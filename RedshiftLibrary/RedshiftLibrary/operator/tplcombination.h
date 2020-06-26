@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/tplcombinationresult.h>
+#include <RedshiftLibrary/operator/chisquareresult.h>
 #include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 #include <RedshiftLibrary/common/mask.h>
 
@@ -24,7 +24,7 @@ public:
     ~COperatorTplcombination();
 
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                             std::vector<CTemplate> tplList,
+                                             const std::vector<CTemplate> tplList,
                                              const TFloat64Range& lambdaRange,
                                              const TFloat64List& redshifts,
                                              Float64 overlapThreshold,
@@ -50,19 +50,21 @@ private:
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
 
+    void BasicFit_preallocateBuffers(const CSpectrum& spectrum,
+                                     const std::vector<CTemplate>& tplList);
+
     void BasicFit(const CSpectrum& spectrum,
-                  std::vector<CTemplate>& tplList,
-                  Float64 *pfgTplBuffer,
+                  const std::vector<CTemplate>& tplList,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,
                   STplcombination_basicfitresult& fittingResults,
                   std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
 
-    // buffers for the precomputed fine grid templates
-    std::vector<std::shared_ptr<CTemplate>>  m_templatesRebined_bf; //buffer
-    std::vector<std::shared_ptr<CMask>>      m_masksRebined_bf; //buffer
-    std::vector<std::shared_ptr<CSpectrumSpectralAxis>>   m_shiftedTemplatesSpectralAxis_bf; //buffer
+    // buffers for the interpolated axis (templates & spectrum)
+    std::vector<CTemplate>   m_templatesRebined_bf; //vector of buffer
+    std::vector<CMask>       m_masksRebined_bf; //vector of buffer
+    CSpectrumSpectralAxis    m_spcSpectralAxis_restframe; //buffer
 
     //ISM Calzetti
     Float64* m_YtplRawBuffer;

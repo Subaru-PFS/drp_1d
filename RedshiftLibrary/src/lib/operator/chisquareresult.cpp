@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -23,6 +24,8 @@ void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
+    FitAmplitudeError.resize( n );
+    FitAmplitudeNegative.resize( n);
     FitDustCoeff.resize( n );
     FitMeiksinIdx.resize( n );
     FitDtM.resize( n );
@@ -176,7 +179,6 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
             stream << "}" << std::endl;
         }
 
-
         if(FitAmplitude.size()>0){
             stream <<  "#Extrema FitAmplitudes = {";
             for ( int i=0; i<Extrema.size(); i++)
@@ -191,6 +193,42 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
                 }
 
                 stream << std::setprecision(16) << "\t" << std::scientific <<   FitAmplitude[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
+
+        if(FitAmplitudeError.size()>0){
+            stream <<  "#Extrema FitAmplitudeErrors = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << std::setprecision(16) << "\t" << std::scientific <<   FitAmplitudeError[idx] << "\t";
+            }
+            stream << "}" << std::endl;
+        }
+
+        if(FitAmplitudeNegative.size()>0){
+            stream <<  "#Extrema FitAmplitudesNegative = {";
+            for ( int i=0; i<Extrema.size(); i++)
+            {
+                Int32 idx=0;
+                for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+                {
+                    if(Redshifts[i2] == Extrema[i]){
+                        idx = i2;
+                        break;
+                    }
+                }
+
+                stream << "\t" <<   FitAmplitudeNegative[idx] << "\t";
             }
             stream << "}" << std::endl;
         }
@@ -254,4 +292,28 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
 void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
+}
+
+bool CChisquareResult::CallFindExtrema() 
+{
+  Int32 extremumCount = 10;
+  Float64 radius = 0.001;
+  TPointList extremumList;
+  TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
+
+    CExtremum extremum(redshiftsRange, extremumCount, radius, true);
+
+    if (Redshifts.size() == 1 || Redshifts.size() > extremumCount)
+    {
+        extremum.DefaultExtremum( Redshifts, ChiSquare, extremumList); 
+
+    } else{
+        extremum.Find(Redshifts, ChiSquare, extremumList);   
+    }
+    // store extrema results
+    Extrema.resize(extremumCount);
+    for (Int32 i = 0; i < extremumList.size(); i++) {
+      Extrema[i] = extremumList[i].X;
+    }  
+  return true;
 }

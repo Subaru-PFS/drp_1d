@@ -33,7 +33,10 @@ public:
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
+                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                              Bool keepigmism = false,
+                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitMeiksinIdx=-1);
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
@@ -44,15 +47,18 @@ public:
 
 private:
 
+    void BasicFit_preallocateBuffers(const CSpectrum& spectrum);
+
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
-                  Float64 *pfgTplBuffer,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,
                   Float64& overlapRate,
                   Float64& chiSquare,
                   Float64 &fittingAmplitude,
+                  Float64& fittingAmplitudeError,
+                  Bool& fittingAmplitudeNegative,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingLogprior,
@@ -67,12 +73,13 @@ private:
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
-                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList());
+                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
+                  bool keepigmism=false);
 
-    // buffers for the precomputed fine grid template
+    // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
-    CSpectrumSpectralAxis m_shiftedTplSpectralAxis_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
     //ISM Calzetti
     Float64* m_YtplRawBuffer;

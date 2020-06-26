@@ -15,13 +15,13 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class COperatorCorrelationSolve
+class CMethodCorrelationSolve
 {
 
 public:
 
-    COperatorCorrelationSolve();
-    ~COperatorCorrelationSolve();
+    CMethodCorrelationSolve();
+    ~CMethodCorrelationSolve();
     const std::string GetDescription();
 
     std::shared_ptr<CCorrelationSolveResult>  Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,

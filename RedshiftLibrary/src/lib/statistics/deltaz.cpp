@@ -17,9 +17,39 @@ CDeltaz::~CDeltaz()
 
 }
 
+Float64 CDeltaz::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z) 
+{
+    Float64 dz = -1;
+    if (!redshifts.size() )
+        return 0;
+    Int32 ret = -1, deltaz_i = 0, maxIter = 2;
+    while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+            Float64 zRangeHalf = 0.002/(deltaz_i+1); 
+            Log.LogInfo("  Deltaz: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
+            TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
+            //ret = Compute3ddl(pdf, Redshifts, z, range, dz);
+            ret = Compute(pdf, redshifts, z, range, dz);            
+            if (ret == -1){
+                Log.LogWarning("  Deltaz: Deltaz computation failed for %f", zRangeHalf);
+                deltaz_i++; 
+            }
+    }
+    if(dz == -1){    
+        Log.LogError("  Deltaz: Deltaz for candidate %f couldnt be calculated", z);
+        dz = 0.001; //default value
+    }
+    return dz;
+}
+
 Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
     sigma = -1.0;
+    TFloat64Range refRange = TFloat64Range(redshifts[0], redshifts[redshifts.size()-1]);
+    bool ret = TFloat64Range::Intersect(redshiftRange, refRange, redshiftRange);
+    if(!ret){
+        Log.LogError("  Deltaz: Deltaz range for candidate %f is outside the redshift range", redshift);
+        throw runtime_error("Deltaz: Candidate is outside range!");
+    }
 
     //find indexes: iz, izmin and izmax
     Int32 izmin= -1;
@@ -38,7 +68,7 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
             break;
         }
     }
-    if(izmin == -1 || izmax == -1 || iz == -1){
+    if( iz==-1 || izmin == -1 || izmax == -1 ){
         return 1;
     }
 
@@ -46,20 +76,19 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
     Float64 y0 = merits[iz];
     Float64 xi2, yi, c0; 
     Float64 sum = 0, sum2 = 0;
-    Int32 n = 0;
-    n = izmax - izmin +1;
-    for (Int32 i = 0; i < n; i++)
+    for (Int32 i = izmin; i < izmax+1; i++)
     {
-        xi2 = redshifts[i+izmin]-x0;
+        xi2 = redshifts[i]-x0;
         xi2 *= xi2;
-        yi = merits[i+izmin]-y0; //pour re-caler les y pour que le centre soit à zero pour x0
+        yi = y0 - merits[i]; //pour re-caler les y pour que le centre soit à zero pour x0
         sum += xi2*yi;
         sum2 += xi2*xi2;
     }
     c0 = sum/sum2; 
-    sigma = sqrt(1.0/c0);
-    if(c0<=0) 
+    if(c0<=0){
         return -1;
+    }
+    sigma = sqrt(1.0/c0);
     return 0;
 }
 
@@ -68,7 +97,13 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
 {
     sigma = -1.0; //default value
     Bool verbose = false;
-
+    
+    TFloat64Range refRange = TFloat64Range(redshifts[0], redshifts[redshifts.size()-1]);
+    bool ret = TFloat64Range::Intersect(redshiftRange, refRange, redshiftRange);
+    if(!ret){
+        Log.LogError("  Deltaz: Deltaz range for candidate %f is completely outside the redshift range", redshift);
+        throw runtime_error("Deltaz: Candidate is outside range!");
+    }
     //find iz, izmin and izmax
     Int32 izmin= -1;
     Int32 iz= -1;

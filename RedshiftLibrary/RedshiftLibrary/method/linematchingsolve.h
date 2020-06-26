@@ -15,13 +15,13 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class COperatorLineMatchingSolve
+class CMethodLineMatchingSolve
 {
 
 public:
 
-    COperatorLineMatchingSolve();
-    ~COperatorLineMatchingSolve();
+    CMethodLineMatchingSolve();
+    ~CMethodLineMatchingSolve();
 
 
     const std::string GetDescription();

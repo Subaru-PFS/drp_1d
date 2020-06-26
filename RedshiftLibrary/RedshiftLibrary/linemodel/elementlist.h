@@ -80,6 +80,8 @@ public:
                         Int32 opt_dustFit,
                         Float64 &merit,
                         Float64& fitAmplitude,
+                        Float64& fitAmplitudeError,
+                        Bool& fitAmplitudeNegative,
                         Float64 &fitDustCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
@@ -87,9 +89,10 @@ public:
                         Float64 &fitLogprior);
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
+    Float64 getFitContinuum_tplAmplitudeError();
     Float64 getFitContinuum_snr();
     Float64 getFitContinuum_tplMerit();
-    void setFitContinuum_tplAmplitude(Float64 tplAmp, std::vector<Float64> polyCoeffs);
+    void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, std::vector<Float64> polyCoeffs);
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     Float64* getPrecomputedGridContinuumFlux();
@@ -101,6 +104,7 @@ public:
     Int32 GetFitContinuum_Option();
     void SetFitContinuum_FitValues(std::string tplfit_name,
                                    Float64 tplfit_amp,
+                                   Float64 tplfit_amperr,
                                    Float64 tplfit_chi2,
                                    Float64 tplfit_ebmv,
                                    Int32 tplfit_meiksinidx,
@@ -300,6 +304,7 @@ public:
     std::string m_opt_secondpass_fittingmethod = "hybrid";
 
     bool m_opt_enable_improveBalmerFit=false;
+
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -356,7 +361,7 @@ private:
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
-    Float64*          m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
+    Float64* m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
     Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     Float64 m_ContinuumWinsize;
@@ -401,6 +406,7 @@ private:
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitAmplitudeError;
     Float64 m_fitContinuum_tplFitMerit;
     Float64 m_fitContinuum_tplFitDustCoeff;
     Int32 m_fitContinuum_tplFitMeiksinIdx;

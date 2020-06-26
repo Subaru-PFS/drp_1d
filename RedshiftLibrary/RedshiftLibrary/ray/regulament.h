@@ -16,6 +16,7 @@ class CRegulament
 {
   public:
     CRegulament();
+    ~CRegulament();
 
     void Apply(CLineModelElementList &LineModelElementList);
     // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>

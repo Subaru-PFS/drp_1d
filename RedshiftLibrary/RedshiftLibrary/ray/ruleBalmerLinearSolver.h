@@ -15,6 +15,8 @@ namespace NSEpic
   class CRuleBalmerLinearSolver : public CRule
   {
   public:
+    CRuleBalmerLinearSolver();
+    ~CRuleBalmerLinearSolver();
     Bool Check( CLineModelElementList& LineModelElementList );
     void SetUp( Bool EnabledArgument, ... );
   private:

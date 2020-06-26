@@ -14,6 +14,11 @@ CRule::CRule ( )
   Enabled = false;
 }
 
+CRule::~CRule ( )
+{
+
+}
+
 /**
  * Checks the elements and corrects if necessary.
  **/

@@ -108,7 +108,7 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 
     // Compute continuum substracted spectrum
     Log.LogInfo("    TemplateCatalog: estimating continuum w. method=%s, for tpl=%s", m_continuumRemovalMethod.c_str(),  r->GetName().c_str());
-    std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName().c_str(), r->GetCategory() ) );
+    std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName(), r->GetCategory() ) );
 
     *tmplWithoutCont = *r;
 
@@ -156,6 +156,7 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
 /**
  * Adds the templates in the input path, under the input category.
  */
+//TODO [ml] templatePath should be a string or boost::path
 void CTemplateCatalog::Add( const char* templatePath, const std::string& category )
 {
     if ( !exists( templatePath ) )
@@ -165,9 +166,9 @@ void CTemplateCatalog::Add( const char* templatePath, const std::string& categor
       }
 
     path p( templatePath );
-    path name = p.leaf();
+    std::string name = p.leaf().generic_string();
 
-    std::shared_ptr<CTemplate> tmpl = std::shared_ptr<CTemplate>( new CTemplate( name.c_str(), category ) );
+    std::shared_ptr<CTemplate> tmpl = std::shared_ptr<CTemplate>( new CTemplate( name, category ) );
 
     CSpectrumIOGenericReader asciiReader;
     asciiReader.Read( templatePath, *tmpl );
@@ -188,6 +189,7 @@ void CTemplateCatalog::Load( const char* dirPath )
 	throw std::runtime_error("Template catalog path does not exist");
       }
 
+    //TODO [ml] initialize end_itr (how can this work ???)
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {
@@ -248,6 +250,7 @@ Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
  */
 Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  category )
 {
+    //TODO [ml] initialize end_itr (how can this work ???)
     directory_iterator end_itr;
     for ( directory_iterator itr( dirPath ); itr != end_itr; ++itr )
     {

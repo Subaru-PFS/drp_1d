@@ -52,7 +52,10 @@ Float64 COperatorCorrelation::GetComputationDuration() const
                                                                    std::string opt_interp_unused,
                                                                    Int32 opt_extinction_unused,
                                                                    Int32 opt_dustFitting_unused,
-                                                                   CPriorHelper::TPriorZEList logpriorze_unused)
+                                                                   CPriorHelper::TPriorZEList logpriorze_unused, 
+                                                                   Bool keepigmism,
+                                                                   Float64 FitDustCoeff,
+                                                                   Float64 FitMeiksinIdx)
  {
     Bool retVal;
 
@@ -66,8 +69,6 @@ Float64 COperatorCorrelation::GetComputationDuration() const
     boost::posix_time::ptime  startTime = boost::posix_time::microsec_clock::local_time();
 
     DebugAssert( overlapThreshold > 0.0 && overlapThreshold <= 1.0 );
-
-    CSpectrumSpectralAxis shiftedTplSpectralAxis( tpl.GetSampleCount(), true );
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
@@ -90,34 +91,49 @@ Float64 COperatorCorrelation::GetComputationDuration() const
 
     result->Redshifts = redshifts;
 
+    // Pre-Allocate the rebined template and mask with regard to the spectrum size
+    m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
+    m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
+    m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
+    m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
+
     for ( Int32 i=0; i<redshifts.size(); i++)
     {
         result->Correlation[i] = NAN;
         result->Status[i] = nStatus_DataError;
         result->Overlap[i] = 0;
 
-        // Shift Template (Since template are created at Z=0)
         Float64 onePlusRedshift = 1.0 + redshifts[i];
-        shiftedTplSpectralAxis.ShiftByWaveLength( tplSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftForward );
 
-        // Compute clamped lambda range over template
+        //shift lambdaRange backward to be in restframe
+        TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift,
+                                             lambdaRange.GetEnd() / onePlusRedshift );
+
+        //redshift in restframe the tgtSpectralAxis
+        m_spcSpectralAxis_restframe.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+        TFloat64Range  spcLambdaRange_restframe(spcLambdaRange.GetBegin()/onePlusRedshift,
+                                                spcLambdaRange.GetEnd()/onePlusRedshift);
+
+        // Compute clamped lambda range over template in restframe
         TFloat64Range tplLambdaRange;
-        retVal = shiftedTplSpectralAxis.ClampLambdaRange( lambdaRange, tplLambdaRange );
+        retVal = tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
         DebugAssert( retVal );
 
         // if there is any intersection between the lambda range of the spectrum and the lambda range of the template
         // Compute the intersected range
-        TFloat64Range intersectedLambdaRange;
-        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange, intersectedLambdaRange );
+        TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
+        TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-        CSpectrumFluxAxis itplTplFluxAxis;
-        CSpectrumSpectralAxis itplTplSpectralAxis;
-        CMask itplMask;
-        CSpectrumFluxAxis::Rebin( intersectedLambdaRange, tplFluxAxis, shiftedTplSpectralAxis, spcSpectralAxis, itplTplFluxAxis, itplTplSpectralAxis, itplMask );
+        CSpectrum& itplSpectrum = m_templateRebined_bf;
+        CMask& itplMask = m_mskRebined_bf;
+
+        tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplSpectrum, itplMask );
+
+        const CSpectrumFluxAxis& itplTplFluxAxis = itplSpectrum.GetFluxAxis();
+        const CSpectrumSpectralAxis& itplTplSpectralAxis = itplSpectrum.GetSpectralAxis();
 
         CMask mask;
-        spcSpectralAxis.GetMask( lambdaRange, mask );
-
+        m_spcSpectralAxis_restframe.GetMask( lambdaRange_restframe, mask );
         itplMask &= mask;
 
         result->Overlap[i] = mask.CompouteOverlapRate( itplMask );
@@ -148,16 +164,16 @@ Float64 COperatorCorrelation::GetComputationDuration() const
             continue;
         }
 
-        const Float64* Xtpl = itplTplSpectralAxis.GetSamples();
-        const Float64* Ytpl = itplTplFluxAxis.GetSamples();
-        const Float64* Xspc = spcSpectralAxis.GetSamples();
-        const Float64* Yspc = spcFluxAxis.GetSamples();
+        const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
+        const TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+        const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
+        const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
 
         TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
 
         // j cursor move over spectrum
         Int32 j = 0;
-        while( j < spcSpectralAxis.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
+        while( j < m_spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] < logIntersectedLambdaRange.GetBegin() )
             j++;
 
         // j cursor move over template
@@ -177,7 +193,7 @@ Float64 COperatorCorrelation::GetComputationDuration() const
         // ---------------------------------
         //          stddev(x) * stddev(s)
         // For each sample in the valid lambda range interval.
-        while( j<spcSpectralAxis.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
+        while( j<m_spcSpectralAxis_restframe.GetSamplesCount() && Xspc[j] <= logIntersectedLambdaRange.GetEnd() )
         {
             sumWeight += 1.0 / error[j];
             sumCorr += ( Ytpl[k] - tplMean ) * ( Yspc[j] - spcMean ) / error[j];

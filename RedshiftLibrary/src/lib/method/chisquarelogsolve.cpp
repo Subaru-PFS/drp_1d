@@ -3,15 +3,16 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+#include <RedshiftLibrary/common/quicksort.h>
 
-#include <RedshiftLibrary/statistics/deltaz.h>
+
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <float.h>
 using namespace NSEpic;
@@ -48,7 +49,7 @@ const std::string CMethodChisquareLogSolve::GetDescription()
 }
 
 
-std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
                                                                               const CSpectrum& spc,
                                                                               const CSpectrum& spcWithoutCont,
                                                                               const CTemplateCatalog& tplCatalog,
@@ -70,16 +71,15 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
 
     Int32 _type;
     if(spcComponent=="raw"){
-       _type = CChisquareLogSolveResult::nType_raw;
-       scopeStr = "chisquare";
+       _type = CChisquareSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
-       _type = CChisquareLogSolveResult::nType_noContinuum;
+       _type = CChisquareSolveResult::nType_noContinuum;
        scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CChisquareLogSolveResult::nType_continuumOnly;
+        _type = CChisquareSolveResult::nType_continuumOnly;
         scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
-        _type = CChisquareLogSolveResult::nType_all;
+        _type = CChisquareSolveResult::nType_all;
     }
 
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
@@ -129,8 +129,8 @@ std::shared_ptr<CChisquareLogSolveResult> CMethodChisquareLogSolve::Compute(CDat
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareLogSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
-        ChisquareSolveResult->m_type = _type;
+        std::shared_ptr< CChisquareSolveResult>  ChisquareSolveResult =
+                std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "chisquarelogsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -165,7 +165,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
     std::string scopeStr = "chisquare";
     Int32 _ntype = 1;
     Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquareLogSolveResult::nType_raw, CChisquareLogSolveResult::nType_noContinuum, CChisquareLogSolveResult::nType_continuumOnly};
+    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
 
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
@@ -183,18 +183,18 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
 
     //case: nType_all
-    if(spctype == CChisquareLogSolveResult::nType_all){
+    if(spctype == CChisquareSolveResult::nType_all){
         _ntype = 3;
     }
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CChisquareLogSolveResult::nType_all){
+        if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = spctype;
         }
 
-        if(_spctype == CChisquareLogSolveResult::nType_continuumOnly){
+        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
             // use continuum only
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
@@ -209,13 +209,13 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
 
             scopeStr = "chisquare_continuum";
-        }else if(_spctype == CChisquareLogSolveResult::nType_raw){
+        }else if(_spctype == CChisquareSolveResult::nType_raw){
             // use full spectrum
             _spc = spc;
             _tpl = tpl;
             scopeStr = "chisquare";
 
-        }else if(_spctype == CChisquareLogSolveResult::nType_noContinuum){
+        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
             // use spectrum without continuum
             _spc = spc;
             CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
@@ -241,6 +241,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                                                                                            opt_interp,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
+        chisquareResult->CallFindExtrema();
 
         if( !chisquareResult )
         {
@@ -410,30 +411,15 @@ Bool CMethodChisquareLogSolve::ExtractCandidateResults(CDataStore &store, std::v
         }
         //Compute Deltaz should happen after marginalization
         // use it for computing the integrated PDF
-        //TODO: Deltaz computation should be moved elsewhere!!
-        std::vector<Float64> Deltaz;        
-        for (Int32 i = 0; i < zcandidates_unordered_list.size(); i++){
-            Float64 z = zcandidates_unordered_list[i], dz = -1;
-            Int32 ret = -1, deltaz_i = 0, maxIter = 2;
-            while(ret == -1 && deltaz_i < maxIter){//iterate only twice
-                CDeltaz deltaz;
-                Float64 zRangeHalf = 0.002/(deltaz_i+1); 
-                Log.LogInfo("  Method-Chisquarelogsolve: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
-                TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-                // Int32 ret = deltaz.Compute(m_result->ChiSquare,
-                // m_result->Redshifts, z, range, dz);
-                Int32 ret = deltaz.Compute3ddl(logzpdf1d->valProbaLog,
-                                               logzpdf1d->Redshifts, z, range, dz);
-                if (ret == -1)
-                {
-                    Log.LogWarning("  Method-Chisquarelogsolve: Deltaz computation failed for %f", zRangeHalf);
-                    deltaz_i++; 
-                }
-            }
-            Deltaz.push_back(dz);
+        TFloat64List deltaz;
+        CDeltaz* deltaz_obj = new CDeltaz();
+        for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
+            Float64 z = zcandidates_unordered_list[i];
+            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
+
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, Deltaz);
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
         
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
 
