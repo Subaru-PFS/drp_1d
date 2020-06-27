@@ -288,7 +288,7 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
         Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
         Log.LogDetail( "CSpectrum::IsFluxValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
         Log.LogDetail( "CSpectrum::IsFluxValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
-        for(Int32 i=iMin; i<=iMax; i++){
+        for(Int32 i=iMin; i<iMax; i++){
             //check flux
             Bool validSample = checkFlux(flux[i], i);
 
@@ -327,7 +327,7 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
         Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
         Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
         Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
-        for(Int32 i=iMin; i<=iMax; i++){
+        for(Int32 i=iMin; i<iMax; i++){
             //check noise
             Bool validSample = checkNoise(error[i], i);
 
@@ -358,7 +358,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
 
     Float64 maxNoise = -DBL_MAX;
     Float64 minFlux = DBL_MAX;
-    for(Int32 i=iMin; i<=iMax; i++){
+    for(Int32 i=iMin; i<iMax; i++){
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - RAW sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
         //check noise & flux
 	if (!checkNoise(error[i], i) || !checkFlux(flux[i], i))
@@ -385,7 +385,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         throw std::runtime_error("    CSpectrum::correctSpectrum - impossible to correct input spectrum.");
     }
 
-    for(Int32 i=iMin; i<=iMax; i++){
+    for(Int32 i=iMin; i<iMax; i++){
         //check noise & flux
         Bool validSample = checkNoise(error[i], i) && checkFlux(flux[i], i);
 

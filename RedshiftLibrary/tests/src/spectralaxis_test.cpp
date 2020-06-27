@@ -2,7 +2,7 @@
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/common/datatypes.h>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <iterator>
 
@@ -78,8 +78,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   BOOST_CHECK(n7ZeroShift.GetSamplesCount() == 2);
   BOOST_CHECK_CLOSE(n7ZeroShift.GetSamples()[0], 2., 1.e-12);
   BOOST_CHECK_CLOSE(n7ZeroShift.GetSamples()[1], 3., 1.e-12);
-
-
 }
 
 BOOST_AUTO_TEST_CASE(ApplyOffset)
@@ -105,23 +103,31 @@ BOOST_AUTO_TEST_CASE(Operator)
 
 BOOST_AUTO_TEST_CASE(Resolution)
 {
-  Float64 n8Array[] = {1.,3.,4.,10.};
-  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,4,false);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetMeanResolution(),3.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(0.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(2.),2.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.),1.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(4.),6.,1.e-12);
-  BOOST_CHECK_CLOSE(n8Axis.GetResolution(11.),6.,1.e-12);
+  Float64 n8Array[] = {1.,3.,4.,10.,15.,16.};
+  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,6,false);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetMeanResolution(),3.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(-0.1),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(0.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(1.1),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(2.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.0),2.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(3.3),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(4.0),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(7.7),6.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(10.0),6.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(11.5),5.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(15.0),5.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(15.6),1.0,1.e-12);
+  BOOST_CHECK_CLOSE(n8Axis.GetResolution(17.2),1.0,1.e-12);
 
   // not enough samples
   Float64 array[] = {10.};
   CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array,1,false);
-  BOOST_CHECK_CLOSE(axis.GetResolution(),0.,1.e-12);
-  BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.,1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetResolution(),0.0,1.e-12);
+  BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.0,1.e-12);
 
 }
 
@@ -166,46 +172,56 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate)
 
   TFloat64Range outrange(-5,0.);
   BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(outrange, mask), 0., 1e-18);
-
-
 }
 
-BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength)
+BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange)
 {
-  Float64 n100Array[] = {0.,2.,3.,6.};
+  // GetIndexAtWaveLength tests
+  Float64 n100Array[] = {0.0, 2.0, 3.0, 6.0};
   CSpectrumSpectralAxis n100Axis = CSpectrumSpectralAxis(n100Array,4,false);
-  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(-1.)==0);
-  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(1.)==0);
-  // BOOST_CHECK(n100Axis.GetIndexAtWaveLength(1.9)==1);
-  // BOOST_CHECK(n100Axis.GetIndexAtWaveLength(2.1)==1);
-  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(7.)==3);
-  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(-1.));
-  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(1.));
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(-1.0)==0);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(0.0)==0);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(1.0)==1);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(1.9)==1);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(2.0)==1);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(2.1)==2);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(3.0)==2);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(5.3)==3);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(6.0)==3);
+  BOOST_CHECK(n100Axis.GetIndexAtWaveLength(7.0)==3);
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(-1.0));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(0.0));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(1.0));
   BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(1.9));
   BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(2.0));
   BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(2.1));
-  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(7.));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(3.0));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(5.3));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(6.0));
+  BOOST_TEST_MESSAGE("index:"<<n100Axis.GetIndexAtWaveLength(7.0));
+
+  // GetIndexesAtWaveLengthRange tests
   TFloat64Range range1 = TFloat64Range(1.9,3.1);
   TInt32Range irange1  = n100Axis.GetIndexesAtWaveLengthRange(range1);
   BOOST_TEST_MESSAGE("index:"<<irange1.GetBegin()<<","<<irange1.GetEnd());
-  BOOST_CHECK(irange1.GetBegin()==0);
+  BOOST_CHECK(irange1.GetBegin()==1);
   BOOST_CHECK(irange1.GetEnd()==3);
   TFloat64Range range2 = TFloat64Range(-2.0,-1.0);
   TInt32Range irange2  = n100Axis.GetIndexesAtWaveLengthRange(range2);
   BOOST_TEST_MESSAGE("index:"<<irange2.GetBegin()<<","<<irange2.GetEnd());
   BOOST_CHECK(irange2.GetBegin()==0);
   BOOST_CHECK(irange2.GetEnd()==0);
-  TFloat64Range range3 = TFloat64Range(10.,20.);
+  TFloat64Range range3 = TFloat64Range(10.0,20.0);
   TInt32Range irange3  = n100Axis.GetIndexesAtWaveLengthRange(range3);
   BOOST_TEST_MESSAGE("index:"<<irange3.GetBegin()<<","<<irange3.GetEnd());
   BOOST_CHECK(irange3.GetBegin()==3);
   BOOST_CHECK(irange3.GetEnd()==3);
-  TFloat64Range range4 = TFloat64Range(-1,2.2);
+  TFloat64Range range4 = TFloat64Range(-1.0,2.2);
   TInt32Range irange4  = n100Axis.GetIndexesAtWaveLengthRange(range4);
   BOOST_TEST_MESSAGE("index:"<<irange4.GetBegin()<<","<<irange4.GetEnd());
   BOOST_CHECK(irange4.GetBegin()==0);
   BOOST_CHECK(irange4.GetEnd()==2);
-  TFloat64Range range5 = TFloat64Range(2.2,10.);
+  TFloat64Range range5 = TFloat64Range(2.2,10.0);
   TInt32Range irange5  = n100Axis.GetIndexesAtWaveLengthRange(range5);
   BOOST_TEST_MESSAGE("index:"<<irange5.GetBegin()<<","<<irange5.GetEnd());
   BOOST_CHECK(irange5.GetBegin()==2);
@@ -240,8 +256,9 @@ BOOST_AUTO_TEST_CASE(Scale)
   BOOST_CHECK_CLOSE(n112Axis[0],1.,1e-12);
 }
 
-BOOST_AUTO_TEST_CASE(lambdaRange)
+BOOST_AUTO_TEST_CASE(LambdaRange)
 {
+  // linear
   Float64 n121Array[] = {0.,1.};
   CSpectrumSpectralAxis n121Axis = CSpectrumSpectralAxis(n121Array,2,false);
   TLambdaRange irange6 = n121Axis.GetLambdaRange();
@@ -255,11 +272,14 @@ BOOST_AUTO_TEST_CASE(lambdaRange)
   TLambdaRange irange8 = n123Axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange8.GetBegin(),0.,1.e-12);
   BOOST_CHECK_CLOSE(irange8.GetEnd(),0.,1.e-12);
-  Float64 n124Array[] = {0.};
-  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,2,true);
+
+  // log
+  Float64 n124Array[] = {0.,1.,2.};
+  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,3,true);
+  BOOST_CHECK(n124Axis.IsInLogScale()==true);
   TLambdaRange irange9 = n124Axis.GetLambdaRange();
-  BOOST_CHECK_CLOSE(irange9.GetBegin(),1.,1.e-12);
-  BOOST_CHECK_CLOSE(irange9.GetEnd(),1.,1.e-12);
+  BOOST_CHECK_CLOSE(irange9.GetBegin(),exp(0.),1.e-12);
+  BOOST_CHECK_CLOSE(irange9.GetEnd(),exp(2.),1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(ClampLambdaRange)

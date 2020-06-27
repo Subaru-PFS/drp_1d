@@ -36,6 +36,8 @@ public:
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
                                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
+                                 
+    Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list);
 
 private:
 
@@ -122,7 +124,6 @@ private:
 
     std::string m_opt_pdfcombination;
     std::string m_opt_pdf_margAmpCorrection="no";
-    std::string m_opt_bestz_option= "maxintgproba"; //"maxproba"
     Float64 m_opt_stronglinesprior;
     Float64 m_opt_haPrior;
     Float64 m_opt_euclidNHaEmittersPriorStrength;

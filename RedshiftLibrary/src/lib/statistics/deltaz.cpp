@@ -1,5 +1,4 @@
 #include <RedshiftLibrary/statistics/deltaz.h>
-
 #include <RedshiftLibrary/log/log.h>
 
 using namespace NSEpic;
@@ -18,19 +17,8 @@ CDeltaz::~CDeltaz()
 
 }
 
-/**
- * @brief CDeltaz::Compute
- * @param merits
- * @param redshifts
- * @param redshift
- * @param redshiftRange
- * @param, output: sigma
- * @return 0: success, 1:problem with indexes,
- */
 Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma)
 {
-    Bool verbose = false;
-
     sigma = -1.0;
 
     //find indexes: iz, izmin and izmax
@@ -54,73 +42,24 @@ Int32 CDeltaz::Compute(TFloat64List merits, TFloat64List redshifts, Float64 reds
         return 1;
     }
 
-    //quadratic fit
-    Int32 i, n;
-    Float64 xi, yi, ei, chisq;
-    gsl_matrix *X, *cov;
-    gsl_vector *y, *w, *c;
-
-    n = izmax - izmin +1;
-
-    X = gsl_matrix_alloc (n, 1);
-    y = gsl_vector_alloc (n);
-    w = gsl_vector_alloc (n);
-
-    c = gsl_vector_alloc (1);
-    cov = gsl_matrix_alloc (1, 1);
-
     Float64 x0 = redshifts[iz];
     Float64 y0 = merits[iz];
-    for (i = 0; i < n; i++)
+    Float64 xi2, yi, c0; 
+    Float64 sum = 0, sum2 = 0;
+    Int32 n = 0;
+    n = izmax - izmin +1;
+    for (Int32 i = 0; i < n; i++)
     {
-        xi = redshifts[i+izmin];
-        yi = merits[i+izmin]-y0;
-        if(verbose){
-            fprintf (stderr, "  x = %+.5e,  y = %+.5e\n",xi, yi);
-        }
-        ei = 1.0; //todo, estimate weighting ?
-        gsl_matrix_set (X, i, 0, (xi-x0)*(xi-x0));
-
-        gsl_vector_set (y, i, yi);
-        gsl_vector_set (w, i, 1.0/(ei*ei));
+        xi2 = redshifts[i+izmin]-x0;
+        xi2 *= xi2;
+        yi = merits[i+izmin]-y0; //pour re-caler les y pour que le centre soit à zero pour x0
+        sum += xi2*yi;
+        sum2 += xi2*xi2;
     }
-
-    {
-        gsl_multifit_linear_workspace * work = gsl_multifit_linear_alloc (n, 1);
-        gsl_multifit_wlinear (X, w, y, c, cov, &chisq, work);
-        gsl_multifit_linear_free (work);
-    }
-
-#define C(i) (gsl_vector_get(c,(i)))
-#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
-
-    sigma = sqrt(1.0/C(0));
-
-    if(verbose){
-        Log.LogInfo("Center Redshift: %g", x0);
-        Log.LogInfo("# best fit: Y = %g + %g X + %g X^2\n", y0, 0.0, C(0));
-        fprintf (stderr, "# best fit: Y = %g + %g X + %g X^2\n", y0, 0.0, C(0));
-
-        Log.LogInfo("# covariance matrix:\n");
-        Log.LogInfo("[ %+.5e \n", COV(0,0));
-
-        fprintf (stderr, "# covariance matrix:\n");
-        fprintf (stderr, "[ %+.5e \n", COV(0,0));
-
-        Log.LogInfo("# chisq/n = %g", chisq/n);
-        Log.LogInfo("# sigma = %g", sigma);
-        Log.LogInfo("\n");
-
-        fprintf (stderr, "# sigma = %g\n", sigma);
-        fprintf (stderr, "# chisq/n = %g\n", chisq/n);
-    }
-
-    gsl_matrix_free (X);
-    gsl_vector_free (y);
-    gsl_vector_free (w);
-    gsl_vector_free (c);
-    gsl_matrix_free (cov);
-
+    c0 = sum/sum2; 
+    sigma = sqrt(1.0/c0);
+    if(c0<=0) 
+        return -1;
     return 0;
 }
 
@@ -199,8 +138,10 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
 
     double zcorr = x0-C(1)/(2.0*C(2));
-    sigma = sqrt(1.0/C(2));
-
+    Float64 c2 = C(2);
+    if(c2>0)
+        sigma = sqrt(1.0/c2);
+    
     //Float64 a = (Float64)(C(0));
     //Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
     //Float64 logK = ( -(a - b2sur4c)/2.0 );
@@ -240,6 +181,7 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
     //results.LogArea[indz] = logarea;
     //results.SigmaZ[indz] = sigma;
     //results.LogAreaCorrectedExtrema[indz] = zcorr;
-
+    if(c2<=0) 
+        return -1;
     return 0;
 }

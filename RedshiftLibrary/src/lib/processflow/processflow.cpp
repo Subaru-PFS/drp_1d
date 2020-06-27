@@ -403,7 +403,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         DebugAssert( qso_redshifts.size() > 0 );
 
-        Log.LogInfo("Processing stellar fitting");
+        Log.LogInfo("Processing QSO fitting");
         CMethodChisquare2Solve solve(calibrationDirPath);
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         qsoResult = solve.Compute( ctx.GetDataStore(),
@@ -431,7 +431,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     // Galaxy method
     std::shared_ptr<COperatorResult> mResult;
     std::string galaxy_method_pdf_reldir = "zPDF";
-    std::vector<Float64> zcandidates_unordered_list;
     if(methodName  == "linemodel" ){
 
         CLineModelSolve Solve(calibrationDirPath);
@@ -449,7 +448,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
             std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
-
+            std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list);
             if(retzc)
             {
@@ -457,6 +456,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "Failed to get z candidates from these results");
             }
+            //compute the integratedPDF and sort candidates based on intg PDF
+            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
     }else if(methodName  == "zweimodelsolve" ){
@@ -508,6 +509,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
             std::shared_ptr<CChisquare2SolveResult> solveResult = std::dynamic_pointer_cast<CChisquare2SolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
+            std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
             {
@@ -515,6 +517,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "Failed to get z candidates from these results");
             }
+            
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
     }else if(methodName  == "chisquarelogsolve" ){
@@ -552,6 +556,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
             std::shared_ptr<CChisquareLogSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareLogSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
+            std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
             {
@@ -559,6 +564,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "  Failed to get z candidates from these results");
             }
+
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
 
@@ -597,6 +604,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
             std::shared_ptr<CTplcombinationSolveResult> solveResult = std::dynamic_pointer_cast<CTplcombinationSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
+            std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
             {
@@ -604,6 +612,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }else{
                 Log.LogError( "Failed to get z candidates from these results");
             }
+            //compute the integratedPDF and sort candidates based on intg PDF
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
 
     }else if(methodName  == "amazed0_1" ){
@@ -697,52 +707,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }else{
         throw std::runtime_error("Problem found while parsing the method parameter");
-    }
-
-    //Extracting the candidates summarized results (nb: only works for linemodel and chisquare methods as of Aug.2018)
-    if(zcandidates_unordered_list.size()>0)
-    {
-        Log.LogInfo( "Computing candidates Probabilities" );
-        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
-
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-        auto results =  ctx.GetDataStore().GetGlobalResult( scope_res.c_str() );
-        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
-
-        if(!logzpdf1d)
-        {
-            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
-        }
-
-        //if we want to have IDs in the candidateresults.csv, two options: pass the IDs to ->compute
-        //or use zcand->Rank to sort them here
-        auto v = ctx.GetDataStore().GetGlobalResult("linemodelsolve.linemodel").lock();
-        auto v_ = std::dynamic_pointer_cast<const CLineModelResult>(v);
-
-        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v_->ExtremaResult.ExtremaIDs);
-        
-        
-        ctx.GetDataStore().StoreScopedGlobalResult( "candidatesresult", zcand );
-        
-        ctx.GetDataStore().SetRank(zcand->Rank);
-        ctx.GetDataStore().SetIntgPDF(zcand->ValSumProba);
-
-        //ctx.editResultStore("linemodelsolve.linemodek_extrema", "rank_PDf" and ExtremaPDF, zcand->Rank);
-        //zcand->compute recompute sthe order of candidates based on valprobalog at this level we have the candidates ordered
-        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
-        for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<zcand->Rank.size(); i++){
-                std::string fname_new =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
-                std::string fname_old =
-                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
-                ctx.GetDataStore().ChangeScopedGlobalResult(fname_old, fname_new);    
-            }
-        }
-    }else{
-        Log.LogInfo("No z-candidates found. Skipping probabilities integration...");
     }
 
     //Process Reliability estimation

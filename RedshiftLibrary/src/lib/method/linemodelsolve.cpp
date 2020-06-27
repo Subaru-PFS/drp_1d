@@ -10,6 +10,8 @@
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -222,8 +224,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.modelpriorzStrength", m_opt_modelZPriorStrength, -1);
     dataStore.GetScopedParam( "linemodel.pdfcombination", m_opt_pdfcombination, "marg");
     dataStore.GetScopedParam( "linemodel.pdf.margampcorr", m_opt_pdf_margAmpCorrection, "no");
-    dataStore.GetScopedParam( "linemodel.pdf.bestzoption", m_opt_bestz_option, "maxintgproba");
-
     dataStore.GetScopedParam( "linemodel.saveintermediateresults", m_opt_saveintermediateresults, "no");
 
     //Auto-correct fitting method
@@ -332,7 +332,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "    -pdf-modelpriorzStrength: %e", m_opt_modelZPriorStrength);
     Log.LogInfo( "    -pdf-combination: %s", m_opt_pdfcombination.c_str()); // "marg";    // "bestchi2";    // "bestproba";
     Log.LogInfo( "    -pdf-margAmpCorrection: %s", m_opt_pdf_margAmpCorrection.c_str());
-    Log.LogInfo( "    -pdf-best z option: %s", m_opt_bestz_option.c_str());
 
     if(m_opt_saveintermediateresults=="yes")
     {
@@ -483,8 +482,6 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
 
     std::shared_ptr<CLineModelSolveResult>  lmsolveresult = std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
-    Log.LogInfo("    linemodelsolve: Pdfz option set : %s", m_opt_bestz_option.c_str());
-    lmsolveresult->SetBestZFromPdfOption( m_opt_bestz_option );
     return lmsolveresult;
 }
 
@@ -1264,4 +1261,43 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
 
     return true;
+}
+
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+{
+        Log.LogInfo( "Computing candidates Probabilities" );
+        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+
+        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        auto results =  store.GetGlobalResult( scope_res.c_str() );
+        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
+
+        if(!logzpdf1d)
+        {
+            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
+            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
+        }
+
+        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
+        
+        
+        //retrieve extremum IDs saved in datastore from firstpass 
+        std::shared_ptr<const CLineModelResult> v = std::dynamic_pointer_cast<const CLineModelResult>(
+            store.GetGlobalResult("linemodelsolve.linemodel").lock());
+
+        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, v->ExtremaResult.DeltaZ, v->ExtremaResult.ExtremaIDs);
+        
+        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+
+        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        for(Int32 f = 0; f<info.size(); f++) {
+            for( Int32 i = 0; i<zcand->Rank.size(); i++){
+                std::string fname_new =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
+                std::string fname_old =
+                (boost::format("linemodelsolve.linemodel_%1%_extrema_tmp_%2%") % info[f] % zcand->Rank[i]).str();
+                store.ChangeScopedGlobalResult(fname_old, fname_new);    
+            }
+        }
+return true;
 }
