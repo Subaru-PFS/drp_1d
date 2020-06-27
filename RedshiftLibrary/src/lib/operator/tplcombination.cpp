@@ -69,6 +69,7 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
 
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     m_templatesRebined_bf.resize(tplList.size());
+    m_masksRebined_bf.resize(tplList.size());
     m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
 
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
