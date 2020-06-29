@@ -636,6 +636,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }
 
+    // Deallocate the rebined template and mask buffers
+    m_templatesRebined_bf.clear();
+    m_masksRebined_bf.clear();
+
     return result;
 
 }
