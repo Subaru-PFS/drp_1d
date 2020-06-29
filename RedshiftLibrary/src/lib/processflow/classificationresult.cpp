@@ -49,7 +49,7 @@ void CClassificationResult::SetQ(Float64 evidence)
  **/
 void CClassificationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    stream <<  "#Type\tMerit\tEvidenceG\tEvidenceS\tEvidenceQ"<< std::endl;
+    stream <<  "#Type\tEvidenceG\tEvidenceS\tEvidenceQ"<< std::endl;
     stream << m_TypeLabel << "\t"
        << m_evidence_galaxy << "\t"
        << m_evidence_star << "\t"
