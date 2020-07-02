@@ -82,7 +82,7 @@ void CExtremum::SetMaxPeakCount( UInt32 n )
 /**
  * Sets m_meritCut to n.
  */
-void CExtremum::SetMeritCut( UInt32 n )
+void CExtremum::SetMeritCut( Float64 n )
 {
     m_meritCut = n;
 }
@@ -359,7 +359,7 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
   vp_.push_back(make_pair(vp[0].second, vp[0].first)); //save best one
   
   maxX.clear(); maxY.clear();
-  for(Int32 i = 1; i<n-1; i++){
+  for(Int32 i = 1; i<n; i++){
     Float64 meritDiff = vp[0].first - vp[i].first;
     if( meritDiff > m_meritCut && i>=keepMinN){
       break; //no need to continue iterating since vp is sorted!
