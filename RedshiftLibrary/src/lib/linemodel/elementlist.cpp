@@ -1416,7 +1416,6 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit,
                                                                                                        zePriorData) );
-    chisquareResult->CallFindExtrema();
 
     if( !chisquareResult )
     {
@@ -1514,7 +1513,6 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
                                                                                                        opt_interp,
                                                                                                        opt_extinction,
                                                                                                        opt_dustFit ) );
-    chisquareResult->CallFindExtrema();
 
     if( !chisquareResult )
     {
