@@ -304,7 +304,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
             TPointList extremumList;
             TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i]);
             //call Find on each secondpass range and retrieve the best 10 peaks?
-            /*CExtremum extremum(redshiftsRange, 5, 0.005, false);
+            /*CExtremum extremum(redshiftsRange, 5, 0.005, false, false);
             extremum.DeactivateSlidingWindow();
             extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
             if(method == 0){

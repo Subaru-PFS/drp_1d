@@ -20,7 +20,7 @@ class CExtremum
 public:
 
     CExtremum( Bool invertForMinSearch = false );
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 peakSeparation = 0.005*2, Bool invertForMinSearch=false);
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 peakSeparation = 0.005*2, Bool invertForMinSearch=false, Bool usePeakSeparation=true);
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );
@@ -29,13 +29,13 @@ public:
     void SetMeritCut( Float64 n );
     Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
     Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
-    
+
     Bool Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const;
     //made public to do unit tests
     Bool Truncate( TFloat64List& xAxis, TFloat64List& yAxis, TPointList& maxPoint) const;
     Bool FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const;
-    void DeactivateSlidingWindow();
-    void SetSortedIndexes(TInt32List&  sortedIndexes);
+    void SortIndexes(TFloat64List&  maxY) const;
+
 private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY) const;
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY, Float64 SignSearch) const;
@@ -51,11 +51,6 @@ private:
     Bool            m_PeakSeparationActive = true;
     mutable TInt32List   m_sortedIndexes;
 };
-inline
-void CExtremum::SetSortedIndexes(TInt32List&  sortedIndexes){
-    m_sortedIndexes = sortedIndexes;
-    return;
-}
 
 }
 

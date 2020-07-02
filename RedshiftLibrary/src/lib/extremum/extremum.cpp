@@ -39,12 +39,13 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 peakSeparation, Bool invertForMinSearch) :
+CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 peakSeparation, Bool invertForMinSearch, Bool usePeakSeparation ) :
     m_MaxPeakCount( maxPeakCount ),
     m_XRange( xRange ),
     m_SignSearch( 1.0 ),
     m_extrema_separation(peakSeparation),
-    m_meritCut(-2)
+    m_meritCut(-2),
+    m_PeakSeparationActive(usePeakSeparation)
 {
     if( invertForMinSearch )
       {
@@ -88,10 +89,6 @@ void CExtremum::SetMeritCut( Float64 n )
     m_meritCut = n;
 }
 
-void CExtremum::DeactivateSlidingWindow()
-{
-    m_PeakSeparationActive = false;
-}
 /**
  * Sets m_SignSearch to val.
  */
@@ -99,6 +96,18 @@ void CExtremum::SetSignSearch( Float64 val )
 {
     m_SignSearch = val;
 }
+
+/**
+ * create an index vector sorting maxY elements
+ */
+void CExtremum::SortIndexes(TFloat64List&  maxY) const
+{
+    m_sortedIndexes.resize(maxY.size());
+    iota(m_sortedIndexes.begin(), m_sortedIndexes.end(), 0);
+    sort(m_sortedIndexes.begin(), m_sortedIndexes.end(),
+       [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
+}
+
 /**
  * Set a list as default extremum as extreumum, i.e., independent from their values
 */
@@ -183,11 +192,8 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
 
     //TODO: add a boolean referring to the metric to use for the sort
     //by default, using the pdf value
-    m_sortedIndexes.resize(maxX.size());
-    iota(m_sortedIndexes.begin(), m_sortedIndexes.end(), 0);
-    sort(m_sortedIndexes.begin(), m_sortedIndexes.end(),
-       [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
-
+    SortIndexes(maxY);
+    
     Int32 keepMinN = 1;
     if(m_meritCut>0.0 && maxX.size()>keepMinN){ 
         Bool v = Cut_Threshold(maxX, maxY, keepMinN);
