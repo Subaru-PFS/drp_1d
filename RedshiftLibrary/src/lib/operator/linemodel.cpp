@@ -2343,7 +2343,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             //TODO: Deltaz computation considers a radius of 0.002(1+zcand) around each candidate:
             //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
             //TODO: check that it is still the best peak on the range used to compute Deltaz!!
-            if(idx2==izmin_cand || idx2==izmax_cand){
+            //skip case where we are reestimating around extrema only
+            if(opt_continuumreest != "onlyextrema" && (idx2==izmin_cand || idx2==izmax_cand)){
                 Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
                 Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
                 eliminateIdx.push_back(i);
