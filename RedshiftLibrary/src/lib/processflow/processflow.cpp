@@ -301,7 +301,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
 
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore().Get( "stellarsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
         ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
