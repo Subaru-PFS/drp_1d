@@ -49,11 +49,21 @@ void CClassificationResult::SetQ(Float64 evidence)
  **/
 void CClassificationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    stream <<  "#Type\tEvidenceG\tEvidenceS\tEvidenceQ"<< std::endl;
+    Float64 sum = m_evidence_galaxy;
+    if(m_evidence_star > 0 )
+        sum += m_evidence_star;
+    if(m_evidence_qso>0) 
+        sum += m_evidence_qso;
+
+    stream <<  "#Type\tEvidenceG\tEvidenceS\tEvidenceQ\tProbaG\tProbaS\tProbaQ"<< std::endl;
     stream << m_TypeLabel << "\t"
        << m_evidence_galaxy << "\t"
        << m_evidence_star << "\t"
        << m_evidence_qso << "\t"
+
+       << m_evidence_galaxy/sum << "\t"
+       << m_evidence_star/sum << "\t"
+       << m_evidence_qso/sum << "\t"
        << std::endl;
 }
 
@@ -62,13 +72,22 @@ void CClassificationResult::Save( const CDataStore& store, std::ostream& stream 
  **/
 void CClassificationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
-
+    Float64 sum = m_evidence_galaxy;
+    if(m_evidence_star>0)
+        sum += m_evidence_star;
+    if(m_evidence_qso>0) 
+        sum += m_evidence_qso;
     stream  << store.GetSpectrumName() << "\t"
             << store.GetProcessingID() << "\t"
             << m_TypeLabel << "\t"
             << m_evidence_galaxy << "\t"
             << m_evidence_star << "\t"
             << m_evidence_qso << "\t"
+
+
+            << m_evidence_galaxy/sum << "\t"
+            << m_evidence_star/sum << "\t"
+            << m_evidence_qso/sum << "\t"
             << std::endl;
 }
 
