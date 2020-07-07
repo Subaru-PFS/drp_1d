@@ -1136,7 +1136,7 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
     Float64 sumModifiedEvidences = 0;
 
     std::vector<Float64> logPriorModel;
-    if (/*false &&*/ modelPriors.size() != meritResults.size())
+    if (/*false &&*/ modelPriors.size() != meritResults.size()){
     
         Float64 priorModelCst = 1.0 / ((Float64)meritResults.size());
         Log.LogInfo(
