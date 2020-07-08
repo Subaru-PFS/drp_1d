@@ -94,11 +94,37 @@ Float64 CPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshifts,
     Float64 logfactor = -DBL_MAX;
     if(redshifts.size()<2)
         return 1;
-    if(redshifts.size()==2){
+    /*if(redshifts.size()==2){
         logfactor = valproba[1] + log( (redshifts[1] - redshifts[0]) );
     }
     else
         logfactor = valproba[1] + log( (redshifts[2] - redshifts[0]) * 0.5 );
+        */
+    
+    for (UInt32 k = 0; k < redshifts.size(); k++)
+    {
+       
+        Float64 zstep;
+        // here, using rect. approx. (enough precision for maxi estimation)
+        if (k == 0)
+        {
+            zstep = (redshifts[k + 1] - redshifts[k]) * 0.5;
+        } else if (k == redshifts.size() - 1)
+        {
+            zstep = (redshifts[k] - redshifts[k - 1]) * 0.5;
+        } else
+        {
+            zstep = (redshifts[k + 1] + redshifts[k]) * 0.5 -
+                    (redshifts[k] + redshifts[k - 1]) * 0.5;
+        }
+        if (logfactor < valproba[k] + log(zstep))
+        {
+            logfactor = valproba[k] +
+                   log(zstep); // maxi will be used to avoid underflows when
+                               // summing exponential of small values
+        }
+    }
+    
     Log.LogDebug(
         "Pdfz: Pdfz computation: using common factor value for log-sum-exp trick=%e",
         logfactor);
