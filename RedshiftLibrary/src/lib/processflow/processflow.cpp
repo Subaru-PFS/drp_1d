@@ -124,10 +124,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string opt_linemeas_catalog_path;
     ctx.GetParameterStore().Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
     TFloat64List redshifts;
+    Float64 zref = -1.0;
     if(opt_linemeas_catalog_path!="")
     {
-        Log.LogInfo( "Override z-search range !");
-        Float64 zref = -1.0;
+        Log.LogInfo( "Override z-search range !");   
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
 
@@ -183,6 +183,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }else{
         redshifts = raw_redshifts;
     }
+    ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.zref", zref);
 
     if(redshifts.size() < 1)
     {

@@ -1190,11 +1190,21 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", continnuum_fit_option);
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
-    RecomputeAroundCandidates(m_firstpass_extremumList,
+
+    dataStore.GetScopedParam( "linemodel.extremacount", m_extremaCount, 1.0);
+    dataStore.GetScopedParam( "linemodel.zref", m_Zlinemeasref, -1.0);
+    Int32 ret = RecomputeAroundCandidates(m_firstpass_extremumList,
                               lambdaRange,
                               opt_continuumreest,
                               continnuum_fit_option); //0: retry all cont. templates at this stage
 
+    if(ret == -1 && m_Zlinemeasref>-1){
+        RecomputeAroundCandidates( m_firstpass_extremumList,
+                              lambdaRange,
+                              opt_continuumreest,
+                              continnuum_fit_option,
+                              true);
+    }
     // additional fitting with fittingmethod=svdlcp2
     if(m_opt_secondpasslcfittingmethod=="svdlc" || m_opt_secondpasslcfittingmethod=="svdlcp2")
     {
@@ -2344,7 +2354,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
             //TODO: check that it is still the best peak on the range used to compute Deltaz!!
             //skip case where we are reestimating around extrema only
-            if(opt_continuumreest != "onlyextrema" && (idx2==izmin_cand || idx2==izmax_cand)){
+            if((idx2==izmin_cand || idx2==izmax_cand)){
                 Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
                 Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
                 eliminateIdx.push_back(i);
@@ -2395,16 +2405,31 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                         pCoeff1,
                         pCoeff2);
         }
+        //Candidate elimination should be moved to the PDF method once the 5815 refactoring starts
         Int32 s = eliminateIdx.size();
         if(s){
-            if(s == input_extremumList.size()){
-                Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                return -1;
+            //case of linemeas
+            if( m_Zlinemeasref >-1 && m_extremaCount == 1){// a bit redundant
+                //  with no degree of freedom, i.e., only one z in the range dont eliminate
+                if(m_result->Redshifts.size() == 1){
+                    //dont eliminate nothing
+                } 
+                if(m_result->Redshifts.size() >1){//i.e., z moved to the range border
+                    //set z to zref...im not convinced!!
+                    //m_Zlinemeasref
+                    return -1; //-1: there is a need to recall the function with a recomputation only on the extrema
+                }
             }
-            for(Int32 i = s-1; i>=0; i--){
-                m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
-                _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
+            else {
+                if(s == input_extremumList.size()){
+                    Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                    throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                    return -1;
+                }
+                for(Int32 i = s-1; i>=0; i--){
+                    m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
+                    _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
+                }
             }
         }
     } else
