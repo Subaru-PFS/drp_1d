@@ -910,6 +910,8 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         }
     }
 
+    m_firstpass_extremaResult.Resize(m_firstpass_extremumList.size());
+
     // extend z around the extrema
     m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
     for (Int32 j = 0; j < m_firstpass_extremumList.size(); j++)
@@ -931,13 +933,13 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             }
         }
         m_result->ExtremaResult.ExtremaExtendedRedshifts[j] = extendedList;
+        m_firstpass_extremaResult.ExtremaExtendedRedshifts[j] = extendedList;
     }
     //*/
     // todo: remove duplicate redshifts from the extended extrema list
 
 
     //now preparing the candidates extrema results
-    m_firstpass_extremaResult.Resize(m_firstpass_extremumList.size());
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
     {
         Float64 z = m_firstpass_extremumList[i].X;
