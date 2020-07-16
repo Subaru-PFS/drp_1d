@@ -21,15 +21,18 @@ void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSo
     Float64 qsoEvidence = 0 ;
     Float64 stellarEvidence = 0;
     Float64 galaxyEvidence = 0;
-    
+    Float64 sum = 0; 
+
     if(galaxyResult){
         galaxyResult->GetEvidenceFromPdf(store, galaxyEvidence);
         Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
         typeLabel = "G";
+        sum += galaxyEvidence;
     }
 
     if(m_enableStarFitting=="yes"){
         Int32 retStellarEv = starResult->GetEvidenceFromPdf(store, stellarEvidence);
+        sum += stellarEvidence;
         if(retStellarEv==0)
         {
             Log.LogInfo( "Found stellar evidence: %e", stellarEvidence);
@@ -41,6 +44,7 @@ void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSo
     }
     if(m_enableQsoFitting=="yes"){
         Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(store, qsoEvidence);
+        sum += qsoEvidence;
         if(retQsoEv==0)
         {
             Log.LogInfo( "Found qso evidence: %e", qsoEvidence);
@@ -50,10 +54,15 @@ void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSo
             }
         }
     }
+
+    if(sum<=0){
+        return;
+    }   
+
     classifResult->SetTypeLabel(typeLabel);
-    classifResult->SetG(galaxyEvidence);
-    classifResult->SetS(stellarEvidence);
-    classifResult->SetQ(qsoEvidence);
+    classifResult->SetG(galaxyEvidence, galaxyEvidence/sum);
+    classifResult->SetS(stellarEvidence, stellarEvidence/sum);
+    classifResult->SetQ(qsoEvidence, qsoEvidence/sum);
 
     return;
 }

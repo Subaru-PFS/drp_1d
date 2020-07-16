@@ -29,19 +29,22 @@ void CClassificationResult::SetTypeLabel( std::string lbl )
     m_TypeLabel = lbl;
 }
 
-void CClassificationResult::SetG(Float64 evidence)
+void CClassificationResult::SetG(Float64 evidence, Float64 prob)
 {
     m_evidence_galaxy = evidence;
+    m_prob_galaxy = prob;
 }
 
-void CClassificationResult::SetS(Float64 evidence)
+void CClassificationResult::SetS(Float64 evidence, Float64 prob)
 {
     m_evidence_star = evidence;
+    m_prob_star = prob;
 }
 
-void CClassificationResult::SetQ(Float64 evidence)
+void CClassificationResult::SetQ(Float64 evidence, Float64 prob)
 {
     m_evidence_qso = evidence;
+    m_prob_qso = prob;
 }
 
 /**
@@ -49,21 +52,15 @@ void CClassificationResult::SetQ(Float64 evidence)
  **/
 void CClassificationResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    Float64 sum = m_evidence_galaxy;
-    if(m_evidence_star > 0 )
-        sum += m_evidence_star;
-    if(m_evidence_qso>0) 
-        sum += m_evidence_qso;
-
     stream <<  "#Type\tEvidenceG\tEvidenceS\tEvidenceQ\tProbaG\tProbaS\tProbaQ"<< std::endl;
     stream << m_TypeLabel << "\t"
        << m_evidence_galaxy << "\t"
        << m_evidence_star << "\t"
        << m_evidence_qso << "\t"
 
-       << m_evidence_galaxy/sum << "\t"
-       << m_evidence_star/sum << "\t"
-       << m_evidence_qso/sum << "\t"
+       << m_prob_galaxy << "\t"
+       << m_prob_star << "\t"
+       << m_prob_qso << "\t"
        << std::endl;
 }
 
@@ -72,11 +69,6 @@ void CClassificationResult::Save( const CDataStore& store, std::ostream& stream 
  **/
 void CClassificationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
-    Float64 sum = m_evidence_galaxy;
-    if(m_evidence_star>0)
-        sum += m_evidence_star;
-    if(m_evidence_qso>0) 
-        sum += m_evidence_qso;
     stream  << store.GetSpectrumName() << "\t"
             << store.GetProcessingID() << "\t"
             << m_TypeLabel << "\t"
@@ -85,9 +77,9 @@ void CClassificationResult::SaveLine( const CDataStore& store, std::ostream& str
             << m_evidence_qso << "\t"
 
 
-            << m_evidence_galaxy/sum << "\t"
-            << m_evidence_star/sum << "\t"
-            << m_evidence_qso/sum << "\t"
+            << m_prob_galaxy << "\t"
+            << m_prob_star << "\t"
+            << m_prob_qso << "\t"
             << std::endl;
 }
 
