@@ -400,9 +400,11 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    if(zwidth_right == - 1)
+    if(zwidth_right == - 1){
         zwidth_right = zwidth_left;
-
+        zwidth_right = zcandidate + zwidth_right;
+        zwidth_left = zcandidate - zwidth_left;
+    }
     UInt32 cand_Idx = getIndex(redshifts, zcandidate);
     if(cand_Idx == 0){
         kmin = 0;
@@ -413,7 +415,7 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
                 break;
             }
             if(redshifts[k] < zwidth_left){
-                kmin = k - 1;
+                kmin = k;
                 break;
             }
         }
@@ -427,8 +429,8 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
                 kmax = k;
                 break;
             }
-            if(redshifts[k] > zwidth_right){
-                kmax = k - 1;
+            if(redshifts[k] > zwidth_right){//case redshifts[k] doesnt correspond exactly to zwidth_right
+                kmax = k;
                 break;
             }
         }
