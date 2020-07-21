@@ -144,19 +144,25 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     overlapRate = 0.0;
     status = nStatus_DataError;
 
+    if(spcMaskAdditional.GetMasksCount()!=spectrum.GetFluxAxis().GetSamplesCount())
+    {
+        Log.LogInfo("  Operator-Chisquare2: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
+        status = nStatus_DataError;
+        return ;
+    }
+    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
+    CMask& itplMask = m_mskRebined_bf;
+
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-
+    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
+    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
+/*
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
 
 
-    if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
-    {
-        Log.LogInfo("  Operator-Chisquare2: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(), spcFluxAxis.GetSamplesCount());
-        status = nStatus_DataError;
-        return ;
-    }
+
     Float64 onePlusRedshift = 1.0 + redshift;
 
     //shift lambdaRange backward to be in restframe
@@ -180,20 +186,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);
 
+
     CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-
-    /*//overlapRate, Method 1
-    CMask mask;
-    spcSpectralAxis.GetMask( lambdaRange, mask );
-    itplMask &= mask;
-    overlapRate = mask.CompouteOverlapRate( itplMask );
-    //*/
-
-    //overlapRate, Method 2
-    //CMask mask;
-    //spcSpectralAxis.GetMask( lambdaRange, mask );
-    //overlapRate = mask.IntersectAndComputeOverlapRate( itplMask );
 
     //overlapRate, Method 3
     overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, itplMask );
@@ -224,23 +219,46 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     }
 
 
-    /*//debug:
-    // save rebinedtpl
-    if(true || redshift==0.0){
-        FILE* f = fopen( "chisquare2_template_rebined.txt", "w+" );
-        for(Int32 m=0; m<itplTplSpectralAxis.GetSamplesCount(); m++){
-            fprintf( f, "%f %e\n", Xtpl[m], Ytpl[m]);
-        }
-        fclose( f );
-    }
-    //*/
-
 
     //save Tpl Flux without dust or any other weighting
     bool ytpl_modified = false;
     for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
     {
         m_YtplRawBuffer[k] = Ytpl[k];
+    }
+*/
+    bool ytpl_modified = false;
+    TFloat64Range currentRange;
+    TFloat64List Ytpl_RawBuffer;
+    Int32 ret = tpl.RebinTemplate(spectrum, 
+                                      redshift, 
+                                      lambdaRange,
+                                      opt_interp, 
+                                      m_spcSpectralAxis_restframe, 
+                                      itplTplSpectrum, 
+                                      itplMask, 
+                                      currentRange,
+                                      overlapRate,
+                                      overlapThreshold,
+                                      Ytpl_RawBuffer);
+    if( ret == -1 ){
+        status = nStatus_NoOverlap; 
+        return;
+    }
+    if( ret == -2 ){
+        status = nStatus_DataError;
+        return;
+    }
+    CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
+    const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+
+//Mira: a bit messy  the code below...to check
+    const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
+    TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+
+    for(Int32 k=0; k<Ytpl_RawBuffer.size(); k++)
+    {
+        m_YtplRawBuffer[k] = Ytpl_RawBuffer[k];
     }
 
     // Optionally Apply some Calzetti Extinction for DUST
@@ -367,29 +385,31 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     Ytpl[k] = m_YtplRawBuffer[k];
                 }
             }
-
             Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
             //check that we got the same coeff:
             if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
+            ytpl_modified = tpl.ApplyDustCoeff(coeffEBMV, Xtpl, Ytpl, kStart, kEnd, m_ismCorrectionCalzetti);
+            /*
             //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
-            Float64 z = redshift;
             for(Int32 k=kStart; k<=kEnd; k++)
             {
                 Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
 
                 Ytpl[k] *= coeffDust;
             }
+            
             ytpl_modified = true;
-
+            */
             //Meiksin IGM extinction
             if(opt_extinction)
             {
                 Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-
-                Float64 coeffIGM = 1.0;
+                Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, Xtpl, Ytpl, kStart, kEnd, redshiftIdx, m_igmCorrectionMeiksin);
+               
+                /*Float64 coeffIGM = 1.0;
                 Float64 z = redshift;
                 Bool igmCorrectionAppliedOnce = false;
                 for(Int32 k=kStart; k<=kEnd; k++)
@@ -409,11 +429,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                         Ytpl[k] *= coeffIGM;
                         igmCorrectionAppliedOnce = true;
                     }
-                }
+                }*/
                 if(!igmCorrectionAppliedOnce)
                 {
                     igmLoopUseless_WavelengthRange = true;
                 }
+                
             }
             //*/
 
@@ -681,7 +702,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             Float64 overlapCorrection = 1.0/overlapRate;
             fit *= overlapCorrection;
             //*/
-        //Note: to avoid coresegmentation errors
+            //Note: to avoid coresegmentation errors
             ChiSquareInterm[kDust_][kM] = fit;
             IsmCalzettiCoeffInterm[kDust_][kM] = coeffEBMV;
             IgmMeiksinIdxInterm[kDust_][kM] = meiksinIdx;
@@ -1285,3 +1306,73 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
+/*
+void COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
+                                           const CTemplate& tpl,
+                                           Float64 redshift,
+                                           Float64 IdxDustCoeff,
+                                           Int32 meiksinIdx,
+                                           std::shared_ptr<COperatorResult> res)
+{
+    Log.LogDetail("  Operator-COperatorChiSquare2: now building spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
+    //for each candidate, call rebin, apply meiksin and calzetti on the selected template
+    for(Int32 i=0; i<candidates.size(); i++)
+    {
+        
+        bool ytpl_modified = false;
+        TFloat64Range currentRange;
+        TFloat64List Ytpl_RawBuffer;
+        Int32 ret = tpl.RebinTemplate(spectrum, 
+                                      redshift, 
+                                      lambdaRange,
+                                      opt_interp, 
+                                      m_spcSpectralAxis_restframe, 
+                                      itplTplSpectrum, 
+                                      itplMask, 
+                                      currentRange,
+                                      overlapRate,
+                                      overlapThreshold,
+                                      Ytpl_RawBuffer);
+        if( ret == -1 ){
+            status = nStatus_NoOverlap; 
+            return;
+        }
+        if( ret == -2 ){
+            status = nStatus_DataError;
+            return;
+        }
+        CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
+        const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+
+        //Mira: a bit messy  the code below...to check
+        const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
+        TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+
+        for(Int32 k=0; k<Ytpl_RawBuffer.size(); k++)
+        {
+            m_YtplRawBuffer[k] = Ytpl_RawBuffer[k];
+        }        
+        //Mira: check if  first arg is float
+        Float64 coeffEBMV = m_ismCorrectionCalzetti->getDustCoeff( IdxDustCoeff, restLambda);
+        ytpl_modified = tpl.ApplyDustCoeff(coeffEBMV, Xtpl, Ytpl, kStart, kEnd, m_ismCorrectionCalzetti);
+
+        if(opt_extinction)
+        {
+            Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+            Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, Xtpl, Ytpl, kStart, kEnd, redshiftIdx, m_igmCorrectionMeiksin);
+        } 
+     
+        m_savedModelSpectrumResults[i];
+    }
+}
+*/
+/*void COperatorChiSquare2::SaveSpectrumResults(CDataStore &dataStore, std::shared_ptr<COperatorResult> res)
+{
+    Log.LogDetail("  Operator-COperatorChiSquare2: now saving spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
+    for(Int32 ie=0; ie<m_savedModelSpectrumResults.size(); ie++)
+    {
+        std::string fname_spc = (boost::format("chisquare2_spc_extrema_%1%") % ie).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
+    }
+}*/
+

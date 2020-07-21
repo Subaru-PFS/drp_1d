@@ -283,6 +283,8 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                     }
                 }
             }
+            //Store model spectrum into datastore
+            //m_chiSquareOperator->SaveSpectrumResults(resultStore, chisquareResult);
         }
     }
 

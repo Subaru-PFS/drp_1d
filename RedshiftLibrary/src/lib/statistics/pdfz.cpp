@@ -361,7 +361,7 @@ Int32 CPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
  * @param redshifts
  * @param valprobalog
  * @param zcandidate
- * @param zwidth
+ * @param zrange corresponds to the concerned range
  * @return -1.0 if error, else sum around the candidate
  */
 Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,

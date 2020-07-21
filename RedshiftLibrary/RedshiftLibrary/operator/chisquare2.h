@@ -84,6 +84,7 @@ private:
     //ISM Calzetti
     Float64* m_YtplRawBuffer;
     Int32 m_YtplRawBufferMaxBufferSize;
+    //std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
     CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
 
@@ -92,6 +93,7 @@ private:
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+    void SaveSpectrumResults(CDataStore &dataStore, std::shared_ptr<COperatorResult> result);
 };
 
 
