@@ -314,7 +314,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                         (solIdx == 0 && probaLog>next) ||
                         (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
                         //if current value is a peak
-                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth/2);
                         if(flux_integral>tmpIntgProba){
                             tmpRedshift = zInCandidateRange;
                             tmpIntgProba = flux_integral;

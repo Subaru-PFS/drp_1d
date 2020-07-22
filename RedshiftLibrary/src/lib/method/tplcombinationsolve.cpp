@@ -369,10 +369,10 @@ Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore &store, std:
         //Compute Deltaz should happen after marginalization
         // use it for computing the integrated PDF
         TFloat64List deltaz;
-        CDeltaz* deltaz_obj = new CDeltaz();
+        CDeltaz deltaz_obj;
         for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
             Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
+            deltaz.push_back(deltaz_obj.GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
