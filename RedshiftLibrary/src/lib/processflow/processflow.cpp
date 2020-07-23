@@ -158,12 +158,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
-
-            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
-            for(Int32 kz=0; kz<nStepsZ; kz++)
+            //make sure to include zref in redshift vector
+            Float64 nStepsZhalf = std::ceil(deltaZrangeHalf/stepZ);
+            redshifts.resize(nStepsZhalf*2 + 1); 
+            for(Int32 kz= 0; kz<nStepsZhalf ; kz++)
             {
-                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
-                redshifts.push_back(_z);
+                Float64 _z = zref + kz*stepZ;
+                redshifts[nStepsZhalf + kz + 1] = _z;
+            }
+            for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
+            {
+                Float64 _z = zref - kz*stepZ;
+                redshifts[nStepsZhalf - kz]= _z;
             }
             Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
         }else{
