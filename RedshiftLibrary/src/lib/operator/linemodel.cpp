@@ -2408,7 +2408,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 } 
                 if(m_result->Redshifts.size() >1){//i.e., z moved to the range border
                     //find idx of zref and save data
-                    auto iz = *std::lower_bound(m_result->Redshifts.begin(), m_result->Redshifts.end(), m_Zlinemeasref);
+                    auto iz = std::find(m_result->Redshifts.begin(), m_result->Redshifts.end(), m_Zlinemeasref) - m_result->Redshifts.begin();
                     _secondpass_recomputed_extremumList[0].X = m_result->Redshifts[iz];
                     _secondpass_recomputed_extremumList[0].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
 
