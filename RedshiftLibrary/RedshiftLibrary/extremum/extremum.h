@@ -26,7 +26,7 @@ public:
     void SetMaxPeakCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );
     void SetSignSearch( Float64 val );
-    void SetMeritCut( UInt32 n );
+    void SetMeritCut( Float64 n );
     Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
     Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
     

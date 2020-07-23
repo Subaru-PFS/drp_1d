@@ -69,6 +69,7 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
 
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     m_templatesRebined_bf.resize(tplList.size());
+    m_masksRebined_bf.resize(tplList.size());
     m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
 
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
@@ -634,6 +635,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
             Log.LogError("  Operator-Tplcombination: Unable to find the z index for spectrum result save");
         }
     }
+
+    // Deallocate the rebined template and mask buffers
+    m_templatesRebined_bf.clear();
+    m_masksRebined_bf.clear();
 
     return result;
 
