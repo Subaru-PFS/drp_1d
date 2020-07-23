@@ -1198,13 +1198,6 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                               opt_continuumreest,
                               continnuum_fit_option); //0: retry all cont. templates at this stage
 
-    if(ret == -1 && m_Zlinemeasref>-1){
-        RecomputeAroundCandidates( m_firstpass_extremumList,
-                              lambdaRange,
-                              opt_continuumreest,
-                              continnuum_fit_option,
-                              true);
-    }
     // additional fitting with fittingmethod=svdlcp2
     if(m_opt_secondpasslcfittingmethod=="svdlc" || m_opt_secondpasslcfittingmethod=="svdlcp2")
     {
@@ -2353,7 +2346,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             //TODO: Deltaz computation considers a radius of 0.002(1+zcand) around each candidate:
             //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
             //TODO: check that it is still the best peak on the range used to compute Deltaz!!
-            //skip case where we are reestimating around extrema only
             if((idx2==izmin_cand || idx2==izmax_cand)){
                 Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
                 Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
@@ -2415,9 +2407,27 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                     //dont eliminate nothing
                 } 
                 if(m_result->Redshifts.size() >1){//i.e., z moved to the range border
-                    //set z to zref...im not convinced!!
-                    //m_Zlinemeasref
-                    return -1; //-1: there is a need to recall the function with a recomputation only on the extrema
+                    //find idx of zref and save data
+                    auto iz = *std::lower_bound(m_result->Redshifts.begin(), m_result->Redshifts.end(), m_Zlinemeasref);
+                    _secondpass_recomputed_extremumList[0].X = m_result->Redshifts[iz];
+                    _secondpass_recomputed_extremumList[0].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
+
+                    // set the second pass parameters used in the model export procedure in computeSecondPass()
+                    m_secondpass_parameters_extremaResult.Extrema[0] = m_result->Redshifts[iz];
+                    m_secondpass_parameters_extremaResult.ExtremaMerit[0] = m_result->ChiSquare[iz];
+                    CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[iz];//.GetContinuumModelSolution();
+                    m_secondpass_parameters_extremaResult.FittedTplName[0] = csolution.tplName;
+                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[0] = csolution.tplAmplitude;
+                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[0] = csolution.tplAmplitudeError;
+                    m_secondpass_parameters_extremaResult.FittedTplMerit[0] = csolution.tplMerit;
+                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[0] = csolution.tplDustCoeff;
+                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[0] = csolution.tplMeiksinIdx;
+                    m_secondpass_parameters_extremaResult.FittedTplRedshift[0] = csolution.tplRedshift;
+                    m_secondpass_parameters_extremaResult.FittedTplDtm[0] = csolution.tplDtm;
+                    m_secondpass_parameters_extremaResult.FittedTplMtm[0] = csolution.tplMtm;
+                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[0] = csolution.tplLogPrior;
+                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[0] = csolution.pCoeffs;
+
                 }
             }
             else {
