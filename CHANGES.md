@@ -1,3 +1,10 @@
+# 0.10.1 (2020-07-02)
+
+## Bug Fixes
+
+* [5858] Fix memory bug
+* [5859] Fix Tplcombination operator
+
 # 0.10.0 (2020-06-23)
 
 ## New Features
