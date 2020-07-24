@@ -161,10 +161,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             //make sure to include zref in redshift vector
             Float64 nStepsZhalf = std::ceil(deltaZrangeHalf/stepZ);
             redshifts.resize(nStepsZhalf*2 + 1); 
-            for(Int32 kz= 0; kz<nStepsZhalf ; kz++)
+            for(Int32 kz= 0; kz<nStepsZhalf +1 ; kz++)
             {
                 Float64 _z = zref + kz*stepZ;
-                redshifts[nStepsZhalf + kz + 1] = _z;
+                redshifts[nStepsZhalf + kz] = _z;
             }
             for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
             {
