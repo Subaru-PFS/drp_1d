@@ -50,7 +50,7 @@
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
-#include <RedshiftLibrary/processflow/classificationresult.h>
+#include <RedshiftLibrary/method/classificationsolve.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
@@ -743,50 +743,18 @@ else if(methodName  == "reliability" ){
 
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-    std::shared_ptr<CClassificationResult> classifResult = std::shared_ptr<CClassificationResult>( new CClassificationResult() );
-    Float64 qsoEvidence=-DBL_MAX;
-    Float64 stellarEvidence=-DBL_MAX;
-    Float64 galaxyEvidence=-DBL_MAX;
-    std::string typeLabel = "U";
+
+    CClassificationSolve classifier(enableStarFitting, enableQsoFitting);
+    classifier.Classify(ctx.GetDataStore(), mResult, starResult, qsoResult);
+
     if(mResult){
-        mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
-        Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
-        typeLabel = "G";
+        Log.LogInfo( "Setting object type: %s", classifier.typeLabel.c_str());
+        mResult->SetTypeLabel(classifier.typeLabel); //maybe this is unecessary since there is a classifresult now
     }
-    if(enableStarFitting=="yes"){
-        Int32 retStellarEv = starResult->GetEvidenceFromPdf(ctx.GetDataStore(), stellarEvidence);
-        if(retStellarEv==0)
-        {
-            Log.LogInfo( "Found stellar evidence: %e", stellarEvidence);
-            if(stellarEvidence>galaxyEvidence)
-            {
-                typeLabel = "S";
-            }
-        }
-    }
-    if(enableQsoFitting=="yes"){
-        Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(ctx.GetDataStore(), qsoEvidence);
-        if(retQsoEv==0)
-        {
-            Log.LogInfo( "Found qso evidence: %e", qsoEvidence);
-            if(qsoEvidence>galaxyEvidence && qsoEvidence>stellarEvidence)
-            {
-                typeLabel = "Q";
-            }
-        }
-    }
-    if(mResult){
-        Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
-        mResult->SetTypeLabel(typeLabel); //maybe this is unecessary since there is a classifresult now
-    }
-    classifResult->SetTypeLabel(typeLabel);
-    classifResult->SetG(galaxyEvidence);
-    classifResult->SetS(stellarEvidence);
-    classifResult->SetQ(qsoEvidence);
 
     //save the classification results
-    if( classifResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifResult );
+    if( classifier.classifResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifier.classifResult );
     }else{
       throw std::runtime_error("Unable to store method result");
     }
