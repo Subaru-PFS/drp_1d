@@ -1190,7 +1190,10 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", continnuum_fit_option);
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
-    RecomputeAroundCandidates(m_firstpass_extremumList,
+
+    dataStore.GetScopedParam( "linemodel.extremacount", m_extremaCount, 1.0);
+    dataStore.GetScopedParam( "linemodel.zref", m_Zlinemeasref, -1.0);
+    Int32 ret = RecomputeAroundCandidates(m_firstpass_extremumList,
                               lambdaRange,
                               opt_continuumreest,
                               continnuum_fit_option); //0: retry all cont. templates at this stage
@@ -2343,7 +2346,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
             //TODO: Deltaz computation considers a radius of 0.002(1+zcand) around each candidate:
             //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
             //TODO: check that it is still the best peak on the range used to compute Deltaz!!
-            if(idx2==izmin_cand || idx2==izmax_cand){
+            if((idx2==izmin_cand || idx2==izmax_cand)){
                 Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
                 Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
                 eliminateIdx.push_back(i);
@@ -2394,16 +2397,49 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                         pCoeff1,
                         pCoeff2);
         }
+        //Candidate elimination should be moved to the PDF method once the 5815 refactoring starts
         Int32 s = eliminateIdx.size();
         if(s){
-            if(s == input_extremumList.size()){
-                Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                return -1;
+            //case of linemeas
+            if( m_Zlinemeasref >-1 && m_extremaCount == 1){// a bit redundant
+                //  with no degree of freedom, i.e., only one z in the range dont eliminate
+                if(m_result->Redshifts.size() == 1){
+                    //dont eliminate nothing
+                } 
+                if(m_result->Redshifts.size() >1){//i.e., z moved to the range border
+                    //find idx of zref and save data
+                    auto iz = std::find(m_result->Redshifts.begin(), m_result->Redshifts.end(), m_Zlinemeasref) - m_result->Redshifts.begin();
+                    _secondpass_recomputed_extremumList[0].X = m_result->Redshifts[iz];
+                    _secondpass_recomputed_extremumList[0].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
+
+                    // set the second pass parameters used in the model export procedure in computeSecondPass()
+                    m_secondpass_parameters_extremaResult.Extrema[0] = m_result->Redshifts[iz];
+                    m_secondpass_parameters_extremaResult.ExtremaMerit[0] = m_result->ChiSquare[iz];
+                    CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[iz];//.GetContinuumModelSolution();
+                    m_secondpass_parameters_extremaResult.FittedTplName[0] = csolution.tplName;
+                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[0] = csolution.tplAmplitude;
+                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[0] = csolution.tplAmplitudeError;
+                    m_secondpass_parameters_extremaResult.FittedTplMerit[0] = csolution.tplMerit;
+                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[0] = csolution.tplDustCoeff;
+                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[0] = csolution.tplMeiksinIdx;
+                    m_secondpass_parameters_extremaResult.FittedTplRedshift[0] = csolution.tplRedshift;
+                    m_secondpass_parameters_extremaResult.FittedTplDtm[0] = csolution.tplDtm;
+                    m_secondpass_parameters_extremaResult.FittedTplMtm[0] = csolution.tplMtm;
+                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[0] = csolution.tplLogPrior;
+                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[0] = csolution.pCoeffs;
+
+                }
             }
-            for(Int32 i = s-1; i>=0; i--){
-                m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
-                _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
+            else {
+                if(s == input_extremumList.size()){
+                    Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                    throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
+                    return -1;
+                }
+                for(Int32 i = s-1; i>=0; i--){
+                    m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
+                    _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
+                }
             }
         }
     } else

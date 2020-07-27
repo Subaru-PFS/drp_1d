@@ -124,10 +124,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string opt_linemeas_catalog_path;
     ctx.GetParameterStore().Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
     TFloat64List redshifts;
+    Float64 zref = -1.0;
     if(opt_linemeas_catalog_path!="")
     {
-        Log.LogInfo( "Override z-search range !");
-        Float64 zref = -1.0;
+        Log.LogInfo( "Override z-search range !");   
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
 
@@ -158,12 +158,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
-
-            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
-            for(Int32 kz=0; kz<nStepsZ; kz++)
+            //make sure to include zref in redshift vector
+            Float64 nStepsZhalf = std::ceil(deltaZrangeHalf/stepZ);
+            redshifts.resize(nStepsZhalf*2 + 1); 
+            for(Int32 kz= 0; kz<nStepsZhalf +1 ; kz++)
             {
-                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
-                redshifts.push_back(_z);
+                Float64 _z = zref + kz*stepZ;
+                redshifts[nStepsZhalf + kz] = _z;
+            }
+            for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
+            {
+                Float64 _z = zref - kz*stepZ;
+                redshifts[nStepsZhalf - kz]= _z;
             }
             Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
         }else{
@@ -183,6 +189,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }else{
         redshifts = raw_redshifts;
     }
+    ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.zref", zref);
 
     if(redshifts.size() < 1)
     {
