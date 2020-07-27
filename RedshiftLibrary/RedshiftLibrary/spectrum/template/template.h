@@ -33,20 +33,19 @@ public:
     bool ApplyDustCoeff(Int32 kDust) const;
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 redshiftIdx) const; 
     void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
-    bool SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
-
-    CSpectrumFluxAxis               m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
+    void SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
 private:
 
     std::string     m_Category;
     std::string     m_Name;
-    mutable Int32 m_kstart;
-    mutable Int32 m_kend;
+    mutable Int32   m_kstart;
+    mutable Int32   m_kend;
     mutable Int32   m_kDust; //définie comme mutable pour pourvoir la changer dans Apply..coeff(), sinon ca ne marche pas
     mutable Int32   m_meiksinIdx;
     mutable std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     //IGM meiksin
     mutable std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+    CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
 };
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const

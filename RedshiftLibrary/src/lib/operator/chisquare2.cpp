@@ -37,7 +37,6 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
     //ISM
     //m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
-    //CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
     m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //m_ismCorrectionCalzetti->Init(calibrationPath, -0.6, 0.1, 16);
     //Allocate buffer for Ytpl reinit during Dust-fit loop
@@ -46,7 +45,6 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
     //IGM
     //m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
-    //CSpectrumFluxCorrectionMeiksin m_igmCorrectionMeiksin;
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
 }

@@ -76,12 +76,10 @@ const std::string& CTemplate::GetCategory() const
 }
 
 
-//bool CTemplate::SetFluxCorrectionIsmIgm(CSpectrumFluxCorrectionCalzetti ismCorrectionCalzetti, CSpectrumFluxCorrectionMeiksin igmCorrectionMeiksin) const
-bool CTemplate::SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const    
+void CTemplate::SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const    
 {
     m_ismCorrectionCalzetti = ismCorrectionCalzetti;
     m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    return true;
 }
 void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const
 {
