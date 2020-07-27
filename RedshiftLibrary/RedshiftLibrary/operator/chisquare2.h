@@ -76,6 +76,17 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   bool keepigmism=false);
 
+    Int32  RebinTemplate( const CSpectrum& spectrum,
+                          const CTemplate& tpl, 
+                                Float64 redshift,
+                                const TFloat64Range& lambdaRange,
+                                std::string opt_interp,
+                                CSpectrum& itplTplSpectrum,
+                                CMask& itplMask,
+                                TFloat64Range& currentRange,
+                                Float64& overlaprate,
+                                Float64 overlapThreshold);// const;
+
     // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
@@ -86,10 +97,10 @@ private:
     Int32 m_YtplRawBufferMaxBufferSize;
     //std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
-    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
+    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
 
     //IGM meiksin
-    CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);

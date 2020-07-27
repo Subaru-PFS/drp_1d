@@ -43,7 +43,7 @@ public:
 
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumSpectralAxis&          GetSpectralAxis();
-
+    CSpectrumFluxAxis&              GetFluxAxisIsmIgm();
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
