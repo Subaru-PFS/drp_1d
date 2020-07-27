@@ -28,6 +28,8 @@ void CChisquareSolveResult::preSave(const CDataStore& store)
         Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
 
     }
+    if(tplName=="")
+        tplName = "Undefined";
 }
 
 void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const

@@ -343,6 +343,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
+        starResult->preSave(ctx.GetDataStore());
     }
 
     // Quasar method
@@ -432,6 +433,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store qso result.");
         }
+        qsoResult->preSave(ctx.GetDataStore());
     }
 
     // Galaxy method
