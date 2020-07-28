@@ -10,7 +10,7 @@
 
 namespace NSEpic
 {
-
+class CTemplateCatalog;
 class CTemplate : public CSpectrum
 {
 
@@ -25,6 +25,10 @@ public:
 
     const std::string&  GetCategory() const;
     const std::string&  GetName() const;
+    Int32 GetTemplateByName(const CTemplateCatalog& tplCatalog,
+                            const TStringList& tplCategoryList,
+                            const std::string tplName,
+                            CTemplate& tpl);
     Bool Save(const char *filePath ) const;
 
     const CSpectrumFluxAxis&        GetFluxAxisIsmIgm() const;

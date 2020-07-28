@@ -2,6 +2,7 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <fstream>
 
 using namespace NSEpic;
@@ -67,6 +68,26 @@ const std::string& CTemplate::GetName() const
     return m_Name;
 }
 
+Int32 CTemplate::GetTemplateByName( const CTemplateCatalog& tplCatalog,
+                                    const TStringList& tplCategoryList,
+                                    const std::string tplName,
+                                    CTemplate& retTpl) 
+{
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        std::string category = tplCategoryList[i];
+
+        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        {
+            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            if(tpl.GetName() == tplName){
+                retTpl = tpl; //copy constructor
+                return 0;
+            }
+        }
+    }
+    return -1;
+}
 /**
  * Returns the value stored in m_Category.
  */

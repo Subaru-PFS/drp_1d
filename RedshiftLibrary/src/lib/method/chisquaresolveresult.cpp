@@ -301,6 +301,78 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param store
  * @param z
  * @param tplName
+ * @param MeiksinIdx (optional return)
+ * @param DustCoeff (optional return)
+ * @return
+ */
+Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff) const
+{
+    tplName = "-1";
+    MeiksinIdx = -1;
+    DustCoeff = -1;
+    Bool foundRedshiftAtLeastOnce = false;
+
+    std::string scopeStr;
+    if(m_type == nType_raw){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_all){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_noContinuum){
+        scopeStr = "chisquare_nocontinuum";
+    }else if(m_type == nType_continuumOnly){
+        scopeStr = "chisquare_continuum";
+    }
+    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    Float64 tmpMerit = DBL_MAX ;
+    std::string tmpTplName = "-1";
+    Int32 tmpMeiksinIdx = -1;
+    Float64 tmpDustCoeff = -1;
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        if(meritResult->ChiSquare.size()<1){
+            continue;
+        }
+
+        Int32 idx=-1;
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->Status[i] == COperator::nStatus_OK )
+            {
+                Float64 tmpRedshift = meritResult->Redshifts[i];
+                if(tmpRedshift == z){
+                    idx = i;
+                    foundRedshiftAtLeastOnce = true;
+                    break;
+                }
+            }
+        }
+        if(idx>-1 && meritResult->ChiSquare[idx]<tmpMerit){
+            tmpMerit = meritResult->ChiSquare[idx];
+            tmpTplName = (*it).first;
+            tmpMeiksinIdx = meritResult->FitDustCoeff[idx];
+            tmpDustCoeff = meritResult->FitMeiksinIdx[idx];
+        }
+    }
+
+    if(foundRedshiftAtLeastOnce){
+        tplName = tmpTplName;
+        MeiksinIdx = tmpMeiksinIdx;
+        DustCoeff = tmpDustCoeff;
+    }else{
+        return -1;
+    }
+    return 1;
+}
+/**
+ * @brief CChisquareSolveResult::GetBestModel
+ * Find the best tpl-name corresponding to the input arg. z and to the minimum Chisquare
+ * @param store
+ * @param z
+ * @param tplName
  * @return
  */
 Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const

@@ -525,7 +525,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
             std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
-            Int32 n_cand = 5; //this is hardcoded for now for this method
+            /*Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
@@ -535,7 +535,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "  Failed to get z candidates from these results");
             }
             
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);*/
         }
 
     }else if(methodName  == "chisquarelogsolve" ){

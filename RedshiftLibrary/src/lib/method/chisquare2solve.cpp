@@ -144,7 +144,36 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                 resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
             }
         }
-
+        Int32 n_cand = 5; //this is hardcoded for now for this method
+        std::vector<Float64> zcandidates_unordered_list;
+        Bool retzc = ChisquareSolveResult->GetRedshiftCandidates( resultStore, zcandidates_unordered_list, n_cand);
+        if(retzc)
+        {
+                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+        }else{
+                Log.LogError( "Failed to get z candidates from these results");
+        }
+            
+        Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list);
+        //for each candidate, get best model by reading from resultstore and selecting best fit
+        for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
+            std::string tplName;
+            Int32 MeiksinIdx;
+            Float64 DustCoeff;
+            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff);
+            //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
+            CTemplate tpl;
+            CTemplate tpl_obj;
+            tpl_obj.GetTemplateByName( tplCatalog, tplCategoryList, tplName, tpl);
+            std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+            m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
+                                                 zcandidates_unordered_list[i],
+                                                 DustCoeff, MeiksinIdx,
+                                                 opt_interp, opt_extinction, lambdaRange,
+                                                 resultspcmodel);
+            m_chiSquareOperator->SaveSpectrumResults(resultStore);
+            
+        }
         return ChisquareSolveResult;
     }
 
@@ -283,8 +312,6 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                     }
                 }
             }
-            //Store model spectrum into datastore
-            //m_chiSquareOperator->SaveSpectrumResults(resultStore, chisquareResult);
         }
     }
 
@@ -423,7 +450,7 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-        
+          
         store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
 
     return true;

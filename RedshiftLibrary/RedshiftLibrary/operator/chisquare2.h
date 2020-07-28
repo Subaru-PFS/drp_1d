@@ -12,7 +12,7 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
-
+#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 namespace NSEpic
 {
 
@@ -43,8 +43,16 @@ public:
                                     Float64 overlapThreshold );
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-
-
+    Int32           GetSpectrumModel(const CSpectrum& spectrum,
+                                      const CTemplate& tpl,
+                                      Float64 redshift,
+                                      Float64 IdxDustCoeff,
+                                      Int32 meiksinIdx,
+                                      std::string opt_interp,
+                                      std::string opt_extinction,
+                                      const TFloat64Range& lambdaRange,
+                                      std::shared_ptr<CModelSpectrumResult> resultspcmodel);
+    void            SaveSpectrumResults(CDataStore &dataStore);
 private:
 
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum);
@@ -78,14 +86,14 @@ private:
 
     Int32  RebinTemplate( const CSpectrum& spectrum,
                           const CTemplate& tpl, 
-                                Float64 redshift,
-                                const TFloat64Range& lambdaRange,
-                                std::string opt_interp,
-                                CSpectrum& itplTplSpectrum,
-                                CMask& itplMask,
-                                TFloat64Range& currentRange,
-                                Float64& overlaprate,
-                                Float64 overlapThreshold);// const;
+                          Float64 redshift,
+                          const TFloat64Range& lambdaRange,
+                          std::string opt_interp,
+                          CSpectrum& itplTplSpectrum,
+                          CMask& itplMask,
+                          TFloat64Range& currentRange,
+                          Float64& overlaprate,
+                          Float64 overlapThreshold);// const;
 
     // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
@@ -95,7 +103,7 @@ private:
     //ISM Calzetti
     Float64* m_YtplRawBuffer;
     Int32 m_YtplRawBufferMaxBufferSize;
-    //std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
+    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     //IGM meiksin

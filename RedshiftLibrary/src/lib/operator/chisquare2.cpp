@@ -24,7 +24,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <assert.h>
-
+#include <RedshiftLibrary/processflow/datastore.h>
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 
@@ -1376,73 +1376,80 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
-/*
-void COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
+
+Int32 COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
                                            Float64 redshift,
                                            Float64 IdxDustCoeff,
                                            Int32 meiksinIdx,
-                                           std::shared_ptr<COperatorResult> res)
+                                           std::string opt_interp,
+                                           std::string opt_extinction,
+                                           const TFloat64Range& lambdaRange,
+                                           std::shared_ptr<CModelSpectrumResult> resultspcmodel)
 {
-    Log.LogDetail("  Operator-COperatorChiSquare2: now building spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
-    //for each candidate, call rebin, apply meiksin and calzetti on the selected template
-    for(Int32 i=0; i<candidates.size(); i++)
-    {
-        
-        bool ytpl_modified = false;
-        TFloat64Range currentRange;
-        TFloat64List Ytpl_RawBuffer;
-        Int32 ret = tpl.RebinTemplate(spectrum, 
-                                      redshift, 
-                                      lambdaRange,
-                                      opt_interp, 
-                                      m_spcSpectralAxis_restframe, 
-                                      itplTplSpectrum, 
-                                      itplMask, 
-                                      currentRange,
-                                      overlapRate,
-                                      overlapThreshold,
-                                      Ytpl_RawBuffer);
-        if( ret == -1 ){
-            status = nStatus_NoOverlap; 
-            return;
-        }
-        if( ret == -2 ){
-            status = nStatus_DataError;
-            return;
-        }
-        CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
-        const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+    Log.LogDetail("  Operator-COperatorChiSquare2: building spectrum model chisquare2 for candidate Zcand=%f", redshift);
+    bool ytpl_modified = false;
+    EStatus status;
+    TFloat64Range currentRange;
+    TFloat64List Ytpl_RawBuffer;
+    Float64 overlapThreshold; //todo
+    Float64 overlapRate = 0.0;
 
-        //Mira: a bit messy  the code below...to check
-        const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
-        TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
+    CMask& itplMask = m_mskRebined_bf;
 
-        for(Int32 k=0; k<Ytpl_RawBuffer.size(); k++)
-        {
-            m_YtplRawBuffer[k] = Ytpl_RawBuffer[k];
-        }        
-        //Mira: check if  first arg is float
-        Float64 coeffEBMV = m_ismCorrectionCalzetti->getDustCoeff( IdxDustCoeff, restLambda);
-        ytpl_modified = tpl.ApplyDustCoeff(coeffEBMV, Xtpl, Ytpl, kStart, kEnd, m_ismCorrectionCalzetti);
-
-        if(opt_extinction)
-        {
-            Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-            Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, Xtpl, Ytpl, kStart, kEnd, redshiftIdx, m_igmCorrectionMeiksin);
-        } 
-     
-        m_savedModelSpectrumResults[i];
+    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
+    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
+    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
+    Int32 ret = RebinTemplate(  spectrum, 
+                                tpl,
+                                redshift, 
+                                lambdaRange,
+                                opt_interp,  
+                                itplTplSpectrum, 
+                                itplMask, 
+                                currentRange,
+                                overlapRate,
+                                overlapThreshold);
+    if( ret == -1 ){
+        status = nStatus_NoOverlap; 
+        return -1;
     }
+    if( ret == -2 ){
+        status = nStatus_DataError;
+        return -1;
+    }
+    CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
+    const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+
+    //Mira: a bit messy  the code below...to check
+    const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
+    TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
+    
+    ytpl_modified = tpl.ApplyDustCoeff(IdxDustCoeff);
+
+    if(opt_extinction == "yes")
+    {
+        Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+        Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshiftIdx);
+    } 
+    //std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(tpl));
+ 
+    m_savedModelSpectrumResults.push_back(resultspcmodel);
+
+    return 0;
 }
-*/
-/*void COperatorChiSquare2::SaveSpectrumResults(CDataStore &dataStore, std::shared_ptr<COperatorResult> res)
+
+void COperatorChiSquare2::SaveSpectrumResults(CDataStore &dataStore)
 {
     Log.LogDetail("  Operator-COperatorChiSquare2: now saving spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
-    for(Int32 ie=0; ie<m_savedModelSpectrumResults.size(); ie++)
+    for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
     {
-        std::string fname_spc = (boost::format("chisquare2_spc_extrema_%1%") % ie).str();
-        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
+        std::string fname_spc = (boost::format("chisquare2_spc_extrema_%1%") % i).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
     }
-}*/
+    return;
+}
 
