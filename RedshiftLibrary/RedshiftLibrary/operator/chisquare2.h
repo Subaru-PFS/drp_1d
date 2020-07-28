@@ -95,6 +95,7 @@ private:
                           Float64& overlaprate,
                           Float64 overlapThreshold);// const;
 
+    Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc, TFloat64Range& currentRange, Int32& kStart, Int32& kEnd);
     // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer

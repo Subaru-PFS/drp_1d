@@ -156,10 +156,11 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust) const
 }
 
 
-bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 redshiftIdx)const 
+bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const 
 {
     m_meiksinIdx = meiksinIdx;
-
+    Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+        
     Float64 coeffIGM = 1.0;
     Bool igmCorrectionAppliedOnce = false;
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();

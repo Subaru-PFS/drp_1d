@@ -349,22 +349,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         //find samples limits
         Int32 kStart = -1;
         Int32 kEnd = -1;
-        for(Int32 k=0; k<m_spcSpectralAxis_restframe.GetSamplesCount(); k++)
-        {
-            if(Xspc[k] >= lbda_min && kStart==-1){
-                kStart=k;
-            }
-            if(Xspc[k] <= lbda_max){
-                kEnd=k;
-            }
-
-        }
-        if(kStart==-1 || kEnd==-1)
+        ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+        if(ret==-1)
         {
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
-
         tpl.SetIsmIgmLambdaRange(kStart, kEnd);
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
@@ -399,8 +389,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             //Meiksin IGM extinction
             if(opt_extinction)
             {
-                Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-                Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshiftIdx);
+                //Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+                Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshift);
                
                 /*Float64 coeffIGM = 1.0;
                 Float64 z = redshift;
@@ -1376,8 +1366,28 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
+Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, TFloat64Range& currentRange, Int32& kStart, Int32& kEnd){
+    Float64 lbda_min = currentRange.GetBegin();
+    Float64 lbda_max = currentRange.GetEnd();
 
-Int32 COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
+    for(Int32 k=0; k<m_spcSpectralAxis_restframe.GetSamplesCount(); k++)
+    {
+        if(Xspc[k] >= lbda_min && kStart==-1){
+            kStart=k;
+        }
+        if(Xspc[k] <= lbda_max){
+            kEnd=k;
+        }
+    }
+    if(kStart==-1 || kEnd==-1)
+    {
+        Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+        return -1;
+    }
+    return 0;
+}
+
+Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
                                            Float64 redshift,
                                            Float64 IdxDustCoeff,
@@ -1427,12 +1437,20 @@ Int32 COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
     TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
     
+    //find samples limits
+    Int32 kStart = -1, kEnd = -1;
+    ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+    if(ret==-1)
+    {
+        Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+        return -1;
+    }
+    tpl.SetIsmIgmLambdaRange(kStart, kEnd);
     ytpl_modified = tpl.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")
     {
-        Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-        Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshiftIdx);
+        Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     //std::shared_ptr<CModelSpectrumResult> resultspcmodel;
     resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(tpl));

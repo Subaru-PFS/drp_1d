@@ -35,7 +35,7 @@ public:
     CSpectrumFluxAxis&              GetFluxAxisIsmIgm();
     //Calzetti extinction
     bool ApplyDustCoeff(Int32 kDust) const;
-    bool ApplyMeiksinCoeff(Int32 meiksinIdx, Int32 redshiftIdx) const; 
+    bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift) const; 
     void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
     void SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
 private:
