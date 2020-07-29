@@ -89,8 +89,6 @@ private:
                           Float64 redshift,
                           const TFloat64Range& lambdaRange,
                           std::string opt_interp,
-                          CSpectrum& itplTplSpectrum,
-                          CMask& itplMask,
                           TFloat64Range& currentRange,
                           Float64& overlaprate,
                           Float64 overlapThreshold);// const;

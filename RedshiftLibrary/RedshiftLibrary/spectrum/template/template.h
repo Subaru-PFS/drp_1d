@@ -36,32 +36,47 @@ public:
     //Calzetti extinction
     bool ApplyDustCoeff(Int32 kDust) const;
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift) const; 
-    void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
-    void SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
+    Int32 GetIsmCoeff() const;
+    Int32 GetIgmCoeff() const;
+    //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
+    void SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, 
+                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
 private:
 
     std::string     m_Category;
-    std::string     m_Name;
-    mutable Int32   m_kstart;
-    mutable Int32   m_kend;
-    mutable Int32   m_kDust; //définie comme mutable pour pourvoir la changer dans Apply..coeff(), sinon ca ne marche pas
-    mutable Int32   m_meiksinIdx;
+    mutable Int32   m_kDust = -1; //définie comme mutable pour pourvoir la changer dans Apply..coeff(), sinon ca ne marche pas
+    mutable Int32   m_meiksinIdx = -1;
     mutable std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     //IGM meiksin
     mutable std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-    CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
+    mutable CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
 };
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const
 {
-    return m_FluxAxisIsmIgm;
+    if(m_kDust ==-1 && m_meiksinIdx == -1)
+        return m_FluxAxis;
+    else
+        return m_FluxAxisIsmIgm;
 }
 inline
 CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm()
 {
-    return m_FluxAxisIsmIgm;
+    if(m_kDust ==-1 && m_meiksinIdx == -1)
+        return m_FluxAxis;
+    else
+        return m_FluxAxisIsmIgm;
 }
-
+inline
+Int32 CTemplate::GetIsmCoeff() const
+{
+    return m_kDust;
+}
+inline
+Int32 CTemplate::GetIgmCoeff() const
+{
+    return m_meiksinIdx;
+}
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
 typedef std::vector< std::shared_ptr< const CTemplate> >     TTemplateConstRefList;
 

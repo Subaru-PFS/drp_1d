@@ -22,17 +22,17 @@ CTemplate::CTemplate( )
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
   m_Category( category ) 
 {
-  this->m_Name = name ;  
+  m_Name = name ;  
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
     m_Category( category )
 {
-  this->m_Name = name ;
+  m_Name = name ;
   m_SpectralAxis = spectralAxis;
   m_FluxAxis = fluxAxis;
-  m_FluxAxisIsmIgm = fluxAxis;//by default, same as fluxAxis
+  //m_FluxAxisIsmIgm //by default, keep it empty
 }
 
 //TODO use copy constructor of CSpectrum
@@ -50,6 +50,9 @@ CTemplate::CTemplate( const CTemplate& other)
     m_nbScales = other.GetDecompScales();
 
     m_Category = other.GetCategory();
+
+    m_kDust = other.GetIsmCoeff(); 
+    m_meiksinIdx = other.GetIgmCoeff();
 }
 
 /**
@@ -97,16 +100,16 @@ const std::string& CTemplate::GetCategory() const
 }
 
 
-void CTemplate::SetFluxCorrectionIsmIgm(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const    
+void CTemplate::SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const    
 {
     m_ismCorrectionCalzetti = ismCorrectionCalzetti;
     m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 }
-void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const
+/*void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const
 {
     m_kstart = kstart;
     m_kend = kend;
-}
+}*/
 /**
  * Saves the template in the given filePath.
  */
@@ -146,8 +149,8 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust) const
 {
     m_kDust = kDust;
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
-    TAxisSampleList  Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
-    for(Int32 k= m_kstart; k<= m_kend; k++)
+    TAxisSampleList & Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
+    for(Int32 k= 0; k< m_SpectralAxis.GetSamplesCount(); k++)
     {
         Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
         Ytpl[k] *= coeffDust;
@@ -164,8 +167,8 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const
     Float64 coeffIGM = 1.0;
     Bool igmCorrectionAppliedOnce = false;
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
-    TAxisSampleList  Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
-    for(Int32 k = m_kstart; k <= m_kend; k++){
+    TAxisSampleList & Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
+    for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++){
          
         if(Xtpl[k] <= m_igmCorrectionMeiksin->GetLambdaMax()){
             Int32 kLbdaMeiksin = 0;

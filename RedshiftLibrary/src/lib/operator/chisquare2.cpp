@@ -36,22 +36,22 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 {
 
     //ISM
-    //m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
+    //m_ismCorrectionCalzetti = std::shared_ptr< CSpectrumFluxCorrectionCalzetti>(new  CSpectrumFluxCorrectionCalzetti()); 
+    m_ismCorrectionCalzetti = std::make_shared< CSpectrumFluxCorrectionCalzetti>(); 
     m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //m_ismCorrectionCalzetti->Init(calibrationPath, -0.6, 0.1, 16);
-    //Allocate buffer for Ytpl reinit during Dust-fit loop
+
     m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
-    m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
 
     //IGM
-    //m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
+    //m_igmCorrectionMeiksin = std::shared_ptr<CSpectrumFluxCorrectionMeiksin>(new CSpectrumFluxCorrectionMeiksin()); 
+    m_igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>( ) ; 
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
 }
 
 COperatorChiSquare2::~COperatorChiSquare2()
 {
-    delete[] m_YtplRawBuffer;
     //delete m_ismCorrectionCalzetti;
     //delete m_igmCorrectionMeiksin;
 }
@@ -159,68 +159,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         return ;
     }
 /*
-    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-    const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
-
-
-
-    Float64 onePlusRedshift = 1.0 + redshift;
-
-    //shift lambdaRange backward to be in restframe
-    TFloat64Range spcLambdaRange_restframe;
-    TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift,
-                                         lambdaRange.GetEnd() / onePlusRedshift );
-
-    //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
-    m_spcSpectralAxis_restframe.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
-    m_spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
-                                         
-    // Compute clamped lambda range over template in restframe
-    TFloat64Range tplLambdaRange;
-    tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
-    // Compute the intersected range
-    TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
-    TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
-
-    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
-    CMask& itplMask = m_mskRebined_bf;
-
-    tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);
-
-
-    CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
-    const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-
-    //overlapRate, Method 3
-    overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, itplMask );
-
-    // Check for overlap rate
-    if( overlapRate < overlapThreshold || overlapRate<=0.0 )
-    {
-        status = nStatus_NoOverlap;
-        return ;
-    }
-
-
-    const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
-    TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
-    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
-    TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
-    //the spectral axis should be in the same scale
-    TFloat64Range currentRange = logIntersectedLambdaRange;
-    if( m_spcSpectralAxis_restframe.IsInLinearScale() != tplSpectralAxis.IsInLinearScale() )
-    {
-        Log.LogError( "    chisquare operator: data and model not in the same scale (lin/log) ! Aborting.");
-        status = nStatus_DataError;
-        return;
-    }
-    if(m_spcSpectralAxis_restframe.IsInLinearScale()){
-        currentRange = intersectedLambdaRange;
-    }
-
-
-
     //save Tpl Flux without dust or any other weighting
     bool ytpl_modified = false;
     for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
@@ -230,13 +168,11 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 */
     bool ytpl_modified = false;
     TFloat64Range currentRange;
-    //Float64* Ytpl_RawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();//is it a good practice to pass class variable as arguments?
+
     Int32 ret = RebinTemplate(spectrum, tpl,
                                       redshift, 
                                       lambdaRange,
-                                      opt_interp,
-                                      itplTplSpectrum, 
-                                      itplMask, 
+                                      opt_interp, 
                                       currentRange,
                                       overlapRate,
                                       overlapThreshold);
@@ -355,7 +291,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
-        tpl.SetIsmIgmLambdaRange(kStart, kEnd);
+        //tpl.SetIsmIgmLambdaRange(kStart, kEnd); //using [0: m_spectralAxis.GetSamplesCount()]
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
@@ -373,7 +309,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
-            ytpl_modified = tpl.ApplyDustCoeff(coeffEBMV);
+            ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(coeffEBMV);
             /*
             //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
@@ -390,7 +326,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             if(opt_extinction)
             {
                 //Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-                Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshift);
+                Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
                
                 /*Float64 coeffIGM = 1.0;
                 Float64 z = redshift;
@@ -482,7 +418,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
             
-            CSpectrumFluxAxis  tplIsmIgm = tpl.GetFluxAxisIsmIgm();
+            CSpectrumFluxAxis &  tplIsmIgm = m_templateRebined_bf.GetFluxAxisIsmIgm();
             TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
 
             Float64 sumCross = 0.0;
@@ -724,8 +660,6 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
                                 const TFloat64Range& lambdaRange,
                                 std::string opt_interp,
                                 //return variables
-                                CSpectrum& itplTplSpectrum,
-                                CMask& itplMask,
                                 TFloat64Range& currentRange,
                                 Float64& overlapRate,
                                 Float64 overlapThreshold)// const
@@ -754,7 +688,10 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-    tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp);   
+    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
+    CMask&  itplMask = m_mskRebined_bf;
+    CSpectrumSpectralAxis& spcSpecAxis = m_spcSpectralAxis_restframe;
+    tpl.Rebin( intersectedLambdaRange, spcSpecAxis, itplTplSpectrum, itplMask, opt_interp);   
 
     CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
@@ -782,11 +719,6 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
     }
     if(m_spcSpectralAxis_restframe.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
-    }
-
-    for(Int32 k=0; k<itplTplSpectralAxis.GetSamplesCount(); k++)
-    {
-        m_YtplRawBuffer[k] = Ytpl[k];
     }
     return 0;
 }
@@ -875,83 +807,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     BasicFit_preallocateBuffers(spectrum);
-
-    //Float64* precomputedFineGridTplFlux;
-
-//below is moved to basic fit
-   /* if(opt_interp=="precomputedfinegrid"){
-       
-        
-        // Precalculate a fine grid template to be used for the 'closest value' rebin method
-        Int32 n = tpl.GetSampleCount();
-        CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
-        CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
-        //Float64 dLambdaTgt =  1.0 * ( spectrum.GetMeanResolution()*0.9 )/( 1+sortedRedshifts[sortedRedshifts.size()-1] );
-        Float64 dLambdaTgt =  0.1;
-        //Float64 lmin = tplSpectralAxis[0];
-        Float64 lmin = 0;
-        Float64 lmax = tplSpectralAxis[n-1];
-        Int32 nTgt = (lmax-lmin)/dLambdaTgt + 2.0/dLambdaTgt;
-
-        // pfg with std::vector
-        //CTemplate       templateFine;
-        //templateFine.GetSpectralAxis().SetSize(nTgt);
-        //templateFine.GetFluxAxis().SetSize(nTgt);
-        //Float64* precomputedFineGridTplFlux = templateFine.GetFluxAxis().GetSamples();
-        // pfg with malloc
-        precomputedFineGridTplFlux = (Float64*)malloc(nTgt*sizeof(Float64));
-        if(precomputedFineGridTplFlux == NULL)
-        {
-            Log.LogError("  Operator-Chisquare2: unable to allocate the precomputed fine grid buffer... aborting!");
-            return NULL;
-        }
-        // pfg with static array => doesn't work
-        //nTgt = 999999;
-        //Float64 precomputedFineGridTplFlux[999999];
-        //Log.LogInfo( "nTgt: %d samples", nTgt);
-
-        //initialise and allocate the gsl objects
-        Float64* Ysrc = tplFluxAxis.GetSamples();
-        Float64* Xsrc = tplSpectralAxis.GetSamples();
-        // linear
-        //gsl_interp *interpolation = gsl_interp_alloc (gsl_interp_linear,n);
-        //gsl_interp_init(interpolation, Xsrc, Ysrc, n);
-        //gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-        //spline
-        gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-        gsl_spline_init (spline, Xsrc, Ysrc, n);
-        gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-
-        Int32 k = 0;
-        Float64 x = 0.0;
-        for(k=0; k<nTgt; k++){
-            x = lmin + k*dLambdaTgt;
-            if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-                precomputedFineGridTplFlux[k] = 0.0;
-            }else{
-                //precomputedFineGridTplFlux[k] = gsl_interp_eval(interpolation, Xsrc, Ysrc, x, accelerator);
-                precomputedFineGridTplFlux[k] = gsl_spline_eval (spline, x, accelerator);
-            }
-        }
-
-        gsl_spline_free (spline);
-        gsl_interp_accel_free (accelerator);
-
-        
-    }*/
-    /*//debug:
-    // save templateFine
-    FILE* f = fopen( "template_fine.txt", "w+" );
-    for(Int32 m=0; m<nTgt; m++){
-        if( Yfine[m] < 0.0001 ){
-            fprintf( f, "%e %e\n", Xfine[m], Yfine[m]);
-        }else{
-            fprintf( f, "%f %f\n", Xfine[m], Yfine[m]);
-        }
-    }
-    fclose( f );
-    //*/
 
     //sort the redshift and keep track of the indexes
     TFloat64List sortedRedshifts;
@@ -1405,8 +1260,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     Float64 overlapThreshold; //todo
     Float64 overlapRate = 0.0;
 
-    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
-    CMask& itplMask = m_mskRebined_bf;
+    BasicFit_preallocateBuffers(spectrum);
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
@@ -1416,9 +1270,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                 tpl,
                                 redshift, 
                                 lambdaRange,
-                                opt_interp,  
-                                itplTplSpectrum, 
-                                itplMask, 
+                                opt_interp,
                                 currentRange,
                                 overlapRate,
                                 overlapThreshold);
@@ -1430,8 +1282,8 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return -1;
     }
-    CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
-    const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
+    CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
+    const CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
 
     //Mira: a bit messy  the code below...to check
     const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
@@ -1445,7 +1297,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
         return -1;
     }
-    tpl.SetIsmIgmLambdaRange(kStart, kEnd);
+    //tpl.SetIsmIgmLambdaRange(kStart, kEnd);
     ytpl_modified = tpl.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")
