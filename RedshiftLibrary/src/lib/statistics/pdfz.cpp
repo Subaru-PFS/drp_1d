@@ -399,11 +399,6 @@ Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    /*if(zwidth_right == - 1){
-        zwidth_right = zwidth_left;
-        zwidth_right = zcandidate + zwidth_right;
-        zwidth_left = zcandidate - zwidth_left;
-    }*/
     UInt32 cand_Idx = getIndex(redshifts, zcandidate);
     if(cand_Idx == 0){
         kmin = 0;
@@ -481,7 +476,6 @@ Int32 CPdfz::getCandidateRobustGaussFit(const TRedshiftList & redshifts,
                          "going to retry w. different parameters",
                          gaussSigma);
         }
-        //current_zwidth /= 2.0;
         zwidth_max /= 2.0;
         current_zrange.IntersectWith(TFloat64Range(zcandidate - zwidth_max, zcandidate + zwidth_max));
         iTry++;
@@ -523,7 +517,6 @@ Int32 CPdfz::getCandidateGaussFit(const TRedshiftList & redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    //Float64 halfzwidth = zwidth / 2.0;
     for (UInt32 k = 0; k < redshifts.size(); k++)
     {
         if (redshifts[k] < zrange.GetBegin())
@@ -857,7 +850,7 @@ Int32 CPdfz::getPmis( const TRedshiftList & redshifts,
     }
     pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
 
-    //estimate zcalc intg probaw
+    //estimate zcalc intg proba
     TFloat64Range zrange(zbest + halfzwidth*(1+zbest), zbest-halfzwidth*(1+zbest));
     Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest,  zrange);
 
