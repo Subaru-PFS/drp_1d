@@ -1043,7 +1043,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumReb
     std::vector<Float64> bestChi2(nshifts, DBL_MAX);
     std::vector<Float64> bestFitAmp(nshifts, -1.0);
     std::vector<Float64> bestFitAmpErr(nshifts, -1.0);
-    std::vector<Bool> bestFitAmpNeg(nshifts);
+    TFloat64List         bestFitAmpNeg(nshifts);
     std::vector<Float64> bestFitDtm(nshifts, -1.0);
     std::vector<Float64> bestFitMtm(nshifts, -1.0);
     std::vector<Float64> bestISMCoeff(nshifts, -1.0);
@@ -1221,7 +1221,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumReb
             //Log.LogDetail("  Operator-ChisquareLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
-            std::vector<Bool> amp_neg(dtm_vec_size);
+            TBoolList amp_neg(dtm_vec_size);
             std::vector<Float64> amp_err(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
             {

@@ -135,7 +135,7 @@ public:
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
-    std::vector<bool> GetStrongELPresentTplshape();
+    TBoolList GetStrongELPresentTplshape();
     std::vector<Int32> GetNLinesAboveSNRTplshape();
     Int32 SetTplshape_PriorHelper(CPriorHelper* priorhelper);
 
@@ -345,7 +345,7 @@ private:
 
 
     std::vector<Float64> m_ScaleMargCorrTplshape;
-    std::vector<bool> m_StrongELPresentTplshape;
+    TBoolList m_StrongELPresentTplshape;
     std::vector<Int32> m_NLinesAboveSNRTplshape;
 
     Float64 m_Redshift;

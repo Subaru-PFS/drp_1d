@@ -1768,7 +1768,7 @@ std::vector<Float64> CLineModelElementList::GetScaleMargTplshape()
     return m_ScaleMargCorrTplshape;
 }
 
-std::vector<bool> CLineModelElementList::GetStrongELPresentTplshape()
+TBoolList CLineModelElementList::GetStrongELPresentTplshape()
 {
     return m_StrongELPresentTplshape;
 }

@@ -676,16 +676,16 @@ std::vector<Float64> CMultiRollModel::GetScaleMargTplshape()
 }
 
 //todo: tbd, are these booleans to be combined by OR or AND ?
-std::vector<bool> CMultiRollModel::GetStrongELPresentTplshape()
+TBoolList CMultiRollModel::GetStrongELPresentTplshape()
 {
-    std::vector<bool> strongElPresentplshape;
+    TBoolList strongElPresentplshape;
     if(m_models.size()>0)
     {
         strongElPresentplshape = m_models[0]->GetStrongELPresentTplshape();
     }
     for(Int32 km=1; km<m_models.size(); km++)
     {
-        std::vector<bool> _strongElPresentplshape = m_models[km]->GetStrongELPresentTplshape();
+        TBoolList _strongElPresentplshape = m_models[km]->GetStrongELPresentTplshape();
         for(Int32 ktpl=0; ktpl<_strongElPresentplshape.size(); ktpl++)
         {
             strongElPresentplshape[ktpl] = strongElPresentplshape[ktpl] || _strongElPresentplshape[ktpl];

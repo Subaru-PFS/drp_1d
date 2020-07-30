@@ -333,17 +333,15 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                TFloat64List _prior;
-                _prior = pdfz.GetConstantLogZPrior(meritResult->Redshifts.size());
-                priors.push_back(_prior);
+                priors.push_back(pdfz.GetConstantLogZPrior(meritResult->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                TFloat64List logLikelihoodCorrected(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
+                chiSquares.emplace_back(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
+                TFloat64List & logLikelihoodCorrected= chiSquares.back();
                 for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                chiSquares.push_back(logLikelihoodCorrected);
                 Log.LogDetail("    chisquare2solve: Pdfz combine - prepared merit  #%d for model : %s", chiSquares.size()-1, ((*it).first).c_str());
             }
         }

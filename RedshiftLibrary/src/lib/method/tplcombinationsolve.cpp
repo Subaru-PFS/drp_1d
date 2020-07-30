@@ -309,17 +309,14 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                TFloat64List _prior;
-                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
-                priors.push_back(_prior);
+                priors.push_back(pdfz.GetConstantLogZPrior(result->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                TFloat64List logLikelihoodCorrected(result->ChiSquareIntermediate.size(), DBL_MAX);
+                chiSquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
                 for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
-                    logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                    chiSquares.back()[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                chiSquares.push_back(logLikelihoodCorrected);
                 Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit #%d for ism=%d, igm=%d", chiSquares.size()-1, kism, kigm);
             }
         }

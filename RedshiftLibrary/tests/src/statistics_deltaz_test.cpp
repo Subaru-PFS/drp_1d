@@ -62,7 +62,7 @@ string chi2sample = "#Redshifts	ChiSquare	Overlap\n"
 
 TFloat64Range redshiftRange = TFloat64Range( 0, 5);
 Float64       redshiftStep = 1E-4;
-std::vector<Float64> pdfz = redshiftRange.SpreadOverLog( redshiftStep );
+TRedshiftList pdfz = redshiftRange.SpreadOverLog( redshiftStep );
 
 void DeltazTestCompute( const string& sample, const Float64 redshift, const TFloat64Range range )
 {
@@ -123,75 +123,70 @@ BOOST_AUTO_TEST_CASE(Deltazbordermax)
 //both redshifts belong to overlapping range
 BOOST_AUTO_TEST_CASE(Deltaz_overlapping1)
 {
-    std::vector<Float64> center_redshifts = {1.0, 1.5};
-    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
-    std::vector<Float64> range_right, range_left;
-    std::vector<Float64> correct_range_left = {0, 1.25}, correct_range_right = {1.24990, 2.75 };
+    TRedshiftList center_redshifts = {1.0, 1.5};
+    TRedshiftList deltaz = { 0.5/3, 0.5/3};
+    TFloat64RangeList ranges;
+    TFloat64RangeList correct_ranges = {{0.5, 1.24990}, {1.25, 2}};
 
-    CPdfCandidateszResult res; 
-    res.Resize(center_redshifts.size());
-    res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
+    CPdfCandidateszResult res;
+    res.Init(center_redshifts, deltaz);
+    res.SetIntegrationWindows(pdfz, ranges);
 
-    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
-    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
 }
 //no overlapping
 BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping)
 {
-    std::vector<Float64> center_redshifts = {1.0, 5.0};
-    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
-    std::vector<Float64> range_right, range_left;
-    std::vector<Float64> correct_range_left = {0, 2}, correct_range_right = {2, 8};
+    TRedshiftList center_redshifts = {1.0, 4.0};
+    TRedshiftList deltaz = { 0.5/3, 0.5/3};
+    TFloat64RangeList ranges;
+    TFloat64RangeList correct_ranges = {{0.5, 1.5}, {3.5, 4.5}};
 
     CPdfCandidateszResult res; 
-    res.Resize(center_redshifts.size());
-    res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
+    res.Init(center_redshifts, deltaz);
+    res.SetIntegrationWindows(pdfz, ranges);
 
-    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
-    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
 }
 //only the smallest redshift belongs to the overlapping region
 BOOST_AUTO_TEST_CASE(Deltaz_overlapping_3)
 {
-    std::vector<Float64> center_redshifts = {1.0, 4.0};
-    std::vector<Float64> deltaz = { 0.5/3, 0.5/3}; 
-    std::vector<Float64> range_right, range_left;
-    std::vector<Float64> correct_range_left = {0, 1.75}, correct_range_right = {1.7499, 6.5};
+    TRedshiftList center_redshifts = {1.0, 4.0};
+    TRedshiftList deltaz = { 1./3, 2.5/3};
+    TFloat64RangeList ranges;
+    TFloat64RangeList correct_ranges = {{0., 1.7499}, {1.75, pdfz.back()}};
 
     CPdfCandidateszResult res; 
-    res.Resize(center_redshifts.size());
-    res.SetIntegrationWindows(pdfz, center_redshifts,  deltaz, range_right, range_left);
+    res.Init(center_redshifts, deltaz);
+    res.SetIntegrationWindows(pdfz, ranges);
 
-    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
-    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
 }
 
 //only the greatest redshift belong to overlapping region
 BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
 {
-    std::vector<Float64> center_redshifts = {1.0, 4.0};
-    std::vector<Float64> deltaz = {1.0/3, 0.5/3}; 
-    std::vector<Float64> range_right, range_left;
-    std::vector<Float64> correct_range_left = {-1, 2.25}, correct_range_right = {2.2499, 6.5};
+    TRedshiftList center_redshifts = {1.0, 4.0};
+    TRedshiftList deltaz = {2.0/3, 2.5/3};
+    TFloat64RangeList ranges;
+    TFloat64RangeList correct_ranges = {{0., 2.2499}, {2.25, pdfz.back()}};
 
     CPdfCandidateszResult res;
-    res.Resize(center_redshifts.size());
-    res.SetIntegrationWindows(pdfz, center_redshifts, deltaz, range_right, range_left);
+    res.Init(center_redshifts, deltaz);
+    res.SetIntegrationWindows(pdfz, ranges);
 
-    //std::cout <<"overlapping 4 \n";
-    //std::cout <<range_right[0] <<"\n"<< range_right[1] <<"\n" <<range_left[0] <<"\n"<< range_left[1]<<"\n";
-    BOOST_CHECK_CLOSE(range_right[0], correct_range_right[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_right[1], correct_range_right[1], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[0], correct_range_left[0], 1E-4);
-    BOOST_CHECK_CLOSE(range_left[1], correct_range_left[1], 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
+    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
 }
 BOOST_AUTO_TEST_SUITE_END()
