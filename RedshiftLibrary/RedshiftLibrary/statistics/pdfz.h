@@ -61,7 +61,7 @@ public:
     Int32 BestProba(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
     Int32 BestChi2(TFloat64List redshifts, std::vector<TFloat64List> meritResults, std::vector<TFloat64List> zPriors, Float64 cstLog, std::shared_ptr<CPdfMargZLogResult> postmargZResult);
     Int32 getIndex( std::vector<Float64> redshifts, Float64 z );
-
+    Float64 logSumExpTrick(TFloat64List valproba, TFloat64List redshifts, Int32 sumMethod);
 private:
 
     Int32   getCandidateGaussFit(std::vector<Float64> redshifts,

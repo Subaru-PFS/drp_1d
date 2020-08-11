@@ -36,6 +36,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     Extrema.resize(size);
     ExtremaMerit.resize(size);
     ExtremaMeritContinuum.resize(size);
+    ExtremaExtendedRedshifts.resize(size);
     DeltaZ.resize(size);
     mTransposeM.resize(size);
     CorrScaleMarg.resize(size);
