@@ -41,15 +41,19 @@ public:
     //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
     void SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, 
                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
+    bool ReinitIsmIgmFlux();
 private:
 
     std::string     m_Category;
-    mutable Int32   m_kDust = -1; //définie comme mutable pour pourvoir la changer dans Apply..coeff(), sinon ca ne marche pas
+    mutable Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
     mutable Int32   m_meiksinIdx = -1;
     mutable std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     //IGM meiksin
     mutable std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
     mutable CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
+
+protected:
+    mutable Bool   m_IsmIgmApplied = false;
 };
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const

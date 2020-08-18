@@ -36,7 +36,9 @@ CTemplate::CTemplate( const std::string& name, const std::string& category,
 }
 
 //TODO use copy constructor of CSpectrum
-CTemplate::CTemplate( const CTemplate& other)
+CTemplate::CTemplate( const CTemplate& other):
+    m_kDust(other.m_kDust),
+    m_meiksinIdx(other.m_meiksinIdx)
 {
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
@@ -50,9 +52,6 @@ CTemplate::CTemplate( const CTemplate& other)
     m_nbScales = other.GetDecompScales();
 
     m_Category = other.GetCategory();
-
-    m_kDust = other.GetIsmCoeff(); 
-    m_meiksinIdx = other.GetIgmCoeff();
 }
 
 /**
@@ -186,4 +185,17 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const
         }
     }
     return igmCorrectionAppliedOnce;
+}
+
+bool CTemplate::ReinitIsmIgmFlux(){
+    //re-init flux tpl: without dust or other weight
+    m_kDust = -1;
+    m_meiksinIdx = -1;
+    TAxisSampleList & Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
+    const TAxisSampleList & YtplRaw = m_FluxAxis.GetSamplesVector();
+    for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++)
+    {   //copying vector: cant avoid it
+        Ytpl[k] = YtplRaw[k];
+    }
+    return true;
 }

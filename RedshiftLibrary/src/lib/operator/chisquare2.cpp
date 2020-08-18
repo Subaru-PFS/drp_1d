@@ -45,9 +45,11 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
     //IGM
     //m_igmCorrectionMeiksin = std::shared_ptr<CSpectrumFluxCorrectionMeiksin>(new CSpectrumFluxCorrectionMeiksin()); 
-    m_igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>( ) ; 
+    m_igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>(); 
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
+    //pass ism/igm correction once for all to the template in question
+    m_templateRebined_bf.SetFluxCorrectionIsmIgm(m_ismCorrectionCalzetti, m_igmCorrectionMeiksin);
 }
 
 COperatorChiSquare2::~COperatorChiSquare2()
@@ -283,33 +285,30 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         }
 
         //find samples limits
-        Int32 kStart = -1;
-        Int32 kEnd = -1;
-        ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+
+        Int32 kStart = 0;
+        Int32 kEnd = itplTplFluxAxis.GetSamplesCount();
+        /*ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
         if(ret==-1)
         {
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
-        //tpl.SetIsmIgmLambdaRange(kStart, kEnd); //using [0: m_spectralAxis.GetSamplesCount()]
+        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); 
+        */
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
             Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
-            /*if(ytpl_modified)
-            {
-                //re-init flux tpl without dust and other weightin
-                for(Int32 k=kStart; k<=kEnd; k++)
-                {
-                    Ytpl[k] = m_YtplRawBuffer[k];
-                }
-            }*/
+            if(ytpl_modified)
+                m_templateRebined_bf.ReinitIsmIgmFlux();
+
             Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
             //check that we got the same coeff:
             if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
-            ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(coeffEBMV);
+            ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(kDust);
             /*
             //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
@@ -418,7 +417,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
             
-            CSpectrumFluxAxis &  tplIsmIgm = m_templateRebined_bf.GetFluxAxisIsmIgm();
+            CSpectrumFluxAxis & tplIsmIgm = m_templateRebined_bf.GetFluxAxisIsmIgm();
             TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
 
             Float64 sumCross = 0.0;
@@ -688,7 +687,7 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
+    CTemplate& itplTplSpectrum = m_templateRebined_bf;
     CMask&  itplMask = m_mskRebined_bf;
     CSpectrumSpectralAxis& spcSpecAxis = m_spcSpectralAxis_restframe;
     tpl.Rebin( intersectedLambdaRange, spcSpecAxis, itplTplSpectrum, itplMask, opt_interp);   
@@ -780,8 +779,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
-    //pass ism/igm correction once for all to the template in question
-    tpl.SetFluxCorrectionIsmIgm(m_ismCorrectionCalzetti, m_igmCorrectionMeiksin);
 
     //**************************************************
 //    Bool enableInputSpcCheck = false;
@@ -881,7 +878,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
             result->FitDustCoeff[i] = FitDustCoeff;
             result->FitMeiksinIdx[i] = FitMeiksinIdx;
         }
-
+        //TODO: reinitialize m_fluxAxisIsmIgm prior to calling BasicFit
         BasicFit( spectrum,
                   tpl,
                   lambdaRange,
@@ -1297,12 +1294,12 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
         return -1;
     }
-    //tpl.SetIsmIgmLambdaRange(kStart, kEnd);
-    ytpl_modified = tpl.ApplyDustCoeff(IdxDustCoeff);
+    //m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
+    ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")
     {
-        Bool igmCorrectionAppliedOnce = tpl.ApplyMeiksinCoeff(meiksinIdx, redshift);
+        Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     //std::shared_ptr<CModelSpectrumResult> resultspcmodel;
     resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(tpl));
