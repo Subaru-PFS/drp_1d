@@ -201,26 +201,32 @@ public:
   void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
-%apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(double ** array, int * n)}
+%apply (const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** array, int * n)}
+%apply (const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(const std::string& object_type,const std::string& method,const std::string& name,double ** array, int * n)}
 
 
 class COperatorResultStore
 {
-%rename(Get_StringCandidateParam) getCandidateParam(const int& rank,const std::string& param, std::string& out_str);
-%rename(Get_Int32CandidateParam) getCandidateParam(const int& rank,const std::string& param, Int32& out_int);
-%rename(Get_Float64CandidateParam) getCandidateParam(const int& rank,const std::string& param, Float64& out_float);
-%rename(Get_Int32Param) getParam(const std::string& param, Int32& out_int);
+%rename(Get_StringCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, std::string& out_str);
+%rename(Get_Int32CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Int32& out_int);
+%rename(Get_Float64CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Float64& out_float);
+  
+%rename(Get_Int32Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Int32& out_int);
+%rename(Get_Float64Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Float64& out_float);
+%rename(Get_StringData) getData(const std::string& object_type,const std::string& method,const std::string& data, std::string& out_str);
 
 
  public:
   COperatorResultStore();
-  void test(double ** array, int * n);
-  void getPdfZGrid(double ** array, int * n);
-  void getPdfProbaLog(double ** array, int * n);
-  void getCandidateParam(const int& rank,const std::string& param, Float64& out_float);
-  void getCandidateParam(const int& rank,const std::string& param, Int32& out_int);
-  void getCandidateParam(const int& rank,const std::string& param, std::string& out_str);
-  void getParam(const std::string& param, Int32& out_int);
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) ;
+
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) ;
   
 };
 

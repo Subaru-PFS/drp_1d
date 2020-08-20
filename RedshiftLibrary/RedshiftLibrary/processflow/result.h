@@ -38,7 +38,20 @@ public:
     void SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string>, TInt32List order) const;
     void SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>>, TInt32List order) const;
     void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>, TInt32List order) const;
+
+    //should pure virtual, let's implement them first here before changing all operator results ....
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+
+  void getData(const std::string& name, Int32& v) const;
+  void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, double **data, int *size) const;
+
 protected:
+
 
 };
 

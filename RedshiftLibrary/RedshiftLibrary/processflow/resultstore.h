@@ -59,12 +59,15 @@ public:
   void log();
 
   // it should be get<Type><Method>CandidateParam(int rank, std::string param, std::string method)
-  void getCandidateParam(const int& rank,const std::string& param, Float64& v) const;
-  void getCandidateParam(const int& rank,const std::string& param, Int32& v) const;
-  void getCandidateParam(const int& rank,const std::string& param, std::string& v) const;
-  void getParam(const std::string& param, Int32& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const;
 
- 
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) const;
 
 protected:
 

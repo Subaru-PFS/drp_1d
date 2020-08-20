@@ -41,6 +41,17 @@ public:
   std::string getString(std::string name,Int32 rank) const;
   Int32 getInt(std::string name,Int32 rank) const;
   Int32 getNbCandidates() const;
+
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+
+  void getData(const std::string& name, Int32& v) const;
+  void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, double **data, int *size) const;
+
   
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
     Float64                     dzDefault;

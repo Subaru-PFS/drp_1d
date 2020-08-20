@@ -578,7 +578,7 @@ void COperatorResultStore::log()
   
 }
 
-
+/*
 void COperatorResultStore::getPdfZGrid(double **zgrid, int *size)
 {
   auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
@@ -594,45 +594,59 @@ void COperatorResultStore::getPdfProbaLog(double **probaLog, int *size)
   *size = logzpdf1d->valProbaLog.size();
   *probaLog = const_cast<double *>(logzpdf1d->valProbaLog.data());
 }
+*/
 
-void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, Float64& v) const
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const
 {
   auto result = GetGlobalResult("candidatesresult");
-  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
-
-  v = logzpdf1d->getDouble(param,rank);
-  
+  result.lock()->getCandidateData(rank,name,v);
 }
 
-void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, std::string& v) const
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const
 {
   auto result = GetGlobalResult("candidatesresult");
-  //there should not be a cast here, -> there must be an intermediate class between COperatorResult and CPdfCandidateszResult
-  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
-  
-  v = logzpdf1d->getString(param,rank);
+  result.lock()->getCandidateData(rank,name,v);
 }
 
-void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, Int32& v) const
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const
 {
-
   auto result = GetGlobalResult("candidatesresult");
-  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
+  result.lock()->getCandidateData(rank,name,v);
 
-  v = logzpdf1d->getInt(param,rank);
+}
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const
+{
+  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  result.lock()->getData(name,data,size);
 }
 
 
-void COperatorResultStore::getParam(const std::string& param, Int32& v) const
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const
 {
   
    auto result = GetGlobalResult("candidatesresult");
-
-   auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
-
-  v = logzpdf1d->getNbCandidates();    
+   result.lock()->getData(name,v);
 }
 
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const
+{
+  auto result = GetGlobalResult("candidatesresult");
+   result.lock()->getData(name,v);
+}
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
+{
+  auto result = GetGlobalResult("candidatesresult");
+  result.lock()->getData(name,v);
+}
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name,double **data, int *size) const
+{
+  
+   auto result = GetGlobalResult("candidatesresult");
+   result.lock()->getData(name,data,size);
+}
 
 
 
