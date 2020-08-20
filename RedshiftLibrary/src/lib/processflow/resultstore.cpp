@@ -2,12 +2,15 @@
 
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
+#include <RedshiftLibrary/log/log.h>
 
 using namespace NSEpic;
 
@@ -124,12 +127,14 @@ TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const std::string
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( const std::string& name ) const
 {
+  Log.LogInfo("get global result %s",name.c_str());
+
     TResultsMap::const_iterator it = m_GlobalResults.find( name );
     if( it != m_GlobalResults.end() )
     {
-        return (*it).second;
+      return (*it).second;
     }
-
+    Log.LogInfo("global result %s not found",name.c_str());
     return std::weak_ptr<const COperatorResult>();
 }
 
@@ -548,3 +553,86 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
 
     return n;
 }
+
+void COperatorResultStore::test(double **zgrid, int *size)
+{
+  Log.LogDebug("enter test");
+  std::vector<double> vec = std::vector<double>();
+  Log.LogDebug("vec created");
+  
+  vec.push_back(3.5);
+  vec.push_back(2.4);
+  Log.LogDebug("vec filled");
+  
+  *size = 2;
+  Log.LogDebug("size set");
+  
+  *zgrid = const_cast<double *>(vec.data());
+  Log.LogDebug("data set");
+  
+}
+
+void COperatorResultStore::log()
+{
+  Log.LogDebug("test log");
+  
+}
+
+
+void COperatorResultStore::getPdfZGrid(double **zgrid, int *size)
+{
+  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( result.lock() );
+  *size = logzpdf1d->Redshifts.size();
+  *zgrid = const_cast<double *>(logzpdf1d->Redshifts.data());
+}
+
+void COperatorResultStore::getPdfProbaLog(double **probaLog, int *size)
+{
+  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( result.lock() );
+  *size = logzpdf1d->valProbaLog.size();
+  *probaLog = const_cast<double *>(logzpdf1d->valProbaLog.data());
+}
+
+void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, Float64& v) const
+{
+  auto result = GetGlobalResult("candidatesresult");
+  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
+
+  v = logzpdf1d->getDouble(param,rank);
+  
+}
+
+void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, std::string& v) const
+{
+  auto result = GetGlobalResult("candidatesresult");
+  //there should not be a cast here, -> there must be an intermediate class between COperatorResult and CPdfCandidateszResult
+  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
+  
+  v = logzpdf1d->getString(param,rank);
+}
+
+void COperatorResultStore::getCandidateParam(const int& rank,const std::string& param, Int32& v) const
+{
+
+  auto result = GetGlobalResult("candidatesresult");
+  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
+
+  v = logzpdf1d->getInt(param,rank);
+}
+
+
+void COperatorResultStore::getParam(const std::string& param, Int32& v) const
+{
+  
+   auto result = GetGlobalResult("candidatesresult");
+
+   auto logzpdf1d = std::dynamic_pointer_cast<const CPdfCandidateszResult>( result.lock() );
+
+  v = logzpdf1d->getNbCandidates();    
+}
+
+
+
+

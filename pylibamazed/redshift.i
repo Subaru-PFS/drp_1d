@@ -50,6 +50,7 @@
 #include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
+
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -62,6 +63,8 @@ import_array();
 
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
+typedef long long Int64;
+typedef int Int32;
 typedef unsigned int UInt32;
 
 namespace NSEpic {
@@ -118,12 +121,13 @@ typedef TFloat64Range   TLambdaRange;
 %template(TFloat64Range) CRange<Float64>;
 
 %apply std::string &OUTPUT { std::string& out_str };
-%apply Int64 &OUTPUT { Int64& out_int };
+%apply Int32 &OUTPUT { Int32& out_int };
+%apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 
 class CParameterStore {
 %rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
-%rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
+%rename(Get_Int64) Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0);
 %rename(Get_Float64) Get( const std::string& name, Float64& out_float, Float64 defaultValue = 0);
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 
@@ -133,8 +137,8 @@ public:
   void FromString(const std::string & json);
   void Save( const std::string& path ) const;
   void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  void Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
   void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  void Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0 );
   void Set( const std::string& name, const std::string& v );
 
 };
@@ -197,11 +201,27 @@ public:
   void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
+%apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(double ** array, int * n)}
+
+
 class COperatorResultStore
 {
-public:
-  COperatorResultStore();
+%rename(Get_StringCandidateParam) getCandidateParam(const int& rank,const std::string& param, std::string& out_str);
+%rename(Get_Int32CandidateParam) getCandidateParam(const int& rank,const std::string& param, Int32& out_int);
+%rename(Get_Float64CandidateParam) getCandidateParam(const int& rank,const std::string& param, Float64& out_float);
+%rename(Get_Int32Param) getParam(const std::string& param, Int32& out_int);
 
+
+ public:
+  COperatorResultStore();
+  void test(double ** array, int * n);
+  void getPdfZGrid(double ** array, int * n);
+  void getPdfProbaLog(double ** array, int * n);
+  void getCandidateParam(const int& rank,const std::string& param, Float64& out_float);
+  void getCandidateParam(const int& rank,const std::string& param, Int32& out_int);
+  void getCandidateParam(const int& rank,const std::string& param, std::string& out_str);
+  void getParam(const std::string& param, Int32& out_int);
+  
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;

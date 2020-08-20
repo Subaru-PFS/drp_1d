@@ -37,6 +37,11 @@ public:
                                 TFloat64List Extrema,  
                                 std::vector<TFloat64List> ExtremaExtendedRedshifts, 
                                 TFloat64List& candidates) const;
+  Float64 getDouble(std::string name,Int32 rank) const;
+  std::string getString(std::string name,Int32 rank) const;
+  Int32 getInt(std::string name,Int32 rank) const;
+  Int32 getNbCandidates() const;
+  
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
     Float64                     dzDefault;
     std::vector<std::string> ExtremaIDs; //also sort ids
