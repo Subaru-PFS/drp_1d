@@ -353,8 +353,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
   }
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
   {
-    if (name.compare("NbCandidates") == 0) v= Rank.size();
-    else if (name.compare("Rank") == 0) v=Rank[rank];
+    if (name.compare("Rank") == 0) v=Rank[rank];
     else Log.LogError("unknown candidate data %s",name);
   }
 
@@ -364,7 +363,10 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{}
 
-  void CPdfCandidateszResult::getData(const std::string& name, Int32& v) const{}
+  void CPdfCandidateszResult::getData(const std::string& name, Int32& v) const{
+    if (name.compare("NbCandidates") == 0) v= Rank.size();
+  
+  }
   void CPdfCandidateszResult::getData(const std::string& name, Float64& v) const{}
   void CPdfCandidateszResult::getData(const std::string& name, std::string& v) const{}
   void CPdfCandidateszResult::getData(const std::string& name, double **data, int *size) const

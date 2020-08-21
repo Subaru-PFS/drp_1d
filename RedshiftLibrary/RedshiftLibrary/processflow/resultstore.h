@@ -53,10 +53,6 @@ public:
 
     std::string             GetScope( const COperatorResult&  result) const;
 
-  void test(double **zgrid, int *size);
-  void getPdfZGrid(double **zgrid, int *size);
-  void getPdfProbaLog(double **probaLog, int *size);
-  void log();
 
   // it should be get<Type><Method>CandidateParam(int rank, std::string param, std::string method)
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const;
@@ -69,6 +65,7 @@ public:
   void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) const;
 
+  void test();
 protected:
 
     void StoreResult( TResultsMap& map, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );

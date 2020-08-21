@@ -127,8 +127,6 @@ TOperatorResultMap COperatorResultStore::GetPerTemplateResult( const std::string
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( const std::string& name ) const
 {
-  Log.LogInfo("get global result %s",name.c_str());
-
     TResultsMap::const_iterator it = m_GlobalResults.find( name );
     if( it != m_GlobalResults.end() )
     {
@@ -554,47 +552,6 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
     return n;
 }
 
-void COperatorResultStore::test(double **zgrid, int *size)
-{
-  Log.LogDebug("enter test");
-  std::vector<double> vec = std::vector<double>();
-  Log.LogDebug("vec created");
-  
-  vec.push_back(3.5);
-  vec.push_back(2.4);
-  Log.LogDebug("vec filled");
-  
-  *size = 2;
-  Log.LogDebug("size set");
-  
-  *zgrid = const_cast<double *>(vec.data());
-  Log.LogDebug("data set");
-  
-}
-
-void COperatorResultStore::log()
-{
-  Log.LogDebug("test log");
-  
-}
-
-/*
-void COperatorResultStore::getPdfZGrid(double **zgrid, int *size)
-{
-  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
-  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( result.lock() );
-  *size = logzpdf1d->Redshifts.size();
-  *zgrid = const_cast<double *>(logzpdf1d->Redshifts.data());
-}
-
-void COperatorResultStore::getPdfProbaLog(double **probaLog, int *size)
-{
-  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
-  auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( result.lock() );
-  *size = logzpdf1d->valProbaLog.size();
-  *probaLog = const_cast<double *>(logzpdf1d->valProbaLog.data());
-}
-*/
 
 void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const
 {
@@ -643,10 +600,20 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name,double **data, int *size) const
 {
-  
-   auto result = GetGlobalResult("candidatesresult");
-   result.lock()->getData(name,data,size);
+  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  result.lock()->getData(name,data,size);
 }
 
+
+void COperatorResultStore::test()
+{
+  std::shared_ptr<CPdfMargZLogResult> testResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+  testResult->Redshifts.clear();
+  testResult->Redshifts.push_back(1.2);
+  testResult->Redshifts.push_back(3.4);
+  
+  StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
+  
+}
 
 

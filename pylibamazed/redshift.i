@@ -201,8 +201,6 @@ public:
   void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
-%apply (const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** array, int * n)}
-%apply (const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1) {(const std::string& object_type,const std::string& method,const std::string& name,double ** array, int * n)}
 
 
 class COperatorResultStore
@@ -215,18 +213,23 @@ class COperatorResultStore
 %rename(Get_Float64Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Float64& out_float);
 %rename(Get_StringData) getData(const std::string& object_type,const std::string& method,const std::string& data, std::string& out_str);
 
+%rename(Get_Float64ArrayCandiateData) getData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1); 
+%rename(Get_Float64ArrayData) getData(const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+
 
  public:
   COperatorResultStore();
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& out_float) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
 
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& out_int) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& out_float) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+
+  void test();
   
 };
 
