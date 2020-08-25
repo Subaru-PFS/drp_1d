@@ -917,3 +917,42 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
 
 }
 
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+{
+  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
+  else if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
+  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
+  else if (name.compare("VelocityEmission") == 0) v = Elv[rank];
+  else if (name.compare("VelocityAbsorption") == 0) v = Alv[rank];
+  else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[rank];
+  else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[rank];
+  else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[rank];
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
+  else Log.LogError("unknown candidate data %s",name);
+
+}
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+{
+ Log.LogError("unknown candidate data %s",name);
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = FittedTplName[rank];
+  else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[rank];
+  else Log.LogError("unknown candidate data %s",name);
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{
+  
+}
+
+void CLineModelExtremaResult::getData(const std::string& name, Int32& v) const{
+}
+void CLineModelExtremaResult::getData(const std::string& name, Float64& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, std::string& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, double **data, int *size) const
+{
+
+}
+

@@ -64,3 +64,18 @@ CSpectrum& CModelSpectrumResult::GetSpectrum()
 {
     return m_model;
 }
+
+void CModelSpectrumResult::getData(const std::string& name, double **data, int *size) const
+{
+  if( name.compare("model_lambda") == 0)
+    {
+      *size = model.GetSpectralAxis().GetSamplesCount();
+      *data = const_cast<double *>(model.GetSpectralAxis().GetSamples());
+    }
+  else if( name.compare("model_flux") == 0)
+    {
+      *size = model.GetFluxAxis().GetSamplesCount();
+      *data = const_cast<double *>(model.GetFluxAxis().GetSamples());
+    }
+  
+}

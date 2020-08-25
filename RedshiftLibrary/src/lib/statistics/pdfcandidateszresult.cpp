@@ -351,6 +351,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
     else if (name.compare("RedshiftProba") == 0) v=ValSumProba[rank];
     else Log.LogError("unknown candidate data %s",name);
   }
+
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
   {
     if (name.compare("Rank") == 0) v=Rank[rank];

@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 
 #include <RedshiftLibrary/log/log.h>
@@ -555,33 +556,42 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
 
 void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const
 {
-  auto result = GetGlobalResult("candidatesresult");
+ std:weak_ptr<const COperatorResult> result;
+  if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+  else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
   result.lock()->getCandidateData(rank,name,v);
 }
 
 void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const
 {
-  auto result = GetGlobalResult("candidatesresult");
+ std:weak_ptr<const COperatorResult> result;
+  if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+  else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
   result.lock()->getCandidateData(rank,name,v);
 }
 
 void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const
 {
-  auto result = GetGlobalResult("candidatesresult");
+ std:weak_ptr<const COperatorResult> result;
+  if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+  else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
   result.lock()->getCandidateData(rank,name,v);
 
 }
 
 void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const
 {
-  auto result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+   std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
+  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+
+  result = GetGlobalResult(oss.str());
   result.lock()->getData(name,data,size);
 }
 
 
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const
 {
-  
    auto result = GetGlobalResult("candidatesresult");
    result.lock()->getData(name,v);
 }
@@ -589,7 +599,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const
 {
   auto result = GetGlobalResult("candidatesresult");
-   result.lock()->getData(name,v);
+  result.lock()->getData(name,v);
 }
 
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
@@ -604,7 +614,6 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   result.lock()->getData(name,data,size);
 }
 
-
 void COperatorResultStore::test()
 {
   std::shared_ptr<CPdfMargZLogResult> testResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -613,7 +622,6 @@ void COperatorResultStore::test()
   testResult->Redshifts.push_back(3.4);
   
   StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
-  
 }
 
 
