@@ -206,6 +206,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   Float64 sigma1 = 0.3;
   Float64 mu1 = 20.;
   Float64 A1 = 1.2;
+  //for(Int32 k=mu1-10; k<=mu1+10; k++){
+  //  modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1)) ;
   for(Int32 k=mu1-10; k<mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
@@ -214,6 +216,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
   Float64 A2 = 2.2;
+  //for(Int32 k=mu2-10; k<=mu2+10; k++){
+  //  modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1)) ;
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
@@ -261,6 +265,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   Float64 sigma1 = 0.3;
   Float64 mu1 = 20.;
   Float64 A1 = 1.2;
+  //for(Int32 k=mu1-10; k<=mu1+10; k++){
+  //  modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1)) ;
   for(Int32 k=mu1-10; k<mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
@@ -269,6 +275,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
   Float64 A2 = 2.2;
+  //for(Int32 k=mu2-10; k<=mu2+10; k++){
+  //  modelfluxAxis[k]+=A2/(sigma2 *2.506597694086548) *exp(-(k-mu2)*(k-mu2)/(2*sigma2*sigma2)) ;
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A2/(sigma2 *2.506597694086548) *exp(-(k-mu2)*(k-mu2)/(2*sigma2)/(2*sigma2)) ;
   }
@@ -306,9 +314,13 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
     modelfluxAxis[k]=k;
   }
+  //for(Int32 k=mu1-10; k<=mu1+10; k++){
+  //  modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1)) ;
   for(Int32 k=mu1-10; k<mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
+  //for(Int32 k=mu2-10; k<=mu2+10; k++){
+  //  modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1)) ;
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
@@ -356,9 +368,9 @@ BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop){
 
 }
 
-void addRay(CSpectrumFluxAxis& spectrumFluxAxis , Float64 sigma, Float64 mu, Float64 A){
+void addRay(CSpectrumFluxAxis& spectrumFluxAxis, Float64 sigma, Float64 mu, Float64 A){
   for(Int32 k=mu-sigma*5; k<=mu+sigma*5; k++){
-    spectrumFluxAxis[k]+=A *exp(-(k-mu)*(k-mu)/(2*sigma)/(2*sigma)) ;
+    spectrumFluxAxis[k]+= A*exp(-(k-mu)*(k-mu)/(2*sigma*sigma));
   }
 }
 
@@ -400,7 +412,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   addRay(modelfluxAxis,4.,1140.,1.5);
   resPeaks.push_back(TInt32Range(1130,1150));
 
-  addRay(modelfluxAxis,4.,1450.,-3.5);
+  addRay(modelfluxAxis,4.,1450.,-13.5);
   resPeaks.push_back(TInt32Range(1400,1500));
   resPeaks.push_back(TInt32Range(1500,1500));
 
@@ -417,13 +429,13 @@ BOOST_AUTO_TEST_CASE(Compute){
   std::shared_ptr<const CLineDetectionResult> res = lineDetection.Compute(spc, lambdaRange, resPeaks, resPeaks);
 
 
-  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[0], "Peak_0 : ratioAmp<m_cut (3.927489<5.000000)");
+  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[0], "Peak_0 : line detected successfully");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[1], "Peak_1 : fwhm<m_minsize");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[2], "Peak_2 : fwhm>m_maxsize");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[3], "Peak_3 : gaussAmp far from spectrum max_value");
   //bug here two status for one peak
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[4], "Peak_3 : gaussAmp far from spectrum max_value (Angstrom)");
-  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[5], "Peak_4 : ratioAmp<m_cut (1.501982<5.000000)");
+  BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[5], "Peak_4 : ratioAmp<m_cut (1.526190<5.000000)");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[6], "Peak_5 : GaussAmp negative");
   BOOST_CHECK_EQUAL(res->PeakListDetectionStatus[7], "Peak_6 : Fitting failed");
 
