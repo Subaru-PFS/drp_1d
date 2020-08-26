@@ -45,6 +45,12 @@ As a user, in `$HOME`:
     source $HOME/venv/bin/activate
     pip3.6 install astropy # on CentOS7 and MacOSX
 
+Use
+
+    make test
+
+to run tests.
+
 #### For linux users
 
     pip3.6 install -e $HOME/cpf-redshift
@@ -82,48 +88,27 @@ You can build either in `Debug` or `Release` mode (defaults to `Release`).
     make install
 
 
-#### -DBUILD_SHARED_LIBS
+#### -DBUILD_STATIC_LIBS
 
-You can build either static or shared library (defaults to `ON`).
+You can build either static or shared library (defaults to shared library). To build a static library set the `BUILD_STATIC_LIBS` option to `ON`.
+Note that tests are disable with static library.
 
-    cmake .. -DBUILD_SHARED_LIBS=ON
-or
-
-    cmake .. -DBUILD_SHARED_LIBS=OFF
+    cmake .. -DBUILD_STATIC_LIBS=ON
 
 
 #### -DCMAKE_INSTALL_PREFIX
 
-You can specify install directory (defaults to `$HOME/usr`).
+You can specify install directory (defaults to `$HOME/local`).
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 
 
-#### -DBUILD_TESTS
+#### -DBUILD_TESTING
 
-In order to build tests, shared libs version must be enabled :
+In order to disable test building, set the `BUILD_TESTING` option to `OFF`:
 
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON
+    cmake .. -DBUILD_TESTING=OFF
 
-Run tests with :
-
-    make test
-
-#### -DTEST_COVERAGE
-
-Tests can output line coverage statistics if you define `TEST_COVERAGE` :
-
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DTEST_COVERAGE=ON
-
-Run tests with :
-
-    make test
-
-Create coverage reports with :
-
-     GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
-     lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
-     genhtml -o coverage coverage.info
 
 ### Usage in client code
 
