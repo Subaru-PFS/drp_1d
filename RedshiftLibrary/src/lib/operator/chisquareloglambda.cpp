@@ -1040,14 +1040,14 @@ Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumReb
     }
 
     // prepare best fit data buffer
-    std::vector<Float64> bestChi2(nshifts, DBL_MAX);
-    std::vector<Float64> bestFitAmp(nshifts, -1.0);
-    std::vector<Float64> bestFitAmpErr(nshifts, -1.0);
-    TFloat64List         bestFitAmpNeg(nshifts);
-    std::vector<Float64> bestFitDtm(nshifts, -1.0);
-    std::vector<Float64> bestFitMtm(nshifts, -1.0);
-    std::vector<Float64> bestISMCoeff(nshifts, -1.0);
-    std::vector<Float64> bestIGMIdx(nshifts, -1.0);
+    TFloat64List bestChi2(nshifts, DBL_MAX);
+    TFloat64List bestFitAmp(nshifts, -1.0);
+    TFloat64List bestFitAmpErr(nshifts, -1.0);
+    TBoolList    bestFitAmpNeg(nshifts);
+    TFloat64List bestFitDtm(nshifts, -1.0);
+    TFloat64List bestFitMtm(nshifts, -1.0);
+    TFloat64List bestISMCoeff(nshifts, -1.0);
+    TFloat64List bestIGMIdx(nshifts, -1.0);
 
     // prepare intermediate fit data buffer
     std::vector<std::vector<TFloat64List>> intermediateChi2;
