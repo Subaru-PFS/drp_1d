@@ -598,13 +598,18 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const
 {
-  auto result = GetGlobalResult("candidatesresult");
+  std:weak_ptr<const COperatorResult> result;
+  if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
+     name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
+  else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }
 
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
 {
-  auto result = GetGlobalResult("candidatesresult");
+  std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("classification") == 0) result = GetGlobalResult("classificationresult");
+  else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }
 

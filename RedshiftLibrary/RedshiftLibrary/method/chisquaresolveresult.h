@@ -52,6 +52,9 @@ public:
     Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
 
   void preSave(const CDataStore& store);
+
+  void getData(const std::string& name, Float64& v) const;
+
 private:
 
     std::unordered_map<std::string, std::string> m_scope2name = {
