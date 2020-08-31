@@ -226,7 +226,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
             if(kprior<0 || !successLoadPriors)
             {
-                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
+                Log.LogDetail( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
                 successLoadPriors=false;
             }
             if(successLoadPriors)

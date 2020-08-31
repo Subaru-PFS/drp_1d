@@ -197,10 +197,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
         if(1)
         {
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
     }
 
@@ -357,7 +357,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
         m_forceLyaFitting = m_opt_lya_forcefit;
-        Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
+        Log.LogDetail("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
     return true;
@@ -1179,10 +1179,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         if(bestFitAmplitudeNegative){
             Log.LogError( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());
             throw runtime_error("Elementlist, cannot loadfitcontinuum because best template has negative amplitude");
-        }else{
-            Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         }
-        //
+        /*}else{
+        //    Log.LogDebug( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
+        }*/
+
         //Retrieve the best template
         bool foundBestTemplate = false;
         for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -1619,7 +1620,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
 Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
 {
     m_fitContinuum_option = 1; //enable use of the fit store
-    Log.LogInfo( "Elementlist: enabling fitContinuum store.");
+    Log.LogDetail( "Elementlist: enabling fitContinuum store.");
     m_fitContinuum_tplfitStore = fitStore;
     return 1;
 }
@@ -2688,7 +2689,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             {
                 //
             }
-            Log.LogInfo( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
+            Log.LogDetail( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
                          savedIdxContinuumFitted,
                          m_fitContinuum_tplName.c_str(),
                          m_fitContinuum_tplFitDustCoeff,
@@ -2708,7 +2709,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
+                Log.LogDetail( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
@@ -2783,10 +2784,10 @@ void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 m
 
     if(1)
     {
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_outsidelinemask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_outsidelinemask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
 
     }
 }
@@ -2808,10 +2809,10 @@ void CLineModelElementList::SetFittingMethod(std::string fitMethod)
         }
         if(0)
         {
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogDebug( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
       }
    }
@@ -6455,10 +6456,10 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     {
         //print the groups
         for( Int32 igr = 0; igr<groups.size(); igr++){
-            Log.LogInfo("    model: Group %d/%d: nlines=%d, tag=%s", igr+1, groups.size(), groups[igr].size(), groupsTags[igr].c_str());
+            Log.LogDebug("    model: Group %d/%d: nlines=%d, tag=%s", igr+1, groups.size(), groups[igr].size(), groupsTags[igr].c_str());
             for(Int32 i=0; i<groups[igr].size(); i++)
             {
-                Log.LogInfo("    model: \t%d: iElt=%d", i+1, groups[igr][i]);
+                Log.LogDebug("    model: \t%d: iElt=%d", i+1, groups[igr][i]);
             }
         }
     }

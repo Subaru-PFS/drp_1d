@@ -369,7 +369,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     if(retSolve){
 
         /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
- //       Log.LogInfo("linemodelsolve: Pdfz computation");
+        // Log.LogDetail("Linemodelsolve: Pdfz computation");
 
         std::string scope = "linemodelsolve.linemodel";
         auto results = dataStore.GetGlobalResult( scope.c_str() );
@@ -500,25 +500,25 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
+        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
     bool zPriorHaStrongestLine = (opt_hapriorstrength>0.0);
     if(zPriorHaStrongestLine)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
+        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior disabled");
     }
 
     Float64 opt_nlines_snr_penalization_factor = -1;
     bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
     if(zPriorNLineSNR)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
+        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
     }
 
     //hardcoded Euclid-NHaZprior parameter
@@ -526,23 +526,23 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     if(opt_euclidNHaEmittersPriorStrength>0.0)
     {
         zPriorEuclidNHa = true;
-        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
+        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
 
 
-    bool zPriorLines=true;
-    Log.LogInfo("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
+    bool zPriorLines = true;
+    Log.LogDetail("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
     if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
     {
-        zPriorLines=false;
+        zPriorLines = false;
     }
     if(zPriorLines)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: Lines Prior enabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior enabled");
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: Lines Prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior disabled");
     }
 
 
@@ -1228,7 +1228,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                  lambdaRange,
                                                  m_opt_continuumreest);
  //combinePDF using results from secondpass
-     Log.LogInfo("linemodelsolve: Pdfz computation");
+    Log.LogDetail("Linemodelsolve: Pdfz computation");
     std::shared_ptr<const CLineModelResult> lmresultsp = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());

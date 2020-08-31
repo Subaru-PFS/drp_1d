@@ -208,7 +208,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList *LineModelEleme
                 {
                     LineModelElementList->m_Elements[iElts]->m_Rays[j].SetOffset(offset);
                     LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
-                    Log.LogInfo( "    CatalogsOffsets - setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
+                    Log.LogDetail( "    CatalogsOffsets - setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
 
                 }
 
@@ -228,7 +228,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList 
     {
         bfs::path ctlgPath( m_OffsetsCatalog[offsetCtlgIndex].filePath.c_str() );
         std::string ctlgFileStackNameWExt = ctlgPath.filename().string();
-        Log.LogInfo( "    CatalogsOffsets: AutoSetUVStack from = %s", ctlgFileStackNameWExt.c_str() );
+        Log.LogDetail( "    CatalogsOffsets: AutoSetUVStack from = %s", ctlgFileStackNameWExt.c_str() );
         SetLinesOffsets(LineModelElementList, offsetCtlgIndex);
     }else
     {
