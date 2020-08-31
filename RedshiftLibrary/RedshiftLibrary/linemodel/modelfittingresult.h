@@ -34,6 +34,7 @@ public:
     void Load( const char* filePath );
 
     const CLineModelSolution& GetLineModelSolution() const;
+  void getData(const std::string& name, double **data, int *size) const;
 
 
 private:

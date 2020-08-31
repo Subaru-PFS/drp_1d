@@ -188,3 +188,9 @@ void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream
 {
 
 }
+
+
+void CModelFittingResult::getData(const std::string& name, double **data, int *size) const
+{
+
+}
