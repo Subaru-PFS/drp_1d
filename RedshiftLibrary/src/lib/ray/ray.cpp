@@ -23,7 +23,8 @@ CRay::CRay(const string& name,
            const std::string& groupName,
            Float64 nominalAmp,
            const string &velGroupName,
-           TAsymParams asymParams)
+           TAsymParams asymParams,
+	   Int32 id)
 {
     m_Name = name;
     m_Pos = pos;
@@ -50,7 +51,10 @@ CRay::CRay(const string& name,
     m_VelGroupName = velGroupName;
 
     m_asymParams = asymParams;
+
+    m_id = id;
 }
+
 
 CRay::~CRay()
 {
@@ -187,6 +191,11 @@ const Float64 CRay::GetNominalAmplitude() const
 const std::string& CRay::GetVelGroupName() const
 {
     return m_VelGroupName;
+}
+
+Int32 CRay::GetID() const
+{
+    return m_id;
 }
 
 /**

@@ -35,6 +35,8 @@ public:
 
     const CLineModelSolution& GetLineModelSolution() const;
   void getData(const std::string& name, double **data, int *size) const;
+  void getData(const std::string& name, std::string *data, int *size) const;
+  void getData(const std::string& name, int  **data, int *size) const;
 
 
 private:
@@ -46,6 +48,10 @@ private:
     CRayCatalog::TRayVector restRayList;
     Float64 VelocityEmission;
     Float64 VelocityAbsorption;
+
+  //copies from restRayList For output only
+    mutable std::vector<Int32> rayId;
+
 };
 
 inline

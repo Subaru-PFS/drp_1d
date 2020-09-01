@@ -583,8 +583,39 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
 {
  std:weak_ptr<const COperatorResult> result;
   std::ostringstream oss;
+  if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+  else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+  else
+    {
+      Log.LogError("unknown data %s",name.c_str());
+    }
+  result = GetGlobalResult(oss.str());
+  result.lock()->getData(name,data,size);
+}
+
+/*
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string *data, int *size) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
   if (name.find("model_") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
   else if (name.find("fitted_rays_") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+  else
+    {
+      Log.LogError("unknown data %s",name.c_str());
+    }
+  result = GetGlobalResult(oss.str());
+  result.lock()->getData(name,data,size);
+}
+*/
+
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **data, int *size) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
+  if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+  else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
   else
     {
       Log.LogError("unknown data %s",name.c_str());

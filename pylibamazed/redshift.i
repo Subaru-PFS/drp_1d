@@ -214,6 +214,7 @@ class COperatorResultStore
 %rename(Get_StringData) getData(const std::string& object_type,const std::string& method,const std::string& data, std::string& out_str);
 
 %rename(Get_Float64ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1); 
+%rename(Get_Int32ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,int ** ARGOUTVIEW_ARRAY1, int * DIM1); 
 %rename(Get_Float64ArrayData) getData(const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
 
 
@@ -223,11 +224,14 @@ class COperatorResultStore
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **ARGOUTVIEW_ARRAY1, int *DIM1) ;
 
   void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& out_int) ;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& out_float) ;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+
+  
 
   void test();
   

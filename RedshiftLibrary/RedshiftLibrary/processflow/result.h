@@ -44,11 +44,15 @@ public:
   virtual void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
   virtual void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
   virtual void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, std::string *data, int *size) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, int  **data, int *size) const;
 
   virtual void getData(const std::string& name, Int32& v) const;
   virtual void getData(const std::string& name, Float64& v) const;
   virtual void getData(const std::string& name, std::string& v) const;
   virtual void getData(const std::string& name, double **data, int *size) const;
+  virtual void getData(const std::string& name, std::string *data, int *size) const;
+  virtual void getData(const std::string& name, int **data, int *size) const;
 
 protected:
 

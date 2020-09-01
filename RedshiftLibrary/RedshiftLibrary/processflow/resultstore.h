@@ -59,11 +59,14 @@ public:
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const;
+  //void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string *data, int *size) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **data, int *size) const;
 
   void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, int **data, int *size) const;
 
   void test();
 protected:
