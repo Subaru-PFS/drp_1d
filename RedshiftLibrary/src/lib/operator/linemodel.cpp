@@ -559,18 +559,14 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                 m_result->ScaleMargCorrectionContinuum[i-1];
         }
         // Flags on continuum and model amplitudes
-        //Log.Logdetail("Continuum amplitude = %f at z=%f", m_result->ContinuumModelSolutions[i].tplAmplitude, m_result->Redshifts[i]);
         Int32 nbLines = m_result->LineModelSolutions[i].Amplitudes.size();
         Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude == 0.0);
         Bool modelAmplitudesZero = true;
         for (Int32 l = 0; l < nbLines; l++)
         {
             modelAmplitudesZero = (modelAmplitudesZero && m_result->LineModelSolutions[i].Amplitudes[l] <= 0.0);
-            //Log.LogDetail("Model amplitude [%d]: %f", l, m_result->LineModelSolutions[i].Amplitudes[l]);
         }
-        //Log.Logdetail("modelAmplitudesZero = %s at z=%f", modelAmplitudesZero ? "true" : "false", m_result->Redshifts[i]);
         allAmplitudesZero.push_back(modelAmplitudesZero && continuumAmplitudeZero);
-        //Log.LogDetail("allAmplitudesZero [%d] = %s at z=%f", i, allAmplitudesZero[i] ? "true" : "false", m_result->Redshifts[i]);
 
     }
     // Check if all amplitudes are zero for all z
