@@ -560,7 +560,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         }
         // Flags on continuum and model amplitudes
         Int32 nbLines = m_result->LineModelSolutions[i].Amplitudes.size();
-        Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude == 0.0);
+        Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0);
         Bool modelAmplitudesZero = true;
         for (Int32 l = 0; l < nbLines; l++)
         {
