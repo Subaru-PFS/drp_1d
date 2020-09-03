@@ -317,14 +317,14 @@ TFloat64List CRuleBalmerLinearSolver::BalmerModelLinSolve( std::vector<Float64> 
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
   if(1)
     {
-      Log.LogInfo( "# best fit: Y = %g X + %g CX + %g XCX + %g", C(0), C(1), C(2), C(3) );
+      Log.LogDebug( "# best fit: Y = %g X + %g CX + %g XCX + %g", C(0), C(1), C(2), C(3) );
       Log.LogDebug( "# covariance matrix:\n" );
       Log.LogDebug( "[ %+.5e, %+.5e \n", COV(0,0), COV(0,1) );
       Log.LogDebug( "  %+.5e, %+.5e \n", COV(1,0), COV(1,1) );
       Log.LogDebug( "[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2) );
       Log.LogDebug( "  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2) );
       Log.LogDebug( "  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2) );
-      Log.LogInfo( "# chisq/n = %g", chisq/n );
+      Log.LogDebug( "# chisq/n = %g", chisq/n );
     }
 
   TFloat64List coeffs;
