@@ -345,7 +345,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         //finally save the stellar fitting results
         if( starResult ) {
-            Log.LogInfo("Saving star fitting results");
+            Log.LogInfo("Saving stellar fitting results");
             ctx.GetDataStore().StoreScopedGlobalResult( "stellarresult", starResult );
         }else{
             Log.LogError( "Unable to store stellar result.");
