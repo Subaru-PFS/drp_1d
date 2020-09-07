@@ -84,7 +84,9 @@ void DeltazTestCompute( const string& sample, const Float64 redshift, const TFlo
 
     CDeltaz deltaz;
     Float64 dz=-1.;
-    Int32 ret = deltaz.Compute(chi2Result.ChiSquare, chi2Result.Redshifts, redshift, range, dz);
+    Int32 iz, izmin, izmax;
+    Int32 ret = deltaz.GetRangeIndices(chi2Result.Redshifts, redshift, range, iz, izmin, izmax );
+    ret = deltaz.Compute(chi2Result.ChiSquare, chi2Result.Redshifts, iz, izmin, izmax, dz);
     BOOST_CHECK_MESSAGE( ret==0, "deltaz process returned error" );
     BOOST_CHECK_MESSAGE( dz>0, "Deltaz is nul or negative : " << dz );
 }
