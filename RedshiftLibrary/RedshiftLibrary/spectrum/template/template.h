@@ -21,6 +21,7 @@ public:
     CTemplate( const std::string& name, const std::string& category,
 	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     CTemplate(const CTemplate& other);
+    CTemplate& operator=(const CTemplate& other);
     ~CTemplate();
 
     const std::string&  GetCategory() const;
@@ -51,9 +52,12 @@ private:
     //IGM meiksin
     mutable std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
     mutable CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
-
+    //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
+    mutable TFloat64List computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
+    mutable TFloat64List computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
+    
 protected:
-    mutable Bool   m_IsmIgmApplied = false;
+    mutable Bool   m_IsmIgmApplied = false;//not yet used
 };
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const

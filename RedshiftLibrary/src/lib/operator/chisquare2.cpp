@@ -37,7 +37,7 @@ COperatorChiSquare2::COperatorChiSquare2( std::string calibrationPath )
 
     //ISM
     //m_ismCorrectionCalzetti = std::shared_ptr< CSpectrumFluxCorrectionCalzetti>(new  CSpectrumFluxCorrectionCalzetti()); 
-    m_ismCorrectionCalzetti = std::make_shared< CSpectrumFluxCorrectionCalzetti>(); 
+    m_ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>(); 
     m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //m_ismCorrectionCalzetti->Init(calibrationPath, -0.6, 0.1, 16);
 
@@ -146,7 +146,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     overlapRate = 0.0;
     status = nStatus_DataError;
 
-    CSpectrum& itplTplSpectrum = m_templateRebined_bf;
+    CTemplate& itplTplSpectrum = m_templateRebined_bf;
     CMask& itplMask = m_mskRebined_bf;
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
@@ -291,7 +291,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         /*ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
         if(ret==-1)
         {
-            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d    . ! Aborting.", kStart, kEnd);
             break;
         }
         m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); 
@@ -301,14 +301,14 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         {
             Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
             if(ytpl_modified)
-                m_templateRebined_bf.ReinitIsmIgmFlux();
+                itplTplSpectrum.ReinitIsmIgmFlux();
 
             Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
             //check that we got the same coeff:
             if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
-            ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(kDust);
+            ytpl_modified = itplTplSpectrum.ApplyDustCoeff(kDust);
             /*
             //Log.LogInfo("  Operator-Chisquare2: fitting with dust coeff value: %f", coeffEBMV);
 
@@ -325,7 +325,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             if(opt_extinction)
             {
                 //Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-                Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
+                Bool igmCorrectionAppliedOnce = itplTplSpectrum.ApplyMeiksinCoeff(meiksinIdx, redshift);
                
                 /*Float64 coeffIGM = 1.0;
                 Float64 z = redshift;
@@ -417,7 +417,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
             
-            CSpectrumFluxAxis & tplIsmIgm = m_templateRebined_bf.GetFluxAxisIsmIgm();
+            CSpectrumFluxAxis & tplIsmIgm = itplTplSpectrum.GetFluxAxisIsmIgm();
             TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
 
             Float64 sumCross = 0.0;
@@ -1256,8 +1256,6 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     TFloat64List Ytpl_RawBuffer;
     Float64 overlapThreshold; //todo
     Float64 overlapRate = 0.0;
-
-    BasicFit_preallocateBuffers(spectrum);
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();

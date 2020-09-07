@@ -53,7 +53,26 @@ CTemplate::CTemplate( const CTemplate& other):
 
     m_Category = other.GetCategory();
 }
+//applying the rule of three (Law of the big three in C++11)
+CTemplate& CTemplate::operator=(const CTemplate& other)
+{
+    m_Name = other.GetName();
+    m_FullPath = other.GetFullPath();
+    m_SpectralAxis = other.GetSpectralAxis();
+    m_FluxAxis = other.GetFluxAxis();
+    m_FluxAxisIsmIgm = other.GetFluxAxisIsmIgm();
 
+    m_estimationMethod = other.GetContinuumEstimationMethod();
+    m_dfBinPath = other.GetWaveletsDFBinPath();
+    m_medianWindowSize = other.GetMedianWinsize();
+    m_nbScales = other.GetDecompScales();
+
+    m_Category = other.GetCategory();
+
+    m_kDust = other.m_kDust;
+    m_meiksinIdx = other.m_meiksinIdx;
+    return *this;
+}
 /**
  * Destructor, empty.
  */
@@ -146,21 +165,28 @@ Bool CTemplate::Save( const char* filePath ) const
 //Calzetti extinction
 bool  CTemplate::ApplyDustCoeff(Int32 kDust) const 
 {
-    m_kDust = kDust;
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
     TAxisSampleList & Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
     for(Int32 k= 0; k< m_SpectralAxis.GetSamplesCount(); k++)
     {
-        Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
+        Float64 coeffDust;
+        if(kDust!= m_kDust){//if we changed the kDust value
+            m_kDust = kDust;
+            computedDustCoeff.clear();
+            coeffDust = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
+            //fill the vector for the newly selected kDust
+            computedDustCoeff.push_back(coeffDust);
+        } 
+        else       
+            coeffDust = computedDustCoeff[k];
         Ytpl[k] *= coeffDust;
     }
     return true;
 }
 
 
-bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const 
+bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift) const
 {
-    m_meiksinIdx = meiksinIdx;
     Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
         
     Float64 coeffIGM = 1.0;
@@ -170,16 +196,24 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const
     for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++){
          
         if(Xtpl[k] <= m_igmCorrectionMeiksin->GetLambdaMax()){
-            Int32 kLbdaMeiksin = 0;
-            if(Xtpl[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
-            {
-                kLbdaMeiksin = Int32(Xtpl[k]- m_igmCorrectionMeiksin->GetLambdaMin());
-            }else //if lambda lower than min meiksin value, use lower meiksin value
-            {
-                kLbdaMeiksin = 0;
-            }
+            if(m_meiksinIdx != meiksinIdx){
+                m_meiksinIdx = meiksinIdx;
+                computedMeiksingCoeff.clear();
+                Int32 kLbdaMeiksin = 0;
+                if(Xtpl[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
+                {
+                    kLbdaMeiksin = Int32(Xtpl[k]- m_igmCorrectionMeiksin->GetLambdaMin());
+                }else //if lambda lower than min meiksin value, use lower meiksin value
+                {
+                    kLbdaMeiksin = 0;
+                }
 
-            coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                computedMeiksingCoeff.push_back(coeffIGM);
+            }
+            else{
+                coeffIGM = computedMeiksingCoeff[k];
+            }
             Ytpl[k] *= coeffIGM;
             igmCorrectionAppliedOnce = true;
         }
@@ -189,8 +223,8 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)const
 
 bool CTemplate::ReinitIsmIgmFlux(){
     //re-init flux tpl: without dust or other weight
-    m_kDust = -1;
-    m_meiksinIdx = -1;
+    //m_kDust = -1;//shdnt reinit these two values so that we can profit from the saved Meiksin/IGMcoeff
+    //m_meiksinIdx = -1;
     TAxisSampleList & Ytpl = m_FluxAxisIsmIgm.GetSamplesVector();
     const TAxisSampleList & YtplRaw = m_FluxAxis.GetSamplesVector();
     for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++)

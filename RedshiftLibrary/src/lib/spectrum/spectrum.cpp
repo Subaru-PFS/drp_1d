@@ -73,7 +73,7 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_dfBinPath = "";
 
 }
-
+//assignment constructor
 CSpectrum::CSpectrum(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
@@ -90,7 +90,7 @@ CSpectrum::~CSpectrum()
 {
 
 }
-
+//copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.GetSpectralAxis();
