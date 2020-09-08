@@ -100,7 +100,6 @@ private:
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
     //ISM Calzetti
-    Float64* m_YtplRawBuffer;
     Int32 m_YtplRawBufferMaxBufferSize;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 

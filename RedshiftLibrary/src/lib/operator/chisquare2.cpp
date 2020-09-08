@@ -19,6 +19,7 @@
 #include <float.h>
 
 #include <sstream>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -178,6 +179,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                       currentRange,
                                       overlapRate,
                                       overlapThreshold);
+
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return;
@@ -250,7 +252,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
 
-
     //Loop on the meiksin Idx
 
     Bool igmLoopUseless_WavelengthRange = false;
@@ -297,6 +298,10 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); 
         */
         //Loop on the EBMV dust coeff
+        if(opt_extinction)
+            itplTplSpectrum.SetRequiredCorrections(2);//This is mandatory, otherwise no corrections can be applied 
+        else 
+            itplTplSpectrum.SetRequiredCorrections(1); 
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
             Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
@@ -419,7 +424,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             
             CSpectrumFluxAxis & tplIsmIgm = itplTplSpectrum.GetFluxAxisIsmIgm();
             TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
-
             Float64 sumCross = 0.0;
             Float64 sumT = 0.0;
             Float64 sumS = 0.0;
@@ -1253,10 +1257,9 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     bool ytpl_modified = false;
     EStatus status;
     TFloat64Range currentRange;
-    TFloat64List Ytpl_RawBuffer;
     Float64 overlapThreshold; //todo
     Float64 overlapRate = 0.0;
-
+    BasicFit_preallocateBuffers(spectrum);
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
@@ -1285,13 +1288,15 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
     
     //find samples limits
-    Int32 kStart = -1, kEnd = -1;
-    ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+    Int32 kStart = 0;
+    Int32 kEnd = itplTplFluxAxis.GetSamplesCount();
+    //ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
     if(ret==-1)
     {
         Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
         return -1;
     }
+    m_templateRebined_bf.SetRequiredCorrections(2);//tell we are going to apply both ISM and IGM corrections
     //m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
     ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 
@@ -1300,8 +1305,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     //std::shared_ptr<CModelSpectrumResult> resultspcmodel;
-    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(tpl));
- 
+    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf/*.GetFluxAxisIsmIgm()*/));
     m_savedModelSpectrumResults.push_back(resultspcmodel);
 
     return 0;

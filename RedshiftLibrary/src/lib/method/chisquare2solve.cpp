@@ -161,10 +161,18 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             Int32 MeiksinIdx;
             Float64 DustCoeff;
             Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff);
+            if(ret==-1){
+                Log.LogError("  Chisquare2Solve: Couldn't find best model for candidate %f", zcandidates_unordered_list[i]);
+                continue;
+            }
             //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
             CTemplate tpl;
             CTemplate tpl_obj;
-            tpl_obj.GetTemplateByName( tplCatalog, tplCategoryList, tplName, tpl);
+            Int32 b = tpl_obj.GetTemplateByName( tplCatalog, tplCategoryList, tplName, tpl);
+            if(b==-1){
+                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName, zcandidates_unordered_list[i]);
+                continue;
+            }
             std::shared_ptr<CModelSpectrumResult> resultspcmodel;
             m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
