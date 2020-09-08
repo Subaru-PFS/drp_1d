@@ -34,8 +34,11 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     bfs::path rootFolder( priorDirPath.c_str() );
     if(!bfs::exists(rootFolder))
     {
-        Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
-        Log.LogWarning("    CPriorHelperContinuum: priors won't be used");
+        if(!rootFolder.string().empty())
+        {
+            Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
+            Log.LogDetail("    CPriorHelperContinuum: priors won't be used");
+        }
         mInitFailed = true;
         return false;
     }
@@ -286,7 +289,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
 
                     if(verboseRead)
                     {
-                        Log.LogInfo("    CPriorHelperContinuum: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
+                        Log.LogDetail("    CPriorHelperContinuum: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
                     }
                 }
                 if(lineVals.size()!=m_nEbv)
@@ -298,7 +301,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
                 data.push_back(lineVals);
                 if(verboseRead)
                 {
-                    Log.LogInfo("    CPriorHelperContinuum: read n=%d cols", lineVals.size());
+                    Log.LogDetail("    CPriorHelperContinuum: read n=%d cols", lineVals.size());
                 }
             }
         }
@@ -380,15 +383,15 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
        }
        if(verbose)
        {
-           Log.LogInfo("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
+           Log.LogDetail("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
        }
        TPriorEList dataz = m_data[idx][idz];
        for(UInt32 icol=0; icol<m_nEbv; icol++)
        {
            if(verbose)
            {
-               Log.LogInfo("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
-               Log.LogInfo("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
+               Log.LogDetail("    CPriorHelperContinuum: get prior for tpl=%s", tplname.c_str());
+               Log.LogDetail("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].logpriorTZE);
            }
             dataz[icol].logpriorTZE /= m_dz;
             dataz[icol].logpriorTZE = m_beta*log(dataz[icol].logpriorTZE);
