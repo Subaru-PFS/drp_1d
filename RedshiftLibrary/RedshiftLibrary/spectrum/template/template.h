@@ -32,29 +32,32 @@ public:
                             const TStringList& tplCategoryList,
                             const std::string tplName,
                             CTemplate& tpl);
+    const CSpectrumFluxAxis&    GetFluxAxis() const;
+    CSpectrumFluxAxis&          GetFluxAxis();
+    const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;
+    CSpectrumFluxAxis&          GetFluxAxisWithoutIsmIgm();
+
     Bool Save(const char *filePath ) const;
 
-    const CSpectrumFluxAxis&        GetFluxAxisIsmIgm() const;
-    CSpectrumFluxAxis&              GetFluxAxisIsmIgm();
     //Calzetti extinction
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
+
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
-    void SetRequiredCorrections(Int32 nbcorrections);
-    void DecrementCorrectionState();
+
     //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
-    void SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, 
-                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin);
-    bool ReinitIsmIgmFlux();
+    bool ReinitIsmIgmConfig();
+    bool ReinitIsmIgmComputedCoeffs(Int32 kDust, Int32 meiksinIdx);
+
+    CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
+    CSpectrumFluxCorrectionMeiksin m_igmCorrectionMeiksin;
 private:
 
     std::string     m_Category;
     Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
     Int32   m_meiksinIdx = -1;
-    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
-    //IGM meiksin
-    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+
     CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
@@ -62,23 +65,39 @@ private:
     
 protected:
     Int32  m_IsmIgmApplied = -1;
-    Int32  m_IsmIgmAppliedStatus = -1;
 };
+
+//override spectrum flux getters to return the corrected flux rather than the raw flux
+//this is required when saving the spectrum model corresponding to a template. By default
+//it is considered as a spectrum..thus we lose the m_FluxAxisIsmIgm variable.
 inline
-const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const
+const CSpectrumFluxAxis& CTemplate::GetFluxAxis() const
 {
-    if(m_kDust ==-1 && m_meiksinIdx == -1 && m_IsmIgmApplied == -1)
+    if(m_kDust ==-1 && m_meiksinIdx == -1)
         return m_FluxAxis;
     else
         return m_FluxAxisIsmIgm;
 }
+
 inline
-CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm()
+CSpectrumFluxAxis& CTemplate::GetFluxAxis()
 {
-    if(m_kDust ==-1 && m_meiksinIdx == -1 && m_IsmIgmApplied == -1)
+    if(m_kDust ==-1 && m_meiksinIdx == -1)
         return m_FluxAxis;
     else
         return m_FluxAxisIsmIgm;
+}
+
+inline
+const CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm() const
+{
+    return m_FluxAxis;
+   
+}
+inline
+CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm()
+{
+    return m_FluxAxis;
 }
 inline
 Int32 CTemplate::GetIsmCoeff() const
@@ -91,32 +110,6 @@ Int32 CTemplate::GetIgmCoeff() const
     return m_meiksinIdx;
 }
 
-/**
- * @m_IsmIgmApplied
- * -1: no corrections applied; 
- * 0: all required corrections are applied;
- * 1: a first correction should be applied; 
- * 2: a second correction should be applied;
- * //each time a correction is applied we decrement m_IsmIgmApplied; 
- * once we reach 0== all corrections are applied, then we can multiply by the fluxaxis
-*/
-inline
-void CTemplate::SetRequiredCorrections(Int32 nbcorrections ) 
-{   
-    m_IsmIgmApplied = nbcorrections; //max value
-    m_IsmIgmAppliedStatus = nbcorrections;
-    return;
-}
-inline
-void CTemplate::DecrementCorrectionState()
-{   
-    m_IsmIgmAppliedStatus = m_IsmIgmAppliedStatus -1; 
-    if(m_IsmIgmAppliedStatus < -1){
-        Log.LogError("No corrections were setup in advance. CTemplate::SetRequiredCorrections should be called first! Aborting");
-        //throw runtime_error("No ISM or IGM corrections were setup. CTemplate::SetRequiredCorrections should be called first! Aborting");
-    }
-    return;
-}
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
 typedef std::vector< std::shared_ptr< const CTemplate> >     TTemplateConstRefList;
 

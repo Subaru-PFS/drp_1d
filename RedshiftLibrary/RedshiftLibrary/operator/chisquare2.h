@@ -100,12 +100,7 @@ private:
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
     //ISM Calzetti
-    Int32 m_YtplRawBufferMaxBufferSize;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
-
-    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
-    //IGM meiksin
-    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);

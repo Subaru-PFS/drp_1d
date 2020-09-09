@@ -32,7 +32,6 @@ CTemplate::CTemplate( const std::string& name, const std::string& category,
   m_Name = name ;
   m_SpectralAxis = spectralAxis;
   m_FluxAxis = fluxAxis;
-  //m_FluxAxisIsmIgm //by default, keep it empty
 }
 
 //TODO use copy constructor of CSpectrum
@@ -43,9 +42,9 @@ CTemplate::CTemplate( const CTemplate& other):
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
     m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxis();
-    if(other.GetFluxAxisIsmIgm().GetSamplesCount())
-        m_FluxAxisIsmIgm = other.GetFluxAxisIsmIgm();
+    m_FluxAxis = other.GetFluxAxisWithoutIsmIgm();
+    if(other.GetFluxAxis().GetSamplesCount())
+        m_FluxAxisIsmIgm = other.GetFluxAxis();
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
@@ -60,9 +59,9 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
     m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxis();
-    if(other.GetFluxAxisIsmIgm().GetSamplesCount())
-        m_FluxAxisIsmIgm = other.GetFluxAxisIsmIgm();
+    m_FluxAxis = other.GetFluxAxisWithoutIsmIgm();
+    if(other.GetFluxAxis().GetSamplesCount())
+        m_FluxAxisIsmIgm = other.GetFluxAxis();
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
@@ -120,11 +119,6 @@ const std::string& CTemplate::GetCategory() const
 }
 
 
-void CTemplate::SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin)   
-{
-    m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-    m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-}
 /*void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const
 {
     m_kstart = kstart;
@@ -167,7 +161,6 @@ Bool CTemplate::Save( const char* filePath ) const
 //Calzetti extinction
 bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 {
-    DecrementCorrectionState();
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
 
     m_FluxAxisIsmIgm.SetSize(m_SpectralAxis.GetSamplesCount());
@@ -176,16 +169,16 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
     {
         if(kDust!= m_kDust){//if we changed the kDust value
             m_kDust = kDust;
-            m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
-            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->getDustCoeff( kDust, Xtpl[k]);
+            /*m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+            //reinit to 1
+            std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1);*/
+            /*if(!m_computedMeiksingCoeff.size()){
+                m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+                std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1);
+            }*/
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, Xtpl[k]);
         } 
-        if(m_IsmIgmAppliedStatus == 0) //this is the last correction to be applied--> multiply by m_fluxAxis
-            if(m_IsmIgmApplied == 1)
-                m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedDustCoeff[k];
-            else
-                m_FluxAxisIsmIgm[k] *= m_FluxAxis[k]*m_computedDustCoeff[k];
-        else
-            m_FluxAxisIsmIgm[k] = m_computedDustCoeff[k];
+        m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
     }
     return true;
 }
@@ -193,8 +186,7 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 
 bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 {
-    DecrementCorrectionState();
-    Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+    Int32 redshiftIdx = m_igmCorrectionMeiksin.GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     Bool igmCorrectionAppliedOnce = false;
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
 
@@ -202,42 +194,54 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 
     for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++){
          
-        if(Xtpl[k] <= m_igmCorrectionMeiksin->GetLambdaMax()){
+        if(Xtpl[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
             if(m_meiksinIdx != meiksinIdx){
                 m_meiksinIdx = meiksinIdx;
-                m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+                /*m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+                std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1);*/
+                /*if(!m_computedDustCoeff.size()){
+                    m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+                    std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1);
+                }*/
                 Int32 kLbdaMeiksin = 0;
-                if(Xtpl[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
+                if(Xtpl[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
                 {
-                    kLbdaMeiksin = Int32(Xtpl[k]- m_igmCorrectionMeiksin->GetLambdaMin());
+                    kLbdaMeiksin = Int32(Xtpl[k] - m_igmCorrectionMeiksin.GetLambdaMin());
                 }else //if lambda lower than min meiksin value, use lower meiksin value
                 {
                     kLbdaMeiksin = 0;
                 }
-                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
             }
-            if(m_IsmIgmAppliedStatus == 0) //this is the last correction to be applied--> multiply by m_fluxAxis as well
-                if(m_IsmIgmApplied==1)
-                    m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k];
-                else 
-                    m_FluxAxisIsmIgm[k] *= m_FluxAxis[k]*m_computedMeiksingCoeff[k];
-            else 
-                m_FluxAxisIsmIgm[k] = m_computedMeiksingCoeff[k];
+            m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
             igmCorrectionAppliedOnce = true;
         }
     }
     return igmCorrectionAppliedOnce;
 }
 
-bool CTemplate::ReinitIsmIgmFlux(){
-    //re-init flux tpl: without dust or other weight
-    //m_kDust = -1;//shdnt reinit these two values so that we can profit from the saved Meiksin/IGMcoeff
-    //m_meiksinIdx = -1;
-    m_IsmIgmAppliedStatus = m_IsmIgmApplied; //reinit
+//reinit ism/igm configuration when we change redshift value
+bool CTemplate::ReinitIsmIgmConfig(){
+    m_kDust = -1;
+    m_meiksinIdx = -1;
     //no more need to copy the fluxaxis since we decided to track the correction application status and to read directly from fluxAxis
-    /*for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++)
-    {   //copying vector: cant avoid it!!
-        m_FluxAxisIsmIgm[k] = m_FluxAxis[k];
-    }*/
+    //set size of computedCorreCoeff and fill it with ones
+    //m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    //std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1);
+
+    //m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    //std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1);         
+    return true;
+}
+
+bool CTemplate::ReinitIsmIgmComputedCoeffs(Int32 kDust, Int32 meiksinIdx){
+    if(m_meiksinIdx != meiksinIdx){
+        m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+        std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1);
+    }
+    if(kDust!= m_kDust){
+        m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+        std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1);
+    }
     return true;
 }

@@ -37,11 +37,11 @@ public:
     Bool InvertFlux();
 
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
-    const CSpectrumFluxAxis&        GetFluxAxis() const;
+    virtual const CSpectrumFluxAxis& GetFluxAxis() const;
 
     const std::string               GetName() const;
 
-    CSpectrumFluxAxis&              GetFluxAxis();
+    virtual CSpectrumFluxAxis&      GetFluxAxis();
     CSpectrumSpectralAxis&          GetSpectralAxis();
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
