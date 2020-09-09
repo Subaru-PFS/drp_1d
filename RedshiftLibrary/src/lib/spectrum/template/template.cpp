@@ -120,7 +120,7 @@ const std::string& CTemplate::GetCategory() const
 }
 
 
-void CTemplate::SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const    
+void CTemplate::SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin)   
 {
     m_ismCorrectionCalzetti = ismCorrectionCalzetti;
     m_igmCorrectionMeiksin = igmCorrectionMeiksin;
@@ -165,7 +165,7 @@ Bool CTemplate::Save( const char* filePath ) const
 }
 
 //Calzetti extinction
-bool  CTemplate::ApplyDustCoeff(Int32 kDust) const 
+bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     DecrementCorrectionState();
     const TAxisSampleList & Xtpl = m_SpectralAxis.GetSamplesVector();
@@ -191,7 +191,7 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust) const
 }
 
 
-bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift) const
+bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 {
     DecrementCorrectionState();
     Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range

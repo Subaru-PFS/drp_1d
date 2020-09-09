@@ -37,32 +37,32 @@ public:
     const CSpectrumFluxAxis&        GetFluxAxisIsmIgm() const;
     CSpectrumFluxAxis&              GetFluxAxisIsmIgm();
     //Calzetti extinction
-    bool ApplyDustCoeff(Int32 kDust) const;
-    bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift) const; 
+    bool ApplyDustCoeff(Int32 kDust);
+    bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
     void SetRequiredCorrections(Int32 nbcorrections);
-    void DecrementCorrectionState() const;
+    void DecrementCorrectionState();
     //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
     void SetFluxCorrectionIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti, 
-                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin) const;
+                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin);
     bool ReinitIsmIgmFlux();
 private:
 
     std::string     m_Category;
-    mutable Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
-    mutable Int32   m_meiksinIdx = -1;
-    mutable std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
+    Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
+    Int32   m_meiksinIdx = -1;
+    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     //IGM meiksin
-    mutable std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-    mutable CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
+    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+    CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
-    mutable TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
-    mutable TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
+    TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
+    TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
     
 protected:
-    mutable Int32  m_IsmIgmApplied = -1;
-    mutable Int32  m_IsmIgmAppliedStatus = -1;
+    Int32  m_IsmIgmApplied = -1;
+    Int32  m_IsmIgmAppliedStatus = -1;
 };
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisIsmIgm() const
@@ -108,7 +108,7 @@ void CTemplate::SetRequiredCorrections(Int32 nbcorrections )
     return;
 }
 inline
-void CTemplate::DecrementCorrectionState() const
+void CTemplate::DecrementCorrectionState()
 {   
     m_IsmIgmAppliedStatus = m_IsmIgmAppliedStatus -1; 
     if(m_IsmIgmAppliedStatus < -1){
