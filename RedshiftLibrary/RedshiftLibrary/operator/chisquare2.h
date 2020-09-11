@@ -51,7 +51,7 @@ public:
                                       std::string opt_interp,
                                       std::string opt_extinction,
                                       const TFloat64Range& lambdaRange,
-                                      std::shared_ptr<CModelSpectrumResult> resultspcmodel);
+                                      Float64 overlapThreshold);
     void            SaveSpectrumResults(CDataStore &dataStore);
 private:
 

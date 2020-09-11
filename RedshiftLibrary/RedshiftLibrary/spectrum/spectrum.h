@@ -126,6 +126,7 @@ CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis()
 inline
 CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
 {
+    m_FineGridInterpolated = false; 
     return m_FluxAxis;
 }
 

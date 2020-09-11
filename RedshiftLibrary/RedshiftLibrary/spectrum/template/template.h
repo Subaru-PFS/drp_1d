@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <map>
-
+#include <iostream>
 namespace NSEpic
 {
 class CTemplateCatalog;
@@ -47,8 +47,7 @@ public:
     Int32 GetIgmCoeff() const;
 
     //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
-    bool ReinitIsmIgmConfig();
-    bool ReinitIsmIgmComputedCoeffs(Int32 kDust, Int32 meiksinIdx);
+    bool InitIsmIgmConfig();
 
     CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
     CSpectrumFluxCorrectionMeiksin m_igmCorrectionMeiksin;
@@ -57,6 +56,7 @@ private:
     std::string     m_Category;
     Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
     Int32   m_meiksinIdx = -1;
+    Float64 m_redshiftMeiksin = -1;
 
     CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
@@ -82,10 +82,15 @@ const CSpectrumFluxAxis& CTemplate::GetFluxAxis() const
 inline
 CSpectrumFluxAxis& CTemplate::GetFluxAxis()
 {
-    if(m_kDust ==-1 && m_meiksinIdx == -1)
+    if(m_kDust ==-1 && m_meiksinIdx == -1){
+        std::cout<<"returning fluxAxis with no correction from non-cte getter cause correction coeffs are not defined\n";
         return m_FluxAxis;
-    else
+    }
+    else{
+        std::cout<<"returning corrected flux (probably to update) and reinitialising ism/igm coeffs \n";
+        InitIsmIgmConfig();
         return m_FluxAxisIsmIgm;
+    } 
 }
 
 inline

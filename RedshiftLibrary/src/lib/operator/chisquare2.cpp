@@ -133,8 +133,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     fittingAmplitudeNegative = 0;
     overlapRate = 0.0;
     status = nStatus_DataError;
-
-    m_templateRebined_bf.ReinitIsmIgmConfig();
+    //to be moved to template non-const getter
+    m_templateRebined_bf.InitIsmIgmConfig();
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
@@ -266,29 +266,24 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         }
         m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); 
         */
-        bool ytpl_modified = false;
         bool igmCorrectionAppliedOnce = false;
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
             Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
-            //if(ytpl_modified)
-            //reinit coefficient anyway
-            m_templateRebined_bf.ReinitIsmIgmComputedCoeffs(kDust, meiksinIdx); 
 
             Float64 coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti.GetEbmvValue(kDust);
             //check that we got the same coeff:
             if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
-            ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(kDust);
+            m_templateRebined_bf.ApplyDustCoeff(kDust);
             //Meiksin IGM extinction
             if(opt_extinction)
             {
                 igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
                 if(!igmCorrectionAppliedOnce)
-                    igmLoopUseless_WavelengthRange = true;
-                
+                    igmLoopUseless_WavelengthRange = true; 
             }
             //*/
 
@@ -353,8 +348,11 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
             
-            CSpectrumFluxAxis & tplIsmIgm = m_templateRebined_bf.GetFluxAxis();
-            TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
+            const CSpectrumFluxAxis & tplIsmIgm = m_templateRebined_bf.GetFluxAxis();
+            //TODO Mira: clean below code once bug is solved
+            std::cout<<"tplIsmIgm :"<<tplIsmIgm[0]<<"\n";
+            std::cout<<"tplFlux :"<<m_templateRebined_bf.GetFluxAxisWithoutIsmIgm()[0]<<"\n";
+            const TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
             Float64 sumCross = 0.0;
             Float64 sumT = 0.0;
             Float64 sumS = 0.0;
@@ -1182,16 +1180,14 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            std::string opt_interp,
                                            std::string opt_extinction,
                                            const TFloat64Range& lambdaRange,
-                                           std::shared_ptr<CModelSpectrumResult> resultspcmodel)
+                                           Float64 overlapThreshold)
 {
     Log.LogDetail("  Operator-COperatorChiSquare2: building spectrum model chisquare2 for candidate Zcand=%f", redshift);
-    bool ytpl_modified = false;
     EStatus status;
     TFloat64Range currentRange;
-    Float64 overlapThreshold; //todo
     Float64 overlapRate = 0.0;
-    m_templateRebined_bf.ReinitIsmIgmConfig();
-    BasicFit_preallocateBuffers(spectrum);
+    m_templateRebined_bf.InitIsmIgmConfig();
+    //BasicFit_preallocateBuffers(spectrum);
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
@@ -1222,14 +1218,14 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         return -1;
     }
     //m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
-    ytpl_modified = m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
+    m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")
     {
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
-    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf));
-    m_savedModelSpectrumResults.push_back(resultspcmodel);
+    //resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf));
+    m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(m_templateRebined_bf));
 
     return 0;
 }

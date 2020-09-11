@@ -172,16 +172,14 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             if(b==-1){
                 Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName, zcandidates_unordered_list[i]);
                 continue;
-            }
-            std::shared_ptr<CModelSpectrumResult> resultspcmodel;
+            }   
             m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
                                                  DustCoeff, MeiksinIdx,
-                                                 opt_interp, opt_extinction, lambdaRange,
-                                                 resultspcmodel);
-            m_chiSquareOperator->SaveSpectrumResults(resultStore);
-            
+                                                 opt_interp, opt_extinction, lambdaRange, 
+                                                 overlapThreshold);   
         }
+        m_chiSquareOperator->SaveSpectrumResults(resultStore);
         return ChisquareSolveResult;
     }
 
