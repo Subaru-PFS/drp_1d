@@ -96,7 +96,7 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
     
     if( !chisquareResult )
     {
-        //Log.LogInfo( "Failed to compute chi square value");
+        //Log.LogError( "Failed to compute chi square value");
         return false;
     }else{
         // Store results

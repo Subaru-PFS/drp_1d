@@ -245,7 +245,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
         if( !chisquareResult )
         {
-            //Log.LogInfo( "Failed to compute chi square value");
+            //Log.LogError( "Failed to compute chi square value");
             return false;
         }else{
             // Store results
@@ -291,7 +291,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
-    Log.LogDetail("    chisquarelogsolve: using results in scope:%s", scope.c_str());
+    Log.LogDetail("    chisquarelogsolve: using results in scope: %s", scope.c_str());
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
@@ -328,10 +328,9 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
             redshifts = meritResult->Redshifts;
         }
 
-
         //check chi2 results status for this template
         {
-            Bool foundBadStatus=0;
+            Bool foundBadStatus = 0;
             for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
             {
                 if(meritResult->Status[kz]!=COperator::nStatus_OK)
@@ -342,7 +341,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
             }
             if(foundBadStatus)
             {
-                Log.LogError("chisquarelogsolve: Found bad status result... fot tpl=%s", (*it).first.c_str());
+                Log.LogError("chisquarelogsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
             }
         }
 
@@ -383,11 +382,9 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
     }
 
 
-
-
     if(retPdfz!=0)
     {
-        Log.LogError("Chisquarelog: Pdfz computation failed");
+        Log.LogError("    chisquarelogsolve: Pdfz computation failed");
     }
 
     return retPdfz;
