@@ -287,7 +287,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
 Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult )
 {
-    Log.LogInfo("    chisquarelogsolve: Pdfz computation");
+    Log.LogInfo("chisquarelogsolve: Pdfz computation");
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 

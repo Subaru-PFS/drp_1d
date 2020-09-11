@@ -468,9 +468,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list);
             if(retzc)
             {
-                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
             }else{
-                Log.LogError( "Failed to get z candidates from these results");
+                Log.LogError( "  Failed to get z candidates from these results");
             }
             //compute the integratedPDF and sort candidates based on intg PDF
             //truncate based on maxCount
@@ -530,9 +530,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
             {
-                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
             }else{
-                Log.LogError( "Failed to get z candidates from these results");
+                Log.LogError( "  Failed to get z candidates from these results");
             }
             
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
@@ -625,9 +625,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
             {
-                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
             }else{
-                Log.LogError( "Failed to get z candidates from these results");
+                Log.LogError( "  Failed to get z candidates from these results");
             }
             //compute the integratedPDF and sort candidates based on intg PDF
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
