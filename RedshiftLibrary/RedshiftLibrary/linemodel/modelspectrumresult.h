@@ -19,7 +19,7 @@ class CModelSpectrumResult : public COperatorResult
 
 public:
 
-    CModelSpectrumResult(CSpectrum spc);
+    CModelSpectrumResult(const CSpectrum& spc);
     CModelSpectrumResult();
     virtual ~CModelSpectrumResult();
 
@@ -32,7 +32,7 @@ public:
     CSpectrum& GetSpectrum();
 
 private:
-    CSpectrum model;
+    CSpectrum m_model;
 
 };
 
