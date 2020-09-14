@@ -1,3 +1,28 @@
+# 0.12.0 (2020-08-11)
+
+## New Features
+
+ * Add the probability of the source to be a star / galaxy / qso
+
+## API Changes
+None
+
+## Bug Fixes
+
+ * [5898] Fix stellar solver output to comply with galaxy solver
+ * [5907] Fix coredump caused by `skipsecondpass : yes` parameter
+ * [5834] Fix candidate filtering when the solver provide a unique candidate
+
+## Other Changes and Additions
+None
+
+# 0.10.1 (2020-07-02)
+
+## Bug Fixes
+
+* [5858] Fix memory bug
+* [5859] Fix Tplcombination operator
+
 # 0.10.0 (2020-06-23)
 
 ## New Features

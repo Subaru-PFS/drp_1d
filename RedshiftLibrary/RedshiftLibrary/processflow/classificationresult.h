@@ -32,9 +32,9 @@ public:
     }
 
     void SetTypeLabel( std::string lbl );
-    void SetG(Float64 evidence);
-    void SetS(Float64 evidence);
-    void SetQ(Float64 evidence);
+    void SetG(Float64 evidence, Float64 prob);
+    void SetS(Float64 evidence, Float64 prob);
+    void SetQ(Float64 evidence, Float64 prob);
 
 
 protected:
@@ -43,6 +43,9 @@ protected:
     Float64 m_evidence_galaxy=-1.0;
     Float64 m_evidence_star=-1.0;
     Float64 m_evidence_qso=-1.0;
+    Float64 m_prob_galaxy=-1.0;
+    Float64 m_prob_star=-1.0;
+    Float64 m_prob_qso=-1.0;
 };
 
 }

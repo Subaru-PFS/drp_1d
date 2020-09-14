@@ -50,7 +50,7 @@
 #include <RedshiftLibrary/method/linemodeltplshapesolve.h>
 #include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
-#include <RedshiftLibrary/processflow/classificationresult.h>
+#include <RedshiftLibrary/method/classificationsolve.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
@@ -124,10 +124,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string opt_linemeas_catalog_path;
     ctx.GetParameterStore().Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
     TFloat64List redshifts;
+    Float64 zref = -1.0;
     if(opt_linemeas_catalog_path!="")
     {
-        Log.LogInfo( "Override z-search range !");
-        Float64 zref = -1.0;
+        Log.LogInfo( "Override z-search range !");   
         namespace fs = boost::filesystem;
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
 
@@ -158,12 +158,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
         {
-
-            Float64 nStepsZ = deltaZrangeHalf*2/stepZ+1;
-            for(Int32 kz=0; kz<nStepsZ; kz++)
+            //make sure to include zref in redshift vector
+            Float64 nStepsZhalf = std::ceil(deltaZrangeHalf/stepZ);
+            redshifts.resize(nStepsZhalf*2 + 1); 
+            for(Int32 kz= 0; kz<nStepsZhalf +1 ; kz++)
             {
-                Float64 _z = zref + kz*stepZ - deltaZrangeHalf;
-                redshifts.push_back(_z);
+                Float64 _z = zref + kz*stepZ;
+                redshifts[nStepsZhalf + kz] = _z;
+            }
+            for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
+            {
+                Float64 _z = zref - kz*stepZ;
+                redshifts[nStepsZhalf - kz]= _z;
             }
             Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
         }else{
@@ -183,6 +189,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }else{
         redshifts = raw_redshifts;
     }
+    ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.zref", zref);
 
     if(redshifts.size() < 1)
     {
@@ -301,7 +308,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
 
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "starsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore().Get( "stellarsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
         ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
@@ -343,6 +350,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
+        starResult->preSave(ctx.GetDataStore());
     }
 
     // Quasar method
@@ -432,6 +440,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store qso result.");
         }
+        qsoResult->preSave(ctx.GetDataStore());
     }
 
     // Galaxy method
@@ -743,50 +752,18 @@ else if(methodName  == "reliability" ){
 
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-    std::shared_ptr<CClassificationResult> classifResult = std::shared_ptr<CClassificationResult>( new CClassificationResult() );
-    Float64 qsoEvidence=-DBL_MAX;
-    Float64 stellarEvidence=-DBL_MAX;
-    Float64 galaxyEvidence=-DBL_MAX;
-    std::string typeLabel = "U";
+
+    CClassificationSolve classifier(enableStarFitting, enableQsoFitting);
+    classifier.Classify(ctx.GetDataStore(), mResult, starResult, qsoResult);
+
     if(mResult){
-        mResult->GetEvidenceFromPdf(ctx.GetDataStore(), galaxyEvidence);
-        Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
-        typeLabel = "G";
+        Log.LogInfo( "Setting object type: %s", classifier.typeLabel.c_str());
+        mResult->SetTypeLabel(classifier.typeLabel); //maybe this is unecessary since there is a classifresult now
     }
-    if(enableStarFitting=="yes"){
-        Int32 retStellarEv = starResult->GetEvidenceFromPdf(ctx.GetDataStore(), stellarEvidence);
-        if(retStellarEv==0)
-        {
-            Log.LogInfo( "Found stellar evidence: %e", stellarEvidence);
-            if(stellarEvidence>galaxyEvidence)
-            {
-                typeLabel = "S";
-            }
-        }
-    }
-    if(enableQsoFitting=="yes"){
-        Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(ctx.GetDataStore(), qsoEvidence);
-        if(retQsoEv==0)
-        {
-            Log.LogInfo( "Found qso evidence: %e", qsoEvidence);
-            if(qsoEvidence>galaxyEvidence && qsoEvidence>stellarEvidence)
-            {
-                typeLabel = "Q";
-            }
-        }
-    }
-    if(mResult){
-        Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
-        mResult->SetTypeLabel(typeLabel); //maybe this is unecessary since there is a classifresult now
-    }
-    classifResult->SetTypeLabel(typeLabel);
-    classifResult->SetG(galaxyEvidence);
-    classifResult->SetS(stellarEvidence);
-    classifResult->SetQ(qsoEvidence);
 
     //save the classification results
-    if( classifResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifResult );
+    if( classifier.classifResult ) {
+        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifier.classifResult );
     }else{
       throw std::runtime_error("Unable to store method result");
     }

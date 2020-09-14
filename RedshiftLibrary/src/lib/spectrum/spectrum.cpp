@@ -118,7 +118,7 @@ Bool CSpectrum::RebinFineGrid() const
   Float64 lmax = m_SpectralAxis[n - 1];
   Int32 nTgt = (lmax - lmin) / m_dLambdaFineGrid + 2.0 / m_dLambdaFineGrid;
 
-  m_pfgFlux.resize(nTgt * sizeof(Float64));
+  m_pfgFlux.resize(nTgt);
 
   const TAxisSampleList Ysrc = m_FluxAxis.GetSamplesVector();
   const TAxisSampleList Xsrc = m_SpectralAxis.GetSamplesVector();

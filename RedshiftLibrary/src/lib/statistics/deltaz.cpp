@@ -17,7 +17,7 @@ CDeltaz::~CDeltaz()
 
 }
 
-Float64 CDeltaz::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z) 
+Float64 CDeltaz::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z, Int32 gslfit) 
 {
     Float64 dz = -1;
     if (!redshifts.size() )
@@ -27,8 +27,11 @@ Float64 CDeltaz::GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z)
             Float64 zRangeHalf = 0.002/(deltaz_i+1); 
             Log.LogInfo("  Deltaz: Deltaz computation nb %i with zRangeHalf %f", deltaz_i, zRangeHalf);
             TFloat64Range range = TFloat64Range(z - zRangeHalf*(1+z), z + zRangeHalf*(1+z));
-            //ret = Compute3ddl(pdf, Redshifts, z, range, dz);
-            ret = Compute(pdf, redshifts, z, range, dz);            
+            if(gslfit)
+                ret = Compute3ddl(pdf, redshifts, z, range, dz);  
+            else{
+                ret = Compute(pdf, redshifts, z, range, dz);
+            }          
             if (ret == -1){
                 Log.LogWarning("  Deltaz: Deltaz computation failed for %f", zRangeHalf);
                 deltaz_i++; 
@@ -146,6 +149,7 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
     cov = gsl_matrix_alloc (3, 3);
 
     double x0 = redshift;
+    double y0 = merits[iz];
     for (i = 0; i < n; i++)
     {
         xi = redshifts[i+izmin];
@@ -159,7 +163,7 @@ Int32 CDeltaz::Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 
         gsl_matrix_set (X, i, 1, xi-x0);
         gsl_matrix_set (X, i, 2, (xi-x0)*(xi-x0));
 
-        gsl_vector_set (y, i, yi);
+        gsl_vector_set (y, i, y0-yi);
         gsl_vector_set (w, i, 1.0/(ei*ei));
     }
 
