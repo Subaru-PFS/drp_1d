@@ -75,8 +75,9 @@ const CSpectrumFluxAxis& CTemplate::GetFluxAxis() const
 {
     if(m_kDust ==-1 && m_meiksinIdx == -1)
         return m_FluxAxis;
-    else
+    else{
         return m_FluxAxisIsmIgm;
+    }
 }
 
 inline
@@ -88,7 +89,6 @@ CSpectrumFluxAxis& CTemplate::GetFluxAxis()
     }
     else{
         std::cout<<"returning corrected flux (probably to update) and reinitialising ism/igm coeffs \n";
-        InitIsmIgmConfig();
         return m_FluxAxisIsmIgm;
     } 
 }

@@ -133,8 +133,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     fittingAmplitudeNegative = 0;
     overlapRate = 0.0;
     status = nStatus_DataError;
-    //to be moved to template non-const getter
+
     m_templateRebined_bf.InitIsmIgmConfig();
+
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
@@ -149,13 +150,14 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     TFloat64Range currentRange;
 
-    Int32 ret = RebinTemplate(spectrum, tpl,
-                                      redshift, 
-                                      lambdaRange,
-                                      opt_interp, 
-                                      currentRange,
-                                      overlapRate,
-                                      overlapThreshold);
+    Int32 ret = RebinTemplate(  spectrum, 
+                                tpl,
+                                redshift, 
+                                lambdaRange,
+                                opt_interp, 
+                                currentRange,
+                                overlapRate,
+                                overlapThreshold);
 
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
@@ -165,11 +167,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return;
     }
-    CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
+    //CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
     const CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
-
     const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
-    TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
 
     // Optionally Apply some Calzetti Extinction for DUST
     Int32 nDustCoeffs=1;
@@ -257,15 +257,15 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         //find samples limits
 
         Int32 kStart = 0;
-        Int32 kEnd = itplTplFluxAxis.GetSamplesCount();
+        Int32 kEnd = Xtpl.size(); //itplTplFluxAxis.GetSamplesCount();
         /*ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
         if(ret==-1)
         {
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d    . ! Aborting.", kStart, kEnd);
             break;
         }
-        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); 
-        */
+        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); */
+        
         bool igmCorrectionAppliedOnce = false;
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
@@ -347,8 +347,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 }
             }
             //*/
-            
-            const CSpectrumFluxAxis & tplIsmIgm = m_templateRebined_bf.GetFluxAxis();
+            const CTemplate& tmp = m_templateRebined_bf;//obligatory, otherwise non-const GetFluxAxis is called
+            const CSpectrumFluxAxis& tplIsmIgm = /*m_templateRebined_bf*/tmp.GetFluxAxis();
             //TODO Mira: clean below code once bug is solved
             std::cout<<"tplIsmIgm :"<<tplIsmIgm[0]<<"\n";
             std::cout<<"tplFlux :"<<m_templateRebined_bf.GetFluxAxisWithoutIsmIgm()[0]<<"\n";

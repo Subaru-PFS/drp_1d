@@ -32,10 +32,10 @@ CSpectrum::CSpectrum()
 
 
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
-    m_SpectralAxis(UInt32(0), other.GetSpectralAxis().IsInLogScale())
+    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
-    const CSpectrumSpectralAxis & otherSpectral = other.GetSpectralAxis();
-    const CSpectrumFluxAxis & otherFlux = other.GetFluxAxis();
+    const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
+    const CSpectrumFluxAxis & otherFlux = other.m_FluxAxis;
     const TFloat64List& error = otherFlux.GetError();
 
     TAxisSampleList & SpectralVector = m_SpectralAxis.GetSamplesVector();
@@ -76,8 +76,8 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
 //assignment constructor
 CSpectrum::CSpectrum(const CSpectrum& other)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxis();
+    m_SpectralAxis = other.m_SpectralAxis;
+    m_FluxAxis = other.m_FluxAxis;
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
@@ -93,8 +93,8 @@ CSpectrum::~CSpectrum()
 //copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxis();
+    m_SpectralAxis = other.m_SpectralAxis;
+    m_FluxAxis = other.m_FluxAxis;
 
     m_estimationMethod = other.GetContinuumEstimationMethod();
     m_dfBinPath = other.GetWaveletsDFBinPath();
@@ -585,9 +585,9 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
 
-    rebinedSpectrum.GetSpectralAxis() = targetSpectralAxis; // copy (necessary)
+    rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
 
-    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.GetFluxAxis();
+    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.m_FluxAxis;
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
     rebinedMask.SetSize(s);

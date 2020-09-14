@@ -123,7 +123,7 @@ const std::string& CTemplate::GetCategory() const
 {
     m_kstart = kstart;
     m_kend = kend;
-}*/
+}
 /**
  * Saves the template in the given filePath.
  */
@@ -165,14 +165,14 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; //nothing to do here
     m_kDust = kDust;
 
-    for(Int32 k= 0; k< m_SpectralAxis.GetSamplesCount(); k++)
+    for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++)
+    //for(Int32 k = m_kstart; k < m_kend; k++)
     {
         m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
         m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
         /*m_FluxAxisIsmIgm[k] = m_FluxAxis[k]
                      *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
                      *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
-
     }
     return true;
 }
@@ -190,6 +190,7 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 
 
     for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++){
+    //for(Int32 k = m_kstart; k < m_kend; k++){
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
             Int32 kLbdaMeiksin = 0;
             if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
@@ -197,7 +198,7 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
                 kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin.GetLambdaMin());
             }else //if lambda lower than min meiksin value, use lower meiksin value
             {
-                    kLbdaMeiksin = 0;
+                kLbdaMeiksin = 0;
             }
             m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
 
