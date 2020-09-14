@@ -258,14 +258,13 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
         Int32 kStart = 0;
         Int32 kEnd = Xtpl.size(); //itplTplFluxAxis.GetSamplesCount();
-        /*ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+        ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
         if(ret==-1)
         {
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d    . ! Aborting.", kStart, kEnd);
             break;
         }
-        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd); */
-        
+        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
         bool igmCorrectionAppliedOnce = false;
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
@@ -348,10 +347,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             }
             //*/
             const CTemplate& tmp = m_templateRebined_bf;//obligatory, otherwise non-const GetFluxAxis is called
-            const CSpectrumFluxAxis& tplIsmIgm = /*m_templateRebined_bf*/tmp.GetFluxAxis();
-            //TODO Mira: clean below code once bug is solved
-            std::cout<<"tplIsmIgm :"<<tplIsmIgm[0]<<"\n";
-            std::cout<<"tplFlux :"<<m_templateRebined_bf.GetFluxAxisWithoutIsmIgm()[0]<<"\n";
+            const CSpectrumFluxAxis& tplIsmIgm = tmp.GetFluxAxis();
+
             const TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
             Float64 sumCross = 0.0;
             Float64 sumT = 0.0;
@@ -596,12 +593,6 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
                                 Float64& overlapRate,
                                 Float64 overlapThreshold)// const
 {
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-
-    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-    const CSpectrumFluxAxis& tplFluxAxis = tpl.GetFluxAxis();
-
     Float64 onePlusRedshift = 1.0 + redshift;
 
     //shift lambdaRange backward to be in restframe
@@ -610,11 +601,12 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
                                          lambdaRange.GetEnd() / onePlusRedshift );
 
     //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
-    m_spcSpectralAxis_restframe.ShiftByWaveLength(spcSpectralAxis, onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
+    m_spcSpectralAxis_restframe.ShiftByWaveLength(spectrum.GetSpectralAxis(), onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
     m_spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
                                          
     // Compute clamped lambda range over template in restframe
     TFloat64Range tplLambdaRange;
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     tplSpectralAxis.ClampLambdaRange( lambdaRange_restframe, tplLambdaRange );
     // Compute the intersected range
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
@@ -625,9 +617,6 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
     CSpectrumSpectralAxis& spcSpecAxis = m_spcSpectralAxis_restframe;
     tpl.Rebin( intersectedLambdaRange, spcSpecAxis, itplTplSpectrum, itplMask, opt_interp);   
 
-    CSpectrumFluxAxis& itplTplFluxAxis = itplTplSpectrum.GetFluxAxis();
-    const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
-    
     //overlapRate
     overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, itplMask );
 
@@ -638,8 +627,6 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
         return -1 ;
     }
 
-    const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
-    TAxisSampleList & Ytpl = itplTplFluxAxis.GetSamplesVector();
     TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
     //the spectral axis should be in the same scale
     currentRange = logIntersectedLambdaRange;
@@ -1151,7 +1138,7 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
-Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, TFloat64Range& currentRange, Int32& kStart, Int32& kEnd){
+Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, TFloat64Range& currentRange, Int32& kStart, Int32& kEnd){   
     Float64 lbda_min = currentRange.GetBegin();
     Float64 lbda_max = currentRange.GetEnd();
 
@@ -1188,10 +1175,6 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     Float64 overlapRate = 0.0;
     m_templateRebined_bf.InitIsmIgmConfig();
     //BasicFit_preallocateBuffers(spectrum);
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
     Int32 ret = RebinTemplate(  spectrum, 
                                 tpl,
                                 redshift, 
@@ -1211,13 +1194,14 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     //find samples limits
     Int32 kStart = 0;
     Int32 kEnd = m_templateRebined_bf.GetFluxAxis().GetSamplesCount();
-    //ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
+    ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
     if(ret==-1)
     {
         Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
         return -1;
     }
-    //m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
+    m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
     m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")

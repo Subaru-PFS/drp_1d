@@ -46,7 +46,7 @@ public:
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
 
-    //void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
+    void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const;
     bool InitIsmIgmConfig();
 
     CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
@@ -58,6 +58,7 @@ private:
     Int32   m_meiksinIdx = -1;
     Float64 m_redshiftMeiksin = -1;
 
+    mutable Int32 m_kstart = -1, m_kend = -1;
     CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
@@ -84,11 +85,9 @@ inline
 CSpectrumFluxAxis& CTemplate::GetFluxAxis()
 {
     if(m_kDust ==-1 && m_meiksinIdx == -1){
-        std::cout<<"returning fluxAxis with no correction from non-cte getter cause correction coeffs are not defined\n";
         return m_FluxAxis;
     }
     else{
-        std::cout<<"returning corrected flux (probably to update) and reinitialising ism/igm coeffs \n";
         return m_FluxAxisIsmIgm;
     } 
 }

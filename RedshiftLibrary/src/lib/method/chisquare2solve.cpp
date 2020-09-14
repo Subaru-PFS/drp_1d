@@ -177,7 +177,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                                                  zcandidates_unordered_list[i],
                                                  DustCoeff, MeiksinIdx,
                                                  opt_interp, opt_extinction, lambdaRange, 
-                                                 overlapThreshold);   
+                                                 overlapThreshold);                                    
         }
         m_chiSquareOperator->SaveSpectrumResults(resultStore);
         return ChisquareSolveResult;
