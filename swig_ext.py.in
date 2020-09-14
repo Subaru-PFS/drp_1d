@@ -4,7 +4,7 @@ import numpy
 include_dirs = '@cpf-redshift_INCLUDE_DIR@'.split(';')
 library_dirs = '@cpf-redshift_LINK_DIR@'.split(';')
 libs = '@cpf-redshift_THIRDPARTY_LIBS@'.split(';')
-coverage = @cpf-redshift_COVERAGE@
+#coverage = @cpf-redshift_COVERAGE@
 
 extra_compile_args = ['-std=c++11']
 if '@CMAKE_C_COMPILER_ID@'.lower().find('clang') > 0 :
@@ -14,9 +14,9 @@ extra_link_args = []
 for path in '@cpf-redshift_LINK_DIR@'.split(';'):
     extra_link_args.extend(['-Wl,-rpath', path])
 
-if coverage:
-    extra_compile_args.append('--coverage')
-    extra_link_args.append('-fprofile-arcs')
+#if coverage:
+#    extra_compile_args.append('--coverage')
+#    extra_link_args.append('-fprofile-arcs')
 
 #  find out numpy include directory.
 try:
