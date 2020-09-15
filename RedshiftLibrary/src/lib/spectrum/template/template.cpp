@@ -42,7 +42,7 @@ CTemplate::CTemplate( const CTemplate& other):
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
     m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxisWithoutIsmIgm();
+    m_FluxAxis = other.m_FluxAxis;
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
 
@@ -59,7 +59,7 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
     m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxisWithoutIsmIgm();
+    m_FluxAxis = other.m_FluxAxis;
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
 
@@ -119,7 +119,7 @@ const std::string& CTemplate::GetCategory() const
 }
 
 
-void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend) const
+void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
 {
     m_kstart = kstart;
     m_kend = kend;

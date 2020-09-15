@@ -136,7 +136,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     m_templateRebined_bf.InitIsmIgmConfig();
 
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+    //const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
@@ -1153,7 +1153,7 @@ Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, T
     }
     if(kStart==-1 || kEnd==-1)
     {
-        Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+        Log.LogDebug( "  Operator-Chisquare2::GetSpecSampleLimits: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
         return -1;
     }
     return 0;

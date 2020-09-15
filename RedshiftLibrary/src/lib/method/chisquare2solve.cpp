@@ -170,7 +170,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             CTemplate tpl_obj;
             Int32 b = tpl_obj.GetTemplateByName( tplCatalog, tplCategoryList, tplName, tpl);
             if(b==-1){
-                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName, zcandidates_unordered_list[i]);
+                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
                 continue;
             }   
             m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
@@ -457,7 +457,7 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
           
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+        store.StoreGlobalResult( "candidatesresult", zcand ); 
 
     return true;
 }
