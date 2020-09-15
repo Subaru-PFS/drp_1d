@@ -97,7 +97,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         // Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
         // calculate on a wider grid, defined by a minimum step
         Float64 dz_thres = opt_twosteplargegridstep;
-        std::vector<Int32> removed_inds;
         Int32 lastKeptInd = 0;
         largeGridRedshifts.push_back(m_sortedRedshifts[lastKeptInd]);
         for (Int32 i = 1; i < m_sortedRedshifts.size() - 1; i++)
