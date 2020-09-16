@@ -54,6 +54,8 @@ public:
 private:
 
     std::string     m_Category;
+    std::string     m_Name;
+
     Int32   m_kDust = -1; //définie comme mutable pour pouvoir la changer dans Apply..coeff(), sinon ca ne marche pas
     Int32   m_meiksinIdx = -1;
     Float64 m_redshiftMeiksin = -1;

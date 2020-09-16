@@ -178,7 +178,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
     m_observeGridContinuumFlux = NULL;
-    m_unscaleContinuumFluxAxisDerivZ =NULL;
+    //m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
 
     m_tplshape_priorhelper = NULL;
@@ -194,13 +194,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
           throw runtime_error("unable to allocate m_observeGridContinuumFlux");
-        }
-        if(1)
-        {
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
     }
 
@@ -269,6 +262,7 @@ CLineModelElementList::~CLineModelElementList()
     if(m_fitContinuum_tplfitStore) delete m_fitContinuum_tplfitStore;
     if(m_Regulament) delete m_Regulament;
     //TODO [ml] m_unscaleContinuumFluxAxisDerivZ if it used again
+    //if(m_CatalogTplShape) delete m_CatalogTplShape;
 }
 
 void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)

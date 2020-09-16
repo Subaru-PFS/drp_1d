@@ -285,7 +285,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     igmLoopUseless_WavelengthRange = true; 
             }
             //*/
-
             /*//debug:
             // save final ISM/IGM template model
             if(redshift>=2.4 && redshift<2.4001 && meiksinIdx==6){
