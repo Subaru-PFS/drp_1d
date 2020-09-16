@@ -362,7 +362,7 @@ private:
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
     Float64* m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
-    Float64* m_unscaleContinuumFluxAxisDerivZ;
+    //Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
