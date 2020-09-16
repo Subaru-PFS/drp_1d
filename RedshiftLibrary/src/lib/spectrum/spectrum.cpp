@@ -535,6 +535,12 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
     }
 }
 
+
+void  CSpectrum::InitPrecomputeFineGrid() const
+{
+    m_FineGridInterpolated = false;
+}
+
 ///
 /// * This rebin method targets processing speed:
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask

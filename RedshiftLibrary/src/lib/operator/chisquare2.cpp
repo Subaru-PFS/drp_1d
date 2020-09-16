@@ -62,6 +62,8 @@ void COperatorChiSquare2::BasicFit_preallocateBuffers(const CSpectrum& spectrum)
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
     m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
+    m_templateRebined_bf.InitPrecomputeFineGrid();
+
     m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
     m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
 }

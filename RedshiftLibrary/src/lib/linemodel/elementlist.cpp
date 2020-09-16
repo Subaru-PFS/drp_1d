@@ -979,7 +979,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 
     if(m_fitContinuum_option==0){
         //hardcoded parameters
-        std::string opt_interp = "lin"; //"precomputedfinegrid"; //
+        std::string opt_interp = "precomputedfinegrid"; //"lin"; //
         Int32 opt_extinction = m_secondpass_fitContinuum_igm;
         Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
         Float64 overlapThreshold = 1.0;

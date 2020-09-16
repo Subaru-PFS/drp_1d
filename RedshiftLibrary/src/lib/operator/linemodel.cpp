@@ -673,7 +673,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select chisquare2 operator"
                     " (faster when only few redshifts calc. points)");
     }
-    std::string opt_interp = "lin"; //"precomputedfinegrid"; //
+    std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
                 opt_chi2operator.c_str());
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
