@@ -585,6 +585,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   std::ostringstream oss;
   if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
   else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+  else if (name.find("BestContinuum") != std::string::npos)  oss << "linemodelsolve.linemodel_continuum_extrema_"<< rank;
   else
     {
       Log.LogError("unknown data %s",name.c_str());
@@ -660,8 +661,16 @@ void COperatorResultStore::test()
   testResult->Redshifts.clear();
   testResult->Redshifts.push_back(1.2);
   testResult->Redshifts.push_back(3.4);
+  testResult->Redshifts.push_back(7.9);
+
+  testResult->valProbaLog.clear();
+  testResult->valProbaLog.push_back(27.4);
+  testResult->valProbaLog.push_back(67.8);
+  testResult->valProbaLog.push_back(92.7);
   
   StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
+
+  
 }
 
 

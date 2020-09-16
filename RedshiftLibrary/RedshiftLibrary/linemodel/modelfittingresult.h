@@ -51,6 +51,7 @@ private:
 
   //copies from restRayList For output only
     mutable std::vector<Int32> rayId;
+    mutable std::vector<Float64> rayLambdaRest;
 
 };
 

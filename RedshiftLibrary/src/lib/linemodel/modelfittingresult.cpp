@@ -195,20 +195,17 @@ void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream
 void CModelFittingResult::getData(const std::string& name, int **data, int *size) const
 {
   *size = LineModelSolution.LambdaObs.size();
-  //  std::vector<int> rayId = std::vector<int>(LineModelSolution.LambdaObs.size()); // beware of memory leaks here, who destroys this vector ?
  
   if (name.compare("FittedRaysID") == 0)
     {
 
-            if (rayId.empty())
+      if (rayId.empty())
       	{
-          //      	  rayId = std::vector<int>(*size);
-	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayId.emplace_back(restRayList[j].GetID());
+          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayId.emplace_back(restRayList[j].GetID());
         }
-	  //	}
 	  *data = const_cast<int *>(rayId.data());
     }
-    else Log.LogError("unkwown data %s",name.c_str());
+  else Log.LogError("unkwown data %s",name.c_str());
 
 }
 
@@ -220,15 +217,14 @@ void CModelFittingResult::getData(const std::string& name, double **data, int *s
     {
       *data = const_cast<double *>(LineModelSolution.LambdaObs.data());
     }
-  /*  else if (name.compare("FittedRaysLambdaRest") == 0)
+  else if (name.compare("FittedRaysLambdaRest") == 0)
     {
-      if (lambdaRest.empty())
-	{
-	  lambdaRest = new std::vector<double>(*size);
-	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) lambdaRest.emplace_back(restRayList[j].GetPosition());
-	}
-      *data = const_cast<double *>(lambdaRest.data());
-      }*/
+      if (rayLambdaRest.empty())
+        {
+          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayLambdaRest.emplace_back(restRayList[j].GetPosition());
+        }
+      *data = const_cast<double *>(rayLambdaRest.data());
+    }
   else if (name.compare("FittedRaysFlux") == 0)
     {
       *data = const_cast<double *>(LineModelSolution.Fluxs.data());

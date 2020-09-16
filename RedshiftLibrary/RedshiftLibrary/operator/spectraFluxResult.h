@@ -26,6 +26,7 @@ public:
     {
         return 1;
     }
+  void getData(const std::string& name, double **data, int *size) const;
 
     TFloat64List   fluxes;
     TFloat64List   wavel;
