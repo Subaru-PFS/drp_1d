@@ -296,7 +296,6 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                 }
 
                 Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                Log.LogDebug( "GetBestRedshiftFromPdf: z=%f : probalog = %f", zInCandidateRange, probaLog);
                 
                 if(method == 0){
                     if(probaLog>tmpProbaLog){
