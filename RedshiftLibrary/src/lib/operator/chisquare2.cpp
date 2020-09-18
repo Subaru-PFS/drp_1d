@@ -345,8 +345,8 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 }
             }
             //*/
-            const CTemplate& tmp = m_templateRebined_bf;//obligatory, otherwise non-const GetFluxAxis is called
-            const CSpectrumFluxAxis& tplIsmIgm = tmp.GetFluxAxis();
+            //const CTemplate& tmp = m_templateRebined_bf;//obligatory, otherwise non-const GetFluxAxis is called
+            const CSpectrumFluxAxis& tplIsmIgm = m_templateRebined_bf.GetFluxAxis();
 
             const TAxisSampleList & Ytpl = tplIsmIgm.GetSamplesVector();
             Float64 sumCross = 0.0;

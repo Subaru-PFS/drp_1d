@@ -27,30 +27,24 @@ CTemplate::CTemplate( const std::string& name, const std::string& category ) :
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
+    CSpectrum(spectralAxis, fluxAxis),
     m_Category( category )
 {
   m_Name = name ;
-  m_SpectralAxis = spectralAxis;
-  m_FluxAxis = fluxAxis;
 }
 
-//TODO use copy constructor of CSpectrum
-CTemplate::CTemplate( const CTemplate& other):
+CTemplate::CTemplate( const CTemplate& other): 
+    CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx)
 {
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.m_FluxAxis;
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-
+    m_kDust = other.m_kDust;
+    m_meiksinIdx = other.m_meiksinIdx;
     m_Category = other.GetCategory();
     m_kstart = other.m_kstart;
     m_kend = other.m_kend;
@@ -58,22 +52,16 @@ CTemplate::CTemplate( const CTemplate& other):
 //applying the rule of three (Law of the big three in C++11)
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
+    CSpectrum::operator=(other);
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.m_FluxAxis;
+
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
-
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-
-    m_Category = other.GetCategory();
-
+        
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
+    m_Category = other.GetCategory();
     m_kstart = other.m_kstart;
     m_kend = other.m_kend;
     return *this;
