@@ -429,13 +429,13 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     return 1;
 }
 
-Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const
+Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir) const
 {
     Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
     redshiftcandidates.clear();
 
     //check if the pdf is stellar/galaxy or else
-    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    /*std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
     std::string scope = store.GetScope( *this );
     std::size_t foundstr_stellar = scope.find("stellarsolve");
     std::size_t foundstr_qso = scope.find("qsosolve");
@@ -443,7 +443,7 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
         outputPdfRelDir = "stellar_zPDF";
     }else if (foundstr_qso!=std::string::npos){
         outputPdfRelDir = "qso_zPDF";
-    }
+    }*/
 
     std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
     auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );

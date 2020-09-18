@@ -30,7 +30,7 @@ CTemplate::CTemplate( const std::string& name, const std::string& category,
     CSpectrum(spectralAxis, fluxAxis),
     m_Category( category )
 {
-  m_Name = name ;
+    m_Name = name;
 }
 
 CTemplate::CTemplate( const CTemplate& other): 
@@ -42,9 +42,9 @@ CTemplate::CTemplate( const CTemplate& other):
     m_FullPath = other.GetFullPath();
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
-
-    m_kDust = other.m_kDust;
-    m_meiksinIdx = other.m_meiksinIdx;
+    
+    m_computedDustCoeff = other.m_computedDustCoeff; 
+    m_computedMeiksingCoeff = other.m_computedDustCoeff;
     m_Category = other.GetCategory();
     m_kstart = other.m_kstart;
     m_kend = other.m_kend;
@@ -52,7 +52,7 @@ CTemplate::CTemplate( const CTemplate& other):
 //applying the rule of three (Law of the big three in C++11)
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
-    CSpectrum::operator=(other);
+    CSpectrum::operator =(other);
     m_Name = other.GetName();
     m_FullPath = other.GetFullPath();
 
@@ -61,6 +61,8 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
         
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
+    m_computedDustCoeff = other.m_computedDustCoeff; 
+    m_computedMeiksingCoeff = other.m_computedDustCoeff;
     m_Category = other.GetCategory();
     m_kstart = other.m_kstart;
     m_kend = other.m_kend;

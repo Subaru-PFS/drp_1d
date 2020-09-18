@@ -99,7 +99,6 @@ private:
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
-    //ISM Calzetti
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
     //Likelihood

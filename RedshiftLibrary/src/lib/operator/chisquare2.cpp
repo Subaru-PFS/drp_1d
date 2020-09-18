@@ -213,7 +213,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         MeiksinList.push_back(0);
     }
 
-    Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
+    Bool option_igmFastProcessing = false; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
     Float64 lbda_min = currentRange.GetBegin();
     Float64 lbda_max = currentRange.GetEnd();

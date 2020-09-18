@@ -146,15 +146,16 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
         }
         Int32 n_cand = 5; //this is hardcoded for now for this method
         std::vector<Float64> zcandidates_unordered_list;
-        Bool retzc = ChisquareSolveResult->GetRedshiftCandidates( resultStore, zcandidates_unordered_list, n_cand);
+        Bool retzc = ChisquareSolveResult->GetRedshiftCandidates( resultStore, zcandidates_unordered_list, n_cand, outputPdfRelDir.c_str());
         if(retzc)
         {
                 Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
         }else{
                 Log.LogError( "Failed to get z candidates from these results");
         }
-            
-        Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list);
+        //Didier: do you think it can be interesting to output a candidateresults.csv pour les stars?
+        if(outputPdfRelDir == "zPDF") //only for galaxy   
+            Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list, outputPdfRelDir.c_str());
         //for each candidate, get best model by reading from resultstore and selecting best fit
         for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
             std::string tplName;
@@ -430,12 +431,12 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
     return retPdfz;
 }
 
-Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, std::string outputPdfRelDir)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
 
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        std::string scope_res = outputPdfRelDir + "/logposterior.logMargP_Z_data";
         auto results =  store.GetGlobalResult( scope_res.c_str() );
         auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
 
