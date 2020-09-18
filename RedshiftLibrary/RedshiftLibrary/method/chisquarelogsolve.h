@@ -29,20 +29,20 @@ class CMethodChisquareLogSolve
 
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquareLogSolveResult> Compute(CDataStore& resultStore,
-                                                      const CSpectrum& spc,
-                                                      const CTemplateCatalog& tplCatalog,
-                                                      const TStringList& tplCategoryList,
-                                                      const TFloat64Range& lambdaRange,
-                                                      const TFloat64List& redshifts,
-                                                      Float64 overlapThreshold,
-                                                      std::vector<CMask> maskList,
-                                                      const std::string outputPdfRelDir,
-                                                      const Float64 radius,
-                                                      std::string spcComponent="raw",
-                                                      std::string opt_interp="lin",
-                                                      std::string opt_extinction="no",
-                                                      std::string opt_dustFit="no");
+    std::shared_ptr<CChisquareSolveResult> Compute(CDataStore& resultStore,
+                                                   const CSpectrum& spc,
+                                                   const CTemplateCatalog& tplCatalog,
+                                                   const TStringList& tplCategoryList,
+                                                   const TFloat64Range& lambdaRange,
+                                                   const TFloat64List& redshifts,
+                                                   Float64 overlapThreshold,
+                                                   std::vector<CMask> maskList,
+                                                   const std::string outputPdfRelDir,
+                                                   const Float64 radius,
+                                                   std::string spcComponent="raw",
+                                                   std::string opt_interp="lin",
+                                                   std::string opt_extinction="no",
+                                                   std::string opt_dustFit="no");
 
     Bool ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list);
 
@@ -56,7 +56,7 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               Int32 spctype=CChisquareLogSolveResult::nType_raw,
+               Int32 spctype=CChisquareSolveResult::nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
@@ -65,9 +65,6 @@ private:
                      std::string scopeStr,
                      std::string opt_combine,
                      std::shared_ptr<NSEpic::CPdfMargZLogResult> postmargZResult);
-
-
-    COperatorChiSquareLogLambda* m_chiSquareOperator;
 
 
     std::string m_opt_pdfcombination;

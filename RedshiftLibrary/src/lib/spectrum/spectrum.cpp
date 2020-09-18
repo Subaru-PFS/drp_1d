@@ -3,6 +3,10 @@
 #include <RedshiftLibrary/noise/flat.h>
 #include <RedshiftLibrary/noise/fromfile.h>
 
+#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include <RedshiftLibrary/continuum/median.h>
+#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+
 #include <RedshiftLibrary/log/log.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
@@ -32,12 +36,16 @@ CSpectrum::CSpectrum():
 }
 
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
+    m_estimationMethod(other.m_estimationMethod),
+    m_dfBinPath(other.m_dfBinPath),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales),
+    m_Name(other.m_Name),
+    m_spcType(other.m_spcType),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
-    const CSpectrumSpectralAxis& otherSpectral = other.GetSpectralAxis();
-
-    m_spcType = other.GetType();
-    const CSpectrumFluxAxis& otherFlux = other.GetFluxAxis();
+    const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
+    const CSpectrumFluxAxis & otherFlux = other.GetFluxAxis();
     const TFloat64List& error = otherFlux.GetError();
 
     TAxisSampleList& SpectralVector = m_SpectralAxis.GetSamplesVector();
@@ -57,12 +65,6 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
             }
         }
     }
-
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-    m_Name = other.GetName();
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
@@ -82,11 +84,13 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_dfBinPath(other.m_dfBinPath),
     m_medianWindowSize(other.m_medianWindowSize),
     m_nbScales(other.m_nbScales),
+    m_SpectralAxis(other.m_SpectralAxis),
+    m_spcType(other.m_spcType),
     m_Name(other.m_Name)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_spcType = other.GetType();
-    m_FluxAxis = other.GetFluxAxis();
+    // need to switch m_fluxAxis to correct buffer
+    // here it points by default to raw
+
 }
 
 CSpectrum::~CSpectrum()
@@ -97,15 +101,14 @@ CSpectrum::~CSpectrum()
 //copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_spcType = other.GetType();
+    m_SpectralAxis = other.m_SpectralAxis;
     *m_FluxAxis = other.GetFluxAxis();
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-    m_Name = other.GetName();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
+    m_Name = other.m_Name;
 
     return *this;
 }
@@ -116,7 +119,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 Bool CSpectrum::RebinFineGrid() const
 {
   // Precalculate a fine grid template to be used for the 'closest value' rebin method
-  Int32 n = m_FluxAxis.GetSamplesCount();
+  Int32 n = m_FluxAxis->GetSamplesCount();
   if(!n)
     return false;
 
@@ -126,7 +129,7 @@ Bool CSpectrum::RebinFineGrid() const
 
   m_pfgFlux.resize(nTgt);
 
-  const TAxisSampleList Ysrc = m_FluxAxis.GetSamplesVector();
+  const TAxisSampleList Ysrc = m_FluxAxis->GetSamplesVector();
   const TAxisSampleList Xsrc = m_SpectralAxis.GetSamplesVector();
 
   //Initialize and allocate the gsl objects
@@ -150,15 +153,64 @@ Bool CSpectrum::RebinFineGrid() const
   return true;
 }
 
-Bool CSpectrum::RemoveContinuum( CContinuum& remover )
+Bool CSpectrum::RemoveContinuum( CContinuum& remover ) const
 {
-    CSpectrumFluxAxis fluxAxisWithoutContinuum;
+    return remover.RemoveContinuum( *this, m_WithoutContinuumFluxAxis );
+}
 
-    Bool ret = remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
+/**
+ * Estimate the continuum component
+ */
+void CSpectrum::EstimateContinuum() const
+{
+    Log.LogInfo( "Continuum estimation on input spectrum: using %s", m_estimationMethod.c_str() );
+    if( m_estimationMethod == "IrregularSamplingMedian" )
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        continuum.SetMedianKernelWidth( m_medianWindowSize );
+        continuum.SetMeanKernelWidth( m_medianWindowSize );
+        RemoveContinuum( continuum );
+        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+    }else if( m_estimationMethod == "Median" )
+    {
+        CContinuumMedian continuum;
+        continuum.SetMedianKernelWidth( m_medianWindowSize );
+        RemoveContinuum( continuum );
+        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+    }else if( m_estimationMethod == "waveletsDF" )
+    {
+        CContinuumDF continuum(m_dfBinPath);
+        Bool ret = RemoveContinuum( continuum );
+        if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
+        {
+          Log.LogError("Failed to apply continuum substraction for spectrum: %s", this->GetName().c_str());
+          throw std::runtime_error("Failed to apply continuum substraction");
+        }
+    }else if( m_estimationMethod == "raw" )
+    {
+        Int32 nbSamples = this->GetSampleCount();
+        m_WithoutContinuumFluxAxis.SetSize(nbSamples);
+        for(Int32 k=0; k<nbSamples; k++)
+        {
+            m_WithoutContinuumFluxAxis[k] = 0.0;
+        }
+    }else if( m_estimationMethod == "zero" )
+    {
+        m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+    }
 
-    *m_FluxAxis = fluxAxisWithoutContinuum;
+    m_nameBaseline = m_method2baseline[m_estimationMethod];
+    Log.LogInfo("===============================================");
 
-    return ret;
+    // Fill m_ContinuumFluxAxis
+    CSpectrumFluxAxis continuumFluxAxis = m_RawFluxAxis;
+    continuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
+    m_ContinuumFluxAxis = continuumFluxAxis;
+}
+
+std::string CSpectrum::GetBaseline() const
+{
+    return m_nameBaseline;
 }
 
 /**
@@ -550,7 +602,7 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
     }
 }
 
-void CSpectrum::InitPrecomputeFineGrid()
+void CSpectrum::InitPrecomputeFineGrid() const
 {
     m_FineGridInterpolated = false;
 }
@@ -569,7 +621,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
                        CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
 {
     
-    if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
+    if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis->GetSamplesCount() )
     {
         Log.LogError("Problem samplecountsize betwees spectral axis and flux axis");
         return false;
@@ -601,16 +653,16 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
     rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
 
-    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.m_FluxAxis;
+    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.GetFluxAxis();
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
     rebinedMask.SetSize(s);
 
     const TAxisSampleList& Xsrc = m_SpectralAxis.GetSamplesVector();
-    const TAxisSampleList& Ysrc = m_FluxAxis.GetSamplesVector();
+    const TAxisSampleList& Ysrc = m_FluxAxis->GetSamplesVector();
     const TAxisSampleList& Xtgt = targetSpectralAxis.GetSamplesVector();
     TAxisSampleList&       Yrebin = rebinedFluxAxis.GetSamplesVector();
-    const TFloat64List&    Error = m_FluxAxis.GetError();
+    const TFloat64List&    Error = m_FluxAxis->GetError();
     TFloat64List&          ErrorRebin = rebinedFluxAxis.GetError();
 
     // Move cursors up to lambda range start
@@ -755,5 +807,5 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 }
 
 void CSpectrum::ScaleFluxAxis(Float64 scale){
-    m_FluxAxis *= scale;
+    *m_FluxAxis *= scale;
 }

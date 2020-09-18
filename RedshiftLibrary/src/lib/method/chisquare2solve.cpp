@@ -46,6 +46,7 @@ const std::string CMethodChisquare2Solve::GetDescription()
 
 }
 
+
 std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStore& resultStore,
                                                                        const CSpectrum& spc,
                                                                        const CTemplateCatalog& tplCatalog,
@@ -118,7 +119,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareSolveResult>  ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, resultStore.GetCurrentScopeName()) );
+        std::shared_ptr< CChisquareSolveResult> ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, resultStore.GetCurrentScopeName()) );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);

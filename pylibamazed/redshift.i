@@ -162,7 +162,7 @@ public:
 class CTemplateCatalog
 {
 public:
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.O, std::string waveletsDFBinPath="" );
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
     void Load( const char* filePath );
     void Add( std::shared_ptr<CTemplate> r );
 };
@@ -244,7 +244,7 @@ class CSpectrum
  %rename(CSpectrum_default) CSpectrum();
  public:
   CSpectrum();
-  CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);

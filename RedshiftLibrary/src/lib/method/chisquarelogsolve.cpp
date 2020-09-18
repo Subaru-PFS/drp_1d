@@ -128,8 +128,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareLogSolveResult> ChisquareSolveResult = std::shared_ptr< CChisquareLogSolveResult>( new CChisquareLogSolveResult() );
-        ChisquareSolveResult->m_type = _type;
+        std::shared_ptr< CChisquareSolveResult> ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "chisquarelogsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);

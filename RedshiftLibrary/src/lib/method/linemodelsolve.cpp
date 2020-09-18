@@ -900,7 +900,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = linemodel.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         Log.LogError( "Linemodel, init failed. Aborting" );
@@ -1052,7 +1052,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
-    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );

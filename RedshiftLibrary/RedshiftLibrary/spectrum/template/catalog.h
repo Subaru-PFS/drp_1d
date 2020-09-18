@@ -15,7 +15,7 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog(std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="");
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
     ~CTemplateCatalog();
 
     void Add( std::shared_ptr<CTemplate> );

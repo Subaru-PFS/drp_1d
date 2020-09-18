@@ -126,8 +126,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 
     if( storeResult )
     {
-        std::shared_ptr< CTplcombinationSolveResult> solveResult = std::shared_ptr< CTplcombinationSolveResult>( new CTplcombinationSolveResult() );
-        solveResult->m_type = _type;
+        std::shared_ptr< CChisquareSolveResult> solveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "tplcombinationsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -231,7 +230,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,  m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {

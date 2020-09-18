@@ -6,8 +6,8 @@
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/continuum/continuum.h>
 
+#include <unordered_map>
 #include <string>
-#include <iostream>
 
 namespace NSEpic
 {
@@ -47,8 +47,6 @@ public:
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
 
-    virtual void                    ScaleFluxAxis(Float64 amplitude);
-
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumFluxAxis&              GetRawFluxAxis();
@@ -59,6 +57,7 @@ public:
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
+    std::string                     GetBaseline() const;
 
     bool                            GetMeanAndStdFluxInRange( TFloat64Range wlRange, Float64& mean, Float64& std ) const;
     bool                            GetLinearRegInRange( TFloat64Range wlRange,  Float64& a, Float64& b) const;
@@ -66,7 +65,7 @@ public:
     Bool                            ConvertToLogScale();
     Bool                            ConvertToLinearScale();
 
-    Bool                            RemoveContinuum( CContinuum& remover );
+    Bool                            RemoveContinuum( CContinuum& remover ) const;
     const Bool                      checkFlux(Float64 flux, Int32 index) const;
     const Bool                      checkNoise(Float64 error, Int32 index) const;
     const Bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
@@ -87,6 +86,8 @@ public:
 
     void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
+    void                            ScaleFluxAxis(Float64 scale);
+
     void                            InitPrecomputeFineGrid() const;
 
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
@@ -98,20 +99,24 @@ protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               *m_FluxAxis = &m_RawFluxAxis;
 
+    void                            EstimateContinuum() const;
+
     Bool                            RebinFineGrid() const;
     Float64                         m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
                                                              //check if enough to be private
     mutable TFloat64List            m_pfgFlux;
     mutable Bool                    m_FineGridInterpolated = false;
 
-
     std::string                     m_Name;
     std::string                     m_FullPath;
+
+    // Continuum removal parameters
     Int32                           m_nbScales;
     Float64                         m_medianWindowSize;
     std::string                     m_estimationMethod;
     std::string                     m_dfBinPath;
 
+    // FluxAxis components
     enum EType
     {
         nType_raw = 1,
@@ -120,9 +125,23 @@ protected:
     };
 
     Int32                           m_spcType = 1;
-    CSpectrumFluxAxis               m_RawFluxAxis;
-    CSpectrumFluxAxis               m_ContinuumFluxAxis;
-    CSpectrumFluxAxis               m_WithoutContinuumFluxAxis;
+    mutable CSpectrumFluxAxis       m_RawFluxAxis;
+    mutable CSpectrumFluxAxis       m_ContinuumFluxAxis;
+    mutable CSpectrumFluxAxis       m_WithoutContinuumFluxAxis;
+
+    // Flag
+    mutable bool                    alreadyRemoved = false;
+
+    // Map method2baseline
+    mutable std::unordered_map<std::string, std::string> m_method2baseline = {
+        {"IrregularSamplingMedian", "baselineISMedian"},
+        {"Median",                  "baselineMedian"},
+        {"waveletsDF",              "baselineDF"},
+        {"raw",                     "baselineRAW"},
+        {"zero",                    "baselineZERO"}
+    };
+
+    mutable std::string m_nameBaseline = "";
 };
 
 inline
@@ -152,12 +171,20 @@ const CSpectrumFluxAxis& CSpectrum::GetRawFluxAxis() const
 inline
 const CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis() const
 {
+    if( !alreadyRemoved ) {
+        EstimateContinuum();
+        alreadyRemoved = true;
+    }
     return m_ContinuumFluxAxis;
 }
 
 inline
 const CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis() const
 {
+    if( !alreadyRemoved ) {
+        EstimateContinuum();
+        alreadyRemoved = true;
+    }
     return m_WithoutContinuumFluxAxis;
 }
 
@@ -172,19 +199,15 @@ CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
 {
     switch(m_spcType){
         case 1 :
-                std::cout << "RawFluxAxis used" << std::endl;
                 *m_FluxAxis = GetRawFluxAxis();
                 break;
         case 2 :
-                std::cout << "ContinuumFluxAxis used" << std::endl;
                 *m_FluxAxis = GetContinuumFluxAxis();
                 break;
         case 3 :
-                std::cout << "WithoutContinuumFluxAxis used" << std::endl;
                 *m_FluxAxis = GetWithoutContinuumFluxAxis();
                 break;
         default :
-                std::cout << "RawFluxAxis used" << std::endl;
                 *m_FluxAxis = GetRawFluxAxis();
     }
     return *m_FluxAxis;
@@ -199,12 +222,20 @@ CSpectrumFluxAxis& CSpectrum::GetRawFluxAxis()
 inline
 CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis()
 {
+    if( !alreadyRemoved ) {
+        EstimateContinuum();
+        alreadyRemoved = true;
+    }
     return m_ContinuumFluxAxis;
 }
 
 inline
 CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
 {
+    if( !alreadyRemoved ) {
+        EstimateContinuum();
+        alreadyRemoved = true;
+    }
     return m_WithoutContinuumFluxAxis;
 }
 

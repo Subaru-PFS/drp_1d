@@ -19,7 +19,7 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, string waveletsDFBinPath)
+CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath )
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
