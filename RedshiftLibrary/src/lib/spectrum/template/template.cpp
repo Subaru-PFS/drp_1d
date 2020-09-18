@@ -52,6 +52,8 @@ CTemplate::CTemplate( const CTemplate& other):
     m_nbScales = other.GetDecompScales();
 
     m_Category = other.GetCategory();
+    m_kstart = other.m_kstart;
+    m_kend = other.m_kend;
 }
 //applying the rule of three (Law of the big three in C++11)
 CTemplate& CTemplate::operator=(const CTemplate& other)
@@ -72,6 +74,8 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
 
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
+    m_kstart = other.m_kstart;
+    m_kend = other.m_kend;
     return *this;
 }
 /**
@@ -225,6 +229,6 @@ bool CTemplate::InitIsmIgmConfig()
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
 
     m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
-        std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);      
+        std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
     return true;
 }

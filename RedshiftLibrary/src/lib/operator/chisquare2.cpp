@@ -258,7 +258,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
         Int32 kStart = 0;
         Int32 kEnd = Xtpl.size(); //itplTplFluxAxis.GetSamplesCount();
-        ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+        ret = GetSpcSampleLimits(Xspc, lbda_min, lbda_max, kStart, kEnd);
         if(ret==-1)
         {
             Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d    . ! Aborting.", kStart, kEnd);
@@ -1137,10 +1137,7 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
-Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, TFloat64Range& currentRange, Int32& kStart, Int32& kEnd){   
-    Float64 lbda_min = currentRange.GetBegin();
-    Float64 lbda_max = currentRange.GetEnd();
-
+Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd){   
     for(Int32 k=0; k<m_spcSpectralAxis_restframe.GetSamplesCount(); k++)
     {
         if(Xspc[k] >= lbda_min && kStart==-1){
@@ -1194,7 +1191,9 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     Int32 kStart = 0;
     Int32 kEnd = m_templateRebined_bf.GetFluxAxis().GetSamplesCount();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    ret = GetSpcSampleLimits(Xspc, currentRange, kStart, kEnd);
+    Float64 lbda_min = currentRange.GetBegin();
+    Float64 lbda_max = currentRange.GetEnd();
+    ret = GetSpcSampleLimits(Xspc, lbda_min, lbda_max, kStart, kEnd);
     if(ret==-1)
     {
         Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
