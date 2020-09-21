@@ -14,15 +14,34 @@ CPdfCandidateszResult::CPdfCandidateszResult()
 {
     optMethod = 0; //di
     //optMethod = 1; //gaussian fit
-    dzDefault = 1e-3;
-    Fullwidth = 6*dzDefault;//default value in case deltaz couldnt be calculted
-    
+    dzDefault = 1e-3;//default value in case deltaz couldnt be calculted, should be instrument dependant (parameter ?)
 }
 
 CPdfCandidateszResult::~CPdfCandidateszResult()
 {
 
 }
+
+void CPdfCandidateszResult::Init(TRedshiftList const & zc, const TRedshiftList & deltaz, const TStringList & IDs)
+{
+
+    Resize(zc.size());
+
+    Redshifts = zc;
+    Deltaz = deltaz;
+    if(!IDs.empty())
+        ExtremaIDs = IDs;
+    else
+    {
+        for(Int32 kc=0; kc<zc.size(); kc++)
+        {
+            ExtremaIDs[kc] = "Ext" + std::to_string(kc);
+        }
+
+    }
+    Rank = TInt32List(zc.size(), -1);
+}
+
 
 void CPdfCandidateszResult::Resize(Int32 n)
 {
@@ -37,6 +56,8 @@ void CPdfCandidateszResult::Resize(Int32 n)
     GaussAmpErr.resize(n);
     GaussSigmaErr.resize(n);
 }
+
+
 /**
  * 1) Fix Deltaz problems: none is passed or none could be compute --> use default values
  * 2) Check if integration windows overlap, mostly for close candidates
@@ -45,51 +66,49 @@ void CPdfCandidateszResult::Resize(Int32 n)
  * Note: Output range includes the multiplication by (1+z).
  * Returns 0 if no overlapping; otherwise 1;
 */
-Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> Pdfz, std::vector<Float64> redshifts,  std::vector<Float64> deltaz, std::vector<Float64>& range_right, std::vector<Float64>& range_left){ 
+Int32 CPdfCandidateszResult::SetIntegrationWindows(const TRedshiftList & Pdfz, TFloat64RangeList & ranges)
+{
     Bool nodz = false;
-    Int32 n = redshifts.size();
-    if(!deltaz.size()){
-        Log.LogInfo("    CPdfCandidateszResult::Compute pdf using Default full-window size, i.e., 6e-3" );      
+    Int32 n = Redshifts.size();
+    if(Deltaz.empty()){
+        Log.LogInfo("    CPdfCandidateszResult::Compute pdf using Default full-window size, i.e., 6e-3 *(1+z)" );
         nodz = true;
     }
-    std::vector<Float64> halfWidth;
-    //check cases where deltaz couldnt be computed or wasnt set--> use default value, 
+
+    TRedshiftList halfWidth;
+
+    ranges.resize(n);
     for(Int32 i = 0; i< n; i++){
-        if(deltaz[i] == -1 || nodz) 
-            deltaz[i] = dzDefault;
-        Deltaz[i] = deltaz[i]; 
-        halfWidth.push_back(3*deltaz[i]*(1 + redshifts[i]));     
-        //initialize range boundaries for each candidate
-        if(redshifts[i] == Pdfz[Pdfz.size()-1])
-            range_right.push_back(redshifts[i]);
-        else    
-            range_right.push_back(redshifts[i] + halfWidth[i]);//higher boundary
-        
-        if(redshifts[i] == Pdfz[0])
-            range_left.push_back(redshifts[i]);
-        else    
-            range_left.push_back(redshifts[i] - halfWidth[i]);//lower boundary
+
+        //check cases where deltaz couldnt be computed or wasnt set--> use default value,
+        if(Deltaz[i] == -1 || nodz)
+            Deltaz[i] = dzDefault*(1+Redshifts[i]);
+
+        halfWidth.push_back(3*Deltaz[i]);
+
+        //initialize range boundaries for each candidate]
+        ranges[i].Set((Redshifts[i] - halfWidth[i]), Redshifts[i] + halfWidth[i]);
+        ranges[i].IntersectWith(TFloat64Range(Pdfz));
     };
     // sort zc values to facilitate comparison and keep track of initial order
-    vector<pair<Float64,Int32 >> vp;
+    vector<pair<Redshift,Int32 >> vp;
     vp.reserve(n);
     for (Int32 i = 0 ; i < n ; i++) {
-        vp.push_back(make_pair(redshifts[i], i));
+        vp.push_back(make_pair(Redshifts[i], i));
     }
     std::sort(vp.rbegin(), vp.rend());  //sort from the highest to the lowest!
 
     Int32 b = 0; 
     for(Int32 i = 0; i<n - 1; i++){ //i represents the higher candidate; go till n-1 since j increments i by one
         Int32 idx_h = vp[i].second; 
-        Int32 j = i + 1; 
-        Int32 idx_l = vp[j].second;
-        Float64 overlap =  range_left[idx_h] - range_right[idx_l];
+        Int32 idx_l = vp[i+1].second;
+        Redshift overlap = ranges[idx_h].GetBegin() - ranges[idx_l].GetEnd();
         if(overlap < 0 ){
             b = 1;
-            Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", redshifts[idx_h], redshifts[idx_l] ); 
-            range_left[idx_h] = ( std::max(redshifts[idx_l], range_left[idx_h]) +
-                                  std::min(redshifts[idx_h], range_right[idx_l]) )/2;
-            range_right[idx_l] = range_left[idx_h] - 1E-4;
+            Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", Redshifts[idx_h], Redshifts[idx_l] );
+            ranges[idx_h].SetBegin(( std::max(Redshifts[idx_l], ranges[idx_h].GetBegin()) +
+                                     std::min(Redshifts[idx_h], ranges[idx_l].GetEnd()) )/2);
+            ranges[idx_l].SetEnd(ranges[idx_h].GetBegin() - 1E-4);
          }
     }
 
@@ -98,7 +117,7 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows( std::vector<Float64> Pdfz, s
 /**
  * @brief CPdfCandidateszResult::Compute
  */
-Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Float64> Pdfz,  std::vector<Float64> PdfProbalog, std::vector<Float64> deltaz, std::vector<std::string> IDs)
+Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList const & Pdfz, TFloat64List const & PdfProbalog, const TRedshiftList & deltaz, const TStringList & IDs)
 {
     if(optMethod==0)
     {
@@ -106,26 +125,18 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
     }else{
         Log.LogInfo("    CPdfCandidateszResult::Compute pdf peaks info (method=gaussian fitting)" );
     }
-    Resize(zc.size());
 
-    std::vector<Float64> range_right, range_left; 
-    Int32 b = SetIntegrationWindows( Pdfz, zc, deltaz, range_right, range_left);
+    Init(zc, deltaz, IDs);
+
+    TFloat64RangeList ranges;
+    Int32 b = SetIntegrationWindows( Pdfz, ranges);
     //b == 0 --> no overlapping, b == 1 --> overlapping
     CPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
     {
-        Rank[kc] = -1;
-        Redshifts[kc] = zc[kc];
-        if(IDs.size()){
-             ExtremaIDs[kc] = IDs[kc];
-        }else{
-            //generate IDs 
-            ExtremaIDs[kc] = "Ext" + std::to_string(kc);
-        }
-
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], range_left[kc], range_right[kc]);
+            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], ranges[kc]);
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
@@ -133,7 +144,7 @@ Int32 CPdfCandidateszResult::Compute( std::vector<Float64> zc,  std::vector<Floa
         }else
         {
             //TODO: this requires further check ?...
-            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], (range_left[kc] + range_right[kc]), GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
+            Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], ranges[kc], GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {
                 ValSumProba[kc] = GaussAmp[kc]*GaussSigma[kc]*sqrt(2*M_PI);
@@ -255,9 +266,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
             Float64 tmpRedshift = Extrema[i]; //by default
             //TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
             TPointList extremumList;
-            Int32 s = ExtremaExtendedRedshifts[i].size();
-            TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i][0], 
-                                                           ExtremaExtendedRedshifts[i][s-1]);
+            TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i]);
             //call Find on each secondpass range and retrieve the best 10 peaks?
             /*CExtremum extremum(redshiftsRange, 5, 0.005, false);
             extremum.DeactivateSlidingWindow();
@@ -314,7 +323,9 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                         (solIdx == 0 && probaLog>next) ||
                         (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
                         //if current value is a peak
-                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, Fullwidth);
+                        Float64 Fullwidth_zp1 = Fullwidth*(zInCandidateRange + 1);
+                        TFloat64Range zrange(zInCandidateRange-Fullwidth_zp1/2, zInCandidateRange+Fullwidth_zp1/2);
+                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, zrange);
                         if(flux_integral>tmpIntgProba){
                             tmpRedshift = zInCandidateRange;
                             tmpIntgProba = flux_integral;

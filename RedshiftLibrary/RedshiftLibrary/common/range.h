@@ -18,11 +18,11 @@ template <typename T> class CRange
   public:
     CRange() {}
 
-    CRange(T begin, T end)
-    {
-        m_Begin = begin;
-        m_End = end;
-    }
+    CRange(const T begin, const T end):
+        m_Begin(begin), m_End(end) {}
+
+    CRange(const std::vector<T> & v):
+        m_Begin(v.front()), m_End(v.back()) {}
 
     ~CRange() {}
 

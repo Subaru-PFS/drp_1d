@@ -324,11 +324,7 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     if(!results.expired())
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
-        {
-            Float64 tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
-            redshiftcandidates.push_back(tmpRedshift);
-        }
+        redshiftcandidates = lineModelResult->ExtremaResult.Extrema;
     }else{
         return false;
     }

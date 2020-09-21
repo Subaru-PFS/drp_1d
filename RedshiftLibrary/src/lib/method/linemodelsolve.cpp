@@ -571,7 +571,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
-            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
 
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
@@ -579,7 +579,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         }
         if(zPriorHaStrongestLine)
         {
-            std::vector<bool> wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+            TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
             std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
             zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorHaStrongest);
         }
@@ -627,10 +627,11 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         std::vector<TFloat64List> zpriorsTplshapes;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
+
             TFloat64List _prior;
             if(zPriorStrongLinePresence)
             {
-                std::vector<bool> strongLinePresence = result->StrongELPresentTplshapes[k];
+                TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
                 _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
             }else
             {
@@ -639,7 +640,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
             if(zPriorHaStrongestLine)
             {
-                std::vector<bool> wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+                TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
                 std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
                 _prior = pdfz.CombineLogZPrior(_prior, zlogPriorHaStrongest);
             }
@@ -654,14 +655,15 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
                 _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
             }
-            zpriorsTplshapes.push_back(_prior);
+            zpriorsTplshapes.push_back(std::move(_prior));
         }
 
         //correct chi2 if necessary
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            TFloat64List logLikelihoodCorrected(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            ChiSquareTplshapesCorrected.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            TFloat64List & logLikelihoodCorrected = ChiSquareTplshapesCorrected.back();
             for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];
@@ -695,7 +697,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                     logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
                 }
             }
-            ChiSquareTplshapesCorrected.push_back(logLikelihoodCorrected);
         }
 
         if(opt_combine=="marg")
@@ -1322,7 +1323,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     return true;
 }
 
-Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, Int32 maxCount)
+Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List const & zcandidates_unordered_list, Int32 maxCount)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
@@ -1345,10 +1346,10 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store, std::vector<Flo
             store.GetGlobalResult("linemodelsolve.linemodel").lock());
         //compute Deltaz
         TFloat64List deltaz;
-        CDeltaz* deltaz_obj = new CDeltaz();
+        CDeltaz deltaz_obj;
         for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
             Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
+            deltaz.push_back(deltaz_obj.GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
 

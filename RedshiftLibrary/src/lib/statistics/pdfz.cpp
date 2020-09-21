@@ -182,8 +182,8 @@ Float64 CPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshifts,
  * regular grid z-pdf anymore
  * @return 0: success, 1:problem, 3 not enough z values, 4: zPrior not valid
  */
-Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts,
-                     Float64 cstLog, TFloat64List logZPrior,
+Int32 CPdfz::Compute(const TFloat64List & merits, const TFloat64List & redshifts,
+                     const Float64 cstLog, const TFloat64List & logZPrior,
                      TFloat64List &logPdf, Float64 &logEvidence)
 {
     Bool verbose = true;
@@ -324,8 +324,8 @@ Int32 CPdfz::Compute(TFloat64List merits, TFloat64List redshifts,
     return 0;
 }
 
-Float64 CPdfz::getSumTrapez(std::vector<Float64> redshifts,
-                            std::vector<Float64> valprobalog)
+Float64 CPdfz::getSumTrapez(const TRedshiftList & redshifts,
+                            const TFloat64List & valprobalog)
 {
     Float64 sum = 0.0;
     if(redshifts.size()==0)
@@ -345,8 +345,8 @@ Float64 CPdfz::getSumTrapez(std::vector<Float64> redshifts,
     return sum;
 }
 
-Float64 CPdfz::getSumRect(std::vector<Float64> redshifts,
-                          std::vector<Float64> valprobalog)
+Float64 CPdfz::getSumRect(const TRedshiftList & redshifts,
+                          const TFloat64List & valprobalog)
 {
     Float64 sum = 0.0;
     // prepare LogEvidence
@@ -378,11 +378,10 @@ Int32 CPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
  * @param zwidth
  * @return -1 if error, else sum around the candidate
  */
-Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
-                                     std::vector<Float64> valprobalog,
-                                     Float64 zcandidate, 
-                                     Float64 zwidth_left,
-                                     Float64 zwidth_right)
+Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
+                                     const TFloat64List & valprobalog,
+                                     const Redshift zcandidate,
+                                     const TFloat64Range & zrange)
 {
     // check that redshifts are sorted
     for (UInt32 k = 1; k < redshifts.size(); k++)
@@ -400,20 +399,13 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    if(zwidth_right == - 1)
-        zwidth_right = zwidth_left;
-
     UInt32 cand_Idx = getIndex(redshifts, zcandidate);
     if(cand_Idx == 0){
         kmin = 0;
     }else{
         for (UInt32 k = cand_Idx - 1; k >0; k--){
-            if(redshifts[k] == zwidth_left){
+            if(redshifts[k] <= zrange.GetBegin()){
                 kmin = k;
-                break;
-            }
-            if(redshifts[k] < zwidth_left){
-                kmin = k - 1;
                 break;
             }
         }
@@ -423,12 +415,8 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
         kmax = redshifts.size()-1;
     }else{
         for (UInt32 k = cand_Idx + 1; k < redshifts.size(); k++){
-            if(redshifts[k] == zwidth_right){
+            if(redshifts[k] >= zrange.GetEnd()){
                 kmax = k;
-                break;
-            }
-            if(redshifts[k] > zwidth_right){
-                kmax = k - 1;
                 break;
             }
         }
@@ -449,9 +437,9 @@ Float64 CPdfz::getCandidateSumTrapez(std::vector<Float64> redshifts,
 }
 
 //TODO: this requires a deeper check to include the updates window support range
-Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
-                                        std::vector<Float64> valprobalog,
-                                        Float64 zcandidate, Float64 zwidth,
+Int32 CPdfz::getCandidateRobustGaussFit(const TRedshiftList & redshifts,
+                                        const TFloat64List & valprobalog,
+                                        const Float64 zcandidate, const TFloat64Range & zrange,
                                         Float64 &gaussAmp, Float64 &gaussAmpErr,
                                         Float64 &gaussSigma,
                                         Float64 &gaussSigmaErr)
@@ -460,13 +448,14 @@ Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
     Int32 nTry = 5;
     Int32 iTry = 0;
 
-    Float64 current_zwidth = zwidth;
+    TFloat64Range current_zrange = zrange;
+    Float64 zwidth_max = std::max(zcandidate-zrange.GetBegin(), zrange.GetEnd() - zcandidate);
     while (!fitSuccessful && iTry < nTry)
     {
         Int32 retFit = getCandidateGaussFit(
-            redshifts, valprobalog, zcandidate, current_zwidth, gaussAmp,
+            redshifts, valprobalog, zcandidate, current_zrange, gaussAmp,
             gaussAmpErr, gaussSigma, gaussSigmaErr);
-        if (!retFit && gaussSigma < zwidth * 2.0 &&
+        if (!retFit && gaussSigma < zwidth_max * 2.0 &&
             std::abs(gaussSigma / gaussSigmaErr) > 1e-2)
         {
             fitSuccessful = true;
@@ -487,7 +476,8 @@ Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
                          "going to retry w. different parameters",
                          gaussSigma);
         }
-        current_zwidth /= 2.0;
+        zwidth_max /= 2.0;
+        current_zrange.IntersectWith(TFloat64Range(zcandidate - zwidth_max, zcandidate + zwidth_max));
         iTry++;
     }
 
@@ -500,9 +490,9 @@ Int32 CPdfz::getCandidateRobustGaussFit(std::vector<Float64> redshifts,
     }
 }
 
-Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
-                                  std::vector<Float64> valprobalog,
-                                  Float64 zcandidate, Float64 zwidth,
+Int32 CPdfz::getCandidateGaussFit(const TRedshiftList & redshifts,
+                                  const TFloat64List & valprobalog,
+                                  const Float64 zcandidate, const TFloat64Range & zrange,
                                   Float64 &gaussAmp, Float64 &gaussAmpErr,
                                   Float64 &gaussSigma, Float64 &gaussSigmaErr)
 {
@@ -527,10 +517,9 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     // redshifts[kmin]:redshifts[kmax] ]
     Int32 kmin = 0;
     Int32 kmax = redshifts.size() - 1;
-    Float64 halfzwidth = zwidth / 2.0;
     for (UInt32 k = 0; k < redshifts.size(); k++)
     {
-        if (redshifts[k] < (zcandidate - halfzwidth))
+        if (redshifts[k] < zrange.GetBegin())
         {
             kmin = k;
         }
@@ -542,7 +531,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
 
     for (UInt32 k = redshifts.size() - 1; k > 0; k--)
     {
-        if (redshifts[k] > (zcandidate + halfzwidth))
+        if (redshifts[k] > zrange.GetEnd())
         {
             kmax = k;
         }
@@ -557,9 +546,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     gsl_multifit_fdfsolver *s;
     int status, info;
     size_t i;
-    size_t n =
-        kmax - kmin +
-        2; // n samples on the support, /* number of data points to fit */
+    size_t n = kmax - kmin + 2; // n samples on the support, /* number of data points to fit */
     size_t p = 2; // DOF = 1.amplitude + 2.width
 
     if (verbose)
@@ -611,7 +598,7 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     {
         x_init[0] = 1.0;
     }
-    x_init[1] = zwidth / 2.0;
+    x_init[1] = std::max(zcandidate - zrange.GetBegin(), zrange.GetEnd() - zcandidate)/2.0;
     if (verbose)
     {
         Log.LogError("    CPdfz::getCandidateSumGaussFit - init a=%e",
@@ -728,18 +715,18 @@ Int32 CPdfz::getCandidateGaussFit(std::vector<Float64> redshifts,
     return ret;
 }
 
-Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
-                       std::vector<Float64> valprobalog,
-                       Float64 zbest,
-                       std::vector<Float64> zcandidates,
-                       Float64 zwidth,
-                       Float64 &pmis)
+Int32 CPdfz::getPmis( const TRedshiftList & redshifts,
+                      const TFloat64List & valprobalog,
+                      const Float64 zbest,
+                      TRedshiftList & zcandidates,
+                      const Float64 zwidth,
+                       Float64 & pmis)
 {
     Float64 halfzwidth = zwidth/2.;
     pmis = -1;
 
     //definition of the lines for mismatch
-    std::vector<Float64> lambda_mis;
+    TFloat64List lambda_mis;
     lambda_mis.push_back(9533.2); //SIII9530
     lambda_mis.push_back(9071.1); //SIII9068
 
@@ -757,7 +744,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
 
 
     //definition of relzerr_mis
-    std::vector<Float64> relzerr_mis;
+    TFloat64List relzerr_mis;
     relzerr_mis.clear();
     for (Int32 kl1 = 0; kl1<lambda_mis.size(); kl1++)
     {
@@ -779,8 +766,8 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
     Int32 maxpeakscount = 1000;
     Float64 radius = 0.005;
     TFloat64Range redshiftsRange(
-        redshifts[0],
-        redshifts[redshifts.size() - 1]);
+        redshifts.front(),
+        redshifts.back());
     CExtremum extremum(redshiftsRange, maxpeakscount, radius, false);
     TPointList extremumList;
     extremum.Find(redshifts, valprobalog, extremumList);
@@ -793,7 +780,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
     Log.LogDetail( "pdfz: Found n candidates for mismatch calc.=%d", zcandidates.size());
 
 
-    std::vector<Int32> indexes_candidates_selected;
+    TInt32List indexes_candidates_selected;
     //for(Int32 k_zmap=0; k_zmap<zcandidates.size(); k_zmap++)
     {
         //Int32 zmap = zcandidates[k_zmap];
@@ -802,6 +789,8 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
         //find zcandidates corresponding to a relzerr value wrt to zmap
         for(Int32 k_cand=0; k_cand<zcandidates.size(); k_cand++)
         {
+            Redshift zmin = zcandidates[k_cand]-halfzwidth*(1+zcandidates[k_cand]);
+            Redshift zmax = zcandidates[k_cand]+halfzwidth*(1+zcandidates[k_cand]);
             for(Int32 k_relzerr_mis=0; k_relzerr_mis<n_relzerr_mis; k_relzerr_mis++)
             {
                 if(true)
@@ -811,7 +800,7 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
                     Float64 z_mis = relzerr_mis[k_relzerr_mis]*(1+zmap)+zmap;
                     //Log.LogDetail( "pdfz: Found zmis=%f for relzerr=%f", z_mis, relzerr_mis[k_relzerr_mis]);
 
-                    if(z_mis>(zcandidates[k_cand]-halfzwidth) && z_mis<(zcandidates[k_cand]+halfzwidth))
+                    if(z_mis>zmin && z_mis<zmax)
                     {
                         indexes_candidates_selected.push_back(k_cand);
                         Log.LogDetail( "pdfz: Found mismatch for relzerr=%f, for zmap=%f: candidate at z=%f", relzerr_mis[k_relzerr_mis], zmap, zcandidates[k_cand]);
@@ -823,16 +812,18 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
     Log.LogDetail( "pdfz: Found n indexes_candidates_selected=%d", indexes_candidates_selected.size());
 
     //find redshift indexes corresponding to selected candidates surrounding
-    std::vector<Int32> indexes_zsamples_selected;
+    TInt32List indexes_zsamples_selected;
     Int32 n_indexes_candidates_selected = indexes_candidates_selected.size();//min((Int32)1, (Int32)indexes_candidates_selected.size());
     for(Int32 k_cand_sel=0; k_cand_sel<n_indexes_candidates_selected; k_cand_sel++)
     {
         Int32 k_cand = indexes_candidates_selected[k_cand_sel];
+        Redshift zmin = zcandidates[k_cand]-halfzwidth*(1+zcandidates[k_cand]);
+        Redshift zmax = zcandidates[k_cand]+halfzwidth*(1+zcandidates[k_cand]);
 
         //find zcandidate index
         for(Int32 kz=0; kz<redshifts.size(); kz++)
         {
-            if(redshifts[kz]>(zcandidates[k_cand]-halfzwidth) && redshifts[kz]<(zcandidates[k_cand]+halfzwidth))
+            if(redshifts[kz]>zmin && redshifts[kz]<zmax)
             {
                 indexes_zsamples_selected.push_back(kz);
             }
@@ -860,7 +851,8 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
     pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
 
     //estimate zcalc intg proba
-    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest, zwidth/2);
+    TFloat64Range zrange(zbest + halfzwidth*(1+zbest), zbest-halfzwidth*(1+zbest));
+    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest,  zrange);
 
     Log.LogDetail("pdfz: <pmisraw><%.6e>", pmis_raw);
     Log.LogDetail("pdfz: <pmap><%.6e>", pzcalc);
@@ -870,72 +862,64 @@ Int32 CPdfz::getPmis(std::vector<Float64> redshifts,
 
     return 0;
 }
-// setting cte priors for all redshift values
-std::vector<Float64> CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
-{
-    std::vector<Float64> zPrior(nredshifts, 1.0);
-    for (UInt32 kz = 0; kz < nredshifts; kz++)
-    {
-        zPrior[kz] = 1.0 / nredshifts;
-    }
 
-    // switch to log
-    std::vector<Float64> logzPrior(nredshifts, 0.0);
+// setting cte priors for all redshift values
+TFloat64List CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
+{
+    TFloat64List logzPrior(nredshifts, 1.0);
+
     for (UInt32 kz = 0; kz < nredshifts; kz++)
     {
-        logzPrior[kz] = log(zPrior[kz]);
+        logzPrior[kz] = log(1.0 / nredshifts);
     }
 
     return logzPrior;
 }
 
-std::vector<Float64>
-CPdfz::GetStrongLinePresenceLogZPrior(std::vector<bool> linePresence,
-                                      Float64 penalization_factor)
+TFloat64List CPdfz::GetStrongLinePresenceLogZPrior(const TBoolList & linePresence,
+                                      const Float64 penalization_factor)
 {
     Float64 probaPresent = 1.0;
     Float64 probaAbsent = penalization_factor;
-    std::vector<Float64> zPrior(linePresence.size(), probaAbsent);
+    TFloat64List logzPrior(linePresence.size(), probaAbsent);
     Float64 sum = 0.0;
     for (UInt32 kz = 0; kz < linePresence.size(); kz++)
     {
         if (linePresence[kz])
         {
-            zPrior[kz] = probaPresent;
+            logzPrior[kz] = probaPresent;
         } else
         {
-            zPrior[kz] = probaAbsent;
+            logzPrior[kz] = probaAbsent;
         }
-        sum += zPrior[kz];
+        sum += logzPrior[kz];
     }
 
     if (sum > 0)
     {
         for (UInt32 kz = 0; kz < linePresence.size(); kz++)
         {
-            zPrior[kz] /= sum;
+            logzPrior[kz] /= sum;
         }
     }
 
     // switch to log
-    std::vector<Float64> logzPrior(linePresence.size(), probaAbsent);
     for (UInt32 kz = 0; kz < linePresence.size(); kz++)
     {
-        logzPrior[kz] = log(zPrior[kz]);
+        logzPrior[kz] = log(logzPrior[kz]);
     }
 
     return logzPrior;
 }
 
-std::vector<Float64>
-CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
-                                      Float64 penalization_factor)
+TFloat64List CPdfz::GetNLinesSNRAboveCutLogZPrior(const TInt32List &  nlinesAboveSNR,
+                                                  const Float64 penalization_factor)
 {
     Int32 nz = nlinesAboveSNR.size();
     Int32 nlinesThres = 2;
     Float64 probaPresent = 1.0;
     Float64 probaAbsent = penalization_factor;
-    std::vector<Float64> zPrior(nz, probaAbsent);
+    TFloat64List zPrior(nz, probaAbsent);
     Float64 sum = 0.0;
     for (UInt32 kz = 0; kz < nz; kz++)
     {
@@ -959,7 +943,7 @@ CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
     }
 
     // switch to log
-    std::vector<Float64> logzPrior(nz, probaAbsent);
+    TFloat64List logzPrior(nz, probaAbsent);
     for (UInt32 kz = 0; kz < nz; kz++)
     {
         logzPrior[kz] = log(zPrior[kz]);
@@ -968,14 +952,14 @@ CPdfz::GetNLinesSNRAboveCutLogZPrior(std::vector<Int32> nlinesAboveSNR,
     return logzPrior;
 }
 
-std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts, Float64 aCoeff)
+TFloat64List CPdfz::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, const Float64 aCoeff)
 {
     if(aCoeff<=0)
     {
         Log.LogError( "    CPdfz::GetEuclidNhaLogZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
         throw std::runtime_error("    CPdfz::GetEuclidNhaLogZPrior: problem found aCoeff<=0");
     }
-    std::vector<Float64> zPrior(redshifts.size(), 0.0);
+    TFloat64List zPrior(redshifts.size(), 0.0);
 
     Float64 maxP = -DBL_MAX;
     Float64 minP = DBL_MAX;
@@ -1065,11 +1049,11 @@ std::vector<Float64> CPdfz::GetEuclidNhaLogZPrior(std::vector<Float64> redshifts
  * @param logprior2
  * @return
  */
-std::vector<Float64> CPdfz::CombineLogZPrior(std::vector<Float64> logprior1,
-                                             std::vector<Float64> logprior2)
+TFloat64List CPdfz::CombineLogZPrior(const TFloat64List & logprior1,
+                                     const TFloat64List & logprior2)
 {
     bool normalizePrior=true;
-    std::vector<Float64> logzPriorCombined;
+    TFloat64List logzPriorCombined;
     if (logprior1.size() != logprior2.size())
     {
         return logzPriorCombined;
@@ -1113,11 +1097,11 @@ std::vector<Float64> CPdfz::CombineLogZPrior(std::vector<Float64> logprior1,
     return logzPriorCombined;
 }
 
-Int32 CPdfz::Marginalize(TFloat64List redshifts,
-                         std::vector<TFloat64List> meritResults,
-                         std::vector<TFloat64List> zPriors, Float64 cstLog,
+Int32 CPdfz::Marginalize(const TFloat64List & redshifts,
+                         const std::vector<TFloat64List> & meritResults,
+                         const std::vector<TFloat64List> & zPriors, const Float64 cstLog,
                          std::shared_ptr<CPdfMargZLogResult> postmargZResult,
-                         std::vector<Float64> modelPriors)
+                         const TFloat64List &modelPriors)
 {
     bool verbose = false;
 
@@ -1361,9 +1345,9 @@ Int32 CPdfz::Marginalize(TFloat64List redshifts,
 // that case: what about sum_z P = 1 ?
 // TODO: this methid should be replaced/modified to correspond to the MaxPDF
 // technique.
-Int32 CPdfz::BestProba(TFloat64List redshifts,
-                       std::vector<TFloat64List> meritResults,
-                       std::vector<TFloat64List> zPriors, Float64 cstLog,
+Int32 CPdfz::BestProba(const TFloat64List & redshifts,
+                       const std::vector<TFloat64List> & meritResults,
+                       const std::vector<TFloat64List> & zPriors, const Float64 cstLog,
                        std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
@@ -1523,9 +1507,9 @@ Int32 CPdfz::BestProba(TFloat64List redshifts,
  * @param postmargZResult
  * @return
  */
-Int32 CPdfz::BestChi2(TFloat64List redshifts,
-                      std::vector<TFloat64List> meritResults,
-                      std::vector<TFloat64List> zPriors, Float64 cstLog,
+Int32 CPdfz::BestChi2(const TFloat64List & redshifts,
+                      const std::vector<TFloat64List> & meritResults,
+                      const std::vector<TFloat64List> & zPriors, const Float64 cstLog,
                       std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     bool verbose = false;
@@ -1546,7 +1530,7 @@ Int32 CPdfz::BestChi2(TFloat64List redshifts,
     }
 
     // build best chi2 vector
-    std::vector<Float64> chi2Min(redshifts.size(), DBL_MAX);
+    TFloat64List chi2Min(redshifts.size(), DBL_MAX);
     for (Int32 km = 0; km < meritResults.size(); km++)
     {
         if (verbose)
