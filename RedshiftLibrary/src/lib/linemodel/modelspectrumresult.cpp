@@ -24,7 +24,7 @@ CModelSpectrumResult::CModelSpectrumResult()
 CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
     m_model(spc)
 {
-    
+    //probably can add model params as class variable here..
 }
 
 /**

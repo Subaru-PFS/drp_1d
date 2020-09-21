@@ -30,7 +30,7 @@ public:
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
-    /*virtual */CSpectrum& operator=(const CSpectrum& other); 
+    CSpectrum& operator=(const CSpectrum& other); 
  
     void  SetName( const char* name );
 

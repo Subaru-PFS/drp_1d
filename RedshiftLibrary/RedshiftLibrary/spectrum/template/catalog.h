@@ -24,9 +24,7 @@ public:
     Bool Save(const char* filePath , Bool saveWithoutContinuum=true);
 
     const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
-    Int32 GetTemplateByName(const TStringList& tplCategoryList,
-                            const std::string tplName,
-                            CTemplate& retTpl) const;
+    const CTemplate& GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
     const CTemplate& GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const;
 
     TTemplateRefList GetTemplate( const TStringList& categoryList ) const;

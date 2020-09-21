@@ -49,7 +49,7 @@ CTemplate::CTemplate( const CTemplate& other):
     m_kstart = other.m_kstart;
     m_kend = other.m_kend;
 }
-//applying the rule of three (Law of the big three in C++11)
+
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);
@@ -83,27 +83,6 @@ const std::string& CTemplate::GetName() const
 {
     return m_Name;
 }
-//move to catalog list
-/*Int32 CTemplate::GetTemplateByName( const CTemplateCatalog& tplCatalog,
-                                    const TStringList& tplCategoryList,
-                                    const std::string tplName,
-                                    CTemplate& retTpl) 
-{
-    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
-    {
-        std::string category = tplCategoryList[i];
-
-        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
-        {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            if(tpl.GetName() == tplName){
-                retTpl = tpl; //copy constructor
-                return 0;
-            }
-        }
-    }
-    return -1;
-}*/
 /**
  * Returns the value stored in m_Category.
  */
@@ -159,7 +138,6 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; //nothing to do here
     m_kDust = kDust;
 
-    //for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++)
     for(Int32 k = m_kstart; k < m_kend + 1; k++)
     {
         m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
@@ -215,10 +193,12 @@ bool CTemplate::InitIsmIgmConfig()
     if(!m_FluxAxisIsmIgm.GetSamplesCount() || m_FluxAxisIsmIgm.GetSamplesCount()!=m_SpectralAxis.GetSamplesCount())
         m_FluxAxisIsmIgm.SetSize(m_SpectralAxis.GetSamplesCount());
 
-    m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    if(m_computedMeiksingCoeff.size()!= m_SpectralAxis.GetSamplesCount())
+        m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
-
-    m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
-        std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
+    
+    if(m_computedDustCoeff.size()!= m_SpectralAxis.GetSamplesCount())
+        m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
     return true;
 }

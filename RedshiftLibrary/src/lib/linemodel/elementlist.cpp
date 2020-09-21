@@ -248,7 +248,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
  **/
 CLineModelElementList::~CLineModelElementList()
 {
-    //Log.LogInfo("Linemodel: Elementlist destructor call");
     if(m_observeGridContinuumFlux)
     {
         delete[] m_observeGridContinuumFlux;
@@ -261,8 +260,6 @@ CLineModelElementList::~CLineModelElementList()
     if(m_fitContinuum_priorhelper) delete m_fitContinuum_priorhelper;
     if(m_fitContinuum_tplfitStore) delete m_fitContinuum_tplfitStore;
     if(m_Regulament) delete m_Regulament;
-    //TODO [ml] m_unscaleContinuumFluxAxisDerivZ if it used again
-    //if(m_CatalogTplShape) delete m_CatalogTplShape;
 }
 
 void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)

@@ -93,7 +93,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
-    ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
 
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
@@ -474,6 +473,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }
             //compute the integratedPDF and sort candidates based on intg PDF
             //truncate based on maxCount
+            ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
             Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
         }
 

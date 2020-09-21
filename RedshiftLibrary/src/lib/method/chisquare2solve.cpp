@@ -153,9 +153,8 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
         }else{
                 Log.LogError( "Failed to get z candidates from these results");
         }
-        //Didier: do you think it can be interesting to output a candidateresults.csv pour les stars?
-        if(outputPdfRelDir == "zPDF") //only for galaxy   
-            Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list, outputPdfRelDir.c_str());
+
+        Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list, outputPdfRelDir.c_str());
         //for each candidate, get best model by reading from resultstore and selecting best fit
         for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
             std::string tplName;
@@ -167,17 +166,18 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                 continue;
             }
             //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
-            CTemplate tpl;
-            Int32 b = tplCatalog.GetTemplateByName(tplCategoryList, tplName, tpl);
-            if(b==-1){
-                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
-                continue;
-            }   
-            m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
+            try {
+                const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+                m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
                                                  DustCoeff, MeiksinIdx,
                                                  opt_interp, opt_extinction, lambdaRange, 
-                                                 overlapThreshold);                                    
+                                                 overlapThreshold);              
+            }catch(const std::runtime_error& e){
+                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
+                continue;
+            }   
+                                  
         }
         m_chiSquareOperator->SaveSpectrumResults(resultStore);
         return ChisquareSolveResult;
@@ -456,8 +456,9 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-          
-        store.StoreGlobalResult( "candidatesresult", zcand ); 
+    
+        std::string name = store.GetCurrentScopeName() + "." +"candidatesresult";
+        store.StoreGlobalResult( name, zcand ); 
 
     return true;
 }
