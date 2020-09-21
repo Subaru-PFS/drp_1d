@@ -774,7 +774,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Zweimodel - contaminant - using offsetLambdaContaminant_s2tos1 : %.2f", offsetLambdaContaminant);
 
     }else{
-        Log.LogError( "Zweimodel - contaminant - unable to find cont. match file=%s", contMatchFilePath.c_str());
+        Log.LogWarning( "Zweimodel - contaminant - unable to find cont. match file=%s", contMatchFilePath.c_str());
         return false;
     }
 

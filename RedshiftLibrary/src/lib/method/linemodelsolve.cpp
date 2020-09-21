@@ -232,13 +232,13 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     {
         m_opt_fittingmethod = forcefittingmethod;
         dataStore.SetScopedParam("linemodel.fittingmethod", m_opt_fittingmethod);
-        Log.LogInfo( "LineModel fitting method auto-correct due to tplshape rigidity");
+        Log.LogInfo( "Linemodel fitting method auto-correct due to tplshape rigidity");
     }
     if(m_opt_rigidity=="tplshape" && m_opt_firstpass_fittingmethod == "hybrid")
     {
         m_opt_firstpass_fittingmethod = forcefittingmethod;
         dataStore.SetScopedParam("linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod);
-        Log.LogInfo( "LineModel first pass fitting method auto-correct due to tplshape rigidity");
+        Log.LogInfo( "Linemodel first pass fitting method auto-correct due to tplshape rigidity");
     }
 
     Log.LogInfo( "Linemodel parameters:");
@@ -369,7 +369,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     if(retSolve){
 
         /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
- //       Log.LogInfo("linemodelsolve: Pdfz computation");
+        // Log.LogDetail("Linemodelsolve: Pdfz computation");
 
         std::string scope = "linemodelsolve.linemodel";
         auto results = dataStore.GetGlobalResult( scope.c_str() );
@@ -500,25 +500,25 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
+        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
     }
     bool zPriorHaStrongestLine = (opt_hapriorstrength>0.0);
     if(zPriorHaStrongestLine)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
+        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: Ha strongest line prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior disabled");
     }
 
     Float64 opt_nlines_snr_penalization_factor = -1;
     bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
     if(zPriorNLineSNR)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
+        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
     }
 
     //hardcoded Euclid-NHaZprior parameter
@@ -526,23 +526,23 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     if(opt_euclidNHaEmittersPriorStrength>0.0)
     {
         zPriorEuclidNHa = true;
-        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
+        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: EuclidNHa prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
 
 
-    bool zPriorLines=true;
-    Log.LogInfo("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
+    bool zPriorLines = true;
+    Log.LogDetail("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
     if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
     {
-        zPriorLines=false;
+        zPriorLines = false;
     }
     if(zPriorLines)
     {
-        Log.LogInfo("Linemodel: Pdfz computation: Lines Prior enabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior enabled");
     }else{
-        Log.LogInfo("Linemodel: Pdfz computation: Lines Prior disabled");
+        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior disabled");
     }
 
 
@@ -905,7 +905,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport);
     if( retInit!=0 )
     {
-        Log.LogError( "Line Model, init failed. Aborting" );
+        Log.LogError( "Linemodel, init failed. Aborting" );
         return false;
     }
     linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
@@ -953,10 +953,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(m_opt_continuumcomponent=="fromspectrum"){
         //check the continuum validity
         if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-            Log.LogWarning("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
             //throw std::runtime_error("Failed to validate continuum  flux");
         }else{
-            Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+            Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
         }
 
         /*
@@ -1004,7 +1004,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                           m_opt_offsets_reldirpath);
     if( retFirstPass!=0 )
     {
-        Log.LogError( "Line Model, first pass failed. Aborting" );
+        Log.LogError( "Linemodel, first pass failed. Aborting" );
         return false;
     }
 
@@ -1058,12 +1058,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport);
     if( retInitB!=0 )
     {
-        Log.LogError( "Line Model fpB, init failed. Aborting" );
+        Log.LogError( "Linemodel fpB, init failed. Aborting" );
         return false;
     }
     if(enableFirstpass_B)
     {
-        Log.LogInfo( "Line Model FIRST PASS B enabled. Computing now." );
+        Log.LogInfo( "Linemodel FIRST PASS B enabled. Computing now." );
 
         linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
         //
@@ -1086,10 +1086,10 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         if(fpb_opt_continuumcomponent=="fromspectrum"){
             //check the continuum validity
             if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-                Log.LogWarning("Line Model - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+                Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
                 //throw std::runtime_error("Failed to validate continuum  flux");
             }else{
-                Log.LogDetail( "Line Model - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
+                Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
             }
         }
 
@@ -1122,7 +1122,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                               m_opt_offsets_reldirpath);
         if( retFirstPass!=0 )
         {
-            Log.LogError( "Line Model, first pass failed. Aborting" );
+            Log.LogError( "Linemodel, first pass failed. Aborting" );
             return false;
         }
 
@@ -1210,7 +1210,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_secondpass_continuumfit);
         if( retSecondPass!=0 )
         {
-            Log.LogError( "Line Model, second pass failed. Aborting" );
+            Log.LogError( "Linemodel, second pass failed. Aborting" );
             return false;
         }
     }else{
@@ -1227,8 +1227,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     Int32 retSaveResults = linemodel.SaveResults(_spc,
                                                  lambdaRange,
                                                  m_opt_continuumreest);
- //combinePDF using results from secondpass
-     Log.LogInfo("linemodelsolve: Pdfz computation");
+    //combinePDF using results from secondpass
+    Log.LogDetail("Linemodelsolve: Pdfz computation");
     std::shared_ptr<const CLineModelResult> lmresultsp = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
 
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -1298,13 +1298,13 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //save linemodel extrema results
         std::string extremaResultsStr=scopeStr.c_str();
         extremaResultsStr.append("_extrema");
-        //Log.LogError("Line Model, saving extrema results: %s", extremaResultsStr.c_str());
+        //Log.LogError("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
         dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), result->GetExtremaResult() );
 
         //save linemodel firstpass extrema results
         std::string firstpassExtremaResultsStr=scopeStr.c_str();
         firstpassExtremaResultsStr.append("_firstpass_extrema");
-        //Log.LogError("Line Model, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
+        //Log.LogError("Linemodel, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
         dataStore.StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), linemodel.GetFirstpassExtremaResult() );
 
         //save linemodel firstpass extrema B results
@@ -1312,7 +1312,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         {
             std::string firstpassbExtremaResultsStr=scopeStr.c_str();
             firstpassbExtremaResultsStr.append("_firstpassb_extrema");
-            //Log.LogError("Line Model, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
+            //Log.LogError("Linemodel, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
             dataStore.StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.GetFirstpassExtremaResult() );
         }
 
@@ -1382,5 +1382,5 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List c
 
         store.StoreScopedGlobalResult( "candidatesresult", zcand );
 
-return true;
+        return true;
 }

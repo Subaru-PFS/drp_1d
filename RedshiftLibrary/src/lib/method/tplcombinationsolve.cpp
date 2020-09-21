@@ -244,7 +244,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
         if( !result )
         {
-            //Log.LogInfo( "Failed to compute chi square value");
+            //Log.LogError( "Failed to compute chi square value");
             return false;
         }else{
             // Store results
@@ -266,7 +266,8 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
-    Log.LogDebug("tplcombinationsolve: combining pdf using results at scope: %s", scope.c_str());
+    Log.LogDetail("    tplcombinationsolve: using results in scope: %s", scope.c_str());
+
     auto results = store.GetGlobalResult( scope.c_str() );
     if(results.expired())
     {
@@ -303,6 +304,23 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
         if(redshifts.size()==0)
         {
             redshifts = result->Redshifts;
+        }
+
+        //check chi2 results status
+        {
+            Bool foundBadStatus = 0;
+            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                if(result->Status[kz]!=COperator::nStatus_OK)
+                {
+                    foundBadStatus = 1;
+                    break;
+                }
+            }
+            if(foundBadStatus)
+            {
+                Log.LogError("tplcombinationsolve: Found bad status result...");
+            }
         }
 
         for(Int32 kism=0; kism<nISM; kism++)

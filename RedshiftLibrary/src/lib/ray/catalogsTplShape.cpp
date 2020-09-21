@@ -40,7 +40,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     bfs::path calibrationFolder( calibrationPath.c_str() );
 
     tplshapedcatalog_relpath = opt_tplratioCatRelPath;
-    Log.LogInfo( "    CatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
+    Log.LogInfo("    CatalogsTplShape - Loading tplshape catalog : %s", tplshapedcatalog_relpath.c_str());
 
     std::string dirPath = (calibrationFolder/tplshapedcatalog_relpath.c_str()).string();
 
@@ -95,7 +95,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         return false;
     }
     std::sort(tplshapeCatalogList.begin(),tplshapeCatalogList.end());
-    Log.LogDebug( "    CatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
+    Log.LogDebug("    CatalogsTplShape - Found %d tplshaped catalogs", tplshapeCatalogList.size());
 
     //load the velocities list for all the catalogs
     fs::path tplshapeVelocitiesDir = tplshapeCatalogDir/"velocities/";
@@ -110,9 +110,9 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         }
       }
     }else{
-        Log.LogError( "    CatalogsTplShape - ERROR - unable to find velocities directory");
+        Log.LogError("    CatalogsTplShape - ERROR - unable to find velocities directory");
     }
-    Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped velocities files", tplshapeVelocitiesList.size());
+    Log.LogInfo("    CatalogsTplShape - Found %d tplshaped velocities files", tplshapeVelocitiesList.size());
 
     //load the priors list for all the catalogs
     fs::path tplshapePriorsDir = tplshapeCatalogDir/"priors/";
@@ -126,10 +126,10 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
           tplshapePriorsList.push_back(dir_iter->path().c_str());
         }
       }
-    }else{
-        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priors directory");
+    }else if ( fs::exists(tplshapePriorsDir) ) {
+        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priors files");
     }
-    Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped priors files", tplshapePriorsList.size());
+    Log.LogInfo("    CatalogsTplShape - Found %d tplshaped priors files", tplshapePriorsList.size());
 
     //load the priorsPz list for all the catalogs
     fs::path tplshapePriorsPzDir = tplshapeCatalogDir/"priors_pZ_Tplr/";
@@ -143,11 +143,10 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
           tplshapePriorsPzList.push_back(dir_iter->path().c_str());
         }
       }
-    }else{
-        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priorsPz directory");
+    }else if ( fs::exists(tplshapePriorsPzDir) ) {
+        Log.LogWarning("    CatalogsTplShape - ERROR - unable to find priorsPz files");
     }
-    Log.LogInfo( "    CatalogsTplShape - Found %d tplshaped priorsPz files", tplshapePriorsPzList.size());
-
+    Log.LogInfo("    CatalogsTplShape - Found %d tplshaped priorsPz files", tplshapePriorsPzList.size());
 
 
     //Load the linecatalog-tplshaped in the list
@@ -171,7 +170,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             }
             catch (std::string& e)
             {
-                Log.LogError( "    CatalogsTplShape - Failed to load tplshape catalog: %s", e.c_str());
+                Log.LogError("    CatalogsTplShape - Failed to load tplshape catalog: %s", e.c_str());
                 throw runtime_error("    CatalogsTplShape - Failed to load tplshape catalog");
             }
 
@@ -197,7 +196,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
             if(kvel<0)
             {
-                Log.LogError( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-velocities files: %s", tplname.c_str());
+                Log.LogError("    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-velocities files: %s", tplname.c_str());
                 return false;
             }
             m_ELvelocities.push_back(200.0);
@@ -205,7 +204,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             bool ret = LoadVelocities(tplshapeVelocitiesList[kvel].c_str(), m_ELvelocities.size()-1);
             if( !ret )
             {
-                Log.LogError( "    CatalogsTplShape - Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
+                Log.LogError("    CatalogsTplShape - Failed to load tplshape velocities: %s", tplshapeVelocitiesList[kvel].c_str());
                 return false;
             }
 
@@ -226,7 +225,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
             if(kprior<0 || !successLoadPriors)
             {
-                Log.LogWarning( "    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
+                Log.LogDetail("    CatalogsTplShape - Failed to match tplshape-catalog with tplshape-prior files: %s", tplname.c_str());
                 successLoadPriors=false;
             }
             if(successLoadPriors)
@@ -234,7 +233,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                 bool retPrior = LoadPrior(tplshapePriorsList[kprior].c_str(), m_Priors.size()-1);
                 if( !retPrior )
                 {
-                    Log.LogError( "    CatalogsTplShape - Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
+                    Log.LogError("    CatalogsTplShape - Failed to load tplshape prior: %s", tplshapePriorsList[kprior].c_str());
                     successLoadPriors=false;
                 }else{
                     //make this prior tpl-ratio equiprobable with other EBMV values
@@ -249,7 +248,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     if(!successLoadPriors) //if not all priors were successfully loaded, replace by cst prior
     {
         Float64 priorCST = 1./(Float64)(m_Priors.size());
-        Log.LogWarning( "    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
+        Log.LogDetail("    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
         for(Int32 k=0; k<m_Priors.size(); k++)
         {
             for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
@@ -258,7 +257,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             }
         }
     }
-    Log.LogInfo( "    CatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
+    Log.LogInfo("    CatalogsTplShape - Loaded %d tplshaped catalogs", m_RayCatalogList.size());
 
     return true;
 }
@@ -295,7 +294,7 @@ bool CRayCatalogsTplShape::LoadVelocities( const char* filePath, Int32 k )
     }
 
 
-    Log.LogDebug( "    CatalogsTplShape - k=%d - Set elv=%.1f, alv=%.1f", k, elv, alv);
+    Log.LogDebug("    CatalogsTplShape - k=%d - Set elv=%.1f, alv=%.1f", k, elv, alv);
     m_ELvelocities[k] = elv;
     m_ABSvelocities[k] = alv;
 
@@ -329,7 +328,7 @@ bool CRayCatalogsTplShape::LoadPrior( const char* filePath, Int32 k )
         return false;
     }
 
-    Log.LogDebug( "    CatalogsTplShape - k=%d - Set prior=%f", k, prior);
+    Log.LogDebug("    CatalogsTplShape - k=%d - Set prior=%f", k, prior);
     m_Priors[k] = prior;
 
     return true;
@@ -434,7 +433,7 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
                 Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[k]);
                 Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
                 std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName();
-                Log.LogDebug( "    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
+                Log.LogDebug("    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
             }
         }
     }

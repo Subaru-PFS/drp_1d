@@ -91,15 +91,11 @@ Bool CQualz::Solve(CDataStore &resultStore, CClassifierStore &classifierStore,
         {
             Log.LogDetail("  ZClassifier: Displaying prediction");
             // DisplayPrediction();
-            Log.LogInfo("  ZClassifier: PREDICTED CLASS zREL : %s",
-                        m_predLabel.c_str());
-            Log.LogInfo("  ZClassifier: \t*associated posterior class "
-                        "prediction = : %f",
-                        m_predProba);
+            Log.LogDetail("  ZClassifier: PREDICTED CLASS zREL : %s", m_predLabel.c_str());
+            Log.LogDetail("  ZClassifier: \t*associated posterior class prediction = : %f", m_predProba);
 
             Log.LogDetail("  ZClassifier: Storing results");
-            auto zQual_vect =
-                std::shared_ptr<CPdfzPredictResult>(new CPdfzPredictResult());
+            auto zQual_vect = std::shared_ptr<CPdfzPredictResult>(new CPdfzPredictResult());
             zQual_vect->m_predLabel = m_predLabel;
             zQual_vect->m_score = m_score;
             zQual_vect->m_posterior = m_posterior;

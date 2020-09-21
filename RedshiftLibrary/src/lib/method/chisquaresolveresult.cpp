@@ -359,7 +359,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
 
 Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const
 {
-    Log.LogDebug( "C%sSolveResult:GetRedshiftCandidates", m_name.c_str() );
+    Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
     redshiftcandidates.clear();
 
     //check if the pdf is stellar/galaxy or else

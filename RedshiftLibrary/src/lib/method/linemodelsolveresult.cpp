@@ -316,7 +316,7 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
 
 Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
 {
-    Log.LogDebug( "CLineModelSolveResult:GetRedshiftCandidates" );
+    Log.LogDebug( "CLineModelSolveResult::GetRedshiftCandidates" );
     redshiftcandidates.clear();
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );

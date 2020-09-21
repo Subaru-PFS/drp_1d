@@ -197,10 +197,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
         if(1)
         {
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
     }
 
@@ -210,7 +210,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
       m_lmfit_fitContinuum = true;
       m_lmfit_fitEmissionVelocity = true;
       m_lmfit_fitAbsorptionVelocity = true;
-      Log.LogInfo("Lmfit parameters : tplAlreadyFit %d ; dobestTemplate %d, fitContinuum %d, fitEmissionVelocity %d, fitAbsorptionVelocity %d",m_lmfit_noContinuumTemplate, m_lmfit_bestTemplate, m_lmfit_fitContinuum, m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity );
+      Log.LogInfo("LMfit parameters : tplAlreadyFit %d ; dobestTemplate %d, fitContinuum %d, fitEmissionVelocity %d, fitAbsorptionVelocity %d",m_lmfit_noContinuumTemplate, m_lmfit_bestTemplate, m_lmfit_fitContinuum, m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity );
     }
     //*/
 
@@ -357,7 +357,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 
         m_fittingmethod = m_opt_secondpass_fittingmethod;
         m_forceLyaFitting = m_opt_lya_forcefit;
-        Log.LogInfo("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
+        Log.LogDetail("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
 
     return true;
@@ -1179,10 +1179,11 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         if(bestFitAmplitudeNegative){
             Log.LogError( "For z=%.5f : Best continuum tpl found: %s has neg. amplitude", m_Redshift, bestTplName.c_str());
             throw runtime_error("Elementlist, cannot loadfitcontinuum because best template has negative amplitude");
-        }else{
-            Log.LogInfo( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
         }
-        //
+        /*}else{
+        //    Log.LogDebug( "For z=%.5f : Best continuum tpl found: %s", m_Redshift, bestTplName.c_str());
+        }*/
+
         //Retrieve the best template
         bool foundBestTemplate = false;
         for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -1420,7 +1421,7 @@ Bool CLineModelElementList::SolveContinuum(const CSpectrum& spectrum,
     if( !chisquareResult )
     {
 
-        Log.LogInfo( "Failed to compute chi square value");
+        Log.LogError( "Failed to compute chi square value");
         return false;
     }else{
         // Store results
@@ -1619,7 +1620,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
 Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
 {
     m_fitContinuum_option = 1; //enable use of the fit store
-    Log.LogInfo( "Elementlist: enabling fitContinuum store.");
+    Log.LogDetail( "Elementlist: enabling fitContinuum store.");
     m_fitContinuum_tplfitStore = fitStore;
     return 1;
 }
@@ -2053,7 +2054,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
                 linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
 
-                Log.LogInfo("\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
+                Log.LogInfo( "\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
                 result.Load(linemodelFitResultsPath.c_str());
                 if(result.GetLineModelSolution().Amplitudes.size()<2)
                 {
@@ -2153,15 +2154,15 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                   while( NegVal)
                   {
                     Int32 retVal = fitAmplitudesLmfit(m_SpcFluxAxis, controller);
-                    //Log.LogInfo( "LineModel Infos: Lmfit retVal = %d", retVal);
+                    //Log.LogInfo("LineModel LMfit: retVal = %d", retVal);
                     NegVal = controller->removeNegAmpLine();
-                    //Log.LogInfo( "LineModel Infos: Lmfit NegVal = %s", (NegVal?"t":"f") );
-                    //Log.LogInfo( "LineModel Infos: Lmfit merit = %.0f ; bestMerit : %.0f ", controller->getMerit(), bestMerit );
+                    //Log.LogInfo("LineModel LMfit: NegVal = %s", (NegVal?"t":"f") );
+                    //Log.LogInfo("LineModel LMfit: merit = %.0f ; bestMerit : %.0f ", controller->getMerit(), bestMerit );
                     if(retVal==0 && !NegVal && controller->getMerit()< bestMerit ){
 
                       bestMerit = controller->getMerit();
                       bestController = std::shared_ptr<CLmfitController>( controller);
-                      //Log.LogInfo("Pointeur best Controller setted");
+                      //Log.LogInfo("Pointer best Controller setted");
                     }
                     //NegVal = false;//no while
                   }
@@ -2189,16 +2190,16 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                   {
                       Float64 amp = bestController->getLineAmp(iElt);
                       Float64 ampErr = bestController->getLineAmpErr(iElt);
-                      //Log.LogInfo("Lmfit : amp [%d] = %.1f, z = %f", iElt, amp, m_Redshift);
+                      //Log.LogInfo("LMfit : amp [%d] = %.1f, z = %f", iElt, amp, m_Redshift);
                       SetElementAmplitude(bestFilteredEltsIdx[iElt], amp, ampErr);
                   }
                   if(bestController->isEmissionVelocityFitted()){
                     SetVelocityEmission(bestController->getEmissionVelocity());
-                    //Log.LogInfo("Lmfit : VelEmission = %.1f, z = %f", bestController->getEmissionVelocity(), m_Redshift);
+                    //Log.LogInfo("LMfit : VelEmission = %.1f, z = %f", bestController->getEmissionVelocity(), m_Redshift);
                   }
                   if(bestController->isAbsorptionVelocityFitted()){
                     SetVelocityAbsorption(bestController->getAbsorptionVelocity());
-                    //Log.LogInfo("Lmfit : VelAbsorption= %.1f, z = %f", bestController->getAbsorptionVelocity(), m_Redshift);
+                    //Log.LogInfo("LMfit : VelAbsorption= %.1f, z = %f", bestController->getAbsorptionVelocity(), m_Redshift);
                    }
                    //prepare the elements support
                    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -2208,7 +2209,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                    refreshModelInitAllGrid();
                    //modelSolution = GetModelSolution();
                 }else{
-                  Log.LogError( "LineModel Lmfit: not able to fit values at z %f", m_Redshift);
+                  Log.LogError("LineModel LMfit: not able to fit values at z %f", m_Redshift);
                   //continue;
                   return DBL_MAX;
                 }
@@ -2688,7 +2689,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             {
                 //
             }
-            Log.LogInfo( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
+            Log.LogDetail( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
                          savedIdxContinuumFitted,
                          m_fitContinuum_tplName.c_str(),
                          m_fitContinuum_tplFitDustCoeff,
@@ -2708,7 +2709,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                Log.LogInfo( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
+                Log.LogDetail( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumCross(m_DtmTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetSumGauss(m_MtmTplshape[savedIdxFitted][iElts]);
@@ -2783,10 +2784,10 @@ void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 m
 
     if(1)
     {
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_outsidelinemask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-        Log.LogInfo( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_outsidelinemask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+        Log.LogDetail( "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
 
     }
 }
@@ -2808,10 +2809,10 @@ void CLineModelElementList::SetFittingMethod(std::string fitMethod)
         }
         if(0)
         {
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogInfo( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogInfo( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
+            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
+            Log.LogDebug( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
         }
       }
    }
@@ -3025,7 +3026,7 @@ Bool CLineModelElementList::addToSpectrumAmplitudeOffset( CSpectrumFluxAxis& mod
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    Log.LogInfo( "Elementlist: Adding n=%d ampOffsets", m_ampOffsetsIdxStart.size());
+    Log.LogDetail( "Elementlist: Adding n=%d ampOffsets", m_ampOffsetsIdxStart.size());
     for( UInt32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
     {
         for( UInt32 k=m_ampOffsetsIdxStart[i]; k<=m_ampOffsetsIdxStop[i]; k++ )
@@ -3102,7 +3103,7 @@ Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spc
     {
         for( UInt32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
         {
-            Log.LogInfo( "Elementlist: i=%d, m_ampOffsetsIdxStart: %d, m_ampOffsetsIdxStop: %d", i, m_ampOffsetsIdxStart[i], m_ampOffsetsIdxStop[i] );
+            Log.LogDebug( "Elementlist: i=%d, m_ampOffsetsIdxStart: %d, m_ampOffsetsIdxStop: %d", i, m_ampOffsetsIdxStart[i], m_ampOffsetsIdxStop[i] );
         }
     }
     return 0;
@@ -3543,12 +3544,12 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     if(verbose)
     {
-        //Log.LogInfo( "fitAmplitudesLmfit");
+        //Log.LogInfo("fitAmplitudesLmfit");
     }
     std::vector<UInt32> filteredEltsIdx= controller->getFilteredIdx();
     UInt32 nddl = filteredEltsIdx.size();
     if(nddl<1){
-        Log.LogError("Lmfit :No ray amplitude to fit ");
+        Log.LogError("Linemodel LMfit: No ray amplitude to fit");
         return -1;
     }
 
@@ -3556,7 +3557,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     if(! controller->isContinuumFitted()){
         xInds = getSupportIndexes( filteredEltsIdx );
     }else{
-        xInds=  std::vector<UInt32>(fluxAxis.GetSamplesCount());
+        xInds = std::vector<UInt32>(fluxAxis.GetSamplesCount());
         //boost::push_back(xInds, fluxAxis.GetSamplesCount());
         std::iota(std::begin(xInds), std::end(xInds), 0);
     }
@@ -3570,12 +3571,12 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     int status, info;
     size_t i;
     size_t n; //n samples on the support, /* number of data points to fit */
-    size_t p = controller->getNumberParameters(); //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity) +1 Absorption VEl +1 Amplitude Template
+    size_t p = controller->getNumberParameters(); //DOF = n amplitudes to fit (1 for each element) + 1 (EL velocity) + 1 Absorption VEl + 1 Amplitude Template
 
     n = xInds.size();
     if(n<nddl){
         controller->resizeAmpsLine();
-        Log.LogError( "LineModel Infos: LMfit not enough smaples on support");
+        Log.LogError("LineModel LMfit: not enough smaples on support");
         for (Int32 iddl = 0; iddl < nddl; iddl++)
         {
             controller->setAmpLine(iddl, 0.0,0.0);
@@ -3594,7 +3595,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
           if(maxabsval<std::abs(flux[idx]))
           {
-              maxabsval=std::abs(flux[idx]);
+              maxabsval = std::abs(flux[idx]);
           }
       }
       normFactor = 1.0/maxabsval;
@@ -3606,7 +3607,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     if(verbose)
     {
-        //Log.LogInfo("normFactor = '%.3e'", normFactor);
+        //Log.LogDetail("normFactor = '%.3e'", normFactor);
     }
 
     gsl_matrix *J = gsl_matrix_alloc(n, p);
@@ -3617,11 +3618,11 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
     //initialize lmfit with previously estimated individual/hybrid fit method
-    Float64 bestAmpLine = -1;
+    Float64 bestAmpLine = -1.0;
     for(Int32 kp=0; kp<nddl; kp++)
     {
-        Float64 amp =  m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();
-        if( amp>bestAmpLine){
+        Float64 amp = m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();
+        if(amp > bestAmpLine){
             bestAmpLine = amp;
         }
     }
@@ -3629,22 +3630,22 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 //    if(bestAmpLine>0.){
 //        controller->setNormAmpLine(1/bestAmpLine);//setNormAmpLine(controller->lineAmp_LmToModel(bestAmpLine));
 //        if(verbose){
-//            Log.LogInfo("Lmfit : normAmpLine : %f", controller->getNormAmpLine());
+//            Log.LogDetail("LineModel LMfit: normAmpLine : %f", controller->getNormAmpLine());
 //        }
 //    }
     for(Int32 kp=0; kp<nddl; kp++)
     {
         Float64 ampInitGuess = m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude();//std::max(m_Elements[filteredEltsIdx[kp]]->GetElementAmplitude() *1.5, bestAmpLine*0.001) ;
-        if(ampInitGuess <0.){
-            Log.LogInfo("Amp negative %d , set to 0",ampInitGuess );
-            ampInitGuess = 0.;
+        if(ampInitGuess < 0.0){
+            Log.LogDetail("Amp negative %d , set to 0", ampInitGuess );
+            ampInitGuess = 0.0;
         }
-        //Float64 ampInitGuess = 0;
+        //Float64 ampInitGuess = 0.0;
 
         x_init[kp] = controller->lineAmp_ModelToLm(ampInitGuess);//*normFactor;
         if(verbose)
         {
-            Log.LogInfo( "LineModel LMfit: set init guess amp [%d] Model = %f lmfit: %f", filteredEltsIdx[kp], ampInitGuess, x_init[kp]);
+            Log.LogDetail("LineModel LMfit: set init guess amp [%d] Model = %f lmfit: %f", filteredEltsIdx[kp], ampInitGuess, x_init[kp]);
         }
         x_init[kp] = ampInitGuess*normFactor;
     }
@@ -3655,33 +3656,33 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
         controller->setNormEmiFactor(normEmiFactor);
         x_init[controller->getIndEmissionVel()] = controller->emiVel_ModelToLm(GetVelocityEmission());//bestAmpLine;
         if(verbose){
-            Log.LogInfo( "LineModel LMfit: normEmiFactor = %f", normEmiFactor);
-             Log.LogInfo( "LineModel LMfit: set init guess Emission velocity = %f ", GetVelocityEmission());
+            Log.LogDetail("LineModel LMfit: normEmiFactor = %f", normEmiFactor);
+            Log.LogDetail("LineModel LMfit: set init guess Emission velocity = %f ", GetVelocityEmission());
         }
     }
     if(controller->isAbsorptionVelocityFitted())
     {
-        Float64 normAbsFactor =1.0;// bestAmpLine/GetVelocityAbsorption();//1.0f;//
+        Float64 normAbsFactor = 1.0;// bestAmpLine/GetVelocityAbsorption();//1.0f;//
 
         controller->setNormAbsFactor(normAbsFactor);
         x_init[controller->getIndAbsorptionVel()] = controller->absVel_ModelToLm(GetVelocityAbsorption());//bestAmpLine;
         if(verbose){
-             Log.LogInfo( "LineModel LMfit: normAbsFactor = %f", normAbsFactor);
-             Log.LogInfo( "LineModel LMfit: set init guess Absorption velocity = %f ", GetVelocityAbsorption());
+            Log.LogDetail("LineModel LMfit: normAbsFactor = %f", normAbsFactor);
+            Log.LogDetail("LineModel LMfit: set init guess Absorption velocity = %f ", GetVelocityAbsorption());
         }
 
     }
     if(controller->isContinuumFitted()){
       x_init[controller->getIndContinuumAmp()]= controller->continuumAmp_ModelToLm(getFitContinuum_tplAmplitude());//*normFactor;
       if(verbose){
-           Log.LogInfo( "LineModel LMfit: set init guess continuum amp = %f ", getFitContinuum_tplAmplitude());
+          Log.LogDetail("LineModel LMfit: set init guess continuum amp = %f ", getFitContinuum_tplAmplitude());
       }
     }
 
     if(controller->isRedshiftFitted()){
       x_init[controller->getIndRedshift()]= m_Redshift;
       if(verbose){
-           Log.LogInfo( "LineModel LMfit: set init guess redshift= %f ", m_Redshift);
+          Log.LogDetail("LineModel LMfit: set init guess redshift = %f ", m_Redshift);
       }
     }
 
@@ -3695,7 +3696,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 
     const double xtol = 1e-8;
     const double gtol = 1e-8;
-    const double ftol =1-8;
+    const double ftol = 1e-8;
     Int32 maxIterations = 250;
 
     //gsl_rng_env_setup();
@@ -3722,7 +3723,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     s = gsl_multifit_fdfsolver_alloc (T, n, p);
 
     /* initialize solver with starting point and weights */
-    gsl_multifit_fdfsolver_wset (s, &f, &x.vector, &w.vector);
+    gsl_multifit_fdfsolver_wset(s, &f, &x.vector, &w.vector);
 
     /* compute initial residual norm */
     res_f = gsl_multifit_fdfsolver_residual(s);
@@ -3732,7 +3733,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     status = gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
 
     gsl_multifit_fdfsolver_jac(s, J);
-    gsl_multifit_covar (J, 0.0, covar);
+    gsl_multifit_covar(J, 0.0, covar);
 
     /* compute final residual norm */
     chi = gsl_blas_dnrm2(res_f);
@@ -3742,35 +3743,32 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
 
-        Log.LogInfo( "summary from method '%s'",
-                gsl_multifit_fdfsolver_name(s));
-        Log.LogInfo( "number of iterations: %zu",
-                gsl_multifit_fdfsolver_niter(s));
-        Log.LogInfo("function evaluations: %zu", f.nevalf);
-        Log.LogInfo("Jacobian evaluations: %zu", f.nevaldf);
-        Log.LogInfo( "reason for stopping: %s",
-                (info == 1) ? "small step size" :(info==2)? "small gradient": "small change in f");
-        Log.LogInfo( "initial |f(x)| = %g", chi0);
-        Log.LogInfo("final   |f(x)| = %g", chi);
+        Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
+        Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
+        Log.LogDebug("function evaluations: %zu", f.nevalf);
+        Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
+        Log.LogDebug("reason for stopping: %s", (info == 1) ? "small step size" : (info==2) ? "small gradient" : "small change in f");
+        Log.LogDebug("initial |f(x)| = %g", chi0);
+        Log.LogDebug("final   |f(x)| = %g", chi);
 
         {
             double dof = n - p;
             //double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-            Log.LogInfo( "chisq/dof = %g",  pow(chi, 2.0) / dof);
+            Log.LogDebug( "chisq/dof = %g",  pow(chi, 2.0) / dof);
 
             for(Int32 k=0; k<p; k++)
             {
                 if(FIT(k)<1e-3)
                 {
-                    //Log.LogInfo ("A %d     = %.3e +/- %.8f", k, FIT(k), c*ERR(k));
+                    //Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c*ERR(k));
                 }else{
-                    //Log.LogInfo ( "A %d     = %.5f +/- %.8f", k, FIT(k), c*ERR(k));
+                    //Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c*ERR(k));
                 }
 
             }
         }
-        Log.LogInfo ( "status = %s (%d)", gsl_strerror (status), status);
+        Log.LogDebug("status = %s (%d)", gsl_strerror (status), status);
     }
 
     //=======================Result treament ====================
@@ -3782,12 +3780,12 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     {
         Float64 a = controller->lineAmp_LmToModel(gsl_vector_get(s->x,iddl));///normFactor;
         Float64 sigma = controller->lineAmp_LmToModel(c*sqrt(gsl_matrix_get(covar,iddl,iddl)));///normFactor;
-        if(a<0){
+        if(a < 0.0){
             ampPos = 0;
         }
         controller->setAmpLine(iddl, a,sigma);
         if(verbose){
-          Log.LogInfo( "LineModel Infos: Lmfit set final amp [%] = %f with err = %f", iddl, a, sigma);
+            Log.LogDetail("LineModel LMfit: set final amp [%] = %f with err = %f", iddl, a, sigma);
         }
     }
     //
@@ -3801,13 +3799,13 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     //
     // if(controller->isEmissionVelocityFitted()){
     //   Float64 vel = gsl_vector_get(s->x,controller->getIndEmissionVel())/controller->getNormEmiFactor();
-    //   if(vel<0){
+    //   if(vel<0.0){
     //     ampPos =0;
     //   }
     // }
     // if(controller->isAbsorptionVelocityFitted()){
     //   Float64 vel = gsl_vector_get(s->x,controller->getIndAbsorptionVel())/controller->getNormAbsFactor();
-    //   if(vel<0){
+    //   if(vel<0.0){
     //     ampPos =0;
     //   }
     // }
@@ -3820,7 +3818,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     {
         controller->setMerit(chi/normFactor/normFactor);
         if(verbose){
-            Log.LogInfo("LineModel Lmfit: Resultat accepted");
+            Log.LogDetail("LineModel LMfit: Result accepted");
         }
         if(controller->isContinuumFitted()){
           Int32 continuumId = controller->getIndContinuumAmp();
@@ -3828,7 +3826,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
           Float64 continuumTplAmpErr = controller->continuumAmp_LmToModel(c*sqrt(gsl_matrix_get(covar,continuumId,continuumId)));///normFactor;
           controller->setContinummAmp(continuumTplAmp, continuumTplAmpErr);
           if(verbose){
-            Log.LogInfo("LineModel Lmfit:  continuumTplAmp calculated =%.3f err =%.3f", continuumTplAmp, continuumTplAmpErr);
+              Log.LogDetail("LineModel LMfit: continuumTplAmp calculated =%.3f err =%.3f", continuumTplAmp, continuumTplAmpErr);
           }
         }
 
@@ -3838,7 +3836,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
           Float64 errVel = controller->emiVel_LmToModel(c*sqrt(gsl_matrix_get(covar,id,id)));
           controller->setVelocityEmission(vel, errVel);
           if(verbose) {
-            Log.LogInfo( "LineModel Infos: Lmfit Emission velocity found = %.3f with err = %.3f", vel, errVel);
+              Log.LogDetail("LineModel LMfit: Emission velocity found = %.3f with err = %.3f", vel, errVel);
           }
         }
         //TODO ajouter des condition sur les err?
@@ -3848,23 +3846,23 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
           Float64 errVel = controller->absVel_LmToModel(c*sqrt(gsl_matrix_get(covar,id,id)));
           controller->setVelocityAbsorption(vel, errVel);
           if(verbose) {
-            Log.LogInfo( "LineModel Infos: Lmfit Absorption velocity found = %.3f with err = %.3f", vel, errVel);
+              Log.LogDetail("LineModel LMfit: Absorption velocity found = %.3f with err = %.3f", vel, errVel);
           }
         }
 
         if(controller->isRedshiftFitted()){
           Int32 id = controller->getIndRedshift();
-          Float64 vel =gsl_vector_get(s->x,id);
+          Float64 vel = gsl_vector_get(s->x,id);
           Float64 errVel = c*sqrt(gsl_matrix_get(covar,id,id));
           controller->setRedshift(vel, errVel);
           if(verbose) {
-            Log.LogInfo( "LineModel Infos: Lmfit Redshift found = %f with err = %f", vel, errVel);
+              Log.LogDetail("LineModel LMfit: Redshift found = %f with err = %f", vel, errVel);
           }
         }
 
         outputStatus = 0;
     }else{
-        Log.LogInfo("LineModel Lmfit: Resultat dump");
+        Log.LogDetail("LineModel LMfit: Result dump");
         controller->setMerit(DBL_MAX);
 
         if(controller->isEmissionVelocityFitted()){
@@ -4282,7 +4280,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
         }
         if(verbose)
         {
-            Log.LogInfo("AmplitudeOffset enabled: idx offset = %d", idxAmpOffset);
+            Log.LogDetail("AmplitudeOffset enabled: idx offset = %d", idxAmpOffset);
         }
     }
 
@@ -4332,7 +4330,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
     Float64 normFactor = 1.0/maxabsval;
     if(verbose)
     {
-        Log.LogInfo("normFactor = '%.3e'\n", normFactor);
+        Log.LogDetail("normFactor = '%.3e'\n", normFactor);
     }
 
     // Prepare the fit data
@@ -4380,25 +4378,25 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
     //
     //boost::chrono::thread_clock::time_point stop_fit = boost::chrono::thread_clock::now();
     //Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
-    //Log.LogInfo( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
+    //Log.LogInfo("LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
 
     if(verbose)
     {
 #define C(i) (gsl_vector_get(c,(i)))
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
         if(1){
-            Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-            Log.LogInfo("# covariance matrix:");
-            Log.LogInfo("[");
-            Log.LogInfo("  %+.5e, %+.5e", COV(0,0), COV(0,1));
-            Log.LogInfo("  %+.5e, %+.5e", COV(1,0), COV(1,1));
+            Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+            Log.LogDebug("# covariance matrix:");
+            Log.LogDebug("[");
+            Log.LogDebug("  %+.5e, %+.5e", COV(0,0), COV(0,1));
+            Log.LogDebug("  %+.5e, %+.5e", COV(1,0), COV(1,1));
 
-            //        Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
-            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
-            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
+            //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
+            //        Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
+            //        Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
 
-            Log.LogInfo("]");
-            Log.LogInfo("# chisq/n = %g", chisq/n);
+            Log.LogDebug("]");
+            Log.LogDebug("# chisq/n = %g", chisq/n);
         }
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
@@ -4406,7 +4404,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
             Float64 a = gsl_vector_get(c,iddl)/normFactor;
             if(verbose)
             {
-                Log.LogInfo("# Found amplitude %d: %+.5e", iddl, a);
+                Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
             }
         }
     }
@@ -4424,7 +4422,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
 
     if(verbose)
     {
-        Log.LogInfo("# Found amplitudes with sameSign=%d", sameSign);
+        Log.LogDetail("# Found amplitudes with sameSign=%d", sameSign);
     }
     if(sameSign){
         for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
@@ -4566,7 +4564,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
     Float64 normFactor = 1.0/maxabsval;
     if(verbose)
     {
-        Log.LogInfo("normFactor = '%.3e'\n", normFactor);
+        Log.LogDetail("normFactor = '%.3e'\n", normFactor);
     }
 
     // Prepare the fit data
@@ -4624,26 +4622,26 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
     //
     //boost::chrono::thread_clock::time_point stop_fit = boost::chrono::thread_clock::now();
     //Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
-    //Log.LogInfo( "LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
+    //Log.LogInfo("LineModel linear fit: prep = %.3f - fit = %.3f", duration_prep, duration_fit);
 
     if(verbose)
     {
 #define C(i) (gsl_vector_get(c,(i)))
 #define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
         if(1){
-            Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-            Log.LogInfo("# covariance matrix:");
-            Log.LogInfo("[");
-            Log.LogInfo("  %+.5e, %+.5e", COV(0,0), COV(0,1));
-            Log.LogInfo("  %+.5e, %+.5e", COV(1,0), COV(1,1));
+            Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+            Log.LogDebug("# covariance matrix:");
+            Log.LogDebug("[");
+            Log.LogDebug("  %+.5e, %+.5e", COV(0,0), COV(0,1));
+            Log.LogDebug("  %+.5e, %+.5e", COV(1,0), COV(1,1));
 
-            //        Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
-            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
-            //        Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
+            //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1), COV(0,2));
+            //        Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0), COV(1,1), COV(1,2));
+            //        Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2,0), COV(2,1), COV(2,2));
 
-            Log.LogInfo("]");
-            Log.LogInfo("# chisq = %g", chisq);
-            Log.LogInfo("# chisq/n = %g", chisq/n);
+            Log.LogDebug("]");
+            Log.LogDebug("# chisq = %g", chisq);
+            Log.LogDebug("# chisq/n = %g", chisq/n);
         }
 
         for (Int32 iddl = 0; iddl < nddl; iddl++)
@@ -4651,7 +4649,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
             Float64 a = gsl_vector_get(c,iddl)/normFactor;
             if(verbose)
             {
-                Log.LogInfo("# Found amplitude %d: %+.5e", iddl, a);
+                Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
             }
         }
     }
@@ -4669,7 +4667,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
 
     if(verbose)
     {
-        Log.LogInfo("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(), sameSign);
+        Log.LogDetail("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(), sameSign);
     }
 
     ampsfitted.resize(nddl);
@@ -4693,13 +4691,13 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
         for(Int32 kCoeff=0; kCoeff<polyOrder+1; kCoeff++)
         {
             Float64 p = gsl_vector_get(c, EltsIdx.size()+1+kCoeff)/normFactor;
-            Log.LogInfo("# Found p%d poly amplitude = %+.5e", kCoeff, p);
+            Log.LogDetail("# Found p%d poly amplitude = %+.5e", kCoeff, p);
         }
     }
 
     if(verbose)
     {
-        Log.LogInfo("# Returning (L+C) n=%d amplitudes", ampsfitted.size());
+        Log.LogDetail("# Returning (L+C) n=%d amplitudes", ampsfitted.size());
     }
 
     gsl_matrix_free (X);
@@ -5771,7 +5769,7 @@ bool CLineModelElementList::GetModelHaStrongest()
 
     Log.LogDebug("    model: GetModelHaStrongest - ampMax=%e (for line=%s)", ampMax, lineMax.c_str());
     Log.LogDebug("    model: GetModelHaStrongest - ampHa=%e (for lha tag=%s)", ampHa, ltags.halpha_em);
-    if( ampHa>0. && ampHa==ampMax)
+    if( ampHa>0.0 && ampHa==ampMax)
     {
         isHaStrongest = true;
         Log.LogDebug("    model: GetModelHaStrongest - found to be true");
@@ -6362,7 +6360,7 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     Bool verbose = false;
     if(verbose)
     {
-        Log.LogInfo("    model: group tags for lineType=%d", lineType);
+        Log.LogDebug("    model: group tags for lineType=%d", lineType);
     }
     std::vector<std::string> tags;
     std::vector<UInt32> nonGroupedLines;
@@ -6376,8 +6374,8 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
         {
             if(verbose)
             {
-                Log.LogInfo("    model: group tags - lineType=%d", lineType);
-                Log.LogInfo("    model: group tags - m_Elements[iElts]->m_Rays[iSubElts].GetType()=%d", m_Elements[iElts]->m_Rays[iSubElts].GetType());
+                Log.LogDebug("    model: group tags - lineType=%d", lineType);
+                Log.LogDebug("    model: group tags - m_Elements[iElts]->m_Rays[iSubElts].GetType()=%d", m_Elements[iElts]->m_Rays[iSubElts].GetType());
             }
             if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
             {
@@ -6393,9 +6391,9 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
 
     if(verbose)
     {
-        Log.LogInfo("    model: group tags non unique found=%d", tags.size());
+        Log.LogDebug("    model: group tags non unique found=%d", tags.size());
         for( Int32 itag = 0; itag<tags.size(); itag++){
-            Log.LogInfo("    model: non unique tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+            Log.LogDebug("    model: non unique tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
         }
     }
 
@@ -6407,7 +6405,7 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     {
         //print the tags
         for( Int32 itag = 0; itag<tags.size(); itag++){
-            Log.LogInfo("    model: velfit group Tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
+            Log.LogDebug("    model: velfit group Tag %d/%d = %s", itag+1, tags.size(), tags[itag].c_str());
         }
     }
     //*/
@@ -6455,10 +6453,10 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     {
         //print the groups
         for( Int32 igr = 0; igr<groups.size(); igr++){
-            Log.LogInfo("    model: Group %d/%d: nlines=%d, tag=%s", igr+1, groups.size(), groups[igr].size(), groupsTags[igr].c_str());
+            Log.LogDebug("    model: Group %d/%d: nlines=%d, tag=%s", igr+1, groups.size(), groups[igr].size(), groupsTags[igr].c_str());
             for(Int32 i=0; i<groups[igr].size(); i++)
             {
-                Log.LogInfo("    model: \t%d: iElt=%d", i+1, groups[igr][i]);
+                Log.LogDebug("    model: \t%d: iElt=%d", i+1, groups[igr][i]);
             }
         }
     }

@@ -99,10 +99,12 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
+    Log.LogInfo( "Iterating over %d tplCategories", tplCategoryList.size());
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];
 
+        Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
@@ -249,7 +251,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
         
         if( !chisquareResult )
         {
-            //Log.LogInfo( "Failed to compute chi square value");
+            //Log.LogError( "Failed to compute chi square value");
             return false;
         }else{
             // Store results
@@ -294,6 +296,8 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
+    Log.LogDetail("    chisquare2solve: using results in scope: %s", scope.c_str());
+
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     CPdfz pdfz;
@@ -327,6 +331,23 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
         if(redshifts.size()==0)
         {
             redshifts = meritResult->Redshifts;
+        }
+
+        //check chi2 results status for this template
+        {
+            Bool foundBadStatus = 0;
+            for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+            {
+                if(meritResult->Status[kz]!=COperator::nStatus_OK)
+                {
+                    foundBadStatus = 1;
+                    break;
+                }
+            }
+            if(foundBadStatus)
+            {
+                Log.LogError("chisquare2solve: Found bad status result... for tpl=%s", (*it).first.c_str());
+            }
         }
 
         for(Int32 kism=0; kism<nISM; kism++)
