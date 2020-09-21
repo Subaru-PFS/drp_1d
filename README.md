@@ -1,59 +1,48 @@
-# cpf-redshift
+# pylibamazed
+
+## Requirements
+
+`pylibamazed` has the following strict requirements (base environment):
+* [gcc](https://gcc.gnu.org/)
+* [python](https://www.python.org/) >=3.6
+* [cmake](https://cmake.org/) >=3.6
+* [swig](http://www.swig.org/) >=2.0
+
+`pylibamazed` depends on following third parties:
+* [boost](https://www.boost.org/) >=1.53
+* [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
+* [gsl](https://www.gnu.org/software/gsl/) >=2.5
+* [fftw](http://www.fftw.org/) >=3.3.8
+
+`pylibamazed` also depends on following python packages
+* [numpy](http://www.numpy.org/) >=1.16.0
+* [astropy](http://www.astropy.org/) >=3.1.1
 
 
-## Per-distribution installation
+## Install
 
-### Install dependencies on CentOS7
+To install the base environment on several plateform please refer to the related [base environment](#Base-environment-install-guide) section.
 
-As root:
+To install third parties refer to the related [third parties](#Third-parties-install-guide) section.
 
-    yum install -y epel-release
-    yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-    rpm --import /etc/pki/rpm-gpg/IUS-COMMUNITY-GPG-KEY
-    yum install -y git gcc-c++ make cmake swig boost-devel cfitsio-devel fftw-devel \
-                   python36-numpy python36u-pip python-virtualenv python36-devel
-
-### Install dependencies on Debian/Ubuntu
-
-As root:
-
-    apt-get install -y git cmake ccache build-essential swig python3-pip \
-                       libboost-filesystem-dev libboost-system-dev libboost-thread-dev \
-                       libboost-timer-dev libboost-chrono-dev libboost-program-options-dev \
-                       libboost-regex-dev libboost-test-dev \
-                       libcfitsio-dev libgsl-dev libfftw3-dev \
-                       pkg-config \
-                       python3-numpy python3-astropy
-
-### Install depencies on MacOS
-
-Use `brew` as packet manager on MacOS:
-
-    brew install boost cfitsio gsl fftw
 
 ### Download, build and install
 
-As a user, in `$HOME`:
+To build the c++ part, as a user, in `pylibamazed` root directory:
 
-    git clone -b develop git@gitlab.lam.fr:CPF/cpf-redshift.git
-    mkdir cpf-redshift/build
-    cd cpf-redshift/build
-    cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+    mkdir build
+    cd build
+    cmake ..
     make -j4
     make install
-    virtualenv -p python3.6 --system-site-packages $HOME/venv
-    source $HOME/venv/bin/activate
-    pip3.6 install astropy # on CentOS7 and MacOSX
 
-#### For linux users
+To run tests, use:
 
-    pip3.6 install -e $HOME/cpf-redshift
+    make test
 
-#### For MacOSX users
+To build and install `pylibamazed` python module, in `pylibamazed` root directory:
 
-    MACOSX_DEPLOYMENT_TARGET=10.13 CC=clang CXX=clang++ pip3.6 install -e $HOME/cpf-redshift
-
-Set `MACOSX_DEPLOYMENT_TARGET` variable to properly MacOSX version (`sw_vers` command on terminal).
+    pip install .
 
 ### Build options
 
@@ -82,105 +71,26 @@ You can build either in `Debug` or `Release` mode (defaults to `Release`).
     make install
 
 
-#### -DBUILD_SHARED_LIBS
+#### -DBUILD_STATIC_LIBS
 
-You can build either static or shared library (defaults to `ON`).
+You can build either static or shared library (defaults to shared library). To build a static library set the `BUILD_STATIC_LIBS` option to `ON`.
+Note that tests are disable with static library.
 
-    cmake .. -DBUILD_SHARED_LIBS=ON
-or
-
-    cmake .. -DBUILD_SHARED_LIBS=OFF
+    cmake .. -DBUILD_STATIC_LIBS=ON
 
 
 #### -DCMAKE_INSTALL_PREFIX
 
-You can specify install directory (defaults to `$HOME/usr`).
+You can specify install directory (defaults to `$HOME/local`).
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 
 
-#### -DBUILD_TESTS
+#### -DBUILD_TESTING
 
-In order to build tests, shared libs version must be enabled :
+In order to disable test building, set the `BUILD_TESTING` option to `OFF`:
 
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON
-
-Run tests with :
-
-    make test
-
-#### -DTEST_COVERAGE
-
-Tests can output line coverage statistics if you define `TEST_COVERAGE` :
-
-    cmake .. -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DTEST_COVERAGE=ON
-
-Run tests with :
-
-    make test
-
-Create coverage reports with :
-
-     GCOV_PREFIX=$HOME/src/cpf-redshift/RedshiftLibrary/ GCOV_PREFIX_STRIP=4 lcov -q -c -t "result" -o tests.cov --no-external -b $HOME/src/cpf-redshift/RedshiftLibrary/ -d CMakeFiles
-     lcov -q -r tests.cov '*/tests/src/*' -o coverage.info
-     genhtml -o coverage coverage.info
-
-### Usage in client code
-
-#### CMakeLists.txt
-
-You client `CMakeLists.txt` must include :
-
-    FIND_PACKAGE( cpf-redshift )
-    INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
-    LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
-
-    TARGET_LINK_LIBRARIES( YOUR_TARGET ${cpf-redshift_LIB})
-
-##### Building
-
-Say you have built cpf-redshift in `$HOME/usr` directory.
-
-You can build the client with :
-
-     CMAKE_MODULE_PATH=$HOME/usr/share/cmake cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
-
-
-### Build and install python interface and client with setuptools
-
-#### With python setup.py install
-
-Create a virtualenv and install amazed :
-
-     virtualenv venv
-     source venv/bin/activate
-
-Install amazed with setup.py:
-
-     python setup.py install
-
-Or, installwith pip :
-
-     pip install -e .
-
-Run it with :
-
-     amazed --help
-
-## Build wheel package
-
-Once cpf-redshift package has been compiled :
-
-     pip install numpy auditwheel
-
-     python setup.py bdist
-     pip wheel /build/cpf-redshift/ -w wheelhouse
-     auditwheel repair \
-          wheelhouse/pyamazed-0.0.1-cp${MAJ}${MIN}-cp${MAJ}${MIN}m-linux_x86_64.whl \
-          -w wheel
-     pip install twine
-     twine upload --repository-url https://test.pypi.org/legacy/ \
-          wheel/pyamazed-0.0.1-cp36-cp36m-manylinux1_x86_64.whl
+    cmake .. -DBUILD_TESTING=OFF
 
 ## Additional documentation
 
@@ -195,11 +105,32 @@ Then open in your web browser:
 
     $ROOT_DIR/docs/html/index.html
 
-## Libraries
+## Base environment install guide
 
-+ GSL : GNU Scientific Library
+This section helps people to install a base environment to install `pylibamazed` (useful for docker users). 
 
-[More informations here](https://www.gnu.org/software/gsl/)
+### Install dependencies on CentOS7
+
+As root:
+
+    yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+    yum install -y git gcc-c++ make cmake3 swig boost-devel cfitsio-devel \
+      patchelf python36u python36u-libs python36u-devel python36u-pip
+
+### Install dependencies on Debian - buster
+
+As root:
+
+    apt-get update
+    apt-get install -y git g++ cmake swig pkg-config libboost-all-dev libgsl-dev \
+      libcfitsio-dev libfftw3-dev python3 python3-pip
+
+### Install depencies on MacOS
+
+Use `brew` as packet manager on MacOS:
+
+    brew install gcc cmake swig boost cfitsio gsl fftw
+
 
 ## Contacts
 
