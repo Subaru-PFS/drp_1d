@@ -53,6 +53,23 @@ TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList 
     return list;
 }
 
+Int32 CTemplateCatalog::GetTemplateByName(  const TStringList& tplCategoryList,
+                                            const std::string tplName,
+                                            CTemplate& retTpl) const
+{
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        for( UInt32 j=0; j<GetTemplateCount( tplCategoryList[i] ); j++ )
+        {
+            const CTemplate& tpl = GetTemplate( tplCategoryList[i], j );
+            if(tpl.GetName() == tplName){
+                retTpl = &tpl; 
+                return 0;
+            }
+        }
+    }
+    return -1;
+}
 /**
  * Returns a list containing all templates without continuum as enumerated in the categoryList input.
  */

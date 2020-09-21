@@ -83,8 +83,8 @@ const std::string& CTemplate::GetName() const
 {
     return m_Name;
 }
-
-Int32 CTemplate::GetTemplateByName( const CTemplateCatalog& tplCatalog,
+//move to catalog list
+/*Int32 CTemplate::GetTemplateByName( const CTemplateCatalog& tplCatalog,
                                     const TStringList& tplCategoryList,
                                     const std::string tplName,
                                     CTemplate& retTpl) 
@@ -103,7 +103,7 @@ Int32 CTemplate::GetTemplateByName( const CTemplateCatalog& tplCatalog,
         }
     }
     return -1;
-}
+}*/
 /**
  * Returns the value stored in m_Category.
  */

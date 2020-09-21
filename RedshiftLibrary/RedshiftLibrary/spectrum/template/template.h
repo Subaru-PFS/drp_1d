@@ -28,10 +28,6 @@ public:
 
     const std::string&  GetCategory() const;
     const std::string&  GetName() const;
-    Int32 GetTemplateByName(const CTemplateCatalog& tplCatalog,
-                            const TStringList& tplCategoryList,
-                            const std::string tplName,
-                            CTemplate& tpl);
     const CSpectrumFluxAxis&    GetFluxAxis() const;
     CSpectrumFluxAxis&          GetFluxAxis();
     const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;

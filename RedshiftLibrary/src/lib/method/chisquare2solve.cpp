@@ -168,8 +168,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             }
             //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
             CTemplate tpl;
-            CTemplate tpl_obj;
-            Int32 b = tpl_obj.GetTemplateByName( tplCatalog, tplCategoryList, tplName, tpl);
+            Int32 b = tplCatalog.GetTemplateByName(tplCategoryList, tplName, tpl);
             if(b==-1){
                 Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
                 continue;
