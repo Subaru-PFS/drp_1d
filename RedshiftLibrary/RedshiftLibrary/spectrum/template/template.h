@@ -60,9 +60,7 @@ private:
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
-    
-protected:
-    Int32  m_IsmIgmApplied = -1;
+
 };
 
 //override spectrum flux getters to return the corrected flux rather than the raw flux

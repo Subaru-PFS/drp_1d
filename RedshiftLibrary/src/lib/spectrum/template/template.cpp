@@ -193,12 +193,10 @@ bool CTemplate::InitIsmIgmConfig()
     if(!m_FluxAxisIsmIgm.GetSamplesCount() || m_FluxAxisIsmIgm.GetSamplesCount()!=m_SpectralAxis.GetSamplesCount())
         m_FluxAxisIsmIgm.SetSize(m_SpectralAxis.GetSamplesCount());
 
-    if(m_computedMeiksingCoeff.size()!= m_SpectralAxis.GetSamplesCount())
-        m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
     
-    if(m_computedDustCoeff.size()!= m_SpectralAxis.GetSamplesCount())
-        m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
     return true;
 }
