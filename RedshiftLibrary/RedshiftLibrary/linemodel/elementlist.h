@@ -405,7 +405,7 @@ private:
     CTemplatesFitStore* m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
-    Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitAmplitude=-1.0;
     Float64 m_fitContinuum_tplFitAmplitudeError;
     Float64 m_fitContinuum_tplFitMerit;
     Float64 m_fitContinuum_tplFitDustCoeff;

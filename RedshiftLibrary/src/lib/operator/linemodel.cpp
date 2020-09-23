@@ -473,6 +473,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
         "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
     //
+    TBoolList allAmplitudesZero;
     Int32 indexLargeGrid = 0;
     std::vector<Float64> calculatedLargeGridRedshifts;
     std::vector<Float64> calculatedLargeGridMerits;
@@ -557,6 +558,23 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             m_result->ScaleMargCorrectionContinuum[i] =
                 m_result->ScaleMargCorrectionContinuum[i-1];
         }
+        // Flags on continuum and model amplitudes
+        Int32 nbLines = m_result->LineModelSolutions[i].Amplitudes.size();
+        Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0);
+        Bool modelAmplitudesZero = true;
+        for (Int32 l = 0; l < nbLines; l++)
+        {
+            modelAmplitudesZero = (modelAmplitudesZero && m_result->LineModelSolutions[i].Amplitudes[l] <= 0.0);
+        }
+        allAmplitudesZero.push_back(modelAmplitudesZero && continuumAmplitudeZero);
+
+    }
+    // Check if all amplitudes are zero for all z
+    Bool checkAllAmplitudes = AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
+    if (checkAllAmplitudes == true)
+    {
+        Log.LogError("  Operator-Linemodel: All amplitudes (continuum & model) are zero for all z. Aborting...");
+        throw runtime_error("  Operator-Linemodel: All amplitudes (continuum & model) are zero for all z. Aborting...");
     }
 
     // now interpolate large grid merit results onto the fine grid
@@ -599,6 +617,15 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     return 0;
 }
 
+Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ)
+{
+    Bool areZero = true;
+    for (Int32 iZ = 0; iZ < nbZ; iZ++)
+    {
+       areZero = (areZero && amplitudesZero[iZ]);
+    }
+    return areZero;
+}
 
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                  const CSpectrum &spectrumContinuum,
