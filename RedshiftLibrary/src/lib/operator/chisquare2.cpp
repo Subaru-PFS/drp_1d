@@ -240,14 +240,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
         if(option_igmFastProcessing && meiksinIdx>0){
               lbda_max = std::min(m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift), currentRange.GetEnd());
-        }else{
-            lbda_max = currentRange.GetEnd();
         }
 
         //find samples limits
         Int32 kStart = -1, kEnd = -1;
         m_templateRebined_bf.SetIsmIgmLambdaRange(lbda_min, lbda_max);
-        m_templateRebined_bf.GetRangeIndex(kStart, kEnd);
+        m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
 
         bool igmCorrectionAppliedOnce = false;
         //Meiksin IGM extinction
@@ -1151,6 +1149,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return -1;
     }
+    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange.GetBegin(), currentRange.GetEnd());
 
     m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);

@@ -37,16 +37,15 @@ CTemplate::CTemplate( const CTemplate& other):
     CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
-    m_Name(other.m_Name )
+    m_Name(other.m_Name ),
+    m_Category( other.m_Category),
+    m_kstart(other.m_kstart,
+    m_kend(other.m_kend),
+    m_computedDustCoeff(other.m_computedDustCoeff), 
+    m_computedMeiksingCoeff(other.m_computedDustCoeff)
 {
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
-    
-    m_computedDustCoeff = other.m_computedDustCoeff; 
-    m_computedMeiksingCoeff = other.m_computedDustCoeff;
-    m_Category = other.GetCategory();
-    m_kstart = other.m_kstart;
-    m_kend = other.m_kend;
 }
 
 CTemplate& CTemplate::operator=(const CTemplate& other)
@@ -89,8 +88,8 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
-Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax){   
-    
+Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax)
+{
     for(Int32 k=0; k<m_SpectralAxis.GetSamplesCount(); k++)
     {
         if(m_SpectralAxis[k] >= lbdamin && m_kstart==-1){
@@ -108,11 +107,11 @@ Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax){
     return 0;
 }
 
-void CTemplate::SetIsmIgmLambdaRange(Float64 lbdamin, Float64 lbdamax)
+void CTemplate::SetIsmIgmLambdaRange( Float64 lbdamin, Float64 lbdamax)
 {
     Int32 b = GetSpcSampleLimits( lbdamin, lbdamax);
     if(b == -1)
-        throw runtime_error("Could not find indexes");
+        throw runtime_error(" CTemplate::SetIsmIgmLambdaRange : Could not find indexes");
 }
 /**
  * Saves the template in the given filePath.
@@ -152,7 +151,7 @@ Bool CTemplate::Save( const char* filePath ) const
 bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     if(m_kDust == kDust)
-        return true; //nothing to do here
+        return true; 
     m_kDust = kDust;
 
     for(Int32 k = m_kstart; k < m_kend + 1; k++)
@@ -178,7 +177,6 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     m_redshiftMeiksin = redshift;
 
 
-    //for(Int32 k = 0; k < m_SpectralAxis.GetSamplesCount(); k++){
     for(Int32 k = m_kstart; k < m_kend + 1; k++){
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
             Int32 kLbdaMeiksin = 0;

@@ -42,7 +42,7 @@ public:
     Int32 GetIgmCoeff() const;
 
     void SetIsmIgmLambdaRange(Float64 lbdamin, Float64 ldbamax);
-    void GetRangeIndex(Int32& begin, Int32& end);
+    void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig();
 
     CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
@@ -110,7 +110,7 @@ Int32 CTemplate::GetIgmCoeff() const
     return m_meiksinIdx;
 }
 inline
-void CTemplate::GetRangeIndex(Int32& begin, Int32& end){
+void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& end){
     begin = m_kstart;
     end   = m_kend;
 }
