@@ -39,8 +39,8 @@ CTemplate::CTemplate( const CTemplate& other):
     m_meiksinIdx(other.m_meiksinIdx),
     m_Name(other.m_Name),
     m_Category( other.m_Category),
-    m_kstart(other.m_kstart),
-    m_kend(other.m_kend),
+    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
+    m_IsmIgm_kend(other.m_IsmIgm_kend),
     m_computedDustCoeff(other.m_computedDustCoeff), 
     m_computedMeiksingCoeff(other.m_computedDustCoeff)
 {
@@ -61,8 +61,8 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_computedDustCoeff = other.m_computedDustCoeff; 
     m_computedMeiksingCoeff = other.m_computedDustCoeff;
     m_Category = other.GetCategory();
-    m_kstart = other.m_kstart;
-    m_kend = other.m_kend;
+   m_IsmIgm_kstart = other.m_IsmIgm_kstart;
+    m_IsmIgm_kend = other.m_IsmIgm_kend;
     return *this;
 }
 /**
@@ -88,32 +88,9 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
-Int32    CTemplate::GetSpcSampleLimits(TFloat64Range& lbdaRange)
-{
-    for(Int32 k=0; k<m_SpectralAxis.GetSamplesCount(); k++)
-    {
-        if(m_SpectralAxis[k] >= lbdaRange.GetBegin() && m_kstart==-1){
-            m_kstart=k;
-        }
-        if(m_SpectralAxis[k] <= lbdaRange.GetEnd()){
-            m_kend=k;
-        }
-    }
-    if(m_kstart==-1 || m_kend==-1)
-    {
-        Log.LogDebug( "  CTemplate::GetSpecSampleLimits: kStart=%d, kEnd=%d ! Aborting.", m_kstart, m_kend);
-        return -1;
-    }
-    return 0;
-}
-
 void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
-    Int32 b = GetSpcSampleLimits( lbdaRange);
-    if(b == -1)
-        throw runtime_error(" CTemplate::SetIsmIgmLambdaRange : Could not find indexes");
-    //below requires testing before using it
-    //lbdaRange.getIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_kstart, m_kend);
+    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
     return;
 }
 /**
@@ -157,7 +134,7 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; 
     m_kDust = kDust;
 
-    for(Int32 k = m_kstart; k < m_kend + 1; k++)
+    for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
         m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
@@ -180,7 +157,7 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     m_redshiftMeiksin = redshift;
 
 
-    for(Int32 k = m_kstart; k < m_kend + 1; k++){
+    for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++){
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
             Int32 kLbdaMeiksin = 0;
             if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
