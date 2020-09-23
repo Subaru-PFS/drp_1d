@@ -136,7 +136,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     m_templateRebined_bf.InitIsmIgmConfig();
 
-    //const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
+
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
@@ -167,10 +167,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return;
     }
-    //CSpectrumFluxAxis& itplTplFluxAxis = m_templateRebined_bf.GetFluxAxis();
-    const CSpectrumSpectralAxis& itplTplSpectralAxis = m_templateRebined_bf.GetSpectralAxis();
-    const TAxisSampleList & Xtpl = itplTplSpectralAxis.GetSamplesVector();
-
     // Optionally Apply some Calzetti Extinction for DUST
     Int32 nDustCoeffs=1;
     Int32 iDustCoeffMin = 0;
@@ -242,30 +238,25 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         }
         Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
-        if(option_igmFastProcessing && meiksinIdx>0)
-        {
-            lbda_max = m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift);
-            if(lbda_max>currentRange.GetEnd())
-            {
-                lbda_max = currentRange.GetEnd();
-            }
-
+        if(option_igmFastProcessing && meiksinIdx>0){
+              lbda_max = std::min(m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift), currentRange.GetEnd());
         }else{
             lbda_max = currentRange.GetEnd();
         }
 
         //find samples limits
+        Int32 kStart = -1, kEnd = -1;
+        m_templateRebined_bf.SetIsmIgmLambdaRange(lbda_min, lbda_max);
+        m_templateRebined_bf.GetRangeIndex(kStart, kEnd);
 
-        Int32 kStart = 0;
-        Int32 kEnd = Xtpl.size(); //itplTplFluxAxis.GetSamplesCount();
-        ret = GetSpcSampleLimits(Xspc, lbda_min, lbda_max, kStart, kEnd);
-        if(ret==-1)
-        {
-            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d    . ! Aborting.", kStart, kEnd);
-            break;
-        }
-        m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
         bool igmCorrectionAppliedOnce = false;
+        //Meiksin IGM extinction
+        if(opt_extinction)
+        {
+            igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
+            if(!igmCorrectionAppliedOnce)
+                igmLoopUseless_WavelengthRange = true; 
+        }
         //Loop on the EBMV dust coeff
         for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
         {
@@ -277,13 +268,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                 Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
             }
             m_templateRebined_bf.ApplyDustCoeff(kDust);
-            //Meiksin IGM extinction
-            if(opt_extinction)
-            {
-                igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
-                if(!igmCorrectionAppliedOnce)
-                    igmLoopUseless_WavelengthRange = true; 
-            }
             //*/
             /*//debug:
             // save final ISM/IGM template model
@@ -611,13 +595,10 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-    CTemplate& itplTplSpectrum = m_templateRebined_bf;
-    CMask&  itplMask = m_mskRebined_bf;
-    CSpectrumSpectralAxis& spcSpecAxis = m_spcSpectralAxis_restframe;
-    tpl.Rebin( intersectedLambdaRange, spcSpecAxis, itplTplSpectrum, itplMask, opt_interp);   
+    tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, m_templateRebined_bf, m_mskRebined_bf, opt_interp);   
 
     //overlapRate
-    overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, itplMask );
+    overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, m_mskRebined_bf );
 
     // Check for overlap rate
     if( overlapRate < overlapThreshold || overlapRate<=0.0 )
@@ -1137,23 +1118,7 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 
     return cstLog;
 }
-Int32    COperatorChiSquare2::GetSpcSampleLimits(const TAxisSampleList & Xspc, Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd){   
-    for(Int32 k=0; k<m_spcSpectralAxis_restframe.GetSamplesCount(); k++)
-    {
-        if(Xspc[k] >= lbda_min && kStart==-1){
-            kStart=k;
-        }
-        if(Xspc[k] <= lbda_max){
-            kEnd=k;
-        }
-    }
-    if(kStart==-1 || kEnd==-1)
-    {
-        Log.LogDebug( "  Operator-Chisquare2::GetSpecSampleLimits: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
-        return -1;
-    }
-    return 0;
-}
+
 
 Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
@@ -1170,7 +1135,6 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     TFloat64Range currentRange;
     Float64 overlapRate = 0.0;
     m_templateRebined_bf.InitIsmIgmConfig();
-    //BasicFit_preallocateBuffers(spectrum);
     Int32 ret = RebinTemplate(  spectrum, 
                                 tpl,
                                 redshift, 
@@ -1187,19 +1151,8 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return -1;
     }
-    //find samples limits
-    Int32 kStart = 0;
-    Int32 kEnd = m_templateRebined_bf.GetFluxAxis().GetSamplesCount();
-    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    Float64 lbda_min = currentRange.GetBegin();
-    Float64 lbda_max = currentRange.GetEnd();
-    ret = GetSpcSampleLimits(Xspc, lbda_min, lbda_max, kStart, kEnd);
-    if(ret==-1)
-    {
-        Log.LogDebug( "  Operator-Chisquare2::GetSpectrumModel: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
-        return -1;
-    }
-    m_templateRebined_bf.SetIsmIgmLambdaRange(kStart, kEnd);
+    m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange.GetBegin(), currentRange.GetEnd());
+
     m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 
     if(opt_extinction == "yes")

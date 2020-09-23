@@ -20,26 +20,25 @@ CTemplate::CTemplate( )
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
-  m_Category( category ) 
+  m_Category( category ),
+  m_Name( name ) 
 {
-  m_Name = name ;  
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
     CSpectrum(spectralAxis, fluxAxis),
-    m_Category( category )
+    m_Category( category ),
+    m_Name( name )
 {
-    m_Name = name;
 }
 
 CTemplate::CTemplate( const CTemplate& other): 
     CSpectrum(other),
     m_kDust(other.m_kDust),
-    m_meiksinIdx(other.m_meiksinIdx)
+    m_meiksinIdx(other.m_meiksinIdx),
+    m_Name(other.m_Name )
 {
-    m_Name = other.GetName();
-    m_FullPath = other.GetFullPath();
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
     
@@ -54,7 +53,6 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);
     m_Name = other.GetName();
-    m_FullPath = other.GetFullPath();
 
     if(other.m_FluxAxisIsmIgm.GetSamplesCount())
         m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
@@ -91,11 +89,30 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
+Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax){   
+    
+    for(Int32 k=0; k<m_SpectralAxis.GetSamplesCount(); k++)
+    {
+        if(m_SpectralAxis[k] >= lbdamin && m_kstart==-1){
+            m_kstart=k;
+        }
+        if(m_SpectralAxis[k] <= lbdamax){
+            m_kend=k;
+        }
+    }
+    if(m_kstart==-1 || m_kend==-1)
+    {
+        Log.LogDebug( "  CTemplate::GetSpecSampleLimits: kStart=%d, kEnd=%d ! Aborting.", m_kstart, m_kend);
+        return -1;
+    }
+    return 0;
+}
 
-void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
+void CTemplate::SetIsmIgmLambdaRange(Float64 lbdamin, Float64 lbdamax)
 {
-    m_kstart = kstart;
-    m_kend = kend;
+    Int32 b = GetSpcSampleLimits( lbdamin, lbdamax);
+    if(b == -1)
+        throw runtime_error("Could not find indexes");
 }
 /**
  * Saves the template in the given filePath.

@@ -41,7 +41,8 @@ public:
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
 
-    void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend);
+    void SetIsmIgmLambdaRange(Float64 lbdamin, Float64 ldbamax);
+    void GetRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig();
 
     CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
@@ -60,7 +61,7 @@ private:
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
-
+    Int32 GetSpcSampleLimits(Float64 lbdamin, Float64 ldbamax);
 };
 
 //override spectrum flux getters to return the corrected flux rather than the raw flux
@@ -108,7 +109,11 @@ Int32 CTemplate::GetIgmCoeff() const
 {
     return m_meiksinIdx;
 }
-
+inline
+void CTemplate::GetRangeIndex(Int32& begin, Int32& end){
+    begin = m_kstart;
+    end   = m_kend;
+}
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
 typedef std::vector< std::shared_ptr< const CTemplate> >     TTemplateConstRefList;
 
