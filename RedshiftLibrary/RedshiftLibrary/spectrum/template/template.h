@@ -41,7 +41,7 @@ public:
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
 
-    void SetIsmIgmLambdaRange(Float64 lbdamin, Float64 ldbamax);
+    void SetIsmIgmLambdaRange(TFloat64Range& lbdaRange);
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig();
 
@@ -61,7 +61,7 @@ private:
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
-    Int32 GetSpcSampleLimits(Float64 lbdamin, Float64 ldbamax);
+    Int32  GetSpcSampleLimits(TFloat64Range& lbdaRange);
 };
 
 //override spectrum flux getters to return the corrected flux rather than the raw flux

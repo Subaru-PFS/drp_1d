@@ -115,6 +115,19 @@ template <typename T> class CRange
         return v;
     }
 
+    //TODO: requires testing first
+  bool getIntervalIndices(std::vector<T>& ordered_values, Int32& i_min,Int32& i_max) const
+  {  
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+
+    if(*it_min > m_Begin) it_min = it_min -1;
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  }
+
   private:
     T m_Begin;
     T m_End;

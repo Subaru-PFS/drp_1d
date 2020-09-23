@@ -211,9 +211,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     Bool option_igmFastProcessing = false; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
-    Float64 lbda_min = currentRange.GetBegin();
-    Float64 lbda_max = currentRange.GetEnd();
-    Log.LogDebug( "  Operator-Chisquare2: currentRange_lbda_min=%f, currentRange_lbda_max=%f", lbda_min, lbda_max);
+    Log.LogDebug( "  Operator-Chisquare2: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
@@ -239,12 +237,12 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
         if(option_igmFastProcessing && meiksinIdx>0){
-              lbda_max = std::min(m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift), currentRange.GetEnd());
+              currentRange.SetEnd(std::min(m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift), currentRange.GetEnd()));
         }
 
         //find samples limits
         Int32 kStart = -1, kEnd = -1;
-        m_templateRebined_bf.SetIsmIgmLambdaRange(lbda_min, lbda_max);
+        m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
         m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
 
         bool igmCorrectionAppliedOnce = false;
@@ -1150,7 +1148,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         return -1;
     }
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange.GetBegin(), currentRange.GetEnd());
+    m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
     m_templateRebined_bf.ApplyDustCoeff(IdxDustCoeff);
 

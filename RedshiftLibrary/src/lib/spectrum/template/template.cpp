@@ -37,9 +37,9 @@ CTemplate::CTemplate( const CTemplate& other):
     CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
-    m_Name(other.m_Name ),
+    m_Name(other.m_Name),
     m_Category( other.m_Category),
-    m_kstart(other.m_kstart,
+    m_kstart(other.m_kstart),
     m_kend(other.m_kend),
     m_computedDustCoeff(other.m_computedDustCoeff), 
     m_computedMeiksingCoeff(other.m_computedDustCoeff)
@@ -88,14 +88,14 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
-Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax)
+Int32    CTemplate::GetSpcSampleLimits(TFloat64Range& lbdaRange)
 {
     for(Int32 k=0; k<m_SpectralAxis.GetSamplesCount(); k++)
     {
-        if(m_SpectralAxis[k] >= lbdamin && m_kstart==-1){
+        if(m_SpectralAxis[k] >= lbdaRange.GetBegin() && m_kstart==-1){
             m_kstart=k;
         }
-        if(m_SpectralAxis[k] <= lbdamax){
+        if(m_SpectralAxis[k] <= lbdaRange.GetEnd()){
             m_kend=k;
         }
     }
@@ -107,11 +107,14 @@ Int32    CTemplate::GetSpcSampleLimits(Float64 lbdamin, Float64 lbdamax)
     return 0;
 }
 
-void CTemplate::SetIsmIgmLambdaRange( Float64 lbdamin, Float64 lbdamax)
+void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
-    Int32 b = GetSpcSampleLimits( lbdamin, lbdamax);
+    Int32 b = GetSpcSampleLimits( lbdaRange);
     if(b == -1)
         throw runtime_error(" CTemplate::SetIsmIgmLambdaRange : Could not find indexes");
+    //below requires testing before using it
+    //lbdaRange.getIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_kstart, m_kend);
+    return;
 }
 /**
  * Saves the template in the given filePath.
