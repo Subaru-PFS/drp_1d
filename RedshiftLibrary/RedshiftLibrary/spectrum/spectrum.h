@@ -76,6 +76,8 @@ public:
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
+    void                InitPrecomputeFineGrid() const;
+
     Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
                                const std::string opt_error_interp="no") const;
@@ -119,7 +121,6 @@ const CSpectrumFluxAxis& CSpectrum::GetFluxAxis() const
 inline
 CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis()
 {
-    m_FineGridInterpolated = false; // since Axis may be modifed
     return m_SpectralAxis;
 }
 
