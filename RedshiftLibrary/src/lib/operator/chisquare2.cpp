@@ -215,7 +215,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
-
+   Float64 lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift);
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kM=0; kM<nIGMCoeffs; kM++)
@@ -237,7 +237,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
         if(option_igmFastProcessing && meiksinIdx>0){
-            Float64 v = std::min(m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift), currentRange.GetEnd());
+            Float64 v = std::min(lbdaMax_IGM, currentRange.GetEnd());
             if(v>currentRange.GetBegin())
                 currentRange.SetEnd(v);
         }
@@ -397,7 +397,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                         //store intermediate sums for IGM range
                         if(sumsIgmSaved==0)
                         {
-                            if(Xspc[j]>m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift))
+                            if(Xspc[j]>lbdaMax_IGM)
                             {
                                 sumCross_IGM = sumCross;
                                 sumT_IGM = sumT;

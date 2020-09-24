@@ -156,6 +156,33 @@ template <typename T> class CRange
     i_max = it_max - ordered_values.begin();
     return true;
   }
+
+    bool getExactEnclosingIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  {
+    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+      {
+        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        return false;
+      }
+    
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+
+    if(*it_min != m_Begin)
+      {
+        Log.LogError("Cannot find %.5f in ordered_values",m_Begin);
+        return false;
+      }
+    if(*it_max != m_End)
+     {
+        Log.LogError("Cannot find %.5f in ordered_values",m_End);
+        return false;
+      }
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  }
   //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
   bool getClosedIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
   {
