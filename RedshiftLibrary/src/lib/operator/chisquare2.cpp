@@ -215,7 +215,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
-   Float64 lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift);
+    
+    Float64 lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin.GetLambdaMax()*(1+redshift);
+    Float64 lbda_max;
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kM=0; kM<nIGMCoeffs; kM++)
@@ -235,17 +237,21 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             break;
         }
         Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
-
+        lbda_max = currentRange.GetEnd();  
         if(option_igmFastProcessing && meiksinIdx>0){
-            Float64 v = std::min(lbdaMax_IGM, currentRange.GetEnd());
-            if(v>currentRange.GetBegin())
-                currentRange.SetEnd(v);
+            lbda_max = std::min(lbdaMax_IGM, lbda_max);
         }
 
-        //find samples limits
+        TFloat64Range range(currentRange.GetBegin(), lbda_max);
         Int32 kStart = -1, kEnd = -1;
-        m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
+        m_templateRebined_bf.SetIsmIgmLambdaRange( range );
         m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+
+        if(kStart==-1 || kEnd==-1)
+        {
+            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+            break;
+        }
 
         bool igmCorrectionAppliedOnce = false;
         //Meiksin IGM extinction

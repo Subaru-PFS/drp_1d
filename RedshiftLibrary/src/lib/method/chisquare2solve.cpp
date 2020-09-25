@@ -456,8 +456,11 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-    
-        std::string name = store.GetCurrentScopeName() + "." +"candidatesresult";
+         std::string name;
+        if(store.GetCurrentScopeName()=="chisquare2solve")
+            name = "candidatesresult";
+        else  
+            name = store.GetCurrentScopeName() + "." +"candidatesresult";
         store.StoreGlobalResult( name, zcand ); 
 
     return true;

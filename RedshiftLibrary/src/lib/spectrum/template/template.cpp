@@ -91,6 +91,7 @@ const std::string& CTemplate::GetCategory() const
 void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
     lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
+
     return;
 }
 /**
@@ -155,9 +156,9 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     Int32 redshiftIdx = m_igmCorrectionMeiksin.GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     m_meiksinIdx = meiksinIdx;
     m_redshiftMeiksin = redshift;
-
-
-    for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++){
+    Bool igmCorrectionAppliedOnce = false;
+    for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
+    {
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
             Int32 kLbdaMeiksin = 0;
             if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
@@ -173,9 +174,10 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
             /*m_FluxAxisIsmIgm[k] = m_FluxAxis[k]
                      *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
                      *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
+            igmCorrectionAppliedOnce = true;
         }
     }
-    return true;
+    return igmCorrectionAppliedOnce;
 }
 
 //init ism/igm configuration when we change redshift value
