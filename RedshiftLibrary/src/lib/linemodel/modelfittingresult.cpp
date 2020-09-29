@@ -9,6 +9,7 @@
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/common/exception.h>
 
 using namespace NSEpic;
 
@@ -205,8 +206,7 @@ void CModelFittingResult::getData(const std::string& name, int **data, int *size
         }
 	  *data = const_cast<int *>(rayId.data());
     }
-  else Log.LogError("unkwown data %s",name.c_str());
-
+  else throw Exception("unkwown data %s",name.c_str());
 }
 
 
@@ -229,7 +229,7 @@ void CModelFittingResult::getData(const std::string& name, double **data, int *s
     {
       *data = const_cast<double *>(LineModelSolution.Fluxs.data());
     }
-  else Log.LogError("unkwown data %s",name.c_str());
+  else throw Exception("unkwown data %s",name.c_str());
 
 }
 
