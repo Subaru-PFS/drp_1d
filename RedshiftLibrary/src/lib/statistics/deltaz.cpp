@@ -59,17 +59,11 @@ Int32 CDeltaz::GetIndices(const TFloat64List & redshifts, const Float64 redshift
 {
     //find indexes: iz, izmin and izmax
     izmin= -1;
-    iz= -1;
+    TFloat64List::const_iterator iiz = std::lower_bound(redshifts.begin(),redshifts.end(),redshift); 
     izmax= -1;
-    for( Int32 i2=0; i2<redshifts.size(); i2++ )
-    {
-        if(iz == -1 && redshift <= redshifts[i2]){
-            iz = i2;
-            break;
-        }
-    }
 
-    if( iz==-1 ){
+    iz = iiz - redshifts.begin();
+    if( *iiz !=redshift ){
         Log.LogError("  Deltaz: Impossible to get redshift index %f (%d)",
                      redshift, iz);
         throw runtime_error("Deltaz: impossible to get redshift indices!");
@@ -90,24 +84,12 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
         Log.LogError("  Deltaz: Deltaz range for candidate %f is outside the redshift range", redshift);
         throw runtime_error("Deltaz: Candidate is outside range!");
     }
-
+    
     //find indexes: iz, izmin and izmax
-    izmin= -1;
-    iz= -1;
-    izmax= -1;
-    for( Int32 i2=0; i2<redshifts.size(); i2++ )
-    {
-        if(iz == -1 && redshift <= redshifts[i2]){
-            iz = i2;
-        }
-        if(izmin == -1 && (effectiveRange.GetBegin() <= redshifts[i2])){
-            izmin = i2;
-        }
-        if(izmax == -1 && (effectiveRange.GetEnd() <= redshifts[i2])){
-            izmax = i2;
-            break;
-        }
-    }
+    izmin= std::lower_bound(redshifts.begin(),redshifts.end(),effectiveRange.GetBegin()) - redshifts.begin();
+    iz= std::lower_bound(redshifts.begin(),redshifts.end(),redshift) - redshifts.begin();
+    izmax= std::lower_bound(redshifts.begin(),redshifts.end(),effectiveRange.GetEnd()) - redshifts.begin();
+
     if( iz==-1 || izmin == -1 || izmax == -1 ){
         Log.LogError("  Deltaz: Impossible to get redshift index %f (%d) or redshift range indices %f,%f (%d,%d)",
                      redshift, iz, effectiveRange.GetBegin(), effectiveRange.GetEnd(), izmin, izmax);

@@ -292,6 +292,53 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4)
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(Enclosing_interval)
+{
+    Float64 delta = 1.0;
+
+    // Known vector
+    std::vector<Float64> myVector(15);
+    //    myVector.resize(15);
+    
+
+    for(UInt32 i = 0; i < myVector.size(); i++)
+    {
+        myVector[i] = 1 + delta * i;
+    }
+
+    const Float64 target = 8.;
+    Int32 i_min = -1;
+    Int32 i_max = -1;
+
+    TFloat64Range range= TFloat64Range(6.5,10.3);
+    
+    range.getEnclosingIntervalIndices(myVector,target,i_min,i_max);
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+    range= TFloat64Range(6,10.3);
+    range.getEnclosingIntervalIndices(myVector,target,i_min,i_max);
+
+    
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+    range= TFloat64Range(6,10);
+    range.getEnclosingIntervalIndices(myVector,target,i_min,i_max);
+
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+}
+
+
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END ()

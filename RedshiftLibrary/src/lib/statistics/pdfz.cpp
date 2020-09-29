@@ -369,6 +369,10 @@ Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
                                      const Redshift zcandidate,
                                      const TFloat64Range & zrange)
 {
+    //TODO use a std function and throw exception
+  //TODO check that this is really necessary and not just a debug functionnality
+  //     -> use a DEBUG directive ? 
+
     // check that redshifts are sorted
     for (UInt32 k = 1; k < redshifts.size(); k++)
     {
@@ -381,31 +385,15 @@ Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
 
     // find indexes kmin, kmax so that zmin and zmax are inside [
     // redshifts[kmin]:redshifts[kmax] ]
-    Int32 kmin = 0;
-    Int32 kmax = redshifts.size() - 1;
-    UInt32 cand_Idx = getIndex(redshifts, zcandidate);
-    if(cand_Idx == 0){
-        kmin = 0;
-    }else{
-        for (UInt32 k = cand_Idx - 1; k >0; k--){
-            if(redshifts[k] <= zrange.GetBegin()){
-                kmin = k;
-                break;
-            }
-        }
-    }
-    Log.LogDebug("    CPdfz::getCandidateSumTrapez - kmin index=%d", kmin);
-    if(cand_Idx == redshifts.size()-1){
-        kmax = redshifts.size()-1;
-    }else{
-        for (UInt32 k = cand_Idx + 1; k < redshifts.size(); k++){
-            if(redshifts[k] >= zrange.GetEnd()){
-                kmax = k;
-                break;
-            }
-        }
-    }
 
+
+    Int32 kmin = -1;
+    Int32 kmax = -1;
+    
+    bool ok = zrange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),zcandidate,kmin,kmax);
+
+    if(!ok || kmin==-1 || kmax==-1) Log.LogError("CPdfz::getCandidateSumTrapez could not find enclosing interval");
+        
     TFloat64List ZinRange;
     TFloat64List valprobainRange;
     for(Int32 i = kmin; i < kmax+1; i++){
