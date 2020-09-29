@@ -144,7 +144,42 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                 resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
             }
         }
+        Int32 n_cand = 5; //this is hardcoded for now for this method
+        std::vector<Float64> zcandidates_unordered_list;
+        Bool retzc = ChisquareSolveResult->GetRedshiftCandidates( resultStore, zcandidates_unordered_list, n_cand, outputPdfRelDir.c_str());
+        if(retzc)
+        {
+                Log.LogInfo( "Found %d z-candidates", zcandidates_unordered_list.size() );
+        }else{
+                Log.LogError( "Failed to get z candidates from these results");
+        }
 
+        Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list, outputPdfRelDir.c_str());
+        //for each candidate, get best model by reading from resultstore and selecting best fit
+        for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
+            std::string tplName;
+            Int32 MeiksinIdx;
+            Float64 DustCoeff;
+            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff);
+            if(ret==-1){
+                Log.LogError("  Chisquare2Solve: Couldn't find best model for candidate %f", zcandidates_unordered_list[i]);
+                continue;
+            }
+            //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
+            try {
+                const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+                m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
+                                                 zcandidates_unordered_list[i],
+                                                 DustCoeff, MeiksinIdx,
+                                                 opt_interp, opt_extinction, lambdaRange, 
+                                                 overlapThreshold);              
+            }catch(const std::runtime_error& e){
+                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
+                continue;
+            }   
+                                  
+        }
+        m_chiSquareOperator->SaveSpectrumResults(resultStore);
         return ChisquareSolveResult;
     }
 
@@ -395,12 +430,12 @@ Int32 CMethodChisquare2Solve::CombinePDF(CDataStore &store, std::string scopeStr
     return retPdfz;
 }
 
-Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, std::string outputPdfRelDir)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
 
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
+        std::string scope_res = outputPdfRelDir + "/logposterior.logMargP_Z_data";
         auto results =  store.GetGlobalResult( scope_res.c_str() );
         auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
 
@@ -421,8 +456,12 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-        
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
+         std::string name;
+        if(store.GetCurrentScopeName()=="chisquare2solve")
+            name = "candidatesresult";
+        else  
+            name = store.GetCurrentScopeName() + "." +"candidatesresult";
+        store.StoreGlobalResult( name, zcand ); 
 
     return true;
 }

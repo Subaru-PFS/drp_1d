@@ -1448,8 +1448,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 // 2=save model with only Em. lines removed.
                 if (overrideModelSavedType == 0)
                 {
-                    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(
-                        new CModelSpectrumResult(m_model->GetModelSpectrum()));
+                    resultspcmodel = std::make_shared<CModelSpectrumResult>(m_model->GetModelSpectrum());
                 } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2)
                 {
                     Int32 lineTypeFilter = -1;
@@ -1460,8 +1459,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                     {
                         lineTypeFilter = CRay::nType_Emission;
                     }
-                    resultspcmodel = std::shared_ptr<CModelSpectrumResult>(
-                        new CModelSpectrumResult(m_model->GetObservedSpectrumWithLinesRemoved(lineTypeFilter)));
+                    resultspcmodel = std::make_shared<CModelSpectrumResult>(m_model->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
                 }
                 // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
                 // std::shared_ptr<CModelSpectrumResult>( new
@@ -1818,14 +1816,9 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                              contreest_iterations, true);
                 mlmfit_modelInfoSave = true;
                 // CModelSpectrumResult
-                std::shared_ptr<CModelSpectrumResult> resultspcmodel =
-                        std::shared_ptr<CModelSpectrumResult>(
-                            new CModelSpectrumResult(
-                                m_model->GetModelSpectrum()));
-                // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
-                // std::shared_ptr<CModelSpectrumResult>( new
-                // CModelSpectrumResult(m_model->GetObservedSpectrumWithLinesRemoved())
-                // );
+                std::shared_ptr<CModelSpectrumResult> resultspcmodel = 
+                    std::make_shared<CModelSpectrumResult>(m_model->GetModelSpectrum());
+
                 mlmfit_savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
                 // CModelFittingResult
                 std::shared_ptr<CModelFittingResult> resultfitmodel =

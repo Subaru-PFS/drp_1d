@@ -93,7 +93,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
-    ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
 
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
@@ -474,6 +473,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             }
             //compute the integratedPDF and sort candidates based on intg PDF
             //truncate based on maxCount
+            ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
             Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
         }
 
@@ -525,7 +525,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         {
             Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
             std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
-            Int32 n_cand = 5; //this is hardcoded for now for this method
+            /*Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
             if(retzc)
@@ -535,7 +535,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                 Log.LogError( "  Failed to get z candidates from these results");
             }
             
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
+            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);*/
         }
 
     }else if(methodName  == "chisquarelogsolve" ){

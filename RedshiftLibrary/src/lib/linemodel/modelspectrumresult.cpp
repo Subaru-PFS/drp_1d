@@ -21,9 +21,10 @@ CModelSpectrumResult::CModelSpectrumResult()
 /**
  * \brief Sets the model to CSpectrum ( spc ).
  **/
-CModelSpectrumResult::CModelSpectrumResult(CSpectrum spc)
+CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
+    m_model(spc)
 {
-    model = CSpectrum(spc);
+    //probably can add model params as class variable here..
 }
 
 /**
@@ -39,8 +40,8 @@ CModelSpectrumResult::~CModelSpectrumResult()
  **/
 void CModelSpectrumResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    const CSpectrumSpectralAxis& spectralAxis = model.GetSpectralAxis();
-    const CSpectrumFluxAxis& modelFluxAxis = model.GetFluxAxis();
+    const CSpectrumSpectralAxis& spectralAxis = m_model.GetSpectralAxis();
+    const CSpectrumFluxAxis& modelFluxAxis = m_model.GetFluxAxis();
 
     stream <<  "#lambda\tflux\t"<< std::endl;
     for ( int i=0; i<spectralAxis.GetSamplesCount(); i++)
@@ -61,5 +62,5 @@ void CModelSpectrumResult::SaveLine(const CDataStore &store, std::ostream& strea
 
 CSpectrum& CModelSpectrumResult::GetSpectrum()
 {
-    return model;
+    return m_model;
 }

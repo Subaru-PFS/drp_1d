@@ -44,9 +44,10 @@ public:
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit, Float64 &evidence) const;
     Int32 GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const;
+    Int32 GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff) const;
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
-    Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const;
+    Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir = "zPDF") const;
 
     Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
 
