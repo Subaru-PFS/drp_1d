@@ -349,13 +349,13 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
     if (name.compare("Redshift") == 0) v=Redshifts[rank];
     else if (name.compare("RedshiftError") == 0) v=Deltaz[rank];
     else if (name.compare("RedshiftProba") == 0) v=ValSumProba[rank];
-    else Log.LogError("unknown candidate data %s",name);
+    else Log.LogError("unknown candidate data %s",name.c_str());
   }
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
   {
     if (name.compare("Rank") == 0) v=Rank[rank];
-    else Log.LogError("unknown candidate data %s",name);
+    else Log.LogError("unknown candidate data %s",name.c_str());
   }
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const{

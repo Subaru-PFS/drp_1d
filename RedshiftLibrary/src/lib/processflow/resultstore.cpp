@@ -559,7 +559,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
   else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-  else throw Exception("unknown method %s",method);
+  else throw Exception("unknown method %s",method.c_str());
   result.lock()->getCandidateData(rank,name,v);
 }
 
@@ -568,7 +568,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
   else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-  else throw Exception("unknown method %s",method);
+  else throw Exception("unknown method %s",method.c_str());
 
   result.lock()->getCandidateData(rank,name,v);
 }
@@ -578,7 +578,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
   else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-  else throw Exception("unknown method %s",method);
+  else throw Exception("unknown method %s",method.c_str());
 
   result.lock()->getCandidateData(rank,name,v);
 
@@ -659,7 +659,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0) result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
   else if (object_type.compare("star") == 0) result = GetGlobalResult("stellar");
-  else throw Exception("unknown object type %s or no double array attributes for this object type",object_type);
+  else throw Exception("unknown object type %s or no double array attributes for this object type",object_type.c_str());
   result.lock()->getData(name,data,size);
 }
 

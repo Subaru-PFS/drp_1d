@@ -929,19 +929,19 @@ void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string
   else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[rank];
   else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[rank];
   else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
-  else throw Exception("unknown candidate Float64 data %s",name);
+  else throw Exception("unknown candidate Float64 data %s",name.c_str());
 
 }
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
-  throw Exception("unknown candidate integer data %s",name);
+  throw Exception("unknown candidate integer data %s",name.c_str());
 }
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0) v = FittedTplName[rank];
   else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[rank];
-  else throw Exception("unknown candidate string data %s",name);
+  else throw Exception("unknown candidate string data %s",name.c_str());
 
 }
 
@@ -966,7 +966,7 @@ void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string
 	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
 	}
     }
-  else throw Exception("unknown candidate string data %s",name);
+  else throw Exception("unknown candidate string data %s",name.c_str());
 }
 
 void CLineModelExtremaResult::getData(const std::string& name, Int32& v) const{
