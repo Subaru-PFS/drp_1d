@@ -69,13 +69,13 @@ void CModelSpectrumResult::getData(const std::string& name, double **data, int *
 {
   if( name.compare("ModelLambda") == 0)
     {
-      *size = model.GetSpectralAxis().GetSamplesCount();
-      *data = const_cast<double *>(model.GetSpectralAxis().GetSamples());
+      *size = m_model.GetSpectralAxis().GetSamplesCount();
+      *data = const_cast<double *>(m_model.GetSpectralAxis().GetSamples());
     }
   else if( name.compare("ModelFlux") == 0)
     {
-      *size = model.GetFluxAxis().GetSamplesCount();
-      *data = const_cast<double *>(model.GetFluxAxis().GetSamples());
+      *size = m_model.GetFluxAxis().GetSamplesCount();
+      *data = const_cast<double *>(m_model.GetFluxAxis().GetSamples());
     }
   
 }

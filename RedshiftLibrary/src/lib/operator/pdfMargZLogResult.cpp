@@ -143,8 +143,6 @@ Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
 
     if(name.compare("pdf_zgrid") == 0)
       {
-        Log.LogInfo("get zgrid, size=%d",Redshifts.size());
-    
         *size = Redshifts.size();
         *data = const_cast<double *>(Redshifts.data());
       }
