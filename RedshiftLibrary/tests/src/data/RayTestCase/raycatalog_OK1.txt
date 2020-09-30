@@ -1,8 +1,11 @@
-#version:0.4.0	(autoconverted)
-# Test comment
-3968.5	CaH	A	-1	-1	-1	-1	-1
-5175    MgI	A	-1	-1	-1	-1	-1
-
-10320   [SII]			E	W	-1	-1	-1	-1
-6562.8  Halpha			E	S	-1	-1	-1	-1
-4101.7  Hdelta			E	W	-1	-1	-1	-1
+#version:0.4.0								
+#2018-09-27								
+#WARNING: amp_group lines cannot be splitted in multiple vel_groups								
+#lambda	name	type	force	profile	amp_group	nominal_ampl	vel_group	id
+12821.59	P5A	A	W	SYM	-1	-1	Abs1
+10941.09	P6A	A	W	SYM	-1	-1	Abs1
+10052.13	P7A	A	W	SYM	-1	-1	Abs1
+9548.59	P8A	A	W	SYM	-1	-1	Abs1
+9231.55	P9A	A	W	SYM	-1	-1	Abs1
+9017.38	P10A	A	W	SYM	-1	-1	Abs1
+8865.22	P11A	A	W	SYM	-1	-1	Abs1
