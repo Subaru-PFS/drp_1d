@@ -86,7 +86,7 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
     }
     
     //find indexes: iz, izmin and izmax
-    bool ok = effectiveRange.getExactEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),izmin,izmax);
+    bool ok = effectiveRange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),izmin,izmax);
     iz= std::lower_bound(redshifts.begin(),redshifts.end(),redshift) - redshifts.begin();
     
     
