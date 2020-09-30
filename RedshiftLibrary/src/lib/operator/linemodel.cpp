@@ -968,16 +968,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         Float64 z = m_firstpass_extremumList[i].X;
         Float64 m = m_firstpass_extremumList[i].Y;
         // find the index in the zaxis results
-        std::vector<Float64>::iterator itr = std::lower_bound(m_result->Redshifts.begin(),
-                                                              m_result->Redshifts.end(),
-                                                              z);
-        Int32 idx = itr - m_result->Redshifts.begin();
-        if (itr == m_result->Redshifts.end() || *itr != z)
-        {
-          //TODO [error] we should throw an error here !!!
-            Log.LogError("Problem. could not find extrema solution index...");
-            continue;
-        }
+        Int32 idx = m_result->getRedshiftIndex(z);
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult.Extrema[i] = z;
@@ -1088,18 +1079,9 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
             m_firstpass_extremaResult.FittedTplpCoeffs.push_back(firstpass_results_b->FittedTplpCoeffs[keb]);
         }else{
             // find the index in the zaxis results
-            std::vector<Float64>::iterator itr = std::lower_bound(m_result->Redshifts.begin(),
-                                                                m_result->Redshifts.end(),
-                                                                z_fpb);
           
-            Int32 idx = itr - m_result->Redshifts.begin();
-            if (itr == m_result->Redshifts.end() || *itr != z_fpb)
-            {
-              //TODO [error] throw exception
-              Log.LogError("Problem. could not find fpb extrema solution index...");
-              continue;
-            }
-
+            Int32 idx =  m_result->getRedshiftIndex(z_fpb);
+          
             //save the continuum fitting parameters from first pass
             m_firstpass_extremaResult.FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
             m_firstpass_extremaResult.FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
@@ -1313,16 +1295,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
 
 
         // find the index in the zaxis results
-        std::vector<Float64>::iterator itr = std::lower_bound(m_result->Redshifts.begin(),
-                                                              m_result->Redshifts.end(),
-                                                              z);
-        Int32 idx = itr - m_result->Redshifts.begin();
-        if (itr == m_result->Redshifts.end() || *itr!=z)
-        {
-          //TODO [error] throw exception here !
-            Log.LogError("Problem. could not find extrema solution index...");
-            continue;
-        }
+        Int32 idx = m_result->getRedshiftIndex(z);
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Saving candidate #%d, idx=%d, z=%f, m=%f",
                     index_extremum, idx, m_result->Redshifts[idx], m_result->ChiSquare[idx]);

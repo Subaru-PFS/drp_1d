@@ -86,11 +86,11 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
     }
     
     //find indexes: iz, izmin and izmax
-    izmin= std::lower_bound(redshifts.begin(),redshifts.end(),effectiveRange.GetBegin()) - redshifts.begin();
+    bool ok = effectiveRange.getExactEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),izmin,izmax);
     iz= std::lower_bound(redshifts.begin(),redshifts.end(),redshift) - redshifts.begin();
-    izmax= std::lower_bound(redshifts.begin(),redshifts.end(),effectiveRange.GetEnd()) - redshifts.begin();
-
-    if( iz==-1 || izmin == -1 || izmax == -1 ){
+    
+    
+    if( !ok || iz == -1 ){
         Log.LogError("  Deltaz: Impossible to get redshift index %f (%d) or redshift range indices %f,%f (%d,%d)",
                      redshift, iz, effectiveRange.GetBegin(), effectiveRange.GetEnd(), izmin, izmax);
         throw runtime_error("Deltaz: impossible to get redshift indices!");
