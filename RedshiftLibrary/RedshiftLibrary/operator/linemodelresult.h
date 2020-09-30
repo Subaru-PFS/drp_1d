@@ -61,7 +61,7 @@ public:
     TBoolList GetStrongELPresentTplshapeResult( Int32 index );
     std::vector<Int32> GetNLinesAboveSNRTplshapeResult( Int32 index );
     std::vector<Float64> GetPriorLinesTplshapeResult( Int32 index_z );
-
+  Int32 getRedshiftIndex(Float64 z);
 
     //Merit results
     TFloat64List            Redshifts;  // z axis
