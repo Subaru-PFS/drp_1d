@@ -48,6 +48,7 @@ public:
                                       Float64 redshift,
                                       Float64 IdxDustCoeff,
                                       Int32 meiksinIdx,
+                                      Float64 amplitude,
                                       std::string opt_interp,
                                       std::string opt_extinction,
                                       const TFloat64Range& lambdaRange,

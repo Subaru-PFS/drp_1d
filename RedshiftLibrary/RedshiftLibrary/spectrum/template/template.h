@@ -28,8 +28,7 @@ public:
 
     const std::string&  GetCategory() const;
     const std::string&  GetName() const;
-    const CSpectrumFluxAxis&    GetFluxAxis() const;
-    CSpectrumFluxAxis&          GetFluxAxis();
+
     const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;
     CSpectrumFluxAxis&          GetFluxAxisWithoutIsmIgm();
 
@@ -37,7 +36,7 @@ public:
 
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
-
+    void ScaleFluxAxis(Float64 amplitude);
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
 
@@ -57,46 +56,23 @@ private:
     Float64 m_redshiftMeiksin = -1;
 
     Int32 m_IsmIgm_kstart = -1, m_IsmIgm_kend = -1;
-    CSpectrumFluxAxis   m_FluxAxisIsmIgm;//flux on which is applied the igm and ism correction
+    CSpectrumFluxAxis   m_NoIsmIgmFluxAxis;
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
 };
 
-//override spectrum flux getters to return the corrected flux rather than the raw flux
-//this is required when saving the spectrum model corresponding to a template. By default
-//it is considered as a spectrum..thus we lose the m_FluxAxisIsmIgm variable.
-inline
-const CSpectrumFluxAxis& CTemplate::GetFluxAxis() const
-{
-    if(m_kDust ==-1 && m_meiksinIdx == -1)
-        return m_FluxAxis;
-    else{
-        return m_FluxAxisIsmIgm;
-    }
-}
-
-inline
-CSpectrumFluxAxis& CTemplate::GetFluxAxis()
-{
-    if(m_kDust ==-1 && m_meiksinIdx == -1){
-        return m_FluxAxis;
-    }
-    else{
-        return m_FluxAxisIsmIgm;
-    } 
-}
 
 inline
 const CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm() const
 {
-    return m_FluxAxis;
+    return m_NoIsmIgmFluxAxis;
    
 }
 inline
 CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm()
 {
-    return m_FluxAxis;
+    return m_NoIsmIgmFluxAxis;
 }
 inline
 Int32 CTemplate::GetIsmCoeff() const

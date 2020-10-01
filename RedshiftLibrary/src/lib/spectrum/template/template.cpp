@@ -44,8 +44,8 @@ CTemplate::CTemplate( const CTemplate& other):
     m_computedDustCoeff(other.m_computedDustCoeff), 
     m_computedMeiksingCoeff(other.m_computedDustCoeff)
 {
-    if(other.m_FluxAxisIsmIgm.GetSamplesCount())
-        m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
+    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
 }
 
 CTemplate& CTemplate::operator=(const CTemplate& other)
@@ -53,15 +53,15 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     CSpectrum::operator =(other);
     m_Name = other.GetName();
 
-    if(other.m_FluxAxisIsmIgm.GetSamplesCount())
-        m_FluxAxisIsmIgm = other.m_FluxAxisIsmIgm;
+    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
         
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
     m_computedDustCoeff = other.m_computedDustCoeff; 
     m_computedMeiksingCoeff = other.m_computedDustCoeff;
-    m_Category = other.GetCategory();
-   m_IsmIgm_kstart = other.m_IsmIgm_kstart;
+    m_Category = other.m_Category;
+    m_IsmIgm_kstart = other.m_IsmIgm_kstart;
     m_IsmIgm_kend = other.m_IsmIgm_kend;
     return *this;
 }
@@ -138,8 +138,8 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
-        m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
-        /*m_FluxAxisIsmIgm[k] = m_FluxAxis[k]
+        m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+        /*m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]
                      *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
                      *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
     }
@@ -170,8 +170,8 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
             }
             m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
 
-            m_FluxAxisIsmIgm[k] = m_FluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
-            /*m_FluxAxisIsmIgm[k] = m_FluxAxis[k]
+            m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+            /*m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]
                      *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
                      *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
             igmCorrectionAppliedOnce = true;
@@ -186,9 +186,10 @@ bool CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
+    
+    m_NoIsmIgmFluxAxis.SetSize(m_SpectralAxis.GetSamplesCount());
+    m_NoIsmIgmFluxAxis = m_FluxAxis;
 
-    if(!m_FluxAxisIsmIgm.GetSamplesCount() || m_FluxAxisIsmIgm.GetSamplesCount()!=m_SpectralAxis.GetSamplesCount())
-        m_FluxAxisIsmIgm.SetSize(m_SpectralAxis.GetSamplesCount());
 
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
@@ -196,4 +197,11 @@ bool CTemplate::InitIsmIgmConfig()
     m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
     return true;
+}
+
+void CTemplate::ScaleFluxAxis(Float64 amplitude){
+    //all spectrum size
+    m_FluxAxis *= amplitude;
+    m_NoIsmIgmFluxAxis *= amplitude;
+    return;
 }

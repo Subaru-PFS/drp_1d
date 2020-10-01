@@ -26,7 +26,6 @@ CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
 {
     //probably can add model params as class variable here..
 }
-
 /**
  * \brief Empty destructor.
  **/

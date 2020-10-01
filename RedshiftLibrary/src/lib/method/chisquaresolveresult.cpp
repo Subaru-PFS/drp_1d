@@ -305,11 +305,12 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param DustCoeff (optional return)
  * @return
  */
-Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff) const
+Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const
 {
     tplName = "-1";
     MeiksinIdx = -1;
     DustCoeff = -1;
+    Amplitude = -1;
     Bool foundRedshiftAtLeastOnce = false;
 
     std::string scopeStr;
@@ -329,6 +330,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     std::string tmpTplName = "-1";
     Int32 tmpMeiksinIdx = -1;
     Float64 tmpDustCoeff = -1;
+    Float64 tmpAmplitude = -1;
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
@@ -355,6 +357,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
             tmpTplName = (*it).first;
             tmpMeiksinIdx = meritResult->FitDustCoeff[idx];
             tmpDustCoeff = meritResult->FitMeiksinIdx[idx];
+            tmpAmplitude = meritResult->FitAmplitude[idx];
         }
     }
 
@@ -362,6 +365,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
         tplName = tmpTplName;
         MeiksinIdx = tmpMeiksinIdx;
         DustCoeff = tmpDustCoeff;
+        Amplitude = tmpAmplitude;
     }else{
         return -1;
     }
