@@ -2,6 +2,7 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/common/exception.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -914,6 +915,66 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveTFloat64List(stream,"ext_Alv",Alv, order);
 
   stream <<  "}";
+
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+{
+  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
+  else if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
+  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
+  else if (name.compare("VelocityEmission") == 0) v = Elv[rank];
+  else if (name.compare("VelocityAbsorption") == 0) v = Alv[rank];
+  else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[rank];
+  else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[rank];
+  else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[rank];
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
+  else throw Exception("unknown candidate Float64 data %s",name.c_str());
+
+}
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+{
+  throw Exception("unknown candidate integer data %s",name.c_str());
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = FittedTplName[rank];
+  else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[rank];
+  else throw Exception("unknown candidate string data %s",name.c_str());
+
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{
+  if (name.compare("ContinuumIndexesColor") == 0)
+    {
+      *size = ContinuumIndexes[rank].size();
+      if (continuumIndexesColorCopy.find(rank) != continuumIndexesColorCopy.end())
+	{
+	  continuumIndexesColorCopy[rank] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesColorCopy[rank].emplace_back(ContinuumIndexes[rank][j].Color);
+	  *data = const_cast<double *>(continuumIndexesColorCopy[rank].data());
+	}
+    }
+  else if( name.compare("ContinuumIndexesBreak") == 0)
+    {
+      *size = ContinuumIndexes[rank].size();
+      if (continuumIndexesBreakCopy.find(rank) != continuumIndexesBreakCopy.end())
+	{
+	  continuumIndexesBreakCopy[rank] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesBreakCopy[rank].emplace_back(ContinuumIndexes[rank][j].Break);
+	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
+	}
+    }
+  else throw Exception("unknown candidate string data %s",name.c_str());
+}
+
+void CLineModelExtremaResult::getData(const std::string& name, Int32& v) const{
+}
+void CLineModelExtremaResult::getData(const std::string& name, Float64& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, std::string& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, double **data, int *size) const
+{
 
 }
 

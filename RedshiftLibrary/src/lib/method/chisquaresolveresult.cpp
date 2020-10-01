@@ -466,3 +466,11 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
 
     return true;
 }
+
+void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
+{
+  if (name.compare("snrHa") == 0)  v = -1;
+  else if (name.compare("lfHa") == 0)  v = -1;
+  else if (name.compare("snrOII") == 0)  v = -1;
+  else if (name.compare("lfOII") == 0)  v = -1;
+}

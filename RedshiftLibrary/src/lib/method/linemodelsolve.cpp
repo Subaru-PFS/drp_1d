@@ -1335,7 +1335,7 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List c
         if(!logzpdf1d)
         {
             Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
+            throw std::runtime_error("Extracto Proba. for z candidates: no results retrieved from scope");
         }
 
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
