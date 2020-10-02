@@ -129,6 +129,9 @@ Bool CTemplate::Save( const char* filePath ) const
 }
 
 //Calzetti extinction
+/**
+ * if kDust == -1: reset the fluxAxis eliminating only the Dust correction
+*/
 bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     if(m_kDust == kDust)
@@ -137,16 +140,19 @@ bool  CTemplate::ApplyDustCoeff(Int32 kDust)
 
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
-        m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
+        if(m_kDust > -1)
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
+        else
+            m_computedDustCoeff[k] = 1; 
+        
         m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
-        /*m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]
-                     *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
-                     *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
     }
     return true;
 }
 
-
+/**
+ * if meiksinIdx == -1: reset the fluxAxis eliminating only the Meiksin correction
+*/
 bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 {
 
@@ -160,20 +166,21 @@ bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
-            Int32 kLbdaMeiksin = 0;
-            if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
-            {
-                kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin.GetLambdaMin());
-            }else //if lambda lower than min meiksin value, use lower meiksin value
-            {
-                kLbdaMeiksin = 0;
+            if(m_meiksinIdx > -1){
+                Int32 kLbdaMeiksin = 0;
+                if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
+                {
+                    kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin.GetLambdaMin());
+                }else //if lambda lower than min meiksin value, use lower meiksin value
+                {
+                    kLbdaMeiksin = 0;
+                }
+                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
             }
-            m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
-
+            else 
+                m_computedMeiksingCoeff[k] = 1;
+            
             m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
-            /*m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]
-                     *(m_meiksinIdx==-1 ? 1.0 : m_computedMeiksingCoeff[k])*
-                     *(m_kDust==-1 ? 1.0 : m_computedDustCoeff[k]);*/
             igmCorrectionAppliedOnce = true;
         }
     }
@@ -186,10 +193,7 @@ bool CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
-    
-    m_NoIsmIgmFluxAxis.SetSize(m_SpectralAxis.GetSamplesCount());
     m_NoIsmIgmFluxAxis = m_FluxAxis;
-
 
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
