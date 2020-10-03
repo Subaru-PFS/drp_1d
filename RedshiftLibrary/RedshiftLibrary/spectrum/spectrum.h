@@ -31,17 +31,17 @@ public:
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other); 
- 
     void  SetName( const char* name );
 
     Bool InvertFlux();
 
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
-    virtual const CSpectrumFluxAxis& GetFluxAxis() const;
+    const CSpectrumFluxAxis&        GetFluxAxis() const;
 
     const std::string               GetName() const;
 
-    virtual CSpectrumFluxAxis&      GetFluxAxis();
+    CSpectrumFluxAxis&              GetFluxAxis();
+    virtual void                    ScaleFluxAxis(Float64 amplitude);
     CSpectrumSpectralAxis&          GetSpectralAxis();
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;

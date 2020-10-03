@@ -134,9 +134,6 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     overlapRate = 0.0;
     status = nStatus_DataError;
 
-    m_templateRebined_bf.InitIsmIgmConfig();
-
-
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
@@ -158,7 +155,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                                 currentRange,
                                 overlapRate,
                                 overlapThreshold);
-
+    m_templateRebined_bf.InitIsmIgmConfig();
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return;
@@ -167,6 +164,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return;
     }
+
     // Optionally Apply some Calzetti Extinction for DUST
     Int32 nDustCoeffs=1;
     Int32 iDustCoeffMin = 0;
@@ -1129,6 +1127,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            Float64 redshift,
                                            Float64 IdxDustCoeff,
                                            Int32 meiksinIdx,
+                                           Float64 amplitude,
                                            std::string opt_interp,
                                            std::string opt_extinction,
                                            const TFloat64Range& lambdaRange,
@@ -1164,6 +1163,7 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     {
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
+    m_templateRebined_bf.ScaleFluxAxis(amplitude);
     //resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf));
     m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(m_templateRebined_bf));
 

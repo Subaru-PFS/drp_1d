@@ -21,12 +21,12 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrum::CSpectrum()
+CSpectrum::CSpectrum():
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
 
 }
 
@@ -56,34 +56,32 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
         }
     }
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
-  m_SpectralAxis(spectralAxis),
-  m_FluxAxis(fluxAxis)
+    m_SpectralAxis(spectralAxis),
+    m_FluxAxis(fluxAxis),
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
 
 }
 //assignment constructor
-CSpectrum::CSpectrum(const CSpectrum& other)
+CSpectrum::CSpectrum(const CSpectrum& other):
+    m_estimationMethod(other.m_estimationMethod),
+    m_dfBinPath(other.m_dfBinPath),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales)
 {
     m_SpectralAxis = other.m_SpectralAxis;
-    m_FluxAxis = other.m_FluxAxis;
-
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-
+    m_FluxAxis = other.GetFluxAxis();
 }
 
 CSpectrum::~CSpectrum()
@@ -94,12 +92,12 @@ CSpectrum::~CSpectrum()
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.m_SpectralAxis;
-    m_FluxAxis = other.m_FluxAxis;
+    m_FluxAxis = other.GetFluxAxis();
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
     return *this;
 }
@@ -738,4 +736,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
 
     return true;
+}
+void CSpectrum::ScaleFluxAxis(Float64 scale){
+    m_FluxAxis *= scale;
+    return;
 }

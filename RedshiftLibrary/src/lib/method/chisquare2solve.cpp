@@ -159,8 +159,8 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
         for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
             std::string tplName;
             Int32 MeiksinIdx;
-            Float64 DustCoeff;
-            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff);
+            Float64 DustCoeff, Amplitude;
+            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff, Amplitude);
             if(ret==-1){
                 Log.LogError("  Chisquare2Solve: Couldn't find best model for candidate %f", zcandidates_unordered_list[i]);
                 continue;
@@ -170,7 +170,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                 const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
                 m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
-                                                 DustCoeff, MeiksinIdx,
+                                                 DustCoeff, MeiksinIdx, Amplitude,
                                                  opt_interp, opt_extinction, lambdaRange, 
                                                  overlapThreshold);              
             }catch(const std::runtime_error& e){
