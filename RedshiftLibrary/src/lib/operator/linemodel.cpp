@@ -664,18 +664,17 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
 
-    std::string opt_chi2operator = "chisquarelog"; //"chisquare2"; //
-    if (redshiftsTplFit.size() < 100 && opt_chi2operator != "chisquare2")
+    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "chisquare2")
         // warning arbitrary number of redshifts threshold
         // to consider chisquare2 faster than chisquarelog
     {
-        opt_chi2operator = "chisquare2";
+        m_opt_tplfit_method = "chisquare2";
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select chisquare2 operator"
                     " (faster when only few redshifts calc. points)");
     }
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
-                opt_chi2operator.c_str());
+                m_opt_tplfit_method.c_str());
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
                 m_opt_tplfit_dustFit);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_igm = %d",
@@ -684,7 +683,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 opt_interp.c_str());
 
     std::shared_ptr<COperator> chiSquareOperator;
-    if (opt_chi2operator == "chisquarelog")
+    if (m_opt_tplfit_method == "chisquarelog")
     {
         // COperatorChiSquareLogLambda* chiSquareOperator;
         bool enableLogRebin = true;
@@ -693,7 +692,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator =
             std::dynamic_pointer_cast<COperatorChiSquareLogLambda>(chiSquareOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
-    } else if (opt_chi2operator == "chisquare2")
+    } else if (m_opt_tplfit_method == "chisquare2")
     {
         chiSquareOperator = std::shared_ptr<COperatorChiSquare2>(
             new COperatorChiSquare2(opt_calibrationPath));
@@ -703,7 +702,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     Float64 overlapThreshold = 1.0;
-    if (opt_chi2operator != "chisquare2" && ignoreLinesSupport==true)
+    if (m_opt_tplfit_method != "chisquare2" && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT chisquare2-operator is used. Disabled");

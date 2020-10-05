@@ -53,6 +53,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
+    desc.append("\tparam: linemodel.continuumfit.method = {""chisquare2"", ""chisquarelog""}\n");
     desc.append("\tparam: linemodel.continuumfit.ismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumfit.igmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumfit.count = <float value>\n");
@@ -158,6 +159,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
+        dataStore.GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "chisquarelog" );
         dataStore.GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
@@ -302,6 +304,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
+        Log.LogInfo( "      -tplfit_method: %s", m_opt_tplfit_method.c_str());
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
@@ -911,6 +914,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
+        linemodel.m_opt_tplfit_method = m_opt_tplfit_method;
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
