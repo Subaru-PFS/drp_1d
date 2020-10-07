@@ -9,6 +9,7 @@
 using namespace NSEpic;
 using namespace std;
 #include <fstream>
+#include <iostream>
 
 CPdfCandidateszResult::CPdfCandidateszResult()
 {
@@ -274,13 +275,23 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                                                     std::vector<TFloat64List> ExtremaExtendedRedshifts,
                                                     TFloat64List& candidates ) const
 {
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-        auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
+        //check if the pdf is stellar/galaxy or else
+        std::string outputPdfRelDir = "zPDF"; //default value set to galaxy zPDF folder
+        std::string scope = store.GetCurrentScopeName();
+        std::size_t foundstr_stellar = scope.find("stellarsolve");
+        std::size_t foundstr_qso = scope.find("qsosolve");
+        if (foundstr_stellar!=std::string::npos){
+            outputPdfRelDir = "stellar_zPDF";
+        }else if (foundstr_qso!=std::string::npos){
+            outputPdfRelDir = "qso_zPDF";
+        }
+        std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+        auto results_pdf = store.GetGlobalResult( scope_res.c_str() );
         auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
 
         if(!logzpdf1d)
         {
-            Log.LogError( "GetBestRedshiftFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
+            Log.LogError( "GetBestRedshiftsFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
             return false;
         }
         Float64 Fullwidth = 6e-3;//should be replaced with deltaz?
@@ -316,7 +327,7 @@ Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store,
                 UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
                 if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
                 {
-                    Log.LogError( "GetBestRedshiftFromPdf: pdf proba value not found for extremumIndex = %d", i);
+                    Log.LogError( "GetBestRedshiftsFromPdf: pdf proba value not found for extremumIndex = %d", i);
                     return false;
                 }
 
