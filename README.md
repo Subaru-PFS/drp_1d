@@ -9,7 +9,7 @@
 * [swig](http://www.swig.org/) >=2.0
 
 `pylibamazed` depends on following third parties:
-* [boost](https://www.boost.org/) >=1.53
+* [boost](https://www.boost.org/) >=1.57
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
