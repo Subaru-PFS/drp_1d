@@ -462,7 +462,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        maskList,
                                        "qso_zPDF",
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        }else if(qso_method=="linemodel"){
+        /*}else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
             CLineModelSolve Solve(calibrationDirPath);
             qsoResult = Solve.Compute( ctx.GetDataStore(),
@@ -473,7 +473,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetRayCatalog(),
                                        spcLambdaRange,
                                        qso_redshifts,
-                                       "qso_zPDF");
+                                       "qso_zPDF");*/
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
