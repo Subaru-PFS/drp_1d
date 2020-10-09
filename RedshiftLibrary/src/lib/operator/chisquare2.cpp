@@ -1165,7 +1165,11 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
     //resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf));
-    m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(m_templateRebined_bf));
+    m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(m_templateRebined_bf, 
+                                                                                tpl.GetName(), 
+                                                                                IdxDustCoeff,
+                                                                                meiksinIdx, 
+                                                                                amplitude));
 
     return 0;
 }

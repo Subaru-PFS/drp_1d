@@ -26,6 +26,18 @@ CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
 {
     //probably can add model params as class variable here..
 }
+CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc, 
+                                            const std::string tplName,
+                                            const Float64 dustCoeff,
+                                            const Int32 meiksinIdx,
+                                            const Float64 amplitude):
+  m_model(spc),
+  m_dustCoeff(dustCoeff),
+  m_meiksinIdx(meiksinIdx),
+  m_tplName(tplName),
+  m_amplitude(amplitude)
+{
+}
 /**
  * \brief Empty destructor.
  **/
@@ -77,4 +89,23 @@ void CModelSpectrumResult::getData(const std::string& name, double **data, int *
       *data = const_cast<double *>(m_model.GetFluxAxis().GetSamples());
     }
   
+}
+
+void CModelSpectrumResult::getData(const std::string& name, Int32& v) const
+{
+  if(name.compare("ModelMeiksinIdx") == 0)
+    v = m_meiksinIdx;  
+}
+void CModelSpectrumResult::getData(const std::string& name, std::string& v) const
+{
+  if(name.compare("ModelTplName") == 0)
+    v = m_tplName;
+}
+void CModelSpectrumResult::getData(const std::string& name, Float64& v) const
+{
+  if(name.compare("ModelDustCoeff") == 0)
+    v = m_dustCoeff;
+  else 
+    if(name.compare("ModelAmplitude") == 0)
+      v = m_amplitude; 
 }

@@ -19,17 +19,18 @@ CChisquareSolveResult::CChisquareSolveResult(const Int32 type, const std::string
 
 void CChisquareSolveResult::preSave(const CDataStore& store)
 {
-    GetBestRedshift( store, redshift, merit, tplName, amplitude, amplitudeError, dustCoeff, meiksinIdx );
-    if(m_bestRedshiftMethod==2)
+    if(m_bestRedshiftMethod==0)//bestXi2
+        GetBestRedshift(store);
+    if(m_bestRedshiftMethod==2)//bestPDF
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
+        GetBestRedshiftFromPdf(store);
         Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
-        GetBestModel(store, redshift, tplName);
-        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
+        GetBestModel(store, redshift, m_tplName, m_meiksinIdx, m_dustCoeff, m_amplitude);
+        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), m_tplName.c_str());
 
     }
-    if(tplName=="")
-        tplName = "Undefined";
+    if(m_tplName=="")
+        m_tplName = "Undefined";
 }
 
 void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
@@ -40,19 +41,19 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
 
     stream << redshift << "\t"
                 << merit << "\t"
-                << tplName << "\t"
-                << amplitude << "\t"
-                << amplitudeError << "\t"
-                << std::setprecision(4) << dustCoeff << "\t"
-                << meiksinIdx << std::endl;
+                << m_tplName << "\t"
+                << m_amplitude << "\t"
+                << m_amplitudeError << "\t"
+                << std::setprecision(4) << m_dustCoeff << "\t"
+                << m_meiksinIdx << std::endl;
 
     stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
     if(m_bestRedshiftMethod==2)
     {
         stream << redshift << "\t"
                << merit << "\t"
-               << evidence << "\t"
-               << tplName << std::endl;
+               << m_evidence << "\t"
+               << m_tplName << std::endl;
     }else{
         stream <<  "-1\t-1\t-1"<< std::endl;
     }
@@ -78,7 +79,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
         scopeStr = "chisquare_continuum";
     }
 
-    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
+    std::string scope = m_scope + "." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
@@ -113,7 +114,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
     return true;
 
 }
-
+//called for saving redshift.csv for Xi2
 void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     char tmpChar[256];
@@ -121,36 +122,14 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     store.GetParam( "dtreepathnum", dtreepathnum );
     sprintf(tmpChar, "%.2f", dtreepathnum);
 
-    Float64 redshift;
-    Float64 merit;
-    Float64 evidence;
-    std::string tplName="-1";
-
-    //unused
-    Float64 amplitude;
-    Float64 amplitudeError;
-    Float64 dustCoeff;
-    Int32 meiksinIdx;
-
-    if(m_bestRedshiftMethod==0)
-    {
-        GetBestRedshift( store, redshift, merit, tplName, amplitude, amplitudeError, dustCoeff, meiksinIdx );
-        Log.LogInfo( "%s-result: extracted best redshift from chi2 extrema: z=%f", m_name.c_str(), redshift);
-    }else if(m_bestRedshiftMethod==2)
-    {
-        GetBestRedshiftFromPdf( store, redshift, merit, evidence );
-        Log.LogInfo( "%s-result: extracted best redshift from PDF: z=%f", m_name.c_str(), redshift);
-        GetBestModel(store, redshift, tplName);
-        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), tplName.c_str());
-    }else{
-        Log.LogError( "%s-result: can't parse best redshift estimation method", m_name.c_str());
-    }
+    //probably below code is not necessary
+    //preSave(store);
 
     stream << store.GetSpectrumName() << "\t"
            << store.GetProcessingID() << "\t"
                 << redshift << "\t"
                 << merit << "\t"
-                << tplName << "\t"
+                << m_tplName << "\t"
                 << m_name + "_" << tmpChar << "\t"
                 << "-1" << "\t" //deltaz
                 << m_ReliabilityLabel << "\t"
@@ -162,7 +141,7 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 
 }
 
-Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& redshift, Float64& merit, std::string& tplName, Float64& amplitude, Float64& amplitudeError, Float64& dustCoeff, Int32& meiksinIdx ) const
+Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -205,13 +184,13 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
 
     if( tmpMerit < DBL_MAX )
     {
-        redshift = tmpRedshift;
-        merit = tmpMerit;
-        tplName = tmpTplName;
-        amplitude = tmpAmplitude;
-        amplitudeError = tmpAmplitudeError;
-        dustCoeff = tmpDustCoeff;
-        meiksinIdx = tmpMeiksinIdx;
+        m_redshift = tmpRedshift;
+        m_merit = tmpMerit;
+        m_tplName = tmpTplName;
+        m_amplitude = tmpAmplitude;
+        m_amplitudeError = tmpAmplitudeError;
+        m_dustCoeff = tmpDustCoeff;
+        m_meiksinIdx = tmpMeiksinIdx;          
         return true;
     }
 
@@ -225,7 +204,7 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store, Float64& r
  * output: merit = chi2(redshift)
  *
  **/
-Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Float64& redshift, Float64& merit, Float64& evidence ) const
+Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) const
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
@@ -261,9 +240,9 @@ Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store, Flo
         }
     }
 
-    redshift = tmpRedshift;
-    merit = tmpProbaLog;
-    evidence = logzpdf1d->valEvidenceLog;
+    m_redshift = tmpRedshift;
+    m_merit = tmpProbaLog;
+    m_evidence = logzpdf1d->valEvidenceLog;
 
     return true;
 }
@@ -291,7 +270,8 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
         return -1;
     }
 
-    evidence = logzpdf1d->valEvidenceLog;
+    m_evidence = logzpdf1d->valEvidenceLog;
+    m_evidence = m_evidence; //prob not useful
     return 0;
 }
 
@@ -310,7 +290,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     tplName = "-1";
     MeiksinIdx = -1;
     DustCoeff = -1;
-    Amplitude = -1;
+    Amplitude = -1.0;
     Bool foundRedshiftAtLeastOnce = false;
 
     std::string scopeStr;
@@ -323,15 +303,18 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     }else if(m_type == nType_continuumOnly){
         scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetCurrentScopeName() + "." + scopeStr.c_str();
+    //we have a problem with the scope here especially if called from processflow
+    std::string scope = m_scope +"." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;
     std::string tmpTplName = "-1";
     Int32 tmpMeiksinIdx = -1;
-    Float64 tmpDustCoeff = -1;
-    Float64 tmpAmplitude = -1;
-
+    Float64 tmpDustCoeff = -1.0;
+    Float64 tmpAmplitude = 0.0;
+    Float64 tmpAmplitudeError = 0.0;
+    Int32 idx = -1;
+    bool first = true;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
         auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
@@ -339,26 +322,30 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
             continue;
         }
 
-        Int32 idx=-1;
-        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+       //find redshift index once for all and probably re-search for it if template size is not the same
+        if(first || (idx>-1 && meritResult->Redshifts[idx] != z))
         {
-            if( meritResult->Status[i] == COperator::nStatus_OK )
-            {
-                Float64 tmpRedshift = meritResult->Redshifts[i];
-                if(tmpRedshift == z){
-                    idx = i;
-                    foundRedshiftAtLeastOnce = true;
-                    break;
-                }
-            }
+           //find the corresponding Z
+            auto itZ = std::find(meritResult->Redshifts.begin(), meritResult->Redshifts.end(), z);
+            idx = std::distance(meritResult->Redshifts.begin(), itZ);
+            first = false;
         }
-        if(idx>-1 && meritResult->ChiSquare[idx]<tmpMerit){
+        if(idx == -1)
+            continue;
+        //verify that the redshift is valid 
+        if(meritResult->Status[idx] == COperator::nStatus_OK) {
+            //all conditions are satisfied
+            foundRedshiftAtLeastOnce = true;
+        }
+        if(meritResult->ChiSquare[idx]<tmpMerit){
             tmpMerit = meritResult->ChiSquare[idx];
             tmpTplName = (*it).first;
             tmpMeiksinIdx = meritResult->FitDustCoeff[idx];
             tmpDustCoeff = meritResult->FitMeiksinIdx[idx];
             tmpAmplitude = meritResult->FitAmplitude[idx];
+            tmpAmplitudeError = meritResult->FitAmplitudeError[idx];
         }
+
     }
 
     if(foundRedshiftAtLeastOnce){
@@ -366,67 +353,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
         MeiksinIdx = tmpMeiksinIdx;
         DustCoeff = tmpDustCoeff;
         Amplitude = tmpAmplitude;
-    }else{
-        return -1;
-    }
-    return 1;
-}
-/**
- * @brief CChisquareSolveResult::GetBestModel
- * Find the best tpl-name corresponding to the input arg. z and to the minimum Chisquare
- * @param store
- * @param z
- * @param tplName
- * @return
- */
-Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const
-{
-    tplName = "-1";
-    Bool foundRedshiftAtLeastOnce = false;
-
-    std::string scopeStr;
-    if(m_type == nType_raw){
-        scopeStr = "chisquare";
-    }else if(m_type == nType_all){
-        scopeStr = "chisquare";
-    }else if(m_type == nType_noContinuum){
-        scopeStr = "chisquare_nocontinuum";
-    }else if(m_type == nType_continuumOnly){
-        scopeStr = "chisquare_continuum";
-    }
-    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
-    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
-
-    Float64 tmpMerit = DBL_MAX ;
-    std::string tmpTplName = "-1";
-    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
-    {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
-        if(meritResult->ChiSquare.size()<1){
-            continue;
-        }
-
-        Int32 idx=-1;
-        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
-        {
-            if( meritResult->Status[i] == COperator::nStatus_OK )
-            {
-                Float64 tmpRedshift = meritResult->Redshifts[i];
-                if(tmpRedshift == z){
-                    idx = i;
-                    foundRedshiftAtLeastOnce = true;
-                    break;
-                }
-            }
-        }
-        if(idx>-1 && meritResult->ChiSquare[idx]<tmpMerit){
-            tmpMerit = meritResult->ChiSquare[idx];
-            tmpTplName = (*it).first;
-        }
-    }
-
-    if(foundRedshiftAtLeastOnce){
-        tplName = tmpTplName;
+        //AmplitudeError = tmpAmplitudeError;
     }else{
         return -1;
     }

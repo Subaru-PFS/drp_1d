@@ -33,17 +33,9 @@ public:
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store,
-                         Float64& redshift,
-                         Float64& merit,
-                         std::string& tplName,
-                         Float64 &amplitude,
-                         Float64 &amplitudeError,
-                         Float64 &dustCoeff,
-                         Int32 &meiksinIdx) const;
+    Bool GetBestRedshift(const CDataStore& store) const;
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
-    Bool GetBestRedshiftFromPdf(const CDataStore& store, Float64& redshift, Float64& merit, Float64 &evidence) const;
-    Int32 GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const;
+    Bool GetBestRedshiftFromPdf(const CDataStore& store) const;
     Int32 GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const;
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
@@ -73,12 +65,15 @@ private:
     const std::string m_scope;
     std::string m_name;
 
-  Float64 evidence;
-  std::string tplName;
-  Float64 amplitude;
-  Float64 amplitudeError;
-  Float64 dustCoeff;
-  Int32 meiksinIdx;
+  mutable Float64 m_redshift;
+  mutable Float64 m_merit; 
+  mutable Float64 m_evidence;
+  mutable std::string m_tplName;
+  //TODO: is not normal to use mutable, but kept it for test
+  mutable Float64 m_amplitude;
+  mutable Float64 m_amplitudeError;
+  mutable Float64 m_dustCoeff;
+  mutable Int32   m_meiksinIdx;
 
 };
 
