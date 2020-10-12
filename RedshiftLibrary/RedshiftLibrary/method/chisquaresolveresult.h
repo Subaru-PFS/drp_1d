@@ -54,6 +54,11 @@ public:
   void preSave(const CDataStore& store);
 
   void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
 
 private:
 

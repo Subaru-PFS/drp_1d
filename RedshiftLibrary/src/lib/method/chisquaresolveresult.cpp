@@ -477,4 +477,39 @@ void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
   else if (name.compare("lfHa") == 0)  v = -1;
   else if (name.compare("snrOII") == 0)  v = -1;
   else if (name.compare("lfOII") == 0)  v = -1;
+  else if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
+  else throw Exception("Unknown data %s",name.c_str());
 }
+
+void CChisquareSolveResult::getData(const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = tplName;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getData(const std::string& name, Int32& v) const
+{
+  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+{
+  if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
+  else if (name.compare("ContinuumAmplitude") == 0) v = amplitude;
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = amplitudeError; 
+  else throw Exception("Unknown data %s",name.c_str());
+}
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = tplName;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+{
+  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
