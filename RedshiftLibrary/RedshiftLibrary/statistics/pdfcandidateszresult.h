@@ -75,7 +75,6 @@ private:
     void SortByValSumProbaInt(TInt32List& flist);
 };
 
-
 }
 
 #endif

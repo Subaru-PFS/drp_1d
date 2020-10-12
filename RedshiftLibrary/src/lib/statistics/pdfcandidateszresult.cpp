@@ -91,23 +91,25 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows(const TRedshiftList & Pdfz, T
         ranges[i].IntersectWith(TFloat64Range(Pdfz));
     };
     // sort zc values to facilitate comparison and keep track of initial order
-    vector<pair<Redshift,Int32 >> vp;
+    vector<pair<Float64,Int32 >> vp;
     vp.reserve(n);
     for (Int32 i = 0 ; i < n ; i++) {
         vp.push_back(make_pair(Redshifts[i], i));
     }
-    std::sort(vp.rbegin(), vp.rend());  //sort from the highest to the lowest!
-
+    std::stable_sort(vp.rbegin(), vp.rend(), [](const pair<Float64,Int32 >& a, const pair<Float64,Int32 >& b) { return a.first < b.first; });
     Int32 b = 0; 
-    for(Int32 i = 0; i<n - 1; i++){ //i represents the higher candidate; go till n-1 since j increments i by one
+    for(Int32 i = 0; i<n - 1; i++){ //i represents the highest candidate; go till n-1 since j increments i by one
         Int32 idx_h = vp[i].second; 
         Int32 idx_l = vp[i+1].second;
         Redshift overlap = ranges[idx_h].GetBegin() - ranges[idx_l].GetEnd();
-        if(overlap < 0 ){
+        if(overlap < 0){
             b = 1;
-            Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", Redshifts[idx_h], Redshifts[idx_l] );
-            ranges[idx_h].SetBegin(( std::max(Redshifts[idx_l], ranges[idx_h].GetBegin()) +
+            //in the case of duplicates, trim completely the range of the second cand
+            if(vp[i].first !=  vp[i+1].first){
+                Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", Redshifts[idx_h], Redshifts[idx_l] );
+                ranges[idx_h].SetBegin(( std::max(Redshifts[idx_l], ranges[idx_h].GetBegin()) +
                                      std::min(Redshifts[idx_h], ranges[idx_l].GetEnd()) )/2);
+            }
             ranges[idx_l].SetEnd(ranges[idx_h].GetBegin() - 1E-4);
          }
     }
