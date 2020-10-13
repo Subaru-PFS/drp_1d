@@ -921,7 +921,6 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
   if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
-  else if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
   else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
   else if (name.compare("VelocityEmission") == 0) v = Elv[rank];
   else if (name.compare("VelocityAbsorption") == 0) v = Alv[rank];
@@ -934,7 +933,8 @@ void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string
 }
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
-  throw Exception("unknown candidate integer data %s",name.c_str());
+  if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
+  else throw Exception("unknown candidate integer data %s",name.c_str());
 }
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
