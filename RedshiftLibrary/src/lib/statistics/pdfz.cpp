@@ -85,14 +85,10 @@ Float64 CPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshifts, Int
 {
 
     Float64 logfactor = -DBL_MAX;
-    if(redshifts.size()<2)
-        return 0;
-    /*if(redshifts.size()==2){
-        logfactor = valproba[1] + log( (redshifts[1] - redshifts[0]) );
+    if(redshifts.size()<2){
+        Log.LogError("CPdfz::logSumExpTrick Can't compute on a range of less than 2 points");
+        throw runtime_error("CPdfz::logSumExpTrick Can't compute on a range of less than 2 points");
     }
-    else
-        logfactor = valproba[1] + log( (redshifts[2] - redshifts[0]) * 0.5 );
-        */
     
     for (UInt32 k = 0; k < redshifts.size(); k++)
     {
@@ -394,7 +390,7 @@ Float64 CPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
 
     if(!ok || kmin==-1 || kmax==-1){
         Log.LogError("CPdfz::getCandidateSumTrapez could not find enclosing interval"); 
-        return 0.0;
+        throw runtime_error("CPdfz::getCandidateSumTrapez could not find enclosing interval");
     }
         
     TFloat64List ZinRange;

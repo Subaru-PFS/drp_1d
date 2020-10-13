@@ -64,9 +64,9 @@ void CPdfCandidateszResult::Resize(Int32 n)
  *      1) if no, keep deltaz value
  *      2) if overlapping, update the half-width of the left and right sides of the integration windows
  * Note: Output range includes the multiplication by (1+z).
- * Returns 0 if no overlapping; otherwise 1;
+ * Returns a list of identified very close candidates, at 2*1E-4
 */
-Int32 CPdfCandidateszResult::SetIntegrationWindows(const TRedshiftList & Pdfz, TFloat64RangeList & ranges)
+TInt32List CPdfCandidateszResult::SetIntegrationWindows(const TRedshiftList & Pdfz, TFloat64RangeList & ranges)
 {
     Bool nodz = false;
     Int32 n = Redshifts.size();
@@ -97,24 +97,39 @@ Int32 CPdfCandidateszResult::SetIntegrationWindows(const TRedshiftList & Pdfz, T
         vp.push_back(make_pair(Redshifts[i], i));
     }
     std::stable_sort(vp.rbegin(), vp.rend(), [](const pair<Float64,Int32 >& a, const pair<Float64,Int32 >& b) { return a.first < b.first; });
-    Int32 b = 0; 
+    TInt32List b = {}; 
     for(Int32 i = 0; i<n - 1; i++){ //i represents the highest candidate; go till n-1 since j increments i by one
         Int32 idx_h = vp[i].second; 
         Int32 idx_l = vp[i+1].second;
         Redshift overlap = ranges[idx_h].GetBegin() - ranges[idx_l].GetEnd();
         if(overlap < 0){
-            b = 1;
             //in the case of duplicates, trim completely the range of the second cand
-            if(vp[i].first !=  vp[i+1].first){
-                Log.LogDebug("    CPdfCandidateszResult::Trimming: integration supports overlap for %f and %f", Redshifts[idx_h], Redshifts[idx_l] );
+            if((vp[i].first -  vp[i+1].first)>2*1E-4){
+                Log.LogDebug("    CPdfCandidateszResult::SetIntegrationWindows: integration supports overlap for %f and %f", Redshifts[idx_h], Redshifts[idx_l] );
                 ranges[idx_h].SetBegin(( std::max(Redshifts[idx_l], ranges[idx_h].GetBegin()) +
                                      std::min(Redshifts[idx_h], ranges[idx_l].GetEnd()) )/2);
+            }else{
+                Log.LogInfo(" CPdfCandidateszResult::SetIntegrationWindows: very close candidates are identified %f and %f", vp[i].first,  vp[i+1].first);
+                b.push_back(idx_l);
             }
             ranges[idx_l].SetEnd(ranges[idx_h].GetBegin() - 1E-4);
          }
     }
 
-    return b; //b is an indicator about overlapping presence
+    //iterate over computed ranges and check that corresponding zcandidates belong to that range, otherwise throw error
+    for(Int32 i = 0; i<n; i++){
+        //if currend index belongs to the duplicates b vector, skip testing it and only test the others
+        if(std::find(b.begin(), b.end(), i)!= b.end())
+            continue;
+        if( Redshifts[i]>= ranges[i].GetBegin() && 
+            Redshifts[i]<= ranges[i].GetEnd()){
+            continue;
+        }else{
+            Log.LogError("CPdfCandidateszResult::SetIntegrationWindows: Failed to identify a range including the candidate %f", Redshifts[i]);
+            throw runtime_error("CPdfCandidateszResult::SetIntegrationWindows: Failed to identify a range including the candidate! Aborting");
+        }
+    } 
+    return b; 
 }
 /**
  * @brief CPdfCandidateszResult::Compute
@@ -131,14 +146,18 @@ Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList co
     Init(zc, deltaz, IDs);
 
     TFloat64RangeList ranges;
-    Int32 b = SetIntegrationWindows( Pdfz, ranges);
-    //b == 0 --> no overlapping, b == 1 --> overlapping
+    TInt32List duplicates = SetIntegrationWindows( Pdfz, ranges);
     CPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
     {
         if(optMethod==0)
         {
-            ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], ranges[kc]);
+            //check if current candidate belongs to the identified duplicates list
+            //if yest, force its pdf value to 0 and avoid callling getCandidateSumTrapez
+            if(std::find(duplicates.begin(), duplicates.end(),kc)!=duplicates.end())
+                ValSumProba[kc] = 0;
+            else
+                ValSumProba[kc] = pdfz.getCandidateSumTrapez( Pdfz, PdfProbalog, zc[kc], ranges[kc]);
             GaussAmp[kc]=-1;
             GaussAmpErr[kc]=-1;
             GaussSigma[kc]=-1;
@@ -146,6 +165,10 @@ Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList co
         }else
         {
             //TODO: this requires further check ?...
+            if(std::find(duplicates.begin(), duplicates.end(),kc)!=duplicates.end()){
+                ValSumProba[kc] = 0;
+                continue;
+            }            
             Int32 retGaussFit = pdfz.getCandidateRobustGaussFit( Pdfz, PdfProbalog, zc[kc], ranges[kc], GaussAmp[kc], GaussAmpErr[kc], GaussSigma[kc], GaussSigmaErr[kc]);
             if(retGaussFit==0)
             {

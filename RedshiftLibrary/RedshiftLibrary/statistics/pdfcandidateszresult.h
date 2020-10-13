@@ -31,7 +31,7 @@ public:
 
     void Init(TRedshiftList const & zc, const TRedshiftList & deltaz = TRedshiftList(), const TStringList & IDs= TStringList());
 
-    Int32 SetIntegrationWindows(const TRedshiftList &Pdfz, TFloat64RangeList & ranges);
+    TInt32List SetIntegrationWindows(const TRedshiftList &Pdfz, TFloat64RangeList & ranges);
 
     Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
                                 TFloat64List Extrema,  
