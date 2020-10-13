@@ -118,7 +118,7 @@ template <typename T> class CRange
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
   bool getEnclosingIntervalIndices(std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
   {
-    if (value <= m_Begin || value >= m_End)
+    if (value < m_Begin || value > m_End)
       {
         Log.LogError("%.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
         return false;
