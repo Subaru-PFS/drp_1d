@@ -12,6 +12,7 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CSingleton<CLog>)
+%shared_ptr(CLSF)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -45,12 +46,12 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
-
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -335,6 +336,15 @@ class CTemplate : public CSpectrum
   CTemplate( const std::string& name, const std::string& category,
 	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
   bool Save( const char* filePath ) const;
+};
+
+class CLSF
+{
+ public:
+  CLSF(const Float64 sigma=0.0);
+  ~CLSF();
+  const Float64 GetSigma() const;
+  void SetSigma(const Float64 sigma);
 };
 
 class CLineModelSolve
