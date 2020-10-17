@@ -69,7 +69,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 //    std::string _scope = "tplcombination";
     std::string scopeStr = "chisquare";
 
-    Int32 _type;
+    CChisquareSolveResult::EType _type;
     if(spcComponent=="raw"){
        _type = CChisquareSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
@@ -165,16 +165,15 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
                                        std::vector<CMask> maskList,
-                                       Int32 spctype,
+                                       CChisquareSolveResult::EType spctype,
                                        std::string opt_interp,
                                        std::string opt_extinction,
                                        std::string opt_dustFitting)
 {
-    CSpectrum _spc;
     std::string scopeStr = "tplcombination";
     Int32 _ntype = 1;
-    Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
+    CSpectrum::EType _spctype = CSpectrum::nType_raw;
+    CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
     if(opt_extinction=="yes")
@@ -196,33 +195,43 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            CTemplate _tpl = tpl;
-            tplList.push_back(_tpl);
+            tplList.push_back(tpl);
         }
     }
+
 
     //case: nType_all
     if(spctype == CChisquareSolveResult::nType_all){
         _ntype = 3;
     }
 
+    const CSpectrum::EType save_spcType = spc.GetType();
+
+    std::vector<CSpectrum::EType> save_tplTypes;
+    for ( CTemplate tpl: tplList){
+        save_tplTypes.push_back(tpl.GetType());
+    }
+
     for( Int32 i=0; i<_ntype; i++){
         if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
-            _spctype = spctype;
-            _spc.SetType(_spctype);
+            _spctype = static_cast<CSpectrum::EType>(spctype);
         }
 
-        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
+        spc.SetType(_spctype);
+        for (CTemplate tpl: tplList)
+            tpl.SetType(_spctype);
+
+        if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
             scopeStr = "chisquare_continuum";
 
-        }else if(_spctype == CChisquareSolveResult::nType_raw){
+        }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
             scopeStr = "chisquare";
 
-        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
+        }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
             scopeStr = "chisquare_nocontinuum";
             //
@@ -244,6 +253,15 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
             m_tplcombinationOperator->SaveSpectrumResults(resultStore);
         }
+    }
+
+    // restore component types
+    spc.SetType(save_spcType);
+    auto it = save_tplTypes.begin();
+    for (CTemplate tpl: tplList)
+    {
+        tpl.SetType(*it);
+        it++;
     }
 
     return true;

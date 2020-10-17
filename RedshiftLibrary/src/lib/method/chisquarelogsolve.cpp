@@ -69,7 +69,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
     std::string scopeStr = "chisquare";
     m_radius = radius;
 
-    Int32 _type;
+    CChisquareSolveResult::EType _type;
     if(spcComponent=="raw"){
        _type = CChisquareSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
@@ -166,17 +166,15 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                      const TFloat64List& redshifts,
                                      Float64 overlapThreshold,
                                      std::vector<CMask> maskList,
-                                     Int32 spctype,
+                                     CChisquareSolveResult::EType spctype,
                                      std::string opt_interp,
                                      std::string opt_extinction,
                                      std::string opt_dustFitting)
 {
-    CSpectrum _spc = spc;
-    CTemplate _tpl = tpl;
     std::string scopeStr = "chisquare";
     Int32 _ntype = 1;
-    Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
+    CSpectrum::EType _spctype = CSpectrum::nType_raw;
+    CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
     if(opt_extinction=="yes")
@@ -195,24 +193,27 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
         _ntype = 3;
     }
 
+    const CSpectrum::EType save_spcType = spc.GetType();
+    const CSpectrum::EType save_tplType = tpl.GetType();
+
     for( Int32 i=0; i<_ntype; i++){
         if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
-            _spctype = spctype;
-            _spc.SetType(_spctype);
-            _tpl.SetType(_spctype);
+            _spctype = static_cast<CSpectrum::EType>(spctype);
         }
+        spc.SetType(_spctype);
+        tpl.SetType(_spctype);
 
-        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
+        if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
             scopeStr = "chisquare_continuum";
 
-        }else if(_spctype == CChisquareSolveResult::nType_raw){
+        }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
             scopeStr = "chisquare";
 
-        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
+        }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
             scopeStr = "chisquare_nocontinuum";
             //
@@ -221,8 +222,8 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
         // Compute merit function
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc,
-                                                                                                           _tpl,
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spc,
+                                                                                                           tpl,
                                                                                                            lambdaRange,
                                                                                                            redshifts,
                                                                                                            overlapThreshold,
@@ -268,6 +269,9 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
             }
         }
     }
+
+    spc.SetType(save_spcType);
+    tpl.SetType(save_tplType);
 
     return true;
 }

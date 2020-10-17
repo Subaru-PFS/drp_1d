@@ -25,6 +25,14 @@ public:
 
     };
 
+    // FluxAxis components
+    enum EType
+    {
+        nType_raw = 1,
+        nType_continuumOnly = 2,
+        nType_noContinuum = 3
+    };
+
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
@@ -34,10 +42,10 @@ public:
     CSpectrum& operator=(const CSpectrum& other);
 
     void SetName(const char* name);
-    void SetType(const Int32 type);
+    void SetType(const EType type) const;
 
     const std::string               GetName() const;
-    const Int32                     GetType() const;
+    const EType                     GetType() const;
 
     Bool InvertFlux();
 
@@ -57,7 +65,7 @@ public:
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
-    std::string                     GetBaseline() const;
+    const std::string               GetBaseline() const;
 
     bool                            GetMeanAndStdFluxInRange( TFloat64Range wlRange, Float64& mean, Float64& std ) const;
     bool                            GetLinearRegInRange( TFloat64Range wlRange,  Float64& a, Float64& b) const;
@@ -97,7 +105,6 @@ public:
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
-    CSpectrumFluxAxis               *m_FluxAxis = &m_RawFluxAxis;
 
     void                            EstimateContinuum() const;
 
@@ -116,16 +123,8 @@ protected:
     std::string                     m_estimationMethod;
     std::string                     m_dfBinPath;
 
-    // FluxAxis components
-    enum EType
-    {
-        nType_raw = 1,
-        nType_continuumOnly = 2,
-        nType_noContinuum = 3
-    };
-
-    Int32                           m_spcType = 1;
-    mutable CSpectrumFluxAxis       m_RawFluxAxis;
+    mutable EType                   m_spcType = nType_raw;
+    CSpectrumFluxAxis               m_RawFluxAxis;
     mutable CSpectrumFluxAxis       m_ContinuumFluxAxis;
     mutable CSpectrumFluxAxis       m_WithoutContinuumFluxAxis;
 
@@ -133,7 +132,7 @@ protected:
     mutable bool                    alreadyRemoved = false;
 
     // Map method2baseline
-    mutable std::unordered_map<std::string, std::string> m_method2baseline = {
+    const std::unordered_map<std::string, std::string> m_method2baseline = {
         {"IrregularSamplingMedian", "baselineISMedian"},
         {"Median",                  "baselineMedian"},
         {"waveletsDF",              "baselineDF"},
@@ -141,7 +140,6 @@ protected:
         {"zero",                    "baselineZERO"}
     };
 
-    mutable std::string m_nameBaseline = "";
 };
 
 inline
@@ -159,7 +157,19 @@ const CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis() const
 inline
 const CSpectrumFluxAxis& CSpectrum::GetFluxAxis() const
 {
-    return *m_FluxAxis;
+    switch(m_spcType){
+        case nType_raw :
+                return GetRawFluxAxis();
+                break;
+        case nType_continuumOnly :
+                return GetContinuumFluxAxis();
+                break;
+        case nType_noContinuum :
+                return GetWithoutContinuumFluxAxis();
+                break;
+        default :
+                return GetRawFluxAxis();
+    }
 }
 
 inline
@@ -198,19 +208,18 @@ inline
 CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
 {
     switch(m_spcType){
-        case 1 :
-                *m_FluxAxis = GetRawFluxAxis();
+        case nType_raw :
+                return GetRawFluxAxis();
                 break;
-        case 2 :
-                *m_FluxAxis = GetContinuumFluxAxis();
+        case nType_continuumOnly :
+                return GetContinuumFluxAxis();
                 break;
-        case 3 :
-                *m_FluxAxis = GetWithoutContinuumFluxAxis();
+        case nType_noContinuum :
+                return GetWithoutContinuumFluxAxis();
                 break;
         default :
-                *m_FluxAxis = GetRawFluxAxis();
+                return GetRawFluxAxis();
     }
-    return *m_FluxAxis;
 }
 
 inline

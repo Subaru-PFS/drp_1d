@@ -56,7 +56,7 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               Int32 spctype=CChisquareSolveResult::nType_raw,
+               CChisquareSolveResult::EType spctype=CChisquareSolveResult::nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");

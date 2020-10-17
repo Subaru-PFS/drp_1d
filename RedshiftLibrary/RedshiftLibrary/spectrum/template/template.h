@@ -90,7 +90,7 @@ void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& end){
     end   = m_IsmIgm_kend;
 }
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
-typedef std::vector< std::shared_ptr< const CTemplate> >     TTemplateConstRefList;
+typedef std::vector< std::shared_ptr< const CTemplate> >   TTemplateConstRefList;
 
 typedef std::map< std::string, TTemplateRefList >          TTemplatesRefDict;
 typedef std::map< std::string, TTemplateConstRefList >     TTemplatesConstRefDict;

@@ -21,7 +21,7 @@ CTemplate::CTemplate( )
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
   m_Category( category ),
-  m_Name( name ) 
+  m_Name( name )
 {
 
 }
@@ -140,6 +140,8 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; 
     m_kDust = kDust;
 
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         if(m_kDust > -1)
@@ -147,7 +149,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
         else
             m_computedDustCoeff[k] = 1; 
         
-        (*m_FluxAxis)[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+        FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
     }
     return true;
 }
@@ -165,6 +167,9 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     m_meiksinIdx = meiksinIdx;
     m_redshiftMeiksin = redshift;
     Bool igmCorrectionAppliedOnce = false;
+
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+
     for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
@@ -182,7 +187,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
             else 
                 m_computedMeiksingCoeff[k] = 1;
             
-            (*m_FluxAxis)[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+            FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
             igmCorrectionAppliedOnce = true;
         }
     }
@@ -195,7 +200,7 @@ bool CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
-    m_NoIsmIgmFluxAxis = *m_FluxAxis;
+    m_NoIsmIgmFluxAxis = GetFluxAxis();
 
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
@@ -206,7 +211,7 @@ bool CTemplate::InitIsmIgmConfig()
 }
 
 void CTemplate::ScaleFluxAxis(Float64 amplitude){
-    //all spectrum size
-    *m_FluxAxis *= amplitude;
+
+    CSpectrum::ScaleFluxAxis(amplitude);
     m_NoIsmIgmFluxAxis *= amplitude;
 }

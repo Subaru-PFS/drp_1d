@@ -10,7 +10,7 @@
 
 using namespace NSEpic;
 
-CChisquareSolveResult::CChisquareSolveResult(const Int32 type, const std::string scope):
+CChisquareSolveResult::CChisquareSolveResult(const EType type, const std::string scope):
     m_type(type),
     m_scope(scope)
 {  

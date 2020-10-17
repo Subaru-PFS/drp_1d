@@ -45,7 +45,7 @@ std::shared_ptr<const CChisquareSolveResult> CMethodChisquareSolve::Compute(CDat
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
 
-            Solve(dataStore, spc, tpl, lambdaRange, redshifts, overlapThreshold, nType_full);
+            Solve(dataStore, spc, tpl, lambdaRange, redshifts, overlapThreshold, CSpectrum::nType_raw);
 
             storeResult = true;
         }
@@ -66,7 +66,7 @@ Bool CMethodChisquareSolve::Solve(CDataStore& dataStore,
                                   const TFloat64Range& lambdaRange,
                                   const TFloat64List& redshifts,
                                   Float64 overlapThreshold,
-                                  Int32 spctype,
+                                  CSpectrum::EType spctype,
                                   std::string opt_interp)
 {
     CSpectrum _spc = spc;

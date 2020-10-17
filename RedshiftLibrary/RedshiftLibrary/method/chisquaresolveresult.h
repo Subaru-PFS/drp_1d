@@ -29,7 +29,7 @@ public:
              nType_all = 4,
     };
 
-    CChisquareSolveResult(const Int32 type=nType_raw, const std::string scope="chisquaresolve");
+    CChisquareSolveResult(const EType type=nType_raw, const std::string scope="chisquaresolve");
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -68,7 +68,7 @@ private:
         {"tplcombinationsolve", "TplcombinationSolve"}
     };
 
-    const Int32 m_type;
+    const EType m_type;
     const std::string m_scope;
     std::string m_name;
 

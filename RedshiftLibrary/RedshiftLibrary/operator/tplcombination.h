@@ -24,7 +24,7 @@ public:
     ~COperatorTplcombination();
 
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                             const std::vector<CTemplate> tplList,
+                                             const std::vector<CTemplate> &tplList,
                                              const TFloat64Range& lambdaRange,
                                              const TFloat64List& redshifts,
                                              Float64 overlapThreshold,

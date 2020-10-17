@@ -377,7 +377,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  **/
 std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectrum& spectrum,
-                                                                  const std::vector<CTemplate> tplList,
+                                                                  const std::vector<CTemplate> & tplList,
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,

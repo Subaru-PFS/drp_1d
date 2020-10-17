@@ -60,9 +60,6 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
         BOOST_CHECK(found);
     }
 
-    // look up expected template names in catalog
-    tplRef = catalog_r.GetTemplateWithoutContinuum(categories);
-    BOOST_CHECK(expected.size() == tplRef.size());
 
     boost::filesystem::remove_all(_path);
 }

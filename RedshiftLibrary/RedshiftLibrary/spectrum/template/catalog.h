@@ -37,8 +37,6 @@ private:
     Bool                     LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
 
     TTemplatesRefDict        m_List;
-    TTemplatesRefDict        m_ListWithoutCont;
-
 
     std::string m_continuumRemovalMethod;
     Float64 m_continuumRemovalMedianKernelWidth;
@@ -54,15 +52,6 @@ inline const CTemplate& CTemplateCatalog::GetTemplate( const std::string& catego
 {
     return *m_List.at( category )[i];
 }
-
-/**
- * Returns the contents of the i-th entry in the category item of m_ListWithoutCont.
- */
-inline const CTemplate& CTemplateCatalog::GetTemplateWithoutContinuum( const std::string& category, UInt32 i ) const
-{
-    return *m_ListWithoutCont.at( category )[i];
-}
-
 
 
 }

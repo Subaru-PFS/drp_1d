@@ -21,13 +21,6 @@ class CMethodChisquareSolve
 
  public:
 
-    enum EType
-    {
-             nType_full = 1,
-             nType_continuumOnly = 2,
-             nType_noContinuum = 3
-    };
-
     CMethodChisquareSolve( std::string calibrationPath );
     ~CMethodChisquareSolve();
 
@@ -50,7 +43,7 @@ private:
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
-               Int32 spctype=nType_full,
+               CSpectrum::EType spctype=CSpectrum::nType_raw,
                std::string opt_interp="lin");
 
     std::string m_calibrationPath;
