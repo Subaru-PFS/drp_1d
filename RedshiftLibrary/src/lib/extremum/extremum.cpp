@@ -183,20 +183,38 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
       }
     }
     Int32 keepMinN = 2;
+    if(m_meritCut>0.0){ 
+        Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    }
     //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
     Bool b;
     if(m_slidingWindowactive)
       b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
 
+    //verify that peaks are well separated by at least secondpassradius
+    Bool verified = verifyPeakSeparation(maxX);
     //Cut_Threshold is optional
-    if(m_meritCut>0.0){ 
-        Bool v = Cut_Threshold(maxX, maxY, keepMinN);
-    }
 
     //truncate based on pdf value for the moment: reduces size of candidate list and also prepares the maxPoint List
     b = Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
 
     return true;
+}
+//passing by copy to not risk changing maxX order without changing maxY
+Bool CExtremum::verifyPeakSeparation( vector <Float64> maxX) const{
+  Bool verified = true;
+ 
+  std::sort(maxX.begin(), maxX.end());
+  for(Int32 i = 0; i< maxX.size() -1; i++)  {
+    Float64 overlap;
+    overlap = (maxX[i+1] - m_Radius*(1+maxX[i+1])) - (maxX[i] + m_Radius*(1+maxX[i]));
+    if(overlap < 0){
+      verified = false;
+      Log.LogError("  CExtremum::verifyPeakSeparation: Peaks %f and %f are not enough separated.", maxX[i], maxX[i+1]);
+      throw runtime_error("  CExtremum::verifyPeakSeparation: two consecutive peaks are not enough separated. Abort");
+    }
+  }
+  return verified;
 }
 /**
  * prominence: vertical distance between a summit and the key col, i.e., the closest (horizontal) minima
@@ -399,7 +417,7 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
   //clear vectors to fill later
   maxX.clear(); maxY.clear();
 
-  //starting from first element
+  //starting from the first element
   //minimal distance between two close extrema should be >= secondpass_range used to find extended redshifts
   Float64 wind_high = tmpX[0] + 2*m_Radius*(1+tmpX[0]);
   vector<Int32> idxList; 
@@ -415,13 +433,27 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
         maxPDF = tmpY[i];
         imax = i;
       }
-      //i++; 
       //case where the last element belongs to the current window
       //we need to push 
-      if(i==tmpX.size()-1 && imax>-1){
-          maxX.push_back(tmpX[imax]);
-          maxY.push_back(tmpY[imax]);
-          break;
+      if(i==tmpX.size()-1 && imax>-1){         
+        if(!maxX.size()){
+              maxX.push_back(tmpX[imax]);
+              maxY.push_back(tmpY[imax]);
+        }else{
+              Float64 overlap;
+              overlap = (tmpX[imax] - m_Radius*(1+tmpX[imax]) ) - (maxX.back() + m_Radius*(1+maxX.back()));
+              if(overlap <0) {
+                if(tmpY[imax]>maxY.back()){
+                  //push the best PDF as a best local candidate before calculating a new window
+                  maxX[maxX.size()-1] = tmpX[imax];
+                  maxY[maxY.size()-1] = tmpY[imax];
+                }//else //nothing to do cause best cand is already saved in maxX
+              }else{
+                maxX.push_back(tmpX[imax]);
+                maxY.push_back(tmpY[imax]);
+              }
+        }
+        break;
       }else{
         i++;
         continue;
@@ -431,30 +463,36 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
     if(tmpX[i]>wind_high){
      
       if(fullwdw){
-        //push the best PDF as a best local candidate before calculating a new window
-        maxX.push_back(tmpX[imax]);
-        maxY.push_back(tmpY[imax]);
+        //before pushing check if the newly identified best is very close to the previos bestZ
+        //if the two following best candid do not respect the strict distance, keep only one of them
+        Float64 overlap;
+        if(!maxX.size()){
+          maxX.push_back(tmpX[imax]);
+          maxY.push_back(tmpY[imax]);
+        }else{
+          overlap = (tmpX[imax] - m_Radius*(1+tmpX[imax]) ) - (maxX.back() + m_Radius*(1+maxX.back()));
+          if(overlap <0) {
+            if(tmpY[imax]>maxY.back()){
+              //push the best PDF as a best local candidate before calculating a new window
+              maxX[maxX.size()-1] = tmpX[imax];
+              maxY[maxY.size()-1] = tmpY[imax];
+            }//else //nothing to do cause best cand is already saved in maxX
+          }else{
+            maxX.push_back(tmpX[imax]);
+            maxY.push_back(tmpY[imax]);
+          }
+        }
         //reinitialize all
         fullwdw = false; 
         imax = -1; maxPDF = -INFINITY;
         //calculate a new window based on the current i
         wind_high = tmpX[i] + 2*m_Radius*(1+tmpX[i]);
       }else {
-        //Check if last elet. if yes, push it to maxX/Y
-        if(i==tmpX.size()-1 && imax>-1){
-          if(imax>-1){
-            maxX.push_back(tmpX[imax]);
-            maxY.push_back(tmpY[imax]);
-          }
-          //Maybe there is here a need to compare with the last identified
-          break; //end of loop
-        }else{
-          //calculate a new window based on the imax we found till now
-          //keep maxPDF set to compare others with it
-          wind_high = tmpX[imax] + 2*m_Radius*(1+tmpX[imax]);
-          fullwdw = true; 
-          continue;
-        }
+        if(imax == -1)
+          imax = i; 
+        wind_high = tmpX[imax] + 2*m_Radius*(1+tmpX[imax]);//add half wdw to reach a full wdw
+        fullwdw = true; 
+        continue;
       }
       
     }

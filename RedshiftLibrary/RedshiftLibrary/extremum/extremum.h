@@ -41,6 +41,7 @@ private:
     Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const;
     TFloat64List Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const;
  
+    Bool verifyPeakSeparation( vector <Float64> maxX) const;
     UInt32          m_MaxPeakCount;
     TFloat64Range   m_XRange;
     Float64         m_meritCut;
