@@ -26,6 +26,8 @@ namespace NSEpic
     std::string m_TypeLabel="-1";
 
     Float64 getMerit() {return merit;}
+    void getData(const std::string& name, std::string& v) const;
+
   protected:
     Float64 redshift;
     Float64 merit;

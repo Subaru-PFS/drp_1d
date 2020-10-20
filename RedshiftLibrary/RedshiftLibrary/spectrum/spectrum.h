@@ -31,7 +31,6 @@ public:
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other); 
- 
     void  SetName( const char* name );
 
     Bool InvertFlux();
@@ -42,8 +41,8 @@ public:
     const std::string               GetName() const;
 
     CSpectrumFluxAxis&              GetFluxAxis();
+    virtual void                    ScaleFluxAxis(Float64 amplitude);
     CSpectrumSpectralAxis&          GetSpectralAxis();
-
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
@@ -75,6 +74,8 @@ public:
     void                SetWaveletsDFBinPath(std::string binPath);
 
     void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+
+    void                InitPrecomputeFineGrid() const;
 
     Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
@@ -119,7 +120,6 @@ const CSpectrumFluxAxis& CSpectrum::GetFluxAxis() const
 inline
 CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis()
 {
-    m_FineGridInterpolated = false; // since Axis may be modifed
     return m_SpectralAxis;
 }
 

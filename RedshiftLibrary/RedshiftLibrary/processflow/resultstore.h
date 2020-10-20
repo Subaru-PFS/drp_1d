@@ -2,6 +2,7 @@
 #define _REDSHIFT_OPERATOR_RESULTSTORE_
 
 #include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/exception.h>
 #include <RedshiftLibrary/processflow/result.h>
 
 #include <boost/filesystem.hpp>
@@ -53,6 +54,22 @@ public:
 
     std::string             GetScope( const COperatorResult&  result) const;
 
+
+  // it should be get<Type><Method>CandidateParam(int rank, std::string param, std::string method)
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const;
+  //void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string *data, int *size) const;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **data, int *size) const;
+
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **data, int *size) const;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, int **data, int *size) const;
+
+  void test();
 protected:
 
     void StoreResult( TResultsMap& map, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );

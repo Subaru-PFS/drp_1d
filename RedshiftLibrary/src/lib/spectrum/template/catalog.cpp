@@ -53,6 +53,20 @@ TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList 
     return list;
 }
 
+const CTemplate&  CTemplateCatalog::GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const
+{
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        for( UInt32 j=0; j<GetTemplateCount( tplCategoryList[i] ); j++ )
+        {
+            const CTemplate& tpl = GetTemplate( tplCategoryList[i], j );
+            if(tpl.GetName() == tplName){
+                return tpl;
+            }
+        }
+    }
+    throw std::runtime_error("Could not find template with name");
+}
 /**
  * Returns a list containing all templates without continuum as enumerated in the categoryList input.
  */
@@ -107,7 +121,7 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
     m_List[r->GetCategory()].push_back( r );
 
     // Compute continuum substracted spectrum
-    Log.LogInfo("    TemplateCatalog: estimating continuum w. method=%s, for tpl=%s", m_continuumRemovalMethod.c_str(),  r->GetName().c_str());
+    Log.LogDetail("    TemplateCatalog: estimating continuum w. method=%s, for tpl=%s", m_continuumRemovalMethod.c_str(),  r->GetName().c_str());
     std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName(), r->GetCategory() ) );
 
     *tmplWithoutCont = *r;

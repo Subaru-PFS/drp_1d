@@ -37,7 +37,7 @@ public:
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
                                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
                                  
-    Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, Int32 maxCount);
+    Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
 
 private:
 

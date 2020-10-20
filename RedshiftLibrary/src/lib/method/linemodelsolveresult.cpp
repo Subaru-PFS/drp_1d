@@ -316,7 +316,7 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
 
 Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
 {
-    Log.LogDebug( "CLineModelSolveResult:GetRedshiftCandidates" );
+    Log.LogDebug( "CLineModelSolveResult::GetRedshiftCandidates" );
     redshiftcandidates.clear();
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );
@@ -324,11 +324,7 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     if(!results.expired())
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
-        {
-            Float64 tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
-            redshiftcandidates.push_back(tmpRedshift);
-        }
+        redshiftcandidates = lineModelResult->ExtremaResult.Extrema;
     }else{
         return false;
     }
@@ -336,3 +332,10 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     return true;
 }
 
+void CLineModelSolveResult::getData(const std::string& name, Float64& v) const
+{
+  if (name.compare("snrHa") == 0)  v = snrHa;
+  else if (name.compare("lfHa") == 0)  v = lfHa;
+  else if (name.compare("snrOII") == 0)  v = snrOII;
+  else if (name.compare("lfOII") == 0)  v = lfOII;
+}

@@ -301,6 +301,82 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param store
  * @param z
  * @param tplName
+ * @param MeiksinIdx (optional return)
+ * @param DustCoeff (optional return)
+ * @return
+ */
+Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const
+{
+    tplName = "-1";
+    MeiksinIdx = -1;
+    DustCoeff = -1;
+    Amplitude = -1;
+    Bool foundRedshiftAtLeastOnce = false;
+
+    std::string scopeStr;
+    if(m_type == nType_raw){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_all){
+        scopeStr = "chisquare";
+    }else if(m_type == nType_noContinuum){
+        scopeStr = "chisquare_nocontinuum";
+    }else if(m_type == nType_continuumOnly){
+        scopeStr = "chisquare_continuum";
+    }
+    std::string scope = store.GetCurrentScopeName() + "." + scopeStr.c_str();
+    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+
+    Float64 tmpMerit = DBL_MAX ;
+    std::string tmpTplName = "-1";
+    Int32 tmpMeiksinIdx = -1;
+    Float64 tmpDustCoeff = -1;
+    Float64 tmpAmplitude = -1;
+
+    for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
+    {
+        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        if(meritResult->ChiSquare.size()<1){
+            continue;
+        }
+
+        Int32 idx=-1;
+        for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
+        {
+            if( meritResult->Status[i] == COperator::nStatus_OK )
+            {
+                Float64 tmpRedshift = meritResult->Redshifts[i];
+                if(tmpRedshift == z){
+                    idx = i;
+                    foundRedshiftAtLeastOnce = true;
+                    break;
+                }
+            }
+        }
+        if(idx>-1 && meritResult->ChiSquare[idx]<tmpMerit){
+            tmpMerit = meritResult->ChiSquare[idx];
+            tmpTplName = (*it).first;
+            tmpMeiksinIdx = meritResult->FitDustCoeff[idx];
+            tmpDustCoeff = meritResult->FitMeiksinIdx[idx];
+            tmpAmplitude = meritResult->FitAmplitude[idx];
+        }
+    }
+
+    if(foundRedshiftAtLeastOnce){
+        tplName = tmpTplName;
+        MeiksinIdx = tmpMeiksinIdx;
+        DustCoeff = tmpDustCoeff;
+        Amplitude = tmpAmplitude;
+    }else{
+        return -1;
+    }
+    return 1;
+}
+/**
+ * @brief CChisquareSolveResult::GetBestModel
+ * Find the best tpl-name corresponding to the input arg. z and to the minimum Chisquare
+ * @param store
+ * @param z
+ * @param tplName
  * @return
  */
 Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName) const
@@ -357,13 +433,13 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     return 1;
 }
 
-Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates) const
+Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir) const
 {
-    Log.LogDebug( "C%sSolveResult:GetRedshiftCandidates", m_name.c_str() );
+    Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
     redshiftcandidates.clear();
 
     //check if the pdf is stellar/galaxy or else
-    std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
+    /*std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
     std::string scope = store.GetScope( *this );
     std::size_t foundstr_stellar = scope.find("stellarsolve");
     std::size_t foundstr_qso = scope.find("qsosolve");
@@ -371,7 +447,7 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
         outputPdfRelDir = "stellar_zPDF";
     }else if (foundstr_qso!=std::string::npos){
         outputPdfRelDir = "qso_zPDF";
-    }
+    }*/
 
     std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
     auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
@@ -394,3 +470,46 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
 
     return true;
 }
+
+void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
+{
+  if (name.compare("snrHa") == 0)  v = -1;
+  else if (name.compare("lfHa") == 0)  v = -1;
+  else if (name.compare("snrOII") == 0)  v = -1;
+  else if (name.compare("lfOII") == 0)  v = -1;
+  else if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
+  else throw Exception("Unknown data %s",name.c_str());
+}
+
+void CChisquareSolveResult::getData(const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = tplName;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getData(const std::string& name, Int32& v) const
+{
+  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+{
+  if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
+  else if (name.compare("ContinuumAmplitude") == 0) v = amplitude;
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = amplitudeError; 
+  else throw Exception("Unknown data %s",name.c_str());
+}
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = tplName;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+
+void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+{
+  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  else throw Exception("Unknown data %s",name.c_str());
+} 
+

@@ -124,3 +124,31 @@ Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
     }
     return solutionIdx;
 }
+
+
+  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+  {
+  }
+  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+  {
+  }
+  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const{}
+  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{}
+
+  void CPdfMargZLogResult::getData(const std::string& name, Int32& v) const{}
+  void CPdfMargZLogResult::getData(const std::string& name, Float64& v) const{}
+  void CPdfMargZLogResult::getData(const std::string& name, std::string& v) const{}
+  void CPdfMargZLogResult::getData(const std::string& name, double **data, int *size) const
+  {
+
+    if(name.compare("pdf_zgrid") == 0)
+      {
+        *size = Redshifts.size();
+        *data = const_cast<double *>(Redshifts.data());
+      }
+    if(name.compare("pdf_probaLog") == 0)
+      {
+        *size = valProbaLog.size();
+        *data = const_cast<double *>(valProbaLog.data());
+      }
+  }

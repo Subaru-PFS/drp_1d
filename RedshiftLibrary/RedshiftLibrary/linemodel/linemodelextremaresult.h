@@ -32,7 +32,16 @@ public:
     }
     //void Load( std::istream& stream );
     bool RemoveSecondPassCandidatebyIdx(Int32 idx);
-    Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
+  Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+
+  void getData(const std::string& name, Int32& v) const;
+  void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, double **data, int *size) const;
 
     //Extrema results
     TFloat64List            ExtremaPDF;    // Ranks extrema
@@ -96,6 +105,9 @@ public:
     TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
 
+  mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
+  mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
+  
 };
 
 

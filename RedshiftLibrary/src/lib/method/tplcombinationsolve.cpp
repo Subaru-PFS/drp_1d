@@ -244,7 +244,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
         if( !result )
         {
-            //Log.LogInfo( "Failed to compute chi square value");
+            //Log.LogError( "Failed to compute chi square value");
             return false;
         }else{
             // Store results
@@ -266,7 +266,8 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
-    Log.LogDebug("tplcombinationsolve: combining pdf using results at scope: %s", scope.c_str());
+    Log.LogDetail("    tplcombinationsolve: using results in scope: %s", scope.c_str());
+
     auto results = store.GetGlobalResult( scope.c_str() );
     if(results.expired())
     {
@@ -305,21 +306,35 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore &store, std::string scop
             redshifts = result->Redshifts;
         }
 
+        //check chi2 results status
+        {
+            Bool foundBadStatus = 0;
+            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+            {
+                if(result->Status[kz]!=COperator::nStatus_OK)
+                {
+                    foundBadStatus = 1;
+                    break;
+                }
+            }
+            if(foundBadStatus)
+            {
+                Log.LogError("tplcombinationsolve: Found bad status result...");
+            }
+        }
+
         for(Int32 kism=0; kism<nISM; kism++)
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                TFloat64List _prior;
-                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
-                priors.push_back(_prior);
+                priors.push_back(pdfz.GetConstantLogZPrior(result->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                TFloat64List logLikelihoodCorrected(result->ChiSquareIntermediate.size(), DBL_MAX);
+                chiSquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
                 for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
-                    logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                    chiSquares.back()[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                chiSquares.push_back(logLikelihoodCorrected);
                 Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit #%d for ism=%d, igm=%d", chiSquares.size()-1, kism, kigm);
             }
         }
@@ -369,10 +384,10 @@ Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore &store, std:
         //Compute Deltaz should happen after marginalization
         // use it for computing the integrated PDF
         TFloat64List deltaz;
-        CDeltaz* deltaz_obj = new CDeltaz();
+        CDeltaz deltaz_obj;
         for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
             Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(deltaz_obj->GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
+            deltaz.push_back(deltaz_obj.GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
         }
         Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);

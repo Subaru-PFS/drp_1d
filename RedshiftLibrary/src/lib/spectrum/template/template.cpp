@@ -1,8 +1,10 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 
+#include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <fstream>
-
+#include <iostream>
 using namespace NSEpic;
 using namespace std;
 
@@ -18,36 +20,51 @@ CTemplate::CTemplate( )
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
-  m_Category( category ) 
+  m_Category( category ),
+  m_Name( name ) 
 {
-  this->m_Name = name ;  
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
-    m_Category( category )
+    CSpectrum(spectralAxis, fluxAxis),
+    m_Category( category ),
+    m_Name( name )
 {
-  this->m_Name = name ;
-  m_SpectralAxis = spectralAxis;
-  m_FluxAxis = fluxAxis;
 }
 
-//TODO use copy constructor of CSpectrum
-CTemplate::CTemplate( const CTemplate& other)
+CTemplate::CTemplate( const CTemplate& other): 
+    CSpectrum(other),
+    m_kDust(other.m_kDust),
+    m_meiksinIdx(other.m_meiksinIdx),
+    m_Name(other.m_Name),
+    m_Category( other.m_Category),
+    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
+    m_IsmIgm_kend(other.m_IsmIgm_kend),
+    m_computedDustCoeff(other.m_computedDustCoeff), 
+    m_computedMeiksingCoeff(other.m_computedDustCoeff)
 {
+    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
+}
+
+CTemplate& CTemplate::operator=(const CTemplate& other)
+{
+    CSpectrum::operator =(other);
     m_Name = other.GetName();
-    m_FullPath = other.GetFullPath();
-    m_SpectralAxis = other.GetSpectralAxis();
-    m_FluxAxis = other.GetFluxAxis();
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-
-    m_Category = other.GetCategory();
+    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
+        
+    m_kDust = other.m_kDust;
+    m_meiksinIdx = other.m_meiksinIdx;
+    m_computedDustCoeff = other.m_computedDustCoeff; 
+    m_computedMeiksingCoeff = other.m_computedDustCoeff;
+    m_Category = other.m_Category;
+    m_IsmIgm_kstart = other.m_IsmIgm_kstart;
+    m_IsmIgm_kend = other.m_IsmIgm_kend;
+    return *this;
 }
-
 /**
  * Destructor, empty.
  */
@@ -63,7 +80,6 @@ const std::string& CTemplate::GetName() const
 {
     return m_Name;
 }
-
 /**
  * Returns the value stored in m_Category.
  */
@@ -72,6 +88,12 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
+void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
+{
+    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
+
+    return;
+}
 /**
  * Saves the template in the given filePath.
  */
@@ -104,4 +126,86 @@ Bool CTemplate::Save( const char* filePath ) const
     }
     file.close();
     return true;
+}
+
+//Calzetti extinction
+/**
+ * if kDust == -1: reset the fluxAxis eliminating only the Dust correction
+*/
+bool  CTemplate::ApplyDustCoeff(Int32 kDust)
+{
+    if(m_kDust == kDust)
+        return true; 
+    m_kDust = kDust;
+
+    for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
+    {
+        if(m_kDust > -1)
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
+        else
+            m_computedDustCoeff[k] = 1; 
+        
+        m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+    }
+    return true;
+}
+
+/**
+ * if meiksinIdx == -1: reset the fluxAxis eliminating only the Meiksin correction
+*/
+bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
+{
+
+    if(m_meiksinIdx == meiksinIdx && m_redshiftMeiksin == redshift)
+        return true;
+        
+    Int32 redshiftIdx = m_igmCorrectionMeiksin.GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+    m_meiksinIdx = meiksinIdx;
+    m_redshiftMeiksin = redshift;
+    Bool igmCorrectionAppliedOnce = false;
+    for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
+    {
+        if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
+            if(m_meiksinIdx > -1){
+                Int32 kLbdaMeiksin = 0;
+                if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
+                {
+                    kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin.GetLambdaMin());
+                }else //if lambda lower than min meiksin value, use lower meiksin value
+                {
+                    kLbdaMeiksin = 0;
+                }
+                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+            }
+            else 
+                m_computedMeiksingCoeff[k] = 1;
+            
+            m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+            igmCorrectionAppliedOnce = true;
+        }
+    }
+    return igmCorrectionAppliedOnce;
+}
+
+//init ism/igm configuration when we change redshift value
+bool CTemplate::InitIsmIgmConfig()
+{
+    m_kDust = -1;
+    m_meiksinIdx = -1;
+    m_redshiftMeiksin = -1; 
+    m_NoIsmIgmFluxAxis = m_FluxAxis;
+
+    m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
+    
+    m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
+    std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
+    return true;
+}
+
+void CTemplate::ScaleFluxAxis(Float64 amplitude){
+    //all spectrum size
+    m_FluxAxis *= amplitude;
+    m_NoIsmIgmFluxAxis *= amplitude;
+    return;
 }

@@ -162,7 +162,7 @@ std::shared_ptr<CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( C
     }
   else
     {
-      Log.LogInfo ( "No peak detected - returning NULL." );
+      Log.LogError ( "No peak detected - returning NULL." );
       return NULL;
     }
 

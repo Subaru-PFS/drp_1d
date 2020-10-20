@@ -26,15 +26,34 @@ public:
 
     void Resize(Int32 n);
 
-    Int32 Compute(std::vector<Float64> zc , std::vector<Float64> Pdfz, std::vector<Float64> PdfProbalog, std::vector<Float64> wdwWidth = std::vector<Float64>(), std::vector<std::string> IDs = std::vector<std::string>());
-    Int32 SetIntegrationWindows( std::vector<Float64> Pdfz, std::vector<Float64> zc,  std::vector<Float64> deltaz, std::vector<Float64>& halfWidth_right, std::vector<Float64>& halfWidth_left);
+    Int32 Compute(TRedshiftList const & zc , TRedshiftList const & Pdfz, TFloat64List const & PdfProbalog,
+                  const TRedshiftList & deltaz = TRedshiftList(), const TStringList & IDs= TStringList());
+
+    void Init(TRedshiftList const & zc, const TRedshiftList & deltaz = TRedshiftList(), const TStringList & IDs= TStringList());
+
+    TInt32List SetIntegrationWindows(const TRedshiftList &Pdfz, TFloat64RangeList & ranges);
 
     Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
                                 TFloat64List Extrema,  
                                 std::vector<TFloat64List> ExtremaExtendedRedshifts, 
                                 TFloat64List& candidates) const;
+  Float64 getDouble(std::string name,Int32 rank) const;
+  std::string getString(std::string name,Int32 rank) const;
+  Int32 getInt(std::string name,Int32 rank) const;
+  Int32 getNbCandidates() const;
+
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+
+  void getData(const std::string& name, Int32& v) const;
+  void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, double **data, int *size) const;
+
+  
     Int32                       optMethod; //0: direct integration, 1:gaussian fit
-    Float64                     Fullwidth;
     Float64                     dzDefault;
     std::vector<std::string> ExtremaIDs; //also sort ids
 
@@ -52,9 +71,9 @@ public:
     //TFloat64List           		GaussSkewness; //todo !
 
 private:
+
     void SortByValSumProbaInt(TInt32List& flist);
 };
-
 
 }
 

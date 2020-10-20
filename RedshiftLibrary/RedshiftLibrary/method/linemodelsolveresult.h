@@ -58,6 +58,8 @@ public:
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
 
   void preSave(const CDataStore& store);
+  void getData(const std::string& name, Float64& v) const;
+
 private:
 
 
