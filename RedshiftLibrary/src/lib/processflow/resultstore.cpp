@@ -575,6 +575,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
@@ -602,6 +609,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
@@ -629,6 +643,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   else if (object_type.compare("star") == 0)
     {
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
