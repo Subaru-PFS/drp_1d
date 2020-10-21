@@ -61,6 +61,7 @@ private:
     std::string m_opt_skipsecondpass="no";
     std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
+    std::string m_opt_tplfit_method="chisquarelog";
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
