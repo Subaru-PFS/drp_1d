@@ -159,24 +159,24 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
         Bool b = ExtractCandidateResults(resultStore, zcandidates_unordered_list, outputPdfRelDir.c_str());
         //for each candidate, get best model by reading from resultstore and selecting best fit
         for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
-            std::string tplName;
-            Int32 MeiksinIdx;
-            Float64 DustCoeff, Amplitude;
-            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i], tplName, MeiksinIdx, DustCoeff, Amplitude);
+            Int32 ret = ChisquareSolveResult->GetBestModel(resultStore, zcandidates_unordered_list[i]); //, tplName, MeiksinIdx, DustCoeff, Amplitude);
+
             if(ret==-1){
                 Log.LogError("  Chisquare2Solve: Couldn't find best model for candidate %f", zcandidates_unordered_list[i]);
                 continue;
             }
             //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
             try {
-                const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+                const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, ChisquareSolveResult->GetTemplateName());
                 m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
-                                                 DustCoeff, MeiksinIdx, Amplitude,
+                                                 ChisquareSolveResult->GetDustCoeff(), 
+                                                 ChisquareSolveResult->GetMeiksinIdx(), 
+                                                 ChisquareSolveResult->GetAmplitude(),
                                                  opt_interp, opt_extinction, lambdaRange, 
                                                  overlapThreshold);              
             }catch(const std::runtime_error& e){
-                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", tplName.c_str(), zcandidates_unordered_list[i]);
+                Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", ChisquareSolveResult->GetTemplateName().c_str(), zcandidates_unordered_list[i]);
                 continue;
             }   
                                   

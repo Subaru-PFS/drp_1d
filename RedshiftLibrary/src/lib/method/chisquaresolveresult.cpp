@@ -25,7 +25,11 @@ void CChisquareSolveResult::preSave(const CDataStore& store)
     {
         GetBestRedshiftFromPdf(store);
         Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
-        GetBestModel(store, redshift, m_tplName, m_meiksinIdx, m_dustCoeff, m_amplitude);
+        Int32 b = GetBestModel(store, m_redshift); //, m_tplName, m_meiksinIdx, m_dustCoeff, m_amplitude);
+        if(b==-1){
+            Log.LogError(" CChisquareSolveResult::preSave: Couldn't find index of %f", m_redshift);
+            throw runtime_error("CChisquareSolveResult::preSave: Couldn't find redshift index. Aborting!");
+        }
         Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), m_tplName.c_str());
 
     }
@@ -39,8 +43,8 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
   
     stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tdustcoeff\tmeiksinidx"<< std::endl;
 
-    stream << redshift << "\t"
-                << merit << "\t"
+    stream << m_redshift << "\t"
+                << m_merit << "\t"
                 << m_tplName << "\t"
                 << m_amplitude << "\t"
                 << m_amplitudeError << "\t"
@@ -50,8 +54,8 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
     stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
     if(m_bestRedshiftMethod==2)
     {
-        stream << redshift << "\t"
-               << merit << "\t"
+        stream << m_redshift << "\t"
+               << m_merit << "\t"
                << m_evidence << "\t"
                << m_tplName << std::endl;
     }else{
@@ -127,8 +131,8 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 
     stream << store.GetSpectrumName() << "\t"
            << store.GetProcessingID() << "\t"
-                << redshift << "\t"
-                << merit << "\t"
+                << m_redshift << "\t"
+                << m_merit << "\t"
                 << m_tplName << "\t"
                 << m_name + "_" << tmpChar << "\t"
                 << "-1" << "\t" //deltaz
@@ -271,7 +275,7 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
     }
 
     m_evidence = logzpdf1d->valEvidenceLog;
-    m_evidence = m_evidence; //prob not useful
+    evidence = m_evidence; //prob not useful
     return 0;
 }
 
@@ -285,12 +289,8 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param DustCoeff (optional return)
  * @return
  */
-Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const
+Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z) const//, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const
 {
-    tplName = "-1";
-    MeiksinIdx = -1;
-    DustCoeff = -1;
-    Amplitude = -1.0;
     Bool foundRedshiftAtLeastOnce = false;
 
     std::string scopeStr;
@@ -349,11 +349,11 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z, st
     }
 
     if(foundRedshiftAtLeastOnce){
-        tplName = tmpTplName;
-        MeiksinIdx = tmpMeiksinIdx;
-        DustCoeff = tmpDustCoeff;
-        Amplitude = tmpAmplitude;
-        //AmplitudeError = tmpAmplitudeError;
+        m_tplName = tmpTplName;
+        m_meiksinIdx = tmpMeiksinIdx;
+        m_dustCoeff = tmpDustCoeff;
+        m_amplitude = tmpAmplitude;
+        m_amplitudeError = tmpAmplitudeError;
     }else{
         return -1;
     }
@@ -404,39 +404,39 @@ void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
   else if (name.compare("lfHa") == 0)  v = -1;
   else if (name.compare("snrOII") == 0)  v = -1;
   else if (name.compare("lfOII") == 0)  v = -1;
-  else if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
+  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
   else throw Exception("Unknown data %s",name.c_str());
 }
 
 void CChisquareSolveResult::getData(const std::string& name, std::string& v) const
 {
-  if (name.compare("TemplateName") == 0) v = tplName;
+  if (name.compare("TemplateName") == 0) v = m_tplName;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
 void CChisquareSolveResult::getData(const std::string& name, Int32& v) const
 {
-  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
 void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-  if (name.compare("ContinuumIsmCoeff")== 0)  v = dustCoeff;
-  else if (name.compare("ContinuumAmplitude") == 0) v = amplitude;
-  else if (name.compare("ContinuumAmplitudeError") == 0) v = amplitudeError; 
+  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
+  else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = m_amplitudeError; 
   else throw Exception("Unknown data %s",name.c_str());
 }
 
 void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
-  if (name.compare("TemplateName") == 0) v = tplName;
+  if (name.compare("TemplateName") == 0) v = m_tplName;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
 void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
-  if (name.compare("ContinuumIgmIndex") == 0) v = meiksinIdx;
+  if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
