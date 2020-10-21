@@ -561,6 +561,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
     
@@ -580,9 +587,15 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0)
     {
-
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
   else if (object_type.compare("star") == 0)
@@ -604,8 +617,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
 
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-      else if (object_type.compare("star") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
-
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
   else if (object_type.compare("star") == 0)
@@ -624,7 +642,10 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   std::ostringstream oss;
   if (object_type.compare("galaxy") == 0)
     {
-      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      std::string meth = method;
+      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+
+      if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
       else if (name.find("BestContinuum") != std::string::npos)  oss << "linemodelsolve.linemodel_continuum_extrema_"<< rank;
       else if (name.compare("ContinuumIndexesColor") == 0 || name.compare("ContinuumIndexesBreak") == 0)
@@ -666,7 +687,9 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   std::ostringstream oss;
   if (object_type.compare("galaxy") == 0)
     {
-      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      std::string meth = method;
+      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+      if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
       else throw Exception("unknown data %s",name.c_str());
     }
