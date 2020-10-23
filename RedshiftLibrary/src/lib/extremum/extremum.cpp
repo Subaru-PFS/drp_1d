@@ -6,7 +6,7 @@
 #include <cmath>
 #include <float.h>
 #include <iostream>
-
+#include <numeric>
 #include <stdio.h>
 
 #define PEAKS_MIN_THRESHOLD (3)
@@ -182,32 +182,43 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
         throw runtime_error("CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
       }
     }
+
+    //TODO: add a boolean referring to the metric to use for the sort
+    //by default, using the pdf value
+    m_sortedIndexes.resize(maxX.size());
+    iota(m_sortedIndexes.begin(), m_sortedIndexes.end(), 0);
+    sort(m_sortedIndexes.begin(), m_sortedIndexes.end(),
+       [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
+
+    //m_boolTracking correspond to peaks of sortedIndexes
     Int32 keepMinN = 2;
-    if(m_meritCut>0.0){ 
+    if(m_meritCut>0.0 && maxX.size()>keepMinN){ 
         Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+    }else{
+      TFloat64List tmpX(maxX), tmpY(maxY);
+      maxX.clear(); maxY.clear();
+      for (Int32 i = 0; i<m_sortedIndexes.size(); i++){
+        maxX.push_back(tmpX[m_sortedIndexes[i]]);
+        maxY.push_back(tmpY[m_sortedIndexes[i]]);
+      }
     }
-    //refine using sliding windows: aiming at avoiding duplicate candidates when possible. 
+    //refine using sliding windows: avoiding duplicate candidates when possible. 
     Bool b;
     if(m_slidingWindowactive)
-      b = FilterOutNeighboringPeaks(maxX, maxY, keepMinN);//keep at least keepMinN candidates
-
+      b = FilterOutNeighboringPeaks_2(maxX, maxY, keepMinN, maxPoint);
     //verify that peaks are well separated by at least secondpassradius
-    Bool verified = verifyPeakSeparation(maxX);
-    //Cut_Threshold is optional
-
-    //truncate based on pdf value for the moment: reduces size of candidate list and also prepares the maxPoint List
-    b = Truncate(maxX, maxY, m_MaxPeakCount, maxPoint);
-
+    Bool verified = verifyPeakSeparation(maxPoint);
     return true;
 }
 //passing by copy to not risk changing maxX order without changing maxY
-Bool CExtremum::verifyPeakSeparation( vector <Float64> maxX) const{
+//considers that maxX are sorted 
+Bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
   Bool verified = true;
  
   std::sort(maxX.begin(), maxX.end());
   for(Int32 i = 0; i< maxX.size() -1; i++)  {
     Float64 overlap;
-    overlap = (maxX[i+1] - m_Radius*(1+maxX[i+1])) - (maxX[i] + m_Radius*(1+maxX[i]));
+    overlap = std::max( maxX[i+1] - m_Radius*(1+maxX[i+1]), 0.0 ) - (maxX[i] + m_Radius*(1+maxX[i]));
     if(overlap < 0){
       verified = false;
       Log.LogError("  CExtremum::verifyPeakSeparation: Peaks %f and %f are not enough separated.", maxX[i], maxX[i+1]);
@@ -215,6 +226,12 @@ Bool CExtremum::verifyPeakSeparation( vector <Float64> maxX) const{
     }
   }
   return verified;
+}
+Bool CExtremum::verifyPeakSeparation( TPointList& maxPoint) const{
+  TFloat64List maxX(maxPoint.size());
+  for(Int32 i = 0; i<maxPoint.size(); i++)
+    maxX[i] = maxPoint[i].X;
+  return verifyPeakSeparation(maxX);
 }
 /**
  * prominence: vertical distance between a summit and the key col, i.e., the closest (horizontal) minima
@@ -231,7 +248,7 @@ Bool CExtremum::verifyPeakSeparation( vector <Float64> maxX) const{
  * 
  * //returned @prominences could be used as a metric for truncating candidates instead of pdf values
 */
-TFloat64List CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const
+TFloat64List CExtremum::Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& maxY, TFloat64List& minX, TFloat64List& minY) const
 {
   //find highest peak:
   Float64 maxV = *std::max_element(maxY.begin(), maxY.end()); //max of maxY
@@ -246,7 +263,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Fl
     throw runtime_error("CExtremum::Cut_Prominence_Merit:empty MaxX");
   }
 
-  vector <Float64> prominence(maxX.size()), tmpX, tmpY; 
+  TFloat64List prominence(maxX.size()), tmpX, tmpY; 
 
   if(maxX.size() == 1){
     prominence[0] = DBL_MAX; //there is no point of calculating the prominence; Force keeping this only candidate
@@ -356,7 +373,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( vector <Float64>& maxX, vector <Fl
  * Third: Sort based on X values to return candidates following their initial order
  * It returns the new list of extrema
 */
-Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const
+Bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const
 {
   if(maxX.size() == 0){
         Log.LogError("      CExtremum::Cut_threshold: empty MaxX arg");
@@ -366,30 +383,21 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
     return true; 
   }
 
-  Int32 n = maxX.size();
-  //create pairs of X and Y
-  vector<pair<Float64,Float64> > vp, vp_;
-  vp.reserve(n);
-  for (Int32 i = 0 ; i < n ; i++) {
-    vp.push_back(make_pair(maxY[i], maxX[i]));
-  }
-  std::sort(vp.rbegin(), vp.rend()); //sort descending order
-  vp_.push_back(make_pair(vp[0].second, vp[0].first)); //save best one
-  
+  TFloat64List tmpX(maxX), tmpY(maxY);
+
   maxX.clear(); maxY.clear();
-  for(Int32 i = 1; i<n; i++){
-    Float64 meritDiff = vp[0].first - vp[i].first;
+
+  for(Int32 i = 0; i<tmpX.size(); i++){
+    Float64 meritDiff =  tmpY[m_sortedIndexes[0]]- tmpY[m_sortedIndexes[i]];
     if( meritDiff > m_meritCut && i>=keepMinN){
-      break; //no need to continue iterating since vp is sorted!
-    }else{
-      vp_.push_back(make_pair(vp[i].second, vp[i].first));
+      //truncate m_sortedIndexes
+      m_sortedIndexes.resize(i-1);
+      break; 
     }
-  }
-  std::sort(vp_.rbegin(), vp_.rend()); //sort based on maxX values
-  Int32 s = vp_.size();
-  for(Int32 i = 1; i<s+1; i++){
-    maxX.push_back(vp_[s-i].first);
-    maxY.push_back(vp_[s-i].second);
+    else{
+        maxX.push_back(tmpX[m_sortedIndexes[i]]);
+        maxY.push_back(tmpY[m_sortedIndexes[i]]);
+    }
   }
   return true;
 }
@@ -401,7 +409,7 @@ Bool CExtremum::Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, I
  * Eliminate close candidates: close, i.e., in a window of 0.005(1+z) around a z candidate of strong value???
  * //TODO: Need to implement the keepmin: probably no need for this!!
 */
-Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin)const
+Bool CExtremum::FilterOutNeighboringPeaks(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin)const
 {
   if(maxX.size() <= keepmin)
     return true;
@@ -501,11 +509,74 @@ Bool CExtremum::FilterOutNeighboringPeaks(vector <Float64>& maxX, vector <Float6
   return true;
 }
 
+//todo use the tracking mecanism
+Bool CExtremum::FilterOutNeighboringPeaks_2(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const
+{
+  if(maxX.size()<= keepmin || maxX.size()<= m_MaxPeakCount){
+    for(Int32 i = 0; i<maxX.size(); i++){
+      maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) );
+    }
+    return true;
+  }
+
+  //Int32 n = std::count(m_boolTracking.begin(), m_boolTracking.end(), true);
+  TBoolList peakTracking(maxX.size(), true);
+  Float64 wind_high, wind_low;
+  Int32 i = 0; 
+  /**
+   * start from the highest proba candidate 
+   * construct a wdw to its right and left
+   * check presence of candidates in this wdw
+   * eliminate neighboring candidates  
+   * update tmpX and tmpY
+  */
+
+  while(i<maxX.size()){
+    //skipped peak
+    if(!peakTracking[i]){
+      i++;
+      continue;
+    }
+    //compute wdw_high with respect to a slightly higher redshift(Z+), i.e., z+ = Z0 + delta*(1 + z+)
+    wind_high = (maxX[i] + m_Radius)/ (1 - m_Radius); //tmpX + m_Radius*(1+tmpX);
+    wind_low = std::max( maxX[i] - m_Radius*(1+maxX[i]), 0.0);
+    for(Int32 j = i+1; j< maxX.size(); j++){
+      //if j is eliminated, skip it and move to the next index
+      if(!peakTracking[j])
+        continue;
+      Float64 overlap = 0.0;
+      if(maxX[j] > maxX[i]){
+        overlap = -wind_high + std::max( maxX[j] - m_Radius*(1+maxX[j]), 0.0 );
+        if(overlap < 0.0){
+          peakTracking[j] = false;
+        }
+        continue; 
+      }
+      if(maxX[j] < maxX[i]){
+        overlap = wind_low - (maxX[j] + m_Radius*(1+maxX[j]));
+        if(overlap < 0.0){
+          peakTracking[j] = false;
+        }
+        continue;  
+      }
+    }
+    maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) );
+    //if at index i, we have already identified our MaxPeakCount as valid Peaks, break the loop
+    //no need to continue if we have reached the required MaxPeakCount
+    if(maxPoint.size() == m_MaxPeakCount)
+      break;
+    i++;
+  }
+
+
+  return true;
+}
+
 /**
  * Brief: Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
  * Extended to include distance between peaks and a threshold to eliminate peaks
  */
-Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const {
+Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY) const {
   if (n == 0)
     return false;
 
@@ -600,7 +671,7 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
   return  true;
 }
 
-Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const 
+Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY, Float64 SignSearch) const 
 {
   if (n == 0)
     return false;
@@ -697,20 +768,29 @@ Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 
 }
 /**
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
- * Reduction happens based on PDF values (we eliminate peaks with the smallest values)
+ * considering that maxY values are sorted in decreasing order
 */
-Bool CExtremum::Truncate( vector <Float64>& maxX, vector <Float64>& maxY, Int32 maxCount, TPointList& maxPoint) const {
+Bool CExtremum::Truncate( TFloat64List& maxX, TFloat64List& maxY, TPointList& maxPoint) const {
+  UInt32 n = maxX.size();
+  n = std::min(m_MaxPeakCount, n);
+  for (Int32 j = 0; j < n; j++) { 
+    maxPoint.push_back(SPoint(maxX[j], m_SignSearch * maxY[j]) );
+  }   
+  return true;
+}
+
+Bool CExtremum::Truncate( TFloat64List& maxX, TFloat64List& maxY, Int32 maxCount, TPointList& maxPoint) const {
   
   Int32 n = maxX.size();
   maxCount = std::min(maxCount, n);
 
-  CQuickSort<Float64> sort;
-  vector<Int32> sortedIndexes(n);
-  sort.SortIndexes( maxY.data(), sortedIndexes.data(), sortedIndexes.size() );
- 
+  TInt32List sortedIndexes(n);
+  iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+  sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
   // save candidates as SPoints
   for (Int32 j = 0; j < maxCount; j++) {
-     Int32 jidx = sortedIndexes[(sortedIndexes.size()- j -1)];
+     Int32 jidx = sortedIndexes[j];
     if( !std::isnan( maxY[jidx] ) ){
       maxPoint.push_back(SPoint(maxX[jidx], m_SignSearch * maxY[jidx]) );
     }

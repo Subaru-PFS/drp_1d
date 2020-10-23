@@ -3,7 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
-
+#include <iostream>
 #include <vector>
 using namespace std; 
 namespace NSEpic
@@ -30,28 +30,34 @@ public:
     Bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
     Bool DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint );
     
-    Bool Cut_Threshold( vector <Float64>& maxX, vector <Float64>& maxY, Int32 keepMinN) const;
+    Bool Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const;
     //made public to do unit tests
-    Bool Truncate( vector <Float64>& xAxis, vector <Float64>& yAxis, Int32 maxCount, TPointList& maxPoint) const;
-    Bool FilterOutNeighboringPeaks( vector <Float64>& maxX, vector <Float64>& maxY, UInt32 keepmin) const;
-    
+    Bool Truncate( TFloat64List& xAxis, TFloat64List& yAxis, TPointList& maxPoint) const;
+    Bool Truncate( TFloat64List& maxX, TFloat64List& maxY, Int32 maxCount, TPointList& maxPoint) const;
+    Bool FilterOutNeighboringPeaks( TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin) const;
+    Bool FilterOutNeighboringPeaks_2(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const;
     void DeactivateSlidingWindow();
+    void SetSortedIndexes(TInt32List&  sortedIndexes);
 private:
-    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY) const;
-    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, vector <Float64>& maxX, vector <Float64>& maxY, Float64 SignSearch) const;
-    TFloat64List Cut_Prominence_Merit( vector <Float64>& maxX, vector <Float64>& maxY, vector <Float64>& minX, vector <Float64>& minY) const;
+    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY) const;
+    Bool FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY, Float64 SignSearch) const;
+    TFloat64List Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& maxY, TFloat64List& minX, TFloat64List& minY) const;
  
-    Bool verifyPeakSeparation( vector <Float64> maxX) const;
+    Bool verifyPeakSeparation( TFloat64List& maxX) const;
+    Bool verifyPeakSeparation( TPointList& maxPoint) const;
     UInt32          m_MaxPeakCount;
     TFloat64Range   m_XRange;
     Float64         m_meritCut;
     Float64         m_SignSearch;
     Float64         m_Radius;
     Bool            m_slidingWindowactive = true;
-    //TO change
-    UInt32 m_maxCount;
+    mutable TInt32List   m_sortedIndexes;
 };
-
+inline
+void CExtremum::SetSortedIndexes(TInt32List&  sortedIndexes){
+    m_sortedIndexes = sortedIndexes;
+    return;
+}
 
 }
 

@@ -3,6 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>  
+#include <numeric>  
 #include <cmath>
 using namespace NSEpic;
 
@@ -141,11 +142,18 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated)
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
     peaks1.SetMeritCut(3);
 
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
+
+    peaks1.SetSortedIndexes(sortedIndexes);
+
     Bool v = peaks1.Cut_Threshold(x, y, 2);
     for (Int32 i = 0; i < x.size(); i++) {       
         maxPoint.push_back(SPoint(x[i],  y[i]) );
     }
-    check_points(maxPoint, TPointList({  {0.1,5}, {0.6,6}, {0.8,8} }));
+    check_points(maxPoint, TPointList({  {0.8,8}, {0.6,6}, {0.1,5} }));
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
