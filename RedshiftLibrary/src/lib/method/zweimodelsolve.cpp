@@ -631,12 +631,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 {
     std::string scopeStr = "linemodel";
 
-    CSpectrum _spc = spc;
-
-    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
-    CSpectrumFluxAxis spcFluxAxis = spc.GetContinuumFluxAxis();
-    CSpectrum _spcContinuum(spcSpectralAxis, spcFluxAxis);
-
     // ---------------------------------------------------
     //    //Hack: load the simulated true-velocities
     //    if(false)
@@ -824,6 +818,13 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         noise.AddNoise( *contSpectrum );
 	Log.LogInfo("Zweimodel - contaminant - Successfully loaded input noise file:    (%s)", noiseName.c_str() );
     }
+
+    // set the continuum estimation parameters
+    contSpectrum->SetMedianWinsize(spc.GetMedianWinsize());
+    contSpectrum->SetDecompScales(spc.GetDecompScales());
+    contSpectrum->SetContinuumEstimationMethod(spc.GetContinuumEstimationMethod());
+    contSpectrum->SetWaveletsDFBinPath(spc.GetWaveletsDFBinPath());
+
     Log.LogInfo("===============================================");
 
 
@@ -839,8 +840,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Float64 _vStep = 50.0;
 
     auto  result_s1 = linemodel_s1.Compute( dataStore,
-                                            _spc,
-                                            _spcContinuum,
+                                            spc,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -892,16 +892,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Log.LogInfo("Zweimodel - using zero continuum (probably overrided inside multimodel)");
     //WARNING: using dumb continuum zero here.
     //WARNING: Note that, in the multimodel, the continuum is re-estimated from the combined inside the operator anyway.
-    CSpectrum _spcContinuum_s2 = *contSpectrum;
-    _spcContinuum_s2.SetMedianWinsize(_spcContinuum.GetMedianWinsize());
-    _spcContinuum_s2.SetDecompScales(_spcContinuum.GetDecompScales());
-    _spcContinuum_s2.SetContinuumEstimationMethod(_spcContinuum.GetContinuumEstimationMethod());
-    _spcContinuum_s2.SetWaveletsDFBinPath(_spcContinuum.GetWaveletsDFBinPath());
-    CSpectrumFluxAxis spcfluxAxis2 = _spcContinuum_s2.GetFluxAxis();
-    for(Int32 k=0; k<spcfluxAxis2.GetSamplesCount(); k++)
-    {
-        spcfluxAxis2[k] = 0.0;
-    }
 
     COperatorLineModel linemodel_s2;
     _secondPass_velfit_dzInfLim = 4e-4;
@@ -909,7 +899,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     _secondPass_velfit_dzStep = 4e-4;
     auto  result_s2 = linemodel_s2.Compute( dataStore,
                                             *contSpectrum,
-                                            _spcContinuum_s2,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -1009,8 +998,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         _secondPass_velfit_dzStep = 2e-4;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
         auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
-                                                       _spc,
-                                                       _spcContinuum,
+                                                       spc,
                                                        tplCatalog,
                                                        tplCategoryList,
                                                        m_calibrationPath,
@@ -1093,7 +1081,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
                 auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
                                                                *contSpectrum,
-                                                               _spcContinuum_s2,
                                                                tplCatalog,
                                                                tplCategoryList,
                                                                m_calibrationPath,

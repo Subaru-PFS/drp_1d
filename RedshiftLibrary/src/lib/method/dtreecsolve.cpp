@@ -100,12 +100,6 @@ Bool CMethodDTreeCSolve::Solve(CDataStore& dataStore,
                                const TFloat64List& redshifts,
                                string& scopeStr)
 {
-    CSpectrum _spc = spc;
-
-    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
-    CSpectrumFluxAxis spcFluxAxis = spc.GetContinuumFluxAxis();
-    CSpectrum _spcContinuum(spcSpectralAxis, spcFluxAxis);
-
     std::string opt_linetypefilter;
     dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
     std::string opt_lineforcefilter;
@@ -151,8 +145,7 @@ Bool CMethodDTreeCSolve::Solve(CDataStore& dataStore,
     Log.LogInfo( "dtreeCsolve: Computing the linemodel");
     COperatorLineModel linemodel;
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
-                                                                           _spc,
-                                                                           _spcContinuum,
+                                                                           spc,
                                                                            tplCatalog,
                                                                            tplCategoryList,
                                                                            m_calibrationPath,
@@ -459,7 +452,7 @@ Bool CMethodDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scop
 
         //override the log coeff: see it as a penality: +> values penalize more
         lmCoeff = 0.0;//-6.85e3;
-        Float64 dtd = results->dTransposeDNocontinuum;
+        Float64 dtd = results->dTransposeD;
         chi2cCoeff = 3e-6*dtd*dtd-0.23*dtd;//poly_1
 
         //chi2cCoeff = -3.9e3;//-1.14e3;
@@ -521,7 +514,7 @@ Bool CMethodDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scop
 //    //method1: Rough prior
 //    for( Int32 i=0; i<zcomb.size(); i++ )
 //    {
-//        Float64 coeff = results->dTransposeDNocontinuum;
+//        Float64 coeff = results->dTransposeD;
 //        Float64 post=0.0;
 
 //        Int32 kci=0;
@@ -581,7 +574,7 @@ Bool CMethodDTreeCSolve::GetCombinedRedshift(CDataStore& store, std::string scop
     for( Int32 i=0; i<zcomb.size(); i++ )
     {
         Float64 post=0.0;
-        Float64 coeff = results->dTransposeDNocontinuum/50.0;//resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
+        Float64 coeff = results->dTransposeD/50.0;//resultPriorContinuum->ChiSquare[i];//results->dTransposeDNocontinuum/50.0; //resultPriorContinuum->ChiSquare[i]
 
         for(Int32 kci=0; kci<results->ExtremaResult.ContinuumIndexes[idxLMResultsExtrema[i]].size();kci++)
         {

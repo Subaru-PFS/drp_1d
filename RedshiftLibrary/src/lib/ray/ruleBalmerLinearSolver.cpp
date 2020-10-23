@@ -125,8 +125,8 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
         Float64 lambda = LineModelElementList.m_Elements[ilineE]->GetRays()[0].GetPosition()*(1.0+LineModelElementList.GetRedshift());
         lambdax.push_back( lambda );
         Int32 Idx = spectralAxis.GetIndexAtWaveLength( lambda );
-        continuumx.push_back( LineModelElementList.m_SpcContinuumFluxAxis[Idx] );
-        datax.push_back( LineModelElementList.m_SpcContinuumFluxAxis[Idx] + amp );
+        continuumx.push_back( LineModelElementList.m_inputSpc->GetContinuumFluxAxis()[Idx] );
+        datax.push_back( LineModelElementList.m_inputSpc->GetContinuumFluxAxis()[Idx] + amp );
         errdatax.push_back(er);
     }
 

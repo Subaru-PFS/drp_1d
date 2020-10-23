@@ -126,7 +126,6 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
-
     return desc;
 
 }
@@ -874,12 +873,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 {
     std::string scopeStr = "linemodel";
 
-    CSpectrum _spc = spc;
-
-    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
-    CSpectrumFluxAxis spcFluxAxis = spc.GetContinuumFluxAxis();
-    CSpectrum _spcContinuum(spcSpectralAxis, spcFluxAxis);
-
     //    //Hack: load the simulated true-velocities
     //    if(false)
     //    {
@@ -949,37 +942,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
     }
 
-    if(m_opt_continuumcomponent=="fromspectrum"){
-        //check the continuum validity
-        if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-            Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-            //throw std::runtime_error("Failed to validate continuum  flux");
-        }else{
-            Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-        }
-
-        /*
-        //check the continuum flux axis
-        const CSpectrumSpectralAxis& contspectralAxis = _spcContinuum.GetSpectralAxis();
-        const CSpectrumFluxAxis& contfluxAxis = _spcContinuum.GetFluxAxis();
-        for(Int32 j=0; j<contfluxAxis.GetSamplesCount(); j++)
-        {
-            if(isnan(contfluxAxis[j]))
-            {
-                Log.LogError( "Linemodelsolve(): NaN value found for the ContinuumFluxAxis at lambda=%f", contspectralAxis[j] );
-                throw runtime_error("Linemodelsolve() NaN value found");
-                break;
-            }
-        }
-        //*/
-    }
-
     //**************************************************
     //FIRST PASS
     //**************************************************
     Int32 retFirstPass = linemodel.ComputeFirstPass(dataStore,
-                                                    _spc,
-                                                    _spcContinuum,
+                                                    spc,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
@@ -1080,22 +1047,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             linemodel_fpb.m_opt_firstpass_tplratio_ismFit = Int32(m_opt_firstpass_tplratio_ismfit=="yes");
         }
 
-        if(fpb_opt_continuumcomponent=="fromspectrum"){
-            //check the continuum validity
-            if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-                Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-                //throw std::runtime_error("Failed to validate continuum  flux");
-            }else{
-                Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-            }
-        }
-
         //**************************************************
         //FIRST PASS B
         //**************************************************
         Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(dataStore,
-                                                            _spc,
-                                                            _spcContinuum,
+                                                            spc,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
@@ -1177,8 +1133,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(!skipSecondPass)
     {
         Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
-                                                          _spc,
-                                                          _spcContinuum,
+                                                          spc,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,
@@ -1222,7 +1177,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
 
 
-    Int32 retSaveResults = linemodel.SaveResults(_spc,
+    Int32 retSaveResults = linemodel.SaveResults(spc,
                                                  lambdaRange,
                                                  m_opt_continuumreest);
     //combinePDF using results from secondpass
@@ -1232,14 +1187,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     Int32 retCombinePdf = CombinePDF(lmresultsp,
-                                         m_opt_rigidity,
-                                         m_opt_pdfcombination,
-                                         m_opt_stronglinesprior,
-                                         m_opt_haPrior,
-                                         m_opt_euclidNHaEmittersPriorStrength,
-                                         m_opt_modelZPriorStrength,
-                                         postmargZResult,
-                                         zpriorResult);
+                                     m_opt_rigidity,
+                                     m_opt_pdfcombination,
+                                     m_opt_stronglinesprior,
+                                     m_opt_haPrior,
+                                     m_opt_euclidNHaEmittersPriorStrength,
+                                     m_opt_modelZPriorStrength,
+                                     postmargZResult,
+                                     zpriorResult);
 
     if(retCombinePdf!=0)
     {

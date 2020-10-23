@@ -38,7 +38,6 @@ class CLineModelElementList
 public:
 
     CLineModelElementList(const CSpectrum& spectrum,
-                          const CSpectrum& spectrumContinuum,
                           const CTemplateCatalog& tplCatalog,
                           const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
@@ -121,7 +120,7 @@ public:
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
     Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
-    Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 getDTransposeD(const TFloat64Range& lambdaRange);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul);
 
@@ -254,14 +253,14 @@ public:
                                         Float64* g);
 
 
-    std::vector<boost::shared_ptr<CLineModelElement>  > m_Elements;
-    std::shared_ptr<CSpectrum>  m_SpectrumModel;  //model
-    CSpectrumFluxAxis m_SpcContinuumFluxAxis; //continuum spectrum used for the model
+    std::vector<boost::shared_ptr<CLineModelElement> > m_Elements;
+    std::shared_ptr<CSpectrum> m_inputSpc;
+    std::shared_ptr<CSpectrum> m_SpectrumModel;  //model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
     std::vector<UInt32> getOverlappingElements(UInt32 ind , std::vector<UInt32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
-    std::shared_ptr<CSpectrum>  m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
+    std::shared_ptr<CSpectrum> m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
     TStringList GetModelRulesLog();
 
@@ -353,18 +352,16 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
-    TFloat64List& m_ErrorNoContinuum;
+    const TFloat64List& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
-    Float64 m_dTransposeDNocontinuum; //the cached dtd (maximum chisquare value)
-    Float64 m_dTransposeDRaw; //the cached dtd (maximum chisquare value)
+    Float64 m_dTransposeD; //the cached dtd (maximum chisquare value)
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
     Float64* m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
     //Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
-    Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_NSigmaSupport;
@@ -384,7 +381,6 @@ private:
     std::string m_rigidity;
     bool m_forcedisableTplratioISMfit=false;
 
-    std::shared_ptr<CSpectrum> m_inputSpc;
     CTemplateCatalog m_tplCatalog;
     CTemplateCatalog m_orthoTplCatalog;
     TStringList m_tplCategoryList;

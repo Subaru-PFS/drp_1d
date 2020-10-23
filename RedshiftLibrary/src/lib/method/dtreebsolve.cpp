@@ -108,12 +108,6 @@ Bool CMethodDTreeBSolve::Solve(CDataStore& dataStore,
                                const TFloat64Range& lambdaRange,
                                const TFloat64List& redshifts)
 {
-    CSpectrum _spc = spc;
-
-    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
-    CSpectrumFluxAxis spcFluxAxis = spc.GetContinuumFluxAxis();
-    CSpectrum _spcContinuum(spcSpectralAxis, spcFluxAxis);
-
     std::string opt_linetypefilter;
     dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
     std::string opt_lineforcefilter;
@@ -147,8 +141,7 @@ Bool CMethodDTreeBSolve::Solve(CDataStore& dataStore,
     // Compute Linemodel
     COperatorLineModel linemodel;
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
-                                                                           spcCompo.GetSpectrum(),
-                                                                           _spcContinuum,
+                                                                           spc,
                                                                            tplCatalog,
                                                                            tplCategoryList,
                                                                            m_calibrationPath,

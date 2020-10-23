@@ -26,19 +26,18 @@ class CMultiRollModel
 public:
 
     CMultiRollModel(const CSpectrum& spectrum,
-                          const CSpectrum& spectrumNoContinuum,
-                          const CTemplateCatalog& tplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string &opt_continuumcomponent,
-                          const std::string& lineWidthType,
-                          const Float64 resolution,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string &opt_rules,
-                          const std::string &opt_rigidity);
+                    const CTemplateCatalog& tplCatalog,
+                    const TStringList& tplCategoryList,
+                    const std::string calibrationPath,
+                    const CRayCatalog::TRayVector& restRayList,
+                    const std::string& opt_fittingmethod,
+                    const std::string &opt_continuumcomponent,
+                    const std::string& lineWidthType,
+                    const Float64 resolution,
+                    const Float64 velocityEmission,
+                    const Float64 velocityAbsorption,
+                    const std::string &opt_rules,
+                    const std::string &opt_rigidity);
 
     ~CMultiRollModel();
 
@@ -59,7 +58,7 @@ public:
     Bool initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
-    Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 getDTransposeD(const TFloat64Range& lambdaRange);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
 
@@ -78,7 +77,7 @@ public:
     const CSpectrum& GetModelSpectrum() const;
     const CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrumFluxAxis& GetModelContinuum() const;
-    const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
+    const CSpectrum& GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
 
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
@@ -88,7 +87,7 @@ public:
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
 
 
-    Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
+    Int32 LoadModelSolution(const CLineModelSolution& modelSolution);
 
     Int32 setPassMode(Int32 iPass);
     void SetAbsLinesLimit(Float64 limit);
@@ -104,7 +103,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
-    std::vector<std::shared_ptr<CLineModelElementList>  > m_models;
+    std::vector<std::shared_ptr<CLineModelElementList> > m_models;
 
 private:
 

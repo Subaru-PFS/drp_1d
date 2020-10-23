@@ -39,8 +39,6 @@
 #include <numeric>
 
 
-
-
 using namespace NSEpic;
 using namespace std;
 
@@ -51,22 +49,21 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
 CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
-                          const CSpectrum &spectrumContinuum,
-                          const CTemplateCatalog& tplCatalog,
-                          const CTemplateCatalog& orthoTplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string& opt_continuumcomponent,
-                          const std::string& widthType,
-                          const Float64 nsigmasupport,
-                          const Float64 resolution,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string& opt_rules,
-                          const std::string &opt_rigidity):
-  m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
+                                             const CTemplateCatalog& tplCatalog,
+                                             const CTemplateCatalog& orthoTplCatalog,
+                                             const TStringList& tplCategoryList,
+                                             const std::string calibrationPath,
+                                             const CRayCatalog::TRayVector& restRayList,
+                                             const std::string& opt_fittingmethod,
+                                             const std::string& opt_continuumcomponent,
+                                             const std::string& widthType,
+                                             const Float64 nsigmasupport,
+                                             const Float64 resolution,
+                                             const Float64 velocityEmission,
+                                             const Float64 velocityAbsorption,
+                                             const std::string& opt_rules,
+                                             const std::string& opt_rigidity):
+  m_ErrorNoContinuum(spectrum.GetFluxAxis().GetError())
 {
     //members for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
@@ -126,14 +123,11 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_enableAmplitudeOffsets = false; //this is highly experimental for now.
     m_enableLambdaOffsetsFit = true; //enable lambdaOffsetFit. Once enabled, the offset fixed value or the fitting on/off switch is done through the offset calibration file.
 
-    //TODO [ml] if m_spectrum is not modified, no reason to copy it
     m_SpectrumModel = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
     m_SpcCorrectedUnderLines = std::shared_ptr<CSpectrum>( new CSpectrum(spectrum) );
-    UInt32 spectrumSampleCount = spectrum.GetSampleCount();
+    const UInt32 spectrumSampleCount = spectrum.GetSampleCount();
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
-    m_SpcContinuumFluxAxis = spectrumContinuum.GetFluxAxis();
-    m_ContinuumWinsize = spectrumContinuum.GetMedianWinsize();
-    Log.LogDetail("    model: Continuum winsize found is %.2f A", m_ContinuumWinsize);
+    Log.LogDetail("    model: Continuum winsize found is %.2f A", m_inputSpc->GetMedianWinsize());
 
     m_ContinuumFluxAxis.SetSize( spectrumSampleCount );
     m_SpcFluxAxisModelDerivVelEmi.SetSize( spectrumSampleCount );
@@ -142,41 +136,28 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
 
-    const TFloat64List& error = spectrumFluxAxis.GetError();
-    TFloat64List& errorSpc = m_SpcFluxAxis.GetError();
-    TFloat64List& errorSpcContinuum = m_SpcContinuumFluxAxis.GetError();
-    // sets the error vectors
-    for( UInt32 i=0; i<spectrumSampleCount; i++ )
-    {
-        m_ErrorNoContinuum[i] = error[i];
-        errorSpc[i] = error[i];
-        errorSpcContinuum[i] = error[i];
-    }
-
-    if( m_ContinuumComponent=="nocontinuum" )
+    if( m_ContinuumComponent == "nocontinuum" )
     {
         //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-        for( UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++ )
-        {
-            modelFluxAxis[i] = 0.0;
-            m_ContinuumFluxAxis[i] = 0.0;
-            m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
-            m_SpcFluxAxis[i] = m_spcFluxAxisNoContinuum[i];
-        }
+        m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
+        m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
+        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
     }
-    if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto")
+    if( m_ContinuumComponent == "fromspectrum" )
     {
-        //the continuum is set to the SpcContinuum and the observed spectrum is the raw spectrum
-        CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
-        for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
-        {
-            m_ContinuumFluxAxis[i] = m_SpcContinuumFluxAxis[i];
-            m_spcFluxAxisNoContinuum[i] = spectrumFluxAxis[i]-m_SpcContinuumFluxAxis[i];
-
-            modelFluxAxis[i] = m_ContinuumFluxAxis[i];
-            m_SpcFluxAxis[i] = spectrumFluxAxis[i];
-        }
+        //the continuum is set to the spectrum continuum and the observed spectrum is the raw spectrum
+        m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
+        m_SpcFluxAxis = spectrum.GetRawFluxAxis();
+        m_ContinuumFluxAxis = spectrum.GetContinuumFluxAxis();
+        modelFluxAxis = m_ContinuumFluxAxis;
     }
+    if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
+    {
+        //the continuum is set to zero and the observed spectrum is the raw spectrum
+        m_SpcFluxAxis = spectrum.GetRawFluxAxis();
+        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
+    }
+
     m_observeGridContinuumFlux = NULL;
     //m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
@@ -474,7 +455,7 @@ const CSpectrum& CLineModelElementList::GetObservedSpectrumWithLinesRemoved(Int3
  */
 Float64 CLineModelElementList::GetContinuumError(Int32 eIdx, Int32 subeIdx)
 {
-//    if(m_ContinuumWinsize<=0)
+//    if(m_inputSpc->GetMedianWinsize()<=0)
 //    {
 //        return -99;
 //    }
@@ -1245,22 +1226,21 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
 void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, std::vector<Float64> polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
 
-    Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_SpcContinuumFluxAxis, alpha=0: only tplfit
+    Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_inputSpc->GetContinuumFluxAxis(), alpha=0: only tplfit
 
     m_fitContinuum_tplFitAmplitude = tplAmp;
     m_fitContinuum_tplFitAmplitudeError = tplAmpErr;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
-        m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp + (alpha)*m_SpcContinuumFluxAxis[k];
-        //m_ContinuumFluxAxis[k] = m_observeGridContinuumFlux[k]*tplAmp;
+        m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp;
+        if  (alpha!=0.0){
+            m_ContinuumFluxAxis[k] += alpha*m_inputSpc->GetContinuumFluxAxis()[k];
+        }
+        Float64 lbdaTerm=1.0;
         for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
         {
-            Float64 lbdaTerm=1.0;
-            for(Int32 kt=0; kt<kCoeff; kt++)
-            {
-                lbdaTerm *=  spcSpectralAxis[k];
-            }
-            m_ContinuumFluxAxis[k] += (1.-alpha)*(polyCoeffs[kCoeff]*lbdaTerm);
+            m_ContinuumFluxAxis[k] += (1.-alpha)*polyCoeffs[kCoeff]*lbdaTerm;
+            lbdaTerm *= spcSpectralAxis[k];
         }
         m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
     }
@@ -1448,14 +1428,9 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     Int32 opt_dustFit = -1;
 
     //prepare observed spectrum without continuum
-    const CSpectrumFluxAxis& inputSpectrumFluxAxis = m_inputSpc->GetFluxAxis();
-    std::shared_ptr<CSpectrum> _spc = std::shared_ptr<CSpectrum>( new CSpectrum(*m_inputSpc) );
-    CSpectrumFluxAxis _spcFluxAxis = _spc->GetFluxAxis();
-    Float64* Y_spc = _spcFluxAxis.GetSamples();
-    for(UInt32 i=0; i<inputSpectrumFluxAxis.GetSamplesCount(); i++)
-    {
-        Y_spc[i] = inputSpectrumFluxAxis[i]-m_ContinuumFluxAxis[i];
-    }
+    CSpectrum::EType savetype = m_inputSpc->GetType();
+    m_inputSpc->SetType(CSpectrum::nType_noContinuum);
+
     //prepare tpl contaminant
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel->GetSpectralAxis();
     const std::string& category = "emission";
@@ -1496,7 +1471,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     {
         m_chiSquareOperator = new COperatorChiSquare2(m_calibrationPath);
     }
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *_spc,
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( *m_inputSpc,
                                                                                                        *m_tplContaminantSpcRebin,
                                                                                                        lambdaRange,
                                                                                                        redshifts,
@@ -1541,18 +1516,13 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     fclose( f );
     //*/
 
-    if( m_ContinuumComponent=="nocontinuum" )
+    m_inputSpc->SetType(savetype);
+    if( m_ContinuumComponent == "nocontinuum" || m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
     {
         for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
-            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-m_ContinuumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
-        }
-    }else if( m_ContinuumComponent == "fromspectrum" || m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto")
-    {
-        for(k=0; k<m_SpcFluxAxis.GetSamplesCount(); k++){
-            m_SpcFluxAxis[k] = inputSpectrumFluxAxis[k]-tplContaminantRebinFluxAxis[k];
+            m_SpcFluxAxis[k] = m_inputSpc->GetFluxAxis()[k]-tplContaminantRebinFluxAxis[k];
         }
     }
-
     return 1;
 }
 
@@ -1677,7 +1647,7 @@ void CLineModelElementList::PrepareContinuum(Float64 z)
         UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
         for ( UInt32 i = 0; i<nSamples; i++)
         {
-            Yrebin[i] = m_SpcContinuumFluxAxis[i];
+            Yrebin[i] = m_inputSpc->GetContinuumFluxAxis()[i];
         }
         return;
     }
@@ -1821,8 +1791,12 @@ Bool CLineModelElementList::setTplshapeAmplitude(std::vector<Float64> ampsElts, 
 Bool CLineModelElementList::initDtd(const TFloat64Range& lambdaRange)
 {
     m_dTransposeDLambdaRange = lambdaRange;
-    m_dTransposeDNocontinuum = EstimateDTransposeD(lambdaRange, "nocontinuum");
-    m_dTransposeDRaw = EstimateDTransposeD(lambdaRange, "raw");
+    if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
+    {
+        m_dTransposeD = EstimateDTransposeD(lambdaRange, "raw");
+    } else {
+        m_dTransposeD = EstimateDTransposeD(lambdaRange, "nocontinuum");
+    }
     m_likelihood_cstLog = EstimateLikelihoodCstLog(lambdaRange);
     return true;
 }
@@ -4803,7 +4777,7 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
                     m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift, idxLineLyaE);
 
 
-                    Float64 m=m_dTransposeDNocontinuum;
+                    Float64 m = m_dTransposeD;
                     if(1)
                     {
                         refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
@@ -4943,7 +4917,7 @@ std::vector<UInt32> CLineModelElementList::ReestimateContinuumUnderLines(std::ve
     Float64 coeffSave = 1e16;
     for( Int32 t=iminMerge;t<imaxMerge;t++)
     {
-        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_SpcContinuumFluxAxis[t])*coeffSave, (spcBuffer.GetFluxAxis()[t-imin] - fluxAxisWithoutContinuumCalc[t-imin])*coeffSave);
+        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_inputSpc->GetContinuumFluxAxis()[t])*coeffSave, (spcBuffer.GetFluxAxis()[t-imin] - fluxAxisWithoutContinuumCalc[t-imin])*coeffSave);
     }
     fclose( f );
     //*/
@@ -5186,21 +5160,18 @@ Float64 CLineModelElementList::getLeastSquareContinuumMeritFast()
 {
     Float64 fit;
 
+    fit = m_dTransposeD;
+
     if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
     {
-        fit = m_dTransposeDRaw;
-
         Float64 term1 = m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitMtM;
         Float64 term2 = - 2.*m_fitContinuum_tplFitAmplitude*m_fitContinuum_tplFitDtM;
         fit += term1 + term2;
         fit += m_fitContinuum_tplFitLogprior;
-    }else{
-        fit = m_dTransposeDNocontinuum;
     }
 
     return fit;
 }
-
 
 
 /**
@@ -6758,7 +6729,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     if(1)
     {
         CContinuumIrregularSamplingMedian continuum;
-        Float64 opt_medianKernelWidth = m_ContinuumWinsize;
+        Float64 opt_medianKernelWidth = m_inputSpc->GetMedianWinsize();
         continuum.SetMedianKernelWidth(opt_medianKernelWidth);
         continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
     }else
@@ -6798,7 +6769,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     Float64 coeffSave = 1e16;
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
-        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_SpcFluxAxis[t]-m_SpcContinuumFluxAxis[t])*coeffSave, (m_SpcFluxAxis[t]-fluxAxisNewContinuum[t])*coeffSave);
+        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_SpcFluxAxis[t]-m_inputSpc->GetContinuumFluxAxis()[t])*coeffSave, (m_SpcFluxAxis[t]-fluxAxisNewContinuum[t])*coeffSave);
     }
     fclose( f );
     //*/
@@ -6809,7 +6780,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
 //    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
 //    {
 //        Y2[t] = m_SpcFluxAxis[t]-fluxAxisNewContinuum[t];
-//        //Y2[t] = m_SpcFluxAxis[t]-m_SpcContinuumFluxAxis[t];
+//        //Y2[t] = m_SpcFluxAxis[t]-m_inputSpc->GetContinuumFluxAxis()[t];
 //    }
 
     //modify m_ContinuumFluxAxis
@@ -6818,7 +6789,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
         Y2[t] = fluxAxisNewContinuum[t];
-        //Y2[t] = m_SpcContinuumFluxAxis[t];
+        //Y2[t] = m_inputSpc->GetContinuumFluxAxis()[t];
     }
 }
 
@@ -6827,20 +6798,14 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
-Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
     {
         initDtd(lambdaRange);
     }
 
-    if(spcComponent=="nocontinuum")
-    {
-        return m_dTransposeDNocontinuum;
-    }else
-    {
-        return m_dTransposeDRaw;
-    }
+    return m_dTransposeD;
 }
 
 /**

@@ -74,13 +74,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                   spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
-    
-    // Process relevance if enabled
-    std::string enableComputeRelevance;
-    ctx.GetParameterStore().Get( "computerelevance", enableComputeRelevance, "no" );
-    if(enableComputeRelevance=="yes")
+
+    // Compute continuum statistics if enabled
+    std::string enableComputeContinuumStat;
+    ctx.GetParameterStore().Get( "computeContinuumStat", enableComputeContinuumStat, "no" );
+    if(enableComputeContinuumStat=="yes")
     {
-        computeRelevance(ctx);
+        computeContinuumStat(ctx);
     }
 
     std::string methodName;
@@ -791,7 +791,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 }
 
-void CProcessFlow::computeRelevance(CProcessFlowContext& ctx)
+void CProcessFlow::computeContinuumStat(CProcessFlowContext& ctx)
 {
     CContinuumIndexes continuumIndexes;
 
