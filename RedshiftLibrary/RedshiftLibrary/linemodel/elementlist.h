@@ -135,7 +135,7 @@ public:
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
-    std::vector<bool> GetStrongELPresentTplshape();
+    TBoolList GetStrongELPresentTplshape();
     std::vector<Int32> GetNLinesAboveSNRTplshape();
     Int32 SetTplshape_PriorHelper(CPriorHelper* priorhelper);
 
@@ -345,7 +345,7 @@ private:
 
 
     std::vector<Float64> m_ScaleMargCorrTplshape;
-    std::vector<bool> m_StrongELPresentTplshape;
+    TBoolList m_StrongELPresentTplshape;
     std::vector<Int32> m_NLinesAboveSNRTplshape;
 
     Float64 m_Redshift;
@@ -362,7 +362,7 @@ private:
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
     Float64* m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
-    Float64* m_unscaleContinuumFluxAxisDerivZ;
+    //Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     Float64 m_ContinuumWinsize;
     std::string m_ContinuumComponent;
@@ -405,7 +405,7 @@ private:
     CTemplatesFitStore* m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
-    Float64 m_fitContinuum_tplFitAmplitude;
+    Float64 m_fitContinuum_tplFitAmplitude=-1.0;
     Float64 m_fitContinuum_tplFitAmplitudeError;
     Float64 m_fitContinuum_tplFitMerit;
     Float64 m_fitContinuum_tplFitDustCoeff;

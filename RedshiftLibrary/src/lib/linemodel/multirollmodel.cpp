@@ -203,14 +203,14 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
 
     if(verbose)
     {
-        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc full path = %s", iRoll, refSpcFullPath.c_str() );
+        Log.LogDetail( "    multirollmodel: load roll #%d: ref spc full path = %s", iRoll, refSpcFullPath.c_str() );
     }
     std::string spcName = bfs::path( refSpcFullPath ).stem().string().c_str();
     std::string spcPath = bfs::path( refSpcFullPath ).parent_path().string().c_str();
     if(verbose)
     {
-        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc name = %s", iRoll, spcName.c_str() );
-        Log.LogInfo( "    multirollmodel: load roll #%d: ref spc path = %s", iRoll, spcPath.c_str() );
+        Log.LogDetail( "    multirollmodel: load roll #%d: ref spc name = %s", iRoll, spcName.c_str() );
+        Log.LogDetail( "    multirollmodel: load roll #%d: ref spc path = %s", iRoll, spcPath.c_str() );
     }
     Int32 substring_start = 0;
     Int32 substring_n;
@@ -525,7 +525,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
                     if(enableLogging)
                     {
-                        Log.LogInfo( "Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
+                        Log.LogDetail( "Multifit: for tplshape=%d, for kElt=%d found A=%f", kts, k, amps[k] );
                     }
                 }
                 //*/
@@ -676,16 +676,16 @@ std::vector<Float64> CMultiRollModel::GetScaleMargTplshape()
 }
 
 //todo: tbd, are these booleans to be combined by OR or AND ?
-std::vector<bool> CMultiRollModel::GetStrongELPresentTplshape()
+TBoolList CMultiRollModel::GetStrongELPresentTplshape()
 {
-    std::vector<bool> strongElPresentplshape;
+    TBoolList strongElPresentplshape;
     if(m_models.size()>0)
     {
         strongElPresentplshape = m_models[0]->GetStrongELPresentTplshape();
     }
     for(Int32 km=1; km<m_models.size(); km++)
     {
-        std::vector<bool> _strongElPresentplshape = m_models[km]->GetStrongELPresentTplshape();
+        TBoolList _strongElPresentplshape = m_models[km]->GetStrongELPresentTplshape();
         for(Int32 ktpl=0; ktpl<_strongElPresentplshape.size(); ktpl++)
         {
             strongElPresentplshape[ktpl] = strongElPresentplshape[ktpl] || _strongElPresentplshape[ktpl];

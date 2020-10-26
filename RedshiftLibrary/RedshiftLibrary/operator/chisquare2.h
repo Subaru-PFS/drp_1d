@@ -12,7 +12,7 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
-
+#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
 namespace NSEpic
 {
 
@@ -43,8 +43,17 @@ public:
                                     Float64 overlapThreshold );
     const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
     const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-
-
+    Int32           GetSpectrumModel(const CSpectrum& spectrum,
+                                      const CTemplate& tpl,
+                                      Float64 redshift,
+                                      Float64 IdxDustCoeff,
+                                      Int32 meiksinIdx,
+                                      Float64 amplitude,
+                                      std::string opt_interp,
+                                      std::string opt_extinction,
+                                      const TFloat64Range& lambdaRange,
+                                      Float64 overlapThreshold);
+    void            SaveSpectrumResults(CDataStore &dataStore);
 private:
 
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum);
@@ -76,22 +85,26 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   bool keepigmism=false);
 
+    Int32  RebinTemplate( const CSpectrum& spectrum,
+                          const CTemplate& tpl, 
+                          Float64 redshift,
+                          const TFloat64Range& lambdaRange,
+                          std::string opt_interp,
+                          TFloat64Range& currentRange,
+                          Float64& overlaprate,
+                          Float64 overlapThreshold);// const;
+
+    Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
     // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
-    //ISM Calzetti
-    Float64* m_YtplRawBuffer;
-    Int32 m_YtplRawBufferMaxBufferSize;
-
-    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
-
-    //IGM meiksin
-    CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+    void SaveSpectrumResults(CDataStore &dataStore, std::shared_ptr<COperatorResult> result);
 };
 
 

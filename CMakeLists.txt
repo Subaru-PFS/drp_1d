@@ -8,21 +8,17 @@ include(gitrevision)
 
 message("Using git revision : " ${GIT_REVISION})
 
-if(NOT BUILD_TESTS)
-  set(BUILD_TESTS ON)
-else()
-  set(BUILD_TESTS OFF)
-endif()
-
-message(STATUS "BUILD_TESTS=" ${BUILD_TESTS})
+option(BUILD_TESTING "Build testings" ON)
 
 if(BUILD_STATIC_LIBS)
   set(BUILD_SHARED_LIBS OFF)
+  set(BUILD_TESTING OFF)
 else()
   set(BUILD_SHARED_LIBS ON)
 endif()
 
-message(STATUS "BUILD_SHARED_LIBS=" ${BUILD_SHARED_LIBS})
+message(STATUS "BUILD_STATIC_LIBS=" ${BUILD_STATIC_LIBS})
+message(STATUS "BUILD_TESTING=" ${BUILD_TESTING})
 
 if(BUILD_SHARED_LIBS)
   set(Boost_USE_STATIC_LIBS OFF)
@@ -167,18 +163,6 @@ IF(BUILD_SHARED_LIBS)
 ENDIF()
 SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
-IF(TEST_COVERAGE)
-  SET(GCC_COVERAGE_COMPILE_FLAGS "--coverage")
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-  SET(cpf-redshift_COVERAGE "True")
-ELSE()
-  SET(cpf-redshift_COVERAGE "False")
-ENDIF()
-
-IF(GPROF)
-  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Og -pg --coverage")
-ENDIF()
-
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------
@@ -242,7 +226,7 @@ ENDIF()
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
-IF(BUILD_TESTS AND BUILD_SHARED_LIBS)
+IF(BUILD_TESTING AND BUILD_SHARED_LIBS)
 ENABLE_TESTING()
 
 FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*_test.cpp )

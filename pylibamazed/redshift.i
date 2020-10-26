@@ -50,6 +50,7 @@
 #include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
+
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -62,6 +63,8 @@ import_array();
 
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
+typedef long long Int64;
+typedef int Int32;
 typedef unsigned int UInt32;
 
 namespace NSEpic {
@@ -118,12 +121,13 @@ typedef TFloat64Range   TLambdaRange;
 %template(TFloat64Range) CRange<Float64>;
 
 %apply std::string &OUTPUT { std::string& out_str };
-%apply Int64 &OUTPUT { Int64& out_int };
+%apply Int32 &OUTPUT { Int32& out_int };
+%apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 
 class CParameterStore {
 %rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
-%rename(Get_Int64) Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0);
+%rename(Get_Int64) Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0);
 %rename(Get_Float64) Get( const std::string& name, Float64& out_float, Float64 defaultValue = 0);
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 
@@ -133,8 +137,8 @@ public:
   void FromString(const std::string & json);
   void Save( const std::string& path ) const;
   void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  void Get( const std::string& name, Int64& out_int, Int64 defaultValue = 0 );
   void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
+  void Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0 );
   void Set( const std::string& name, const std::string& v );
 
 };
@@ -197,11 +201,40 @@ public:
   void SaveAllResults(const std::string& dir, const std::string opt) const;
 };
 
+
+
 class COperatorResultStore
 {
-public:
-  COperatorResultStore();
+%rename(Get_StringCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, std::string& out_str);
+%rename(Get_Int32CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Int32& out_int);
+%rename(Get_Float64CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Float64& out_float);
+  
+%rename(Get_Int32Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Int32& out_int);
+%rename(Get_Float64Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Float64& out_float);
+%rename(Get_StringData) getData(const std::string& object_type,const std::string& method,const std::string& data, std::string& out_str);
 
+%rename(Get_Float64ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1); 
+%rename(Get_Int32ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,int ** ARGOUTVIEW_ARRAY1, int * DIM1); 
+%rename(Get_Float64ArrayData) getData(const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+
+
+ public:
+  COperatorResultStore();
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& out_float) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& out_int) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& out_float) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
+  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+
+  
+
+  void test();
+  
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;

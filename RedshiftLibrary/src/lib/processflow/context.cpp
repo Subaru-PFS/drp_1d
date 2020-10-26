@@ -95,7 +95,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
         continuum.SetMeanKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
         m_SpectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
-        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", opt_medianKernelWidth );
+        Log.LogInfo( "Continuum estimation - IrregularSamplingMedian - medianKernelWidth = %.2f", opt_medianKernelWidth );
     }else if( medianRemovalMethod== "Median")
     {
         nameBaseline = "preprocess/baselineMedian";

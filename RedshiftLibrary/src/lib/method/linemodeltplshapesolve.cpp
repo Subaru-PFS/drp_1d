@@ -293,7 +293,7 @@ Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
 
     if( !result )
     {
-        Log.LogInfo( "Failed to compute linemodeltplshape");
+        Log.LogError( "Failed to compute linemodeltplshape");
         return false;
     }else{
         //save linemodel chisquare results

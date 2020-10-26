@@ -21,21 +21,21 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrum::CSpectrum()
+CSpectrum::CSpectrum():
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
 
 }
 
 
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
-    m_SpectralAxis(UInt32(0), other.GetSpectralAxis().IsInLogScale())
+    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
-    const CSpectrumSpectralAxis & otherSpectral = other.GetSpectralAxis();
-    const CSpectrumFluxAxis & otherFlux = other.GetFluxAxis();
+    const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
+    const CSpectrumFluxAxis & otherFlux = other.m_FluxAxis;
     const TFloat64List& error = otherFlux.GetError();
 
     TAxisSampleList & SpectralVector = m_SpectralAxis.GetSamplesVector();
@@ -56,50 +56,48 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
         }
     }
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
-  m_SpectralAxis(spectralAxis),
-  m_FluxAxis(fluxAxis)
+    m_SpectralAxis(spectralAxis),
+    m_FluxAxis(fluxAxis),
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
 
 }
-
-CSpectrum::CSpectrum(const CSpectrum& other)
+//assignment constructor
+CSpectrum::CSpectrum(const CSpectrum& other):
+    m_estimationMethod(other.m_estimationMethod),
+    m_dfBinPath(other.m_dfBinPath),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
+    m_SpectralAxis = other.m_SpectralAxis;
     m_FluxAxis = other.GetFluxAxis();
-
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
-
 }
 
 CSpectrum::~CSpectrum()
 {
 
 }
-
+//copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
+    m_SpectralAxis = other.m_SpectralAxis;
     m_FluxAxis = other.GetFluxAxis();
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
     return *this;
 }
@@ -370,8 +368,9 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     {
         Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
         Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
-        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
+        Log.LogDetail( "CSpectrum::IsNoiseValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
+        Log.LogDetail( "CSpectrum::IsNoiseValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
+        //Log.LogDebug("    CSpectrum::IsNoiseValid - debug - iMin=%d and wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax, m_SpectralAxis[iMax]);
         for(Int32 i=iMin; i<iMax; i++){
             //check noise
             Bool validSample = checkNoise(error[i], i);
@@ -534,6 +533,12 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
     }
 }
 
+
+void  CSpectrum::InitPrecomputeFineGrid() const
+{
+    m_FineGridInterpolated = false;
+}
+
 ///
 /// * This rebin method targets processing speed:
 /// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask
@@ -578,9 +583,9 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
 
-    rebinedSpectrum.GetSpectralAxis() = targetSpectralAxis; // copy (necessary)
+    rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
 
-    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.GetFluxAxis();
+    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.m_FluxAxis;
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
     rebinedMask.SetSize(s);
@@ -731,4 +736,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
 
     return true;
+}
+void CSpectrum::ScaleFluxAxis(Float64 scale){
+    m_FluxAxis *= scale;
+    return;
 }

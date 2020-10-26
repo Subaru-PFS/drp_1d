@@ -66,13 +66,15 @@ public:
           const std::string& groupName="-1",
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
-          TAsymParams asymParams={NAN, NAN, NAN});
+          TAsymParams asymParams={NAN, NAN, NAN},
+	  Int32 id=-1);
 
     ~CRay();
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
 
-    Bool                GetIsStrong() const;
+  Int32 GetID() const;
+  Bool                GetIsStrong() const;
     Bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
@@ -107,7 +109,7 @@ public:
     void                ConvertVacuumToAir();
 
 private:
-
+  Int32 m_id = -1;
     Int32           m_Type = 0;
     TProfile        m_Profile = NONE;
     Int32           m_Force = 0;

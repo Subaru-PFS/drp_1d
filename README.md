@@ -3,17 +3,19 @@ The **pylibamazed** library for Subaru-PFS project.
 
 ## Requirements
 
-drp_1d has the following strict requirements:
+`drp_1d` has the following strict requirements:
 * [gcc](https://gcc.gnu.org/)
 * [python](https://www.python.org/) >=3.6
 * [cmake](https://cmake.org/) >=3.6
 * [swig](http://www.swig.org/) >=2.0
+
+`drp_1d` depends on following third parties:
 * [boost](https://www.boost.org/) >=1.53
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 
-drp_1d also depends on other python packages
+`drp_1d` also depends on other python packages
 * [numpy](http://www.numpy.org/) >=1.16.0
 * [astropy](http://www.astropy.org/) >=3.1.1
 

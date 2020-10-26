@@ -22,9 +22,14 @@ public:
 
     CDeltaz();
     ~CDeltaz();
-    Float64 GetDeltaz(TFloat64List redshifts, TFloat64List pdf, Float64 z, Int32 gslfit = 0);
-    Int32 Compute3ddl(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64 &deltaz);
-    Int32 Compute(TFloat64List merits, TFloat64List redshifts, Float64 redshift, TFloat64Range redshiftRange, Float64& sigma);
+    Float64 GetDeltaz(const TFloat64List & redshifts, const TFloat64List & pdf, const Float64 z, const Int32 gslfit=0);
+    Int32 GetIndices(const TFloat64List & redshifts, const Float64 redshift, const Int32 HalfNbSamples, 
+                          Int32 & iz, Int32 & izmin, Int32 & izmax );
+    Int32 GetRangeIndices(const TFloat64List & redshifts, const Float64 redshift, const TFloat64Range & redshiftRange, 
+                          Int32 & iz, Int32 & izmin, Int32 & izmax );
+    Int32 Compute3ddl(const TFloat64List &merits, const TFloat64List &redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma);
+    Int32 Compute(const TFloat64List & merits, const TFloat64List & redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma);
+
 private:
 
 

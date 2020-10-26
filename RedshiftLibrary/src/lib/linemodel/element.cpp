@@ -670,6 +670,6 @@ Bool CLineModelElement::LoadDataExtinction()
     {
         Log.LogError( "Read: linemodel- extinction residue: data not read successfully" );
     }
-    Log.LogInfo( "Read exctinction successfully" );
+    Log.LogDetail( "Read exctinction successfully" );
     return true;
 }

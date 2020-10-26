@@ -75,11 +75,25 @@ void CClassificationResult::SaveLine( const CDataStore& store, std::ostream& str
             << m_evidence_galaxy << "\t"
             << m_evidence_star << "\t"
             << m_evidence_qso << "\t"
-
-
             << m_prob_galaxy << "\t"
             << m_prob_star << "\t"
             << m_prob_qso << "\t"
             << std::endl;
 }
 
+void CClassificationResult::getData(const std::string& name, std::string& v) const
+{
+  Log.LogDebug("CClassificationResult::getData getting type=%s",m_TypeLabel.c_str());
+  v = m_TypeLabel;
+}
+
+void CClassificationResult::getData(const std::string& name, Float64& v) const
+{
+  if (name.compare("EvidenceGalaxy") == 0)  v = m_evidence_galaxy;
+  else if (name.compare("EvidenceQSO") == 0)  v = m_evidence_qso;
+  else if (name.compare("EvidenceStar") == 0)  v = m_evidence_star;
+  else if (name.compare("ProbGalaxy") == 0)  v = m_prob_galaxy;
+  else if (name.compare("ProbQSO") == 0)  v = m_prob_qso;
+  else if (name.compare("ProbStar") == 0)  v = m_prob_star;
+  //else throw error
+}
