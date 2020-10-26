@@ -21,9 +21,9 @@ public:
     ~CLineModelExtremaResult();
 
     void Resize(Int32 size);
-
-    void Save( const CDataStore& store, std::ostream& stream) const;
-    void SaveJSON( const CDataStore& store, std::ostream& stream) const;
+    
+    void Save( const CDataStore& store, std::ostream& stream ) const;
+    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
 
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
     inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
@@ -31,6 +31,17 @@ public:
         return 1;
     }
     //void Load( std::istream& stream );
+    bool RemoveSecondPassCandidatebyIdx(Int32 idx);
+  Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
+  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+
+  void getData(const std::string& name, Int32& v) const;
+  void getData(const std::string& name, Float64& v) const;
+  void getData(const std::string& name, std::string& v) const;
+  void getData(const std::string& name, double **data, int *size) const;
 
     //Extrema results
     TFloat64List            ExtremaPDF;    // Ranks extrema
@@ -51,7 +62,7 @@ public:
     TFloat64List            lfOII;
 
     //Deprecated?
-    TFloat64List            ExtremaExtendedRedshifts;    // z range around extrema
+    std::vector<TFloat64List> ExtremaExtendedRedshifts;    // z range around extrema
     TFloat64List            Posterior;    // z extrema
     TFloat64List            LogArea;    // log area for each extrema
     TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
@@ -76,6 +87,7 @@ public:
     //template continuum
     std::vector<std::string>      FittedTplName;    //Name of the best template fitted for continuum
     TFloat64List            FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
+    TFloat64List            FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
     TFloat64List            FittedTplMerit;     //Chisquare for the best template fitted for continuum
     TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
     std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
@@ -92,6 +104,10 @@ public:
     TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
+
+  mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
+  mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
+  
 };
 
 

@@ -52,7 +52,7 @@ public:
     std::string getTplshape_bestTplName();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetScaleMargTplshape();
-    std::vector<bool> GetStrongELPresentTplshape();
+    TBoolList GetStrongELPresentTplshape();
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();

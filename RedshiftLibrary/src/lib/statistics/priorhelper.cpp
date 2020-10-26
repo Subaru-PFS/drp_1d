@@ -36,8 +36,11 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
     bfs::path rootFolder( priorDirPath.c_str() );
     if(!bfs::exists(rootFolder))
     {
-        Log.LogWarning("    CPriorHelper: rootFolder path does not exist: %s", rootFolder.string().c_str());
-        Log.LogWarning("    CPriorHelper: priors won't be used");
+        if(!rootFolder.string().empty())
+        {
+            Log.LogWarning("    CPriorHelper: rootFolder path does not exist: %s", rootFolder.string().c_str());
+            Log.LogDetail("    CPriorHelper: priors won't be used");
+        }
         mInitFailed = true;
         return false;
     }
@@ -394,7 +397,7 @@ bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Flo
 
                     if(verboseRead)
                     {
-                        Log.LogInfo("    CPriorHelper: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
+                        Log.LogDetail("    CPriorHelper: read line=%d, col=%d : valf=%e", nlinesRead, lineVals.size()-1, x);
                     }
                 }
                 if(lineVals.size()!=m_nEbv)
@@ -406,7 +409,7 @@ bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Flo
                 data.push_back(lineVals);
                 if(verboseRead)
                 {
-                    Log.LogInfo("    CPriorHelper: read n=%d cols", lineVals.size());
+                    Log.LogDetail("    CPriorHelper: read n=%d cols", lineVals.size());
                 }
             }
         }
@@ -447,7 +450,7 @@ bool CPriorHelper::LoadFileZ(const char* filePath , std::vector<Float64>& data)
 
                 if(verboseRead)
                 {
-                    Log.LogInfo("    CPriorHelper: read line=%d : valf=%e", nlinesRead, x);
+                    Log.LogDetail("    CPriorHelper: read line=%d : valf=%e", nlinesRead, x);
                 }
 
                 nlinesRead++;
@@ -538,15 +541,15 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
        }
        if(verbose)
        {
-           Log.LogInfo("    CPriorHelper: get prior for z=%f: found idz=%d", redshifts[kz], idz);
+           Log.LogDetail("    CPriorHelper: get prior for z=%f: found idz=%d", redshifts[kz], idz);
        }
        TPriorEList dataz = m_data[idx][idz];
        for(UInt32 icol=0; icol<m_nEbv; icol++)
        {
            if(verbose)
            {
-               Log.LogInfo("    CPriorHelper: get prior for tpl=%s", tplname.c_str());
-               Log.LogInfo("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].priorTZE);
+               Log.LogDetail("    CPriorHelper: get prior for tpl=%s", tplname.c_str());
+               Log.LogDetail("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e", idx, idz, icol, dataz[icol].priorTZE);
            }
 
            Float64 logPTE = 0.;
@@ -583,7 +586,7 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
 
            if(verbose)
            {
-               Log.LogInfo("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : logPZ=%e", idx, idz, icol, logPZ);
+               Log.LogDetail("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : logPZ=%e", idx, idz, icol, logPZ);
            }
 
            dataz[icol].logprior_precompA = logPA;

@@ -314,7 +314,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
-            std::vector<bool> strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
             zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
             zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
@@ -346,28 +346,26 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         std::vector<TFloat64List> zpriorsTplshapes;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            TFloat64List _prior;
             if(zPriorStrongLinePresence)
             {
-                std::vector<bool> strongLinePresence = result->StrongELPresentTplshapes[k];
-                _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+                TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
+                zpriorsTplshapes.push_back(pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior));
             }else
             {
-                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+                zpriorsTplshapes.push_back(pdfz.GetConstantLogZPrior(result->Redshifts.size()));
             }
-            zpriorsTplshapes.push_back(_prior);
         }
 
         //correct chi2 if necessary: todo add switch
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            TFloat64List logLikelihoodCorrected(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            ChiSquareTplshapesCorrected.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            TFloat64List & logLikelihoodCorrected = ChiSquareTplshapesCorrected.back();
             for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];// + result->ScaleMargCorrectionTplshapes[k][kz];
             }
-            ChiSquareTplshapesCorrected.push_back(logLikelihoodCorrected);
         }
 
         if(opt_combine=="marg")
@@ -776,7 +774,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         Log.LogInfo( "Zweimodel - contaminant - using offsetLambdaContaminant_s2tos1 : %.2f", offsetLambdaContaminant);
 
     }else{
-        Log.LogError( "Zweimodel - contaminant - unable to find cont. match file=%s", contMatchFilePath.c_str());
+        Log.LogWarning( "Zweimodel - contaminant - unable to find cont. match file=%s", contMatchFilePath.c_str());
         return false;
     }
 

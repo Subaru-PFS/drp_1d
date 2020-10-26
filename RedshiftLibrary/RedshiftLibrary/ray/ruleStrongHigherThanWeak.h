@@ -15,6 +15,8 @@ class CRuleStrongHigherThanWeak : public CRule
 {
   public:
     CRuleStrongHigherThanWeak();
+    ~CRuleStrongHigherThanWeak();
+
     Bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 

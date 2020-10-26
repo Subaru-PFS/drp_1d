@@ -90,8 +90,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 {
     Int32 nSamples = origin.GetSamplesCount();
     m_SpectralFlags = 0;
-
-    DebugAssert( origin.GetSamplesCount() == GetSamplesCount() );
+    DebugAssert( nSamples ==  GetSamplesCount());
 
     const Float64* originSamples = origin.GetSamples();
 
@@ -358,23 +357,10 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
     if( waveLength >= m_Samples[hi] )
         return hi;
 
-    for (;;)
-    {
+    auto it = std::lower_bound(m_Samples.begin(),m_Samples.end(),waveLength);
 
-        m = (lo + hi) / 2;
+    return (it - m_Samples.begin());
 
-        if( waveLength < m_Samples[m] )
-            hi = m - 1;
-        else if( waveLength > m_Samples[m] )
-            lo = m + 1;
-        else
-            return m;
-
-        if (lo > hi)
-            return(lo);
-    }
-
-    return -1;
 }
 
 /**

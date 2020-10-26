@@ -1,6 +1,8 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/common/exception.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -35,6 +37,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     Extrema.resize(size);
     ExtremaMerit.resize(size);
     ExtremaMeritContinuum.resize(size);
+    ExtremaExtendedRedshifts.resize(size);
     DeltaZ.resize(size);
     mTransposeM.resize(size);
     CorrScaleMarg.resize(size);
@@ -70,6 +73,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
 
     FittedTplName.resize(size);
     FittedTplAmplitude.resize(size);
+    FittedTplAmplitudeError.resize(size);
     FittedTplMerit.resize(size);
     FittedTplDustCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
@@ -84,6 +88,92 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeAmplitude.resize(size);
     FittedTplshapeDtm.resize(size);
     FittedTplshapeMtm.resize(size);
+}
+
+bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
+    ExtremaPDF.erase(ExtremaPDF.begin() + idx);
+    ExtremaIDs.erase( ExtremaIDs.begin() + idx);
+    Extrema.erase( Extrema.begin() + idx);
+    ExtremaMerit.erase( ExtremaMerit.begin() + idx);
+    ExtremaMeritContinuum.erase( ExtremaMeritContinuum.begin() + idx);
+    DeltaZ.erase( DeltaZ.begin() + idx);
+    mTransposeM.erase( mTransposeM.begin() + idx);
+    CorrScaleMarg.erase( CorrScaleMarg.begin() + idx);
+    NDof.erase( NDof.begin() + idx);
+    ExtremaLastPass.erase( ExtremaLastPass.begin() + idx);
+    lmfitPass.erase( lmfitPass.begin() + idx);
+    snrHa.erase( snrHa.begin() + idx);
+    lfHa.erase( lfHa.begin() + idx);
+    snrOII.erase( snrOII.begin() + idx);
+    lfOII.erase( lfOII.begin() + idx);
+
+    Posterior.erase( Posterior.begin() + idx);
+    StrongELSNR.erase( StrongELSNR.begin() + idx);
+    StrongELSNRAboveCut.erase( StrongELSNRAboveCut.begin() + idx);
+    LogArea.erase( LogArea.begin() + idx);
+    LogAreaCorrectedExtrema.erase( LogAreaCorrectedExtrema.begin() + idx);
+    SigmaZ.erase( SigmaZ.begin() + idx);
+    bic.erase( bic.begin() + idx);
+    ContinuumIndexes.erase( ContinuumIndexes.begin() + idx);
+    OutsideLinesMask.erase( OutsideLinesMask.begin() + idx);
+    OutsideLinesSTDFlux.erase( OutsideLinesSTDFlux.begin() + idx);
+    OutsideLinesSTDError.erase( OutsideLinesSTDError.begin() + idx);
+
+    Elv.erase( Elv.begin() + idx);
+    Alv.erase( Alv.begin() + idx);
+    GroupsELv.erase( GroupsELv.begin() + idx);
+    GroupsALv.erase( GroupsALv.begin() + idx);
+
+    FittedTplName.erase( FittedTplName.begin() + idx);
+    FittedTplAmplitude.erase( FittedTplAmplitude.begin() + idx);
+    FittedTplMerit.erase( FittedTplMerit.begin() + idx);
+    FittedTplDustCoeff.erase( FittedTplDustCoeff.begin() + idx);
+    FittedTplMeiksinIdx.erase( FittedTplMeiksinIdx.begin() + idx);
+    FittedTplRedshift.erase( FittedTplRedshift.begin() + idx);
+    FittedTplDtm.erase( FittedTplDtm.begin() + idx);
+    FittedTplMtm.erase( FittedTplMtm.begin() + idx);
+    FittedTplLogPrior.erase( FittedTplLogPrior.begin() + idx);
+    FittedTplpCoeffs.erase( FittedTplpCoeffs.begin() + idx);
+
+    FittedTplshapeName.erase( FittedTplshapeName.begin() + idx);
+    FittedTplshapeIsmCoeff.erase( FittedTplshapeIsmCoeff.begin() + idx);
+    FittedTplshapeAmplitude.erase( FittedTplshapeAmplitude.begin() + idx);
+    FittedTplshapeDtm.erase( FittedTplshapeDtm.begin() + idx);
+    FittedTplshapeMtm.erase(FittedTplshapeMtm.begin() + idx);
+    ExtremaExtendedRedshifts.erase(ExtremaExtendedRedshifts.begin() + idx);
+    return true;
+} 
+
+/** 
+ * set writing order for first pass candidates based on sorted IDS using integrated PDF.
+ * This is useful when some of first-pass candidates are cut off or eliminated in the second pass
+*/
+Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const 
+{       Rank_PDF.clear();
+        //getcorresponding Rank:
+        for(Int32 i = 0; i <ids.size(); i++){
+            std::string sub = ids[i].substr(3, ids[i].length()); 
+            int number  = 0;
+            for(auto ch : sub) {
+                number = (number * 10) + (ch - '0');
+            }
+            Rank_PDF.push_back(number);//get last character
+        }
+        for(Int32 i = 0; i<Extrema.size(); i++){
+            bool found = false;
+            for(Int32 j = 0; j<ids.size(); j++){
+                if(Rank_PDF[j] == i){
+                    found = true;
+                    break; 
+                }
+            }
+            if(!found)
+                Rank_PDF.push_back(i);
+        }
+        if(Rank_PDF.size()!= Extrema.size()){
+            return -1;
+        }
+        return 0;
 }
 
 
@@ -113,10 +203,36 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TInt32List Rank_PDF = candResults->Rank;
 
+    //below is a sign that we are saving firstpass data
+    //TODO: check if removing these info is valid for all types of spectra
+    bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });    
+    if(zeros){
+         Int32 n = Rank_PDF.size();
+        if(n<Extrema.size()){
+            //in this case, rank doesnt mean anything
+            /*Rank_PDF.clear();
+            for(Int32 i = 0; i<Extrema.size(); i++){
+                Rank_PDF.push_back(i);
+            }*/
+            //in this case, rank doesnt mean anything
+            Rank_PDF.clear();
+            for(Int32 i = 0; i<Extrema.size(); i++){
+                Rank_PDF.push_back(i);
+            }
+            std::vector<std::string> ids = candResults->ExtremaIDs;
+            Int32 ret = FixRanksUsingSortedIDs(Rank_PDF, ids);
+            if(ret<0){
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+            }
+
+        }
+    }
+
     // save extrema list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#Extrema for z = {";
-        for ( int i=0; i<Extrema.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  Extrema[Rank_PDF[i]] << "\t";
         }
@@ -124,21 +240,19 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
     }
     if(ExtremaIDs.size()>0){
         stream <<  "#ExtremaIDs for z = {";
-        for ( int i=0; i<ExtremaIDs.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             std::string s = ExtremaIDs[Rank_PDF[i]];
             stream <<  s  << "\t";
         }
         stream << "}" << std::endl;
     }
-   //below is a sign that we are saving firstpass data
-   //TODO: check if removing these info is valid for all types of spectra
-   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
-   if(!zeros){
+
+    if(!zeros){
         // save extrema reference rank, used to map
         if(Extrema.size()>0){
           stream <<  "#Extrema final Rank for z = {";
-            for ( int i=0; i<Extrema.size(); i++)
+            for ( int i=0; i<Rank_PDF.size(); i++)
             {
                 stream <<  i << "\t";
             }
@@ -148,7 +262,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
      TFloat64List ExtremaPDF = candResults->ValSumProba;
      if(ExtremaPDF.size()>0){
         stream <<  "#Extrema IntgPDF for z = {";
-        for ( int i=0; i<ExtremaPDF.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  ExtremaPDF[Rank_PDF[i]] << "\t";
         }
@@ -158,7 +272,7 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
     // save extremaMerit list, on 1 line
     if(ExtremaMerit.size()>0){
         stream <<  "#ExtremaMerit for z = {";
-        for ( int i=0; i<ExtremaMerit.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  ExtremaMerit[Rank_PDF[i]] << "\t";
         }
@@ -168,7 +282,7 @@ if(!zeros){
     // save extremaMeritContinuum list, on 1 line
     if(ExtremaMeritContinuum.size()>0){
         stream <<  "#ExtremaMeritContinuum for z = {";
-        for ( int i=0; i<ExtremaMeritContinuum.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  ExtremaMeritContinuum[Rank_PDF[i]] << "\t";
         }
@@ -178,7 +292,7 @@ if(!zeros){
     // save extrema Deltaz list, on 1 line
     if(DeltaZ.size()>0){
         stream <<  "#ExtremaDeltaZ for z = {";
-        for ( int i=0; i<DeltaZ.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  DeltaZ[Rank_PDF[i]] << "\t";
         }
@@ -188,7 +302,7 @@ if(!zeros){
     // save extrema mTransposeM list, on 1 line
     if(mTransposeM.size()>0){
         stream <<  "#mTransposeM for z = {";
-        for ( int i=0; i<mTransposeM.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  mTransposeM[Rank_PDF[i]] << "\t";
         }
@@ -198,7 +312,7 @@ if(!zeros){
     // save NDof list, on 1 line
     if(NDof.size()>0){
         stream <<  "#NDof for z = {";
-        for ( int i=0; i<NDof.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  NDof[Rank_PDF[i]] << "\t";
         }
@@ -208,7 +322,7 @@ if(!zeros){
     // save CorrScaleMarg list, on 1 line
     if(CorrScaleMarg.size()>0){
         stream <<  "#CorrScaleMarg for z = {";
-        for ( int i=0; i<CorrScaleMarg.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  CorrScaleMarg[Rank_PDF[i]] << "\t";
         }
@@ -218,7 +332,7 @@ if(!zeros){
     // save ExtremaLastPass list, on 1 line
     if(ExtremaLastPass.size()>0){
         stream <<  "#ExtremaLastPass for z = {";
-        for ( int i=0; i<ExtremaLastPass.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  ExtremaLastPass[Rank_PDF[i]] << "\t";
         }
@@ -228,7 +342,7 @@ if(!zeros){
     // save lmfitPass list, on 1 line
     if(lmfitPass.size()>0){
         stream <<  "#lmfitPass for z = {";
-        for ( int i=0; i<lmfitPass.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  lmfitPass[Rank_PDF[i]] << "\t";
         }
@@ -238,7 +352,7 @@ if(!zeros){
     // save snrHa list, on 1 line
     if(snrHa.size()>0){
         stream <<  "#snrHa for z = {";
-        for ( int i=0; i<snrHa.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  snrHa[Rank_PDF[i]] << "\t";
         }
@@ -248,7 +362,7 @@ if(!zeros){
     // save lfHa list, on 1 line
     if(lfHa.size()>0){
         stream <<  "#lfHa for z = {";
-        for ( int i=0; i<lfHa.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  lfHa[Rank_PDF[i]] << "\t";
         }
@@ -259,7 +373,7 @@ if(!zeros){
     // save snrOII list, on 1 line
     if(snrOII.size()>0){
         stream <<  "#snrOII for z = {";
-        for ( int i=0; i<snrOII.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  snrOII[Rank_PDF[i]] << "\t";
         }
@@ -269,7 +383,7 @@ if(!zeros){
     // save lfOII list, on 1 line
     if(lfOII.size()>0){
         stream <<  "#lfOII for z = {";
-        for ( int i=0; i<lfOII.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  lfOII[Rank_PDF[i]] << "\t";
         }
@@ -279,7 +393,7 @@ if(!zeros){
     // save bic list, on 1 line
     if(bic.size()>0){
         stream <<  "#BIC for each extrema = {";
-        for ( int i=0; i<bic.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  bic[Rank_PDF[i]] << "\t";
         }
@@ -289,7 +403,7 @@ if(!zeros){
     // save posterior list, on 1 line
     if(Posterior.size()>0){
         stream <<  "#POSTERIOR for each extrema = {";
-        for ( int i=0; i<Posterior.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  Posterior[Rank_PDF[i]] << "\t";
         }
@@ -299,7 +413,7 @@ if(!zeros){
     // save SigmaZ list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#SigmaZ for each extrema = {";
-        for ( int i=0; i<SigmaZ.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  SigmaZ[Rank_PDF[i]] << "\t";
         }
@@ -309,7 +423,7 @@ if(!zeros){
     // save LogArea list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#LogArea for each extrema = {";
-        for ( int i=0; i<LogArea.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  LogArea[Rank_PDF[i]] << "\t";
         }
@@ -319,7 +433,7 @@ if(!zeros){
     // save ContinuumIndexes list, on 1 line
     if(Extrema.size()>0){
         stream <<  "#ContinuumIndexes Color for each extrema = {";
-        for ( int i=0; i<ContinuumIndexes.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << "<";
             for(Int32 kci=0; kci<ContinuumIndexes[Rank_PDF[i]].size(); kci++)
@@ -330,7 +444,7 @@ if(!zeros){
         }
         stream << "}" << std::endl;
         stream <<  "#ContinuumIndexes Break for each extrema = {";
-        for ( int i=0; i<ContinuumIndexes.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << "<";
             for(Int32 kci=0; kci<ContinuumIndexes[Rank_PDF[i]].size(); kci++)
@@ -346,7 +460,7 @@ if(!zeros){
     // save StrongELSNR list, on 1 line
     if(StrongELSNR.size()>0){
         stream <<  "#StrongELSNR for each extrema = {";
-        for ( int i=0; i<StrongELSNR.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  StrongELSNR[Rank_PDF[i]] << "\t";
         }
@@ -357,7 +471,7 @@ if(!zeros){
     // save StrongELSNRAboveCut list, on 1 line
     if(StrongELSNRAboveCut.size()>0){
         stream <<  "#StrongELSNRAboveCut for each extrema = {";
-        for ( int i=0; i<StrongELSNRAboveCut.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             std::vector<std::string> line_list = StrongELSNRAboveCut[Rank_PDF[i]];
             for ( int ki=0; ki<line_list.size(); ki++)
@@ -376,7 +490,7 @@ if(!zeros){
     // save FittedTplName, on 1 line
     if(FittedTplName.size()>0){
         stream <<  "#FittedTplName for each extrema = {";
-        for ( int i=0; i<FittedTplName.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplName[Rank_PDF[i]] << "\t";
         }
@@ -386,17 +500,27 @@ if(!zeros){
     // save FittedTplAmplitude, on 1 line
     if(FittedTplAmplitude.size()>0){
         stream <<  "#FittedTplAmplitude for each extrema = {";
-        for ( int i=0; i<FittedTplAmplitude.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplAmplitude[Rank_PDF[i]] << "\t";
         }
         stream << "}" << std::endl;
     }
 
+    // save FittedTplAmplitudeError, on 1 line
+    if(FittedTplAmplitudeError.size()>0){
+        stream <<  "#FittedTplAmplitudeError for each extrema = {";
+        for ( int i=0; i<Rank_PDF.size(); i++)
+        {
+            stream <<  FittedTplAmplitudeError[Rank_PDF[i]] << "\t";
+        }
+	stream << "}" << std::endl;
+    }
+
     // save FittedTplMerit, on 1 line
     if(FittedTplMerit.size()>0){
         stream <<  "#FittedTplMerit for each extrema = {";
-        for ( int i=0; i<FittedTplMerit.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplMerit[Rank_PDF[i]] << "\t";
         }
@@ -407,7 +531,7 @@ if(!zeros){
     if(FittedTplDustCoeff.size()>0){
         stream <<  "#FittedTplDustCoeff for each extrema = {";
         stream << std::setprecision(3);
-        for ( int i=0; i<FittedTplDustCoeff.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplDustCoeff[Rank_PDF[i]] << "\t";
         }
@@ -417,7 +541,7 @@ if(!zeros){
     // save FittedTplMeiksinIdx, on 1 line
     if(FittedTplMeiksinIdx.size()>0){
         stream <<  "#FittedTplMeiksinIdx for each extrema = {";
-        for ( int i=0; i<FittedTplMeiksinIdx.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplMeiksinIdx[Rank_PDF[i]] << "\t";
         }
@@ -429,7 +553,7 @@ if(!zeros){
     if(FittedTplRedshift.size()>0){
         stream <<  "#FittedTplRedshift for each extrema = {";
         stream << std::setprecision(8);
-        for ( int i=0; i<FittedTplRedshift.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplRedshift[Rank_PDF[i]] << "\t";
         }
@@ -440,7 +564,7 @@ if(!zeros){
     if(FittedTplDtm.size()>0){
         stream <<  "#FittedTplDtm for each extrema = {";
         stream << std::setprecision(8);
-        for ( int i=0; i<FittedTplDtm.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplDtm[Rank_PDF[i]] << "\t";
         }
@@ -451,7 +575,7 @@ if(!zeros){
     if(FittedTplMtm.size()>0){
         stream <<  "#FittedTplMtm for each extrema = {";
         stream << std::setprecision(8);
-        for ( int i=0; i<FittedTplMtm.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplMtm[Rank_PDF[i]] << "\t";
         }
@@ -462,7 +586,7 @@ if(!zeros){
     if(FittedTplLogPrior.size()>0){
         stream <<  "#FittedTplLogPrior for each extrema = {";
         stream << std::setprecision(8);
-        for ( int i=0; i<FittedTplLogPrior.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplLogPrior[Rank_PDF[i]] << "\t";
         }
@@ -473,7 +597,7 @@ if(!zeros){
     if(FittedTplpCoeffs.size()>0){
         stream <<  "#FittedTplpCoeffs for each extrema = {";
         stream << std::setprecision(8);
-        for ( int i=0; i<FittedTplpCoeffs.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             if(i>0)
             {
@@ -495,7 +619,7 @@ if(!zeros){
     // save FittedTplshapeName, on 1 line
     if(FittedTplshapeName.size()>0){
         stream <<  "#FittedTplshapeName for each extrema = {";
-        for ( int i=0; i<FittedTplshapeName.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplshapeName[Rank_PDF[i]] << "\t";
         }
@@ -505,7 +629,7 @@ if(!zeros){
     // save FittedTplshapeIsmCoeff, on 1 line
     if(FittedTplshapeIsmCoeff.size()>0){
         stream <<  "#FittedTplshapeIsmCoeff for each extrema = {";
-        for ( int i=0; i<FittedTplshapeIsmCoeff.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplshapeIsmCoeff[Rank_PDF[i]] << "\t";
         }
@@ -515,7 +639,7 @@ if(!zeros){
     // save FittedTplshapeAmplitude, on 1 line
     if(FittedTplshapeAmplitude.size()>0){
         stream <<  "#FittedTplshapeAmplitude for each extrema = {";
-        for ( int i=0; i<FittedTplshapeAmplitude.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplshapeAmplitude[Rank_PDF[i]] << "\t";
         }
@@ -525,7 +649,7 @@ if(!zeros){
     // save FittedTplshapeDtm, on 1 line
     if(FittedTplshapeDtm.size()>0){
         stream <<  "#FittedTplshapeDtm for each extrema = {";
-        for ( int i=0; i<FittedTplshapeDtm.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplshapeDtm[Rank_PDF[i]] << "\t";
         }
@@ -535,7 +659,7 @@ if(!zeros){
     // save FittedTplshapeMtm, on 1 line
     if(FittedTplshapeMtm.size()>0){
         stream <<  "#FittedTplshapeMtm for each extrema = {";
-        for ( int i=0; i<FittedTplshapeMtm.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream <<  FittedTplshapeMtm[Rank_PDF[i]] << "\t";
         }
@@ -546,7 +670,7 @@ if(!zeros){
     // save OutsideLinesSTDFlux, on 1 line
     if(OutsideLinesSTDFlux.size()>0){
         stream <<  "#OutsideLinesSTDFlux for each extrema = {";
-        for ( int i=0; i<OutsideLinesSTDFlux.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDFlux[Rank_PDF[i]] << "\t";
         }
@@ -556,7 +680,7 @@ if(!zeros){
     // save OutsideLinesSTDError, on 1 line
     if(OutsideLinesSTDError.size()>0){
         stream <<  "#OutsideLinesSTDError for each extrema = {";
-        for ( int i=0; i<OutsideLinesSTDError.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << std::scientific << std::setprecision(5) <<  OutsideLinesSTDError[Rank_PDF[i]] << "\t";
         }
@@ -566,7 +690,7 @@ if(!zeros){
     // save Elv, on 1 line
     if(Elv.size()>0){
         stream <<  "#Elv for each extrema = {";
-        for ( int i=0; i<Elv.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << std::fixed << std::setprecision(1) <<  Elv[Rank_PDF[i]] << "\t";
         }
@@ -576,7 +700,7 @@ if(!zeros){
     // save Alv, on 1 line
     if(Alv.size()>0){
         stream <<  "#Alv for each extrema = {";
-        for ( int i=0; i<Alv.size(); i++)
+        for ( int i=0; i<Rank_PDF.size(); i++)
         {
             stream << std::fixed << std::setprecision(1) <<  Alv[Rank_PDF[i]] << "\t";
         }
@@ -605,6 +729,26 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
   TInt32List order = candResults->Rank;
 
+  bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+  if(zeros){
+        //saving firstpass data
+        //in the case where some candidates from first-pass are eliminated from second-pass
+        //make sure to save all data we collected from first pass
+        Int32 n = order.size();
+        if(n<Extrema.size()){
+            order.clear(); //in this case, rank doesnt mean anything
+            /*
+            for(Int32 i = 0; i<Extrema.size(); i++){
+                order.push_back(i);
+            }*/
+            std::vector<std::string> ids = candResults->ExtremaIDs;
+            Int32 ret = FixRanksUsingSortedIDs(order, ids);
+            if(ret<0){
+                Log.LogError("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+                throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
+            }
+        }
+    }
   stream << "{"<< std::endl;
   // save extrema list, on 1 line
   SaveTFloat64List(stream,"z_extrema", Extrema, order);
@@ -616,12 +760,11 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveStringVector(stream,"z_extremaIDs", ExtremaIDs, order);
   stream << "," << std::endl;
 
-  bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
   if(!zeros){
     // save extremum final rank list, on 1 line
-    std::vector<int> finalRanks(Extrema.size());
+    std::vector<int> finalRanks(order.size());
     std::iota(finalRanks.begin(), finalRanks.end(), 0);
-    SaveInt32Vector(stream,"z_ExtremaFinalRank", finalRanks, {});
+    SaveInt32Vector(stream,"z_ExtremaFinalRank", finalRanks, finalRanks);
     stream << "," << std::endl;
 
     // save extremaPDF list, on 1 line
@@ -699,6 +842,9 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   // save FittedTplAmplitude, on 1 line
   SaveTFloat64List(stream,"ext_FittedTplAmplitude",FittedTplAmplitude, order);
   stream << "," << std::endl;
+  // save FittedTplAmplitudeError, on 1 line
+  SaveTFloat64List(stream,"ext_FittedTplAmplitudeError",FittedTplAmplitudeError, order);
+  stream << "," << std::endl;
   // save FittedTplMerit, on 1 line
   SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit, order);
   stream << "," << std::endl;
@@ -769,6 +915,66 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
   SaveTFloat64List(stream,"ext_Alv",Alv, order);
 
   stream <<  "}";
+
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+{
+  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
+  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
+  else if (name.compare("VelocityEmission") == 0) v = Elv[rank];
+  else if (name.compare("VelocityAbsorption") == 0) v = Alv[rank];
+  else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[rank];
+  else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[rank];
+  else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[rank];
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
+  else throw Exception("unknown candidate Float64 data %s",name.c_str());
+
+}
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+{
+  if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
+  else throw Exception("unknown candidate integer data %s",name.c_str());
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+{
+  if (name.compare("TemplateName") == 0) v = FittedTplName[rank];
+  else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[rank];
+  else throw Exception("unknown candidate string data %s",name.c_str());
+
+}
+
+void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{
+  if (name.compare("ContinuumIndexesColor") == 0)
+    {
+      *size = ContinuumIndexes[rank].size();
+      if (continuumIndexesColorCopy.find(rank) != continuumIndexesColorCopy.end())
+	{
+	  continuumIndexesColorCopy[rank] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesColorCopy[rank].emplace_back(ContinuumIndexes[rank][j].Color);
+	  *data = const_cast<double *>(continuumIndexesColorCopy[rank].data());
+	}
+    }
+  else if( name.compare("ContinuumIndexesBreak") == 0)
+    {
+      *size = ContinuumIndexes[rank].size();
+      if (continuumIndexesBreakCopy.find(rank) != continuumIndexesBreakCopy.end())
+	{
+	  continuumIndexesBreakCopy[rank] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesBreakCopy[rank].emplace_back(ContinuumIndexes[rank][j].Break);
+	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
+	}
+    }
+  else throw Exception("unknown candidate string data %s",name.c_str());
+}
+
+void CLineModelExtremaResult::getData(const std::string& name, Int32& v) const{
+}
+void CLineModelExtremaResult::getData(const std::string& name, Float64& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, std::string& v) const{}
+void CLineModelExtremaResult::getData(const std::string& name, double **data, int *size) const
+{
 
 }
 

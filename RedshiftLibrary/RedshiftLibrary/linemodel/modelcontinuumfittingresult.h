@@ -25,6 +25,7 @@ public:
                                  std::string _name,
                                  Float64 _merit,
                                  Float64 _amp,
+                                 Float64 _amp_err,
                                  Float64 _ismCoeff,
                                  Int32 _igmIndex,
                                  Float64 _fitting_snr);
@@ -45,6 +46,7 @@ private:
     std::string Name;
     Float64 Merit;
     Float64 Amp;
+    Float64 AmpErr;
     Float64 IsmCoeff;
     Int32   IgmIndex;
 

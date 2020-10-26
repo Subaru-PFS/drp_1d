@@ -20,9 +20,9 @@ using namespace std;
 /**
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
-COperatorLineMatching2Solve::COperatorLineMatching2Solve()
+CMethodLineMatching2Solve::CMethodLineMatching2Solve()
 {    
-  Log.LogDebug ( "COperatorLineMatchingSolve::COperatorLineMatching2Solve()" );
+  Log.LogDebug ( "CMethodLineMatching2Solve::CMethodLineMatching2Solve()" );
 
   // Peak Detection
   m_winsize = 250.0;
@@ -46,9 +46,9 @@ COperatorLineMatching2Solve::COperatorLineMatching2Solve()
 /**
  * Empty destructor.
  */
-COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
+CMethodLineMatching2Solve::~CMethodLineMatching2Solve()
 {
-  Log.LogDebug ( "COperatorLineMatching2Solve::~COperatorLineMatching2Solve()" );
+  Log.LogDebug ( "CMethodLineMatching2Solve::~CMethodLineMatching2Solve()" );
 }
 
 /**
@@ -70,14 +70,14 @@ COperatorLineMatching2Solve::~COperatorLineMatching2Solve()
  * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore,
+std::shared_ptr<CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( CDataStore& resultStore,
 										       const CSpectrum& spc, 
 										       const TFloat64Range& lambdaRange, 
 										       const TFloat64Range& redshiftsRange, 
 										       Float64 redshiftStep, 
 										       const CRayCatalog& restRayCatalog )
 {
-  Log.LogDebug ( "std::shared_ptr<const CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
+  Log.LogDebug ( "std::shared_ptr<const CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
 
   Int32 lineType = CRay::nType_Emission;
   std::string linetypeStr = "E";
@@ -162,7 +162,7 @@ std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute(
     }
   else
     {
-      Log.LogInfo ( "No peak detected - returning NULL." );
+      Log.LogError ( "No peak detected - returning NULL." );
       return NULL;
     }
 
@@ -318,7 +318,7 @@ std::shared_ptr<CLineMatching2SolveResult> COperatorLineMatching2Solve::Compute(
   return std::shared_ptr<CLineMatching2SolveResult>( new CLineMatching2SolveResult() );
 }
 
-const std::string COperatorLineMatching2Solve::GetDescription()
+const std::string CMethodLineMatching2Solve::GetDescription()
 {
     std::string desc;
     desc = "Method linematching2:\n";

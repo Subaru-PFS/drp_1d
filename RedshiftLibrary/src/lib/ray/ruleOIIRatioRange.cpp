@@ -19,6 +19,10 @@ CRuleRatioRange::CRuleRatioRange():
 {
 }
 
+CRuleRatioRange::~CRuleRatioRange()
+{
+}
+
 void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
 {
   Name = "ratiorange";

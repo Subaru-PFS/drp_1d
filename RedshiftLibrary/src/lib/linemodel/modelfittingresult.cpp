@@ -8,6 +8,8 @@
 #include <iomanip>      // std::setprecision
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/common/exception.h>
 
 using namespace NSEpic;
 
@@ -174,6 +176,7 @@ void CModelFittingResult::Load( const char* filePath )
 		return;
             }
             LineModelSolution.Amplitudes.push_back(amp);
+	    
 
         }
     }
@@ -186,5 +189,94 @@ void CModelFittingResult::Load( const char* filePath )
  **/
 void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
 {
+
+}
+
+
+void CModelFittingResult::getData(const std::string& name, int **data, int *size) const
+{
+  *size = LineModelSolution.LambdaObs.size();
+ 
+  if (name.compare("FittedRaysID") == 0)
+    {
+
+      if (rayId.empty())
+      	{
+          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayId.emplace_back(restRayList[j].GetID());
+        }
+	  *data = const_cast<int *>(rayId.data());
+    }
+  else throw Exception("unkwown data %s",name.c_str());
+}
+
+
+void CModelFittingResult::getData(const std::string& name, double **data, int *size) const
+{
+  *size = LineModelSolution.LambdaObs.size();
+  if (name.compare("FittedRaysLambda") == 0)
+    {
+      *data = const_cast<double *>(LineModelSolution.LambdaObs.data());
+    }
+  else if (name.compare("FittedRaysLambdaRest") == 0)
+    {
+      if (rayLambdaRest.empty())
+        {
+          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayLambdaRest.emplace_back(restRayList[j].GetPosition());
+        }
+      *data = const_cast<double *>(rayLambdaRest.data());
+    }
+  else if (name.compare("FittedRaysFlux") == 0)
+    {
+      *data = const_cast<double *>(LineModelSolution.Fluxs.data());
+    }
+  else throw Exception("unkwown data %s",name.c_str());
+
+}
+
+void CModelFittingResult::getData(const std::string& name, std::string *data, int *size) const
+{
+  *size  = LineModelSolution.LambdaObs.size();
+  /*
+ if (name.compare("FittedRaysType") == 0)
+    {
+      if (rayType.empty())
+	{
+	  rayType = new std::vector<std::string>(*size);
+	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
+	    {
+	      if(restRayList[j].GetType() == CRay::nType_Absorption) rayType.emplace_back("A");
+	      else rayType.emplace_back("E");
+	    }
+	}
+      *data = const_cast<double *>(rayType.data());
+    }
+  else if (name.compare("FittedRaysForce") == 0)
+    {
+      if (rayForce.empty())
+	{
+	  rayForce = new std::vector<std::string>(*size);
+	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
+	    {
+	      if(restRayList[j].GetForce() == CRay::nForce_Strong) rayType.emplace_back("S");
+	      else rayType.emplace_back("W");
+	    }
+	}
+      *data = const_cast<double *>(rayType.data());
+    }
+  else if (name.compare("FittedRaysName") == 0)
+    {
+      if (rayForce.empty())
+	{
+	  rayForce = new std::vector<std::string>(*size);
+	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
+	    {
+	      if(restRayList[j].GetForce() == CRay::nForce_Strong) rayType.emplace_back("S");
+	      else rayType.emplace_back("W");
+	    }
+	}
+      *data = const_cast<double *>(rayType.data());
+    }
+  */ 
+  
 
 }

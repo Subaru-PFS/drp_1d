@@ -15,13 +15,13 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class COperatorBlindSolve
+class CMethodBlindSolve
 {
 
 public:
 
-    COperatorBlindSolve();
-    ~COperatorBlindSolve();
+    CMethodBlindSolve();
+    ~CMethodBlindSolve();
 
     const std::string GetDescription();
 

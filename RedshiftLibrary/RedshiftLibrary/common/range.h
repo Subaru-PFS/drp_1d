@@ -2,7 +2,9 @@
 #define _CORE_COMMON_RANGE_
 
 #include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/log/log.h>
 
+#include <cmath>
 #include <vector>
 
 namespace NSEpic {
@@ -17,11 +19,11 @@ template <typename T> class CRange
   public:
     CRange() {}
 
-    CRange(T begin, T end)
-    {
-        m_Begin = begin;
-        m_End = end;
-    }
+    CRange(const T begin, const T end):
+        m_Begin(begin), m_End(end) {}
+
+    CRange(const std::vector<T> & v):
+        m_Begin(v.front()), m_End(v.back()) {}
 
     ~CRange() {}
 
@@ -46,6 +48,11 @@ template <typename T> class CRange
     const T &GetEnd() const { return m_End; }
 
     T GetLength() const { return m_End - m_Begin; }
+
+    Bool IntersectWith(const CRange<T> r)
+    {
+        return Intersect(*this, r, *this);
+    }
 
     static Bool Intersect(const CRange<T> &a, const CRange<T> b,
                           CRange<T> &intersect)
@@ -87,30 +94,113 @@ template <typename T> class CRange
 
     std::vector<T> SpreadOverLog(Float64 delta) const
     {
-        std::vector<T> v;
+	std::vector<T> v;
+	if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+	{
+	    v.resize(1);
+	    v[0] = m_Begin;
+	    return v;
+	}
 
-        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
-        {
-            v.resize(1);
-            v[0] = m_Begin;
-            return v;
-        }
-
-        v.push_back(m_Begin);
-        Float64 x = m_Begin;
-        Float64 step = delta * (1. + m_Begin);
+        Float64 x = m_Begin + 1.;
+        Float64 edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while (x + step < m_End && count < maxCount)
+        while (x < m_End+1. && count < maxCount)
         {
-            x = x + step;
-            v.push_back(x);
-            step = delta * (1. + x);
+            v.push_back(x-1.);
             count++;
+            x *= edelta;
         }
 
         return v;
     }
+  //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
+  bool getEnclosingIntervalIndices(std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
+  {
+    if (value < m_Begin || value > m_End)
+      {
+        Log.LogError("%.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
+        return false;
+      }
+    else if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+      {
+        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        return false;
+      }
+    typename std::vector<T>::iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),it,m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(it,ordered_values.end(),m_End);
+
+    if(*it_min > m_Begin) it_min = it_min -1;
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  }
+
+  bool getEnclosingIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  {
+    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+      {
+        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        return false;
+      }
+    
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+
+    if(*it_min > m_Begin) it_min = it_min -1;
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  }
+
+    bool getExactEnclosingIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  {
+    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+      {
+        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        return false;
+      }
+    
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+
+    if(*it_min != m_Begin)
+      {
+        Log.LogError("Cannot find %.5f in ordered_values",m_Begin);
+        return false;
+      }
+    if(*it_max != m_End)
+     {
+        Log.LogError("Cannot find %.5f in ordered_values",m_End);
+        return false;
+      }
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  }
+  //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
+  bool getClosedIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  {
+    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+      {
+        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        return false;
+      }
+    
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+
+    if(*it_max > m_End) it_max = it_max -1;
+
+    i_min = it_min - ordered_values.begin();
+    i_max = it_max - ordered_values.begin();
+    return true;
+  } 
 
   private:
     T m_Begin;

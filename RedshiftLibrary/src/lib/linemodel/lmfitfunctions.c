@@ -1,14 +1,15 @@
-
 #include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/linemodel/lmfitcontroller.h>
 
 #include <RedshiftLibrary/log/log.h>
+
 namespace NSEpic
 {
-/*
- This class is use by the soler lmfit, it is compose of two callback functions
- the first one (lmfit_f) return a vector : for each lmadba the difference between model and flux
- * */
+/**
+ This class is use by the solver lmfit, it is compose of two callback functions
+ the first one (lmfit_f) return a vector : for each lamdbda the difference between model and flux
+ the second one (lmfit_df) return a jacobian matrix : for each lambda the derivatives amplitudes between model and flux (emission and absorbtion lines)
+**/
 class CLineModelElementList;
 
 
@@ -21,9 +22,7 @@ struct lmfitdata {
     CLmfitController* controller;
 };
 
-int
-lmfit_f (const gsl_vector * x, void *data,
-         gsl_vector * f)
+int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
 {
     size_t n = ((struct lmfitdata *)data)->n;
     Float64 *y = ((struct lmfitdata *)data)->y;
@@ -39,17 +38,18 @@ lmfit_f (const gsl_vector * x, void *data,
       Float64 redshift = gsl_vector_get(x, controller-> getIndRedshift());
       linemodel->setRedshift(redshift , !controller->isNoContinuum());
       if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
-        // a continuum is fit by linemodel , but not by lmfit
+         // a continuum is fit by linemodel , but not by lmfit
          std::vector<Float64> polyCoeffs;
-         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), polyCoeffs);
+         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), linemodel->getFitContinuum_tplAmplitudeError(), polyCoeffs);
       }
     }
 
     if(controller->isContinuumFitted()){
       Int32 idxContinuumTplAmp = controller->getIndContinuumAmp();
-      Float64 continuumTplAmp= controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
+      Float64 continuumTplAmp = controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
+      Float64 continuumTplAmpErr = -1.0; //controller->continuumAmpErr_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));
       std::vector<Float64> polyCoeffs;
-      linemodel->setFitContinuum_tplAmplitude( continuumTplAmp, polyCoeffs);
+      linemodel->setFitContinuum_tplAmplitude(continuumTplAmp, continuumTplAmpErr, polyCoeffs);
     }
 
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
@@ -78,19 +78,14 @@ lmfit_f (const gsl_vector * x, void *data,
 
     for (UInt32 i = 0; i < n; i++)
     {
-
         Float64 Yi = linemodel->getModelFluxVal(samples_indexes[i])*normFactor;
-
-
         gsl_vector_set (f, i, Yi - y[i]);
     }
 
     return GSL_SUCCESS;
 }
 
-int
-lmfit_df (const gsl_vector * x, void *data,
-          gsl_matrix * J)
+int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
 {
     size_t n = ((struct lmfitdata *)data)->n;
     //std::shared_ptr<CLineModelElementList> linemodel = ((struct lmfitdata *)data)->linemodel;
@@ -109,15 +104,16 @@ lmfit_df (const gsl_vector * x, void *data,
       if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
         // a continuum is fit by linemodel , but not by lmfit
           std::vector<Float64> polyCoeffs;
-         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), polyCoeffs);
+         linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), linemodel->getFitContinuum_tplAmplitudeError(), polyCoeffs);
       }
     }
 
     if(controller->isContinuumFitted()){
       Int32 idxContinuumTplAmp = controller->getIndContinuumAmp();
-      Float64 continuumTplAmp= controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
+      Float64 continuumTplAmp = controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
+      Float64 continuumTplAmpErr = -1.0; //controller->continuumAmpErr_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));
       std::vector<Float64> polyCoeffs;
-      linemodel->setFitContinuum_tplAmplitude( continuumTplAmp, polyCoeffs);
+      linemodel->setFitContinuum_tplAmplitude(continuumTplAmp, continuumTplAmpErr, polyCoeffs);
     }
 
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)

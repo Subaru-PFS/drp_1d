@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
 
 
 namespace NSEpic
@@ -34,6 +35,13 @@ public:
 private:
 
     Float64                 m_TotalDuration;
+
+    // buffers for the interpolated axis (template & spectrum)
+    CTemplate       m_templateRebined_bf; //buffer
+    CTemplate       m_templateWOContRebined_bf; //buffer
+    CMask           m_mskRebined_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+
 };
 
 

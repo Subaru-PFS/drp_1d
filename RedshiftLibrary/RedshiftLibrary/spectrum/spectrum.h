@@ -26,11 +26,11 @@ public:
 
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
-    CSpectrum& operator=(const CSpectrum& other);
-
+    CSpectrum& operator=(const CSpectrum& other); 
     void  SetName( const char* name );
 
     Bool InvertFlux();
@@ -41,8 +41,8 @@ public:
     const std::string               GetName() const;
 
     CSpectrumFluxAxis&              GetFluxAxis();
+    virtual void                    ScaleFluxAxis(Float64 amplitude);
     CSpectrumSpectralAxis&          GetSpectralAxis();
-
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
@@ -73,13 +73,23 @@ public:
     void                SetContinuumEstimationMethod(std::string method);
     void                SetWaveletsDFBinPath(std::string binPath);
 
-    void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
+    void                LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
+    void                InitPrecomputeFineGrid() const;
+
+    Bool                Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                               CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
+                               const std::string opt_error_interp="no") const;
 protected:
+
     CSpectrumSpectralAxis           m_SpectralAxis;
     CSpectrumFluxAxis               m_FluxAxis;
 
-private:
+    Bool                            RebinFineGrid() const;
+    Float64                         m_dLambdaFineGrid = 0.1;//oversampling step for fine grid //check if enough to be private
+    mutable TFloat64List            m_pfgFlux;
+    mutable Bool                    m_FineGridInterpolated = false;
+
 
     std::string                     m_Name;
     std::string                     m_FullPath;

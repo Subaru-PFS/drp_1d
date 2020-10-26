@@ -60,6 +60,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 std::shared_ptr<CParameterStore> paramStore,
                                 std::shared_ptr<CClassifierStore> zqualStore  )
 {
+  //std::cout <<"Initializing context" << std::endl;
     Log.LogInfo("Processing context initialization");
 
     m_ClassifierStore = zqualStore;
@@ -76,8 +77,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
 
 
     // Compute continuum substracted spectrum
-    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum() );
-    *m_SpectrumWithoutContinuum = *spectrum;
+    m_SpectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum(*spectrum ));
 
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
@@ -95,7 +95,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
         continuum.SetMeanKernelWidth(opt_medianKernelWidth);
         m_SpectrumWithoutContinuum->RemoveContinuum( continuum );
         m_SpectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
-        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", opt_medianKernelWidth );
+        Log.LogInfo( "Continuum estimation - IrregularSamplingMedian - medianKernelWidth = %.2f", opt_medianKernelWidth );
     }else if( medianRemovalMethod== "Median")
     {
         nameBaseline = "preprocess/baselineMedian";
@@ -198,6 +198,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
     m_DataStore->StoreScopedGlobalResult(nameContinuumIndexesResult, continuumIndexesResult);
 
+
     return true;
 }
 
@@ -207,6 +208,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
                                 std::shared_ptr<CParameterStore> paramStore,
 		   	        std::shared_ptr<CClassifierStore> zqualStore )
 {
+
     std::string medianRemovalMethod;
     paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     //override the continuum removal for the templates :

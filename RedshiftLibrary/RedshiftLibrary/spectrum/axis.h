@@ -22,7 +22,7 @@ public:
     ~CSpectrumAxis();
 
     CSpectrumAxis& operator=(const CSpectrumAxis& other);
-
+    CSpectrumAxis& operator*=(const Float64 op);
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
 
@@ -31,7 +31,7 @@ public:
     const TAxisSampleList&   GetSamplesVector() const;
     TAxisSampleList&         GetSamplesVector();
     UInt32                   GetSamplesCount() const;
-
+    UInt32                   GetSamplesCount();
     virtual void        SetSize( UInt32 s );
 
 protected:

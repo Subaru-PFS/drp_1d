@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/operator/linemodelresult.h>
 
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -70,7 +71,7 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
         TFloat64List _corr(nResults, 0.0);
         ScaleMargCorrectionTplshapes.push_back(_corr);
 
-        std::vector<bool> selp(nResults, false);
+        TBoolList selp(nResults, false);
         StrongELPresentTplshapes.push_back(selp);
 
         std::vector<Int32> nlac(nResults, false);
@@ -90,8 +91,8 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
 Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
                                                     TFloat64List chisquareTplshape,
                                                     TFloat64List scaleMargCorrTplshape,
-                                                    std::vector<bool> strongEmissionLinePresentTplshape,
-                                                    std::vector<Int32> nLinesAboveSNRTplshape,
+                                                    TBoolList strongEmissionLinePresentTplshape,
+                                                    TInt32List nLinesAboveSNRTplshape,
                                                     TFloat64List priorLinesTplshape)
 {
     if(index_z>=Redshifts.size())
@@ -174,9 +175,9 @@ TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index_z )
     return scaleMargCorrTplshape;
 }
 
-std::vector<bool> CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index_z )
+TBoolList CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index_z )
 {
-    std::vector<bool> strongELPresentTplshape;
+    TBoolList strongELPresentTplshape;
     if(index_z>=Redshifts.size())
     {
         return strongELPresentTplshape;
@@ -415,9 +416,9 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrT
  * @param filterType: 1: emission only, 2 abs only, else: no filter
  * @return: a list of boolean values indicating if a strong is present (not outsidelambdarange for that z) for each redshift
  */
-std::vector<bool> CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const
+TBoolList CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const
 {
-    std::vector<bool> strongIsPresent(linemodelsols.size(), false);
+    TBoolList strongIsPresent(linemodelsols.size(), false);
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         strongIsPresent[solutionIdx] = false;
@@ -478,12 +479,12 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineMode
  * @brief CLineModelResult::GetStrongestLineIsHa
  * @return: a list of boolean values indicating if the strongest line is Ha (Highest amp and not outsidelambdarange for that z) for each redshift
  */
-std::vector<bool> CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
+TBoolList CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
 {
-    bool verbose = true;
+    Bool verbose = true;
     UInt32 filterType=1;
     linetags ltags;
-    std::vector<bool> strongestIsHa(linemodelsols.size(), false);
+    TBoolList strongestIsHa(linemodelsols.size(), false);
     std::string ampMaxLineTag = "";
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
@@ -602,4 +603,19 @@ Float64 CLineModelResult::GetMaxChiSquare() const
         }
     }
     return max;
+}
+
+Int32 CLineModelResult::getRedshiftIndex(Float64 z)
+{
+  std::vector<Float64>::iterator itr = std::lower_bound(Redshifts.begin(),
+                                                        Redshifts.end(),
+                                                        z);
+
+  if (itr == Redshifts.end() || *itr != z)
+    {
+      size_t size = snprintf( nullptr, 0, "Could not find extrema solution index for %f", z) + 1; // Extra space for '\0'
+      std::unique_ptr<char[]> buf( new char[ size ] );                                                        snprintf( buf.get(), size, "Could not find extrema solution index for %f", z);                          std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
+      throw runtime_error(_msg.c_str());
+    }
+  return (itr - Redshifts.begin()); 
 }

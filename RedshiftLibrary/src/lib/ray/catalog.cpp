@@ -95,6 +95,8 @@ Bool CRayCatalog::Add( const CRay& r )
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
+      //TODO this should be a map with key defined as struct{name,position,type}
+      // TODO this should be a map with key defined as ID, much better than struct{name,position,type} now that a ray has an ID
         // Can't add a line with a name + position + type that already exists in the list
         if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
             return false;
@@ -189,7 +191,7 @@ void CRayCatalog::Load( const char* filePath )
         if(line.compare(0,1,"#",1)==0){
             continue;
         }
-        char_separator<char> sep(" \t");
+        char_separator<char> sep("\t");
 
         // Tokenize each line
         typedef tokenizer< char_separator<char> > ttokenizer;
@@ -247,6 +249,11 @@ void CRayCatalog::Load( const char* filePath )
             }else if( strcmp(strong.c_str(),"S")==0 ){
                 Eforce = 2;
             }
+            else
+              {
+                Log.LogError("Bad force in : %s", + filePath);
+                throw runtime_error("Bad force");
+              }
 
             std::string profileName = "SYM";
             CRay::TProfile profile;
@@ -303,9 +310,24 @@ void CRayCatalog::Load( const char* filePath )
                 velGroupName = *it;
             }
 
+	    ++it;
+	    int id=-1;
+	    if( it != tok.end() ){
+	      try
+		{
+		  id = lexical_cast<int>(*it);
+		}
+	      catch (const bad_lexical_cast& e)
+		{
+		  Log.LogError("Bad file format : %s [%s]", filePath, e.what());
+		  throw runtime_error("Bad file format");
+		}
+            }
+	    
+
             if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
             {
-                Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, asymParams) );
+	      Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, asymParams, id) );
             }
         }
     }

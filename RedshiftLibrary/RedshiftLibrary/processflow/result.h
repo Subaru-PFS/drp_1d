@@ -28,9 +28,8 @@ public:
     virtual void SaveJSON(const CDataStore& store, std::ostream& stream) const;
     //virtual void Load( std::istream& stream ) = 0;
 
-    void SetReliabilityLabel( std::string lbl );
-    void SetTypeLabel( std::string lbl );
-    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
+
+
 
     void SaveFloat64(std::ostream& stream,Float64 data) const;
     void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data, TInt32List order) const;
@@ -39,10 +38,25 @@ public:
     void SaveStringVector(std::ostream& stream,std::string name,std::vector<std::string>, TInt32List order) const;
     void SaveStringVectorOfVector(std::ostream& stream,std::string name,std::vector<std::vector<std::string>>, TInt32List order) const;
     void SaveTContinuumIndexListVector(std::ostream& stream,std::string name,std::vector<CContinuumIndexes::TContinuumIndexList>, TInt32List order) const;
+
+    //should pure virtual, let's implement them first here before changing all operator results ....
+  virtual void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, std::string *data, int *size) const;
+  virtual void getCandidateData(const int& rank,const std::string& name, int  **data, int *size) const;
+
+  virtual void getData(const std::string& name, Int32& v) const;
+  virtual void getData(const std::string& name, Float64& v) const;
+  virtual void getData(const std::string& name, std::string& v) const;
+  virtual void getData(const std::string& name, double **data, int *size) const;
+  virtual void getData(const std::string& name, std::string *data, int *size) const;
+  virtual void getData(const std::string& name, int **data, int *size) const;
+
 protected:
 
-    std::string m_ReliabilityLabel="-1";
-    std::string m_TypeLabel="-1";
+
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

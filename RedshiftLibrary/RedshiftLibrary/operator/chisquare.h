@@ -6,6 +6,9 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/chisquareresult.h>
 
+#include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/template/template.h>
+
 namespace NSEpic
 {
 
@@ -26,7 +29,10 @@ public:
                                              std::string opt_interp_unused="lin",
                                              Int32 opt_extinction_unused=0,
                                              Int32 opt_dustFitting_unused=0,
-                                             CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList());
+                                             CPriorHelper::TPriorZEList logpriorze_unused=CPriorHelper::TPriorZEList(), 
+                                             Bool keepigmism = false,
+                                             Float64 FitDustCoeff=-1,
+                                             Float64 FitMeiksinIdx=-1);
 
 
 private:
@@ -35,6 +41,10 @@ private:
                    const TFloat64Range& lambdaRange, Float64 redshift, Float64 overlapThreshold,
                    Float64& overlapRate, Float64& chiSquare, Float64 &fitamplitude, EStatus& status  );
 
+    // buffers for the interpolated axis (template & spectrum)
+    CTemplate       m_templateRebined_bf; //buffer
+    CMask           m_mskRebined_bf; //buffer
+    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
 
 };
 

@@ -11,18 +11,18 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorBlindSolve::COperatorBlindSolve()
+CMethodBlindSolve::CMethodBlindSolve()
 {
 
 }
 
-COperatorBlindSolve::~COperatorBlindSolve()
+CMethodBlindSolve::~CMethodBlindSolve()
 {
 
 }
 
 
-const std::string COperatorBlindSolve::GetDescription()
+const std::string CMethodBlindSolve::GetDescription()
 {
     std::string desc;
 
@@ -35,7 +35,7 @@ const std::string COperatorBlindSolve::GetDescription()
 
 }
 
-std::shared_ptr<CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
+std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
@@ -77,7 +77,7 @@ std::shared_ptr<CBlindSolveResult> COperatorBlindSolve::Compute(  CDataStore& re
     return NULL;
 }
 
-Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
+Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
                                const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Int32 correlationExtremumCount,
                                Float64 overlapThreshold )
 {
@@ -105,35 +105,16 @@ Bool COperatorBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& 
     }
 
     resultStore.StoreScopedPerTemplateResult( tpl, "correlation", correlationResult );
+    
 
-    // Find redshifts extremum
-    TPointList extremumList;
-    CExtremum extremum( redshiftsRange, correlationExtremumCount);
-    extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList );
-
-    // Refine Extremum with a second maximum search around the z candidates:
-    // This corresponds to the finer xcorrelation in EZ Pandora (in standard_DP fctn in SolveKernel.py)
-    Float64 radius = 0.001;
-    for( Int32 i=0; i<extremumList.size(); i++ )
-    {
-        Float64 x = extremumList[i].X;
-        Float64 left_border = max(redshiftsRange.GetBegin(), x-radius);
-        Float64 right_border=min(redshiftsRange.GetEnd(), x+radius);
-
-        TPointList extremumListFine;
-        TFloat64Range rangeFine = TFloat64Range( left_border, right_border );
-        CExtremum extremumFine( rangeFine , 1);
-        extremumFine.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumListFine );
-        if( extremumListFine.size() ) {
-            extremumList[i] = extremumListFine[0];
-        }
-    }
-
+    Float64 radius = 0.005;
+        TPointList extremumList;
+    CExtremum extremum( redshiftsRange, correlationExtremumCount, radius);
+    extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList);
     if( extremumList.size() == 0 )
     {
         return false;
     }
-
     // Compute merit function
     TFloat64List extremumRedshifts( extremumList.size() );
     TFloat64List extremumCorrelation( extremumList.size() );

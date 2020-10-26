@@ -38,8 +38,8 @@ public:
     void Load( std::istream& stream );
 
     Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
-    std::vector<bool> GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
-    std::vector<bool> GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const;
+    TBoolList GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
+    TBoolList GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const;
     std::vector<Int32> GetNLinesAboveSnrcut( std::vector<CLineModelSolution> linemodelsols ) const;
 
     Float64 GetExtremaMerit(Int32 extremaIdx) const;
@@ -49,20 +49,19 @@ public:
 
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
-
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
     Int32 SetChisquareTplshapeResult(Int32 index,
                                      TFloat64List chisquareTplshape,
                                      TFloat64List scaleMargCorrTplshape,
-                                     std::vector<bool> strongEmissionLinePresentTplshape,
-                                     std::vector<Int32> nLinesAboveSNRTplshape,
+                                     TBoolList strongEmissionLinePresentTplshape,
+                                     TInt32List nLinesAboveSNRTplshape,
                                      TFloat64List priorLinesTplshape);
     TFloat64List GetChisquareTplshapeResult( Int32 index );
     TFloat64List GetScaleMargCorrTplshapeResult( Int32 index );
-    std::vector<bool> GetStrongELPresentTplshapeResult( Int32 index );
+    TBoolList GetStrongELPresentTplshapeResult( Int32 index );
     std::vector<Int32> GetNLinesAboveSNRTplshapeResult( Int32 index );
     std::vector<Float64> GetPriorLinesTplshapeResult( Int32 index_z );
-
+  Int32 getRedshiftIndex(Float64 z);
 
     //Merit results
     TFloat64List            Redshifts;  // z axis
@@ -74,7 +73,7 @@ public:
     std::vector<Float64> PriorTplshapes; // model prior (for each tplshape)
     std::vector<TFloat64List> PriorLinesTplshapes; // lines priors (for each tplshape)
     std::vector<TFloat64List> ScaleMargCorrectionTplshapes; // full scale marginalization correction results (for each tplshape)
-    std::vector<std::vector<bool>> StrongELPresentTplshapes; // full strongELPresent results (for each tplshape)
+    std::vector<TBoolList> StrongELPresentTplshapes; // full strongELPresent results (for each tplshape)
     std::vector<std::vector<Int32>> NLinesAboveSNRTplshapes; // full n_lines_above_snr results (for each tplshape)
     TFloat64List ChiSquareContinuum; // chi2 result for the continuum
     TFloat64List ScaleMargCorrectionContinuum; //  scale marginalization correction result for the continuum
@@ -85,7 +84,6 @@ public:
     //Extrema results
     CLineModelExtremaResult ExtremaResult;
 
-    //
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples = 0;

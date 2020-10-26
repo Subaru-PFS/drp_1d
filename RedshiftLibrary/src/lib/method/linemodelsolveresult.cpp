@@ -2,13 +2,13 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/linemodelresult.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
-
 
 using namespace NSEpic;
 
@@ -27,36 +27,37 @@ CLineModelSolveResult::~CLineModelSolveResult()
 
 }
 
+
+void CLineModelSolveResult::preSave(const CDataStore& store)
+{
+   //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
+    if(m_bestRedshiftMethod==0)
+    {
+        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
+    }
+    else if(m_bestRedshiftMethod==2)
+    {
+        if(GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
+        {
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
+        Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
+        Log.LogInfo( "Linemodelsolve-result: extracted best model-tplcontinuum=%s", tplcontinuumName.c_str());
+        }
+        else Log.LogError( "Linemodelsolve-result: can't get best redshift From Pdf");
+    }
+    else{
+        Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
+    }
+
+}
 /**
  * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
  **/
 void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
-    Float64 redshift;
-    Float64 merit;
-    std::string tplratioName="-1";
-    std::string tplcontinuumName="-1";
-    Float64 sigma;
-    Float64 snrHa=-1.0;
-    Float64 lfHa=-1.0;
-    Float64 snrOII=-1.0;
-    Float64 lfOII=-1.0;
 
-    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    if(m_bestRedshiftMethod==0)
-    {
-        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
-        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
-    }else if(m_bestRedshiftMethod==2)
-    {
-        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName );
-        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
-        Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
-        Log.LogInfo( "Linemodelsolve-result: extracted best model-tplcontinuum=%s", tplcontinuumName.c_str());
-    }else{
-        Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
-    }
-
+ 
 
     stream <<  "#Redshifts\tMerit\tTemplateRatio\tTemplateContinuum\tmethod\tsigma"<< std::endl;
     stream << redshift << "\t"
@@ -194,19 +195,28 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     auto res = store.GetGlobalResult( scope.c_str() );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TFloat64List ExtremaPDF = candResults->ValSumProba;
+    //reading from candResults cause deltaz is computed correctly there and what is saved in datastore is bad
+    TFloat64List ExtremaDeltaz = candResults->Deltaz;
+    TFloat64List Extrema = candResults->Redshifts;
     Int32 bestIdx = candResults->Rank[0];
 
+    if(bestIdx>=Extrema.size() || !Extrema.size()){
+       Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: Can't access best redshift ");
+       throw runtime_error("Can't access best redshift");
+    }
     if(results.expired())
         return false;
-
-    redshift = lineModelResult->ExtremaResult.Extrema[bestIdx];
+    //is not possible, we are reading values from datastore that we update in pdfzcandidatesresult!!!
+    redshift = Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
-    sigma = lineModelResult->ExtremaResult.DeltaZ[bestIdx];
+    sigma = ExtremaDeltaz[bestIdx];
+    //not sure that below values are correct! im right..they are not
     snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
     lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
     snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
     lfOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
     modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
+    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
     return true;
 }
 
@@ -306,7 +316,7 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
 
 Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
 {
-    Log.LogDebug( "CLineModelSolveResult:GetRedshiftCandidates" );
+    Log.LogDebug( "CLineModelSolveResult::GetRedshiftCandidates" );
     redshiftcandidates.clear();
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );
@@ -314,11 +324,7 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     if(!results.expired())
     {
         auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
-        {
-            Float64 tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
-            redshiftcandidates.push_back(tmpRedshift);
-        }
+        redshiftcandidates = lineModelResult->ExtremaResult.Extrema;
     }else{
         return false;
     }
@@ -326,3 +332,10 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     return true;
 }
 
+void CLineModelSolveResult::getData(const std::string& name, Float64& v) const
+{
+  if (name.compare("snrHa") == 0)  v = snrHa;
+  else if (name.compare("lfHa") == 0)  v = lfHa;
+  else if (name.compare("snrOII") == 0)  v = snrOII;
+  else if (name.compare("lfOII") == 0)  v = lfOII;
+}

@@ -14,16 +14,16 @@ class CDataStore;
 
 /**
  * \ingroup Redshift
- * \class COperatorLineMatching2Solve
+ * \class CMethodLineMatching2Solve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-class COperatorLineMatching2Solve
+class CMethodLineMatching2Solve
 {
 
 public:
 
-    COperatorLineMatching2Solve();
-    ~COperatorLineMatching2Solve();
+    CMethodLineMatching2Solve();
+    ~CMethodLineMatching2Solve();
 
     std::shared_ptr<CLineMatching2SolveResult> Compute( CDataStore& resultStore,
 							      const CSpectrum& spc, 

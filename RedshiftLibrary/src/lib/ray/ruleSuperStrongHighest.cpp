@@ -11,6 +11,10 @@ CRuleSuperStrong::CRuleSuperStrong()
 {
 }
 
+CRuleSuperStrong::~CRuleSuperStrong()
+{
+}
+
 void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
 {
   Name = "superstrong";

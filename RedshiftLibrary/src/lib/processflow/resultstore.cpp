@@ -2,12 +2,16 @@
 
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
+#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 
+#include <RedshiftLibrary/log/log.h>
 
 using namespace NSEpic;
 
@@ -127,9 +131,9 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
     TResultsMap::const_iterator it = m_GlobalResults.find( name );
     if( it != m_GlobalResults.end() )
     {
-        return (*it).second;
+      return (*it).second;
     }
-
+    Log.LogInfo("global result %s not found",name.c_str());
     return std::weak_ptr<const COperatorResult>();
 }
 
@@ -548,3 +552,193 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
 
     return n;
 }
+
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("galaxy") == 0)
+    {
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+      else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else throw Exception("unknown method %s",method.c_str());
+    }
+    
+  else if (object_type.compare("star") == 0)
+    {
+      
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else result =  GetGlobalResult("stellarsolve.stellarresult");
+    }
+  else throw Exception("unknown object_type %s",object_type.c_str());
+
+  result.lock()->getCandidateData(rank,name,v);
+}
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("galaxy") == 0)
+    {
+
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+      else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else throw Exception("unknown method %s",method.c_str());
+    }
+  else if (object_type.compare("star") == 0)
+    {
+      
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else result =  GetGlobalResult("stellarsolve.stellarresult");
+    }
+  else throw Exception("unknown object_type %s",object_type.c_str());
+  
+  result.lock()->getCandidateData(rank,name,v);
+}
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("galaxy") == 0)
+    {
+
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
+      else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else if (object_type.compare("star") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+
+      else throw Exception("unknown method %s",method.c_str());
+    }
+  else if (object_type.compare("star") == 0)
+    {
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else result =  GetGlobalResult("stellarsolve.stellarresult");
+    }
+  else throw Exception("unknown object_type %s",object_type.c_str());
+
+  result.lock()->getCandidateData(rank,name,v);
+}
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
+  if (object_type.compare("galaxy") == 0)
+    {
+      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+      else if (name.find("BestContinuum") != std::string::npos)  oss << "linemodelsolve.linemodel_continuum_extrema_"<< rank;
+      else if (name.compare("ContinuumIndexesColor") == 0 || name.compare("ContinuumIndexesBreak") == 0)
+        {
+          result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+          result.lock()->getCandidateData(rank,name,data,size);
+          return;
+        }
+      else throw Exception("unknown data %s",name.c_str());
+    }
+  else if (object_type.compare("star") == 0)
+    {
+      oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_" << rank;
+    }
+  result = GetGlobalResult(oss.str());
+  result.lock()->getData(name,data,size);
+}
+
+/*
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string *data, int *size) const
+{
+ std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
+  if (name.find("model_") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+  else if (name.find("fitted_rays_") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+  else
+    {
+      Log.LogError("unknown data %s",name.c_str());
+    }
+  result = GetGlobalResult(oss.str());
+  result.lock()->getData(name,data,size);
+}
+*/
+
+
+void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **data, int *size) const 
+{
+ std:weak_ptr<const COperatorResult> result;
+  std::ostringstream oss;
+  if (object_type.compare("galaxy") == 0)
+    {
+      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
+      else throw Exception("unknown data %s",name.c_str());
+    }
+  else if (object_type.compare("star") == 0)
+    {
+      if (name.find("Model") != std::string::npos)  oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<< rank;
+      else throw Exception("unknown data %s",name.c_str());
+    }
+  else throw Exception("unknown object_type %s",object_type.c_str());
+  result = GetGlobalResult(oss.str());
+  result.lock()->getData(name,data,size);
+}
+
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const
+{
+  if (object_type.compare("galaxy") == 0)
+    {
+   auto result = GetGlobalResult("candidatesresult");
+   result.lock()->getData(name,v);
+    }
+  else if (object_type.compare("star") == 0)
+    {
+      if(name.compare("NbCandidates") == 0)     v=1;
+      else throw Exception("unknown data %s",name.c_str());         
+    }
+  else throw Exception("unknown object_type %s",object_type.c_str());
+      
+}
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const
+{
+  std:weak_ptr<const COperatorResult> result;
+  if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
+     name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
+  else result = GetGlobalResult("candidatesresult");
+  result.lock()->getData(name,v);
+}
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
+{
+  std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("classification") == 0) result = GetGlobalResult("classificationresult");
+  else result = GetGlobalResult("candidatesresult");
+  result.lock()->getData(name,v);
+}
+
+void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name,double **data, int *size) const
+{
+  std:weak_ptr<const COperatorResult> result;
+  if (object_type.compare("galaxy") == 0) result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  else if (object_type.compare("star") == 0) result = GetGlobalResult("stellar_zPDF/logposterior.logMargP_Z_data");
+  else throw Exception("unknown object type %s or no double array attributes for this object type",object_type.c_str());
+  result.lock()->getData(name,data,size);
+}
+
+void COperatorResultStore::test()
+{
+  std::shared_ptr<CPdfMargZLogResult> testResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+  testResult->Redshifts.clear();
+  testResult->Redshifts.push_back(1.2);
+  testResult->Redshifts.push_back(3.4);
+  testResult->Redshifts.push_back(7.9);
+
+  testResult->valProbaLog.clear();
+  testResult->valProbaLog.push_back(27.4);
+  testResult->valProbaLog.push_back(67.8);
+  testResult->valProbaLog.push_back(92.7);
+  
+  StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
+
+  
+}
+
+

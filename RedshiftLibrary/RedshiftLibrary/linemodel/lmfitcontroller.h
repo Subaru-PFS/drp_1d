@@ -52,6 +52,7 @@ class CLmfitController{
     Float64 getAbsorptionVelocity();
     Float64 getEmissionVelocity();
     Float64 getContinuumAmp();
+    Float64 getContinuumAmpErr();
     Float64 getRedshift();
     void calculatedIndices();
     void addElement(Int32 elemId);
@@ -71,6 +72,8 @@ class CLmfitController{
     Float64 absVel_ModelToLm(Float64 modelAbsVel);
     Float64 continuumAmp_LmToModel(Float64 lmContinuumAmp);
     Float64 continuumAmp_ModelToLm(Float64 lmContinuumAmp);
+    //Float64 continuumAmpErr_LmToModel(Float64 lmContinuumAmpErr);
+    //Float64 continuumAmpErr_ModelToLm(Float64 lmContinuumAmpErr);
 
   private:
 
@@ -82,19 +85,19 @@ class CLmfitController{
     std::vector<Float64> m_ampsLinefitted;
     std::vector<Float64> m_ampErrLineFitted;
     bool m_normFactorSetted = false;
-    Float64 m_normFactor = 0;
-    Float64 m_normAmpLine = 0;
-    Float64 m_normEmiFactor = 0;
-    Float64 m_normAbsFactor = 0;
-    Float64 m_continuumAmp = 0;
-    Float64 m_continuumAmpErr = 0;
-    Float64 m_velAbs = 0;
-    Float64 m_velErrAbs = 0;
-    Float64 m_velEm = 0;
-    Float64 m_velErrEm = 0;
-    Float64 m_merit = 0;
-    Float64 m_redshift = 0;
-    Float64 m_redshiftErr = 0;
+    Float64 m_normFactor = 0.;
+    Float64 m_normAmpLine = 0.;
+    Float64 m_normEmiFactor = 0.;
+    Float64 m_normAbsFactor = 0.;
+    Float64 m_continuumAmp = 0.;
+    Float64 m_continuumAmpErr = 0.;
+    Float64 m_velAbs = 0.;
+    Float64 m_velErrAbs = 0.;
+    Float64 m_velEm = 0.;
+    Float64 m_velErrEm = 0.;
+    Float64 m_merit = 0.;
+    Float64 m_redshift = 0.;
+    Float64 m_redshiftErr = 0.;
     std::vector<UInt32> m_filteredEltsIdx;
     Int32 m_numberParameters = 0;
     Int32 m_indAbsorptionVel = 0;

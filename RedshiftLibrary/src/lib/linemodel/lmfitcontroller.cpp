@@ -184,6 +184,16 @@ Float64 CLmfitController::continuumAmp_ModelToLm(Float64 lmContinuumAmp){
   // return lmContinuumAmp;
 }
 
+/*Float64 CLmfitController::continuumAmpErr_LmToModel(Float64 lmContinuumAmpErr){
+  return lmContinuumAmpErr*lmContinuumAmpErr;
+  // return lmContinuumAmpErr;
+}
+
+Float64 CLmfitController::continuumAmpErr_ModelToLm(Float64 lmContinuumAmpErr){
+  return sqrt(lmContinuumAmpErr);
+  // return lmContinuumAmpErr;
+}*/
+
 //
 /*
 Parse all the amplitude of element and look if some are neg. Those are remove from the fitting
@@ -279,6 +289,7 @@ Int32 CLmfitController::getIndAbsorptionVel(){
 Int32 CLmfitController::getIndContinuumAmp(){
   return m_indContinuumAmp;
 }
+
 // return the index of redshift in the vector of lmfit variable
 Int32 CLmfitController::getIndRedshift(){
   return m_indRedshift;
@@ -319,12 +330,18 @@ Float64 CLmfitController::getContinuumAmp(){
   return m_continuumAmp;
 }
 
+Float64 CLmfitController::getContinuumAmpErr(){
+  return m_continuumAmpErr;
+}
+
 Float64 CLmfitController::getRedshift(){
   return m_redshift;
 }
+
 void CLmfitController::setMerit(Float64 merit){
   m_merit = merit;
 }
+
 Float64 CLmfitController::getMerit(){
   return m_merit;
 }

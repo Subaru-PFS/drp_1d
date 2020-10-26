@@ -18,6 +18,7 @@ namespace NSEpic
     std::string Name;
     
     CRule ( );
+    virtual ~CRule();
     void Apply( CLineModelElementList& LineModelElementList );
     virtual Bool Check( CLineModelElementList& LineModelElementList ) = 0;
     virtual void SetUp( Bool EnabledArgument, ... ) = 0;

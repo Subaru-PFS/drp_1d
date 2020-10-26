@@ -15,13 +15,13 @@ class COperatorResultStore;
 /**
  * \ingroup Redshift
  */
-class COperatorDTreeBSolve
+class CMethodDTreeBSolve
 {
 
 public:
 
-    COperatorDTreeBSolve( std::string calibrationPath="" );
-    ~COperatorDTreeBSolve();
+    CMethodDTreeBSolve( std::string calibrationPath="" );
+    ~CMethodDTreeBSolve();
 
     const std::string GetDescription();
 

@@ -4,7 +4,8 @@
 #include <RedshiftLibrary/noise/fromfile.h>
 
 #include <RedshiftLibrary/log/log.h>
-
+#include <gsl/gsl_spline.h>
+#include <gsl/gsl_interp.h>
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
@@ -20,83 +21,125 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrum::CSpectrum()
+CSpectrum::CSpectrum():
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
 
 }
 
 
-CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask)
+CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
+    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
-    TFloat64List tmpFlux;
-    TFloat64List tmpError;
-    TFloat64List tmpWave;
-
-    CSpectrumSpectralAxis otherSpectral = other.GetSpectralAxis();
-    CSpectrumFluxAxis otherFlux = other.GetFluxAxis();
-
+    const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
+    const CSpectrumFluxAxis & otherFlux = other.m_FluxAxis;
     const TFloat64List& error = otherFlux.GetError();
 
-    for(Int32 i=0; i<mask.size(); i++){
+    TAxisSampleList & SpectralVector = m_SpectralAxis.GetSamplesVector();
+    TAxisSampleList & FluxVector = m_FluxAxis.GetSamplesVector();
+    TFloat64List & ErrorVector = m_FluxAxis.GetError();
+
+    const UInt32 otherSpectralSize = otherSpectral.GetSamplesCount();
+    const UInt32 otherFluxSize = otherFlux.GetSamplesCount();
+    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize );
+    minsize = min(minsize, otherFluxSize );
+    for(Int32 i=0; i<minsize; i++){
         if(mask[i]!=0){
-            tmpWave.push_back(otherSpectral[i]);
-            tmpFlux.push_back(otherFlux[i]);
+            SpectralVector.push_back(otherSpectral[i]);
+            FluxVector.push_back(otherFlux[i]);
             if( !error.empty() ){
-                tmpError.push_back(error[i]);
+                ErrorVector.push_back(error[i]);
             }
         }
     }
 
-    CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(tmpWave.size(), otherSpectral.IsInLogScale());
-    CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(tmpFlux.size());
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
-    for(Int32 i=0; i<tmpFlux.size(); i++){
-        (*_SpectralAxis)[i] = tmpWave[i];
-        (*_FluxAxis)[i] = tmpFlux[i];
-        if( !error.empty() ){
-            (*_FluxAxis).GetError()[i] = tmpError[i];
-        }
-    }
-
-    m_SpectralAxis = *_SpectralAxis;
-    m_FluxAxis = *_FluxAxis;
-
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
 }
 
-CSpectrum::CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
-  m_SpectralAxis(spectralAxis),
-  m_FluxAxis(fluxAxis)
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
+    m_SpectralAxis(spectralAxis),
+    m_FluxAxis(fluxAxis),
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
 {
-    m_estimationMethod = "";
-    m_medianWindowSize = -1;
-    m_nbScales = -1;
-    m_dfBinPath = "";
+
+}
+//assignment constructor
+CSpectrum::CSpectrum(const CSpectrum& other):
+    m_estimationMethod(other.m_estimationMethod),
+    m_dfBinPath(other.m_dfBinPath),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales)
+{
+    m_SpectralAxis = other.m_SpectralAxis;
+    m_FluxAxis = other.GetFluxAxis();
 }
 
 CSpectrum::~CSpectrum()
 {
 
 }
-
+//copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
-    m_SpectralAxis = other.GetSpectralAxis();
+    m_SpectralAxis = other.m_SpectralAxis;
     m_FluxAxis = other.GetFluxAxis();
 
-    m_estimationMethod = other.GetContinuumEstimationMethod();
-    m_dfBinPath = other.GetWaveletsDFBinPath();
-    m_medianWindowSize = other.GetMedianWinsize();
-    m_nbScales = other.GetDecompScales();
+    m_estimationMethod = other.m_estimationMethod;
+    m_dfBinPath = other.m_dfBinPath;
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
 
     return *this;
+}
+
+/**
+ * below should be calculated in the case of precomputedfinegrid
+*/
+Bool CSpectrum::RebinFineGrid() const
+{
+ // Precalculate a fine grid template to be used for the 'closest value' rebin method
+  Int32 n = m_FluxAxis.GetSamplesCount();
+  if(!n)
+    return false;
+
+  Float64 lmin = m_SpectralAxis[0];//template wavelength never starts at 0
+  Float64 lmax = m_SpectralAxis[n - 1];
+  Int32 nTgt = (lmax - lmin) / m_dLambdaFineGrid + 2.0 / m_dLambdaFineGrid;
+
+  m_pfgFlux.resize(nTgt);
+
+  const TAxisSampleList Ysrc = m_FluxAxis.GetSamplesVector();
+  const TAxisSampleList Xsrc = m_SpectralAxis.GetSamplesVector();
+
+  //inialise and allocate the gsl objects
+  gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, n);
+  gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
+  gsl_interp_accel * accelerator = gsl_interp_accel_alloc();
+
+  Int32 k = 0;
+  Float64 x = 0.0;
+  for (k = 0; k < nTgt; k++) {
+    x = lmin + k * m_dLambdaFineGrid;
+    if (x < m_SpectralAxis[0] || x > m_SpectralAxis[n - 1]) {
+      m_pfgFlux[k] = 0.0;
+    } else {
+      m_pfgFlux[k] = gsl_spline_eval(spline, x, accelerator);
+    }
+  }
+  gsl_spline_free(spline);
+  gsl_interp_accel_free(accelerator);
+  m_FineGridInterpolated = true;
+  return true;
 }
 
 
@@ -231,19 +274,19 @@ void CSpectrum::SetName( const char* name )
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 {
-    Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
+    //Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
     Bool validValue = true;
     if( std::isnan(flux) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found nan flux value (=%e) at index=%d", flux, index);
     }
     if( std::isinf(flux) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found inf flux value (=%e) at index=%d", flux, index);
     }
     if( flux != flux ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
+        //Log.LogDebug("    CSpectrum::checkFlux - Found invalid flux value (=%e) at index=%d", flux, index);
     }
     return validValue;
 }
@@ -325,8 +368,9 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     {
         Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
         Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
-        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMin=%d error[iMin]=%e", LambdaMin, iMin, error[iMin]);
-        Log.LogDebug("    CSpectrum::IsNoiseValid - wl=%f iMax=%d error[iMax]=%e", LambdaMax, iMax, error[iMax]);
+        Log.LogDetail( "CSpectrum::IsNoiseValid - checking on the configured lambdarange = (%f, %f)", LambdaMin, LambdaMax );
+        Log.LogDetail( "CSpectrum::IsNoiseValid - checking on the true observed spectral axis lambdarange = (%f, %f)", m_SpectralAxis[iMin], m_SpectralAxis[iMax] );
+        //Log.LogDebug("    CSpectrum::IsNoiseValid - debug - iMin=%d and wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax, m_SpectralAxis[iMax]);
         for(Int32 i=iMin; i<iMax; i++){
             //check noise
             Bool validSample = checkNoise(error[i], i);
@@ -487,4 +531,213 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
       noise.AddNoise(*this);
       Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
     }
+}
+
+
+void  CSpectrum::InitPrecomputeFineGrid() const
+{
+    m_FineGridInterpolated = false;
+}
+
+///
+/// * This rebin method targets processing speed:
+/// - it uses already allocated rebinedFluxAxis, rebinedSpectralAxis and rebinedMask
+/// - opt_interp = 'lin' : linear interpolation is performed by default
+/// - opt_interp = 'precomputedfinegrid' : nearest grid point interpolation is performed using m_pfgFlux which is the precomputed fine grid
+/// - opt_interp = 'spline' : GSL/spline interpolation is performed (TODO - not tested)
+/// - opt_interp = 'ngp' : nearest grid point is performed (TODO - not tested)
+/**
+ * targetSpectralAxis should be expressed in same frame as source SpetralAxis
+*/
+Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp, const std::string opt_error_interp) const
+{
+    
+    if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
+    {
+        Log.LogError("Problem samplecountsize betwees spectral axis and flux axis");
+        return false;
+    }
+    
+    if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false)
+    {
+        RebinFineGrid();
+    }
+
+    if(m_pfgFlux.size()==0 && opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == true)
+    {
+        Log.LogError("Problem buffer couldnt be computed\n" );
+        return false;
+    }
+
+    //the spectral axis should be in the same scale
+    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
+        Log.LogError("Problem spectral axis and target spectral axis are not in same scale\n");
+        return false;
+
+    }
+    if(m_SpectralAxis.IsInLinearScale()){
+        currentRange = range;
+    }
+    UInt32 s = targetSpectralAxis.GetSamplesCount();
+
+    rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
+
+    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.m_FluxAxis;
+    rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
+
+    rebinedMask.SetSize(s);
+
+    const TAxisSampleList& Xsrc = m_SpectralAxis.GetSamplesVector();
+    const TAxisSampleList& Ysrc = m_FluxAxis.GetSamplesVector();
+    const TAxisSampleList& Xtgt = targetSpectralAxis.GetSamplesVector();
+    TAxisSampleList&       Yrebin = rebinedFluxAxis.GetSamplesVector();
+    const TFloat64List&    Error = m_FluxAxis.GetError();
+    TFloat64List&          ErrorRebin = rebinedFluxAxis.GetError();
+
+    // Move cursors up to lambda range start
+    Int32 j = 0;
+    while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] < currentRange.GetBegin() )
+    {
+        rebinedMask[j] = 0;
+        Yrebin[j] = 0.0;
+        if (opt_error_interp == "rebin" )
+            ErrorRebin[j] = INFINITY;
+        j++;
+    }
+
+    if(opt_interp=="lin"){
+        //Default linear interp.
+        Int32 k = 0;
+        // For each sample in the valid lambda range interval.
+        while( k<m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+        {           
+            // For each sample in the target spectrum that are in between two continous source sample
+            while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
+            {
+                // perform linear interpolation of the flux
+                Float64 xSrcStep = ( Xsrc[k+1] - Xsrc[k] );
+                Float64 t = ( Xtgt[j] - Xsrc[k] ) / xSrcStep;
+                Yrebin[j] = Ysrc[k] + ( Ysrc[k+1] - Ysrc[k] ) * t;
+                rebinedMask[j] = 1;
+
+                if (opt_error_interp != "no")
+                {
+                    if (opt_error_interp == "rebin" )
+                        ErrorRebin[j] = Error[k] + ( Error[k+1] - Error[k] ) * t;
+                    else if (opt_error_interp == "rebinVariance")
+                    {
+                        ErrorRebin[j] = sqrt(Error[k]*Error[k]*(1-t)*(1-t) + Error[k+1]*Error[k+1] * t*t);
+                        //*
+                        Float64 xDestStep, xStepCompensation;
+                        if(j<targetSpectralAxis.GetSamplesCount()-1)
+                        {
+                            xDestStep = Xtgt[j+1]-Xtgt[j];
+                            xStepCompensation = xSrcStep/xDestStep;
+                        }else if(j>0){
+                            xDestStep = Xtgt[j]-Xtgt[j-1];
+                            xStepCompensation = xSrcStep/xDestStep;
+                        }else{
+                            xStepCompensation = 1.0;
+                        }
+                        ErrorRebin[j] *= sqrt(xStepCompensation);
+                    }
+                }
+                j++;
+            }
+
+            k++;
+        }
+    }else if(opt_interp=="precomputedfinegrid"){
+        // Precomputed FINE GRID nearest sample, 20150801
+        Int32 k = 0;
+        Float64 lmin = m_SpectralAxis[0];
+       // For each sample in the target spectrum
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
+            k = int( (Xtgt[j] - lmin)/m_dLambdaFineGrid + 0.5 );
+            Yrebin[j] = m_pfgFlux[k];
+            rebinedMask[j] = 1;
+
+            // note: error rebin not implemented for precomputedfinegrid
+            if (opt_error_interp != "no")
+                return false;
+
+            j++;
+
+        }
+    }else if(opt_interp=="spline"){
+         // GSL method spline
+        //initialise and allocate the gsl objects
+        Int32 n = m_SpectralAxis.GetSamplesCount();
+        gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
+        gsl_spline_init (spline, Xsrc.data(), Ysrc.data(), n);
+        gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
+
+        // For each sample in the valid lambda range interval.
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
+            Yrebin[j] = gsl_spline_eval (spline, Xtgt[j], accelerator);
+            rebinedMask[j] = 1;
+
+            // note: error rebin not implemented for spline interp
+            if (opt_error_interp != "no")
+                return false;
+
+            j++;
+        }
+    }else if(opt_interp=="ngp"){
+        //nearest sample, lookup
+        Int32 k = 0; 
+        Int32 kprev = 0;
+        Int32 n = m_SpectralAxis.GetSamplesCount();
+        while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
+        {
+            k = gsl_interp_bsearch (Xsrc.data(), Xtgt[j], kprev, n);
+            kprev = k;
+            // closest value
+            Yrebin[j] = Ysrc[k];
+
+            if (opt_error_interp != "no")
+            {
+                ErrorRebin[j] = Error[k];
+
+                if (opt_error_interp == "rebinVariance")
+                {
+                     Float64 xSrcStep, xDestStep, xStepCompensation;
+                     if(j<targetSpectralAxis.GetSamplesCount()-1)
+                     {
+                         xDestStep = Xtgt[j+1]-Xtgt[j];
+                         xStepCompensation = xSrcStep/xDestStep;
+                     }else if(j>0){
+                         xDestStep = Xtgt[j]-Xtgt[j-1];
+                         xStepCompensation = xSrcStep/xDestStep;
+                     }else{
+                         xStepCompensation = 1.0;
+                     }
+                     ErrorRebin[j] *= sqrt(xStepCompensation);
+                }
+            }
+
+            rebinedMask[j] = 1;
+            j++;
+        }
+    }
+
+    while( j < targetSpectralAxis.GetSamplesCount() )
+    {
+        rebinedMask[j] = 0;
+        Yrebin[j] = 0.0;
+        if (opt_error_interp == "rebin" )
+            ErrorRebin[j] = INFINITY;
+        j++;
+    }
+
+    return true;
+}
+void CSpectrum::ScaleFluxAxis(Float64 scale){
+    m_FluxAxis *= scale;
+    return;
 }

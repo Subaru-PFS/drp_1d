@@ -40,10 +40,21 @@ CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
     m_Samples = other.m_Samples;
     return *this;
 }
+CSpectrumAxis& CSpectrumAxis::operator*=(const Float64 op)
+{
+    for(Int32 i = 0; i < m_Samples.size(); i++){
+        m_Samples[i] *= op;
+    }
+    return *this;
+}
 
 void CSpectrumAxis::SetSize( UInt32 s )
 {
     m_Samples.resize( s );
 }
 
+UInt32 CSpectrumAxis::GetSamplesCount( )
+{
+    return m_Samples.size();
+}
 
