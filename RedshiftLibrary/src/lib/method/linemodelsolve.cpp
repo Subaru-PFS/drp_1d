@@ -374,7 +374,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
         // Log.LogDetail("Linemodelsolve: Pdfz computation");
 
-        std::string scope = "linemodelsolve.linemodel";
+        std::string scope = dataStore.GetCurrentScopeName() + ".linemodel";
         auto results = dataStore.GetGlobalResult( scope.c_str() );
         if(results.expired())
         {
