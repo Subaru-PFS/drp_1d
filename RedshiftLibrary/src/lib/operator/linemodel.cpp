@@ -2451,7 +2451,10 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
                                const TFloat64List &redshifts,
-                               const Float64 nsigmasupport)
+                               const Float64 nsigmasupport,
+                               const Float64 halfwdwsize,
+                               const Float64 radius
+                               )
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
@@ -2470,6 +2473,8 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 
     // set the nsigmasupport
     m_linesmodel_nsigmasupport = nsigmasupport;
+    m_secondPass_extensionradius = halfwdwsize;
+    m_extremaRedshiftSeparation = radius; 
 
     return 0;
 }

@@ -64,10 +64,11 @@ const std::string CMethodDTreeCSolve::GetDescription()
 
 std::shared_ptr<CDTreeCSolveResult> CMethodDTreeCSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
+                                                        const TFloat64Range& lambdaRange, const TFloat64List &redshifts,
+                                                        const Float64 radius)
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( resultStore, "dtreeCsolve" );
 
     std::string scopeStr = "chisquare";
@@ -259,7 +260,7 @@ Bool CMethodDTreeCSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     //*/
     auto chisolveResultcontinuum = chiSolve->Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit);
 
     if( !chisolveResultcontinuum )
     {

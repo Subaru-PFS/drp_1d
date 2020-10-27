@@ -57,6 +57,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                                                                               Float64 overlapThreshold,
                                                                               std::vector<CMask> maskList,
                                                                               const std::string outputPdfRelDir,
+                                                                              const Float64 radius,
                                                                               std::string spcComponent,
                                                                               std::string opt_interp,
                                                                               std::string opt_extinction,
@@ -66,6 +67,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
 
     CDataStore::CAutoScope resultScope( resultStore, "chisquare2solve" );
     std::string scopeStr = "chisquare";
+    m_radius = radius;
 
     Int32 _type;
     if(spcComponent=="raw"){
@@ -282,7 +284,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
 
-        chisquareResult->CallFindExtrema();
+        chisquareResult->CallFindExtrema(m_radius);
         
         if( !chisquareResult )
         {

@@ -26,10 +26,11 @@ CMethodChisquareSolve::~CMethodChisquareSolve()
 
 std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string opt_interp )
+                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, 
+                                                        const Float64 radius, std::string opt_interp )
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( dataStore, "chisquaresolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
@@ -92,7 +93,7 @@ Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, 
     //adding cast to be capable of reading redshift attribute
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>(chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp));
     
-    chisquareResult->CallFindExtrema();  
+    chisquareResult->CallFindExtrema(m_radius);  
     
     if( !chisquareResult )
     {

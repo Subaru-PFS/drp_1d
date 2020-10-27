@@ -89,10 +89,12 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
     Float64       maxCount; 
+    Float64       radius;
 
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
+    ctx.GetParameterStore().Get( "extremaredshiftseparation", radius, 0.005);//todo: decide on the default values using latest analyses plots
 
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
@@ -339,6 +341,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                     overlapThreshold,
                                     maskList,
                                     "stellar_zPDF",
+                                    radius,
                                     opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
@@ -431,6 +434,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
+                                       radius,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         }else if(qso_method=="chisquarelogsolve"){
             opt_interp="unused";
@@ -445,6 +449,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
+                                       radius,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         }else if(qso_method=="tplcombinationsolve"){
             opt_interp="lin";
@@ -461,6 +466,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
+                                       radius,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         /*}else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
@@ -473,7 +479,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetRayCatalog(),
                                        spcLambdaRange,
                                        qso_redshifts,
-                                       "qso_zPDF");*/
+                                       "qso_zPDF",
+                                       radius);*/
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
@@ -502,7 +509,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts,
-                                 galaxy_method_pdf_reldir);
+                                 galaxy_method_pdf_reldir,
+                                 radius);
 
         if( mResult)
         {
@@ -565,6 +573,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
+                                 radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
         if( mResult)
@@ -611,6 +620,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
+                                 radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
@@ -660,6 +670,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
+                                 radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
         if( mResult)
@@ -701,7 +712,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  ctx.GetTemplateCatalog(),
                                  templateCategoryList,
                                  ctx.GetRayCatalog(),
-                                 spcLambdaRange, redshifts);
+                                 spcLambdaRange, redshifts, radius);
 
     }else if(methodName  == "amazed0_3" ){
         CMethodDTreeCSolve Solve(calibrationDirPath);
@@ -712,7 +723,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  templateCategoryList,
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
-                                 redshifts);
+                                 redshifts, radius);
 
     }else if(methodName  == "correlationsolve" ){
         CMethodCorrelationSolve solve;

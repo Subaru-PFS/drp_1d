@@ -27,7 +27,7 @@ public:
 
     std::shared_ptr<CDTreeBSolveResult> Compute(CDataStore &resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
+                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Float64 radius );
 
 
 private:
@@ -40,7 +40,7 @@ private:
     TFloat64List GetBestRedshiftChi2List(CDataStore& store, std::string scopeStr, Float64 &minmerit, TFloat64List &zList);
 
     std::string m_calibrationPath;
-
+    Float64 m_radius;
 };
 
 
