@@ -153,9 +153,35 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated)
     for (Int32 i = 0; i < x.size(); i++) {       
         maxPoint.push_back(SPoint(x[i],  y[i]) );
     }
-    check_points(maxPoint, TPointList({  {0.8,8}, {0.6,6}, {0.1,5} }));
+    check_points(maxPoint, TPointList({ {0.1,5}, {0.6,6}, {0.8,8}}));
 }
 
+
+BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak)
+{
+    CExtremum peaks1;
+    TPointList maxPoint;
+    TFloat64List x = { 0.0, 0.1, 0.2};
+    TFloat64List y = { 1.0, 6.0, 1.2};
+
+    Float64 radius = 0.005;
+    peaks1.SetMaxPeakCount(5);
+    peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
+    peaks1.SetMeritCut(3);
+
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
+
+    peaks1.SetSortedIndexes(sortedIndexes);
+
+    Bool v = peaks1.Cut_Threshold(x, y, 2);
+    for (Int32 i = 0; i < x.size(); i++) {       
+        maxPoint.push_back(SPoint(x[i],  y[i]) );
+    }
+    check_points(maxPoint, TPointList({ {0.1,6},  {0.2,1.2}}));
+}
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
 {
     
@@ -165,14 +191,14 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
 
     Float64 radius = 0.2;
     CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
 
-    //testing only the sliding window algo
-    peaks1.FilterOutNeighboringPeaks(x, y, 2);
-    for (Int32 i = 0; i < x.size(); i++) {
-        
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.1,5.0}, {0.8,8}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+    check_points(maxPoint, TPointList({{0.8,8}, {0.1,5.0}, {0.4,1.0}})); 
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks)
@@ -184,13 +210,14 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks)
 
     Float64 radius = 0.05;
     CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
 
-    //testing only the sliding window algo
-    peaks1.FilterOutNeighboringPeaks(x, y, 2);
-    for (Int32 i = 0; i < x.size(); i++) { 
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.08,8}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+    check_points(maxPoint, TPointList({{0.08,8},{0.02, 5}})); 
 }
 
 
@@ -203,13 +230,14 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2)
 
     Float64 radius = 0.005;
     CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
 
-    //testing only the sliding window algo
-    peaks1.FilterOutNeighboringPeaks(x, y, 2);
-    for (Int32 i = 0; i < x.size(); i++) {
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.03,4.0}, {0.06,6.0}, {0.08,8}, {0.1,4.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+    check_points(maxPoint, TPointList({{0.08,8}, {0.06,6.0}, {0.03,4.0}, {0.1,4.0}, {0.02, 3}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF)
@@ -221,24 +249,21 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF)
 
     Float64 radius = 0.005;
     CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
 
-    //testing only the sliding window algo
-    peaks1.FilterOutNeighboringPeaks(x, y, 2);
-    for (Int32 i = 0; i < x.size(); i++) {
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.03,5.0}, {0.06,8.0}, {0.1,14.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+
+    check_points(maxPoint, TPointList({ {0.1,14.0}, {0.09, 11.0}, {0.08,10.0}, {0.07, 9.5}, {0.06,8.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 
     //bigger radius
     radius = 0.1;
-    //CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
     maxPoint = {};
-    //testing only the sliding window algo
-    peaks1.FilterOutNeighboringPeaks(x, y, 2);
-    for (Int32 i = 0; i < x.size(); i++) {
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.03,5.0}, {0.06,8.0}, {0.1,14.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
+    check_points(maxPoint, TPointList({ {0.1,14.0}, {0.09, 11.0}, {0.08,10.0}, {0.07, 9.5}, {0.06,8.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 
 }
 //testing case where nb of peaks = keepmin
@@ -251,15 +276,16 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2)
 
     Float64 radius = 0.2;
     CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
 
+    peaks1.SetSortedIndexes(sortedIndexes);
     //testing only the sliding window algo
     Int32  keepmin = 2;
-    peaks1.FilterOutNeighboringPeaks(x, y, keepmin);
-    for (Int32 i = 0; i < x.size(); i++) {
-        
-        maxPoint.push_back(SPoint(x[i],  y[i]) );
-    }
-    check_points(maxPoint, TPointList({{0.01,1.0}, {0.1,5.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
+    peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin, maxPoint);
+    check_points(maxPoint, TPointList({ {0.1,5.0}, {0.01,1.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_Truncate)
@@ -270,8 +296,14 @@ BOOST_AUTO_TEST_CASE(Extremum_Truncate)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Int32 maxCount = 2;
-    CExtremum peaks1( false); //TFloat64Range(-10.0, 10.0), 5, radius, false);
-    peaks1.Truncate( x, y, maxCount, maxPoint);
+    CExtremum peaks1( TFloat64Range(-10.0, 10.0), maxCount);
+    TInt32List sortedIndexes(x.size());
+    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
+    sort(sortedIndexes.begin(), sortedIndexes.end(),
+       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
+
+    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.Truncate( x, y, maxPoint);
     
     check_points(maxPoint, TPointList({{0.8,8}, {0.6,6}}));
 }

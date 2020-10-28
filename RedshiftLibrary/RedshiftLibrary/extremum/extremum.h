@@ -33,9 +33,7 @@ public:
     Bool Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const;
     //made public to do unit tests
     Bool Truncate( TFloat64List& xAxis, TFloat64List& yAxis, TPointList& maxPoint) const;
-    Bool Truncate( TFloat64List& maxX, TFloat64List& maxY, Int32 maxCount, TPointList& maxPoint) const;
-    Bool FilterOutNeighboringPeaks( TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin) const;
-    Bool FilterOutNeighboringPeaks_2(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const;
+    Bool FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const;
     void DeactivateSlidingWindow();
     void SetSortedIndexes(TInt32List&  sortedIndexes);
 private:
@@ -50,7 +48,7 @@ private:
     Float64         m_meritCut;
     Float64         m_SignSearch;
     Float64         m_Radius;
-    Bool            m_slidingWindowactive = true;
+    Bool            m_PeakSeparationActive = true;
     mutable TInt32List   m_sortedIndexes;
 };
 inline
