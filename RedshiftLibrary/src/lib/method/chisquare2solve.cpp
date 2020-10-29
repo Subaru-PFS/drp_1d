@@ -168,20 +168,31 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
             try {
                 const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, ChisquareSolveResult->GetTemplateName());
-                m_chiSquareOperator->GetSpectrumModel(spc, tpl, 
+                CModelSpectrumResult spcmodel;
+                m_chiSquareOperator->ComputeSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
                                                  ChisquareSolveResult->GetDustCoeff(), 
                                                  ChisquareSolveResult->GetMeiksinIdx(), 
                                                  ChisquareSolveResult->GetAmplitude(),
                                                  opt_interp, opt_extinction, lambdaRange, 
-                                                 overlapThreshold);              
+                                                 overlapThreshold, spcmodel);
+                m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(spcmodel));
+                m_savedModelContinuumFittingResults.push_back(std::make_shared<CModelContinuumFittingResult>(
+                                                                                zcandidates_unordered_list[i],
+                                                                                tpl.GetName(), 
+                                                                                ChisquareSolveResult->GetMerit(),
+                                                                                ChisquareSolveResult->GetAmplitude(),
+                                                                                ChisquareSolveResult->GetAmplitudeError(),
+                                                                                ChisquareSolveResult->GetDustCoeff(),
+                                                                                ChisquareSolveResult->GetMeiksinIdx(),
+                                                                                ChisquareSolveResult->GetFittingSNR()));          
             }catch(const std::runtime_error& e){
                 Log.LogError("  Chisquare2Solve: Couldn't find template by tplName: %s for candidate %f", ChisquareSolveResult->GetTemplateName().c_str(), zcandidates_unordered_list[i]);
                 continue;
             }   
-                                  
+                    
         }
-        m_chiSquareOperator->SaveSpectrumResults(resultStore);
+        SaveSpectrumResults(resultStore);
         return ChisquareSolveResult;
     }
 
@@ -468,3 +479,21 @@ Bool CMethodChisquare2Solve::ExtractCandidateResults(CDataStore &store, std::vec
     return true;
 }
 
+void CMethodChisquare2Solve::SaveSpectrumResults(CDataStore &dataStore)
+{
+    if( m_savedModelContinuumFittingResults.size()!= m_savedModelSpectrumResults.size()){
+        Log.LogError(" CMethodChisquare2Solve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size.");
+        throw runtime_error(" CMethodChisquare2Solve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size. Aborting!");
+    }
+
+    Log.LogDetail("  Methode-COperatorChiSquare2: now saving spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
+    for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
+    {
+        std::string fname_spc = (boost::format("chisquare2_spc_extrema_%1%") % i).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
+
+        fname_spc = (boost::format("chisquare2_fitcontinuum_extrema_%1%") % i).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(),  m_savedModelContinuumFittingResults[i] );
+    }
+    return;
+}

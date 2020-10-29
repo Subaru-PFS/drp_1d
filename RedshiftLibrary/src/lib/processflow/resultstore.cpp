@@ -564,7 +564,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -578,7 +578,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -599,7 +599,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -612,7 +612,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -634,7 +634,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -646,7 +646,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       else if(method.compare("chisquare2solve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<<rank;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }

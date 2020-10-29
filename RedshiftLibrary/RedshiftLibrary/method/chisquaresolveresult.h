@@ -56,7 +56,9 @@ public:
   const Float64 GetAmplitude();
   const Float64 GetMeiksinIdx();
   const Float64 GetDustCoeff();
-
+  const Float64 GetAmplitudeError();
+  const Float64 GetMerit();
+  const Float64 GetFittingSNR();
 private:
 
     std::unordered_map<std::string, std::string> m_scope2name = {
@@ -79,7 +81,8 @@ private:
   mutable Float64 m_amplitudeError = -1.0;
   mutable Float64 m_dustCoeff = -1.0;
   mutable Int32   m_meiksinIdx = -1.0;
-
+  //Not sure it is necessary here
+  mutable Int32   m_fittingSNR = -1.0;
 };
 
 inline
@@ -98,6 +101,19 @@ inline
 const Float64 CChisquareSolveResult::GetDustCoeff(){
   return m_dustCoeff;
 }
+inline
+const Float64 CChisquareSolveResult::GetAmplitudeError(){
+  return m_amplitudeError;
+}
+inline 
+const Float64 CChisquareSolveResult::GetMerit(){
+  return m_merit;
+}
+inline
+const Float64 CChisquareSolveResult::GetFittingSNR(){
+  return m_fittingSNR;
+}
+
 }
 
 #endif

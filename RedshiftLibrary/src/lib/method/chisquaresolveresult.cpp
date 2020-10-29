@@ -126,7 +126,6 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     store.GetParam( "dtreepathnum", dtreepathnum );
     sprintf(tmpChar, "%.2f", dtreepathnum);
 
-    //probably below code is not necessary
     //preSave(store);
 
     stream << store.GetSpectrumName() << "\t"
@@ -349,6 +348,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z) co
     }
 
     if(foundRedshiftAtLeastOnce){
+        m_merit = tmpMerit;
         m_tplName = tmpTplName;
         m_meiksinIdx = tmpMeiksinIdx;
         m_dustCoeff = tmpDustCoeff;

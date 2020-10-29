@@ -1122,7 +1122,7 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 }
 
 
-Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
+Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
                                            Float64 redshift,
                                            Float64 IdxDustCoeff,
@@ -1131,7 +1131,8 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
                                            std::string opt_interp,
                                            std::string opt_extinction,
                                            const TFloat64Range& lambdaRange,
-                                           Float64 overlapThreshold)
+                                           Float64 overlapThreshold,
+                                           CModelSpectrumResult& spc)
 {
     Log.LogDetail("  Operator-COperatorChiSquare2: building spectrum model chisquare2 for candidate Zcand=%f", redshift);
     EStatus status;
@@ -1164,24 +1165,9 @@ Int32   COperatorChiSquare2::GetSpectrumModel(const CSpectrum& spectrum,
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
-    //resultspcmodel = std::shared_ptr<CModelSpectrumResult>(new CModelSpectrumResult(m_templateRebined_bf));
-    m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(m_templateRebined_bf, 
-                                                                                tpl.GetName(), 
-                                                                                IdxDustCoeff,
-                                                                                meiksinIdx, 
-                                                                                amplitude));
-
+    spc(m_templateRebined_bf);
     return 0;
 }
 
-void COperatorChiSquare2::SaveSpectrumResults(CDataStore &dataStore)
-{
-    Log.LogDetail("  Operator-COperatorChiSquare2: now saving spectrum/model chisquare2 results n=%d", m_savedModelSpectrumResults.size());
-    for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
-    {
-        std::string fname_spc = (boost::format("chisquare2_spc_extrema_%1%") % i).str();
-        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
-    }
-    return;
-}
+
 
