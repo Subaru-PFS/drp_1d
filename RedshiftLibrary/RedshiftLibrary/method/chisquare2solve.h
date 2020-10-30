@@ -7,6 +7,8 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/chisquare2.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 
 namespace NSEpic
 {

@@ -13,7 +13,7 @@
 #include <RedshiftLibrary/operator/chisquare2.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
 
 #include <RedshiftLibrary/statistics/pdfz.h>

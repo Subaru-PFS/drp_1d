@@ -12,6 +12,7 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 namespace NSEpic
 {
 

@@ -1165,7 +1165,7 @@ Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
-    spc(m_templateRebined_bf);
+    spc = m_templateRebined_bf;
     return 0;
 }
 

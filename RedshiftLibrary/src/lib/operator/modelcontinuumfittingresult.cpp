@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/linemodel/modelcontinuumfittingresult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

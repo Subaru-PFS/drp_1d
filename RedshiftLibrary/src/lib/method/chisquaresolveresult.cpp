@@ -24,8 +24,8 @@ void CChisquareSolveResult::preSave(const CDataStore& store)
     if(m_bestRedshiftMethod==2)//bestPDF
     {
         GetBestRedshiftFromPdf(store);
-        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), redshift);
-        Int32 b = GetBestModel(store, m_redshift); //, m_tplName, m_meiksinIdx, m_dustCoeff, m_amplitude);
+        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), m_redshift);
+        Int32 b = GetBestModel(store, m_redshift);
         if(b==-1){
             Log.LogError(" CChisquareSolveResult::preSave: Couldn't find index of %f", m_redshift);
             throw runtime_error("CChisquareSolveResult::preSave: Couldn't find redshift index. Aborting!");
@@ -144,7 +144,7 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 
 }
 
-Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) const
+Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) 
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -156,7 +156,8 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) const
     }else if(m_type == nType_continuumOnly){
         scopeStr = "chisquare_continuum";
     }
-    std::string scope = store.GetScope( *this ) + m_scope + "." + scopeStr.c_str();
+
+    std::string scope = m_scope + "." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
     Float64 tmpMerit = DBL_MAX ;
@@ -207,13 +208,12 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) const
  * output: merit = chi2(redshift)
  *
  **/
-Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) const
+Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) 
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
-    std::string scope = store.GetScope( *this );
-    std::size_t foundstr_stellar = scope.find("stellarsolve");
-    std::size_t foundstr_qso = scope.find("qsosolve");
+    std::size_t foundstr_stellar = m_scope.find("stellarsolve");
+    std::size_t foundstr_qso = m_scope.find("qsosolve");
     if (foundstr_stellar!=std::string::npos){
         outputPdfRelDir = "stellar_zPDF";
     }else if (foundstr_qso!=std::string::npos){
@@ -250,13 +250,12 @@ Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) co
     return true;
 }
 
-Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) 
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
-    std::string scope = store.GetScope( *this );
-    std::size_t foundstr_stellar = scope.find("stellarsolve");
-    std::size_t foundstr_qso = scope.find("qsosolve");
+    std::size_t foundstr_stellar = m_scope.find("stellarsolve");
+    std::size_t foundstr_qso = m_scope.find("qsosolve");
     if (foundstr_stellar!=std::string::npos){
         outputPdfRelDir = "stellar_zPDF";
     }else if (foundstr_qso!=std::string::npos){
@@ -288,7 +287,7 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param DustCoeff (optional return)
  * @return
  */
-Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z) const//, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const
+Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z)
 {
     Bool foundRedshiftAtLeastOnce = false;
 
@@ -302,7 +301,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z) co
     }else if(m_type == nType_continuumOnly){
         scopeStr = "chisquare_continuum";
     }
-    //we have a problem with the scope here especially if called from processflow
+
     std::string scope = m_scope +"." + scopeStr.c_str();
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
@@ -364,17 +363,6 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
 {
     Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
     redshiftcandidates.clear();
-
-    //check if the pdf is stellar/galaxy or else
-    /*std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
-    std::string scope = store.GetScope( *this );
-    std::size_t foundstr_stellar = scope.find("stellarsolve");
-    std::size_t foundstr_qso = scope.find("qsosolve");
-    if (foundstr_stellar!=std::string::npos){
-        outputPdfRelDir = "stellar_zPDF";
-    }else if (foundstr_qso!=std::string::npos){
-        outputPdfRelDir = "qso_zPDF";
-    }*/
 
     std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
     auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );

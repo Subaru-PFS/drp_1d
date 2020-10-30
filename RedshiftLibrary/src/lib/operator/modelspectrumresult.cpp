@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
