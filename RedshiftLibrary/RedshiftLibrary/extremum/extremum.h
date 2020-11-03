@@ -20,7 +20,7 @@ class CExtremum
 public:
 
     CExtremum( Bool invertForMinSearch = false );
-    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 radius = 0.005, Bool invertForMinSearch=false);
+    CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 peakSeparation = 0.005*2, Bool invertForMinSearch=false);
     ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );
@@ -47,7 +47,7 @@ private:
     TFloat64Range   m_XRange;
     Float64         m_meritCut;
     Float64         m_SignSearch;
-    Float64         m_Radius;
+    Float64          m_extrema_separation;
     Bool            m_PeakSeparationActive = true;
     mutable TInt32List   m_sortedIndexes;
 };

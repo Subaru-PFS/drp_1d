@@ -301,7 +301,7 @@ bool CChisquareResult::CallFindExtrema(Float64 radius)
   TPointList extremumList;
   TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
 
-    CExtremum extremum(redshiftsRange, extremumCount, radius, true);
+    CExtremum extremum(redshiftsRange, extremumCount, 2*radius, true);
 
     if (Redshifts.size() == 1 || Redshifts.size() < extremumCount)
     {

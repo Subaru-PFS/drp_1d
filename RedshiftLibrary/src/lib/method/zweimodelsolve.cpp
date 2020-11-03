@@ -1003,7 +1003,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
         Float64 _opt_twosteplargegridstep = -1;
         std::string _opt_twosteplargegridsampling = "log";
-        linemodel_s1c2X.m_secondPass_extensionradius = 0.0;
+        linemodel_s1c2X.m_secondPass_halfwindowsize = 0.0;
         _secondPass_velfit_dzInfLim = 0; //no z refinement
         _secondPass_velfit_dzSupLim = 0; //no z refinement
         _secondPass_velfit_dzStep = 2e-4;
@@ -1085,7 +1085,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
 
                 Float64 _opt_twosteplargegridstep = -1;
                 std::string _opt_twosteplargegridsampling = "log";
-                linemodel_s2c1Y.m_secondPass_extensionradius = 0.0;
+                linemodel_s2c1Y.m_secondPass_halfwindowsize = 0.0;
                 _secondPass_velfit_dzInfLim = 0;
                 _secondPass_velfit_dzSupLim = 0;
                 _secondPass_velfit_dzStep = 2e-4;

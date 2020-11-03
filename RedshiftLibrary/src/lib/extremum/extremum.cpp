@@ -23,7 +23,7 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
     m_MaxPeakCount( 10 ),
     m_XRange( 0.0, 0.0 ),
     m_SignSearch( 1.0 ),
-    m_Radius(0.005),
+    m_extrema_separation(0.005),
     m_meritCut(-2)
 {
     if( invertForMinSearch )
@@ -39,11 +39,11 @@ CExtremum::CExtremum( Bool invertForMinSearch ) :
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 radius, Bool invertForMinSearch) :
+CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 peakSeparation, Bool invertForMinSearch) :
     m_MaxPeakCount( maxPeakCount ),
     m_XRange( xRange ),
     m_SignSearch( 1.0 ),
-    m_Radius(radius),
+    m_extrema_separation(peakSeparation),
     m_meritCut(-2)
 {
     if( invertForMinSearch )
@@ -209,9 +209,9 @@ Bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
  
   std::sort(maxX.begin(), maxX.end());
   for(Int32 i = 0; i< maxX.size() -1; i++)  {
-    TFloat64Range windowh(maxX[i+1] - m_Radius*(1+maxX[i+1]), maxX[i+1] + m_Radius*(1+maxX[i+1]));
+    TFloat64Range windowh(maxX[i+1] - m_extrema_separation/2*(1+maxX[i+1]), maxX[i+1] + m_extrema_separation/2*(1+maxX[i+1]));
     windowh.IntersectWith(TFloat64Range(maxX));
-    TFloat64Range windowl(maxX[i] - m_Radius*(1+maxX[i]), maxX[i] + m_Radius*(1+maxX[i]));
+    TFloat64Range windowl(maxX[i] - m_extrema_separation/2*(1+maxX[i]), maxX[i] + m_extrema_separation/2*(1+maxX[i]));
     windowl.IntersectWith(TFloat64Range(maxX));
     Float64 overlap;
     overlap = windowh.GetBegin() - windowl.GetEnd();
@@ -422,13 +422,10 @@ Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat6
     if(!peakTracking[i]){
       continue;
     }
-
     nkeep++;
-    maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) ); 
-    //compute wdw_high with respect to a slightly higher redshift(Z+), i.e., z+ = Z0 + delta*(1 + z+)
-    wind_high = (maxX[i] + m_Radius)/ (1 - m_Radius); 
-    wind_low = maxX[i] - m_Radius*(1+maxX[i]);
-
+    maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) );
+    wind_high = maxX[i] + (maxX[i] + 1) * m_extrema_separation/ (1 - m_extrema_separation/2); 
+    wind_low = maxX[i] - (maxX[i] + 1) * m_extrema_separation/ (1 + m_extrema_separation/2);;
     TFloat64Range window(wind_low, wind_high);
     window.IntersectWith(TFloat64Range(maxX));
     Int32 i_min, i_max;
