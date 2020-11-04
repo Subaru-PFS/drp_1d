@@ -27,7 +27,6 @@ public:
     ~CTemplate();
 
     const std::string&  GetCategory() const;
-    const std::string&  GetName() const;
 
     const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;
     CSpectrumFluxAxis&          GetFluxAxisWithoutIsmIgm();
@@ -49,7 +48,6 @@ public:
 private:
 
     std::string     m_Category;
-    std::string     m_Name;
 
     Int32   m_kDust = -1; 
     Int32   m_meiksinIdx = -1;

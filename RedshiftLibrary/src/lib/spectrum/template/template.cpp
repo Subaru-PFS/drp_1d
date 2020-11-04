@@ -20,26 +20,23 @@ CTemplate::CTemplate( )
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
-  m_Category( category ),
-  m_Name( name )
+  m_Category( category )
 {
-
+    m_Name = name;
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
     CSpectrum(spectralAxis, fluxAxis),
-    m_Category( category ),
-    m_Name( name )
+    m_Category( category )
 {
-
+    m_Name = name;
 }
 
 CTemplate::CTemplate( const CTemplate& other): 
     CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
-    m_Name(other.m_Name),
     m_Category( other.m_Category),
     m_IsmIgm_kstart(other.m_IsmIgm_kstart),
     m_IsmIgm_kend(other.m_IsmIgm_kend),
@@ -53,7 +50,7 @@ CTemplate::CTemplate( const CTemplate& other):
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);
-    m_Name = other.GetName();
+    m_Name = other.m_Name;
 
     if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
         m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
@@ -76,13 +73,6 @@ CTemplate::~CTemplate()
 
 }
 
-/**
- * Returns the value stored in m_Name.
- */
-const std::string& CTemplate::GetName() const
-{
-    return m_Name;
-}
 /**
  * Returns the value stored in m_Category.
  */

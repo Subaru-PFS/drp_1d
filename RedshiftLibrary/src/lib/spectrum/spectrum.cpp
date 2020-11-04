@@ -134,6 +134,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_medianWindowSize = other.m_medianWindowSize;
     m_nbScales = other.m_nbScales;
     m_Name = other.m_Name;
+    alreadyRemoved = other.alreadyRemoved;
 
     return *this;
 }
@@ -178,8 +179,18 @@ Bool CSpectrum::RebinFineGrid() const
   return true;
 }
 
+void CSpectrum::ResetContinuum() const
+{
+    alreadyRemoved = false;
+
+    m_ContinuumFluxAxis.SetSize(0);
+    m_WithoutContinuumFluxAxis.SetSize(0);
+}
+
 Bool CSpectrum::RemoveContinuum( CContinuum& remover ) const
 {
+    ResetContinuum();
+
     return remover.RemoveContinuum( *this, m_WithoutContinuumFluxAxis );
 }
 
@@ -233,12 +244,13 @@ void CSpectrum::EstimateContinuum() const
     Log.LogInfo("===============================================");
 
     // Fill m_ContinuumFluxAxis
-    CSpectrumFluxAxis continuumFluxAxis = m_RawFluxAxis;
-    continuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
-    m_ContinuumFluxAxis = continuumFluxAxis;
+    m_ContinuumFluxAxis = m_RawFluxAxis;
+    m_ContinuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
+
+    alreadyRemoved = true;
 }
 
-const string CSpectrum::GetBaseline() const
+const string& CSpectrum::GetBaseline() const
 {
     return m_method2baseline.at(m_estimationMethod);
 }
@@ -355,7 +367,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &
     return true;
 }
 
-const std::string CSpectrum::GetName() const
+const std::string & CSpectrum::GetName() const
 {
     return m_Name;
 }
@@ -543,10 +555,17 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
             nCorrected++;
         }
     }
+
     if(nCorrected>0)
     {
         Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples with coeff (=%f), minFlux=%e, maxNoise=%e", nCorrected, coeffCorr, minFlux, maxNoise);
     }
+
+    if (corrected)
+    {
+        ResetContinuum();
+    }
+
     return corrected;
 }
 
@@ -565,12 +584,12 @@ const Float64 CSpectrum::GetMedianWinsize() const
       return m_medianWindowSize;
 }
 
-const std::string CSpectrum::GetContinuumEstimationMethod() const
+const std::string & CSpectrum::GetContinuumEstimationMethod() const
 {
       return m_estimationMethod;
 }
 
-const std::string CSpectrum::GetWaveletsDFBinPath() const
+const std::string & CSpectrum::GetWaveletsDFBinPath() const
 {
       return m_dfBinPath;
 }
@@ -582,21 +601,37 @@ void CSpectrum::SetFullPath(const char* nameP)
 
 void CSpectrum::SetDecompScales( Int32 decompScales )
 {
+    if (m_nbScales!=decompScales &&
+            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
+    {
+        ResetContinuum();
+    }
     m_nbScales = decompScales;
 }
 
 void CSpectrum::SetMedianWinsize( Float64 winsize )
 {
+    if (m_medianWindowSize!=winsize &&
+            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
+    {
+        ResetContinuum();
+    }
     m_medianWindowSize = winsize;
 }
 
 void CSpectrum::SetContinuumEstimationMethod( std::string method )
 {
-    m_estimationMethod = method;
+    if (m_estimationMethod != method){
+        m_estimationMethod = method;
+        ResetContinuum();
+    }
 }
 
 void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
 {
+    if (m_dfBinPath!=binPath && m_estimationMethod=="waveletsDF"){
+        ResetContinuum();
+    }
     m_dfBinPath = binPath;
 }
 
@@ -619,6 +654,8 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
   reader.Read(spectrumFilePath, *this);
   Log.LogInfo("Successfully loaded input spectrum file: (%s), samples : %d",
 	      spcName.c_str(), GetSampleCount() );
+
+  ResetContinuum();
 
   // add noise if any or add flat noise
   if( noiseFilePath == NULL )
@@ -684,6 +721,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         currentRange = range;
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
+
+    rebinedSpectrum.ResetContinuum();
 
     rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
 

@@ -44,7 +44,7 @@ public:
     void SetName(const char* name);
     void SetType(const EType type) const;
 
-    const std::string               GetName() const;
+    const std::string&              GetName() const;
     const EType                     GetType() const;
 
     Bool InvertFlux();
@@ -65,7 +65,7 @@ public:
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
-    const std::string               GetBaseline() const;
+    const std::string&              GetBaseline() const;
 
     bool                            GetMeanAndStdFluxInRange( TFloat64Range wlRange, Float64& mean, Float64& std ) const;
     bool                            GetLinearRegInRange( TFloat64Range wlRange,  Float64& a, Float64& b) const;
@@ -83,8 +83,8 @@ public:
     const std::string&       	    GetFullPath() const;
     const Int32                     GetDecompScales() const;
     const Float64                   GetMedianWinsize() const;
-    const std::string               GetContinuumEstimationMethod() const;
-    const std::string               GetWaveletsDFBinPath() const;
+    const std::string&              GetContinuumEstimationMethod() const;
+    const std::string&              GetWaveletsDFBinPath() const;
 
     void 			    SetFullPath(const char* nameP);
     void 			    SetDecompScales(Int32 decompScales);
@@ -107,8 +107,9 @@ protected:
     CSpectrumSpectralAxis           m_SpectralAxis;
 
     void                            EstimateContinuum() const;
-
+    void                            ResetContinuum() const;
     Bool                            RebinFineGrid() const;
+
     Float64                         m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
                                                              //check if enough to be private
     mutable TFloat64List            m_pfgFlux;
@@ -183,7 +184,6 @@ const CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis() const
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
-        alreadyRemoved = true;
     }
     return m_ContinuumFluxAxis;
 }
@@ -193,7 +193,6 @@ const CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis() const
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
-        alreadyRemoved = true;
     }
     return m_WithoutContinuumFluxAxis;
 }
@@ -233,7 +232,6 @@ CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis()
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
-        alreadyRemoved = true;
     }
     return m_ContinuumFluxAxis;
 }
@@ -243,7 +241,6 @@ CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
-        alreadyRemoved = true;
     }
     return m_WithoutContinuumFluxAxis;
 }
