@@ -31,7 +31,7 @@ class CMethodChisquareSolve
     ~CMethodChisquareSolve();
     std::shared_ptr<const CChisquareSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  , std::string opt_interp="lin");
+                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold  , const Float64 radius, std::string opt_interp="lin");
 
 
 
@@ -41,6 +41,8 @@ private:
                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold , Int32 spctype=nType_full, std::string opt_interp="lin");
 
     std::string m_calibrationPath;
+    Float64 m_radius;
+
 };
 
 

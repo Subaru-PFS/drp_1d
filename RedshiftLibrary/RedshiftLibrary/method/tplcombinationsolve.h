@@ -38,6 +38,7 @@ class CMethodTplcombinationSolve
                                                     Float64 overlapThreshold,
                                                     std::vector<CMask> maskList,
                                                     const std::string outputPdfRelDir,
+                                                    const Float64 radius,
                                                     std::string spcComponent="raw" ,
                                                     std::string opt_interp="lin",
                                                     std::string opt_extinction="no",
@@ -68,6 +69,7 @@ private:
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateChisquareResults=false;
+    Float64 m_radius;
 
 };
 

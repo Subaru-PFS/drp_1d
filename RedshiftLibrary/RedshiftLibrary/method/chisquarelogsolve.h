@@ -39,6 +39,7 @@ class CMethodChisquareLogSolve
                                                       Float64 overlapThreshold,
                                                       std::vector<CMask> maskList,
                                                       const std::string outputPdfRelDir,
+                                                      const Float64 radius,
                                                       std::string spcComponent="raw",
                                                       std::string opt_interp="lin",
                                                       std::string opt_extinction="no",
@@ -63,7 +64,7 @@ private:
     std::string m_opt_spclogrebin;
 
     COperatorChiSquareLogLambda* m_chiSquareOperator;
-
+    Float64 m_radius;
 };
 
 

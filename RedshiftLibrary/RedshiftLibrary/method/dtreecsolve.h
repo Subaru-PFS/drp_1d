@@ -27,7 +27,7 @@ public:
 
     std::shared_ptr<CDTreeCSolveResult> Compute(CDataStore &resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
-                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
+                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, const Float64 radius );
 
 
 private:
@@ -43,6 +43,7 @@ private:
     TFloat64List GetChi2ListForGivenTemplateName(CDataStore& store, std::string scopeStr, TFloat64List givenRedshifts, std::vector<std::string> givenTplNames);
 
     std::string m_calibrationPath;
+    Float64 m_radius;
 };
 
 

@@ -294,10 +294,10 @@ void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream )
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-bool CChisquareResult::CallFindExtrema() 
+bool CChisquareResult::CallFindExtrema(Float64 radius) 
 {
   Int32 extremumCount = 10;
-  Float64 radius = 0.001;
+  radius = radius/5; 
   TPointList extremumList;
   TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
 

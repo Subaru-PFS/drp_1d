@@ -79,10 +79,11 @@ const std::string CMethodDTreeBSolve::GetDescription()
 
 std::shared_ptr<CDTreeBSolveResult> CMethodDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
+                                                        const TFloat64Range& lambdaRange, const TFloat64List &redshifts,
+                                                        const Float64 radius)
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( resultStore, "dtreeBsolve" );
 
     storeResult = Solve(resultStore, spc, spcWithoutCont,
@@ -247,7 +248,7 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     overlapThresholdNC = 1.0;
     auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
+                                                                        lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit);
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
@@ -283,7 +284,7 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     //*/
     auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                         tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
+                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit);
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 

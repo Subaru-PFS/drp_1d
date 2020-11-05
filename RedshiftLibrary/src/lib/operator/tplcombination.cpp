@@ -382,13 +382,14 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
                                                                   std::vector<CMask> additional_spcMasks,
+                                                                  const Float64 radius,
                                                                   std::string opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting)
 {
     Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", tplList.size());
 
-
+    m_radius = radius;
     if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("  Operator-tplcombination: no calzetti calib. file loaded... aborting!");
@@ -569,7 +570,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
     
-    result->CallFindExtrema();
+    result->CallFindExtrema(m_radius);
 
     //store spectrum results
     Int32 nMaxExtremaSpectraSave = 1;

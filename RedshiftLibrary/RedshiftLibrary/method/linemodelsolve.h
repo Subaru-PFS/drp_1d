@@ -32,7 +32,8 @@ public:
 
 
     std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
-                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const string outputPdfRelDir);
+                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const string outputPdfRelDir, 
+                                           const Float64 radius);
 
     Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
                                  const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
@@ -131,9 +132,11 @@ private:
     Float64 m_opt_modelZPriorStrength;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
+    Float64 m_opt_secondpass_halfwindowsize;
 
     std::string m_calibrationPath;
     std::string m_outputPdfRelDir;
+    Float64 m_redshiftSeparation;
 
 };
 

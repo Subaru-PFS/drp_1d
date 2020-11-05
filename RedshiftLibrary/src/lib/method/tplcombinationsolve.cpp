@@ -56,13 +56,14 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
                                                                               Float64 overlapThreshold,
                                                                               std::vector<CMask> maskList,
                                                                               const std::string outputPdfRelDir,
+                                                                              const Float64 radius,
                                                                               std::string spcComponent,
                                                                               std::string opt_interp,
                                                                               std::string opt_extinction,
                                                                               std::string opt_dustFit)
 {
     Bool storeResult = false;
-
+    m_radius = radius;
 //    std::string _name = "Tplcombination";
     CDataStore::CAutoScope resultScope( resultStore, "tplcombinationsolve" );
 //    std::string _scope = "tplcombination";
@@ -240,7 +241,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( _spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList,  m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {

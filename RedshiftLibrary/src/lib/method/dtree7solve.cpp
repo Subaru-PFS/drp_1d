@@ -78,10 +78,11 @@ const std::string CMethodDTree7Solve::GetDescription()
 std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
                                                         const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
                                                         const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
+                                                        const Float64 radius,
                                                         Int32 correlationExtremumCount, Float64 overlapThreshold )
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( dataStore, "dtree7solve" );
 
     dataStore.GetScopedParam( "winsize", m_winsize, 250.0 );
@@ -247,7 +248,7 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
             CMethodChisquareSolve chiSolve(m_calibrationPath);
             auto chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                 tplCatalog, filteredTemplateCategoryList,
-                                                                                lambdaRange, roundedRedshift, overlapThreshold );
+                                                                                lambdaRange, roundedRedshift, m_radius, overlapThreshold );
             if( chisolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
                 return true;
@@ -278,7 +279,7 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
                 CMethodChisquareSolve chiSolve(m_calibrationPath);
                 auto chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
                                                                                     tplCatalog, filteredTemplateCategoryList,
-                                                                                    lambdaRange, roundedRedshift, overlapThreshold );
+                                                                                    lambdaRange, roundedRedshift, m_radius, overlapThreshold );
                 if( chisolveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
                     return true;

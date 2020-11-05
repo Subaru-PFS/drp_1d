@@ -27,9 +27,10 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve(string calibrationPath)
+CLineModelSolve::CLineModelSolve(string calibrationPath):
+    m_calibrationPath(calibrationPath)
 {
-    m_calibrationPath = calibrationPath;
+    
 }
 
 /**
@@ -112,6 +113,7 @@ const std::string CLineModelSolve::GetDescription()
     //second pass
     desc.append("\tparam: linemodel.skipsecondpass = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.secondpass.continuumfit = {""fromfirstpass"", ""retryall"", ""refitfirstpass""}\n");
+    desc.append("\tparam: linemodel.secondpass.halfwindowsize = <float value>\n");
 
     desc.append("\tparam: linemodel.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: linemodel.pdf.margampcorr = {""yes"", ""no""}\n");
@@ -142,6 +144,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
     dataStore.GetScopedParam( "linemodel.skipsecondpass", m_opt_skipsecondpass, "no" );
     dataStore.GetScopedParam( "linemodel.secondpass.continuumfit", m_opt_secondpass_continuumfit, "fromfirstpass" );
+    dataStore.GetScopedParam( "linemodel.secondpass.halfwindowsize", m_opt_secondpass_halfwindowsize, 0.005 );
     dataStore.GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
     dataStore.GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
@@ -361,10 +364,12 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                                                                  const CRayCatalog& restraycatalog,
                                                                  const TFloat64Range& lambdaRange,
                                                                  const TFloat64List& redshifts,
-                                                                 const std::string outputPdfRelDir)
+                                                                 const std::string outputPdfRelDir,
+                                                                 const Float64 radius)
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
     m_outputPdfRelDir = outputPdfRelDir;
+    m_redshiftSeparation = radius;
 
     PopulateParameters( dataStore );
     Int32 retSolve = Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
@@ -905,7 +910,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport);
+    Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         Log.LogError( "Linemodel, init failed. Aborting" );
@@ -1059,7 +1064,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
-    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport);
+    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
