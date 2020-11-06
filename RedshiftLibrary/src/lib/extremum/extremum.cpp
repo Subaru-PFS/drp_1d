@@ -188,7 +188,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     sort(m_sortedIndexes.begin(), m_sortedIndexes.end(),
        [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
 
-    Int32 keepMinN = 2;
+    Int32 keepMinN = 1;
     if(m_meritCut>0.0 && maxX.size()>keepMinN){ 
         Bool v = Cut_Threshold(maxX, maxY, keepMinN);
     }
@@ -403,9 +403,9 @@ Bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 kee
 
 Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const
 {
-  if(maxX.size()<= keepmin || maxX.size()<= m_MaxPeakCount){
-    for(Int32 i:m_sortedIndexes){
-      maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) );
+  if(maxX.size()<= keepmin){
+    for(Int32 i = 0; i<maxX.size(); i++){
+      maxPoint.push_back(SPoint(maxX[m_sortedIndexes[i]], m_SignSearch * maxY[m_sortedIndexes[i]]) );
     }
     return true;
   }
@@ -425,7 +425,7 @@ Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat6
     nkeep++;
     maxPoint.push_back(SPoint(maxX[i], m_SignSearch * maxY[i]) );
     wind_high = maxX[i] + (maxX[i] + 1) * m_extrema_separation/ (1 - m_extrema_separation/2); 
-    wind_low = maxX[i] - (maxX[i] + 1) * m_extrema_separation/ (1 + m_extrema_separation/2);;
+    wind_low = maxX[i] - (maxX[i] + 1) * m_extrema_separation/ (1 + m_extrema_separation/2);
     TFloat64Range window(wind_low, wind_high);
     window.IntersectWith(TFloat64Range(maxX));
     Int32 i_min, i_max;
