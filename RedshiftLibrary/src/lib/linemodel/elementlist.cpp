@@ -63,7 +63,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const Float64 velocityAbsorption,
                                              const std::string& opt_rules,
                                              const std::string& opt_rigidity):
-  m_ErrorNoContinuum(spectrum.GetFluxAxis().GetError())
+  m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
 {
     //members for chi2 continuum fitting
     m_tplCatalog = tplCatalog;
@@ -134,7 +134,9 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_SpcFluxAxisModelDerivVelAbs.SetSize( spectrumSampleCount );
     CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel->GetFluxAxis();
     const CSpectrumFluxAxis& spectrumFluxAxis = spectrum.GetFluxAxis();
+
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
+    m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
 
     if( m_ContinuumComponent == "nocontinuum" )
     {

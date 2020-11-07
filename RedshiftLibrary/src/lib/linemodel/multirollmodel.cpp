@@ -43,9 +43,10 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         spcRolls.push_back(spcRoll);
     }
 
-    // Combine rolls if the continuum is estimated from spectrum
+    // Estimate a common continuum spectrum if the continuum is estimated from spectrum
     if(opt_continuumcomponent=="fromspectrum")
     {
+        // Combine rolls
         CSpectrumCombination spcCombination;
         CSpectrum spcCombined = CSpectrum(*spcRolls[0]);
         Int32 retComb = spcCombination.Combine(spcRolls, spcCombined);
@@ -54,22 +55,19 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
             Log.LogError( "    multirollmodel: Unable to combine rolls for continuum estimate override");
         }
 
-        TFloat64List dumb_mask;
-        for(Int32 km=0; km<spcCombined.GetSampleCount(); km++)
+        // Estimate continuum spectrum
+        CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
+        for(Int32 km=0; km<nModels; km++)
         {
-            dumb_mask.push_back(1);
+            spcRolls[km]->SetContinuumEstimationMethod(ContinuumFluxAxis);
         }
-        std::shared_ptr<CSpectrum> spcCombinedRolls = std::shared_ptr<CSpectrum>( new CSpectrum(spcCombined, dumb_mask) );
-        Log.LogInfo("    multirollmodel: ============  Combined Rolls case  ============");
+    }
 
-        // Set continuum estimation parameters for combined rolls
-        spcCombinedRolls->SetContinuumEstimationMethod(spectrum.GetContinuumEstimationMethod());
-        spcCombinedRolls->SetMedianWinsize(spectrum.GetMedianWinsize());
-        spcCombinedRolls->SetDecompScales(spectrum.GetDecompScales());
-        spcCombinedRolls->SetWaveletsDFBinPath(spectrum.GetWaveletsDFBinPath());
-
+    Log.LogInfo("    multirollmodel: ===============================================");
+    for(Int32 km=0; km<nModels; km++)
+    {
         Float64 lines_nsigmasupport = 6.0;
-        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcCombinedRolls,
+        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
                                                                                              tplCatalog,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
@@ -85,52 +83,17 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              opt_rules,
                                                                                              opt_rigidity
                                                                                              )));
-
-        //hardcoded source size definition for combined rolls
-        m_models[0]->SetSourcesizeDispersion(0.35);
-    }
-    else
-    {
-        Log.LogInfo("    multirollmodel: ===============================================");
-        for(Int32 km=0; km<nModels; km++)
-        {
-            // Set continuum estimation parameters for each roll
-            spcRolls[km]->SetContinuumEstimationMethod(spectrum.GetContinuumEstimationMethod());
-            spcRolls[km]->SetMedianWinsize(spectrum.GetMedianWinsize());
-            spcRolls[km]->SetDecompScales(spectrum.GetDecompScales());
-            spcRolls[km]->SetWaveletsDFBinPath(spectrum.GetWaveletsDFBinPath());
-
-            Float64 lines_nsigmasupport = 6.0;
-            m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
-                                                                                                 tplCatalog,
-                                                                                                 tplCatalog,
-                                                                                                 tplCategoryList,
-                                                                                                 calibrationPath,
-                                                                                                 restRayList,
-                                                                                                 opt_fittingmethod,
-                                                                                                 opt_continuumcomponent,
-                                                                                                 widthType,
-                                                                                                 lines_nsigmasupport,
-                                                                                                 resolution,
-                                                                                                 velocityEmission,
-                                                                                                 velocityAbsorption,
-                                                                                                 opt_rules,
-                                                                                                 opt_rigidity
-                                                                                                 )));
-
-            //hardcoded source size definition for each roll
-            if(km==0){
-                m_models[km]->SetSourcesizeDispersion(0.35);
-            }else if(km==1){
-                m_models[km]->SetSourcesizeDispersion(0.35);
-            }else if(km==2){
-                m_models[km]->SetSourcesizeDispersion(0.35);
-            }else if(km==3){
-                m_models[km]->SetSourcesizeDispersion(0.35);
-            }
+        //hardcoded source size definition for each roll
+        if(km==0){
+         m_models[km]->SetSourcesizeDispersion(0.35);
+        }else if(km==1){
+         m_models[km]->SetSourcesizeDispersion(0.35);
+        }else if(km==2){
+         m_models[km]->SetSourcesizeDispersion(0.35);
+        }else if(km==3){
+         m_models[km]->SetSourcesizeDispersion(0.35);
         }
     }
-
 }
 
 /**

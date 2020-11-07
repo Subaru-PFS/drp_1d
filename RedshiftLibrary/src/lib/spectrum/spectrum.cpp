@@ -199,7 +199,7 @@ Bool CSpectrum::RemoveContinuum( CContinuum& remover ) const
  */
 void CSpectrum::EstimateContinuum() const
 {
-    Log.LogInfo( "Continuum estimation on input spectrum: using %s", m_estimationMethod.c_str() );
+    Log.LogDetail( "Continuum estimation on input spectrum: using %s", m_estimationMethod.c_str() );
 
     if( m_estimationMethod == "IrregularSamplingMedian" )
     {
@@ -207,13 +207,13 @@ void CSpectrum::EstimateContinuum() const
         continuum.SetMedianKernelWidth( m_medianWindowSize );
         continuum.SetMeanKernelWidth( m_medianWindowSize );
         RemoveContinuum( continuum );
-        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+        Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
     }else if( m_estimationMethod == "Median" )
     {
         CContinuumMedian continuum;
         continuum.SetMedianKernelWidth( m_medianWindowSize );
         RemoveContinuum( continuum );
-        Log.LogInfo( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+        Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
     }else if( m_estimationMethod == "waveletsDF" )
     {
         CContinuumDF continuum(m_dfBinPath);
@@ -234,6 +234,10 @@ void CSpectrum::EstimateContinuum() const
     }else if( m_estimationMethod == "zero" )
     {
         m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+    }else if( m_estimationMethod == "manual" )
+    {
+        m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+        m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
     }
     else
     {
@@ -241,11 +245,14 @@ void CSpectrum::EstimateContinuum() const
         throw runtime_error("CSpectrum::EstimateContinuum Estimation method undefined or unknown");
     }
 
-    Log.LogInfo("===============================================");
+    Log.LogDetail("===============================================");
 
     // Fill m_ContinuumFluxAxis
-    m_ContinuumFluxAxis = m_RawFluxAxis;
-    m_ContinuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
+    if  (m_estimationMethod != "manual" )
+    {
+        m_ContinuumFluxAxis = m_RawFluxAxis;
+        m_ContinuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
+    }
 
     alreadyRemoved = true;
 }
@@ -625,6 +632,23 @@ void CSpectrum::SetContinuumEstimationMethod( std::string method )
         m_estimationMethod = method;
         ResetContinuum();
     }
+}
+
+/*
+ *  force manual setting of the continuum
+ */
+void CSpectrum::SetContinuumEstimationMethod(const CSpectrumFluxAxis & ContinuumFluxAxis )
+{
+    m_estimationMethod = "manual";
+    ResetContinuum();
+
+    if (ContinuumFluxAxis.GetSamplesCount() != GetSampleCount())
+    {
+        Log.LogError("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
+        throw runtime_error("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
+    }
+
+    m_ContinuumFluxAxis = ContinuumFluxAxis;
 }
 
 void CSpectrum::SetWaveletsDFBinPath(std::string binPath)

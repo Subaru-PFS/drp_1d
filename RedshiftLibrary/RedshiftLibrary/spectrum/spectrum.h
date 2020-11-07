@@ -90,6 +90,7 @@ public:
     void 			    SetDecompScales(Int32 decompScales);
     void 			    SetMedianWinsize(Float64 winsize);
     void                            SetContinuumEstimationMethod(std::string method);
+    void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
 
     void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
@@ -138,7 +139,8 @@ protected:
         {"Median",                  "baselineMedian"},
         {"waveletsDF",              "baselineDF"},
         {"raw",                     "baselineRAW"},
-        {"zero",                    "baselineZERO"}
+        {"zero",                    "baselineZERO"},
+        {"manual",                  "baselineMANUAL"}
     };
 
 };
