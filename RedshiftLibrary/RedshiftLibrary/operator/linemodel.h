@@ -7,9 +7,9 @@
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/linemodel/multirollmodel.h>
-#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/modelfittingresult.h>
-#include <RedshiftLibrary/linemodel/modelcontinuumfittingresult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/common/mask.h>

@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/chisquareresult.h>
-#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/common/mask.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>

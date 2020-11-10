@@ -7,6 +7,8 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/chisquare2.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 
 namespace NSEpic
 {
@@ -45,7 +47,7 @@ class CMethodChisquare2Solve
                                                     std::string opt_dustFit="no");
 
     Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, std::string outputPdfRelDir = "zPDF");
-
+    void SaveSpectrumResults(CDataStore &dataStore);
 
 private:
 
@@ -58,7 +60,8 @@ private:
 
 
     COperatorChiSquare2* m_chiSquareOperator;
-
+    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
+    std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;
