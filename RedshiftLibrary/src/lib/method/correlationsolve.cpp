@@ -89,7 +89,7 @@ Bool CMethodCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum& s
     Float64 radius = 0.005;
     TPointList extremumList;
     TFloat64Range range( result->Redshifts[0], result->Redshifts[result->Redshifts.size()-1] );
-    CExtremum extremum( range, extremumCount, radius);
+    CExtremum extremum( range, extremumCount, 2*radius);
     extremum.Find( result->Redshifts, result->Correlation, extremumList);
     
     // store extrema results

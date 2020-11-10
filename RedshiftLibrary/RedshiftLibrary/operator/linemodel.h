@@ -217,7 +217,7 @@ public:
     Float64 m_linesmodel_nsigmasupport;
 
     Int32 m_maxModelSaveCount;
-    Float64 m_secondPass_extensionradius; // = 0.005;
+    Float64 m_secondPass_halfwindowsize; // = 0.005;
     Float64 m_extremaRedshiftSeparation; 
 
 

@@ -900,7 +900,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     Int32 extremacount = 5;
     /*if(opt_extremacount > extremacount)
         extremacount = opt_extremacount;*/
-    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, m_secondPass_extensionradius, invertForMinSearch);
+    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, 2*m_secondPass_halfwindowsize, invertForMinSearch);
 
     if (m_result->Redshifts.size() == 1)
     {
@@ -942,9 +942,9 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                     m_firstpass_extremumList[j].X, m_firstpass_extremumList[j].Y);
         Float64 x = m_firstpass_extremumList[j].X;
         Float64 left_border =
-            max(redshiftsRange.GetBegin(), x - m_secondPass_extensionradius*(1.+x));
+            max(redshiftsRange.GetBegin(), x - m_secondPass_halfwindowsize*(1.+x));
         Float64 right_border =
-            min(redshiftsRange.GetEnd(), x + m_secondPass_extensionradius*(1.+x));
+            min(redshiftsRange.GetEnd(), x + m_secondPass_halfwindowsize*(1.+x));
         TFloat64List extendedList;
         for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
         {
@@ -1040,9 +1040,9 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
             m_result->Redshifts[0],
             m_result->Redshifts[m_result->Redshifts.size() - 1]);
         Float64 left_border =
-                max(redshiftsRange.GetBegin(), z_fpb - m_secondPass_extensionradius*(1.+z_fpb));
+                max(redshiftsRange.GetBegin(), z_fpb - m_secondPass_halfwindowsize*(1.+z_fpb));
         Float64 right_border =
-                min(redshiftsRange.GetEnd(), z_fpb + m_secondPass_extensionradius*(1.+z_fpb));
+                min(redshiftsRange.GetEnd(), z_fpb + m_secondPass_halfwindowsize*(1.+z_fpb));
         TFloat64List extendedRedshifts;
         for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
         {
@@ -2219,9 +2219,9 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 m_result->Redshifts[0],
                 m_result->Redshifts[m_result->Redshifts.size() - 1]);
             Float64 left_border = max(redshiftsRange.GetBegin(),
-                                      z - m_secondPass_extensionradius*(1.+z));
+                                      z - m_secondPass_halfwindowsize*(1.+z));
             Float64 right_border = min(redshiftsRange.GetEnd(),
-                                       z + m_secondPass_extensionradius*(1.+z));
+                                       z + m_secondPass_halfwindowsize*(1.+z));
             // m_model->SetFittingMethod("nofit");
             _secondpass_recomputed_extremumList[i].Y = DBL_MAX;
             _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[idx];
@@ -2473,7 +2473,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 
     // set the nsigmasupport
     m_linesmodel_nsigmasupport = nsigmasupport;
-    m_secondPass_extensionradius = halfwdwsize;
+    m_secondPass_halfwindowsize = halfwdwsize;
     m_extremaRedshiftSeparation = radius; 
 
     return 0;

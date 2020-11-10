@@ -109,7 +109,7 @@ Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& sp
 
     Float64 radius = 0.005;
         TPointList extremumList;
-    CExtremum extremum( redshiftsRange, correlationExtremumCount, radius);
+    CExtremum extremum( redshiftsRange, correlationExtremumCount, 2*radius);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList);
     if( extremumList.size() == 0 )
     {
