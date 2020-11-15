@@ -628,7 +628,7 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
                                              Float64 min,
                                              Float64 max)
 {
-    Float64 nRays = m_Rays.size();
+    Int32 nRays = m_Rays.size();
     Int32 nSteps = int((max-min)/step+0.5);
 
     bool atLeastOneOffsetToFit = false;
@@ -731,7 +731,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
                               Float64 redshift,
                               Int32 lineIdx )
 {
-    Float64 nRays = m_Rays.size();
+    Int32 nRays = m_Rays.size();
 
     m_sumCross = 0.0;
     m_sumGauss = 0.0;

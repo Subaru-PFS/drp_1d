@@ -99,7 +99,7 @@ private:
     //constant
     Float64 m_c_kms;
 
-    bool m_verbose=false;
+    const bool m_verbose=false;
 };
 
 }
