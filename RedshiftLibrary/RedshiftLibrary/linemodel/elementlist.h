@@ -61,15 +61,14 @@ public:
 
     void LogCatalogInfos();
 
-    void PrepareContinuum(Float64 z);
+    void PrepareContinuum();
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
     void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
     Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum);
-    Bool SolveContinuum(const CSpectrum& spectrum,
-                        const CTemplate& tpl,
+    Bool SolveContinuum(const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
                         const TFloat64List& redshifts,
                         Float64 overlapThreshold,
@@ -254,13 +253,13 @@ public:
 
 
     std::vector<boost::shared_ptr<CLineModelElement> > m_Elements;
-    std::shared_ptr<CSpectrum> m_inputSpc;
-    std::shared_ptr<CSpectrum> m_SpectrumModel;  //model
+    const CSpectrum & m_inputSpc;
+    CSpectrum m_SpectrumModel;  //model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
     std::vector<UInt32> getOverlappingElements(UInt32 ind , std::vector<UInt32> excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
-    std::shared_ptr<CSpectrum> m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
+    CSpectrum m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
     TStringList GetModelRulesLog();
 
@@ -340,7 +339,7 @@ private:
 
     Int32 improveBalmerFit();
     void applyRules(bool enableLogs=false);
-    CRegulament* m_Regulament;
+    CRegulament m_Regulament;
 
 
     std::vector<Float64> m_ScaleMargCorrTplshape;

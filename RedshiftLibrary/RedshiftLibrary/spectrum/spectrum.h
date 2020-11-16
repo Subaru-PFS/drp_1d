@@ -111,7 +111,7 @@ protected:
     void                            ResetContinuum() const;
     Bool                            RebinFineGrid() const;
 
-    Float64                         m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
+    const Float64                   m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
                                                              //check if enough to be private
     mutable TFloat64List            m_pfgFlux;
     mutable Bool                    m_FineGridInterpolated = false;
