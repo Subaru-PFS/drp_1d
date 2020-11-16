@@ -323,7 +323,7 @@ private:
                                                  Float64 &chisquare,
                                                  Int32 polyOrder=-1);
 
-    bool m_forceDisableLyaFitting;
+    bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
 

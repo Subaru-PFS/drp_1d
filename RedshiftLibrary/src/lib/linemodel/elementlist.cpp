@@ -3318,7 +3318,7 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range la
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
-  bool verbose=false;
+  const bool verbose=false;
   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<UInt32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -4209,7 +4209,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UI
             Float64 offset = m_LambdaOffsetMin+m_LambdaOffsetStep*idxBestMerit;
             for(Int32 iE=0; iE<EltsIdx.size(); iE++)
             {
-                Float64 nRays = m_Elements[iE]->m_Rays.size();
+                Int32 nRays = m_Elements[iE]->m_Rays.size();
                 for(Int32 iR=0; iR<nRays; iR++)
                 {
                     if(m_Elements[iE]->m_Rays[iR].GetOffsetFitEnabled())
@@ -4240,7 +4240,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
 {
   //boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
-    bool verbose = false;
+    const bool verbose = false;
     bool useAmpOffset = m_enableAmplitudeOffsets;
     Int32 idxAmpOffset = -1;
 
@@ -4340,7 +4340,7 @@ Int32 CLineModelElementList::fitAmplitudesLinSolve( std::vector<UInt32> EltsIdx,
 
             if(verbose)
             {
-                fprintf(stderr, "fval = '%.3e'\n", fval);
+                Log.LogDebug("fval = '%.3e'", fval);
             }
         }
 
@@ -4575,7 +4575,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( std::vector
 
             if(false && verbose)
             {
-                fprintf(stderr, "fval = '%.3e'\n", fval);
+                Log.LogDebug("fval = '%.3e'", fval);
             }
         }
 
