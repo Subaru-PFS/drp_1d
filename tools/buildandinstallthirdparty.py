@@ -119,6 +119,13 @@ def _cfitsio_build(path, prefix, options, extra_flags=''):
                   parallel=options.parallel,
                   shared='shared' if options.shared else 'all-nofitsio'))
 
+def _openblas_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path} ;"
+              "make -j{parallel} ; make install PREFIX={prefix}".format(
+                  path=path, prefix=prefix,
+                  parallel=options.parallel,
+                  extra_flags=extra_flags))
+
 
 libDict = {
     "boost": {
@@ -150,7 +157,16 @@ libDict = {
         "check_file": "libcfitsio",
         "build": _cfitsio_build,
         "extra_flags": ''
+    },
+    "openblas": {
+        "path": "openblas-0.3.7",
+        "src": "https://github.com/xianyi/OpenBLAS/archive/"
+        "v0.3.7.tar.gz",
+        "check_file": "libopenblas",
+        "build": _openblas_build,
+        "extra_flags": ''
     }
+
 }
 
 
