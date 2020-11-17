@@ -1556,6 +1556,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 {
     Log.LogDetail("  Operator-ChisquareLog: starting computation for template: %s", tpl.GetName().c_str());
 
+    if(redshifts.size()<2){
+        Log.LogError("       Operator-ChisquareLog::Compute: Cannot compute on a redshift array %d <2", redshifts.size());
+        throw runtime_error("Operator-ChisquareLog::Compute: Cannot compute on a redshift array <2");
+    }
     if ((opt_dustFitting==-10 || opt_dustFitting>-1) && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("  Operator-ChisquareLog: no calzetti calib. file loaded... aborting!");
@@ -1712,6 +1716,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Float64 loglbdamax = log(lambdaRange.GetEnd());
     Int32 loglbdaCount = (Int32) floor((loglbdamax - loglbdamin) / loglbdaStep + 1);
 
+    if(loglbdaCount<2){
+        Log.LogError("       Operator-ChisquareLog::Compute: loglbdaCount = %d <2", loglbdaCount);
+        throw runtime_error("Operator-ChisquareLog::Compute: loglbdaCount <2. Abort!");
+    }
     // Allocate the Log-rebined spectrum and mask
     CSpectrumFluxAxis &spectrumRebinedFluxAxis = m_spectrumRebinedLog.GetFluxAxis();
     CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =  m_spectrumRebinedLog.GetSpectralAxis();
