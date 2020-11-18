@@ -8,6 +8,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/ray/regulament.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
 #include <RedshiftLibrary/operator/chisquare2.h>
@@ -29,7 +30,6 @@
 namespace NSEpic
 {
   static Int32 defaultIdx = -1;
-  class CRegulament;
   class CRayCatalogsTplShape;
 
 class CLineModelElementList

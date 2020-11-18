@@ -80,7 +80,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_velocityAbsorptionInit(m_velocityAbsorption),
     m_rulesoption(opt_rules),
     m_rigidity(opt_rigidity),
-    m_Regulament();
+    m_Regulament(),
     m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
 {
     //check if tplcat and orthoTplCat are aligned

@@ -3,10 +3,11 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <boost/format.hpp>
-#include <RedshiftLibrary/linemodel/elementlist.h>
 
 namespace NSEpic
 {
+class CLineModelElementList;
+
   /**
    * \ingroup Redshift
    * Abstract class for common functionality of rules.
