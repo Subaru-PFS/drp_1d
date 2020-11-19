@@ -2156,19 +2156,6 @@ Float64 COperatorChiSquareLogLambda::EstimateLikelihoodCstLog(
     return cstLog;
 }
 
-const Float64 *COperatorChiSquareLogLambda::getDustCoeff(Float64 dustCoeff,
-                                                         Float64 maxLambda)
-{
-    return m_ismCorrectionCalzetti->getDustCoeff(dustCoeff, maxLambda);
-}
-
-const Float64 *COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx,
-                                                            Float64 redshift,
-                                                            Float64 maxLambda)
-{
-    return m_igmCorrectionMeiksin->getMeiksinCoeff(meiksinIdx, redshift, maxLambda);
-}
-
 void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)
 {
     m_opt_spcrebin = enable;

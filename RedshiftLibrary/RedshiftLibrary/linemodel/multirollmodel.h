@@ -93,7 +93,7 @@ public:
     void SetAbsLinesLimit(Float64 limit);
     void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
-    Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
+    Int32 SetFitContinuum_FitStore(std::shared_ptr<const CTemplatesFitStore> & fitStore);
     void SetFittingMethod(std::string fitMethod);
     void ResetElementIndexesDisabled();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);

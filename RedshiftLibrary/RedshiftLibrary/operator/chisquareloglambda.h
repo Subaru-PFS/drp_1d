@@ -40,9 +40,6 @@ public:
                                               Float64 FitDustCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
-    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-
     void enableSpcLogRebin(Bool enable);
 
 private:

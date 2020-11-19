@@ -149,11 +149,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     //m_unscaleContinuumFluxAxisDerivZ =NULL;
     m_chiSquareOperator = NULL;
 
-    m_tplshape_priorhelper = NULL;
-
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
-    m_fitContinuum_tplfitStore = NULL;
     m_fitContinuum_priorhelper = NULL;
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
@@ -224,9 +221,6 @@ CLineModelElementList::~CLineModelElementList()
     {
         delete m_chiSquareOperator;
     }
-    if(m_tplshape_priorhelper) delete m_tplshape_priorhelper;
-    if(m_fitContinuum_priorhelper) delete m_fitContinuum_priorhelper;
-    if(m_fitContinuum_tplfitStore) delete m_fitContinuum_tplfitStore;
 }
 
 void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)
@@ -245,35 +239,35 @@ void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath
 Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
 {
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
-    m_CatalogTplShape = new CRayCatalogsTplShape();
+    //m_CatalogTplShape = new CRayCatalogsTplShape();
 
-    bool ret = m_CatalogTplShape->Init(m_calibrationPath, opt_tplratioCatRelPath, opt_tplratio_ismFit);
+    bool ret = m_CatalogTplShape.Init(m_calibrationPath, opt_tplratioCatRelPath, opt_tplratio_ismFit);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
         return false;
     }
-    m_CatalogTplShape->InitLineCorrespondingAmplitudes(*this);
-    m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, 0 );
-    //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, 0 );
-    //m_RestRayList = m_CatalogTplShape->GetRestLinesList(0);
+    m_CatalogTplShape.InitLineCorrespondingAmplitudes(*this);
+    m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, 0 );
+    //m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, 0 );
+    //m_RestRayList = m_CatalogTplShape.GetRestLinesList(0);
     //LoadCatalog(m_RestRayList);
     //LogCatalogInfos();
 
     //Resize tplshape buffers
-    m_ChisquareTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_ScaleMargCorrTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_StrongELPresentTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_FittedAmpTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_LyaWidthCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_LyaDeltaCoeffTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_FittedErrorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_MtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_DtmTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    m_LinesLogPriorTplshape.resize(m_CatalogTplShape->GetCatalogsCount());
-    for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape->GetCatalogsCount(); ktplshape++)
+    m_ChisquareTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_ScaleMargCorrTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_StrongELPresentTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_FittedAmpTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_LyaWidthCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_LyaDeltaCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_FittedErrorTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_MtmTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_DtmTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_LinesLogPriorTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    for(Int32 ktplshape=0; ktplshape<m_CatalogTplShape.GetCatalogsCount(); ktplshape++)
     {
         m_FittedAmpTplshape[ktplshape].resize(m_Elements.size());
         m_FittedErrorTplshape[ktplshape].resize(m_Elements.size());
@@ -768,7 +762,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
         if(lines.size()>0)
         {
-            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -788,7 +782,7 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
 
     if(lines.size()>0)
     {
-        m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -812,7 +806,7 @@ void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVe
 
         if(lines.size()>0)
         {
-            m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -1557,7 +1551,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
     m_ContinuumComponent = component;
 }
 
-Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
+Int32 CLineModelElementList::SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore)
 {
     m_fitContinuum_option = 1; //enable use of the fit store
     Log.LogDetail( "Elementlist: enabling fitContinuum store.");
@@ -1565,7 +1559,7 @@ Int32 CLineModelElementList::SetFitContinuum_FitStore(CTemplatesFitStore* fitSto
     return 1;
 }
 
-Int32 CLineModelElementList::SetFitContinuum_PriorHelper(CPriorHelper *priorhelper)
+Int32 CLineModelElementList::SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper)
 {
     m_fitContinuum_priorhelper = priorhelper;
     return 1;
@@ -1670,17 +1664,17 @@ Int32 CLineModelElementList::getTplshape_count()
     {
         return 0;
     }
-    return m_CatalogTplShape->GetCatalogsCount();
+    return m_CatalogTplShape.GetCatalogsCount();
 }
 
-std::vector<Float64> CLineModelElementList::getTplshape_priors()
+const std::vector<Float64> & CLineModelElementList::getTplshape_priors()
 {
     if(m_rigidity!="tplshape")
     {
-        std::vector<Float64> dumb;
+        static std::vector<Float64> dumb;
         return dumb;
     }
-    return m_CatalogTplShape->getCatalogsPriors();
+    return m_CatalogTplShape.getCatalogsPriors();
 }
 
 std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
@@ -1734,22 +1728,22 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    m_CatalogTplShape->SetLyaProfile(*this, itplshape, m_forceLyaFitting);
+    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting);
 
-    m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, itplshape );
+    m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, itplshape );
 
     if(enableSetVelocity)
     {
         //Set the velocities from templates: todo auto switch when velfit is ON
-        m_CatalogTplShape->GetCatalogVelocities(itplshape, m_velocityEmission, m_velocityAbsorption);
+        m_CatalogTplShape.GetCatalogVelocities(itplshape, m_velocityEmission, m_velocityAbsorption);
     }
 
-    Log.LogDebug( "    model : setTplshapeModel, loaded: %d = %s", itplshape, m_CatalogTplShape->GetCatalogName(itplshape).c_str());
+    Log.LogDebug( "    model : setTplshapeModel, loaded: %d = %s", itplshape, m_CatalogTplShape.GetCatalogName(itplshape).c_str());
     return true;
 }
 
 
-Int32 CLineModelElementList::SetTplshape_PriorHelper(CPriorHelper *priorhelper)
+Int32 CLineModelElementList::SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper)
 {
     m_tplshape_priorhelper = priorhelper;
     return 1;
@@ -1822,7 +1816,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
     std::vector<CPriorHelper::SPriorTZE> logPriorDataTplShape;
     if(m_rigidity=="tplshape")
     {
-        nfitting=m_CatalogTplShape->GetCatalogsCount();
+        nfitting=m_CatalogTplShape.GetCatalogsCount();
 
         if(!m_tplshape_priorhelper->mInitFailed)
         {
@@ -1836,9 +1830,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
             {
                 //prepare the lines prior data
-                Int32 ebvfilter=m_CatalogTplShape->GetIsmIndex(ifitting);
+                Int32 ebvfilter=m_CatalogTplShape.GetIsmIndex(ifitting);
                 CPriorHelper::SPriorTZE logPriorData;
-                std::string tplrationame = m_CatalogTplShape->GetCatalogName(ifitting);
+                std::string tplrationame = m_CatalogTplShape.GetCatalogName(ifitting);
                 bool retGetPrior = m_tplshape_priorhelper->GetTZEPriorData(tplrationame, ebvfilter, redshift, logPriorData);
                 if(retGetPrior==false)
                 {
@@ -1909,7 +1903,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                 if(m_forcedisableTplratioISMfit)
                 {
-                    if(m_CatalogTplShape->GetIsmCoeff(ifitting)>0 && ifitting>0)
+                    if(m_CatalogTplShape.GetIsmCoeff(ifitting)>0 && ifitting>0)
                     {
                         //copy the values for ebmv=ebmv_fixed (=0) here
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
@@ -2430,7 +2424,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 correctedAmplitudes.resize(modelSolution.Amplitudes.size());
                 std::string bestTplName = "";
 
-                m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
+                m_CatalogTplShape.GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
                 for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
                 {
                     Int32 eIdx = FindElementIndex(iRestRay);
@@ -2583,8 +2577,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
                     modelSolution = GetModelSolution();
                     continuumModelSolution = GetContinuumModelSolution();
-                    m_tplshapeBestTplName = m_CatalogTplShape->GetCatalogName(savedIdxFitted);
-                    m_tplshapeBestTplIsmCoeff = m_CatalogTplShape->GetIsmCoeff(savedIdxFitted);
+                    m_tplshapeBestTplName = m_CatalogTplShape.GetCatalogName(savedIdxFitted);
+                    m_tplshapeBestTplIsmCoeff = m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
                     m_tplshapeBestTplAmplitude = m_FittedAmpTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                     m_tplshapeBestTplDtm = m_DtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                     m_tplshapeBestTplMtm = m_MtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
@@ -2593,7 +2587,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
             //if(m_rigidity=="tplcorr")
             //{
-            //  Float64 tplshapePriorCoeff = m_CatalogTplShape->GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
+            //  Float64 tplshapePriorCoeff = m_CatalogTplShape.GetBestFit( modelSolution.Rays, modelSolution.Amplitudes,  );
             //  Log.LogDebug( "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff);
             //  merit = sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
             //}
@@ -2633,15 +2627,15 @@ Float64 CLineModelElementList::fit(Float64 redshift,
 
         if(m_rigidity=="tplshape")
         {
-            //m_CatalogTplShape->SetMultilineNominalAmplitudes( *this, savedIdxFitted );
-            bool retSetMultiAmplFast = m_CatalogTplShape->SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+            //m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, savedIdxFitted );
+            bool retSetMultiAmplFast = m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
             if( !retSetMultiAmplFast ){
                 Log.LogError( "Linemodel: tplshape, Unable to set Multiline NominalAmplitudes from Tplshape !");
             }
 
 
             //Set the velocities from templates: todo auto switch when velfit is ON
-            //m_CatalogTplShape->GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
+            //m_CatalogTplShape.GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
                 Log.LogDetail( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
@@ -5810,7 +5804,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     std::vector<UInt32> a;
     a.push_back(index1);
     a.push_back(index2);
-    m_Elements.push_back(boost::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
+    m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
 }
 
 /**

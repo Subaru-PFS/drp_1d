@@ -1,5 +1,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/linemodel/calibrationconfig.h>
+#include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/linetags.h>
 
@@ -19,16 +20,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-
-CRayCatalogsTplShape::CRayCatalogsTplShape()
-{
-    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
-}
-
-CRayCatalogsTplShape::~CRayCatalogsTplShape()
-{
-    delete m_ismCorrectionCalzetti;
-}
 
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tplratioCatRelPath, Int32 enableISMCalzetti)
 {
@@ -52,7 +43,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
     //Float64 ebmv_start=0.0;
     //Float64 ebmv_step=0.9;
     //Float64 ebmv_n=2;
-    m_ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
+    m_ismCorrectionCalzetti.Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
 
     bool ret = Load(dirPath.c_str());
     if(!ret)
@@ -156,7 +147,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
     {
         nDustCoeffs = 1;
     }else{
-        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nDustCoeffs = m_ismCorrectionCalzetti.GetNPrecomputedDustCoeffs();
     }
     for(Int32 ktpl=0; ktpl<tplshapeCatalogList.size(); ktpl++)
     {
@@ -353,7 +344,7 @@ Int32 CRayCatalogsTplShape::GetCatalogsCount()
     return m_RayCatalogList.size();
 }
 
-std::vector<Float64> CRayCatalogsTplShape::getCatalogsPriors()
+const std::vector<Float64> & CRayCatalogsTplShape::getCatalogsPriors()
 {
     return m_Priors;
 }
@@ -365,7 +356,7 @@ std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
 
 Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx)
 {
-    return m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[idx]);
+    return m_ismCorrectionCalzetti.GetEbmvValue(m_IsmIndexes[idx]);
 }
 
 Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx)
@@ -408,7 +399,7 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
             {
                 Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
                 Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-                Float64 dustCoeff = m_ismCorrectionCalzetti->getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+                Float64 dustCoeff = m_ismCorrectionCalzetti.getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
                 nominalAmp*=dustCoeff;
                 //find line in the elementList
                 Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
@@ -430,7 +421,7 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
         {
             Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
-                Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[k]);
+                Float64 ebv = m_ismCorrectionCalzetti.GetEbmvValue(m_IsmIndexes[k]);
                 Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
                 std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName();
                 Log.LogDebug("    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
@@ -493,7 +484,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     {
         Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
         Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-        Float64 dustCoeff = m_ismCorrectionCalzetti->getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+        Float64 dustCoeff = m_ismCorrectionCalzetti.getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
         nominalAmp*=dustCoeff;
         //find line in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )

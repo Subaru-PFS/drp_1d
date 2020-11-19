@@ -33,15 +33,12 @@ public:
 
     Float64 getDustCoeff(Int32 kDust, Float64 restLambda );
 
-    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-
-    Float64 *m_dataCalzetti = NULL;
-    Float64 m_NdataCalzetti;
+    std::vector<Float64> m_dataCalzetti;
 
     Int32 m_nDustCoeff = 0;
     Float64 m_dustCoeffStep;
     Float64 m_dustCoeffStart;
-    Float64* m_dataDustCoeff = NULL;
+    std::vector<Float64> m_dataDustCoeff;
     bool calzettiInitFailed = false;
 
 private:

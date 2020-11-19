@@ -39,8 +39,6 @@ public:
 
     Float64  getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda);
 
-    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-
 
     Float64 GetLambdaMin();
     Float64 GetLambdaMax();

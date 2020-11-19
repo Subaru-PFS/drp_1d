@@ -8,6 +8,7 @@
 #include <gsl/gsl_matrix.h>
 
 #include <RedshiftLibrary/ray/catalog.h>
+#include <RedshiftLibrary/ray/catalogsTplShape.h>
 #include <RedshiftLibrary/ray/regulament.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
@@ -30,7 +31,6 @@
 namespace NSEpic
 {
   static Int32 defaultIdx = -1;
-  class CRayCatalogsTplShape;
 
 class CLineModelElementList
 {
@@ -95,8 +95,8 @@ public:
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
-    Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
-    Int32 SetFitContinuum_PriorHelper(CPriorHelper* priorhelper);
+    Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
+    Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
     Int32 GetFitContinuum_Option();
@@ -129,13 +129,13 @@ public:
     Float64 getTplshape_bestDtm();
     Float64 getTplshape_bestMtm();
     Int32 getTplshape_count();
-    std::vector<Float64> getTplshape_priors();
+    const std::vector<Float64> & getTplshape_priors();
     std::vector<Float64> GetChisquareTplshape();
     std::vector<Float64> GetPriorLinesTplshape();
     std::vector<Float64> GetScaleMargTplshape();
     TBoolList GetStrongELPresentTplshape();
     std::vector<Int32> GetNLinesAboveSNRTplshape();
-    Int32 SetTplshape_PriorHelper(CPriorHelper* priorhelper);
+    Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
     Int32 GetNElements();
     Int32 GetModelValidElementsNDdl();
@@ -252,7 +252,7 @@ public:
                                         Float64* g);
 
 
-    std::vector<boost::shared_ptr<CLineModelElement> > m_Elements;
+    std::vector<std::shared_ptr<CLineModelElement> > m_Elements;
     const CSpectrum & m_inputSpc;
     CSpectrum m_SpectrumModel;  //model
     Int32 FindElementIndex(Int32 LineCatalogIndex);
@@ -266,7 +266,7 @@ public:
     Int32 setPassMode(Int32 iPass);
     void SetForcedisableTplratioISMfit(bool opt);
 
-    CRayCatalogsTplShape* m_CatalogTplShape;
+    CRayCatalogsTplShape m_CatalogTplShape;
     std::vector<Float64> m_ChisquareTplshape;
     std::vector<std::vector<Float64>> m_FittedAmpTplshape;
     std::vector<std::vector<Float64>> m_FittedErrorTplshape;
@@ -389,7 +389,7 @@ private:
     Float64 m_tplshapeBestTplDtm;
     Float64 m_tplshapeBestTplMtm;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
-    CPriorHelper* m_tplshape_priorhelper;
+    std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
 
     COperatorChiSquare2* m_chiSquareOperator;
     Int32 m_secondpass_fitContinuum_dustfit;
@@ -397,7 +397,7 @@ private:
     Int32 m_secondpass_fitContinuum_outsidelinesmask;
     Int32 m_secondpass_fitContinuum_observedFrame;
 
-    CTemplatesFitStore* m_fitContinuum_tplfitStore;
+    std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude=-1.0;
@@ -413,7 +413,7 @@ private:
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
     Float64 m_fitContinuum_tplFitAlpha=0.;
-    CPriorHelper* m_fitContinuum_priorhelper;
+    std::shared_ptr<const CPriorHelper> m_fitContinuum_priorhelper;
 
     bool m_lmfit_noContinuumTemplate;
     bool m_lmfit_bestTemplate;
