@@ -4,9 +4,11 @@
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/spectrum/LSF.h>
 #include <RedshiftLibrary/continuum/continuum.h>
 
 #include <unordered_map>
+#include <stdexcept>
 #include <string>
 
 namespace NSEpic
@@ -36,6 +38,7 @@ public:
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf);
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
@@ -54,12 +57,14 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
+    const CLSF&                     GetLSF() const;
 
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumFluxAxis&              GetRawFluxAxis();
     CSpectrumFluxAxis&              GetContinuumFluxAxis();
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
+    CLSF&                           GetLSF();
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -95,6 +100,10 @@ public:
 
     void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
+    void                            EnableLSF() const;
+    void                            DisableLSF() const;
+    Bool                            UseOfLSF() const;
+
     void                            ScaleFluxAxis(Float64 scale);
 
     void                            InitPrecomputeFineGrid() const;
@@ -106,6 +115,8 @@ public:
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
+    CLSF                            m_LSF;
+    mutable Bool                    m_enableLSF = false;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -245,6 +256,24 @@ CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
         EstimateContinuum();
     }
     return m_WithoutContinuumFluxAxis;
+}
+
+inline
+void CSpectrum::EnableLSF() const
+{
+    m_enableLSF = true;
+}
+
+inline
+void CSpectrum::DisableLSF() const
+{
+    m_enableLSF = false;
+}
+
+inline
+Bool CSpectrum::UseOfLSF() const
+{
+    return m_enableLSF;
 }
 
 }

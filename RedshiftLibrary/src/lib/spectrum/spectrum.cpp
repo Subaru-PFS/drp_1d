@@ -96,10 +96,22 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_dfBinPath(""),
     m_Name("") 
 {
-
+    CLSF lsf = CLSF();
+    CSpectrum(spectralAxis, fluxAxis, lsf);
 }
 
-//copy constructor,
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf) :
+    m_SpectralAxis(spectralAxis),
+    m_RawFluxAxis(fluxAxis),
+    m_estimationMethod(""),
+    m_medianWindowSize(-1),
+    m_nbScales(-1),
+    m_dfBinPath("")
+{
+    m_LSF = std::move(lsf);
+}
+
+//copy constructor
 // copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
 // and const members (m_dLambdaFineGrid &m_method2baseline)
 CSpectrum::CSpectrum(const CSpectrum& other):
@@ -912,5 +924,27 @@ void CSpectrum::ScaleFluxAxis(Float64 scale){
     if (alreadyRemoved){
         m_ContinuumFluxAxis *= scale;
         m_WithoutContinuumFluxAxis *= scale;
+    }
+}
+
+// Move in header file after externalize the test
+CLSF* CSpectrum::GetLSF()
+{
+    if( !m_LSF->IsValid() && m_enableLSF ){
+        Log.LogError("LSF parameter is not valid");
+        throw std::runtime_error("LSF parameter is not valid");
+    }else{
+        return m_LSF.get();
+    }
+}
+
+// Move in header file after externalize the test
+const CLSF* CSpectrum::GetLSF() const
+{
+    if( !m_LSF->IsValid() && m_enableLSF ){
+        Log.LogError("LSF parameter is not valid");
+        throw std::runtime_error("LSF parameter is not valid");
+    }else{
+        return m_LSF.get();
     }
 }

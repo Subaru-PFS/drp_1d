@@ -49,7 +49,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     m_Spectrum = spectrum;
     InitSpectrum();
 
-    // calzetti ISM & Meiksin IGM initialiation
+    // Calzetti ISM & Meiksin IGM initialization
     std::string calibrationPath;
     m_ParameterStore->Get( "calibrationDir", calibrationPath );
     InitIsmIgm(calibrationPath);
@@ -106,6 +106,12 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
 
 void CProcessFlowContext::InitSpectrum()
 {
+    // Enable LSF if necessary
+    std::string enableLSF;
+    m_ParameterStore->Get( "linemodelsolve.linemodel.enableLSF", enableLSF, "no" );
+    if( enableLSF == "yes" )
+        m_Spectrum->EnableLSF();
+
     // Smooth flux
     Int64 smoothWidth;
     m_ParameterStore->Get( "smoothWidth", smoothWidth, 0 );

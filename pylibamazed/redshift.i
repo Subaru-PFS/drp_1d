@@ -246,6 +246,8 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf);
+  CLSF& GetLSF();
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
