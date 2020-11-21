@@ -338,8 +338,8 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z)
         if(meritResult->ChiSquare[idx]<tmpMerit){
             tmpMerit = meritResult->ChiSquare[idx];
             tmpTplName = (*it).first;
-            tmpMeiksinIdx = meritResult->FitDustCoeff[idx];
-            tmpDustCoeff = meritResult->FitMeiksinIdx[idx];
+            tmpMeiksinIdx = meritResult->FitMeiksinIdx[idx];
+            tmpDustCoeff = meritResult->FitDustCoeff[idx];
             tmpAmplitude = meritResult->FitAmplitude[idx];
             tmpAmplitudeError = meritResult->FitAmplitudeError[idx];
         }

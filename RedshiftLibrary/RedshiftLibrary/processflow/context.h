@@ -67,6 +67,8 @@ public:
 private:
 
     void                                       InitSpectrum();
+    void                                       InitIsmIgm(const std::string & CalibrationDirPath);
+
     std::shared_ptr<CSpectrum>                 m_Spectrum;
 
     std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;

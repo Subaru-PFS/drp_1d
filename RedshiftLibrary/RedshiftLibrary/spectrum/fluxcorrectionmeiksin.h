@@ -33,15 +33,15 @@ public:
 
     std::vector<MeiksinCorrection> m_corrections;
 
-    Int32 GetIdxCount();
-    Int32 GetRedshiftIndex(Float64 z);
-    std::vector<Float64> GetSegmentsStartRedshiftList();
+    Int32 GetIdxCount() const;
+    Int32 GetRedshiftIndex(Float64 z) const;
+    std::vector<Float64> GetSegmentsStartRedshiftList() const;
 
-    Float64  getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda);
+    Float64  getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda) const;
 
 
-    Float64 GetLambdaMin();
-    Float64 GetLambdaMax();
+    Float64 GetLambdaMin() const;
+    Float64 GetLambdaMax() const;
 
     bool meiksinInitFailed = false;
 
@@ -52,24 +52,24 @@ private:
 
 };
 
-inline std::vector<Float64> CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList()
+inline std::vector<Float64> CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList() const
 {
     std::vector<Float64> zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                                        4.5, 5.0, 5.5, 6.0, 6.5};
     return zstartlist;
 };
 
-inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMin()
+inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMin() const
 {
     return m_LambdaMin;
 }
 
-inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax()
+inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax() const 
 {
     return m_LambdaMax;
 }
 
-inline Int32 CSpectrumFluxCorrectionMeiksin::GetIdxCount()
+inline Int32 CSpectrumFluxCorrectionMeiksin::GetIdxCount() const
 {
     return 7; //harcoded value from the number of cols in the ascii files
 }

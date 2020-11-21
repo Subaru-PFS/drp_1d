@@ -391,7 +391,7 @@ private:
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
     std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
 
-    COperatorChiSquare2* m_chiSquareOperator;
+    COperatorChiSquare2 m_chiSquareOperator;
     Int32 m_secondpass_fitContinuum_dustfit;
     Int32 m_secondpass_fitContinuum_igm;
     Int32 m_secondpass_fitContinuum_outsidelinesmask;

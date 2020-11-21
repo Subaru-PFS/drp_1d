@@ -33,12 +33,12 @@ public:
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store);
+    Bool GetBestRedshift(const CDataStore& store) const;
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
-    Bool GetBestRedshiftFromPdf(const CDataStore& store);
-    Int32 GetBestModel(const CDataStore& store, Float64 z) ; //, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const;
+    Bool GetBestRedshiftFromPdf(const CDataStore& store) const;
+    Int32 GetBestModel(const CDataStore& store, Float64 z)  const; //, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const;
 
-    Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence);
+    Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir = "zPDF") const;
 
     Int32 m_bestRedshiftMethod = 2; //best chi2, best proba

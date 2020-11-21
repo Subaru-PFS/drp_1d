@@ -21,7 +21,7 @@ class CMethodChisquareSolve
 
  public:
 
-    CMethodChisquareSolve( std::string calibrationPath );
+    CMethodChisquareSolve();
     ~CMethodChisquareSolve();
 
     std::shared_ptr<const CChisquareSolveResult> Compute(CDataStore& resultStore,
@@ -46,7 +46,6 @@ private:
                CSpectrum::EType spctype=CSpectrum::nType_raw,
                std::string opt_interp="lin");
 
-    std::string m_calibrationPath;
     Float64 m_radius;
 
 };

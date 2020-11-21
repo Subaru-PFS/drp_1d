@@ -128,7 +128,7 @@ Bool CSpectrumFluxCorrectionMeiksin::LoadFile( const char* filePath )
  *
  * @return
  */
-Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z)
+Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
 {
     Int32 index = -1;
 
@@ -154,7 +154,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z)
  */
 
 
-Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda)
+Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda) const
 {
     Int32 redshiftIdx = GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     Float64 coeffIGM = 1.0;

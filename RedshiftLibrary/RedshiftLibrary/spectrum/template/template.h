@@ -42,9 +42,12 @@ public:
     void SetIsmIgmLambdaRange(TFloat64Range& lbdaRange);
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig();
+    
+    bool CalzettiInitFailed() const;
+    bool MeiksinInitFailed() const;
 
-    CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
-    CSpectrumFluxCorrectionMeiksin m_igmCorrectionMeiksin;
+    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
+    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 private:
 
     std::string     m_Category;

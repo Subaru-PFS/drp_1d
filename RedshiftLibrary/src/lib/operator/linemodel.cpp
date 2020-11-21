@@ -681,15 +681,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     {
         // COperatorChiSquareLogLambda* chiSquareOperator;
         bool enableLogRebin = true;
-        chiSquareOperator = std::shared_ptr<COperatorChiSquareLogLambda>(
-            new COperatorChiSquareLogLambda(opt_calibrationPath));
+        chiSquareOperator = std::make_shared<COperatorChiSquareLogLambda>(opt_calibrationPath);
         std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator =
             std::dynamic_pointer_cast<COperatorChiSquareLogLambda>(chiSquareOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
     } else if (m_opt_tplfit_method == "chisquare2")
     {
-        chiSquareOperator = std::shared_ptr<COperatorChiSquare2>(
-            new COperatorChiSquare2(opt_calibrationPath));
+        chiSquareOperator = std::make_shared<COperatorChiSquare2>();
     } else
     {
         Log.LogError("  Operator-Linemodel: unable to parse chisquare continuum fit operator");

@@ -80,13 +80,13 @@ Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64
     return true;
 }
 
-Float64 CSpectrumFluxCorrectionCalzetti::GetEbmvValue(Int32 k)
+Float64 CSpectrumFluxCorrectionCalzetti::GetEbmvValue(Int32 k) const
 {
     Float64 coeffEBMV = m_dustCoeffStart + m_dustCoeffStep*(Float64)k;
     return coeffEBMV;
 }
 
-Float64 CSpectrumFluxCorrectionCalzetti::getDustCoeff( Int32 kDust, Float64 restLambda )
+Float64 CSpectrumFluxCorrectionCalzetti::getDustCoeff( Int32 kDust, Float64 restLambda ) const 
 {
     Float64 coeffDust = 1.0;
     if(restLambda >= m_LambdaMin && restLambda < m_LambdaMax)
@@ -97,17 +97,17 @@ Float64 CSpectrumFluxCorrectionCalzetti::getDustCoeff( Int32 kDust, Float64 rest
     return coeffDust;
 }
 
-Int32 CSpectrumFluxCorrectionCalzetti::GetNPrecomputedDustCoeffs()
+Int32 CSpectrumFluxCorrectionCalzetti::GetNPrecomputedDustCoeffs() const
 {
     return m_nDustCoeff;
 }
 
-Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMin()
+Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMin() const
 {
     return m_LambdaMin;
 }
 
-Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMax()
+Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMax() const
 {
     return m_LambdaMax;
 }

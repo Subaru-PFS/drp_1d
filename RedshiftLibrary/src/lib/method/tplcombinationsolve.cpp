@@ -17,14 +17,12 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodTplcombinationSolve::CMethodTplcombinationSolve( std::string calibrationPath )
+CMethodTplcombinationSolve::CMethodTplcombinationSolve()
 {
-    m_tplcombinationOperator = new COperatorTplcombination( calibrationPath );
 }
 
 CMethodTplcombinationSolve::~CMethodTplcombinationSolve()
 {
-    delete m_tplcombinationOperator;
 }
 
 const std::string CMethodTplcombinationSolve::GetDescription()
@@ -239,7 +237,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator->Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator.Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {
@@ -251,7 +249,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             resultStore.StoreScopedGlobalResult(scopeStr.c_str(), result );
             // Store spectrum results
             Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
-            m_tplcombinationOperator->SaveSpectrumResults(resultStore);
+            m_tplcombinationOperator.SaveSpectrumResults(resultStore);
         }
     }
 

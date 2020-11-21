@@ -22,7 +22,7 @@ class CMethodDTree7Solve
 
 public:
 
-    CMethodDTree7Solve(std::string calibrationPath="");
+    CMethodDTree7Solve();
     ~CMethodDTree7Solve();
 
     const std::string GetDescription();
@@ -68,8 +68,6 @@ private:
                               Float64 overlapThreshold);
 
     TStringList getFilteredTplCategory(const TStringList& tplCategoryListIn, const std::string& CategoryFilter);
-
-    std::string m_calibrationPath;
 
 };
 

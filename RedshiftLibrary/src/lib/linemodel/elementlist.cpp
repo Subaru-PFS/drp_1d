@@ -147,15 +147,13 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     m_observeGridContinuumFlux = NULL;
     //m_unscaleContinuumFluxAxisDerivZ =NULL;
-    m_chiSquareOperator = NULL;
 
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
-    m_fitContinuum_priorhelper = NULL;
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
     {
-        m_chiSquareOperator = new COperatorChiSquare2(calibrationPath);
+        m_chiSquareOperator = COperatorChiSquare2();
         m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
         if(m_observeGridContinuumFlux == NULL){
           throw runtime_error("unable to allocate m_observeGridContinuumFlux");
@@ -216,10 +214,6 @@ CLineModelElementList::~CLineModelElementList()
     if(m_observeGridContinuumFlux)
     {
         delete[] m_observeGridContinuumFlux;
-    }
-    if(m_chiSquareOperator)
-    {
-        delete m_chiSquareOperator;
     }
 }
 
@@ -1260,30 +1254,73 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     //initialize and allocate the gsl objects
     Float64* Ysrc = tplFluxAxis.GetSamples();
     const Float64* Xsrc = tplSpectralAxis.GetSamples();
-    //apply dust attenuation
-    const Float64* dustCoeffArray = m_chiSquareOperator->getDustCoeff(m_fitContinuum_tplFitDustCoeff, Xsrc[n-1]);
-    //apply igm meiksin extinction
-    const Float64* meiksinCoeffArray = m_chiSquareOperator->getMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift, Xsrc[n-1]);
 
-    if(dustCoeffArray!=0)
+    //apply dust attenuation
+    Int32 idxDust = -1;
+    if (m_fitContinuum_tplFitDustCoeff >0.)
     {
-        Float64 lambda = 0.0;
-        for(Int32 ktpl=0; ktpl<n; ktpl++)
+        if (tpl.CalzettiInitFailed())
         {
-            lambda = Xsrc[ktpl];
-            Ysrc[ktpl]*=dustCoeffArray[Int32(lambda)]; //dust coeff is rounded at the nearest 1 angstrom value
+            Log.LogError("  no calzetti calib. file loaded in template... aborting!");
+            throw std::runtime_error("  no calzetti calib. file in template");
         }
-        delete dustCoeffArray;
+        for(Int32 kDust=0; kDust<tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs(); kDust++)
+        {
+            Float64 coeffEBMV = tpl.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
+            if(m_fitContinuum_tplFitDustCoeff==coeffEBMV)
+            {
+                idxDust = kDust;
+                break;
+            }
+        }
     }
-    if(meiksinCoeffArray!=0)
+    if(idxDust!=-1)
     {
         Float64 lambda = 0.0;
         for(Int32 ktpl=0; ktpl<n; ktpl++)
         {
             lambda = Xsrc[ktpl];
-            Ysrc[ktpl]*=meiksinCoeffArray[Int32(lambda)]; //igm meiksin coeff is rounded at the nearest 1 angstrom value
+            Ysrc[ktpl]*=tpl.m_ismCorrectionCalzetti->getDustCoeff(idxDust, Int32(lambda)); //dust coeff is rounded at the nearest 1 angstrom value
         }
-        delete meiksinCoeffArray;
+    }
+
+    //apply igm meiksin extinction
+    Float64 coeffIGM = 1.0;
+    Int32 meiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
+    if (meiksinIdx>=0)// &&        
+    {
+        if (tpl.MeiksinInitFailed())
+        {
+            Log.LogError("  no meiksin calib. file loaded in template... aborting!");
+            throw std::runtime_error("  no meiksin calib. file in template");
+        }else if (meiksinIdx>tpl.m_igmCorrectionMeiksin->GetIdxCount()-1)
+        {
+            Log.LogError("  meiksin index outside available range... aborting!");
+            throw std::runtime_error(" meiksin index outside available range");
+        }
+                
+        Int32 redshiftIdx = tpl.m_igmCorrectionMeiksin->GetRedshiftIndex(m_Redshift);
+
+        Float64 lambda = 0.0;
+        for(Int32 ktpl=0; ktpl<n; ktpl++)
+        {
+            lambda = Xsrc[ktpl];
+            Float64 coeffIGM = 1.0;
+            if(lambda <= tpl.m_igmCorrectionMeiksin->GetLambdaMax())
+            {
+                Int32 kLbdaMeiksin = 0;
+                if(lambda >= tpl.m_igmCorrectionMeiksin->GetLambdaMin())
+                {
+                    kLbdaMeiksin = Int32(lambda-tpl.m_igmCorrectionMeiksin->GetLambdaMin());
+                }else //if lambda lower than min meiksin value, use lower meiksin value
+                {
+                    kLbdaMeiksin = 0;
+                }
+                coeffIGM = tpl.m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+            }
+
+            Ysrc[ktpl] *= coeffIGM;
+        }
     }
 
     //spline
@@ -1351,7 +1388,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
     // Compute merit function
     //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( m_inputSpc,
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( m_inputSpc,
                                                                                                        tpl,
                                                                                                        lambdaRange,
                                                                                                        redshifts,
@@ -1440,11 +1477,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
 
     //*
     //Fit contaminant template AMPLITUDE
-    if(m_chiSquareOperator == NULL)
-    {
-        m_chiSquareOperator = new COperatorChiSquare2(m_calibrationPath);
-    }
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( m_inputSpc,
+    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( m_inputSpc,
                                                                                                        *m_tplContaminantSpcRebin,
                                                                                                        lambdaRange,
                                                                                                        redshifts,
@@ -2725,26 +2758,6 @@ void CLineModelElementList::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 m
 void CLineModelElementList::SetFittingMethod(std::string fitMethod)
 {
     m_fittingmethod = fitMethod;
-
-    if(fitMethod == "lmfit" ) // todo: add the tplfit continuum component option check
-    {
-      if(m_observeGridContinuumFlux == NULL){
-        const CSpectrumFluxAxis & modelFluxAxis = m_SpectrumModel.GetFluxAxis();
-        m_chiSquareOperator = new COperatorChiSquare2(m_calibrationPath);
-        m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
-        if(m_observeGridContinuumFlux == NULL){
-          Log.LogError("unable to allocate m_observeGridContinuumFlux");
-          return;
-        }
-        if(0)
-        {
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_dustfit = %d", m_secondpass_fitContinuum_dustfit );
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_igm = %d", m_secondpass_fitContinuum_igm );
-            Log.LogDebug( "Elementlist: secondpass fitContinuum_outsidelinesmask = %d", m_secondpass_fitContinuum_outsidelinesmask );
-            Log.LogDebug( "Elementlist: fitContinuum_observedFrame = %d", m_secondpass_fitContinuum_observedFrame );
-        }
-      }
-   }
 }
 
 void CLineModelElementList::SetLeastSquareFastEstimationEnabled(Int32 enabled)

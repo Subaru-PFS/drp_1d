@@ -25,13 +25,13 @@ public:
     Bool Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n );
     Bool LoadFile( const char* filePath );
 
-    Float64 GetLambdaMin();
-    Float64 GetLambdaMax();
-    Int32 GetNPrecomputedDustCoeffs();
+    Float64 GetLambdaMin() const;
+    Float64 GetLambdaMax() const;
+    Int32 GetNPrecomputedDustCoeffs() const;
 
-    Float64 GetEbmvValue(Int32 k);
+    Float64 GetEbmvValue(Int32 k) const;
 
-    Float64 getDustCoeff(Int32 kDust, Float64 restLambda );
+    Float64 getDustCoeff(Int32 kDust, Float64 restLambda ) const;
 
     std::vector<Float64> m_dataCalzetti;
 

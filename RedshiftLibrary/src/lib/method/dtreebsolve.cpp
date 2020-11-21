@@ -242,7 +242,7 @@ Bool CMethodDTreeBSolve::Solve(CDataStore& dataStore,
     // prepare the unused masks
     std::vector<CMask> maskList;
 
-    CMethodChisquare2Solve chiSolve(m_calibrationPath);
+    CMethodChisquare2Solve chiSolve;
     //achtung: override overlap threshold for chi2nocontinuum:
     Float64 overlapThresholdNC=overlapThreshold;
     overlapThresholdNC = 1.0;

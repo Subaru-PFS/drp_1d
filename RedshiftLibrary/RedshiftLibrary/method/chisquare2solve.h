@@ -26,7 +26,7 @@ class CMethodChisquare2Solve
  public:
 
 
-    CMethodChisquare2Solve( std::string calibrationPath="" );
+    CMethodChisquare2Solve();
     ~CMethodChisquare2Solve();
 
     const std::string GetDescription();
@@ -69,7 +69,8 @@ private:
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult);
 
 
-    COperatorChiSquare2* m_chiSquareOperator;
+
+    COperatorChiSquare2 m_chiSquareOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 

@@ -23,7 +23,7 @@ class CMethodTplcombinationSolve
 
  public:
 
-    CMethodTplcombinationSolve( std::string calibrationPath="" );
+    CMethodTplcombinationSolve();
     ~CMethodTplcombinationSolve();
 
     const std::string GetDescription();
@@ -67,7 +67,7 @@ private:
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult);
 
 
-    COperatorTplcombination* m_tplcombinationOperator;
+    COperatorTplcombination m_tplcombinationOperator;
 
 
     std::string m_opt_pdfcombination;

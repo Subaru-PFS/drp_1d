@@ -120,10 +120,10 @@ private:
 
 
     //ISM Calzetti
-    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
+    std::unique_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
 
     //IGM meiksin
-    CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+    std::unique_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);

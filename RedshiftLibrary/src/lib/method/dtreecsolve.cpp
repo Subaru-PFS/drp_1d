@@ -213,7 +213,7 @@ Bool CMethodDTreeCSolve::Solve(CDataStore& dataStore,
 
     Log.LogInfo( "dtreeCsolve: Computing the template fitting : %s", scopeStr.c_str());
 
-    CMethodChisquare2Solve* chiSolve = new CMethodChisquare2Solve(m_calibrationPath);
+    CMethodChisquare2Solve chiSolve;
     std::vector<Float64> redshiftsChi2Continuum;
     /*
     Int32 enableFastContinuumFitLargeGrid = 1;
@@ -258,7 +258,7 @@ Bool CMethodDTreeCSolve::Solve(CDataStore& dataStore,
     Log.LogInfo( "dtreeCsolve: maskList size is %d", maskList.size());
 
     //*/
-    auto chisolveResultcontinuum = chiSolve->Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit );
+    auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, opt_spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit );
 
     if( !chisolveResultcontinuum )
     {
@@ -273,7 +273,6 @@ Bool CMethodDTreeCSolve::Solve(CDataStore& dataStore,
     GetCombinedRedshift(dataStore, scopeStr);
     // /////////////////////////////////////////////////////////////////////////////
 
-    delete chiSolve;
     return true;
 }
 

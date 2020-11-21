@@ -33,7 +33,7 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodDTree7Solve::CMethodDTree7Solve(std::string calibrationPath)
+CMethodDTree7Solve::CMethodDTree7Solve()
 {
     // Peak Detection
     m_winsize = 250.0;
@@ -46,8 +46,6 @@ CMethodDTree7Solve::CMethodDTree7Solve(std::string calibrationPath)
 
     //dtree path
     m_dtreepathnum = -1.0;
-
-    m_calibrationPath = calibrationPath;
 }
 
 CMethodDTree7Solve::~CMethodDTree7Solve()
@@ -251,7 +249,7 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore& dataStore,
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, redshiftStep);
         Log.LogInfo( "DTree7 - (n candidates = %d)", roundedRedshift.size());
         {   //chisolve with emission templqtes only
-            CMethodChisquareSolve chiSolve(m_calibrationPath);
+            CMethodChisquareSolve chiSolve;
             auto chisolveResult = chiSolve.Compute( dataStore, spc, tplCatalog, filteredTemplateCategoryList, lambdaRange, roundedRedshift, m_radius, overlapThreshold );
 
             if( chisolveResult ) {
@@ -281,7 +279,7 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore& dataStore,
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, redshiftStep);
             m_dtreepathnum = 2.2;
             {   //chisolve with emission templqtes only
-                CMethodChisquareSolve chiSolve(m_calibrationPath);
+                CMethodChisquareSolve chiSolve;
                 auto chisolveResult = chiSolve.Compute( dataStore, spc, tplCatalog, filteredTemplateCategoryList, lambdaRange, roundedRedshift, m_radius, overlapThreshold );
 
                 if( chisolveResult ) {

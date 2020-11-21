@@ -276,7 +276,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
         std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
         starTemplateCatalog->Load( templateDir.c_str() );
-
+        //  push ISM in all galaxy templates 
+        auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
+        ismCorrectionCalzetti->Init(calibrationDirPath, 0.0, 0.1, 10);
+        TTemplateRefList  TplList = starTemplateCatalog->GetTemplate(filteredStarTemplateCategoryList);
+        for (auto tpl : TplList)
+        {
+            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+        }
         for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
         {
             std::string category = filteredStarTemplateCategoryList[i];
@@ -290,8 +297,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
         ctx.GetDataStore().GetScopedParam( "starsolve.interpolation", opt_interp, "precomputedfinegrid" );
-        std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "starsolve.extinction", opt_extinction, "no" );
+        const std::string opt_extinction = "no";
         std::string opt_dustFit;
         ctx.GetDataStore().GetScopedParam( "starsolve.dustfit", opt_dustFit, "yes" );
 
@@ -305,7 +311,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         DebugAssert( stars_redshifts.size() > 0 );
 
         Log.LogInfo("Processing stellar fitting");
-        CMethodChisquare2Solve solve(calibrationDirPath);
+        CMethodChisquare2Solve solve;
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         starResult = solve.Compute( ctx.GetDataStore(),
                                     ctx.GetSpectrum(),
@@ -398,7 +404,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         Log.LogInfo("Processing QSO fitting");
         if(qso_method=="chisquare2solve"){
-            CMethodChisquare2Solve solve(calibrationDirPath);
+            CMethodChisquare2Solve solve();
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
                                        *qsoTemplateCatalog,
@@ -428,7 +434,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             opt_interp="lin";
             opt_extinction="no";
             opt_dustFit="no";
-            CMethodTplcombinationSolve solve(calibrationDirPath);
+            CMethodTplcombinationSolve solve;
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
                                        *qsoTemplateCatalog,
@@ -529,7 +535,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         //retrieve the calibration dir path
         std::string calibrationDirPath;
         ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        CMethodChisquare2Solve solve(calibrationDirPath);
+        CMethodChisquare2Solve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
@@ -619,10 +625,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         // prepare the unused masks
         std::vector<CMask> maskList;
-        //retrieve the calibration dir path
-        std::string calibrationDirPath;
-        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        CMethodTplcombinationSolve solve(calibrationDirPath);
+        CMethodTplcombinationSolve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),

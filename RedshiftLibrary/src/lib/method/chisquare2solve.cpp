@@ -18,14 +18,12 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodChisquare2Solve::CMethodChisquare2Solve( std::string calibrationPath )
+CMethodChisquare2Solve::CMethodChisquare2Solve()
 {
-    m_chiSquareOperator = new COperatorChiSquare2( calibrationPath );
 }
 
 CMethodChisquare2Solve::~CMethodChisquare2Solve()
 {
-    delete m_chiSquareOperator;
 }
 
 const std::string CMethodChisquare2Solve::GetDescription()
@@ -162,7 +160,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
                 Log.LogError("  Chisquare2Solve: Couldn't find best model for candidate %f", zcandidates_unordered_list[i]);
                 continue;
             }
-            //now that we have best tplName, we have access to meiksin index, dustCoeff, data to create the model spectrum
+            //now that we have best tplName, we have access to meiksin index & EBMV to create the model spectrum
             try {
                 const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, ChisquareSolveResult->GetTemplateName());
                 CModelSpectrumResult spcmodel;
@@ -260,7 +258,7 @@ Bool CMethodChisquare2Solve::Solve(CDataStore& resultStore,
 
         // Compute merit function
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spc,
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( spc,
                                                                                                            tpl,
                                                                                                            lambdaRange,
                                                                                                            redshifts,
