@@ -277,7 +277,8 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
  * @return
  */
 Int32 CLineModelElementList::setPassMode(Int32 iPass)
-{
+{   
+    m_pass = iPass;
     if(iPass==1)
     {
         m_forceDisableLyaFitting = true;
@@ -301,7 +302,9 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
 
     return true;
 }
-
+Int32 CLineModelElementList::GetPassNumber(){
+    return m_pass;
+}
 
 void CLineModelElementList::SetForcedisableTplratioISMfit(bool opt)
 {
@@ -889,7 +892,15 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 }
 
 /**
+<<<<<<< HEAD
  * \brief Generates a continuum from the fitting with a set of templates : uses the templatefitting operator
+=======
+ * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
+ * TODO: LoadFitContinuum should be limited to reading continuum values from the variable class, especially that 
+ * we want that continuum fitting results are saved in tplfitStore container outside CElementList and these stores will be injected 
+ * in the class whenever required !
+ * TODO: study this possibility before doing the change
+>>>>>>> accomodating precompute to the secondpass call; save continuum params into secondpassExtremaResult; inject these params prior to recomputeAroundCand and estimateSecondPassParam
  */
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
@@ -1048,16 +1059,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
             redshifts[0] = 0.0;
         }
 
-        for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
-        {
-            std::string category = m_tplCategoryList[i];
-
-            for( UInt32 j=0; j<m_orthoTplCatalog.GetTemplateCount( category ); j++ )
-            {
-                const CTemplate& tpl = m_orthoTplCatalog.GetTemplate( category, j );
-
-                if(tpl.GetName()==m_fitContinuum_tplName)
-                {
+        const CTemplate& tpl = m_orthoTplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+        if(tpl.GetName()==m_fitContinuum_tplName)
+        {//we can skip these extra declarations
                     Float64 merit = DBL_MAX;
                     Float64 fitAmplitude = -1.0;
                     Float64 fitAmplitudeError =-1.0;
@@ -1099,9 +1103,6 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         bestTplName = tpl.GetName();
                     }
         
-                    break;
-                }
-            }
         }
     }else{
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
@@ -1118,18 +1119,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         }*/
 
         //Retrieve the best template
-        bool foundBestTemplate = false;
-        for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+        const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, bestTplName); 
+        if(tpl.GetName()==bestTplName)
         {
-            std::string category = m_tplCategoryList[i];
-
-            for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
-            {
-                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-
-                if(tpl.GetName()==bestTplName)
-                {
-                    foundBestTemplate = true;
                     m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
                     m_fitContinuum_tplFitAmplitudeError = bestFitAmplitudeError;
                     m_fitContinuum_tplFitMerit = bestMerit;
@@ -1171,11 +1163,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                         tplfitsnr=bestFitDtM/std::sqrt(bestFitMtM);
                     }
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with snr=%e", tplfitsnr);
-                    break;
-                }
-            }
         }
-        if(!foundBestTemplate)
+        else
         {
             Log.LogError("Failed to load-fit continuum. Failed to find best template=%s", bestTplName.c_str());
             throw runtime_error( "Failed to load and fit continuum. Failed to find best template by name");
@@ -1218,20 +1207,12 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
   m_Redshift = redshift;
 
   if(reinterpolatedContinuum){
-    for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+    const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName);
+    if(tpl.GetName()==m_fitContinuum_tplName)
     {
-        std::string category = m_tplCategoryList[i];
+        ApplyContinuumOnGrid(tpl, redshift);
+    }
 
-        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
-        {
-            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-
-            if(tpl.GetName()==m_fitContinuum_tplName)
-            {
-              ApplyContinuumOnGrid(tpl, redshift);
-            }
-          }
-        }
   }
 
 }
@@ -1384,15 +1365,18 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
     //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
     auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( m_inputSpc,
-                                                                                                                        tpl,
-                                                                                                                        lambdaRange,
-                                                                                                                        redshifts,
-                                                                                                                        overlapThreshold,
-                                                                                                                        maskList,
-                                                                                                                        opt_interp,
-                                                                                                                        opt_extinction,
-                                                                                                                        opt_dustFit,
-                                                                                                                        zePriorData) );
+                                                                                                       tpl,
+                                                                                                       lambdaRange,
+                                                                                                       redshifts,
+                                                                                                       overlapThreshold,
+                                                                                                       maskList,
+                                                                                                       opt_interp,
+                                                                                                       opt_extinction,
+                                                                                                       opt_dustFit,
+                                                                                                       zePriorData, 
+                                                                                                       keepigmism,
+                                                                                                       fitDustCoeff,
+                                                                                                       fitMeiksinIdx) );
 
     if( !templateFittingResult )
     {
@@ -1961,7 +1945,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //INFO: tplshape can override the lyafitting, see m_opt_lya_forcefit
                 setLyaProfile(redshift, spectralAxis);
             }
-
+//end of continuum
+//fit of ray amplitude
             //generate random amplitudes
             if(m_fittingmethod=="random")
             {
@@ -2133,6 +2118,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_Redshift = bestController->getRedshift();
                     }
                     const CTemplate* tpl = bestController->getTemplate();
+                    //Mira s hook: appl template continuum by interpolating the grid as defined in initContinuum
                     ApplyContinuumOnGrid(*tpl, m_Redshift);
                     std::vector<Float64> polyCoeffs;
                     setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), bestController->getContinuumAmpErr(), polyCoeffs);
@@ -2700,19 +2686,11 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
   }else{
     if(m_lmfit_bestTemplate){
       LoadFitContinuum(lambdaRange, -1, 0);
-      for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
-      {
-        std::string category = m_tplCategoryList[i];
-
-        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ) ; j++ )
-        {
-            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-            if(m_fitContinuum_tplName == tpl.GetName()){
-              bool continumLoaded = true;
-              useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
-            }
+      const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+      if(m_fitContinuum_tplName == tpl.GetName()){
+        bool continumLoaded = true;
+        useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
         }
-      }
     }else{
       for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
       {
@@ -3185,6 +3163,7 @@ CMask CLineModelElementList::getOutsideLinesMask()
 
     std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
     std::vector<UInt32> supportIdxes = getSupportIndexes( validEltsIdx );
+    //_mask(spectralAxis.GetSamplesCount(), 1); //initialize with a given size and value = 1
     for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
     {
         _mask[i]=1;
@@ -4443,6 +4422,8 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( const std::
     }
 
     std::vector<UInt32> xInds;
+    //Mira: why not calling  getSupportIndexes( EltsIdx )?
+    //maybe also we should use the intersect method
     for(Int32 i=0; i<spectralAxis.GetSamplesCount(); i++)
     {
         if(spectralAxis[i]>=lambdaRange.GetBegin() && spectralAxis[i]<=lambdaRange.GetEnd())
@@ -6812,6 +6793,7 @@ Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaR
     return m_likelihood_cstLog;
 }
 
+//below code could be moved to CSpectrum
 /**
  * \brief this function estimates the dtd value withing the wavelength range
  **/

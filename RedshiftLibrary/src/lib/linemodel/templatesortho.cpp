@@ -137,6 +137,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
         CLineModelSolution modelSolution;
+        //TODO: here we are fitting a nul continuum --> just nullify the continuum model  !!
         CContinuumModelSolution continuumModelSolution;
         model.fit( redshift,
                    lambdaRange,

@@ -264,6 +264,8 @@ public:
     TStringList GetModelRulesLog();
 
     Int32 setPassMode(Int32 iPass);
+    Int32 GetPassNumber();
+
     void SetForcedisableTplratioISMfit(bool opt);
 
     CRayCatalogsTplShape m_CatalogTplShape;
@@ -277,6 +279,7 @@ public:
     std::vector<std::vector<Float64>> m_LyaDeltaCoeffTplshape;
     std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
 
+    Int32 m_pass = 1;
     bool m_enableAmplitudeOffsets;
     Float64 m_LambdaOffsetMin = -400.0;
     Float64 m_LambdaOffsetMax = 400.0;
