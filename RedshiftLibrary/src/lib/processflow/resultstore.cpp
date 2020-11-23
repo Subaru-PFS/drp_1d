@@ -409,18 +409,22 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
         for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
         {
             std::string resultName = (*it).first;
+            Log.LogInfo("save result %s",resultName.c_str()); 
             auto  result = (*it).second;
 
             bool firstpass = false;
             bool saveThisResult = false;
 	        bool saveJSON = false;
+            
             if(opt_lower=="all" || opt_lower=="global"){
                 saveThisResult = true;
                 //save extrema results
                 std::string extremaresTagRes = "linemodel_extrema";
                 std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
                 if (foundstr!=std::string::npos){
-		            saveJSON = true;
+                  Log.LogInfo("save only json");                   
+                  saveThisResult = false;
+                  saveJSON = true;
                 }
             }
             else if(opt_lower=="linemeas")
@@ -430,13 +434,13 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 if (foundstr!=std::string::npos){
                     saveThisResult=true;
                 }
-            }else if(opt_lower=="default")
+            }else if(opt_lower=="default" || opt_lower=="all" || opt_lower=="global")
             {
                 //save extrema results
                 std::string extremaresTagRes = "linemodel_extrema";
                 std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
                 if (foundstr!=std::string::npos){
-                    saveThisResult=true;
+                    saveThisResult=false;
 		            saveJSON = true;
                 }
 
@@ -480,7 +484,16 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 }
             }
 
-            if(!saveThisResult)
+            if (resultName == "linemodel_extrema" ||  // do not save linemodel_extrema.csv, json works well
+                resultName == "linemodelsolve.linemodel" || // contains useleess chi2 and duplicate info from linemodel_extrema 
+                resultName.find("linemodel_rules_extrema") !=std::string::npos ) // empty files...
+              {
+                Log.LogInfo("do not save csv");
+                saveThisResult=false;
+              
+              }
+              /*            
+            if(!saveThisResult && !saveJSON)
             {
                 continue;
             }
@@ -491,11 +504,16 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             if (foundstr!=std::string::npos){
                     firstpass=true;
             }
-
+              */
             std::fstream outputStream;
             // Save result at root of output directory
-            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
-            result->Save( store, outputStream);
+
+            if (saveThisResult)
+              {
+                CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
+
+                result->Save( store, outputStream);
+              }
 	        if(saveJSON){
 		        std::fstream outputJSONStream;
 		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
@@ -505,6 +523,8 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
     }
 
     // Store per template results
+    // Do not store per templates result
+    /*
     if(opt_lower=="all"){
         TPerTemplateResultsMap::const_iterator it;
         for( it=m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); it++ )
@@ -527,6 +547,7 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             }
         }
     }
+    */
 }
 
 
