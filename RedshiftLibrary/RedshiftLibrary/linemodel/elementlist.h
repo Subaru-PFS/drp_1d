@@ -85,15 +85,14 @@ public:
                         Float64& fitDtM,
                         Float64& fitMtM,
                         Float64 &fitLogprior);
-    std::string getFitContinuum_tplName();
+    const std::string & getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     Float64 getFitContinuum_tplAmplitudeError();
     Float64 getFitContinuum_snr();
     Float64 getFitContinuum_tplMerit();
-    void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, std::vector<Float64> polyCoeffs);
+    void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
     Float64 getFitContinuum_tplIsmDustCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
-    Float64* getPrecomputedGridContinuumFlux();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
     Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
@@ -110,31 +109,31 @@ public:
                                    Float64 tplfit_dtm,
                                    Float64 tplfit_mtm,
                                    Float64 tplfit_logprior,
-                                   std::vector<Float64> polyCoeffs);
+                                   const std::vector<Float64> & polyCoeffs);
 
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
 
     Bool initDtd(const TFloat64Range& lambdaRange);
-    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
     Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
-    Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul);
+    Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul);
 
-    std::string getTplshape_bestTplName();
+    const std::string & getTplshape_bestTplName();
     Float64 getTplshape_bestTplIsmCoeff();
     Float64 getTplshape_bestAmplitude();
     Float64 getTplshape_bestDtm();
     Float64 getTplshape_bestMtm();
     Int32 getTplshape_count();
     const std::vector<Float64> & getTplshape_priors();
-    std::vector<Float64> GetChisquareTplshape();
+    const std::vector<Float64> & GetChisquareTplshape();
     std::vector<Float64> GetPriorLinesTplshape();
-    std::vector<Float64> GetScaleMargTplshape();
-    TBoolList GetStrongELPresentTplshape();
-    std::vector<Int32> GetNLinesAboveSNRTplshape();
+    const std::vector<Float64> & GetScaleMargTplshape();
+    const TBoolList & GetStrongELPresentTplshape();
+    const std::vector<Int32> & GetNLinesAboveSNRTplshape();
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
     Int32 GetNElements();
@@ -350,7 +349,7 @@ private:
 
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
-    std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
+    CTemplate m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
     TFloat64List& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
@@ -358,7 +357,7 @@ private:
     TFloat64Range m_dTransposeDLambdaRange; //the lambdaRange used to computed cached dTransposeD values
     Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
-    Float64* m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
+    TAxisSampleList m_observeGridContinuumFlux;   //the continuum spectre without the amplitude coeff; m_ContinuumFLux = amp * m_observeGridContinuumFlux
     //Float64* m_unscaleContinuumFluxAxisDerivZ;
     CSpectrumFluxAxis m_ContinuumFluxAxis;  //rebined model continuum
     std::string m_ContinuumComponent;

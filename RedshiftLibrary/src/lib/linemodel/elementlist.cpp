@@ -145,19 +145,13 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
     }
 
-    m_observeGridContinuumFlux = NULL;
-    //m_unscaleContinuumFluxAxisDerivZ =NULL;
-
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
     {
         m_chiSquareOperator = COperatorChiSquare2();
-        m_observeGridContinuumFlux = new Float64[modelFluxAxis.GetSamplesCount()]();
-        if(m_observeGridContinuumFlux == NULL){
-          throw runtime_error("unable to allocate m_observeGridContinuumFlux");
-        }
+        m_observeGridContinuumFlux.resize(modelFluxAxis.GetSamplesCount());
     }
 
     if(opt_fittingmethod=="lmfit"){
@@ -211,10 +205,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
  **/
 CLineModelElementList::~CLineModelElementList()
 {
-    if(m_observeGridContinuumFlux)
-    {
-        delete[] m_observeGridContinuumFlux;
-    }
 }
 
 void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath)
@@ -858,7 +848,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Int32 opt_extinction = m_secondpass_fitContinuum_igm;
   Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
 
-  if(m_observeGridContinuumFlux == NULL)
+  if(m_observeGridContinuumFlux.empty())
   {
     throw runtime_error("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
@@ -901,7 +891,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
-    if(m_observeGridContinuumFlux == NULL)
+    if(m_observeGridContinuumFlux.empty())
     {
       throw runtime_error("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux");
     }
@@ -1191,7 +1181,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     }
 }
 
-void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, std::vector<Float64> polyCoeffs){
+void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
 
     Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_inputSpc->GetContinuumFluxAxis(), alpha=0: only tplfit
@@ -1444,9 +1434,9 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     //prepare tpl contaminant
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const std::string& category = "emission";
-    m_tplContaminantSpcRebin = std::shared_ptr<CTemplate>( new CTemplate( "contaminantrebin", category ) );
-    CSpectrumFluxAxis& tplContaminantRebinFluxAxis = m_tplContaminantSpcRebin->GetFluxAxis();
-    CSpectrumSpectralAxis& tplContaminantRebinSpcAxis = m_tplContaminantSpcRebin->GetSpectralAxis();
+    m_tplContaminantSpcRebin = CTemplate( "contaminantrebin", category );
+    CSpectrumFluxAxis& tplContaminantRebinFluxAxis = m_tplContaminantSpcRebin.GetFluxAxis();
+    CSpectrumSpectralAxis& tplContaminantRebinSpcAxis = m_tplContaminantSpcRebin.GetSpectralAxis();
     tplContaminantRebinFluxAxis.SetSize(spcSpectralAxis.GetSamplesCount());
     tplContaminantRebinSpcAxis.SetSize(spcSpectralAxis.GetSamplesCount());
 
@@ -1478,7 +1468,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     //*
     //Fit contaminant template AMPLITUDE
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( m_inputSpc,
-                                                                                                       *m_tplContaminantSpcRebin,
+                                                                                                       m_tplContaminantSpcRebin,
                                                                                                        lambdaRange,
                                                                                                        redshifts,
                                                                                                        overlapThreshold,
@@ -1534,11 +1524,11 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
 
 std::shared_ptr<CModelSpectrumResult> CLineModelElementList::GetContaminantSpectrumResult()
 {
-    std::shared_ptr<CModelSpectrumResult>  resultcont = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(*m_tplContaminantSpcRebin) );
+    std::shared_ptr<CModelSpectrumResult>  resultcont = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(m_tplContaminantSpcRebin) );
     return resultcont;
 }
 
-std::string CLineModelElementList::getFitContinuum_tplName()
+const std::string & CLineModelElementList::getFitContinuum_tplName()
 {
     return m_fitContinuum_tplName;
 }
@@ -1623,7 +1613,7 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_dtm,
                                                       Float64 tplfit_mtm,
                                                       Float64 tplfit_logprior,
-                                                      std::vector<Float64> polyCoeffs)
+                                                      const std::vector<Float64> & polyCoeffs)
 {
     m_fitContinuum_tplName = tplfit_name;
     m_fitContinuum_tplFitAmplitude = tplfit_amp;
@@ -1649,7 +1639,7 @@ void CLineModelElementList::PrepareContinuum()
     const CSpectrumSpectralAxis& targetSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
 
-    if(m_observeGridContinuumFlux == NULL){
+    if(m_observeGridContinuumFlux.empty()){
         UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
         for ( UInt32 i = 0; i<nSamples; i++)
         {
@@ -1664,7 +1654,7 @@ void CLineModelElementList::PrepareContinuum()
     return;
 }
 
-std::string CLineModelElementList::getTplshape_bestTplName()
+const std::string & CLineModelElementList::getTplshape_bestTplName()
 {
     return m_tplshapeBestTplName;
 }
@@ -1710,7 +1700,7 @@ const std::vector<Float64> & CLineModelElementList::getTplshape_priors()
     return m_CatalogTplShape.getCatalogsPriors();
 }
 
-std::vector<Float64> CLineModelElementList::GetChisquareTplshape()
+const std::vector<Float64> & CLineModelElementList::GetChisquareTplshape()
 {
     return m_ChisquareTplshape;
 }
@@ -1731,17 +1721,17 @@ std::vector<Float64> CLineModelElementList::GetPriorLinesTplshape()
     return plinestplshape;
 }
 
-std::vector<Float64> CLineModelElementList::GetScaleMargTplshape()
+const std::vector<Float64> & CLineModelElementList::GetScaleMargTplshape()
 {
     return m_ScaleMargCorrTplshape;
 }
 
-TBoolList CLineModelElementList::GetStrongELPresentTplshape()
+const TBoolList & CLineModelElementList::GetStrongELPresentTplshape()
 {
     return m_StrongELPresentTplshape;
 }
 
-std::vector<Int32> CLineModelElementList::GetNLinesAboveSNRTplshape()
+const std::vector<Int32> & CLineModelElementList::GetNLinesAboveSNRTplshape()
 {
     return m_NLinesAboveSNRTplshape;
 }
@@ -3555,7 +3545,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
     gsl_matrix *J = gsl_matrix_alloc(n, p);
     gsl_matrix *covar = gsl_matrix_alloc (p, p);
     double y[n], weights[n];
-    struct lmfitdata d = {n,y,this, xInds, m_observeGridContinuumFlux, controller};
+    struct lmfitdata d = {n,y,this, xInds, m_observeGridContinuumFlux.data(), controller};
     gsl_multifit_function_fdf f;
 
     Float64* x_init = (Float64*) calloc( p, sizeof( Float64 ) );
@@ -6802,7 +6792,7 @@ Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaR
 /**
  * \brief this function estimates the dtd value withing the wavelength range
  **/
-Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+Float64 CLineModelElementList::EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
@@ -6865,7 +6855,7 @@ Float64 CLineModelElementList::EstimateMTransposeM(const TFloat64Range& lambdaRa
 /**
  * \brief this function estimates the mtm value withing the wavelength range
  **/
-Int32 CLineModelElementList::getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> lbda, std::vector<Float64> mtmCumul)
+Int32 CLineModelElementList::getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul)
 {
     mtmCumul.clear();
     lbda.clear();

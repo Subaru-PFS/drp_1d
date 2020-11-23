@@ -364,7 +364,7 @@ class CMethodLineMatching2Solve
 class CMethodChisquare2Solve
 {
  public:
-  CMethodChisquare2Solve( std::string calibrationPath="" );
+  CMethodChisquare2Solve();
   ~CMethodChisquare2Solve();
   const std::string GetDescription();
 };
@@ -380,7 +380,7 @@ class CMethodChisquareLogSolve
 class CMethodTplcombinationSolve
 {
  public:
-  CMethodTplcombinationSolve( std::string calibrationPath="" );
+  CMethodTplcombinationSolve();
   ~CMethodTplcombinationSolve();
   const std::string GetDescription();
 };

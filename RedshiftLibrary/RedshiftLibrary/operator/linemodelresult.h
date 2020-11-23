@@ -51,11 +51,11 @@ public:
     Float64 GetMaxChiSquare() const;
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
     Int32 SetChisquareTplshapeResult(Int32 index,
-                                     TFloat64List chisquareTplshape,
-                                     TFloat64List scaleMargCorrTplshape,
-                                     TBoolList strongEmissionLinePresentTplshape,
-                                     TInt32List nLinesAboveSNRTplshape,
-                                     TFloat64List priorLinesTplshape);
+                                     const TFloat64List & chisquareTplshape,
+                                     const TFloat64List & scaleMargCorrTplshape,
+                                     const TBoolList & strongEmissionLinePresentTplshape,
+                                     const TInt32List & nLinesAboveSNRTplshape,
+                                     const TFloat64List & priorLinesTplshape);
     TFloat64List GetChisquareTplshapeResult( Int32 index );
     TFloat64List GetScaleMargCorrTplshapeResult( Int32 index );
     TBoolList GetStrongELPresentTplshapeResult( Int32 index );
