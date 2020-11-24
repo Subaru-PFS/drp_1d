@@ -209,18 +209,17 @@ Bool CZweiModelSolve::PopulateParameters( CDataStore& dataStore )
  * NB: keep the linemodelsolve scope for now, so that the linemodelsolveresult can be used
  **/
 std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dataStore,
-								       const CSpectrum& spc,
-								       const CSpectrum& spcWithoutCont,
-                                       const CTemplateCatalog& tplCatalog,
-                                       const TStringList& tplCategoryList,
-								       const CRayCatalog& restraycatalog,
-								       const TFloat64Range& lambdaRange,
-								       const TFloat64List& redshifts )
+                                                                 const CSpectrum& spc,
+                                                                 const CTemplateCatalog& tplCatalog,
+                                                                 const TStringList& tplCategoryList,
+                                                                 const CRayCatalog& restraycatalog,
+                                                                 const TFloat64Range& lambdaRange,
+                                                                 const TFloat64List& redshifts )
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
 
     PopulateParameters( dataStore );
-    Int32 retSolve = Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
+    Int32 retSolve = Solve( dataStore, spc, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts );
 
     if(retSolve){
 
@@ -246,7 +245,7 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -261,7 +260,7 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -276,8 +275,11 @@ std::shared_ptr<CLineModelSolveResult> CZweiModelSolve::Compute( CDataStore& dat
     return std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
 }
 
-
-Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result, std::string opt_rigidity, std::string opt_combine, Float64 opt_stronglinesprior)
+Int32 CZweiModelSolve::CombinePDF(CDataStore& store,
+                                  std::shared_ptr<const CLineModelResult> result,
+                                  std::string opt_rigidity,
+                                  std::string opt_combine,
+                                  Float64 opt_stronglinesprior)
 {
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
@@ -307,7 +309,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
         }
         std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
         zPrior->SetSize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             zPrior->Redshifts[k] = result->Redshifts[k];
         }
@@ -322,7 +324,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
 
         //correct chi2 if necessary: todo add switch
         TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             logLikelihoodCorrected[k] = result->ChiSquare[k];// + result->ScaleMargCorrection[k];
         }
@@ -333,7 +335,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
             postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
             postmargZResult->Redshifts.resize(result->Redshifts.size());
             postmargZResult->valProbaLog.resize(result->Redshifts.size());
-            for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+            for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
             {
                 postmargZResult->Redshifts[k] = result->Redshifts[k] ;
                 postmargZResult->valProbaLog[k] = logProba[k];
@@ -370,9 +372,18 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
 
         if(opt_combine=="marg")
         {
-            retPdfz = pdfz.Marginalize( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult, result->PriorTplshapes);
+            retPdfz = pdfz.Marginalize(result->Redshifts,
+                                       ChiSquareTplshapesCorrected,
+                                       zpriorsTplshapes,
+                                       cstLog,
+                                       postmargZResult,
+                                       result->PriorTplshapes);
         }else{
-            retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
+            retPdfz = pdfz.BestProba(result->Redshifts,
+                                     ChiSquareTplshapesCorrected,
+                                     zpriorsTplshapes,
+                                     cstLog,
+                                     postmargZResult);
         }
         // todo: store priors for each tplshape model ?
     }else{
@@ -390,8 +401,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore &store, std::shared_ptr<const CLine
     return 0;
 }
 
-
-Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result)
+Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result)
 {
     Log.LogInfo("Linemodel: continuum Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -404,7 +414,7 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
 
     std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     zPrior->SetSize(result->Redshifts.size());
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
     {
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
@@ -414,7 +424,7 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
 
     //correct chi2 if necessary: todo add switch
     TFloat64List logLikelihoodCorrected(result->ChiSquareContinuum.size(), DBL_MAX);
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
     {
         logLikelihoodCorrected[k] = result->ChiSquareContinuum[k];// + result->ScaleMargCorrectionContinuum[k];
     }
@@ -425,7 +435,7 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
         postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
         postmargZResult->Redshifts.resize(result->Redshifts.size());
         postmargZResult->valProbaLog.resize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             postmargZResult->Redshifts[k] = result->Redshifts[k] ;
             postmargZResult->valProbaLog[k] = logProba[k];
@@ -439,14 +449,12 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
     return 0;
 }
 
-
-
 /**
  * \brief
  * Retrieve the true-velocities from a hardcoded ref file path
  * nb: this is a hack for development purposes
  **/
-Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
+Int32 CZweiModelSolve::getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64& elv, Float64& alv)
 {
     std::ifstream file;
 
@@ -524,7 +532,6 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
     return true;
 }
 
-
 /**
  * \brief
  * Retrieve the true-redshift from a hardcoded ref file path
@@ -532,7 +539,7 @@ Int32 CZweiModelSolve::getVelocitiesFromRefFile( const char* filePath, std::stri
  * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
  * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
  **/
-Int32 CZweiModelSolve::getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion )
+Int32 CZweiModelSolve::getValueFromRefFile(const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion)
 {
     std::ifstream file;
 
@@ -606,36 +613,23 @@ Int32 CZweiModelSolve::getValueFromRefFile( const char* filePath, std::string sp
     return true;
 }
 
-
 /**
  * \brief
- * Create a continuum object by subtracting spcWithoutCont from the spc.
+ * Create a continuum object by subtracting spcWithoutContinuum from the spc.
  * Configure the opt_XXX variables from the dataStore scope parameters.
  * LogInfo the opt_XXX values.
  * Create a COperatorLineModel, call its Compute method. 
  * If that returned true, store results.
  **/
 Bool CZweiModelSolve::Solve( CDataStore& dataStore,
-			     const CSpectrum& spc,
-			     const CSpectrum& spcWithoutCont,
-                 const CTemplateCatalog& tplCatalog,
-                 const TStringList& tplCategoryList,
+                             const CSpectrum& spc,
+                             const CTemplateCatalog& tplCatalog,
+                             const TStringList& tplCategoryList,
 			     const CRayCatalog& restraycatalog,
-                 const TFloat64Range& lambdaRange,
+                             const TFloat64Range& lambdaRange,
 			     const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
-
-    CSpectrum _spc = spc;
-    CSpectrum _spcContinuum = spc;
-    _spcContinuum.SetMedianWinsize(spcWithoutCont.GetMedianWinsize());
-    _spcContinuum.SetDecompScales(spcWithoutCont.GetDecompScales());
-    _spcContinuum.SetContinuumEstimationMethod(spcWithoutCont.GetContinuumEstimationMethod());
-    _spcContinuum.SetWaveletsDFBinPath(spcWithoutCont.GetWaveletsDFBinPath());
-    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
-    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
-    sfluxAxisPtr = spcfluxAxis;
 
     // ---------------------------------------------------
     //    //Hack: load the simulated true-velocities
@@ -824,6 +818,13 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         noise.AddNoise( *contSpectrum );
 	Log.LogInfo("Zweimodel - contaminant - Successfully loaded input noise file:    (%s)", noiseName.c_str() );
     }
+
+    // set the continuum estimation parameters
+    contSpectrum->SetMedianWinsize(spc.GetMedianWinsize());
+    contSpectrum->SetDecompScales(spc.GetDecompScales());
+    contSpectrum->SetContinuumEstimationMethod(spc.GetContinuumEstimationMethod());
+    contSpectrum->SetWaveletsDFBinPath(spc.GetWaveletsDFBinPath());
+
     Log.LogInfo("===============================================");
 
 
@@ -839,8 +840,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Float64 _vStep = 50.0;
 
     auto  result_s1 = linemodel_s1.Compute( dataStore,
-                                            _spc,
-                                            _spcContinuum,
+                                            spc,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -892,16 +892,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Log.LogInfo("Zweimodel - using zero continuum (probably overrided inside multimodel)");
     //WARNING: using dumb continuum zero here.
     //WARNING: Note that, in the multimodel, the continuum is re-estimated from the combined inside the operator anyway.
-    CSpectrum _spcContinuum_s2 = *contSpectrum;
-    _spcContinuum_s2.SetMedianWinsize(_spcContinuum.GetMedianWinsize());
-    _spcContinuum_s2.SetDecompScales(_spcContinuum.GetDecompScales());
-    _spcContinuum_s2.SetContinuumEstimationMethod(_spcContinuum.GetContinuumEstimationMethod());
-    _spcContinuum_s2.SetWaveletsDFBinPath(_spcContinuum.GetWaveletsDFBinPath());
-    CSpectrumFluxAxis spcfluxAxis2 = _spcContinuum_s2.GetFluxAxis();
-    for(Int32 k=0; k<spcfluxAxis2.GetSamplesCount(); k++)
-    {
-        spcfluxAxis2[k] = 0.0;
-    }
 
     COperatorLineModel linemodel_s2;
     _secondPass_velfit_dzInfLim = 4e-4;
@@ -909,7 +899,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     _secondPass_velfit_dzStep = 4e-4;
     auto  result_s2 = linemodel_s2.Compute( dataStore,
                                             *contSpectrum,
-                                            _spcContinuum_s2,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -1009,40 +998,39 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         _secondPass_velfit_dzStep = 2e-4;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
         auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
-                                                     _spc,
-                                                     _spcContinuum,
-                                                     tplCatalog,
-                                                     tplCategoryList,
-                                                     m_calibrationPath,
-                                                     restraycatalog,
-                                                     m_opt_linetypefilter,
-                                                     m_opt_lineforcefilter,
-                                                     lambdaRange,
-                                                     zcandidates_s1,
-                                                     _opt_extremacount,
-                                                     m_opt_fittingmethod,
-                                                     m_opt_continuumcomponent,
-                                                     m_opt_lineWidthType,
-                                                     m_opt_resolution,
-                                                     m_opt_velocity_emission,
-                                                     m_opt_velocity_absorption,
-                                                     m_opt_continuumreest,
-                                                     m_opt_rules,
-                                                     m_opt_velocityfit,
-                                                     _opt_twosteplargegridstep,
-                                                     _opt_twosteplargegridsampling,
-                                                     m_opt_rigidity,
-                                                     m_opt_tplratio_reldirpath,
-                                                     m_opt_offsets_reldirpath,
-                                                     m_opt_em_velocity_fit_min,
-                                                     m_opt_em_velocity_fit_max,
-                                                     _vStep,
-                                                     m_opt_abs_velocity_fit_min,
-                                                     m_opt_abs_velocity_fit_max,
-                                                     _vStep,
-                                                     _secondPass_velfit_dzInfLim,
-                                                     _secondPass_velfit_dzSupLim,
-                                                     _secondPass_velfit_dzStep);
+                                                       spc,
+                                                       tplCatalog,
+                                                       tplCategoryList,
+                                                       m_calibrationPath,
+                                                       restraycatalog,
+                                                       m_opt_linetypefilter,
+                                                       m_opt_lineforcefilter,
+                                                       lambdaRange,
+                                                       zcandidates_s1,
+                                                       _opt_extremacount,
+                                                       m_opt_fittingmethod,
+                                                       m_opt_continuumcomponent,
+                                                       m_opt_lineWidthType,
+                                                       m_opt_resolution,
+                                                       m_opt_velocity_emission,
+                                                       m_opt_velocity_absorption,
+                                                       m_opt_continuumreest,
+                                                       m_opt_rules,
+                                                       m_opt_velocityfit,
+                                                       _opt_twosteplargegridstep,
+                                                       _opt_twosteplargegridsampling,
+                                                       m_opt_rigidity,
+                                                       m_opt_tplratio_reldirpath,
+                                                       m_opt_offsets_reldirpath,
+                                                       m_opt_em_velocity_fit_min,
+                                                       m_opt_em_velocity_fit_max,
+                                                       _vStep,
+                                                       m_opt_abs_velocity_fit_min,
+                                                       m_opt_abs_velocity_fit_max,
+                                                       _vStep,
+                                                       _secondPass_velfit_dzInfLim,
+                                                       _secondPass_velfit_dzSupLim,
+                                                       _secondPass_velfit_dzStep);
 
         if( !result_s1_c2zX )
         {
@@ -1092,40 +1080,39 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
                 std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
                 auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
-                                                            *contSpectrum,
-                                                            _spcContinuum_s2,
-                                                             tplCatalog,
-                                                             tplCategoryList,
-                                                             m_calibrationPath,
-                                                             restraycatalog,
-                                                             m_opt_linetypefilter,
-                                                             m_opt_lineforcefilter,
-                                                             lambdaRange,
-                                                             redshifts_s2,
-                                                             _opt_extremacount,
-                                                             m_opt_fittingmethod,
-                                                             m_opt_continuumcomponent,
-                                                             m_opt_lineWidthType,
-                                                             m_opt_resolution,
-                                                             m_opt_velocity_emission,
-                                                             m_opt_velocity_absorption,
-                                                             m_opt_continuumreest,
-                                                             m_opt_rules,
-                                                             m_opt_velocityfit,
-                                                             _opt_twosteplargegridstep,
-                                                             _opt_twosteplargegridsampling,
-                                                             m_opt_rigidity,
-                                                             m_opt_tplratio_reldirpath,
-                                                             m_opt_offsets_reldirpath,
-                                                             m_opt_em_velocity_fit_min,
-                                                             m_opt_em_velocity_fit_max,
-                                                             _vStep,
-                                                             m_opt_abs_velocity_fit_min,
-                                                             m_opt_abs_velocity_fit_max,
-                                                             _vStep,
-                                                             _secondPass_velfit_dzInfLim,
-                                                             _secondPass_velfit_dzSupLim,
-                                                             _secondPass_velfit_dzStep);
+                                                               *contSpectrum,
+                                                               tplCatalog,
+                                                               tplCategoryList,
+                                                               m_calibrationPath,
+                                                               restraycatalog,
+                                                               m_opt_linetypefilter,
+                                                               m_opt_lineforcefilter,
+                                                               lambdaRange,
+                                                               redshifts_s2,
+                                                               _opt_extremacount,
+                                                               m_opt_fittingmethod,
+                                                               m_opt_continuumcomponent,
+                                                               m_opt_lineWidthType,
+                                                               m_opt_resolution,
+                                                               m_opt_velocity_emission,
+                                                               m_opt_velocity_absorption,
+                                                               m_opt_continuumreest,
+                                                               m_opt_rules,
+                                                               m_opt_velocityfit,
+                                                               _opt_twosteplargegridstep,
+                                                               _opt_twosteplargegridsampling,
+                                                               m_opt_rigidity,
+                                                               m_opt_tplratio_reldirpath,
+                                                               m_opt_offsets_reldirpath,
+                                                               m_opt_em_velocity_fit_min,
+                                                               m_opt_em_velocity_fit_max,
+                                                               _vStep,
+                                                               m_opt_abs_velocity_fit_min,
+                                                               m_opt_abs_velocity_fit_max,
+                                                               _vStep,
+                                                               _secondPass_velfit_dzInfLim,
+                                                               _secondPass_velfit_dzSupLim,
+                                                               _secondPass_velfit_dzStep);
 
                 if( !result_s2_c1zY )
                 {
@@ -1152,8 +1139,6 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                     }
                 }
 
-
-
             }
             combined_merits.push_back(combined_merits_s2zX);
         }
@@ -1178,7 +1163,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         std::string fname_s2cont = (boost::format("linemodel_s2cont_extrema_0")).str();
         dataStore.StoreScopedGlobalResult( fname_s2cont.c_str(), best_s2contModelSpectrum );
 
-        std::shared_ptr<CZweiModelResult> zweimodelResult = std::shared_ptr<CZweiModelResult>( new CZweiModelResult(zcandidates_s1, zcandidates_s2, combined_merits));
+        std::shared_ptr<CZweiModelResult> zweimodelResult = std::shared_ptr<CZweiModelResult>( new CZweiModelResult(zcandidates_s1, zcandidates_s2, combined_merits) );
         std::string fname_result = (boost::format("zweimodel")).str();
         dataStore.StoreScopedGlobalResult( fname_result.c_str(), zweimodelResult );
     }

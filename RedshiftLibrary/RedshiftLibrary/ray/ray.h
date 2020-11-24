@@ -17,7 +17,7 @@ typedef struct {
 } TAsymParams;
 
 /**
- * /ingroup Redshift
+ * \ingroup Redshift
  * Represent a Single Line.
  */
 class CRay

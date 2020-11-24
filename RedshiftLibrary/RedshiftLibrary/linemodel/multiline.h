@@ -1,5 +1,5 @@
-#ifndef LINEMODEL_ELEMENT_MULTILINE_H
-#define LINEMODEL_ELEMENT_MULTILINE_H
+#ifndef _REDSHIFT_LINEMODEL_MULTILINE_
+#define _REDSHIFT_LINEMODEL_MULTILINE_
 
 #include <RedshiftLibrary/linemodel/element.h>
 #include <RedshiftLibrary/ray/catalog.h>
@@ -104,5 +104,4 @@ private:
 
 }
 
-
-#endif // ELEMENT_H
+#endif // _REDSHIFT_LINEMODEL_MULTILINE_

@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_COMMON_MEAN__
-#define _REDSHIFT_COMMON_MEAN__
+#ifndef _REDSHIFT_COMMON_MEAN_
+#define _REDSHIFT_COMMON_MEAN_
 
 #include <RedshiftLibrary/common/datatypes.h>
 

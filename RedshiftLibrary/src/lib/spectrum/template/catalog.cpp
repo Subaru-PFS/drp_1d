@@ -19,7 +19,7 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog(string cremovalmethod, Float64 mediankernelsize , Float64 waveletsScales, string waveletsDFBinPath)
+CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath )
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
@@ -67,23 +67,7 @@ const CTemplate&  CTemplateCatalog::GetTemplateByName(const TStringList& tplCate
     }
     throw std::runtime_error("Could not find template with name");
 }
-/**
- * Returns a list containing all templates without continuum as enumerated in the categoryList input.
- */
-TTemplateRefList CTemplateCatalog::GetTemplateWithoutContinuum( const TStringList& categoryList ) const
-{
-    TTemplateRefList list;
 
-    for( Int32 i=0; i<categoryList.size(); i++ )
-    {
-        for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); j++ )
-        {
-            list.push_back( m_ListWithoutCont.at( categoryList[i] )[j] );
-        }
-    }
-
-    return list;
-}
 
 /**
  * Get a list of strings with the contents of m_List.
@@ -119,52 +103,6 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
       throw runtime_error("Template has no category");
 
     m_List[r->GetCategory()].push_back( r );
-
-    // Compute continuum substracted spectrum
-    Log.LogDetail("    TemplateCatalog: estimating continuum w. method=%s, for tpl=%s", m_continuumRemovalMethod.c_str(),  r->GetName().c_str());
-    std::shared_ptr<CTemplate> tmplWithoutCont = std::shared_ptr<CTemplate>( new CTemplate( r->GetName(), r->GetCategory() ) );
-
-    *tmplWithoutCont = *r;
-
-    if( m_continuumRemovalMethod == "Median" )
-    {
-        CContinuumMedian continuum;
-        continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
-        tmplWithoutCont->RemoveContinuum( continuum );
-    }
-    else if( m_continuumRemovalMethod== "IrregularSamplingMedian")
-    {
-        CContinuumIrregularSamplingMedian continuum;
-        continuum.SetMedianKernelWidth( m_continuumRemovalMedianKernelWidth );
-        continuum.SetMeanKernelWidth( m_continuumRemovalMedianKernelWidth );
-        tmplWithoutCont->RemoveContinuum( continuum );
-    }
-    else if( m_continuumRemovalMethod== "waveletsDF")
-    {
-        CContinuumDF continuum(m_continuumRemovalWaveletsBinPath);
-        tmplWithoutCont->SetDecompScales(m_continuumRemovalWaveletsNScales);
-        Bool ret = tmplWithoutCont->RemoveContinuum( continuum );
-        if( !ret )
-        {
-	    throw std::runtime_error("Failed to apply continuum substraction for template");
-        }
-    }
-    else if( m_continuumRemovalMethod == "zero" )
-    {
-        CSpectrumFluxAxis& fluxAxis = tmplWithoutCont->GetFluxAxis();
-        for(Int32 k=0; k<fluxAxis.GetSamplesCount(); k++)
-        {
-            fluxAxis[k] = 0.0;
-        }
-    }
-    else if( m_continuumRemovalMethod == "raw" )
-    {
-        //nothing to do, tmplWithoutCont already set to r
-    }
-
-    tmplWithoutCont->ConvertToLogScale();
-
-    m_ListWithoutCont[r->GetCategory()].push_back( tmplWithoutCont );
 }
 
 /**
@@ -182,7 +120,11 @@ void CTemplateCatalog::Add( const char* templatePath, const std::string& categor
     path p( templatePath );
     std::string name = p.leaf().generic_string();
 
-    std::shared_ptr<CTemplate> tmpl = std::shared_ptr<CTemplate>( new CTemplate( name, category ) );
+    std::shared_ptr<CTemplate> tmpl = std::make_shared<CTemplate>(name, category);
+    tmpl->SetContinuumEstimationMethod(m_continuumRemovalMethod);
+    tmpl->SetMedianWinsize(m_continuumRemovalMedianKernelWidth);
+    tmpl->SetDecompScales(m_continuumRemovalWaveletsNScales);
+    tmpl->SetWaveletsDFBinPath(m_continuumRemovalWaveletsBinPath);
 
     CSpectrumIOGenericReader asciiReader;
     asciiReader.Read( templatePath, *tmpl );
@@ -241,14 +183,16 @@ Bool CTemplateCatalog::Save( const char* dirPath, Bool saveWithoutContinuum )
         for( UInt32 j=0; j<GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = GetTemplate( category, j );
-            const CTemplate& tplWithoutCOntinuum = GetTemplateWithoutContinuum( category, j );
 
             std::string filePath = tpl.GetName();
             path file (filePath.c_str());
             path full_path = dirCategoryFull / file;
             if(saveWithoutContinuum)
             {
-                tplWithoutCOntinuum.Save( full_path.c_str() );
+                CSpectrum::EType savetype = tpl.GetType();
+                tpl.SetType(CSpectrum::nType_noContinuum);
+                tpl.Save( full_path.c_str() );
+                tpl.SetType(savetype);
             }
             else
             {

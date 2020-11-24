@@ -2,20 +2,13 @@
 #define _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/processflow/processflow.h>
+#include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/operator.h>
-
-
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
 
 namespace NSEpic
 {
 
 class CProcessFlowContext;
-class CTemplate;
-class CSpectrum;
 
 /**
  * \ingroup Redshift
@@ -32,6 +25,7 @@ public:
 
 private:
 
+    void computeContinuumStat(CProcessFlowContext& ctx);
     Bool isPdfValid(CProcessFlowContext &ctx) const;
     Int32 getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion );
 };

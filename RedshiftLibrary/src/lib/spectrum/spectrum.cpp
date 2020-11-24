@@ -3,6 +3,10 @@
 #include <RedshiftLibrary/noise/flat.h>
 #include <RedshiftLibrary/noise/fromfile.h>
 
+#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include <RedshiftLibrary/continuum/median.h>
+#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+
 #include <RedshiftLibrary/log/log.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
@@ -25,90 +29,123 @@ CSpectrum::CSpectrum():
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
-    m_dfBinPath("")
+    m_dfBinPath(""),
+    m_Name("")
 {
 
 }
 
-
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
+    m_estimationMethod(other.m_estimationMethod),
+    m_dfBinPath(other.m_dfBinPath),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales),
+    m_Name(other.m_Name),
+    m_spcType(other.m_spcType),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
-    const CSpectrumFluxAxis & otherFlux = other.m_FluxAxis;
-    const TFloat64List& error = otherFlux.GetError();
+    const CSpectrumFluxAxis & otherRawFlux = other.m_RawFluxAxis;
+    const CSpectrumFluxAxis & otherContinuumFlux = other.m_ContinuumFluxAxis;
+    const CSpectrumFluxAxis & otherWithoutContinuumFlux = other.m_WithoutContinuumFluxAxis;
 
-    TAxisSampleList & SpectralVector = m_SpectralAxis.GetSamplesVector();
-    TAxisSampleList & FluxVector = m_FluxAxis.GetSamplesVector();
-    TFloat64List & ErrorVector = m_FluxAxis.GetError();
+    const TFloat64List& otherRawError = otherRawFlux.GetError();
+    const TFloat64List& otherContinuumError = otherContinuumFlux.GetError();
+    const TFloat64List& otherWithoutContinuumError = otherWithoutContinuumFlux.GetError();
+
+    TAxisSampleList& SpectralVector = m_SpectralAxis.GetSamplesVector();
+    TAxisSampleList& RawFluxVector = m_RawFluxAxis.GetSamplesVector();
+    TAxisSampleList& ContinuumFluxVector = m_ContinuumFluxAxis.GetSamplesVector();
+    TAxisSampleList& WithoutContinuumFluxVector = m_WithoutContinuumFluxAxis.GetSamplesVector();
+
+    TFloat64List& RawErrorVector = m_RawFluxAxis.GetError();
+    TFloat64List& ContinuumErrorVector = m_ContinuumFluxAxis.GetError();
+    TFloat64List& WithoutContinuumErrorVector = m_WithoutContinuumFluxAxis.GetError();
 
     const UInt32 otherSpectralSize = otherSpectral.GetSamplesCount();
-    const UInt32 otherFluxSize = otherFlux.GetSamplesCount();
-    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize );
-    minsize = min(minsize, otherFluxSize );
+    const UInt32 otherFluxSize = otherRawFlux.GetSamplesCount();
+    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize);
+    minsize = min(minsize, otherFluxSize);
     for(Int32 i=0; i<minsize; i++){
         if(mask[i]!=0){
             SpectralVector.push_back(otherSpectral[i]);
-            FluxVector.push_back(otherFlux[i]);
-            if( !error.empty() ){
-                ErrorVector.push_back(error[i]);
+            RawFluxVector.push_back(otherRawFlux[i]);
+            if( !otherRawError.empty() ){
+                RawErrorVector.push_back(otherRawError[i]);
+            }
+            if (other.alreadyRemoved){
+                ContinuumFluxVector.push_back(otherContinuumFlux[i]);
+                if( !otherContinuumError.empty() ){
+                    ContinuumErrorVector.push_back(otherContinuumError[i]);
+                }
+                WithoutContinuumFluxVector.push_back(otherWithoutContinuumFlux[i]);
+                if( !otherWithoutContinuumError.empty() ){
+                     WithoutContinuumErrorVector.push_back(otherWithoutContinuumError[i]);
+                }
             }
         }
     }
-
-    m_estimationMethod = other.m_estimationMethod;
-    m_dfBinPath = other.m_dfBinPath;
-    m_medianWindowSize = other.m_medianWindowSize;
-    m_nbScales = other.m_nbScales;
-
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
     m_SpectralAxis(spectralAxis),
-    m_FluxAxis(fluxAxis),
+    m_RawFluxAxis(fluxAxis),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
-    m_dfBinPath("")
+    m_dfBinPath(""),
+    m_Name("") 
 {
 
 }
+
 //assignment constructor
 CSpectrum::CSpectrum(const CSpectrum& other):
     m_estimationMethod(other.m_estimationMethod),
     m_dfBinPath(other.m_dfBinPath),
     m_medianWindowSize(other.m_medianWindowSize),
-    m_nbScales(other.m_nbScales)
+    m_nbScales(other.m_nbScales),
+    m_SpectralAxis(other.m_SpectralAxis),
+    m_RawFluxAxis(other.m_RawFluxAxis),
+    m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
+    m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
+    m_spcType(other.m_spcType),
+    m_Name(other.m_Name)
 {
-    m_SpectralAxis = other.m_SpectralAxis;
-    m_FluxAxis = other.GetFluxAxis();
+
 }
 
 CSpectrum::~CSpectrum()
 {
 
 }
+
 //copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.m_SpectralAxis;
-    m_FluxAxis = other.GetFluxAxis();
+    m_RawFluxAxis = other.m_RawFluxAxis;
+    m_ContinuumFluxAxis = other.m_ContinuumFluxAxis;
+    m_WithoutContinuumFluxAxis = other.m_WithoutContinuumFluxAxis;
+    m_spcType = other.m_spcType;
 
     m_estimationMethod = other.m_estimationMethod;
     m_dfBinPath = other.m_dfBinPath;
     m_medianWindowSize = other.m_medianWindowSize;
     m_nbScales = other.m_nbScales;
+    m_Name = other.m_Name;
+    alreadyRemoved = other.alreadyRemoved;
 
     return *this;
 }
 
 /**
  * below should be calculated in the case of precomputedfinegrid
-*/
+ */
 Bool CSpectrum::RebinFineGrid() const
 {
- // Precalculate a fine grid template to be used for the 'closest value' rebin method
-  Int32 n = m_FluxAxis.GetSamplesCount();
+  // Precalculate a fine grid template to be used for the 'closest value' rebin method
+  Int32 n = GetFluxAxis().GetSamplesCount();
   if(!n)
     return false;
 
@@ -118,13 +155,13 @@ Bool CSpectrum::RebinFineGrid() const
 
   m_pfgFlux.resize(nTgt);
 
-  const TAxisSampleList Ysrc = m_FluxAxis.GetSamplesVector();
+  const TAxisSampleList Ysrc = GetFluxAxis().GetSamplesVector();
   const TAxisSampleList Xsrc = m_SpectralAxis.GetSamplesVector();
 
-  //inialise and allocate the gsl objects
-  gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, n);
+  //Initialize and allocate the gsl objects
+  gsl_spline* spline = gsl_spline_alloc(gsl_interp_cspline, n);
   gsl_spline_init(spline, Xsrc.data(), Ysrc.data(), n);
-  gsl_interp_accel * accelerator = gsl_interp_accel_alloc();
+  gsl_interp_accel* accelerator = gsl_interp_accel_alloc();
 
   Int32 k = 0;
   Float64 x = 0.0;
@@ -142,16 +179,87 @@ Bool CSpectrum::RebinFineGrid() const
   return true;
 }
 
-
-Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
+void CSpectrum::ResetContinuum() const
 {
-    CSpectrumFluxAxis fluxAxisWithoutContinuum;
+    alreadyRemoved = false;
 
-    Bool ret = remover.RemoveContinuum( *this, fluxAxisWithoutContinuum );
+    m_ContinuumFluxAxis.SetSize(0);
+    m_WithoutContinuumFluxAxis.SetSize(0);
+}
 
-    m_FluxAxis = fluxAxisWithoutContinuum;
+Bool CSpectrum::RemoveContinuum( CContinuum& remover ) const
+{
+    ResetContinuum();
 
-    return ret;
+    return remover.RemoveContinuum( *this, m_WithoutContinuumFluxAxis );
+}
+
+/**
+ * Estimate the continuum component
+ */
+void CSpectrum::EstimateContinuum() const
+{
+    Log.LogDetail( "Continuum estimation on input spectrum: using %s", m_estimationMethod.c_str() );
+
+    if( m_estimationMethod == "IrregularSamplingMedian" )
+    {
+        CContinuumIrregularSamplingMedian continuum;
+        continuum.SetMedianKernelWidth( m_medianWindowSize );
+        continuum.SetMeanKernelWidth( m_medianWindowSize );
+        RemoveContinuum( continuum );
+        Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+    }else if( m_estimationMethod == "Median" )
+    {
+        CContinuumMedian continuum;
+        continuum.SetMedianKernelWidth( m_medianWindowSize );
+        RemoveContinuum( continuum );
+        Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
+    }else if( m_estimationMethod == "waveletsDF" )
+    {
+        CContinuumDF continuum(m_dfBinPath);
+        Bool ret = RemoveContinuum( continuum );
+        if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
+        {
+          Log.LogError("Failed to apply continuum substraction for spectrum: %s", this->GetName().c_str());
+          throw std::runtime_error("Failed to apply continuum substraction");
+        }
+    }else if( m_estimationMethod == "raw" )
+    {
+        Int32 nbSamples = this->GetSampleCount();
+        m_WithoutContinuumFluxAxis.SetSize(nbSamples);
+        for(Int32 k=0; k<nbSamples; k++)
+        {
+            m_WithoutContinuumFluxAxis[k] = 0.0;
+        }
+    }else if( m_estimationMethod == "zero" )
+    {
+        m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+    }else if( m_estimationMethod == "manual" )
+    {
+        m_WithoutContinuumFluxAxis = m_RawFluxAxis;
+        m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
+    }
+    else
+    {
+        Log.LogError("CSpectrum::EstimateContinuum Estimation method undefined or unknown");
+        throw runtime_error("CSpectrum::EstimateContinuum Estimation method undefined or unknown");
+    }
+
+    Log.LogDetail("===============================================");
+
+    // Fill m_ContinuumFluxAxis
+    if  (m_estimationMethod != "manual" )
+    {
+        m_ContinuumFluxAxis = m_RawFluxAxis;
+        m_ContinuumFluxAxis.Subtract( m_WithoutContinuumFluxAxis );
+    }
+
+    alreadyRemoved = true;
+}
+
+const string& CSpectrum::GetBaseline() const
+{
+    return m_method2baseline.at(m_estimationMethod);
 }
 
 /**
@@ -159,7 +267,11 @@ Bool CSpectrum::RemoveContinuum(  CContinuum& remover )
  */
 Bool CSpectrum::InvertFlux()
 {
-    m_FluxAxis.Invert();
+    m_RawFluxAxis.Invert();
+    if (alreadyRemoved){
+        m_ContinuumFluxAxis.Invert();
+        m_WithoutContinuumFluxAxis.Invert();
+    }
     return true;
 }
 
@@ -198,7 +310,7 @@ TLambdaRange CSpectrum::GetLambdaRange() const
     return m_SpectralAxis.GetLambdaRange();
 }
 
-bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const
+bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64& mean, Float64 &std) const
 {
     //wlrange should be totally included in the spectrum lambdarange
     if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
@@ -212,17 +324,17 @@ bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, 
 
     CMask mask;
     m_SpectralAxis.GetMask( wlRange, mask );
-    const TFloat64List& error = m_FluxAxis.GetError();
+    const TFloat64List& error = GetFluxAxis().GetError();
     Float64 _Mean = 0.0;
     Float64 _SDev = 0.0;
-    m_FluxAxis.ComputeMeanAndSDev( mask,_Mean ,_SDev, error);
+    GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev, error);
 
     mean = _Mean;
     std = _SDev;
     return true;
 }
 
-bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 &b) const
+bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &b) const
 {
     //wlrange should be totally included in the spectrum lambdarange
     if(wlRange.GetBegin()<m_SpectralAxis.GetLambdaRange().GetBegin())
@@ -234,7 +346,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 
         return false;
     }
 
-    const TFloat64List& error = m_FluxAxis.GetError();
+    const TFloat64List& error = GetFluxAxis().GetError();
 
     TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
     Int32 n = iRange.GetEnd()-iRange.GetBegin()+1;
@@ -247,7 +359,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 
         Int32 ik=k+iRange.GetBegin();
         w[k] = 1.0/(error[ik]*error[ik]);
         x[k] = m_SpectralAxis[ik];
-        y[k] = m_FluxAxis[ik];
+        y[k] =GetFluxAxis().GetSamples()[ik];
     }
 
     double c0, c1, cov00, cov01, cov11, chisq;
@@ -262,14 +374,24 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange,  Float64& a, Float64 
     return true;
 }
 
-const std::string CSpectrum::GetName() const
+const std::string & CSpectrum::GetName() const
 {
     return m_Name;
 }
 
-void CSpectrum::SetName( const char* name )
+void CSpectrum::SetName(const char* name)
 {
     m_Name = name;
+}
+
+const CSpectrum::EType CSpectrum::GetType() const
+{
+    return m_spcType;
+}
+
+void CSpectrum::SetType(const CSpectrum::EType type) const
+{
+    m_spcType = type;
 }
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
@@ -315,13 +437,13 @@ const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
     return validValue;
 }
 
-const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
+const Bool CSpectrum::IsFluxValid( Float64 LambdaMin, Float64 LambdaMax ) const
 {
     Bool allzero = true;
     Bool invalidValue = false;
     Int32 nInvalid = 0;
 
-    const Float64* flux = m_FluxAxis.GetSamples();
+    const Float64* flux = GetFluxAxis().GetSamples();
     if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
         return false;
     }
@@ -355,12 +477,12 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin,  Float64 LambdaMax ) const
     }
 }
 
-const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) const
+const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin, Float64 LambdaMax ) const
 {
     Bool valid = true;
     Int32 nInvalid = 0;
 
-    const TFloat64List& error = m_FluxAxis.GetError();
+    const TFloat64List& error = GetFluxAxis().GetError();
     if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
         return false;
     }
@@ -388,13 +510,13 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin,  Float64 LambdaMax ) cons
     }
 }
 
-Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 coeffCorr )
+Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 coeffCorr )
 {
-    Bool corrected=false;
+    Bool corrected = false;
     Int32 nCorrected = 0;
 
-    TFloat64List& error = m_FluxAxis.GetError();
-    Float64* flux = m_FluxAxis.GetSamples();
+    TFloat64List& error = GetFluxAxis().GetError();
+    Float64 *flux = GetFluxAxis().GetSamples();
 
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -434,16 +556,23 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin,  Float64 LambdaMax, Float64 
         Bool validSample = checkNoise(error[i], i) && checkFlux(flux[i], i);
 
         if(!validSample){
-            error[i]=maxNoise*coeffCorr;
-            flux[i]=minFlux/coeffCorr;
+            error[i] = maxNoise*coeffCorr;
+            flux[i] = minFlux/coeffCorr;
             corrected=true;
             nCorrected++;
         }
     }
+
     if(nCorrected>0)
     {
         Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples with coeff (=%f), minFlux=%e, maxNoise=%e", nCorrected, coeffCorr, minFlux, maxNoise);
     }
+
+    if (corrected)
+    {
+        ResetContinuum();
+    }
+
     return corrected;
 }
 
@@ -462,38 +591,71 @@ const Float64 CSpectrum::GetMedianWinsize() const
       return m_medianWindowSize;
 }
 
-const std::string CSpectrum::GetContinuumEstimationMethod() const
+const std::string & CSpectrum::GetContinuumEstimationMethod() const
 {
       return m_estimationMethod;
 }
 
-const std::string CSpectrum::GetWaveletsDFBinPath() const
+const std::string & CSpectrum::GetWaveletsDFBinPath() const
 {
       return m_dfBinPath;
 }
 
 void CSpectrum::SetFullPath(const char* nameP)
 {
-	m_FullPath = nameP;
+    m_FullPath = nameP;
 }
 
 void CSpectrum::SetDecompScales( Int32 decompScales )
 {
+    if (m_nbScales!=decompScales &&
+            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
+    {
+        ResetContinuum();
+    }
     m_nbScales = decompScales;
 }
 
 void CSpectrum::SetMedianWinsize( Float64 winsize )
 {
+    if (m_medianWindowSize!=winsize &&
+            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
+    {
+        ResetContinuum();
+    }
     m_medianWindowSize = winsize;
 }
 
 void CSpectrum::SetContinuumEstimationMethod( std::string method )
 {
-    m_estimationMethod = method;
+    if (m_estimationMethod != method){
+        m_estimationMethod = method;
+        ResetContinuum();
+    }
+}
+
+/*
+ *  force manual setting of the continuum
+ */
+void CSpectrum::SetContinuumEstimationMethod(const CSpectrumFluxAxis & ContinuumFluxAxis )
+{
+    m_estimationMethod = "manual";
+    ResetContinuum();
+
+    if (ContinuumFluxAxis.GetSamplesCount() != GetSampleCount())
+    {
+        Log.LogError("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
+        throw runtime_error("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
+    }
+
+    m_ContinuumFluxAxis = ContinuumFluxAxis;
 }
 
 void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
 {
+    if (m_dfBinPath!=binPath && m_estimationMethod=="waveletsDF"){
+        ResetContinuum();
+    }
     m_dfBinPath = binPath;
 }
 
@@ -504,7 +666,7 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
 
   CSpectrumIOGenericReader reader;
 
- if(spectrumFilePath!=NULL)
+  if(spectrumFilePath!=NULL)
       spcName = bfs::path(spectrumFilePath).stem().string() ;
 
   if(noiseFilePath!=NULL)
@@ -516,6 +678,8 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
   reader.Read(spectrumFilePath, *this);
   Log.LogInfo("Successfully loaded input spectrum file: (%s), samples : %d",
 	      spcName.c_str(), GetSampleCount() );
+
+  ResetContinuum();
 
   // add noise if any or add flat noise
   if( noiseFilePath == NULL )
@@ -533,8 +697,7 @@ void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFile
     }
 }
 
-
-void  CSpectrum::InitPrecomputeFineGrid() const
+void CSpectrum::InitPrecomputeFineGrid() const
 {
     m_FineGridInterpolated = false;
 }
@@ -550,16 +713,16 @@ void  CSpectrum::InitPrecomputeFineGrid() const
  * targetSpectralAxis should be expressed in same frame as source SpetralAxis
 */
 Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                     CSpectrum& rebinedSpectrum, CMask& rebinedMask , const std::string opt_interp, const std::string opt_error_interp) const
+                       CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
 {
     
-    if( m_SpectralAxis.GetSamplesCount() != m_FluxAxis.GetSamplesCount() )
+    if( m_SpectralAxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount() )
     {
         Log.LogError("Problem samplecountsize betwees spectral axis and flux axis");
         return false;
     }
     
-    if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false)
+    if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )
     {
         RebinFineGrid();
     }
@@ -583,18 +746,20 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
 
+    rebinedSpectrum.ResetContinuum();
+
     rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
 
-    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.m_FluxAxis;
+    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.GetFluxAxis();
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
     rebinedMask.SetSize(s);
 
     const TAxisSampleList& Xsrc = m_SpectralAxis.GetSamplesVector();
-    const TAxisSampleList& Ysrc = m_FluxAxis.GetSamplesVector();
+    const TAxisSampleList& Ysrc = GetFluxAxis().GetSamplesVector();
     const TAxisSampleList& Xtgt = targetSpectralAxis.GetSamplesVector();
     TAxisSampleList&       Yrebin = rebinedFluxAxis.GetSamplesVector();
-    const TFloat64List&    Error = m_FluxAxis.GetError();
+    const TFloat64List&    Error = GetFluxAxis().GetError();
     TFloat64List&          ErrorRebin = rebinedFluxAxis.GetError();
 
     // Move cursors up to lambda range start
@@ -603,7 +768,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
-        if (opt_error_interp == "rebin" )
+        if (opt_error_interp == "rebin")
             ErrorRebin[j] = INFINITY;
         j++;
     }
@@ -669,8 +834,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
         }
     }else if(opt_interp=="spline"){
-         // GSL method spline
-        //initialise and allocate the gsl objects
+        // GSL method spline
+        //Initialize and allocate the gsl objects
         Int32 n = m_SpectralAxis.GetSamplesCount();
         gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
         gsl_spline_init (spline, Xsrc.data(), Ysrc.data(), n);
@@ -737,7 +902,11 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
     return true;
 }
+
 void CSpectrum::ScaleFluxAxis(Float64 scale){
-    m_FluxAxis *= scale;
-    return;
+    m_RawFluxAxis *= scale;
+    if (alreadyRemoved){
+        m_ContinuumFluxAxis *= scale;
+        m_WithoutContinuumFluxAxis *= scale;
+    }
 }

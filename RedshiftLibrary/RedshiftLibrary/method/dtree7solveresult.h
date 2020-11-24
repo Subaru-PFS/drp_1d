@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_DTREE7SOLVERESULT_
-#define _REDSHIFT_OPERATOR_DTREE7SOLVERESULT_
+#ifndef _REDSHIFT_METHOD_DTREE7SOLVERESULT_
+#define _REDSHIFT_METHOD_DTREE7SOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

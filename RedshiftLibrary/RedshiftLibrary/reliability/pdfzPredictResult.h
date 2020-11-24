@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_PDFZPREDICTRESULT_
-#define _REDSHIFT_OPERATOR_PDFZPREDICTRESULT_
+#ifndef _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
+#define _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/operator/operator.h>

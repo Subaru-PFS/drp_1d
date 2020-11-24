@@ -126,7 +126,6 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.saveintermediateresults = {""yes"", ""no""}\n");
 
 
-
     return desc;
 
 }
@@ -347,7 +346,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
     Log.LogInfo( "    -save-intermediate-chisquaretplshaperesults: %d", (int)m_opt_enableSaveChisquareTplshapeResults);
 
-
     return true;
 }
 
@@ -358,21 +356,20 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
  **/
 std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dataStore,
                                                                  const CSpectrum& spc,
-                                                                 const CSpectrum& spcWithoutCont,
                                                                  const CTemplateCatalog& tplCatalog,
                                                                  const TStringList& tplCategoryList,
                                                                  const CRayCatalog& restraycatalog,
                                                                  const TFloat64Range& lambdaRange,
                                                                  const TFloat64List& redshifts,
                                                                  const std::string outputPdfRelDir,
-                                                                 const Float64 radius)
+                                                                 const Float64 radius )
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodelsolve" );
     m_outputPdfRelDir = outputPdfRelDir;
     m_redshiftSeparation = radius;
 
     PopulateParameters( dataStore );
-    Int32 retSolve = Solve( dataStore, spc, spcWithoutCont, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts);
+    Int32 retSolve = Solve( dataStore, spc, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts );
 
     if(retSolve){
 
@@ -434,7 +431,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -449,7 +446,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -463,7 +460,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
             for(Int32 km=0; km<result->PriorLinesTplshapes.size(); km++)
             {
                 std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+                result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
                 for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     result_chisquaretplshape->ChiSquare[kz] = result->PriorLinesTplshapes[km][kz];
@@ -475,7 +472,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
             //Save PriorContinuumTplshapes results
             std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-            result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>());
+            result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
             for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 result_chisquaretplshape->ChiSquare[kz] = result->ContinuumModelSolutions[kz].tplLogPrior;
@@ -489,11 +486,9 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         return NULL;
     }
 
-
-    std::shared_ptr<CLineModelSolveResult>  lmsolveresult = std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
+    std::shared_ptr<CLineModelSolveResult> lmsolveresult = std::shared_ptr<CLineModelSolveResult>( new CLineModelSolveResult() );
     return lmsolveresult;
 }
-
 
 Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result,
                                   std::string opt_rigidity,
@@ -539,7 +534,6 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
         Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior disabled");
     }
 
-
     bool zPriorLines = true;
     Log.LogDetail("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
     if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
@@ -572,7 +566,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
         }
         zPrior->SetSize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             zPrior->Redshifts[k] = result->Redshifts[k];
         }
@@ -605,13 +599,13 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
         //correct chi2 if necessary
         TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             logLikelihoodCorrected[k] = result->ChiSquare[k];
         }
         if(false && m_opt_pdf_margAmpCorrection=="yes") //maybe there should not be a scalemarg correction for the bestchi2 option ? Todo: raise warning then...
         {
-            for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+            for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
             {
                 logLikelihoodCorrected[k] += result->ScaleMargCorrection[k];
             }
@@ -621,7 +615,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
             postmargZResult->Redshifts.resize(result->Redshifts.size());
             postmargZResult->valProbaLog.resize(result->Redshifts.size());
-            for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+            for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
             {
                 postmargZResult->Redshifts[k] = result->Redshifts[k] ;
                 postmargZResult->valProbaLog[k] = logProba[k];
@@ -681,7 +675,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 //find max scalemargcorr
                 //*
                 Float64 maxscalemargcorr=-DBL_MAX;
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
                 {
                     if(maxscalemargcorr < result->ScaleMargCorrectionTplshapes[k][kz])
                     {
@@ -690,7 +684,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 }
                 Log.LogError("Linemodel: maxscalemargcorr= %e", maxscalemargcorr);
                 //*/
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
                 {
                     if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
                     {
@@ -700,7 +694,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             }
             if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
             {
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
                 {
                     logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
                 }
@@ -716,7 +710,11 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                                        postmargZResult,
                                        result->PriorTplshapes);
         }else{
-            retPdfz = pdfz.BestProba( result->Redshifts, ChiSquareTplshapesCorrected, zpriorsTplshapes, cstLog, postmargZResult);
+            retPdfz = pdfz.BestProba(result->Redshifts,
+                                     ChiSquareTplshapesCorrected,
+                                     zpriorsTplshapes,
+                                     cstLog,
+                                     postmargZResult);
         }
         // todo: store priors for each tplshape model ?
     }else{
@@ -726,8 +724,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     return retPdfz;
 }
 
-
-Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result)
+Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result)
 {
     Log.LogInfo("Linemodel: continuum Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -740,7 +737,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
 
     std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     zPrior->SetSize(result->Redshifts.size());
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
     {
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
@@ -750,7 +747,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
 
     //correct chi2 if necessary: todo add switch
     TFloat64List logLikelihoodCorrected(result->ChiSquareContinuum.size(), DBL_MAX);
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
     {
         logLikelihoodCorrected[k] = result->ChiSquareContinuum[k];// + result->ScaleMargCorrectionContinuum[k];
     }
@@ -761,7 +758,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
         postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
         postmargZResult->Redshifts.resize(result->Redshifts.size());
         postmargZResult->valProbaLog.resize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++)
+        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
         {
             postmargZResult->Redshifts[k] = result->Redshifts[k] ;
             postmargZResult->valProbaLog[k] = logProba[k];
@@ -775,14 +772,12 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore &store, std::shared_ptr<const
     return 0;
 }
 
-
-
 /**
  * \brief
  * Retrieve the true-velocities from a hardcoded ref file path
  * nb: this is a hack for development purposes
  **/
-Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv )
+Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64& elv, Float64& alv)
 {
     std::ifstream file;
 
@@ -862,7 +857,7 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
 
 /**
  * \brief
- * Create a continuum object by subtracting spcWithoutCont from the spc.
+ * Create a continuum object by subtracting spcWithoutContinuum from the spc.
  * Configure the opt_XXX variables from the dataStore scope parameters.
  * LogInfo the opt_XXX values.
  * Create a COperatorLineModel, call its Compute method.
@@ -870,7 +865,6 @@ Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64
  **/
 Bool CLineModelSolve::Solve( CDataStore& dataStore,
                              const CSpectrum& spc,
-                             const CSpectrum& spcWithoutCont,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
                              const CRayCatalog& restraycatalog,
@@ -878,17 +872,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                              const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
-
-    CSpectrum _spc = spc;
-    CSpectrum _spcContinuum = spc;
-    _spcContinuum.SetMedianWinsize(spcWithoutCont.GetMedianWinsize());
-    _spcContinuum.SetDecompScales(spcWithoutCont.GetDecompScales());
-    _spcContinuum.SetContinuumEstimationMethod(spcWithoutCont.GetContinuumEstimationMethod());
-    _spcContinuum.SetWaveletsDFBinPath(spcWithoutCont.GetWaveletsDFBinPath());
-    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract( spcWithoutCont.GetFluxAxis() );
-    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
-    sfluxAxisPtr = spcfluxAxis;
 
     //    //Hack: load the simulated true-velocities
     //    if(false)
@@ -910,7 +893,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = linemodel.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         Log.LogError( "Linemodel, init failed. Aborting" );
@@ -959,58 +942,32 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
     }
 
-    if(m_opt_continuumcomponent=="fromspectrum"){
-        //check the continuum validity
-        if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-            Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-            //throw std::runtime_error("Failed to validate continuum  flux");
-        }else{
-            Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-        }
-
-        /*
-        //check the continuum flux axis
-        const CSpectrumSpectralAxis& contspectralAxis = _spcContinuum.GetSpectralAxis();
-        const CSpectrumFluxAxis& contfluxAxis = _spcContinuum.GetFluxAxis();
-        for(Int32 j=0; j<contfluxAxis.GetSamplesCount(); j++)
-        {
-            if(isnan(contfluxAxis[j]))
-            {
-                Log.LogError( "Linemodelsolve(): NaN value found for the ContinuumFluxAxis at lambda=%f", contspectralAxis[j] );
-                throw runtime_error("Linemodelsolve() NaN value found");
-                break;
-            }
-        }
-        //*/
-    }
-
     //**************************************************
     //FIRST PASS
     //**************************************************
     Int32 retFirstPass = linemodel.ComputeFirstPass(dataStore,
-                                          _spc,
-                                          _spcContinuum,
-                                          tplCatalog,
-                                          tplCategoryList,
-                                          m_calibrationPath,
-                                          restraycatalog,
-                                          m_opt_linetypefilter,
-                                          m_opt_lineforcefilter,
-                                          lambdaRange,
-                                          m_opt_fittingmethod,
-                                          m_opt_continuumcomponent,
-                                          m_opt_lineWidthType,
-                                          m_opt_resolution,
-                                          m_opt_velocity_emission,
-                                          m_opt_velocity_absorption,
-                                          m_opt_continuumreest,
-                                          m_opt_rules,
-                                          m_opt_velocityfit,
-                                          m_opt_firstpass_largegridstep,
-                                          m_opt_firstpass_largegridsampling,
-                                          m_opt_rigidity,
-                                          m_opt_tplratio_reldirpath,
-                                          m_opt_offsets_reldirpath);
+                                                    spc,
+                                                    tplCatalog,
+                                                    tplCategoryList,
+                                                    m_calibrationPath,
+                                                    restraycatalog,
+                                                    m_opt_linetypefilter,
+                                                    m_opt_lineforcefilter,
+                                                    lambdaRange,
+                                                    m_opt_fittingmethod,
+                                                    m_opt_continuumcomponent,
+                                                    m_opt_lineWidthType,
+                                                    m_opt_resolution,
+                                                    m_opt_velocity_emission,
+                                                    m_opt_velocity_absorption,
+                                                    m_opt_continuumreest,
+                                                    m_opt_rules,
+                                                    m_opt_velocityfit,
+                                                    m_opt_firstpass_largegridstep,
+                                                    m_opt_firstpass_largegridsampling,
+                                                    m_opt_rigidity,
+                                                    m_opt_tplratio_reldirpath,
+                                                    m_opt_offsets_reldirpath);
     if( retFirstPass!=0 )
     {
         Log.LogError( "Linemodel, first pass failed. Aborting" );
@@ -1057,14 +1014,12 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         throw std::runtime_error("Linemodel: Search for z-candidates failed. Aborting");
     }
 
-
-
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
-    Int32 retInitB = linemodel_fpb.Init(_spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
@@ -1092,43 +1047,32 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             linemodel_fpb.m_opt_firstpass_tplratio_ismFit = Int32(m_opt_firstpass_tplratio_ismfit=="yes");
         }
 
-        if(fpb_opt_continuumcomponent=="fromspectrum"){
-            //check the continuum validity
-            if( !_spcContinuum.IsFluxValid( lambdaRange.GetBegin(), lambdaRange.GetEnd() ) ){
-                Log.LogWarning("Linemodel - Failed to validate continuum spectrum flux on wavelength range (%.1f ; %.1f)",lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-                //throw std::runtime_error("Failed to validate continuum  flux");
-            }else{
-                Log.LogDetail( "Linemodel - Successfully validated continuum flux on wavelength range (%.1f ; %.1f)", lambdaRange.GetBegin(), lambdaRange.GetEnd() );
-            }
-        }
-
         //**************************************************
         //FIRST PASS B
         //**************************************************
         Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(dataStore,
-                                              _spc,
-                                              _spcContinuum,
-                                              tplCatalog,
-                                              tplCategoryList,
-                                              m_calibrationPath,
-                                              restraycatalog,
-                                              m_opt_linetypefilter,
-                                              m_opt_lineforcefilter,
-                                              lambdaRange,
-                                              m_opt_fittingmethod,
-                                              fpb_opt_continuumcomponent,
-                                              m_opt_lineWidthType,
-                                              m_opt_resolution,
-                                              m_opt_velocity_emission,
-                                              m_opt_velocity_absorption,
-                                              m_opt_continuumreest,
-                                              m_opt_rules,
-                                              m_opt_velocityfit,
-                                              m_opt_firstpass_largegridstep,
-                                              m_opt_firstpass_largegridsampling,
-                                              m_opt_rigidity,
-                                              m_opt_tplratio_reldirpath,
-                                              m_opt_offsets_reldirpath);
+                                                            spc,
+                                                            tplCatalog,
+                                                            tplCategoryList,
+                                                            m_calibrationPath,
+                                                            restraycatalog,
+                                                            m_opt_linetypefilter,
+                                                            m_opt_lineforcefilter,
+                                                            lambdaRange,
+                                                            m_opt_fittingmethod,
+                                                            fpb_opt_continuumcomponent,
+                                                            m_opt_lineWidthType,
+                                                            m_opt_resolution,
+                                                            m_opt_velocity_emission,
+                                                            m_opt_velocity_absorption,
+                                                            m_opt_continuumreest,
+                                                            m_opt_rules,
+                                                            m_opt_velocityfit,
+                                                            m_opt_firstpass_largegridstep,
+                                                            m_opt_firstpass_largegridsampling,
+                                                            m_opt_rigidity,
+                                                            m_opt_tplratio_reldirpath,
+                                                            m_opt_offsets_reldirpath);
         if( retFirstPass!=0 )
         {
             Log.LogError( "Linemodel, first pass failed. Aborting" );
@@ -1174,6 +1118,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             Log.LogError( "linemodel_fpb: Search for z-candidates failed. Aborting" );
             throw std::runtime_error("linemodel_fpb: Search for z-candidates failed. Aborting");
         }
+
         //**************************************************
         //COMBINE CANDIDATES
         //**************************************************
@@ -1188,8 +1133,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if(!skipSecondPass)
     {
         Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
-                                                          _spc,
-                                                          _spcContinuum,
+                                                          spc,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,
@@ -1233,7 +1177,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     }
 
 
-    Int32 retSaveResults = linemodel.SaveResults(_spc,
+    Int32 retSaveResults = linemodel.SaveResults(spc,
                                                  lambdaRange,
                                                  m_opt_continuumreest);
     //combinePDF using results from secondpass
@@ -1243,14 +1187,14 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
     Int32 retCombinePdf = CombinePDF(lmresultsp,
-                                         m_opt_rigidity,
-                                         m_opt_pdfcombination,
-                                         m_opt_stronglinesprior,
-                                         m_opt_haPrior,
-                                         m_opt_euclidNHaEmittersPriorStrength,
-                                         m_opt_modelZPriorStrength,
-                                         postmargZResult,
-                                         zpriorResult);
+                                     m_opt_rigidity,
+                                     m_opt_pdfcombination,
+                                     m_opt_stronglinesprior,
+                                     m_opt_haPrior,
+                                     m_opt_euclidNHaEmittersPriorStrength,
+                                     m_opt_modelZPriorStrength,
+                                     postmargZResult,
+                                     zpriorResult);
 
     if(retCombinePdf!=0)
     {
@@ -1362,11 +1306,11 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List c
         }
         zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz, v->ExtremaResult.ExtremaIDs);
 
-        std::vector<std::string> info {"spc", "fit", "fitcontinuum", "rules", "continuum"};
+        std::vector<std::string> info = {"spc", "fit", "fitcontinuum", "rules", "continuum"};
         Int32 s = zcand->Rank.size();
         Int32 l = std::min(maxCount, s);
         for(Int32 f = 0; f<info.size(); f++) {
-            for( Int32 i = 0; i<l; i++){
+            for(Int32 i = 0; i<l; i++) {
                 std::string fname_new =
                 (boost::format("linemodelsolve.linemodel_%1%_extrema_%2%") % info[f] % i).str();
                 std::string fname_old =

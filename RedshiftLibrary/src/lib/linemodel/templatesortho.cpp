@@ -100,25 +100,19 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
 
     std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate) );
 
-
     bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){
 
         std::string opt_continuumcomponent = "fromspectrum";
-        CSpectrum spectrum = CSpectrum(inputTemplate);
-        CSpectrum spectrumContinuumZero = CSpectrum(inputTemplate);
-        CSpectrumFluxAxis& continuumZeroFluxAxis = spectrumContinuumZero.GetFluxAxis();
-        for(UInt32 i=0; i<continuumZeroFluxAxis.GetSamplesCount(); i++){
-            continuumZeroFluxAxis[i] = 0.0; //put zero as continuum here
-        }
+        CSpectrum spectrum = inputTemplate;
+        std::string saveContinuumEstimationMethod = spectrum.GetContinuumEstimationMethod();
+        spectrum.SetContinuumEstimationMethod("zero");
 
         CTemplateCatalog tplCatalogUnused;
         TStringList tplCategoryListUnused;
 
-
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,
-                                     spectrumContinuumZero,
                                      tplCatalogUnused,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
@@ -146,6 +140,9 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                    continuumModelSolution,
                    contreest_iterations,
                    enableLogging );
+
+        //Restore the continuum estimation method
+        spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
         //get mtm and dtm cumulative vector and store it
         std::vector<Float64> lbda;

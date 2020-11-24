@@ -33,17 +33,17 @@ public:
     CDataStore( COperatorResultStore& resultStore, CParameterStore& parameStore );
     virtual ~CDataStore();
 
-    void                PushScope( const std::string& name );
-    void                PopScope();
+    void                            PushScope( const std::string& name );
+    void                            PopScope();
 
-    const std::string&  GetSpectrumName() const;
-    void                SetSpectrumName( const std::string& name );
-    const std::string&  GetProcessingID() const;
-    void                SetProcessingID( const std::string& valStr );
+    const std::string&              GetSpectrumName() const;
+    void                            SetSpectrumName( const std::string& name );
+    const std::string&              GetProcessingID() const;
+    void                            SetProcessingID( const std::string& valStr );
 
-    std::string         GetCurrentScopeName() const;
+    std::string                     GetCurrentScopeName() const;
 
-    std::string         GetScope( const COperatorResult&  result) const;
+    std::string                     GetScope(const COperatorResult& result) const;
 
     // Wrapper functions
     void                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
@@ -84,9 +84,9 @@ public:
     void                            DeleteScopedGlobalResult( const std::string& name );
     void                            StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
 
-    std::weak_ptr<const COperatorResult>          GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
-    TOperatorResultMap              GetPerTemplateResult( const std::string& name ) const;
-    std::weak_ptr<const COperatorResult>          GetGlobalResult( const std::string& name ) const;
+    std::weak_ptr<const COperatorResult>       GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
+    TOperatorResultMap                         GetPerTemplateResult( const std::string& name ) const;
+    std::weak_ptr<const COperatorResult>       GetGlobalResult( const std::string& name ) const;
 
     void                            SaveRedshiftResult( const boost::filesystem::path& dir );
     void                            SaveCandidatesResult( const boost::filesystem::path& dir );
@@ -101,9 +101,9 @@ protected:
 
     std::string                     GetScopedName( const std::string& name ) const;
 
-    COperatorResultStore&            m_ResultStore;
+    COperatorResultStore&           m_ResultStore;
 
-    CParameterStore&                 m_ParameterStore;
+    CParameterStore&                m_ParameterStore;
 
     std::string                     m_SpectrumName;
     std::string                     m_ProcessingID;

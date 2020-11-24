@@ -1,5 +1,5 @@
-#ifndef _CORE_COMMON_THREADPOOL_
-#define _CORE_COMMON_THREADPOOL_
+#ifndef _REDSHIFT_COMMON_THREADPOOL_
+#define _REDSHIFT_COMMON_THREADPOOL_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
@@ -11,7 +11,7 @@
 namespace NSEpic {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * ThreadPool class
  */
 class CThreadPool

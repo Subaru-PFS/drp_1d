@@ -32,11 +32,11 @@ public:
     TAxisSampleList&         GetSamplesVector();
     UInt32                   GetSamplesCount() const;
     UInt32                   GetSamplesCount();
-    virtual void        SetSize( UInt32 s );
+    virtual void             SetSize( UInt32 s );
 
 protected:
 
-    TAxisSampleList     m_Samples;
+    TAxisSampleList          m_Samples;
 
 };
 

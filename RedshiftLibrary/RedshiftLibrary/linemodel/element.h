@@ -1,5 +1,5 @@
-#ifndef ELEMENT_H
-#define ELEMENT_H
+#ifndef _REDSHIFT_LINEMODEL_ELEMENT_
+#define _REDSHIFT_LINEMODEL_ELEMENT_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
@@ -13,7 +13,7 @@
 namespace NSEpic {
 
 /**
- * /ingroup Redshift
+ * \ingroup Redshift
  */
 class CLineModelElement
 {
@@ -201,4 +201,4 @@ class CLineModelElement
 
 } // namespace NSEpic
 
-#endif // ELEMENT_H
+#endif // _REDSHIFT_LINEMODEL_ELEMENT_

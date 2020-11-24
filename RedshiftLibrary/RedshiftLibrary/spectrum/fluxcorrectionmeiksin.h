@@ -13,8 +13,7 @@ namespace NSEpic
 {
 
 /**
- * /ingroup Redshift
-
+ * \ingroup Redshift
  */
 class CSpectrumFluxCorrectionMeiksin
 {

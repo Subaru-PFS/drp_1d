@@ -328,13 +328,6 @@ void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 
     ExtremaResult.Save(store, stream); //todo: move these into their own file. aview should be adapted.
 
-    // save dTransposeDNocontinuum, on 1 line
-    if(true){
-        stream <<  "#dTransposeDNocontinuum = {";
-        stream <<  dTransposeDNocontinuum << "\t";
-        stream << "}" << std::endl;
-    }
-
     // save dTransposeD, on 1 line
     if(true){
         stream <<  "#dTransposeD = {";

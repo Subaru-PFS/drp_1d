@@ -1,59 +1,31 @@
 #include <RedshiftLibrary/processflow/processflow.h>
 
-#include <RedshiftLibrary/continuum/standard.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-
 #include <RedshiftLibrary/linemodel/calibrationconfig.h>
 
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/continuum/median.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/operator/peakdetection.h>
-#include <RedshiftLibrary/gaussianfit/gaussianfit.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/operator/raymatching.h>
-#include <RedshiftLibrary/common/median.h>
 
-#include <RedshiftLibrary/operator/correlation.h>
-#include <RedshiftLibrary/operator/chicorr.h>
-#include <RedshiftLibrary/method/blindsolveresult.h>
-#include <RedshiftLibrary/operator/raydetectionresult.h>
-#include <RedshiftLibrary/operator/raydetection.h>
+#include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/method/blindsolve.h>
-#include <RedshiftLibrary/method/blindsolveresult.h>
-#include <RedshiftLibrary/operator/chisquare.h>
-
-#include <RedshiftLibrary/operator/peakdetectionresult.h>
-#include <RedshiftLibrary/operator/raydetectionresult.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
-
 #include <RedshiftLibrary/method/chisquaresolve.h>
 #include <RedshiftLibrary/method/chisquare2solve.h>
 #include <RedshiftLibrary/method/chisquarelogsolve.h>
 #include <RedshiftLibrary/method/correlationsolve.h>
-#include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/dtree7solve.h>
-#include <RedshiftLibrary/method/dtree7solveresult.h>
 #include <RedshiftLibrary/method/dtreebsolve.h>
-#include <RedshiftLibrary/method/dtreebsolveresult.h>
 #include <RedshiftLibrary/method/dtreecsolve.h>
-#include <RedshiftLibrary/method/dtreecsolveresult.h>
+#include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/linematching2solve.h>
+#include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
 #include <RedshiftLibrary/method/zweimodelsolve.h>
-#include <RedshiftLibrary/method/linemodelsolveresult.h>
-#include <RedshiftLibrary/method/linemodeltplshapesolve.h>
-#include <RedshiftLibrary/method/linemodeltplshapesolveresult.h>
-#include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
-
+#include <RedshiftLibrary/processflow/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
+#include <RedshiftLibrary/continuum/indexes.h>
+#include <RedshiftLibrary/continuum/indexesresult.h>
+#include <RedshiftLibrary/operator/spectraFluxResult.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -61,10 +33,8 @@
 #include <iostream>
 
 #include <boost/algorithm/string.hpp>
-#include <stdio.h>
-#include <float.h>
-#include <cmath>
-#include <math.h>
+#include <cstdio>
+#include <cfloat>
 
 using namespace std;
 using namespace boost;
@@ -83,7 +53,8 @@ CProcessFlow::~CProcessFlow()
 
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    Log.LogInfo("<proc-spc><%s>", ctx.GetSpectrum().GetName().c_str());
+    std::string spectrumName = ctx.GetSpectrum().GetName();
+    Log.LogInfo("<proc-spc><%s>", spectrumName.c_str());
 
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
@@ -99,16 +70,24 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", ctx.GetSpectrum().GetName().c_str(),
-            spcLambdaRange.GetBegin(), spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+    Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", spectrumName.c_str(), spcLambdaRange.GetBegin(),
+                  spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
+
+    // Compute continuum statistics if enabled
+    std::string enableComputeContinuumStat;
+    ctx.GetParameterStore().Get( "computeContinuumStat", enableComputeContinuumStat, "no" );
+    if(enableComputeContinuumStat=="yes")
+    {
+        computeContinuumStat(ctx);
+    }
 
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );
     boost::algorithm::to_lower(methodName);
 
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    // Create redshift initial list by spanning redshift across the given range, with the given delta
     std::string redshiftSampling;
     ctx.GetParameterStore().Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
     TFloat64List raw_redshifts;
@@ -128,21 +107,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Float64 zref = -1.0;
     if(opt_linemeas_catalog_path!="")
     {
-        Log.LogInfo( "Override z-search range !");   
-        namespace fs = boost::filesystem;
+        Log.LogInfo( "Override z-search range !");
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
 
         Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
-        fs::path refFilePath(opt_linemeas_catalog_path.c_str());
+        bfs::path refFilePath(opt_linemeas_catalog_path.c_str());
 
-
-        if ( fs::exists(refFilePath) )
+        if ( bfs::exists(refFilePath) )
         {
-            std::string spcSubStringId = ctx.GetSpectrum().GetName();
+            std::string spcSubStringId = spectrumName;
             Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
             getValueFromRefFile( refFilePath.c_str(), spcSubStringId, zref, reverseInclusionForIdMatching);
         }
-        if(zref==-1)
+        if(zref==-1.0)
         {
           throw std::runtime_error("Override z-search: unable to find zref!");
         }
@@ -186,7 +163,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Log.LogInfo( "Override z-search: Using overriden dzstep: %f", stepZ);
         }
 
-        Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", ctx.GetSpectrum().GetName().c_str(), zref);
+        Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", spectrumName.c_str(), zref);
     }else{
         redshifts = raw_redshifts;
     }
@@ -202,7 +179,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     // Remove Star category, and filter the list with regard to input variable CategoryFilter
     TStringList templateCategoryList;
     ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-    TStringList   filteredTemplateCategoryList;
+    TStringList filteredTemplateCategoryList;
     for( UInt32 i=0; i<templateCategoryList.size(); i++ )
     {
         std::string category = templateCategoryList[i];
@@ -224,21 +201,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Bool enableInputSpcCorrect = true;
     std::string enableInputSpcCorrectStr;
     ctx.GetParameterStore().Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
-    if(enableInputSpcCorrectStr!="yes")
-    {
-        enableInputSpcCorrect=false;
-    }
-    if(methodName  == "reliability" )
+    if(enableInputSpcCorrectStr != "yes" || methodName  == "reliability" )
     {
         enableInputSpcCorrect = false;
     }
     if(enableInputSpcCorrect)
     {
         //Check if the Spectrum is valid on the lambdarange
+        //correctInputSpectrum(spcLambdaRange);
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
         if( ctx.correctSpectrum( lmin, lmax ) ){
-            Log.LogInfo( "Successfully corrected noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            Log.LogInfo( "Successfully corrected noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
         }
     }
 
@@ -251,24 +225,26 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     if(enableInputSpcCheck)
     {
         //Check if the Spectrum is valid on the lambdarange
+        //checkInputSpectrum(spcLambdaRange);
         const Float64 lmin = spcLambdaRange.GetBegin();
         const Float64 lmax = spcLambdaRange.GetEnd();
+	//Check if the flux is valid on the lambdarange
         if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
             Log.LogError("Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
-                         ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+                          spectrumName.c_str(), lmin, lmax );
             throw std::runtime_error("Failed to validate spectrum flux");
         }else{
-            Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
         }
+	//Check if the noise is valid in the lambdarange
         if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
             Log.LogError("Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
-                         ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+                          spectrumName.c_str(), lmin, lmax );
             throw std::runtime_error("Failed to validate noise from spectrum");
         }else{
-            Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", ctx.GetSpectrum().GetName().c_str(), lmin, lmax );
+            Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
         }
     }
-
 
     // Stellar method
     std::shared_ptr<CSolveResult> starResult;
@@ -290,7 +266,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
         std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
 
-        TStringList   filteredStarTemplateCategoryList;
+        TStringList filteredStarTemplateCategoryList;
         filteredStarTemplateCategoryList.push_back( "star" );
 
         //temporary star catalog handling through calibration files, should be loaded somewhere else ?
@@ -333,7 +309,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         starResult = solve.Compute( ctx.GetDataStore(),
                                     ctx.GetSpectrum(),
-                                    ctx.GetSpectrumWithoutContinuum(),
                                     *starTemplateCatalog,
                                     filteredStarTemplateCategoryList,
                                     spcLambdaRange,
@@ -375,7 +350,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         Log.LogInfo( "    Processflow - Loading qso templates catalog : %s", qsoTemplates.c_str());
         std::string templateDir = (calibrationFolder/qsoTemplates.c_str()).string();
 
-        TStringList   filteredQSOTemplateCategoryList;
+        TStringList filteredQSOTemplateCategoryList;
         filteredQSOTemplateCategoryList.push_back( "emission" );
 
         //temporary qso catalog handling through calibration files, should be loaded somewhere else ?
@@ -426,7 +401,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodChisquare2Solve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       ctx.GetSpectrumWithoutContinuum(),
                                        *qsoTemplateCatalog,
                                        filteredQSOTemplateCategoryList,
                                        spcLambdaRange,
@@ -441,7 +415,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodChisquareLogSolve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       ctx.GetSpectrumWithoutContinuum(),
                                        *qsoTemplateCatalog,
                                        filteredQSOTemplateCategoryList,
                                        spcLambdaRange,
@@ -458,7 +431,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodTplcombinationSolve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       ctx.GetSpectrumWithoutContinuum(),
                                        *qsoTemplateCatalog,
                                        filteredQSOTemplateCategoryList,
                                        spcLambdaRange,
@@ -473,7 +445,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CLineModelSolve Solve(calibrationDirPath);
             qsoResult = Solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       ctx.GetSpectrumWithoutContinuum(),
                                        *qsoTemplateCatalog,
                                        filteredQSOTemplateCategoryList,
                                        ctx.GetRayCatalog(),
@@ -503,7 +474,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CLineModelSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  ctx.GetRayCatalog(),
@@ -512,7 +482,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  galaxy_method_pdf_reldir,
                                  radius);
 
-        if( mResult)
+        if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
             std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
@@ -536,14 +506,11 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CZweiModelSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts );
-
-
 
     }else if(methodName  == "chisquare2solve" ){
         Float64 overlapThreshold;
@@ -565,7 +532,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodChisquare2Solve solve(calibrationDirPath);
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  spcLambdaRange,
@@ -576,7 +542,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
-        if( mResult)
+        if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
             std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
@@ -612,7 +578,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodChisquareLogSolve solve(calibrationDirPath);
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  spcLambdaRange,
@@ -623,8 +588,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
-
-        if( mResult)
+        if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
             std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
@@ -640,7 +604,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
         }
-
 
     }else if(methodName  == "tplcombinationsolve" ){
         Float64 overlapThreshold;
@@ -662,7 +625,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodTplcombinationSolve solve(calibrationDirPath);
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  spcLambdaRange,
@@ -673,7 +635,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
-        if( mResult)
+        if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
             std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
@@ -696,7 +658,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodDTree7Solve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  templateCategoryList,
                                  ctx.GetRayCatalog(),
@@ -708,7 +669,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodDTreeBSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  templateCategoryList,
                                  ctx.GetRayCatalog(),
@@ -718,7 +678,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodDTreeCSolve Solve(calibrationDirPath);
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  templateCategoryList,
                                  ctx.GetRayCatalog(),
@@ -729,7 +688,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodCorrelationSolve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
-                                 ctx.GetSpectrumWithoutContinuum(),
                                  ctx.GetTemplateCatalog(),
                                  filteredTemplateCategoryList,
                                  lambdaRange, redshiftRange, redshiftStep );
@@ -738,14 +696,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         CMethodBlindSolve blindSolve;
         mResult = blindSolve.Compute( ctx.GetDataStore(),
                                       ctx.GetSpectrum(),
-                                      ctx.GetSpectrumWithoutContinuum(),
                                       ctx.GetTemplateCatalog(),
                                       filteredTemplateCategoryList,
                                       lambdaRange, redshiftRange, redshiftStep);
 
     }else if(methodName  == "linematching" ){
-        CMethodLineMatchingSolve Solve;
-        mResult = Solve.Compute(ctx.GetDataStore(), ctx.GetSpectrum(),
+        COperatorLineMatchingSolve Solve;
+        mResult = Solve.Compute(ctx.GetDataStore(),
+                                ctx.GetSpectrum(),
                                 lambdaRange,
                                 redshiftRange,
                                 redshiftStep,
@@ -762,7 +720,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }
     */
-else if(methodName  == "reliability" ){
+    else if(methodName  == "reliability" ){
         Log.LogInfo( "Processing RELIABILITY ONLY");
         //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
 
@@ -832,6 +790,46 @@ else if(methodName  == "reliability" ){
       throw std::runtime_error("Unable to store method result");
     }
 }
+
+void CProcessFlow::computeContinuumStat(CProcessFlowContext& ctx)
+{
+    CContinuumIndexes continuumIndexes;
+
+    CSpectrumSpectralAxis spcContinuumSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
+    CSpectrumFluxAxis spcContinuumFluxAxis = ctx.GetSpectrum().GetContinuumFluxAxis();
+    CSpectrum spcContinuum(spcContinuumSpectralAxis, spcContinuumFluxAxis);
+
+    // Call getRelevance function
+    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( ctx.GetSpectrum(), spcContinuum );
+
+    // Save the continuum indexes
+    std::shared_ptr<CContinuumIndexesResult> continuumIndexesResult = (std::shared_ptr<CContinuumIndexesResult>) new CContinuumIndexesResult();
+    continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
+
+    if( continuumIndexesResult ) {
+        const std::string nameContinuumIndexesResult = "preprocess/continuumIndexes";
+        ctx.GetDataStore().StoreScopedGlobalResult( nameContinuumIndexesResult.c_str(), continuumIndexesResult );
+    }
+
+    // Save the baseline results
+    std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
+    baselineResult->m_optio = 0;
+    UInt32 len = spcContinuum.GetSampleCount();
+
+    baselineResult->fluxes.resize(len);
+    baselineResult->wavel.resize(len);
+    for( UInt32 k=0; k<len; k++ )
+    {
+        baselineResult->fluxes[k] = spcContinuumFluxAxis[k];
+        baselineResult->wavel[k] = spcContinuumSpectralAxis[k];
+    }
+
+    if( baselineResult ) {
+        const std::string nameBaseline = "preprocess/" + ctx.GetSpectrum().GetBaseline();
+        ctx.GetDataStore().StoreScopedGlobalResult( nameBaseline.c_str(), baselineResult );
+    }
+}
+
 
 /**
  * @brief isPdfValid

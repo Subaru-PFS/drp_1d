@@ -1,5 +1,5 @@
-#ifndef _CORE_REDSHIFT_DATATYPES_
-#define _CORE_REDSHIFT_DATATYPES_
+#ifndef _REDSHIFT_COMMON_DATATYPES_
+#define _REDSHIFT_COMMON_DATATYPES_
 
 #include <memory>
 #include <string>

@@ -60,7 +60,6 @@ COperatorLineModel::~COperatorLineModel() {}
  */
 Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                            const CSpectrum &spectrum,
-                                           const CSpectrum &spectrumContinuum,
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
@@ -78,7 +77,8 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
                                            const std::string &opt_rules,
                                            const std::string &opt_velocityFitting,
                                            const Float64 &opt_twosteplargegridstep,
-                                           const string &opt_twosteplargegridsampling, const std::string &opt_rigidity,
+                                           const string &opt_twosteplargegridsampling,
+                                           const std::string &opt_rigidity,
                                            const std::string &opt_tplratioCatRelPath,
                                            const std::string &opt_offsetCatRelPath)
 {
@@ -190,7 +190,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
-                                                         spectrumContinuum,
                                                          tplCatalog,
                                                          *orthoTplCatalog,
                                                          tplCategoryList,
@@ -212,20 +211,18 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
 
     /*
     CMultiRollModel model( spectrum,
-                                 spectrumContinuum,
-                                 tplCatalog,//orthoTplCatalog,
-                                 tplCategoryList,
-                                 opt_calibrationPath,
-                                 restRayList,
-                                 opt_fittingmethod,
-                                 opt_continuumcomponent,
-                                 opt_lineWidthType,
-                                 opt_resolution,
-                                 opt_velocityEmission,
-                                 opt_velocityAbsorption,
-                                 opt_rules,
-                                 opt_rigidity);
-
+                           tplCatalog,//orthoTplCatalog,
+                           tplCategoryList,
+                           opt_calibrationPath,
+                           restRayList,
+                           opt_fittingmethod,
+                           opt_continuumcomponent,
+                           opt_lineWidthType,
+                           opt_resolution,
+                           opt_velocityEmission,
+                           opt_velocityAbsorption,
+                           opt_rules,
+                           opt_rigidity);
 
     Bool enableLoadContTemplateOverride = false; //manual switch for hardcoded
     contaminant bypass load if(enableLoadContTemplateOverride)
@@ -387,7 +384,6 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
             throw runtime_error("  Operator-Linemodel: opt_firstpass_zgridstep must be defined (!= -1) for this fit continuum procedure.");
         }
         PrecomputeContinuumFit(spectrum,
-                               spectrumContinuum,
                                *orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
@@ -432,9 +428,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     //    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     m_result->nSpcSamples = m_model->getSpcNSamples(lambdaRange);
-    m_result->dTransposeDNocontinuum =
-        m_model->getDTransposeD(lambdaRange, "nocontinuum");
-    m_result->dTransposeD = m_model->getDTransposeD(lambdaRange, "raw");
+    m_result->dTransposeD = m_model->getDTransposeD(lambdaRange);
     m_result->cstLog = m_model->getLikelihood_cstLog(lambdaRange);
 
     Int32 contreest_iterations = 0;
@@ -627,14 +621,13 @@ Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
 }
 
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
-                                                 const CSpectrum &spectrumContinuum,
-                                                 const CTemplateCatalog &tplCatalog,
-                                                 const TStringList &tplCategoryList,
-                                                 const std::string opt_calibrationPath,
-                                                 const TFloat64Range &lambdaRange,
-                                                 const Float64 redshiftStep,
-                                                 const string zsampling,
-                                                 bool ignoreLinesSupport)
+                                                const CTemplateCatalog &tplCatalog,
+                                                const TStringList &tplCategoryList,
+                                                const std::string opt_calibrationPath,
+                                                const TFloat64Range &lambdaRange,
+                                                const Float64 redshiftStep,
+                                                const string zsampling,
+                                                bool ignoreLinesSupport)
 {
     boost::chrono::thread_clock::time_point start_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -958,7 +951,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         m_firstpass_extremaResult.ExtremaExtendedRedshifts[j] = extendedList;
     }
     //*/
-    // todo: remove duplicate redshifts from the extended extrema list
+    // TODO: remove duplicate redshifts from the extended extrema list
 
 
     //now preparing the candidates extrema results
@@ -997,7 +990,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
             Log.LogError(" Saving first pass extremum w. result idx=%d, w. m_result->Redshifts[idx]=%f", idx, m_result->Redshifts[idx]);
         }
 
-        //... todo: more first pass results can be saved here if needed
+        //... TODO: more first pass results can be saved here if needed
     }
 
 
@@ -1054,7 +1047,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
         }
         m_result->ExtremaResult.ExtremaExtendedRedshifts[startIdx + keb] = extendedRedshifts;
         //*/
-        // todo: remove duplicate redshifts from the extended extrema list
+        // TODO: remove duplicate redshifts from the extended extrema list
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult.Extrema.push_back(z_fpb);
@@ -1103,13 +1096,11 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
         }
     }
 
-
     return retval;
 }
 
 Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
                                             const CSpectrum &spectrum,
-                                            const CSpectrum &spectrumContinuum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
@@ -1506,11 +1497,11 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 m_model->getLeastSquareContinuumMeritFast();
         }
 
-        m_result->ExtremaResult.ExtremaLastPass[i] =  z; // refined extremum is initialized here.
+        m_result->ExtremaResult.ExtremaLastPass[i] = z; // refined extremum is initialized here.
 
         //m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz( z );
         //deltaz cannot be calculated here, but mostly on the new peaks in the pdf
-       // m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz(postmargZResult->Redshifts, postmargZResult->valProbaLog, z);
+        // m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz(postmargZResult->Redshifts, postmargZResult->valProbaLog, z);
 
         // store model Ha SNR & Flux
         m_result->ExtremaResult.snrHa[i] =
@@ -1670,8 +1661,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     // enable/disable fit by groups. Once enabled, the velocity fitting groups
     // are defined in the line catalog from v4.0 on.
     m_enableWidthFitByGroups = true;
-
-
 
 
     bool enable_secondpass_parameters_estimation = true;
@@ -1837,7 +1826,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 {
                     m_model->SetFittingMethod("individual");
                 }
-                m_model->SetForcedisableTplratioISMfit(m_model->m_opt_firstpass_forcedisableTplratioISMfit); //todo, add new param for this ?
+                m_model->SetForcedisableTplratioISMfit(m_model->m_opt_firstpass_forcedisableTplratioISMfit); //TODO: add new param for this ?
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
                 std::vector<std::vector<Int32>> idxVelfitGroups;
@@ -2073,7 +2062,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 //restore some params
                 m_model->SetFittingMethod(opt_fittingmethod);
                 // m_model->m_enableAmplitudeOffsets = false;
-                m_model->SetForcedisableTplratioISMfit(false); //todo coordinate with SetPassMode() ?
+                m_model->SetForcedisableTplratioISMfit(false); //TODO: coordinate with SetPassMode() ?
 
             }
         }else{
@@ -2505,7 +2494,6 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::GetFirstpassExtrema
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
         CDataStore &dataStore,
         const CSpectrum &spectrum,
-        const CSpectrum &spectrumContinuum,
         const CTemplateCatalog &tplCatalog,
         const TStringList &tplCategoryList,
         const std::string opt_calibrationPath,
@@ -2558,7 +2546,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     //**************************************************
     Int32 retFirstPass = ComputeFirstPass(dataStore,
                                           spectrum,
-                                          spectrumContinuum,
                                           tplCatalog,
                                           tplCategoryList,
                                           opt_calibrationPath,
@@ -2605,7 +2592,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     Int32 retSecondPass = ComputeSecondPass(
                 dataStore,
                 spectrum,
-                spectrumContinuum,
                 tplCatalog,
                 tplCategoryList,
                 opt_calibrationPath,
@@ -2646,27 +2632,40 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
  * @return
  */
 std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
-    CDataStore &dataStore, const CSpectrum &spectrum,
-    const CSpectrum &spectrumContinuum, const CTemplateCatalog &tplCatalog,
-    const TStringList &tplCategoryList, const std::string opt_calibrationPath,
-    const CRayCatalog &restraycatalog, const std::string &opt_lineTypeFilter,
-    const std::string &opt_lineForceFilter, const TFloat64Range &lambdaRange,
-    const TFloat64List &redshifts, const Int32 opt_extremacount,
+    CDataStore &dataStore,
+    const CSpectrum &spectrum,
+    const CTemplateCatalog &tplCatalog,
+    const TStringList &tplCategoryList,
+    const std::string opt_calibrationPath,
+    const CRayCatalog &restraycatalog,
+    const std::string &opt_lineTypeFilter,
+    const std::string &opt_lineForceFilter,
+    const TFloat64Range &lambdaRange,
+    const TFloat64List &redshifts,
+    const Int32 opt_extremacount,
     const std::string &opt_fittingmethod,
     const std::string &opt_continuumcomponent,
-    const std::string &opt_lineWidthType, const Float64 opt_resolution,
-    const Float64 opt_velocityEmission, const Float64 opt_velocityAbsorption,
-    const std::string &opt_continuumreest, const std::string &opt_rules,
+    const std::string &opt_lineWidthType,
+    const Float64 opt_resolution,
+    const Float64 opt_velocityEmission,
+    const Float64 opt_velocityAbsorption,
+    const std::string &opt_continuumreest,
+    const std::string &opt_rules,
     const std::string &opt_velocityFitting,
     const Float64 &opt_twosteplargegridstep,
-    const string &opt_twosteplargegridsampling, const std::string &opt_rigidity,
-    const string &opt_tplratioCatRelPath, const string &opt_offsetCatRelPath,
-    const Float64 &opt_emvelocityfitmin, const Float64 &opt_emvelocityfitmax,
-    const Float64 &opt_emvelocityfitstep, const Float64 &opt_absvelocityfitmin,
-    const Float64 &opt_absvelocityfitmax, const Float64 &opt_absvelocityfitstep)
+    const string &opt_twosteplargegridsampling,
+    const std::string &opt_rigidity,
+    const string &opt_tplratioCatRelPath,
+    const string &opt_offsetCatRelPath,
+    const Float64 &opt_emvelocityfitmin,
+    const Float64 &opt_emvelocityfitmax,
+    const Float64 &opt_emvelocityfitstep,
+    const Float64 &opt_absvelocityfitmin,
+    const Float64 &opt_absvelocityfitmax,
+    const Float64 &opt_absvelocityfitstep)
 {
     auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute(
-        dataStore, spectrum, spectrumContinuum, tplCatalog, tplCategoryList,
+        dataStore, spectrum, tplCatalog, tplCategoryList,
         opt_calibrationPath, restraycatalog, opt_lineTypeFilter,
         opt_lineForceFilter, lambdaRange, redshifts, opt_extremacount,
         opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType,
@@ -2730,7 +2729,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
         Int32 maxSaveBackup = m_maxModelSaveCount;
         m_maxModelSaveCount = 0;
         auto lastPassResult = std::dynamic_pointer_cast<CLineModelResult>(
-            Compute(dataStore, spectrum, spectrumContinuum, tplCatalog,
+            Compute(dataStore, spectrum, tplCatalog,
                     tplCategoryList, opt_calibrationPath, restraycatalog,
                     opt_lineTypeFilter, opt_lineForceFilter, lambdaRange,
                     lastPassRedshifts, opt_extremacount_lastPass,
@@ -3163,7 +3162,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult &results)
             double xi, yi, ei;
             xi = results.Redshifts[i + izmin];
             yi = results.ChiSquare[i + izmin];
-            ei = 1.0; // todo, estimate weighting ?
+            ei = 1.0; // TODO: estimate weighting ?
             gsl_matrix_set(X, i, 0, 1.0);
             gsl_matrix_set(X, i, 1, xi - x0);
             gsl_matrix_set(X, i, 2, (xi - x0) * (xi - x0));

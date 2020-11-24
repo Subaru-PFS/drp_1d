@@ -87,9 +87,8 @@ public:
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;
     Int32 nSpcSamples = 0;
-    Float64 dTransposeDNocontinuum = 0;
-    Float64 dTransposeD = 0;
-    Float64 cstLog = 0;
+    Float64 dTransposeD = 0.0;
+    Float64 cstLog = 0.0;
 };
 
 

@@ -104,13 +104,13 @@ Bool CLineModelTplshapeSolve::PopulateParameters( CDataStore& dataStore )
  * Return a pointer to an empty CLineModelTplshapeSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
 std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Compute( CDataStore& dataStore,
-								       const CSpectrum& spc,
-								       const CSpectrum& spcWithoutCont,
-                                       const CTemplateCatalog& tplCatalog,
-                                       const TStringList& tplCategoryList,
-								       const CRayCatalog& restraycatalog,
-								       const TFloat64Range& lambdaRange,
-								       const TFloat64List& redshifts )
+                                                                                       const CSpectrum& spc,
+                                                                                       const CSpectrum& spcWithoutCont,
+                                                                                       const CTemplateCatalog& tplCatalog,
+                                                                                       const TStringList& tplCategoryList,
+                                                                                       const CRayCatalog& restraycatalog,
+                                                                                       const TFloat64Range& lambdaRange,
+                                                                                       const TFloat64List& redshifts )
 {
     CDataStore::CAutoScope resultScope( dataStore, "linemodeltplshapesolve" );
 
@@ -257,21 +257,20 @@ std::shared_ptr<const CLineModelTplshapeSolveResult> CLineModelTplshapeSolve::Co
  * If that returned true, store results.
  **/
 Bool CLineModelTplshapeSolve::Solve( CDataStore& dataStore,
-			     const CSpectrum& spc,
-                 const CSpectrum& spcCont,
-                 const CTemplateCatalog& tplCatalog,
-                 const TStringList& tplCategoryList,
-                 const CTemplate& tpl,
-                 const CRayCatalog& lineCatalog,
-                 const TFloat64Range& lambdaRange,
-			     const TFloat64List& redshifts )
+                                     const CSpectrum& spc,
+                                     const CSpectrum& spcCont,
+                                     const CTemplateCatalog& tplCatalog,
+                                     const TStringList& tplCategoryList,
+                                     const CTemplate& tpl,
+                                     const CRayCatalog& lineCatalog,
+                                     const TFloat64Range& lambdaRange,
+                                     const TFloat64List& redshifts )
 {
     std::string scopeStr = "linemodel";
 
     COperatorLineModel linemodel;
     auto  result = linemodel.Compute( dataStore,
                                       spc,
-                                      spcCont,
                                       tplCatalog,
                                       tplCategoryList,
                                       "", //no calibration path needed for this method

@@ -1,8 +1,9 @@
-#ifndef _REDSHIFT_OPERATOR_ZWEIMODELSOLVE_
-#define _REDSHIFT_OPERATOR_ZWEIMODELSOLVE_
+#ifndef _REDSHIFT_METHOD_ZWEIMODELSOLVE_
+#define _REDSHIFT_METHOD_ZWEIMODELSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
 #include <RedshiftLibrary/linemodel/zweimodelresult.h>
@@ -27,32 +28,45 @@ public:
     ~CZweiModelSolve();
 
     const std::string GetDescription();
+
     Bool PopulateParameters( CDataStore& dataStore );
 
+    std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore,
+                                                   const CSpectrum& spc,
+                                                   const CTemplateCatalog& tplCatalog,
+                                                   const TStringList& tplCategoryList,
+                                                   const CRayCatalog& restraycatalog,
+                                                   const TFloat64Range& lambdaRange,
+                                                   const TFloat64List& redshifts);
 
-    std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
-                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts );
+    Bool Solve(CDataStore& resultStore,
+               const CSpectrum& spc,
+               const CTemplateCatalog& tplCatalog,
+               const TStringList& tplCategoryList,
+               const CRayCatalog& restraycatalog,
+               const TFloat64Range& lambdaRange,
+               const TFloat64List& redshifts);
 
-    Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
-                                 const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
 
 private:
 
-    Int32 getValueFromRefFile( const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion );
-    Int32 getVelocitiesFromRefFile( const char* filePath, std::string spcid, Float64& elv, Float64& alv );
-    Int32 getContaminantNameFromFile(const char* filePath, std::string spcid, Int32 colID,
-                                     std::string& contSpcFileName,
-                                     std::string& contErrorFileName,
-                                     Float64 &offsetLambdaContaminant,
-                                     Int32 reverseInclusion );
+    Int32 getValueFromRefFile(const char* filePath, std::string spcid, Int32 colID, Float64& zref, Int32 reverseInclusion);
 
+    Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64& elv, Float64& alv);
 
-    Int32 CombinePDF(CDataStore &store,
+    Int32 getContaminantNameFromFile( const char* filePath, std::string spcid, Int32 colID,
+                                      std::string& contSpcFileName,
+                                      std::string& contErrorFileName,
+                                      Float64& offsetLambdaContaminant,
+                                      Int32 reverseInclusion );
+
+    Int32 CombinePDF(CDataStore& store,
                      std::shared_ptr<const CLineModelResult> result,
                      std::string opt_rigidity,
                      std::string opt_combine,
                      Float64 opt_stronglinesprior);
-    Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
+
+    Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
 
     std::string m_opt_linetypefilter;

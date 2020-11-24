@@ -21,10 +21,14 @@ CMethodCorrelationSolve::~CMethodCorrelationSolve()
 
 }
 
-std::shared_ptr<CCorrelationSolveResult>  CMethodCorrelationSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
-                                                        Float64 overlapThreshold )
+std::shared_ptr<CCorrelationSolveResult> CMethodCorrelationSolve::Compute( CDataStore& resultStore,
+                                                                           const CSpectrum& spc,
+                                                                           const CTemplateCatalog& tplCatalog,
+                                                                           const TStringList& tplCategoryList,
+                                                                           const TFloat64Range& lambdaRange,
+                                                                           const TFloat64Range& redshiftsRange,
+                                                                           Float64 redshiftStep,
+                                                                           Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
@@ -41,9 +45,8 @@ std::shared_ptr<CCorrelationSolveResult>  CMethodCorrelationSolve::Compute(  CDa
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshiftsRange, redshiftStep, overlapThreshold );
+            Solve( resultStore, spc, tpl, lambdaRange, redshiftsRange, redshiftStep, overlapThreshold );
 
             storeResult = true;
         }
@@ -58,15 +61,24 @@ std::shared_ptr<CCorrelationSolveResult>  CMethodCorrelationSolve::Compute(  CDa
     return NULL;
 }
 
-Bool CMethodCorrelationSolve::Solve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Float64 overlapThreshold )
+Bool CMethodCorrelationSolve::Solve( CDataStore& resultStore,
+                                     const CSpectrum& spc,
+                                     const CTemplate& tpl,
+                                     const TFloat64Range& lambdaRange,
+                                     const TFloat64Range& redshiftsRange,
+                                     Float64 redshiftStep,
+                                     Float64 overlapThreshold )
 {
-    CSpectrum s = spc;
-    s.GetSpectralAxis().ConvertToLogScale();
+    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
+    spcSpectralAxis.ConvertToLogScale();
+    CSpectrumFluxAxis spcFluxAxis = spc.GetWithoutContinuumFluxAxis();
 
-    CTemplate t = tpl;
-    t.GetSpectralAxis().ConvertToLogScale();
+    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+    tplSpectralAxis.ConvertToLogScale();
+    CSpectrumFluxAxis tplFluxAxis = tpl.GetWithoutContinuumFluxAxis();
 
+    CSpectrum spcWithoutCont(spcSpectralAxis, spcFluxAxis);
+    CTemplate tplWithoutCont(tpl.GetName(), tpl.GetCategory(), tplSpectralAxis, tplFluxAxis);
 
     // Create redshift initial list by spanning redshift acdross the given range, with the given delta
     TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep ); //TODO: this should be done in processflow, not in the method itself.

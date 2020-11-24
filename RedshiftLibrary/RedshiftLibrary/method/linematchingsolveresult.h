@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMATCHINGSOLVERESULT_
-#define _REDSHIFT_OPERATOR_LINEMATCHINGSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
+#define _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
