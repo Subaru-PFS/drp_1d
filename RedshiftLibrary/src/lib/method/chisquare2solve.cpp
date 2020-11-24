@@ -164,7 +164,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquare2Solve::Compute(CDataStor
             try {
                 const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, ChisquareSolveResult->GetTemplateName());
                 CModelSpectrumResult spcmodel;
-                m_chiSquareOperator->ComputeSpectrumModel(spc, tpl, 
+                m_chiSquareOperator.ComputeSpectrumModel(spc, tpl, 
                                                  zcandidates_unordered_list[i],
                                                  ChisquareSolveResult->GetDustCoeff(), 
                                                  ChisquareSolveResult->GetMeiksinIdx(), 

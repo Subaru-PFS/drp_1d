@@ -404,7 +404,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         Log.LogInfo("Processing QSO fitting");
         if(qso_method=="chisquare2solve"){
-            CMethodChisquare2Solve solve();
+            CMethodChisquare2Solve solve;
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
                                        *qsoTemplateCatalog,
