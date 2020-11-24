@@ -484,6 +484,7 @@ Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
     //#pragma omp parallel for
     for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
     {
+      //TODO [ml] unitialized value in test below
         if (m_enableFastFitLargeGrid == 0 || m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             m_result->ChiSquare[i] = m_model->fit(m_result->Redshifts[i],

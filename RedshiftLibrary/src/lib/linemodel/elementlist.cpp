@@ -101,7 +101,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_velocityAbsorptionInit = m_velocityAbsorption;
     m_fittingmethod = opt_fittingmethod;
     m_rulesoption = opt_rules;
-    m_rigidity = opt_rigidity;
+    m_rigidity = opt_rigidity;  //TODO [ml] check if m_rigidity is initialized, maybe opt_rigidity = null
     m_calibrationPath = calibrationPath;
 
 //Note1: why setting second-pass params at this level in the code, given than this method is called from
@@ -224,6 +224,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
     */
+
+    //TODO [ml] m_dTransposeDLambdaRange, m_forceDisableLyaFitting must be initialized in contructor
 }
 
 /**
