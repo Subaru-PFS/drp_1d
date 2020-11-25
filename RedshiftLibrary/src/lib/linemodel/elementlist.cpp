@@ -1157,6 +1157,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", bestFitAmplitudeError);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with a %s amplitude", bestFitAmplitudeNegative ? "negative" : "positive");
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with DustCoeff=%e", bestFitDustCoeff);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with MeiksinIdx=%d", bestFitMeiksinIdx);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", bestFitLogprior);

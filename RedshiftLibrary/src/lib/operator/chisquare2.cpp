@@ -219,12 +219,11 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
     
-    Float64 lbdaMax_IGM;
+    Float64 lbda_max, lbdaMax_IGM;
     if (opt_extinction)
     {
-        Float64 lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
+        lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
     }
-    Float64 lbda_max;
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kM=0; kM<nIGMCoeffs; kM++)
@@ -655,9 +654,6 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 {
     Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
 
-    // Pre-Allocate the rebined template and mask with regard to the spectrum size
-    BasicFit_preallocateBuffers(spectrum, tpl);
-
     if(0)
     {
         //CSpectrumFluxAxis tmp_tplFluxAxis = tpl.GetFluxAxis();
@@ -670,20 +666,20 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         }
     }
 
-    if( (opt_dustFitting==-10 || opt_dustFitting>-1) && m_templateRebined_bf.CalzettiInitFailed())
+    if( (opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
     {
         Log.LogError("  Operator-Chisquare2: no calzetti calib. file loaded in template... aborting!");
         throw std::runtime_error("  Operator-Chisquare2: no calzetti calib. file in template");
     }
-    if( opt_dustFitting>-1 && opt_dustFitting>m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
+    if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
     {
         Log.LogError("  Operator-Chisquare2: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
                      opt_dustFitting,
-                     m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
+                     tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
         throw std::runtime_error("  Operator-Chisquare2: calzetti index overflow");
     }
 
-    if( opt_extinction && m_templateRebined_bf.MeiksinInitFailed())
+    if( opt_extinction && tpl.MeiksinInitFailed())
     {
         Log.LogError("  Operator-Chisquare2: no meiksin calib. file loaded in template... aborting!");
         throw std::runtime_error("  Operator-Chisquare2: no meiksin calib. file in template");
@@ -694,6 +690,9 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
+
+    // Pre-Allocate the rebined template and mask with regard to the spectrum size
+    BasicFit_preallocateBuffers(spectrum, tpl);
 
     //sort the redshift and keep track of the indexes
     TFloat64List sortedRedshifts;
