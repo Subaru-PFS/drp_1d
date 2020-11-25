@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/spectrum/LSF.h>
+#include <RedshiftLibrary/spectrum/LSFConstant.h>
 #include <RedshiftLibrary/continuum/continuum.h>
 
 #include <unordered_map>
@@ -38,7 +39,7 @@ public:
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
@@ -57,14 +58,14 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
-    const CLSF&                     GetLSF() const;
+    const CLSF*                     GetLSF() const;
 
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumFluxAxis&              GetRawFluxAxis();
     CSpectrumFluxAxis&              GetContinuumFluxAxis();
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
-    CLSF&                           GetLSF();
+    CLSF*                           GetLSF();
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -115,7 +116,7 @@ public:
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
-    CLSF                            m_LSF;
+    std::shared_ptr<CLSF>           m_LSF = std::make_shared<CLSFConstantGaussian>();
     mutable Bool                    m_enableLSF = false;
 
     void                            EstimateContinuum() const;

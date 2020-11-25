@@ -42,6 +42,8 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_nbScales(other.m_nbScales),
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
+    m_enableLSF(other.m_enableLSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
@@ -96,11 +98,10 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_dfBinPath(""),
     m_Name("") 
 {
-    CLSF lsf = CLSF();
-    CSpectrum(spectralAxis, fluxAxis, lsf);
+
 }
 
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf) :
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf) :
     m_SpectralAxis(spectralAxis),
     m_RawFluxAxis(fluxAxis),
     m_estimationMethod(""),
@@ -108,7 +109,9 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_nbScales(-1),
     m_dfBinPath("")
 {
-    m_LSF = std::move(lsf);
+    if (lsf) {
+        m_LSF = std::move(lsf);
+    }
 }
 
 //copy constructor
@@ -124,6 +127,8 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
     m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
+    m_enableLSF(other.m_enableLSF),
     m_Name(other.m_Name),
     alreadyRemoved(other.alreadyRemoved)
 {
@@ -144,6 +149,9 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_ContinuumFluxAxis = other.m_ContinuumFluxAxis;
     m_WithoutContinuumFluxAxis = other.m_WithoutContinuumFluxAxis;
     m_spcType = other.m_spcType;
+
+    m_LSF = other.m_LSF;
+    m_enableLSF = other.m_enableLSF;
 
     m_estimationMethod = other.m_estimationMethod;
     m_dfBinPath = other.m_dfBinPath;

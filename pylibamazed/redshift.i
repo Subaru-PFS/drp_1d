@@ -13,6 +13,7 @@
 %shared_ptr(CRayCatalog)
 %shared_ptr(CSingleton<CLog>)
 %shared_ptr(CLSF)
+%shared_ptr(CLSFConstantGaussian)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -47,6 +48,7 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/LSFConstant.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/method/linematching2solve.h"
@@ -246,8 +248,8 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const CLSF& lsf);
-  CLSF& GetLSF();
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf);
+  CLSF* GetLSF();
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
@@ -343,10 +345,20 @@ class CTemplate : public CSpectrum
 class CLSF
 {
  public:
-  CLSF(const Float64 sigma=0.0);
-  ~CLSF();
+  virtual ~CLSF();
+  virtual const Float64 GetSigma() const=0;
+  virtual void SetSigma(const Float64 sigma)=0;
+  virtual bool IsValid() const=0;
+};
+
+class CLSFConstantGaussian : public CLSF
+{
+ public:
+  CLSFConstantGaussian(const Float64 sigma=0.0);
+  ~CLSFConstantGaussian();
   const Float64 GetSigma() const;
   void SetSigma(const Float64 sigma);
+  bool IsValid() const;
 };
 
 class CLineModelSolve

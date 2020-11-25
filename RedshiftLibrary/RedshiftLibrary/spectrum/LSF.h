@@ -14,16 +14,12 @@ class CLSF
 
 public:
 
-    CLSF(const Float64 sigma=0.0);
-    ~CLSF();
+    virtual ~CLSF(){};
 
-    const Float64       GetSigma() const;
-    void                SetSigma(const Float64 sigma);
-    bool                IsValid() const;
+    virtual const Float64       GetSigma() const=0;
+    virtual void                SetSigma(const Float64 sigma)=0;
+    virtual bool                IsValid() const=0;
 
-private:
-
-    Float64             m_sigma=0.0;
 };
 
 }
