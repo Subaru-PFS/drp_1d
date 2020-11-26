@@ -23,9 +23,6 @@
 #include <RedshiftLibrary/processflow/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
-#include <RedshiftLibrary/continuum/indexes.h>
-#include <RedshiftLibrary/continuum/indexesresult.h>
-#include <RedshiftLibrary/operator/spectraFluxResult.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -74,14 +71,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                   spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
-
-    // Compute continuum statistics if enabled
-    std::string enableComputeContinuumStat;
-    ctx.GetParameterStore().Get( "computeContinuumStat", enableComputeContinuumStat, "no" );
-    if(enableComputeContinuumStat=="yes")
-    {
-        computeContinuumStat(ctx);
-    }
 
     std::string methodName;
     ctx.GetParameterStore().Get( "method", methodName );
@@ -793,45 +782,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
       throw std::runtime_error("Unable to store method result");
-    }
-}
-
-void CProcessFlow::computeContinuumStat(CProcessFlowContext& ctx)
-{
-    CContinuumIndexes continuumIndexes;
-
-    CSpectrumSpectralAxis spcContinuumSpectralAxis = ctx.GetSpectrum().GetSpectralAxis();
-    CSpectrumFluxAxis spcContinuumFluxAxis = ctx.GetSpectrum().GetContinuumFluxAxis();
-    CSpectrum spcContinuum(spcContinuumSpectralAxis, spcContinuumFluxAxis);
-
-    // Call getRelevance function
-    CContinuumIndexes::SContinuumRelevance continuumRelevance = continuumIndexes.getRelevance( ctx.GetSpectrum(), spcContinuum );
-
-    // Save the continuum indexes
-    std::shared_ptr<CContinuumIndexesResult> continuumIndexesResult = (std::shared_ptr<CContinuumIndexesResult>) new CContinuumIndexesResult();
-    continuumIndexesResult->SetValues(continuumRelevance.StdSpectrum, continuumRelevance.StdContinuum);
-
-    if( continuumIndexesResult ) {
-        const std::string nameContinuumIndexesResult = "preprocess/continuumIndexes";
-        ctx.GetDataStore().StoreScopedGlobalResult( nameContinuumIndexesResult.c_str(), continuumIndexesResult );
-    }
-
-    // Save the baseline results
-    std::shared_ptr<CSpectraFluxResult> baselineResult = (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
-    baselineResult->m_optio = 0;
-    UInt32 len = spcContinuum.GetSampleCount();
-
-    baselineResult->fluxes.resize(len);
-    baselineResult->wavel.resize(len);
-    for( UInt32 k=0; k<len; k++ )
-    {
-        baselineResult->fluxes[k] = spcContinuumFluxAxis[k];
-        baselineResult->wavel[k] = spcContinuumSpectralAxis[k];
-    }
-
-    if( baselineResult ) {
-        const std::string nameBaseline = "preprocess/" + ctx.GetSpectrum().GetBaseline();
-        ctx.GetDataStore().StoreScopedGlobalResult( nameBaseline.c_str(), baselineResult );
     }
 }
 
