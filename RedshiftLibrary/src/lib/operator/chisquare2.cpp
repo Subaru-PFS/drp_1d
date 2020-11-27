@@ -198,7 +198,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     TInt32List MeiksinList;
     if(opt_extinction)
     {
-        if(keepigmism && fittingMeiksinIdx!=-1){
+        if(keepigmism){
             nIGMCoeffs = 1;
             MeiksinList.push_back(fittingMeiksinIdx);//fill it with only the index passed as argument   
         }
