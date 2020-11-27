@@ -1,12 +1,14 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/LSF.h>
+#include <RedshiftLibrary/spectrum/LSFConstant.h>
 #include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
-
 
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <cstdio>
 #include <ctime>
 #include <limits>
@@ -61,6 +63,7 @@ BOOST_AUTO_TEST_CASE(decompScales)
     BOOST_TEST_MESSAGE("GetDecompScales OK");
 
 }
+
 BOOST_AUTO_TEST_CASE(invert)
 {
 
@@ -68,6 +71,71 @@ BOOST_AUTO_TEST_CASE(invert)
 
     BOOST_CHECK(object_CSpectrum.InvertFlux() == true);
     BOOST_TEST_MESSAGE("InvertFlux OK");
+
+}
+
+BOOST_AUTO_TEST_CASE(LSF)
+{
+
+    CSpectrumSpectralAxis m_SpectralAxis;
+    CSpectrumFluxAxis m_FluxAxis;
+    std::shared_ptr<CLSF> m_LSF(new CLSFConstantGaussian(1.09));
+
+    //Test constructor with spectralAxis, fluxAxis and LSF
+    CSpectrum object_CSpectrum(m_SpectralAxis, m_FluxAxis, m_LSF);
+
+    BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum.GetLSF()->GetSigma() == 1.09);
+    BOOST_CHECK(object_CSpectrum.UseOfLSF() == false);
+    object_CSpectrum.EnableLSF();
+    BOOST_CHECK(object_CSpectrum.UseOfLSF() == true);
+
+    //Test assignment copy constructor
+    CSpectrum object_CSpectrum1 = object_CSpectrum;
+
+    BOOST_CHECK(object_CSpectrum1.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum1.GetLSF()->GetSigma() == 1.09);
+    BOOST_CHECK(object_CSpectrum1.UseOfLSF() == true);
+    object_CSpectrum1.DisableLSF();
+    BOOST_CHECK(object_CSpectrum1.UseOfLSF() == false);
+    BOOST_CHECK(object_CSpectrum.UseOfLSF() == true);
+
+    //Test copy constructor
+    CSpectrum object_CSpectrum1_bis(object_CSpectrum1);
+
+    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetSigma() == 1.09);
+    BOOST_CHECK(object_CSpectrum1_bis.UseOfLSF() == false);
+    object_CSpectrum1_bis.EnableLSF();
+    BOOST_CHECK(object_CSpectrum1_bis.UseOfLSF() == true);
+    BOOST_CHECK(object_CSpectrum1.UseOfLSF() == false);
+
+    //Test constructor with spectralAxis and fluxAxis
+    CSpectrum object_CSpectrum2(m_SpectralAxis, m_FluxAxis);
+
+    BOOST_CHECK(object_CSpectrum2.GetLSF()->IsValid() == false);
+    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.0);
+    BOOST_CHECK(object_CSpectrum2.UseOfLSF() == false);
+    object_CSpectrum2.EnableLSF();
+    BOOST_CHECK(object_CSpectrum2.UseOfLSF() == true);
+    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF(), std::runtime_error);
+    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF()->GetSigma(), std::runtime_error);
+    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF()->SetSigma(0.01), std::runtime_error);
+
+    //Test default constructor
+    CSpectrum object_CSpectrum3;
+
+    object_CSpectrum3.GetLSF()->SetSigma(2.04e-60);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 2.04e-60); 
+    object_CSpectrum3.GetLSF()->SetSigma(0.0);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == false);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 0.0);
+    object_CSpectrum3.GetLSF()->SetSigma(DBL_MAX);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == DBL_MAX);
+    BOOST_CHECK(object_CSpectrum3.UseOfLSF() == false);
+    BOOST_TEST_MESSAGE("LSF OK");
 
 }
 
