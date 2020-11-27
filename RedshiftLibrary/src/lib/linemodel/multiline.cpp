@@ -1085,7 +1085,7 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
 /**
  * \brief For rays inside lambda range, sets the flux to the continuum flux.
  **/
-void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
+void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
 {
     if(m_OutsideLambdaRange)
     {

@@ -91,7 +91,7 @@ class CLineModelElement
                                Float64 redshift, bool emissionRay) = 0;
 
     virtual void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
-                                   CSpectrumFluxAxis &continuumfluxAxis,
+                                   const CSpectrumFluxAxis &continuumfluxAxis,
                                    Int32 lineIdx = -1) = 0;
 
     virtual Float64 GetNominalAmplitude(Int32 subeIdx) = 0;
