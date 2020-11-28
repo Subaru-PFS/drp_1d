@@ -642,11 +642,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 minRedshift,
                 maxRedshift);
 
-    CTemplatesFitStore *tplfitStore = new CTemplatesFitStore(minRedshift,
-                                                             maxRedshift,
-                                                             redshiftStep,
-                                                             zsampling);
-    std::vector<Float64> redshiftsTplFit = tplfitStore->GetRedshiftList();
+    std::shared_ptr<CTemplatesFitStore> tplfitStore = make_shared<CTemplatesFitStore>(minRedshift,
+                                                                                        maxRedshift,
+                                                                                        redshiftStep,
+                                                                                        zsampling);
+    const std::vector<Float64> & redshiftsTplFit = tplfitStore->GetRedshiftList();
     Log.LogInfo("  Operator-Linemodel: continuum tpl redshift list n=%d",redshiftsTplFit.size());
     //for(UInt32 kztplfit=0; kztplfit<Int32(redshiftsTplFit.size()); kztplfit++)
     for(UInt32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
@@ -681,15 +681,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     {
         // COperatorChiSquareLogLambda* chiSquareOperator;
         bool enableLogRebin = true;
-        chiSquareOperator = std::shared_ptr<COperatorChiSquareLogLambda>(
-            new COperatorChiSquareLogLambda(opt_calibrationPath));
+        chiSquareOperator = std::make_shared<COperatorChiSquareLogLambda>(opt_calibrationPath);
         std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator =
             std::dynamic_pointer_cast<COperatorChiSquareLogLambda>(chiSquareOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
     } else if (m_opt_tplfit_method == "chisquare2")
     {
-        chiSquareOperator = std::shared_ptr<COperatorChiSquare2>(
-            new COperatorChiSquare2(opt_calibrationPath));
+        chiSquareOperator = std::make_shared<COperatorChiSquare2>();
     } else
     {
         Log.LogError("  Operator-Linemodel: unable to parse chisquare continuum fit operator");
@@ -724,7 +722,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     duration_tplfitmaskprep_seconds);
     }
 
-    CPriorHelper *phelperContinuum = new CPriorHelper();
+    std::shared_ptr<CPriorHelper> phelperContinuum = std::make_shared<CPriorHelper>();
     phelperContinuum->Init(m_opt_tplfit_continuumprior_dirpath.c_str(), 0);
     phelperContinuum->SetBetaA(m_opt_tplfit_continuumprior_betaA);
     phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
@@ -2471,7 +2469,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 
 void COperatorLineModel::InitTplratioPriors()
 {
-    CPriorHelper *phelperLines = new CPriorHelper();
+    std::shared_ptr<CPriorHelper> phelperLines = make_shared<CPriorHelper>();
     phelperLines->Init(m_opt_tplratio_prior_dirpath.c_str(), 1);
     phelperLines->SetBetaA(m_opt_tplratio_prior_betaA);
     phelperLines->SetBetaTE(m_opt_tplratio_prior_betaTE);

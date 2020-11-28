@@ -49,6 +49,11 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     m_Spectrum = spectrum;
     InitSpectrum();
 
+    // calzetti ISM & Meiksin IGM initialiation
+    std::string calibrationPath;
+    m_ParameterStore->Get( "calibrationDir", calibrationPath );
+    InitIsmIgm(calibrationPath);
+
     // DataStore initialization
     m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
     m_DataStore->SetSpectrumName( m_Spectrum->GetName() );
@@ -123,6 +128,25 @@ void CProcessFlowContext::InitSpectrum()
     std::string dfBinPath;
     m_ParameterStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
     m_Spectrum->SetWaveletsDFBinPath(dfBinPath);
+}
+
+
+void CProcessFlowContext::InitIsmIgm(const std::string & calibrationPath)
+{
+    //ISM
+    auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
+    ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    //IGM
+    auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
+    igmCorrectionMeiksin->Init(calibrationPath);
+
+    //push in all galaxy templates
+    TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{"galaxy"});
+    for (auto tpl : TplList)
+    {
+        tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+    }   
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()

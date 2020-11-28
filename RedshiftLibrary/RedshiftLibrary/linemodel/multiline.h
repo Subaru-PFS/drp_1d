@@ -61,7 +61,7 @@ public:
 
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx=-1 );
     void addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumFluxAxis, Float64 redshift, bool emissionRay );
-    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx=-1 );
+    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx=-1 );
     Float64 GetFittedAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
     Float64 GetNominalAmplitude(Int32 subeIdx);

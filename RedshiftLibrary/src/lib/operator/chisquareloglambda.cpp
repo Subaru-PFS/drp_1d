@@ -40,12 +40,12 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(
     m_opt_spcrebin = true;
 
     // ISM
-    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
+    m_ismCorrectionCalzetti = std::unique_ptr<CSpectrumFluxCorrectionCalzetti> (new CSpectrumFluxCorrectionCalzetti());
     m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //m_ismCorrectionCalzetti->Init(calibrationPath, -0.6, 0.1, 16);
 
     // IGM
-    m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
+    m_igmCorrectionMeiksin = std::unique_ptr<CSpectrumFluxCorrectionMeiksin> (new CSpectrumFluxCorrectionMeiksin());
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
     m_nPaddedSamples = 0;
@@ -65,8 +65,6 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
 {
-    delete m_ismCorrectionCalzetti;
-    delete m_igmCorrectionMeiksin;
     freeFFTPlans();
 }
 
@@ -2154,19 +2152,6 @@ Float64 COperatorChiSquareLogLambda::EstimateLikelihoodCstLog(
     cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
 
     return cstLog;
-}
-
-const Float64 *COperatorChiSquareLogLambda::getDustCoeff(Float64 dustCoeff,
-                                                         Float64 maxLambda)
-{
-    return m_ismCorrectionCalzetti->getDustCoeff(dustCoeff, maxLambda);
-}
-
-const Float64 *COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx,
-                                                            Float64 redshift,
-                                                            Float64 maxLambda)
-{
-    return m_igmCorrectionMeiksin->getMeiksinCoeff(meiksinIdx, redshift, maxLambda);
 }
 
 void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)

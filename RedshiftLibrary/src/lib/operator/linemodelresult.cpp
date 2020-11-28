@@ -89,11 +89,11 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
 }
 
 Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
-                                                    TFloat64List chisquareTplshape,
-                                                    TFloat64List scaleMargCorrTplshape,
-                                                    TBoolList strongEmissionLinePresentTplshape,
-                                                    TInt32List nLinesAboveSNRTplshape,
-                                                    TFloat64List priorLinesTplshape)
+                                                    const TFloat64List & chisquareTplshape,
+                                                    const TFloat64List & scaleMargCorrTplshape,
+                                                    const TBoolList & strongEmissionLinePresentTplshape,
+                                                    const TInt32List & nLinesAboveSNRTplshape,
+                                                    const TFloat64List & priorLinesTplshape)
 {
     if(index_z>=Redshifts.size())
     {

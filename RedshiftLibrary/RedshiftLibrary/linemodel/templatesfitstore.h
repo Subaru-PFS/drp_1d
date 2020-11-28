@@ -49,11 +49,11 @@ public:
 
     void prepareRedshiftList();
     void initFitValues();
-    Int32 GetRedshiftIndex(Float64 z);
+    Int32 GetRedshiftIndex(Float64 z) const;
 
-    std::vector<Float64> GetRedshiftList();
-    TemplateFitValues GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank);
-    Int32 GetContinuumCount();
+    const std::vector<Float64> & GetRedshiftList() const;
+    TemplateFitValues GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
+    Int32 GetContinuumCount() const;
 
 private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]

@@ -12,9 +12,8 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodChisquareSolve::CMethodChisquareSolve(string calibrationPath)
+CMethodChisquareSolve::CMethodChisquareSolve()
 {
-    m_calibrationPath = calibrationPath;
 }
 
 CMethodChisquareSolve::~CMethodChisquareSolve()
@@ -79,7 +78,7 @@ Bool CMethodChisquareSolve::Solve(CDataStore& dataStore,
     std::vector<CMask> maskList;
 
     // Compute merit function
-    COperatorChiSquare2 chiSquare(m_calibrationPath);
+    COperatorChiSquare2 chiSquare;
     //adding cast to be capable of reading redshift attribute
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>(chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp));
     

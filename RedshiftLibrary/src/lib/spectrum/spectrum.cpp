@@ -99,7 +99,9 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
 
 }
 
-//assignment constructor
+//copy constructor,
+// copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
+// and const members (m_dLambdaFineGrid &m_method2baseline)
 CSpectrum::CSpectrum(const CSpectrum& other):
     m_estimationMethod(other.m_estimationMethod),
     m_dfBinPath(other.m_dfBinPath),
@@ -110,7 +112,8 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
     m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
     m_spcType(other.m_spcType),
-    m_Name(other.m_Name)
+    m_Name(other.m_Name),
+    alreadyRemoved(other.alreadyRemoved)
 {
 
 }
@@ -120,7 +123,8 @@ CSpectrum::~CSpectrum()
 
 }
 
-//copy constructor
+//copy assignment operator
+// same logic than copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.m_SpectralAxis;

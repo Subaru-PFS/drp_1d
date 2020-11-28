@@ -17,7 +17,7 @@ template <typename T> class CRange
 {
 
   public:
-    CRange() {}
+    CRange(): m_Begin(), m_End() {}
 
     CRange(const T begin, const T end):
         m_Begin(begin), m_End(end) {}

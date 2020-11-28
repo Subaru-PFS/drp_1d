@@ -243,7 +243,7 @@ Int32 CMultiRollModel::getSpcNSamples(const TFloat64Range& lambdaRange)
     }
 }
 
-Int32 CMultiRollModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
+Int32 CMultiRollModel::SetFitContinuum_FitStore(std::shared_ptr<const CTemplatesFitStore> & fitStore)
 {
     Int32 ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)

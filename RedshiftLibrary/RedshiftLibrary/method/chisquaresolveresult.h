@@ -36,8 +36,8 @@ public:
     Bool GetBestRedshift(const CDataStore& store);
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store);
-    Int32 GetBestModel(const CDataStore& store, Float64 z) ; //, std::string& tplName, Int32& MeiksinIdx, Float64& DustCoeff, Float64& Amplitude) const;
-
+    Int32 GetBestModel(const CDataStore& store, Float64 z);
+    
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence);
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir = "zPDF") const;
 
