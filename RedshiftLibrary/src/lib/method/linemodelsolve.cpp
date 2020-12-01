@@ -52,6 +52,7 @@ const std::string CLineModelSolve::GetDescription()
 
     desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
+    desc.append("\tparam: linemodel.enableLSF = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.continuumfit.method = {""chisquare2"", ""chisquarelog""}\n");
@@ -139,6 +140,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 {
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
+    dataStore.GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
     dataStore.GetScopedParam( "linemodel.skipsecondpass", m_opt_skipsecondpass, "no" );
@@ -248,6 +250,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "Linemodel parameters:");
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
+    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
     if(m_opt_lineWidthType=="combined"){

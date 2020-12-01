@@ -69,6 +69,7 @@ private:
 
     std::string m_opt_linetypefilter;
     std::string m_opt_lineforcefilter;
+    std::string m_opt_enableLSF;
     std::string m_opt_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod;
     std::string m_opt_continuumcomponent;
