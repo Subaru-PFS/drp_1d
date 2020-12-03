@@ -57,7 +57,6 @@ public:
     //put as public on purpose to avoid the 'old-school' use of getters
     Float64 m_fitContinuum_tplFitSNRMax = 0.0;
     Float64 m_opt_fitcontinuum_maxCount = 2;//default value to 2
-    Int32 m_fitContinuum_option;
 private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
     Int32 n_max_continuum_candidates=10000;

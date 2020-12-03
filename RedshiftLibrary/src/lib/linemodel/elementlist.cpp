@@ -1019,6 +1019,9 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitMtM = fitValues.fitMtM;
         bestFitLogprior = fitValues.logprior;
         bestTplName = fitValues.tplName;
+
+        m_fitContinuum_tplFitSNRMax = m_fitContinuum_tplfitStore->m_fitContinuum_tplFitSNRMax;
+        m_opt_fitcontinuum_maxCount = m_fitContinuum_tplfitStore->m_opt_fitcontinuum_maxCount;
     }else if(m_fitContinuum_option==2){
         //values unmodified
         bestTplName = m_fitContinuum_tplName;
