@@ -347,7 +347,7 @@ class CLSF
 {
  public:
   virtual ~CLSF();
-  virtual Float64 GetSigma() const=0;
+  virtual Float64 GetSigma(Float64 lambda=-1.0) const=0;
   virtual void SetSigma(const Float64 sigma)=0;
   virtual bool IsValid() const=0;
 };
@@ -357,7 +357,7 @@ class CLSFConstantGaussian : public CLSF
  public:
   CLSFConstantGaussian(const Float64 sigma=0.0);
   ~CLSFConstantGaussian();
-  Float64 GetSigma() const;
+  Float64 GetSigma(Float64 lambda=-1.0) const;
   void SetSigma(const Float64 sigma);
   bool IsValid() const;
 };

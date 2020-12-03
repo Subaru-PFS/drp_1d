@@ -17,7 +17,7 @@ public:
     CLSFConstantGaussian(const Float64 sigma=0.0);
     ~CLSFConstantGaussian();
 
-    Float64             GetSigma() const;
+    Float64             GetSigma(Float64 lambda=-1.0) const;
     void                SetSigma(const Float64 sigma);
     bool                IsValid() const;
 

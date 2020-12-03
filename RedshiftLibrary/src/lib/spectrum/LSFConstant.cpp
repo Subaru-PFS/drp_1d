@@ -25,7 +25,7 @@ CLSFConstantGaussian::~CLSFConstantGaussian()
 /**
  * Return the spectral resolution.
  */
-Float64 CLSFConstantGaussian::GetSigma() const
+Float64 CLSFConstantGaussian::GetSigma(Float64 lambda) const
 {
     return m_sigma;
 }
