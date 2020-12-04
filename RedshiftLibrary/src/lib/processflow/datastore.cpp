@@ -178,6 +178,11 @@ std::string  CDataStore::GetScopedName( const std::string& name ) const {
 
 }
 
+void CDataStore::GetScopedParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
+{
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
+}
+
 void CDataStore::GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
     return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
@@ -248,9 +253,10 @@ void CDataStore::SetScopedParam( const std::string& name, const std::string& v )
     return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-
-
-
+void CDataStore::GetParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
+{
+    return m_ParameterStore.Get( name, v, defaultValue );
+}
 
 void CDataStore::GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
