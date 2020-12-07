@@ -261,11 +261,14 @@ Int32 CPdfz::Compute(const TFloat64List & merits, const TFloat64List & redshifts
         Log.LogDebug("Pdfz: Pdfz computation: using logZPrior min=%e", logZPriorMax);
         Log.LogDebug("Pdfz: Pdfz computation: using logZPrior max=%e", logZPriorMin);
     }
-    //TODO: check if logZPrior is a cte vector; if so
+
+    // renormalize zprior to 1
+    Float64 logsumZPrior = logSumExpTrick(logZPrior, redshifts, sumMethod);
+
     logPdf.resize(redshifts.size());
     TFloat64List Xi2_2withPrior;
     for(Int32 i = 0; i < merits.size(); i++){
-        Xi2_2withPrior.push_back(-0.5*merits[i] + logZPrior[i]);
+        Xi2_2withPrior.push_back(-0.5*merits[i] + logZPrior[i] - logsumZPrior);
     }
     // prepare logLikelihood and LogEvidence
     Float64 logsumexp = logSumExpTrick( Xi2_2withPrior, redshifts, sumMethod);
@@ -812,12 +815,7 @@ Int32 CPdfz::getPmis( const TRedshiftList & redshifts,
 // setting cte priors for all redshift values
 TFloat64List CPdfz::GetConstantLogZPrior(UInt32 nredshifts)
 {
-    TFloat64List logzPrior(nredshifts, 1.0);
-
-    for (UInt32 kz = 0; kz < nredshifts; kz++)
-    {
-        logzPrior[kz] = log(1.0 / nredshifts);
-    }
+    TFloat64List logzPrior(nredshifts, 0.0);
 
     return logzPrior;
 }
