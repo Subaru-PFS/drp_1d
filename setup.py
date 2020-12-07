@@ -19,8 +19,8 @@ setup(
     packages=['pylibamazed'],
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
-    setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
-    install_requires=['numpy>=1.16.0', 'astropy>=3.1.1'],
+    setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1','pandas>=1.0.3', 'h5py>=2.9'],
+    install_requires=['numpy>=1.16.0', 'astropy>=3.1.1', 'pandas>=1.0.3','h5py>=2.9'],
     tests_require=['pytest-runner', 'pytest', ],
     py_modules=['pylibamazed/redshift'],
     classifiers=[
