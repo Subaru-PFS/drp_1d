@@ -248,8 +248,8 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf);
-  CLSF* GetLSF();
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  std::shared_ptr<CLSF> GetLSF();
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
@@ -346,7 +346,7 @@ class CLSF
 {
  public:
   virtual ~CLSF();
-  virtual const Float64 GetSigma() const=0;
+  virtual Float64 GetSigma() const=0;
   virtual void SetSigma(const Float64 sigma)=0;
   virtual bool IsValid() const=0;
 };
@@ -356,7 +356,7 @@ class CLSFConstantGaussian : public CLSF
  public:
   CLSFConstantGaussian(const Float64 sigma=0.0);
   ~CLSFConstantGaussian();
-  const Float64 GetSigma() const;
+  Float64 GetSigma() const;
   void SetSigma(const Float64 sigma);
   bool IsValid() const;
 };
