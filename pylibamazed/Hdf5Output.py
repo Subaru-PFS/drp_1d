@@ -28,24 +28,24 @@ class Hdf5Output(AbstractOutput):
         if object_type not in self.candidates_results.keys():
             first = True
             candidates = self.hdf5_group.get(object_type + "/candidates")
-            # params_names = []
+            params_names = []
             for candidate in candidates.keys():
                 cand = candidates.get(candidate)
                 params = np.array(cand.get("model_parameters"))
                 if first:
-                    # for p in params.dtype.names:
-                    #     if np.issubdtype(params.dtype.fields[p][0], bytes):
-                    #         params_names.append(p)
+                    for p in params.dtype.names:
+                        if np.issubdtype(params.dtype.fields[p][0], bytes):
+                            params_names.append(p)
                     self.candidates_results[object_type] = pd.DataFrame(params)
                     first = False
                 else:
                     self.candidates_results[object_type] = self.candidates_results[object_type].append(
                         pd.DataFrame(params))
 
-            # self.candidates_results[object_type] = pd.DataFrame(self.candidates_results[object_type])
-            # for param in params_names:
-            #     self.candidates_results[object_type][param] = self.candidates_results[object_type][param].apply(
-            #         lambda x: x.decode('utf-8'))
+            self.candidates_results[object_type] = pd.DataFrame(self.candidates_results[object_type])
+            for param in params_names:
+                self.candidates_results[object_type][param] = self.candidates_results[object_type][param].apply(
+                    lambda x: x.decode('utf-8'))
             self.candidates_results[object_type].set_index("Rank", inplace=True, drop=False)
             if self.add_sup_columns:
                 self.load_pdf(object_type)
