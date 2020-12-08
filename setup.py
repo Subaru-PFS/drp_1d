@@ -17,10 +17,11 @@ setup(
     license="GPLv3+",
     url="http://www.lam.fr",
     packages=['pylibamazed'],
+    include_package_data=True,
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
-    setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1','pandas>=1.0.3', 'h5py>=2.9'],
-    install_requires=['numpy>=1.16.0', 'astropy>=3.1.1', 'pandas>=1.0.3','h5py>=2.9'],
+    setup_requires=['numpy>=1.16.0', 'astropy>=3.1.1','pandas>=1.0.0', 'h5py>=2.9'],
+    install_requires=['numpy>=1.16.0', 'astropy>=3.1.1', 'pandas>=1.0.0','h5py>=2.9'],
     tests_require=['pytest-runner', 'pytest', ],
     py_modules=['pylibamazed/redshift'],
     classifiers=[

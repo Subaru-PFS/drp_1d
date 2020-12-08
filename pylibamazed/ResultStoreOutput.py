@@ -3,7 +3,7 @@ from .OutputSpecifications import candidate_specifications
 import numpy as np
 import pandas as pd
 import abc
-
+import resource
 class ResultStoreOutput(AbstractOutput):
 
     def __init__(self,input_manager,result_store, parameters):
@@ -219,7 +219,9 @@ class ResultStoreOutput(AbstractOutput):
     def write_hdf5(self,hdf5_root,spectrum_id,zlog):
         zlog.LogInfo("[hdf5] writing " + str(spectrum_id))
         obs = hdf5_root.create_group(spectrum_id)
-
+        obs.attrs["user_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+        obs.attrs["system_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_stime
+        obs.attrs["memory_used"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         self.load_all()
 
         classification = obs.create_dataset('classification', (1,), np.dtype([('Type', 'S1'),
