@@ -38,8 +38,8 @@ public:
 
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) : CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>()){}
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
@@ -58,14 +58,14 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
-    const CLSF*                     GetLSF() const;
+    const std::shared_ptr<CLSF>     GetLSF() const;
 
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumFluxAxis&              GetRawFluxAxis();
     CSpectrumFluxAxis&              GetContinuumFluxAxis();
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
-    CLSF*                           GetLSF();
+    std::shared_ptr<CLSF>           GetLSF();
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;

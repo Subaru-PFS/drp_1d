@@ -89,29 +89,16 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     }
 }
 
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf) :
     m_SpectralAxis(spectralAxis),
     m_RawFluxAxis(fluxAxis),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
     m_dfBinPath(""),
-    m_Name("") 
+    m_Name("")
 {
-
-}
-
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, std::shared_ptr<CLSF>& lsf) :
-    m_SpectralAxis(spectralAxis),
-    m_RawFluxAxis(fluxAxis),
-    m_estimationMethod(""),
-    m_medianWindowSize(-1),
-    m_nbScales(-1),
-    m_dfBinPath("")
-{
-    if (lsf) {
-        m_LSF = std::move(lsf);
-    }
+    m_LSF = lsf;
 }
 
 //copy constructor
@@ -936,23 +923,23 @@ void CSpectrum::ScaleFluxAxis(Float64 scale){
 }
 
 // Move in header file after externalize the test
-CLSF* CSpectrum::GetLSF()
+std::shared_ptr<CLSF> CSpectrum::GetLSF()
 {
     if( !m_LSF->IsValid() && m_enableLSF ){
         Log.LogError("LSF parameter is not valid");
         throw std::runtime_error("LSF parameter is not valid");
     }else{
-        return m_LSF.get();
+        return m_LSF;
     }
 }
 
 // Move in header file after externalize the test
-const CLSF* CSpectrum::GetLSF() const
+const std::shared_ptr<CLSF> CSpectrum::GetLSF() const
 {
     if( !m_LSF->IsValid() && m_enableLSF ){
         Log.LogError("LSF parameter is not valid");
         throw std::runtime_error("LSF parameter is not valid");
     }else{
-        return m_LSF.get();
+        return m_LSF;
     }
 }
