@@ -767,6 +767,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   std:weak_ptr<const COperatorResult> result;
   if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
      name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
+  else if(object_type=="classification") result = GetGlobalResult("classificationresult");
   else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }
