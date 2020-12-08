@@ -12,6 +12,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/common/exception.h>
+#include <RedshiftLibrary/common/formatter.h>
 
 using namespace NSEpic;
 
@@ -593,7 +595,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
-      else throw Exception("unknown method %s",method.c_str());
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown method "<< method);
     }
     
   else if (object_type.compare("star") == 0)
@@ -609,7 +611,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
         }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
-  else throw Exception("unknown object_type %s",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
 
   result.lock()->getCandidateData(rank,name,v);
 }
@@ -628,7 +630,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
-      else throw Exception("unknown method %s",method.c_str());
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown method "<< method);
     }
   else if (object_type.compare("star") == 0)
     {
@@ -643,7 +645,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
         }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
-  else throw Exception("unknown object_type %s",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   
   result.lock()->getCandidateData(rank,name,v);
 }
@@ -663,7 +665,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
-      else throw Exception("unknown method %s",method.c_str());
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown method "<< method);
     }
   else if (object_type.compare("star") == 0)
     {
@@ -677,7 +679,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
         }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
-  else throw Exception("unknown object_type %s",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
 
   result.lock()->getCandidateData(rank,name,v);
 }
@@ -700,7 +702,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
           result.lock()->getCandidateData(rank,name,data,size);
           return;
         }
-      else throw Exception("unknown data %s",name.c_str());
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);
     }
   else if (object_type.compare("star") == 0)
     {
@@ -719,7 +721,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   else if (name.find("fitted_rays_") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
   else
     {
-      Log.LogError("unknown data %s",name.c_str());
+      Log.LogError("unknown data "<<name);
     }
   result = GetGlobalResult(oss.str());
   result.lock()->getData(name,data,size);
@@ -737,14 +739,14 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       if (method.compare("templatefittingsolve")==0) meth = "templatefitting";
       if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
-      else throw Exception("unknown data %s",name.c_str());
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);
     }
   else if (object_type.compare("star") == 0)
     {
       if (name.find("Model") != std::string::npos)  oss << "stellarsolve.templatefittingsolve.templatefitting_spc_extrema_"<< rank;
-      else throw Exception("unknown data %s",name.c_str());
+      else throw  GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);
     }
-  else throw Exception("unknown object_type %s",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   result = GetGlobalResult(oss.str());
   result.lock()->getData(name,data,size);
 }
@@ -760,9 +762,9 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   else if (object_type.compare("star") == 0)
     {
       if(name.compare("NbCandidates") == 0)     v=1;
-      else throw Exception("unknown data %s",name.c_str());         
+      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);         
     }
-  else throw Exception("unknown object_type %s",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
       
 }
 
@@ -789,7 +791,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0) result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
   else if (object_type.compare("star") == 0) result = GetGlobalResult("stellar_zPDF/logposterior.logMargP_Z_data");
-  else throw Exception("unknown object type %s or no double array attributes for this object type",object_type.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object type %s or no double array attributes for this object type "<<object_type);
   result.lock()->getData(name,data,size);
 }
 
