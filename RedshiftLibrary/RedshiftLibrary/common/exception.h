@@ -34,32 +34,26 @@ namespace NSEpic {
     {
 
     }
-    /*
-    template<typename ... Args>
-    Exception(ErrorCode ec,std::string& format, Args&& ... args) {
-      size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
-      //      if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
-      std::unique_ptr<char[]> buf( new char[ size ] ); 
-      snprintf( buf.get(), size, format.c_str(), args ... );
-      _msg = std::string( buf.get(), buf.get() + size - 1 );
-    }
 
-    template<typename ... Args>
-    Exception(ErrorCode ec,const char* format, Args&& ... args) {
-      size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
-      //      if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
-      std::unique_ptr<char[]> buf( new char[ size ] ); 
-      snprintf( buf.get(), size, format, args ... );
-      _msg = std::string( buf.get(), buf.get() + size - 1 );
-    }
-    //  Exception(const std::string& msg) : _msg(msg){}
-  */
+    Exception(const Exception& e):
+      _msg(e._msg),
+      code(e.code){}
+      
+    ~Exception(){}
     virtual const char* what() const noexcept override
     {
       return _msg.c_str();
-    }  
+    }
+
+    void getMessage(std::string &msg)
+    {
+      msg = _msg;
+    }
+
+    ErrorCode getErrorCode(){return code;}
   };
-  
+
+
   // A solve exception stops the whole pipeline
   // This exception should be caught only from pylibamazed or a client
   class GlobalException: public Exception
@@ -69,6 +63,11 @@ namespace NSEpic {
       Exception(ec,message)
     {
     }
+    GlobalException(const Exception& e):
+      Exception(e){}
+
+    ~GlobalException(){}
+
   };
 
   // A solve exception stops a solve method (which is considered as failed), but not the whole pipeline
@@ -81,6 +80,30 @@ namespace NSEpic {
     {
       
     }
+    SolveException(const Exception& e):
+      Exception(e){}
+
+    ~SolveException(){}
+  };
+
+    // This exception is for now reserved for the unknown parameter exception
+  // It should be handled at initialization only, not the case as parameters are retrieved in the process flow
+  // This exception class should also be used for bad parameters values (e.g. a negative value when a positive value is required)
+  class ParameterException: public Exception
+  {
+  public:
+    ParameterException(ErrorCode ec,std::string message):
+      Exception(ec,message)
+    {
+    }
+    ParameterException(const Exception& e):
+      Exception(e){}
+
+    ~ParameterException(){}
+    void getMessage(std::string &msg)
+    {
+      msg = _msg;
+    }
   };
 
   //only this exception class should be caught from the library
@@ -92,6 +115,8 @@ namespace NSEpic {
     {
       
     }
+    ~InternalException(){}
+
   };
 
   

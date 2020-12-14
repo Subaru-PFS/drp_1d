@@ -4,6 +4,7 @@
 %include std_string.i
 %include std_shared_ptr.i
 %include std_except.i
+%include exception.i
 
 %shared_ptr(CClassifierStore)
 %shared_ptr(CLog)
@@ -35,6 +36,7 @@
 #include "RedshiftLibrary/common/singleton.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/reliability/zclassifierstore.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -55,7 +57,10 @@
 #include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
-%}
+//static PyObject* pParameterException;
+//static PyObject* pGlobalException;
+//static PyObject* pSolveException;
+ %}
 
 %include numpy.i
 
@@ -63,6 +68,51 @@ using namespace NSEpic;
 import_array();
 %}
 
+%{
+
+#define CATCH_PE(Exception) \
+    catch(const Exception &e) \
+    { \
+       SWIG_Python_Raise(SWIG_NewPointerObj(new Exception(e), \
+            SWIGTYPE_p_##Exception,SWIG_POINTER_OWN), \
+            #Exception, SWIGTYPE_p_##Exception); \
+       SWIG_fail; \
+    } \
+      
+#define CATCH_PE_ERR(Exception) \
+    catch(const Exception &e) \
+    { \
+      PyErr_SetString(SWIG_Python_ExceptionType(SWIGTYPE_p_##Exception), e.what()); \
+      SWIG_fail; \
+    } \
+
+  /**/
+
+// should be in "derived first" order
+#define FOR_EACH_EXCEPTION(ACTION) \
+   ACTION(ParameterException)       \
+   ACTION(GlobalException) \
+   ACTION(SolveException) \
+   ACTION(Exception) \
+/**/
+%}
+
+%exception {
+    try {
+        $action
+    }
+    FOR_EACH_EXCEPTION(CATCH_PE)
+    catch (const std::exception & e)
+    {
+        SWIG_exception(SWIG_RuntimeError, (std::string("C++ std::exception: ") + e.what()).c_str());
+    }
+    catch (...)
+    {
+        SWIG_exception(SWIG_UnknownError, "C++ anonymous exception");
+    }
+}
+
+%exceptionclass Exception;
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
 typedef long long Int64;
@@ -398,4 +448,39 @@ class CMethodTplcombinationSolve
   CMethodTplcombinationSolve();
   ~CMethodTplcombinationSolve();
   const std::string GetDescription();
+};
+
+
+class Exception : public std::exception
+{
+  %rename(GetMessage) getMessage(std::string &out_str);
+ public:
+  Exception(ErrorCode ec,std::string message);
+  ~Exception();
+  void getMessage(std::string &out_str);
+};
+
+
+class GlobalException: public Exception
+{
+ public:
+  GlobalException(ErrorCode ec,std::string message);
+  ~GlobalException();
+};
+
+class SolveException: public Exception
+{
+ public:
+  SolveException(ErrorCode ec,std::string message);
+  ~SolveException();
+};
+
+class ParameterException: public Exception
+{
+  %rename(GetMessage) getMessage(std::string &out_str);
+ public:
+  ParameterException(ErrorCode ec,std::string message);
+  ~ParameterException();
+  void getMessage(std::string &out_str);
+
 };
