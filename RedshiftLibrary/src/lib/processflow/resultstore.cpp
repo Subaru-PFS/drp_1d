@@ -310,7 +310,7 @@ void COperatorResultStore::SaveClassificationResult( const CDataStore& store, co
         //*
         if(ret==1)
         {
-            outputStream <<  "#Spectrum\tProcessingID\ttype\tevidenceG\tevidenceS\tevidenceQ"<< std::endl;
+            outputStream <<  "#Spectrum\tProcessingID\ttype\tLogEvidenceG\tLogEvidenceS\tLogEvidenceQ\tProbaG\tProbaS\tProbaQ"<< std::endl;
         }
         //*/
 
