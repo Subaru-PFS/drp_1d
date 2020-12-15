@@ -1,8 +1,8 @@
-#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVE2_
-#define _REDSHIFT_METHOD_LINEMATCHINGSOLVE2_
+#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
+#define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/linematching2solveresult.h>
+#include <RedshiftLibrary/method/linematchingsolveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 
 namespace NSEpic
@@ -14,18 +14,18 @@ class CDataStore;
 
 /**
  * \ingroup Redshift
- * \class CMethodLineMatching2Solve
+ * \class CMethodLineMatchingSolve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-class CMethodLineMatching2Solve
+class CMethodLineMatchingSolve
 {
 
 public:
 
-    CMethodLineMatching2Solve();
-    ~CMethodLineMatching2Solve();
+    CMethodLineMatchingSolve();
+    ~CMethodLineMatchingSolve();
 
-    std::shared_ptr<CLineMatching2SolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore,
                                                        const CSpectrum& spc, 
                                                        const TFloat64Range& lambdaRange, 
                                                        const TFloat64Range& redshiftsRange, 

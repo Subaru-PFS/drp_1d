@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/method/linematching2solveresult.h>
+#include <RedshiftLibrary/method/linematchingsolveresult.h>
 #include <RedshiftLibrary/processflow/context.h>
 #include <RedshiftLibrary/operator/raymatchingresult.h>
 
@@ -9,7 +9,7 @@ using namespace NSEpic;
 /**
  * Empty constructor.
  */
-CLineMatching2SolveResult::CLineMatching2SolveResult()
+CLineMatchingSolveResult::CLineMatchingSolveResult()
 {
 
 }
@@ -17,7 +17,7 @@ CLineMatching2SolveResult::CLineMatching2SolveResult()
 /**
  * Empty destructor.
  */
-CLineMatching2SolveResult::~CLineMatching2SolveResult()
+CLineMatchingSolveResult::~CLineMatchingSolveResult()
 {
 
 }
@@ -25,7 +25,7 @@ CLineMatching2SolveResult::~CLineMatching2SolveResult()
 /**
  * Collects from GetBestResult in the store and pretty outputs to stream.
  */
-void CLineMatching2SolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -40,9 +40,9 @@ void CLineMatching2SolveResult::Save( const CDataStore& store, std::ostream& str
 }
 
 /**
- * Collects from GetBestResult in the store and pretty outputs to stream, with a "LineMatching2Solve" suffix.
+ * Collects from GetBestResult in the store and pretty outputs to stream, with a "LineMatchingSolve" suffix.
  */
-void CLineMatching2SolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -51,15 +51,15 @@ void CLineMatching2SolveResult::SaveLine( const CDataStore& store, std::ostream&
     stream << store.GetSpectrumName() << "\t"
 	   << redshift << "\t"
 	   << merit << "\t"
-	   << "LineMatching2Solve" << std::endl;
+	   << "LineMatchingSolve" << std::endl;
 }
 
 /**
  * Wrapper around CRayMatchingResult::GetBestRedshift.
  */
-Bool CLineMatching2SolveResult::GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineMatchingSolveResult::GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
-    std::string scope = store.GetScope( *this ) + "linematching2solve.raymatching";
+    std::string scope = store.GetScope( *this ) + "linematchingsolve.raymatching";
     auto Results = store.GetGlobalResult( scope.c_str() );
 
     Int32 tmpMatchNum = -1;

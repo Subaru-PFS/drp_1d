@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVE2RESULT_
-#define _REDSHIFT_METHOD_LINEMATCHINGSOLVE2RESULT_
+#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
+#define _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -15,13 +15,13 @@ class CProcessFlowContext;
 /**
  * \ingroup Redshift
  */
-class CLineMatching2SolveResult : public COperatorResult
+  class CLineMatchingSolveResult : public COperatorResult
 {
 
 public:
 
-    CLineMatching2SolveResult();
-    virtual ~CLineMatching2SolveResult();
+    CLineMatchingSolveResult();
+    virtual ~CLineMatchingSolveResult();
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
