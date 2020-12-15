@@ -252,7 +252,6 @@ class CSpectrum
   void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
-  void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
   TLambdaRange GetLambdaRange() const;
   %apply Float64& OUTPUT { Float64& mean };
   %apply Float64& OUTPUT { Float64& std };

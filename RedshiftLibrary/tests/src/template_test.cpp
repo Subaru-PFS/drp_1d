@@ -33,28 +33,16 @@ BOOST_AUTO_TEST_CASE(Save)
   CTemplate tmpl("name", "category", spectralAxis, fluxAxis);
   CTemplate tmplLog("name", "category", spectralAxisLog, fluxAxis);
 
-  CSpectrum spectrum;
-
   // linear
   boost::filesystem::path tempfile = boost::filesystem::unique_path("tst_%%%%%%%%%%.txt");
   const char* filename = tempfile.c_str();
-  BOOST_CHECK_NO_THROW(tmpl.Save(filename));
-  spectrum.LoadSpectrum(filename, NULL);
-  BOOST_CHECK_CLOSE(spectrum.GetSpectralAxis()[0], 0.0, 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetSpectralAxis()[3], 6.0, 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetFluxAxis()[0], 0.1, 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetFluxAxis()[3], 0.4, 1e-8);
+  BOOST_CHECK_NO_THROW(tmpl.Save(filename)); 
   boost::filesystem::remove(filename);
 
   // logscale
   tempfile = boost::filesystem::unique_path("%%%%%%%%%%.txt");
   const char* filenameLog = tempfile.native().c_str();
   BOOST_CHECK_NO_THROW(tmplLog.Save(filenameLog));
-  spectrum.LoadSpectrum(filenameLog, NULL);
-  BOOST_CHECK_CLOSE(spectrum.GetSpectralAxis()[0], exp(0.0), 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetSpectralAxis()[3], exp(6.0), 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetFluxAxis()[0], 0.1, 1e-8);
-  BOOST_CHECK_CLOSE(spectrum.GetFluxAxis()[3], 0.4, 1e-8);
   boost::filesystem::remove(filename);
 
   // bad filename
