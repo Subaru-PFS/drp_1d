@@ -77,12 +77,12 @@ BOOST_AUTO_TEST_CASE(invert)
 BOOST_AUTO_TEST_CASE(LSF)
 {
 
-    CSpectrumSpectralAxis m_SpectralAxis;
-    CSpectrumFluxAxis m_FluxAxis;
-    std::shared_ptr<CLSF> m_LSF(new CLSFConstantGaussian(1.09));
+    CSpectrumSpectralAxis SpectralAxis;
+    CSpectrumFluxAxis FluxAxis;
+    std::shared_ptr<CLSF> LSF=std::make_shared<CLSFConstantGaussian>(1.09);
 
     //Test constructor with spectralAxis, fluxAxis and LSF
-    CSpectrum object_CSpectrum(m_SpectralAxis, m_FluxAxis, m_LSF);
+    CSpectrum object_CSpectrum(SpectralAxis, FluxAxis, LSF);
 
     BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
     BOOST_CHECK(object_CSpectrum.GetLSF()->GetSigma() == 1.09);
@@ -111,22 +111,26 @@ BOOST_AUTO_TEST_CASE(LSF)
     BOOST_CHECK(object_CSpectrum1.UseOfLSF() == false);
 
     //Test constructor with spectralAxis and fluxAxis
-    CSpectrum object_CSpectrum2(m_SpectralAxis, m_FluxAxis);
+    CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
 
     BOOST_CHECK(object_CSpectrum2.GetLSF()->IsValid() == false);
     BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.0);
     BOOST_CHECK(object_CSpectrum2.UseOfLSF() == false);
-    object_CSpectrum2.EnableLSF();
-    BOOST_CHECK(object_CSpectrum2.UseOfLSF() == true);
-    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF(), std::runtime_error);
-    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF()->GetSigma(), std::runtime_error);
-    BOOST_CHECK_THROW(object_CSpectrum2.GetLSF()->SetSigma(0.01), std::runtime_error);
-
+    BOOST_CHECK_THROW(object_CSpectrum2.EnableLSF(), std::runtime_error);
+    BOOST_CHECK(object_CSpectrum2.UseOfLSF() == false);
+    //BOOST_CHECK(object_CSpectrum2.GetLSF(), std::runtime_error);
+    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.0);
+    object_CSpectrum2.GetLSF()->SetSigma(0.01);
+    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.01);
+    
     //Test default constructor
     CSpectrum object_CSpectrum3;
-
-    object_CSpectrum3.GetLSF()->SetSigma(2.04e-60);
+    BOOST_CHECK(object_CSpectrum3.GetLSF() == nullptr);
+    
+    object_CSpectrum3.SetLSF(LSF);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 1.09);
+    object_CSpectrum3.GetLSF()->SetSigma(2.04e-60);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 2.04e-60); 
     object_CSpectrum3.GetLSF()->SetSigma(0.0);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == false);

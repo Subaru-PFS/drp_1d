@@ -249,7 +249,8 @@ class CSpectrum
   CSpectrum();
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
-  std::shared_ptr<CLSF> GetLSF();
+  std::shared_ptr<const CLSF> GetLSF() const;
+  void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);

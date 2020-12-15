@@ -96,10 +96,18 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_medianWindowSize(-1),
     m_nbScales(-1),
     m_dfBinPath(""),
-    m_Name("")
+    m_Name(""),
+    m_LSF(lsf)
 {
-    m_LSF = lsf;
+
 }
+
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis):
+    CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>())
+{
+
+}
+
 
 //copy constructor
 // copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
@@ -403,6 +411,20 @@ const CSpectrum::EType CSpectrum::GetType() const
 void CSpectrum::SetType(const CSpectrum::EType type) const
 {
     m_spcType = type;
+}
+
+
+void CSpectrum::EnableLSF()
+{
+    if (m_LSF == nullptr){
+        Log.LogError("%s: Cannot enable LSF, LSF member is not initialized",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF member is not initialized");
+    }else if( ! m_LSF->IsValid()){
+        Log.LogError("%s: Cannot enable LSF, LSF member is not valid",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF member is not valid");
+    } else {
+        m_enableLSF = true;
+    }
 }
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
@@ -919,27 +941,5 @@ void CSpectrum::ScaleFluxAxis(Float64 scale){
     if (alreadyRemoved){
         m_ContinuumFluxAxis *= scale;
         m_WithoutContinuumFluxAxis *= scale;
-    }
-}
-
-// Move in header file after externalize the test
-std::shared_ptr<CLSF> CSpectrum::GetLSF()
-{
-    if( !m_LSF->IsValid() && m_enableLSF ){
-        Log.LogError("LSF parameter is not valid");
-        throw std::runtime_error("LSF parameter is not valid");
-    }else{
-        return m_LSF;
-    }
-}
-
-// Move in header file after externalize the test
-const std::shared_ptr<CLSF> CSpectrum::GetLSF() const
-{
-    if( !m_LSF->IsValid() && m_enableLSF ){
-        Log.LogError("LSF parameter is not valid");
-        throw std::runtime_error("LSF parameter is not valid");
-    }else{
-        return m_LSF;
     }
 }

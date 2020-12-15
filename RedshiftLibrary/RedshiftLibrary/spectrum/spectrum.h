@@ -38,7 +38,7 @@ public:
 
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) : CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>()){}
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
@@ -58,7 +58,7 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
-    const std::shared_ptr<CLSF>     GetLSF() const;
+    std::shared_ptr<const CLSF>     GetLSF() const;
 
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
@@ -66,6 +66,7 @@ public:
     CSpectrumFluxAxis&              GetContinuumFluxAxis();
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
     std::shared_ptr<CLSF>           GetLSF();
+    void                            SetLSF(const std::shared_ptr<CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -101,8 +102,8 @@ public:
 
     void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
 
-    void                            EnableLSF() const;
-    void                            DisableLSF() const;
+    void                            EnableLSF();
+    void                            DisableLSF();
     Bool                            UseOfLSF() const;
 
     void                            ScaleFluxAxis(Float64 scale);
@@ -116,8 +117,8 @@ public:
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
-    std::shared_ptr<CLSF>           m_LSF = std::make_shared<CLSFConstantGaussian>();
-    mutable Bool                    m_enableLSF = false;
+    std::shared_ptr<CLSF>           m_LSF;
+    Bool                            m_enableLSF = false;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -260,13 +261,26 @@ CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
 }
 
 inline
-void CSpectrum::EnableLSF() const
+std::shared_ptr<CLSF> CSpectrum::GetLSF()
 {
-    m_enableLSF = true;
+    return m_LSF;
 }
 
 inline
-void CSpectrum::DisableLSF() const
+std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
+{
+    return m_LSF;
+
+}
+
+inline 
+void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
+{
+    m_LSF = lsf;
+}
+
+inline
+void CSpectrum::DisableLSF()
 {
     m_enableLSF = false;
 }
