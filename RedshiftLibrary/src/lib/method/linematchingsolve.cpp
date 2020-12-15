@@ -3,8 +3,6 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/linematchingsolveresult.h>
-#include <RedshiftLibrary/operator/chisquare.h>
-#include <RedshiftLibrary/operator/correlation.h>
 #include <RedshiftLibrary/operator/peakdetection.h>
 #include <RedshiftLibrary/operator/peakdetectionresult.h>
 #include <RedshiftLibrary/operator/raydetection.h>
