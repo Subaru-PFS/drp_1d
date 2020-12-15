@@ -6,16 +6,9 @@
 #include <RedshiftLibrary/debug/assert.h>
 
 #include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/method/blindsolve.h>
-#include <RedshiftLibrary/method/chisquaresolve.h>
 #include <RedshiftLibrary/method/chisquare2solve.h>
 #include <RedshiftLibrary/method/chisquarelogsolve.h>
-#include <RedshiftLibrary/method/correlationsolve.h>
-#include <RedshiftLibrary/method/dtree7solve.h>
-#include <RedshiftLibrary/method/dtreebsolve.h>
-#include <RedshiftLibrary/method/dtreecsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
-#include <RedshiftLibrary/method/linematching2solve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
 #include <RedshiftLibrary/method/zweimodelsolve.h>
@@ -648,52 +641,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     }
     /*
-    else if(methodName  == "amazed0_1" ){
-        CMethodDTree7Solve Solve(calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 templateCategoryList,
-                                 ctx.GetRayCatalog(),
-                                 lambdaRange,
-                                 redshiftRange,
-                                 redshiftStep);
-
-    }else if(methodName  == "amazed0_2" ){
-        CMethodDTreeBSolve Solve(calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 templateCategoryList,
-                                 ctx.GetRayCatalog(),
-                                 spcLambdaRange, redshifts, radius);
-
-    }else if(methodName  == "amazed0_3" ){
-        CMethodDTreeCSolve Solve(calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 templateCategoryList,
-                                 ctx.GetRayCatalog(),
-                                 spcLambdaRange,
-                                 redshifts, radius);
-
-    }else if(methodName  == "correlationsolve" ){
-        CMethodCorrelationSolve solve;
-        mResult = solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
-                                 lambdaRange, redshiftRange, redshiftStep );
-
-    }else if(methodName  == "blindsolve" ){
-        CMethodBlindSolve blindSolve;
-        mResult = blindSolve.Compute( ctx.GetDataStore(),
-                                      ctx.GetSpectrum(),
-                                      ctx.GetTemplateCatalog(),
-                                      filteredTemplateCategoryList,
-                                      lambdaRange, redshiftRange, redshiftStep);
-
     }else if(methodName  == "linematching" ){
         COperatorLineMatchingSolve Solve;
         mResult = Solve.Compute(ctx.GetDataStore(),
@@ -703,16 +650,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                 redshiftStep,
                                 ctx.GetRayCatalog() );
 
-    }else if(methodName  == "linematching2" ){
-        CMethodLineMatching2Solve Solve;
-        mResult = Solve.Compute(ctx.GetDataStore(),
-                                ctx.GetSpectrum(),
-                                spcLambdaRange,
-                                redshiftRange,
-                                redshiftStep,
-                                ctx.GetRayCatalog() );
-
-    }
     */
     else if(methodName  == "reliability" ){
         Log.LogInfo( "Processing RELIABILITY ONLY");
