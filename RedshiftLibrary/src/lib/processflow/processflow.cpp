@@ -7,7 +7,7 @@
 
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/method/templatefitting.h>
-#include <RedshiftLibrary/method/chisquarelogsolve.h>
+#include <RedshiftLibrary/method/templatefittinglog.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
@@ -400,9 +400,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        "qso_zPDF",
                                        radius,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        }else if(qso_method=="chisquarelogsolve"){
+        }else if(qso_method=="templatefittinglogsolve"){
             opt_interp="unused";
-            CMethodChisquareLogSolve solve(calibrationDirPath);
+            CMethodTemplateFittingLogSolve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
                                        *qsoTemplateCatalog,
@@ -549,23 +549,23 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);*/
         }
 
-    }else if(methodName  == "chisquarelogsolve" ){
+    }else if(methodName  == "templatefittinglogsolve" ){
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "chisquarelogsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore().Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp="unused";
         std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.extinction", opt_extinction, "no" );
+        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "chisquarelogsolve.dustfit", opt_dustFit, "no" );
+        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
         //retrieve the calibration dir path
         std::string calibrationDirPath;
         ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        CMethodChisquareLogSolve solve(calibrationDirPath);
+        CMethodTemplateFittingLogSolve solve(calibrationDirPath);
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
@@ -580,7 +580,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         if( mResult )
         {
-            Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
+            Log.LogInfo( "Extracting z-candidates from TemplateFittingLogsolve method results" );
             std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;

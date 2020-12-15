@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/linemodel/templatesortho.h>
 #include <RedshiftLibrary/linemodel/templatesorthostore.h>
 #include <RedshiftLibrary/operator/templatefitting.h>
-#include <RedshiftLibrary/operator/chisquareloglambda.h>
+#include <RedshiftLibrary/operator/templatefittinglog.h>
 #include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/operator/linemodel.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
@@ -676,18 +676,18 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum opt_interp = %s",
                 opt_interp.c_str());
 
-    std::shared_ptr<COperator> chiSquareOperator;
+    std::shared_ptr<COperator> templateFittingOperator;
     if (m_opt_tplfit_method == "chisquarelog")
     {
-        // COperatorChiSquareLogLambda* chiSquareOperator;
+        // COperatorTemplateFittingLog* templateFittingOperator;
         bool enableLogRebin = true;
-        chiSquareOperator = std::make_shared<COperatorChiSquareLogLambda>(opt_calibrationPath);
-        std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator =
-            std::dynamic_pointer_cast<COperatorChiSquareLogLambda>(chiSquareOperator);
+        templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(opt_calibrationPath);
+        std::shared_ptr<COperatorTemplateFittingLog> chiSquareLogOperator =
+            std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
     } else if (m_opt_tplfit_method == "templateFitting")
     {
-        chiSquareOperator = std::make_shared<COperatorTemplateFitting>();
+        templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
     } else
     {
         Log.LogError("  Operator-Linemodel: unable to parse chisquare continuum fit operator");
@@ -755,9 +755,9 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //Log.LogInfo("  Operator-Linemodel: check prior data, zePriorData[0][0].logpriorTZE = %e", priorDataLogCheck);
             //*/
 
-            auto chisquareResult =
+            auto templatefittingResult =
                 std::dynamic_pointer_cast<CTemplateFittingResult>(
-                    chiSquareOperator->Compute(
+                    templateFittingOperator->Compute(
                             spectrum,
                             tpl,
                             lambdaRange,
@@ -769,18 +769,18 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                             opt_tplfit_integer_chi2_dustfit,
                             zePriorData));
 
-            if (!chisquareResult)
+            if (!templatefittingResult)
             {
                 Log.LogInfo("  Operator-Linemodel failed to compute chisquare value for tpl=%s",
                             tpl.GetName().c_str());
             } else
             {
-                chisquareResultsAllTpl.push_back(chisquareResult);
+                chisquareResultsAllTpl.push_back(templatefittingResult);
                 chisquareResultsTplName.push_back(tpl.GetName());
             }
         }
     }
-    chiSquareOperator.reset();
+    templateFittingOperator.reset();
 
     // fill the fit store with fitted values: only the best fitted values FOR EACH TEMPLATE are used
     Float64 bestTplFitSNR = 0.0;

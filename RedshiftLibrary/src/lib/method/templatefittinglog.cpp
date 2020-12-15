@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/method/chisquarelogsolve.h>
+#include <RedshiftLibrary/method/templatefittinglog.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
@@ -18,36 +18,36 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodChisquareLogSolve::CMethodChisquareLogSolve( std::string calibrationPath )
+CMethodTemplateFittingLogSolve::CMethodTemplateFittingLogSolve( std::string calibrationPath )
 {
-    m_chiSquareOperator = new COperatorChiSquareLogLambda( calibrationPath );
+    m_templateFittingOperator = new COperatorTemplateFittingLog( calibrationPath );
 }
 
-CMethodChisquareLogSolve::~CMethodChisquareLogSolve()
+CMethodTemplateFittingLogSolve::~CMethodTemplateFittingLogSolve()
 {
-    delete m_chiSquareOperator;
+    delete m_templateFittingOperator;
 }
 
-const std::string CMethodChisquareLogSolve::GetDescription()
+const std::string CMethodTemplateFittingLogSolve::GetDescription()
 {
     std::string desc;
 
-    desc = "Method chisquarelogsolve:\n";
+    desc = "Method templatefittinglogsolve:\n";
 
-    desc.append("\tparam: chisquarelogsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
-    desc.append("\tparam: chisquarelogsolve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: chisquarelogsolve.extinction = {""yes"", ""no""}\n");
-    desc.append("\tparam: chisquarelogsolve.dustfit = {""yes"", ""no""}\n");
-    desc.append("\tparam: chisquarelogsolve.enablespclogrebin = {""yes"", ""no""}\n");
-    desc.append("\tparam: chisquarelogsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
-    desc.append("\tparam: chisquarelogsolve.saveintermediateresults = {""yes"", ""no""}\n");
+    desc.append("\tparam: templatefittinglogsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
+    desc.append("\tparam: templatefittinglogsolve.overlapThreshold = <float value>\n");
+    desc.append("\tparam: templatefittinglogsolve.extinction = {""yes"", ""no""}\n");
+    desc.append("\tparam: templatefittinglogsolve.dustfit = {""yes"", ""no""}\n");
+    desc.append("\tparam: templatefittinglogsolve.enablespclogrebin = {""yes"", ""no""}\n");
+    desc.append("\tparam: templatefittinglogsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
+    desc.append("\tparam: templatefittinglogsolve.saveintermediateresults = {""yes"", ""no""}\n");
 
     return desc;
 
 }
 
 
-std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Compute(CDataStore& resultStore,
                                                                          const CSpectrum& spc,
                                                                          const CTemplateCatalog& tplCatalog,
                                                                          const TStringList& tplCategoryList,
@@ -64,7 +64,7 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
 {
     Bool storeResult = false;
 
-    CDataStore::CAutoScope resultScope( resultStore, "chisquarelogsolve" );
+    CDataStore::CAutoScope resultScope( resultStore, "templatefittinglogsolve" );
     std::string scopeStr = "chisquare";
     m_radius = radius;
 
@@ -85,9 +85,9 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
     resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
     if(m_opt_saveintermediateresults=="yes")
     {
-        m_opt_enableSaveIntermediateChisquareResults = true;
+        m_opt_enableSaveIntermediateTemplateFittingResults = true;
     }else{
-        m_opt_enableSaveIntermediateChisquareResults = false;
+        m_opt_enableSaveIntermediateTemplateFittingResults = false;
     }
     resultStore.GetScopedParam( "enablespclogrebin", m_opt_spclogrebin, "yes");
 
@@ -97,15 +97,15 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
     Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
     Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
-    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
+    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateTemplateFittingResults);
     Log.LogInfo( "    -enable spectrum-log-rebin: %s", m_opt_spclogrebin.c_str());
     Log.LogInfo( "");
 
     if(m_opt_spclogrebin=="yes")
     {
-        m_chiSquareOperator->enableSpcLogRebin(true);
+        m_templateFittingOperator->enableSpcLogRebin(true);
     }else{
-        m_chiSquareOperator->enableSpcLogRebin(false);
+        m_templateFittingOperator->enableSpcLogRebin(false);
     }
 
     Log.LogInfo( "Iterating over %d tplCategories", tplCategoryList.size());
@@ -127,7 +127,7 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
 
     if( storeResult )
     {
-        std::shared_ptr< CTemplateFittingSolveResult> ChisquareSolveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "chisquarelogsolve") );
+        std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "templatefittinglogsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -138,11 +138,11 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
             CPdfz pdfz;
             Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
             Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Log.LogDetail("    chisquarelogsolve: Pdfz normalization - sum rect. = %e", sumRect);
-            Log.LogDetail("    chisquarelogsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
+            Log.LogDetail("    templatefittinglogsolve: Pdfz normalization - sum rect. = %e", sumRect);
+            Log.LogDetail("    templatefittinglogsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
             Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
             if(!pdfSumCheck){
-                Log.LogError("    chisquarelogsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+                Log.LogError("    templatefittinglogsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
             }
 
 
@@ -152,13 +152,13 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(C
             }
         }
 
-        return ChisquareSolveResult;
+        return TemplateFittingSolveResult;
     }
 
     return NULL;
 }
 
-Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
+Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
                                      const CSpectrum& spc,
                                      const CTemplate& tpl,
                                      const TFloat64Range& lambdaRange,
@@ -221,15 +221,15 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
         // Compute merit function
         //CRef<CTemplateFittingResult>  chisquareResult = (CTemplateFittingResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_chiSquareOperator->Compute( spc,
-                                                                                                           tpl,
-                                                                                                           lambdaRange,
-                                                                                                           redshifts,
-                                                                                                           overlapThreshold,
-                                                                                                           maskList,
-                                                                                                           opt_interp,
-                                                                                                           enable_extinction,
-                                                                                                           option_dustFitting ) );
+        auto  chisquareResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator->Compute( spc,
+                                                                                                                       tpl,
+                                                                                                                       lambdaRange,
+                                                                                                                       redshifts,
+                                                                                                                       overlapThreshold,
+                                                                                                                       maskList,
+                                                                                                                       opt_interp,
+                                                                                                                       enable_extinction,
+                                                                                                                       option_dustFitting ) );
         chisquareResult->CallFindExtrema(m_radius);
 
         if( !chisquareResult )
@@ -241,7 +241,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
             resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
 
             //Save intermediate chisquare results
-            if(m_opt_enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
+            if(m_opt_enableSaveIntermediateTemplateFittingResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
             {
                 Int32 nISM = chisquareResult->ChiSquareIntermediate[0].size();
                 if(chisquareResult->ChiSquareIntermediate[0].size()>0)
@@ -275,13 +275,13 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
     return true;
 }
 
-Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
-    Log.LogInfo("chisquarelogsolve: Pdfz computation");
+    Log.LogInfo("templatefittinglogsolve: Pdfz computation");
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
-    Log.LogDetail("    chisquarelogsolve: using results in scope: %s", scope.c_str());
+    Log.LogDetail("    templatefittinglogsolve: using results in scope: %s", scope.c_str());
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
@@ -308,10 +308,10 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeS
         if(cstLog==-1)
         {
             cstLog = meritResult->CstLog;
-            Log.LogInfo("chisquarelogsolve: using cstLog = %f", cstLog);
+            Log.LogInfo("templatefittinglogsolve: using cstLog = %f", cstLog);
         }else if ( cstLog != meritResult->CstLog)
         {
-            Log.LogError("chisquarelogsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, meritResult->CstLog);
+            Log.LogError("templatefittinglogsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, meritResult->CstLog);
         }
         if(redshifts.size()==0)
         {
@@ -331,7 +331,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeS
             }
             if(foundBadStatus)
             {
-                Log.LogError("chisquarelogsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
+                Log.LogError("templatefittinglogsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
             }
         }
 
@@ -348,7 +348,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeS
                 {
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                Log.LogDetail("    chisquarelogsolve: Pdfz combine - prepared merit  #%d for model : %s, ism=%d, igm=%d", chiSquares.size()-1, ((*it).first).c_str(), kism, kigm);
+                Log.LogDetail("    templatefittinglogsolve: Pdfz combine - prepared merit  #%d for model : %s, ism=%d, igm=%d", chiSquares.size()-1, ((*it).first).c_str(), kism, kigm);
             }
         }
     }
@@ -357,30 +357,30 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeS
     {
         if(opt_combine=="marg")
         {
-            Log.LogInfo("    chisquarelogsolve: Pdfz combination - Marginalization");
+            Log.LogInfo("    templatefittinglogsolve: Pdfz combination - Marginalization");
             retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
         }else if(opt_combine=="bestchi2")
         {
-            Log.LogInfo("    chisquarelogsolve: Pdfz combination - BestChi2");
+            Log.LogInfo("    templatefittinglogsolve: Pdfz combination - BestChi2");
             retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
         }else{
-            Log.LogError("    chisquarelogsolve: Unable to parse pdf combination method option");
+            Log.LogError("    templatefittinglogsolve: Unable to parse pdf combination method option");
         }
     }else
     {
-        Log.LogError("    chisquarelogsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
+        Log.LogError("    templatefittinglogsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
     }
 
 
     if(retPdfz!=0)
     {
-        Log.LogError("    chisquarelogsolve: Pdfz computation failed");
+        Log.LogError("    templatefittinglogsolve: Pdfz computation failed");
     }
 
     return retPdfz;
 }
 
-Bool CMethodChisquareLogSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)
+Bool CMethodTemplateFittingLogSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());

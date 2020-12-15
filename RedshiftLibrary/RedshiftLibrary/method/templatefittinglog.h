@@ -5,7 +5,7 @@
 #include <RedshiftLibrary/method/templatefittingresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/chisquareloglambda.h>
+#include <RedshiftLibrary/operator/templatefittinglog.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 namespace NSEpic
@@ -18,14 +18,14 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CMethodChisquareLogSolve
+class CMethodTemplateFittingLogSolve
 {
 
  public:
 
 
-    CMethodChisquareLogSolve( std::string calibrationPath="" );
-    ~CMethodChisquareLogSolve();
+    CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
+    ~CMethodTemplateFittingLogSolve();
 
     const std::string GetDescription();
 
@@ -69,10 +69,10 @@ private:
 
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;
-    Bool m_opt_enableSaveIntermediateChisquareResults=false;
+    Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
     std::string m_opt_spclogrebin;
 
-    COperatorChiSquareLogLambda* m_chiSquareOperator;
+    COperatorTemplateFittingLog* m_templateFittingOperator;
     Float64 m_radius;
 
 };

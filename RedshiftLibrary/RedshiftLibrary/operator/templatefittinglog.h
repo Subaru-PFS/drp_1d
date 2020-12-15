@@ -18,13 +18,13 @@
 namespace NSEpic
 {
 
-class COperatorChiSquareLogLambda : public COperator
+class COperatorTemplateFittingLog : public COperator
 {
 
 public:
 
-    COperatorChiSquareLogLambda(std::string calibrationPath);
-    ~COperatorChiSquareLogLambda();
+    COperatorTemplateFittingLog(std::string calibrationPath);
+    ~COperatorTemplateFittingLog();
 
     std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                               const CTemplate& tpl,

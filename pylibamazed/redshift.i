@@ -52,7 +52,7 @@
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/method/templatefitting.h"
-#include "RedshiftLibrary/method/chisquarelogsolve.h"
+#include "RedshiftLibrary/method/templatefittinglog.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -385,11 +385,11 @@ class CMethodTemplateFittingSolve
   const std::string GetDescription();
 };
 
-class CMethodChisquareLogSolve
+class CMethodTemplateFittingLogSolve
 {
  public:
-  CMethodChisquareLogSolve( std::string calibrationPath="" );
-  ~CMethodChisquareLogSolve();
+  CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
+  ~CMethodTemplateFittingLogSolve();
   const std::string GetDescription();
 };
 
