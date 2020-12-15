@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/operator/tplcombination.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
@@ -422,8 +423,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         sortedIndexes.push_back(vp[i].second);
     }
 
-    Log.LogDebug("  Operator-tplcombination: prepare the results");
-    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    Log.LogDebug("  Operator-tp<lcombination: prepare the results");
+    std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
     Int32 nDustCoeffs=1;
     if(opt_dustFitting)
     {

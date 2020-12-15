@@ -2,7 +2,7 @@
 #define _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/chisquaresolveresult.h>
+#include <RedshiftLibrary/method/templatefittingresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/chisquareloglambda.h>
@@ -29,7 +29,7 @@ class CMethodChisquareLogSolve
 
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquareSolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
                                                    const TStringList& tplCategoryList,
@@ -56,7 +56,7 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CChisquareSolveResult::EType spctype=CChisquareSolveResult::nType_raw,
+               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");

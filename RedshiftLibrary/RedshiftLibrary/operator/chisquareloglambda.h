@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/common/mask.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
@@ -60,11 +60,8 @@ private:
     bool verboseLogXtYFFT = false;
     bool verboseExportXtYFFT = false;
 
-
-
-
     Int32 FitAllz(const TFloat64Range& lambdaRange,
-                  std::shared_ptr<CChisquareResult> result,
+                  std::shared_ptr<CTemplateFittingResult> result,
                   std::vector<Int32> igmMeiksinCoeffs=std::vector<Int32>(1, 0),
                   std::vector<Int32> ismEbmvCoeffs=std::vector<Int32>(1, 0),
                   CMask spcMaskAdditional=CMask(),
@@ -75,7 +72,7 @@ private:
                     const TAxisSampleList &  error,
                     const TAxisSampleList &  tplRebinedLambda,
                     const TAxisSampleList &  tplRebinedFluxRaw,
-                    std::shared_ptr<CChisquareResult> result,
+                    std::shared_ptr<CTemplateFittingResult> result,
                     std::vector<Int32> igmMeiksinCoeffs,
                     std::vector<Int32> ismEbmvCoeffs);
 

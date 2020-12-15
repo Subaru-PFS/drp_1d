@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 
 #include <boost/tokenizer.hpp>
@@ -10,17 +10,17 @@
 
 using namespace NSEpic;
 
-CChisquareResult::CChisquareResult()
+CTemplateFittingResult::CTemplateFittingResult()
 {
 
 }
 
-CChisquareResult::~CChisquareResult()
+CTemplateFittingResult::~CTemplateFittingResult()
 {
 
 }
 
-void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
+void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
@@ -62,7 +62,7 @@ void CChisquareResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     }
 }
 
-void CChisquareResult::Load( std::istream& stream )
+void CTemplateFittingResult::Load( std::istream& stream )
 {
     // Clear current lines list
     Redshifts.clear();
@@ -145,7 +145,7 @@ void CChisquareResult::Load( std::istream& stream )
     }
 }
 
-void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -289,12 +289,12 @@ void CChisquareResult::Save( const CDataStore& store, std::ostream& stream ) con
     }
 }
 
-void CChisquareResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-bool CChisquareResult::CallFindExtrema(Float64 radius) 
+bool CTemplateFittingResult::CallFindExtrema(Float64 radius) 
 {
   Int32 extremumCount = 10;
   radius = radius/5; 

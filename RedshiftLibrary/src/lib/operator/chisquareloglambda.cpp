@@ -3,7 +3,7 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
@@ -503,7 +503,7 @@ void COperatorChiSquareLogLambda::freeFFTPlans()
  * @return
  */
 Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
-                                           std::shared_ptr<CChisquareResult> result,
+                                           std::shared_ptr<CTemplateFittingResult> result,
                                            std::vector<Int32> igmMeiksinCoeffs,
                                            std::vector<Int32> ismEbmvCoeffs,
                                            CMask spcMaskAdditional,
@@ -624,7 +624,7 @@ Int32 COperatorChiSquareLogLambda::FitAllz(const TFloat64Range &lambdaRange,
     for (Int32 k = 0; k < nzranges; k++)
     {
         // prepare the zrange-result container
-        std::shared_ptr<CChisquareResult> subresult = std::shared_ptr<CChisquareResult>(new CChisquareResult());
+        std::shared_ptr<CTemplateFittingResult> subresult = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
         TFloat64Range zrange = TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                                              result->Redshifts[izrangelist[k].GetEnd()]);
         TInt32Range ilbda;
@@ -857,7 +857,7 @@ Int32 COperatorChiSquareLogLambda::FitRangez(const TAxisSampleList & spectrumReb
                                              const TAxisSampleList & error,
                                              const TAxisSampleList & tplRebinedLambda,
                                              const TAxisSampleList & tplRebinedFluxRaw,
-                                             std::shared_ptr<CChisquareResult> result,
+                                             std::shared_ptr<CTemplateFittingResult> result,
                                              std::vector<Int32> igmMeiksinCoeffs,
                                              std::vector<Int32> ismEbmvCoeffs)
 {
@@ -2062,8 +2062,8 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
         ismEbmvCoeffs.clear();
     }
 
-    std::shared_ptr<CChisquareResult> result =
-        std::shared_ptr<CChisquareResult>(new CChisquareResult());
+    std::shared_ptr<CTemplateFittingResult> result =
+        std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
     result->Init(sortedRedshifts.size(),
                  std::max((Int32)ismEbmvCoeffs.size(), 1),
                  std::max((Int32)igmMeiksinCoeffs.size(), 1));

@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/method/chisquaresolveresult.h>
+#include <RedshiftLibrary/method/templatefittingresult.h>
 
 #include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <stdio.h>
 #include <float.h>
 #include <RedshiftLibrary/log/log.h>
@@ -10,14 +10,14 @@
 
 using namespace NSEpic;
 
-CChisquareSolveResult::CChisquareSolveResult(const EType type, const std::string scope):
+CTemplateFittingSolveResult::CTemplateFittingSolveResult(const EType type, const std::string scope):
     m_type(type),
     m_scope(scope)
 {  
     m_name = m_scope2name[m_scope];
 }
 
-void CChisquareSolveResult::preSave(const CDataStore& store)
+void CTemplateFittingSolveResult::preSave(const CDataStore& store)
 {
     if(m_bestRedshiftMethod==0)//bestXi2
         GetBestRedshift(store);
@@ -27,8 +27,8 @@ void CChisquareSolveResult::preSave(const CDataStore& store)
         Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), m_redshift);
         Int32 b = GetBestModel(store, m_redshift);
         if(b==-1){
-            Log.LogError(" CChisquareSolveResult::preSave: Couldn't find index of %f", m_redshift);
-            throw runtime_error("CChisquareSolveResult::preSave: Couldn't find redshift index. Aborting!");
+            Log.LogError(" CTemplateFittingSolveResult::preSave: Couldn't find index of %f", m_redshift);
+            throw runtime_error("CTemplateFittingSolveResult::preSave: Couldn't find redshift index. Aborting!");
         }
         Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), m_tplName.c_str());
 
@@ -37,7 +37,7 @@ void CChisquareSolveResult::preSave(const CDataStore& store)
         m_tplName = "Undefined";
 }
 
-void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
 {
 
   
@@ -70,7 +70,7 @@ void CChisquareSolveResult::Save( const CDataStore& store, std::ostream& stream 
     stream << detailStr.c_str();
 }
 
-Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
+Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -92,7 +92,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
         Float64 tmpRedshift = 0.0;
         std::string tmpTplName;
 
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        auto meritResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( (*it).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
@@ -119,7 +119,7 @@ Bool CChisquareSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& 
 
 }
 //called for saving redshift.csv for Xi2
-void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
     char tmpChar[256];
     Float64 dtreepathnum;
@@ -144,7 +144,7 @@ void CChisquareSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 
 }
 
-Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store) 
+Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store) 
 {
     std::string scopeStr;
     if(m_type == nType_raw){
@@ -170,7 +170,7 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store)
 
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        auto meritResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( (*it).second );
         for( Int32 i=0; i<meritResult->ChiSquare.size(); i++ )
         {
             if( meritResult->ChiSquare[i] < tmpMerit && meritResult->Status[i] == COperator::nStatus_OK )
@@ -208,7 +208,7 @@ Bool CChisquareSolveResult::GetBestRedshift( const CDataStore& store)
  * output: merit = chi2(redshift)
  *
  **/
-Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) 
+Bool CTemplateFittingSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) 
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
@@ -250,7 +250,7 @@ Bool CChisquareSolveResult::GetBestRedshiftFromPdf( const CDataStore& store )
     return true;
 }
 
-Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) 
+Int32 CTemplateFittingSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) 
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
@@ -278,8 +278,8 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
 }
 
 /**
- * @brief CChisquareSolveResult::GetBestModel
- * Find the best tpl-name corresponding to the input arg. z and to the minimum Chisquare
+ * @brief CTemplateFittingSolveResult::GetBestModel
+ * Find the best tpl-name corresponding to the input arg. z and to the minimum TemplateFitting
  * @param store
  * @param z
  * @param tplName
@@ -287,19 +287,19 @@ Int32 CChisquareSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  * @param DustCoeff (optional return)
  * @return
  */
-Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z)
+Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64 z)
 {
     Bool foundRedshiftAtLeastOnce = false;
 
     std::string scopeStr;
     if(m_type == nType_raw){
-        scopeStr = "chisquare";
+        scopeStr = "templatefitting";
     }else if(m_type == nType_all){
-        scopeStr = "chisquare";
+        scopeStr = "templatefitting";
     }else if(m_type == nType_noContinuum){
-        scopeStr = "chisquare_nocontinuum";
+        scopeStr = "templatefitting_nocontinuum";
     }else if(m_type == nType_continuumOnly){
-        scopeStr = "chisquare_continuum";
+        scopeStr = "templatefitting_continuum";
     }
 
     std::string scope = m_scope +"." + scopeStr.c_str();
@@ -315,7 +315,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z)
     bool first = true;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        auto meritResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( (*it).second );
         if(meritResult->ChiSquare.size()<1){
             continue;
         }
@@ -359,7 +359,7 @@ Int32 CChisquareSolveResult::GetBestModel(const CDataStore& store, Float64 z)
     return 1;
 }
 
-Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir) const
+Bool CTemplateFittingSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir) const
 {
     Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
     redshiftcandidates.clear();
@@ -386,7 +386,7 @@ Bool CChisquareSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     return true;
 }
 
-void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
+void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) const
 {
   if (name.compare("snrHa") == 0)  v = -1;
   else if (name.compare("lfHa") == 0)  v = -1;
@@ -396,19 +396,19 @@ void CChisquareSolveResult::getData(const std::string& name, Float64& v) const
   else throw Exception("Unknown data %s",name.c_str());
 }
 
-void CChisquareSolveResult::getData(const std::string& name, std::string& v) const
+void CTemplateFittingSolveResult::getData(const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0) v = m_tplName;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
-void CChisquareSolveResult::getData(const std::string& name, Int32& v) const
+void CTemplateFittingSolveResult::getData(const std::string& name, Int32& v) const
 {
   if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
-void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
   if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
   else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
@@ -416,13 +416,13 @@ void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& 
   else throw Exception("Unknown data %s",name.c_str());
 }
 
-void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
+void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0) v = m_tplName;
   else throw Exception("Unknown data %s",name.c_str());
 } 
 
-void CChisquareSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
+void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
   if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
   else throw Exception("Unknown data %s",name.c_str());

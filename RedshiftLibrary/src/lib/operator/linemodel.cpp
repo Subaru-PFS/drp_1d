@@ -3,9 +3,9 @@
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>
 #include <RedshiftLibrary/linemodel/templatesortho.h>
 #include <RedshiftLibrary/linemodel/templatesorthostore.h>
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 #include <RedshiftLibrary/operator/chisquareloglambda.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/operator/linemodel.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/spectrum/axis.h>
@@ -655,15 +655,15 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     kztplfit,
                     redshiftsTplFit[kztplfit]);
     }
-    std::vector<std::shared_ptr<CChisquareResult>> chisquareResultsAllTpl;
+    std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
 
-    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "chisquare2")
+    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "templateFitting")
         // warning arbitrary number of redshifts threshold
-        // to consider chisquare2 faster than chisquarelog
+        // to consider templateFitting faster than chisquarelog
     {
-        m_opt_tplfit_method = "chisquare2";
-        Log.LogInfo("  Operator-Linemodel: precomputing- auto select chisquare2 operator"
+        m_opt_tplfit_method = "templateFitting";
+        Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
@@ -685,19 +685,19 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         std::shared_ptr<COperatorChiSquareLogLambda> chiSquareLogOperator =
             std::dynamic_pointer_cast<COperatorChiSquareLogLambda>(chiSquareOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
-    } else if (m_opt_tplfit_method == "chisquare2")
+    } else if (m_opt_tplfit_method == "templateFitting")
     {
-        chiSquareOperator = std::make_shared<COperatorChiSquare2>();
+        chiSquareOperator = std::make_shared<COperatorTemplateFitting>();
     } else
     {
         Log.LogError("  Operator-Linemodel: unable to parse chisquare continuum fit operator");
     }
 
     Float64 overlapThreshold = 1.0;
-    if (m_opt_tplfit_method != "chisquare2" && ignoreLinesSupport==true)
+    if (m_opt_tplfit_method != "templateFitting" && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
-        Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT chisquare2-operator is used. Disabled");
+        Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
     }
     std::vector<CMask> maskList;
     if(ignoreLinesSupport)
@@ -756,7 +756,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //*/
 
             auto chisquareResult =
-                std::dynamic_pointer_cast<CChisquareResult>(
+                std::dynamic_pointer_cast<CTemplateFittingResult>(
                     chiSquareOperator->Compute(
                             spectrum,
                             tpl,
@@ -792,7 +792,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         for (UInt32 j = 0; j < chisquareResultsAllTpl.size(); j++)
         {
             auto chisquareResult =
-                std::dynamic_pointer_cast<CChisquareResult>(
+                std::dynamic_pointer_cast<CTemplateFittingResult>(
                     chisquareResultsAllTpl[j]);
 
             bool retAdd = tplfitStore->Add(chisquareResultsTplName[j],

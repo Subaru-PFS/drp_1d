@@ -47,7 +47,7 @@ const std::string CMethodChisquareLogSolve::GetDescription()
 }
 
 
-std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CTemplateFittingSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
                                                                          const CSpectrum& spc,
                                                                          const CTemplateCatalog& tplCatalog,
                                                                          const TStringList& tplCategoryList,
@@ -68,17 +68,17 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
     std::string scopeStr = "chisquare";
     m_radius = radius;
 
-    CChisquareSolveResult::EType _type;
+    CTemplateFittingSolveResult::EType _type;
     if(spcComponent=="raw"){
-       _type = CChisquareSolveResult::nType_raw;
+       _type = CTemplateFittingSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
-       _type = CChisquareSolveResult::nType_noContinuum;
+       _type = CTemplateFittingSolveResult::nType_noContinuum;
        scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CChisquareSolveResult::nType_continuumOnly;
+        _type = CTemplateFittingSolveResult::nType_continuumOnly;
         scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
-        _type = CChisquareSolveResult::nType_all;
+        _type = CTemplateFittingSolveResult::nType_all;
     }
 
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
@@ -127,7 +127,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareSolveResult> ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "chisquarelogsolve") );
+        std::shared_ptr< CTemplateFittingSolveResult> ChisquareSolveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "chisquarelogsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -165,7 +165,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                      const TFloat64List& redshifts,
                                      Float64 overlapThreshold,
                                      std::vector<CMask> maskList,
-                                     CChisquareSolveResult::EType spctype,
+                                     CTemplateFittingSolveResult::EType spctype,
                                      std::string opt_interp,
                                      std::string opt_extinction,
                                      std::string opt_dustFitting)
@@ -188,7 +188,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
     }
 
     //case: nType_all
-    if(spctype == CChisquareSolveResult::nType_all){
+    if(spctype == CTemplateFittingSolveResult::nType_all){
         _ntype = 3;
     }
 
@@ -196,7 +196,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
     const CSpectrum::EType save_tplType = tpl.GetType();
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CChisquareSolveResult::nType_all){
+        if(spctype == CTemplateFittingSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = static_cast<CSpectrum::EType>(spctype);
@@ -220,8 +220,8 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spc,
+        //CRef<CTemplateFittingResult>  chisquareResult = (CTemplateFittingResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
+        auto  chisquareResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_chiSquareOperator->Compute( spc,
                                                                                                            tpl,
                                                                                                            lambdaRange,
                                                                                                            redshifts,
@@ -252,7 +252,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                     {
                         for(Int32 kigm=0; kigm<nIGM; kigm++)
                         {
-                            std::shared_ptr<CChisquareResult> result_chisquare_intermediate = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+                            std::shared_ptr<CTemplateFittingResult> result_chisquare_intermediate = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
                             result_chisquare_intermediate->Init( chisquareResult->Redshifts.size(), 0, 0);
                             for(Int32 kz=0; kz<chisquareResult->Redshifts.size(); kz++)
                             {
@@ -294,7 +294,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeS
     std::vector<Float64> redshifts;
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
-        auto meritResult = std::dynamic_pointer_cast<const CChisquareResult>( (*it).second );
+        auto meritResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( (*it).second );
         Int32 nISM = -1;
         Int32 nIGM = -1;
         if(meritResult->ChiSquareIntermediate.size()>0)

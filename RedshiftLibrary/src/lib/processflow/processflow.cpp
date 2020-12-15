@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/debug/assert.h>
 
 #include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/method/chisquare2solve.h>
+#include <RedshiftLibrary/method/templatefitting.h>
 #include <RedshiftLibrary/method/chisquarelogsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
@@ -295,7 +295,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         DebugAssert( stars_redshifts.size() > 0 );
 
         Log.LogInfo("Processing stellar fitting");
-        CMethodChisquare2Solve solve;
+        CMethodTemplateFittingSolve solve;
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         starResult = solve.Compute( ctx.GetDataStore(),
                                     ctx.GetSpectrum(),
@@ -359,7 +359,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
 
         std::string qso_method;
-        ctx.GetParameterStore().Get( "qsosolve.method", qso_method, "chisquare2solve" );
+        ctx.GetParameterStore().Get( "qsosolve.method", qso_method, "templatefittingsolve" );
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "qsosolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
@@ -387,8 +387,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         DebugAssert( qso_redshifts.size() > 0 );
 
         Log.LogInfo("Processing QSO fitting");
-        if(qso_method=="chisquare2solve"){
-            CMethodChisquare2Solve solve;
+        if(qso_method=="templatefittingsolve"){
+            CMethodTemplateFittingSolve solve;
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
                                        *qsoTemplateCatalog,
@@ -502,24 +502,24 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  spcLambdaRange,
                                  redshifts );
 
-    }else if(methodName  == "chisquare2solve" ){
+    }else if(methodName  == "templatefittingsolve" ){
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "chisquare2solve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore().Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "chisquare2solve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
-        ctx.GetDataStore().GetScopedParam( "chisquare2solve.interpolation", opt_interp, "precomputedfinegrid" );
+        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
         std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "chisquare2solve.extinction", opt_extinction, "no" );
+        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "chisquare2solve.dustfit", opt_dustFit, "no" );
+        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
         //retrieve the calibration dir path
         std::string calibrationDirPath;
         ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        CMethodChisquare2Solve solve;
+        CMethodTemplateFittingSolve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
@@ -534,8 +534,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         if( mResult )
         {
-            Log.LogInfo( "Extracting z-candidates from Chisquare2solve method results" );
-            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
+            Log.LogInfo( "Extracting z-candidates from TemplateFittingsolve method results" );
+            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
             /*Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
@@ -581,7 +581,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from ChisquareLogsolve method results" );
-            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
+            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
@@ -625,7 +625,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if( mResult )
         {
             Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
-            std::shared_ptr<CChisquareSolveResult> solveResult = std::dynamic_pointer_cast<CChisquareSolveResult>( mResult );
+            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
             Int32 n_cand = 5; //this is hardcoded for now for this method
             std::vector<Float64> zcandidates_unordered_list;
             Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);

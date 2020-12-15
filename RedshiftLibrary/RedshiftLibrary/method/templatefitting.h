@@ -2,10 +2,10 @@
 #define _REDSHIFT_METHOD_CHISQUARE2SOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/chisquaresolveresult.h>
+#include <RedshiftLibrary/method/templatefittingresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
@@ -20,18 +20,18 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CMethodChisquare2Solve
+class CMethodTemplateFittingSolve
 {
 
  public:
 
 
-    CMethodChisquare2Solve();
-    ~CMethodChisquare2Solve();
+    CMethodTemplateFittingSolve();
+    ~CMethodTemplateFittingSolve();
 
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquareSolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
                                                    const TStringList& tplCategoryList,
@@ -58,7 +58,7 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CChisquareSolveResult::EType spctype=CChisquareSolveResult::nType_raw,
+               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
@@ -70,13 +70,13 @@ private:
 
 
 
-    COperatorChiSquare2 m_chiSquareOperator;
+    COperatorTemplateFitting m_templateFittingOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;
-    Bool m_opt_enableSaveIntermediateChisquareResults=false;
+    Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
     Float64 m_radius;
 
 };

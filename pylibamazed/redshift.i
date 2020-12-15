@@ -51,8 +51,7 @@
 #include "RedshiftLibrary/spectrum/LSFConstant.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
-#include "RedshiftLibrary/method/linematching2solve.h"
-#include "RedshiftLibrary/method/chisquare2solve.h"
+#include "RedshiftLibrary/method/templatefitting.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
@@ -369,7 +368,7 @@ class CLineModelSolve
   ~CLineModelSolve();
   const std::string GetDescription();
 };
-
+ 
 class CMethodLineMatchingSolve
 {
  public:
@@ -378,19 +377,11 @@ class CMethodLineMatchingSolve
   const std::string GetDescription();
 };
 
-class CMethodLineMatching2Solve
+class CMethodTemplateFittingSolve
 {
  public:
-  CMethodLineMatching2Solve();
-  ~CMethodLineMatching2Solve();
-  const std::string GetDescription();
-};
-
-class CMethodChisquare2Solve
-{
- public:
-  CMethodChisquare2Solve();
-  ~CMethodChisquare2Solve();
+  CMethodTemplateFittingSolve();
+  ~CMethodTemplateFittingSolve();
   const std::string GetDescription();
 };
 
