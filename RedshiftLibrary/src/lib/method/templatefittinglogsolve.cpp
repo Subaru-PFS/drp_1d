@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/method/templatefittinglog.h>
+#include <RedshiftLibrary/method/templatefittinglogsolve.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
