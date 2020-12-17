@@ -51,8 +51,8 @@
 #include "RedshiftLibrary/spectrum/LSFConstant.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
-#include "RedshiftLibrary/method/templatefitting.h"
-#include "RedshiftLibrary/method/templatefittinglog.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
