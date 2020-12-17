@@ -31,8 +31,7 @@
 
 #include <RedshiftLibrary/operator/linemodel.h>
 
-
-#include <float.h>
+#include <cfloat>
 
 using namespace NSEpic;
 using namespace std;
@@ -77,17 +76,20 @@ const std::string CMethodDTreeBSolve::GetDescription()
 
 }
 
-std::shared_ptr<CDTreeBSolveResult> CMethodDTreeBSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List &redshifts)
+std::shared_ptr<CDTreeBSolveResult> CMethodDTreeBSolve::Compute( CDataStore& resultStore,
+                                                                 const CSpectrum& spc,
+                                                                 const CTemplateCatalog& tplCatalog,
+                                                                 const TStringList& tplCategoryList,
+                                                                 const CRayCatalog& restRayCatalog,
+                                                                 const TFloat64Range& lambdaRange,
+                                                                 const TFloat64List& redshifts,
+                                                                 const Float64 radius )
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( resultStore, "dtreeBsolve" );
 
-    storeResult = Solve(resultStore, spc, spcWithoutCont,
-                                       tplCatalog, tplCategoryList, restRayCatalog,
-                                       lambdaRange, redshifts );
+    storeResult = Solve(resultStore, spc, tplCatalog, tplCategoryList, restRayCatalog, lambdaRange, redshifts);
 
     //storeResult = true;
     if( storeResult )
@@ -98,14 +100,14 @@ std::shared_ptr<CDTreeBSolveResult> CMethodDTreeBSolve::Compute( CDataStore& res
     return NULL;
 }
 
-Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64List &redshifts)
+Bool CMethodDTreeBSolve::Solve(CDataStore& dataStore,
+                               const CSpectrum& spc,
+                               const CTemplateCatalog& tplCatalog,
+                               const TStringList& tplCategoryList,
+                               const CRayCatalog& restRayCatalog,
+                               const TFloat64Range& lambdaRange,
+                               const TFloat64List& redshifts)
 {
-    CSpectrum _spcContinuum = spc;
-    CSpectrumFluxAxis spcfluxAxis = _spcContinuum.GetFluxAxis();
-    spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
-    CSpectrumFluxAxis& sfluxAxisPtr = _spcContinuum.GetFluxAxis();
-    sfluxAxisPtr = spcfluxAxis;
-
     std::string opt_linetypefilter;
     dataStore.GetScopedParam( "linemodel.linetypefilter", opt_linetypefilter, "no" );
     std::string opt_lineforcefilter;
@@ -140,7 +142,6 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     COperatorLineModel linemodel;
     auto result = dynamic_pointer_cast<CLineModelResult>(linemodel.Compute(dataStore,
                                                                            spc,
-                                                                           _spcContinuum,
                                                                            tplCatalog,
                                                                            tplCategoryList,
                                                                            m_calibrationPath,
@@ -241,13 +242,12 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     // prepare the unused masks
     std::vector<CMask> maskList;
 
-    CMethodChisquare2Solve chiSolve(m_calibrationPath);
+    CMethodChisquare2Solve chiSolve;
     //achtung: override overlap threshold for chi2nocontinuum:
     Float64 overlapThresholdNC=overlapThreshold;
     overlapThresholdNC = 1.0;
-    auto chisolveResultnc = chiSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                        tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
+    auto chisolveResultnc = chiSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftsChi2, overlapThresholdNC, maskList, spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit );
+
     if( chisolveResultnc ) {
         dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResultnc );
     }
@@ -281,9 +281,7 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
     }
 
     //*/
-    auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                        tplCatalog, tplCategoryList,
-                                                                        lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, opt_interp, opt_extinction, opt_dustFit);
+    auto chisolveResultcontinuum = chiSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftsChi2Continuum, overlapThreshold, maskList, spcComponent, m_radius, opt_interp, opt_extinction, opt_dustFit );
     //_///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //*/
 
@@ -292,10 +290,8 @@ Bool CMethodDTreeBSolve::Solve(CDataStore &dataStore, const CSpectrum &spc, cons
 
     // /////////////////////////////////////////////////////////////////////////////
 
-
     return true;
 }
-
 
 Bool CMethodDTreeBSolve::GetCombinedRedshift(CDataStore& store)
 {
@@ -357,7 +353,6 @@ Bool CMethodDTreeBSolve::GetCombinedRedshift(CDataStore& store)
     {
         w_chi2continuum.push_back(chi2continuum[i]/minchi2continuum);
     }
-
 
     //*
     //***********************************************************
@@ -493,8 +488,7 @@ Bool CMethodDTreeBSolve::GetCombinedRedshift(CDataStore& store)
 
 }
 
-
-TFloat64List CMethodDTreeBSolve::GetBestRedshiftChi2List( CDataStore& store, std::string scopeStr,  Float64& minmerit, TFloat64List& zList)
+TFloat64List CMethodDTreeBSolve::GetBestRedshiftChi2List(CDataStore& store, std::string scopeStr, Float64& minmerit, TFloat64List& zList)
 {
     std::string scope = "dtreeBsolve.chisquare2solve.";
     scope.append(scopeStr.c_str());

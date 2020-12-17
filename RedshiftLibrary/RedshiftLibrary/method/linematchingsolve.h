@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMATCHINGSOLVE_
-#define _REDSHIFT_OPERATOR_LINEMATCHINGSOLVE_
+#ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
+#define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/linematchingsolveresult.h>
@@ -23,11 +23,14 @@ public:
     CMethodLineMatchingSolve();
     ~CMethodLineMatchingSolve();
 
-
     const std::string GetDescription();
 
-    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc,
-                                        const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog &restRayCatalog);
+    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore,
+                                                      const CSpectrum& spc,
+                                                      const TFloat64Range& lambdaRange,
+                                                      const TFloat64Range& redshiftsRange,
+                                                      Float64 redshiftStep,
+                                                      const CRayCatalog &restRayCatalog);
 
 
 private:

@@ -1,5 +1,5 @@
-#ifndef _CORE_LOG_FILEHANDLER_
-#define _CORE_LOG_FILEHANDLER_
+#ifndef _REDSHIFT_LOG_FILEHANDLER_
+#define _REDSHIFT_LOG_FILEHANDLER_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/handler.h>
@@ -10,7 +10,7 @@ namespace NSEpic
 {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Handler that output log to agiven file
  */
 class CLogFileHandler : public CLogHandler

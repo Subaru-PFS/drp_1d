@@ -17,6 +17,7 @@
 using namespace NSEpic;
 using namespace std;
 
+
 /**
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
@@ -71,11 +72,11 @@ CMethodLineMatching2Solve::~CMethodLineMatching2Solve()
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
 std::shared_ptr<CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( CDataStore& resultStore,
-										       const CSpectrum& spc, 
-										       const TFloat64Range& lambdaRange, 
-										       const TFloat64Range& redshiftsRange, 
-										       Float64 redshiftStep, 
-										       const CRayCatalog& restRayCatalog )
+                                                                               const CSpectrum& spc,
+                                                                               const TFloat64Range& lambdaRange,
+                                                                               const TFloat64Range& redshiftsRange,
+                                                                               Float64 redshiftStep,
+                                                                               const CRayCatalog& restRayCatalog )
 {
   Log.LogDebug ( "std::shared_ptr<const CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
 
@@ -106,7 +107,7 @@ std::shared_ptr<CLineMatching2SolveResult> CMethodLineMatching2Solve::Compute( C
       }
     if( linetypeStr == "Emission" )
       {
-    lineType = CRay::nType_Emission;
+        lineType = CRay::nType_Emission;
       }
   }
   

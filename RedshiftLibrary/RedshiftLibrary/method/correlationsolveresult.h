@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CORRELATIONSOLVERESULT_
-#define _REDSHIFT_OPERATOR_CORRELATIONSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_CORRELATIONSOLVERESULT_
+#define _REDSHIFT_METHOD_CORRELATIONSOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

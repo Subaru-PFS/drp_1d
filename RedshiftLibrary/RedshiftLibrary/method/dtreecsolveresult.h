@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_DTREECSOLVERESULT_
-#define _REDSHIFT_OPERATOR_DTREECSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_DTREECSOLVERESULT_
+#define _REDSHIFT_METHOD_DTREECSOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

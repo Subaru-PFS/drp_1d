@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_BLINDSOLVERESULT_
-#define _REDSHIFT_OPERATOR_BLINDSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_BLINDSOLVERESULT_
+#define _REDSHIFT_METHOD_BLINDSOLVERESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

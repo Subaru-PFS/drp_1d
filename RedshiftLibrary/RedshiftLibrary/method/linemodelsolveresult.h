@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
-#define _REDSHIFT_OPERATOR_LINEMODELSOLVERESULT_
+#ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
+#define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
 #include <RedshiftLibrary/method/solveresult.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -55,7 +55,7 @@ public:
                                 std::string &modelTplContinuum) const;
     Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 
-    Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const;
+    Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) ;
 
   void preSave(const CDataStore& store);
   void getData(const std::string& name, Float64& v) const;
@@ -79,4 +79,3 @@ private:
 }
 
 #endif
-

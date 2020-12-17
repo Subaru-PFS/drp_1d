@@ -1,5 +1,5 @@
-#ifndef lmfitcontroller_H
-#define lmfitcontroller_H
+#ifndef _REDSHIFT_LINEMODEL_LMFITCONTROLLER_
+#define _REDSHIFT_LINEMODEL_LMFITCONTROLLER_
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/ray/ray.h>

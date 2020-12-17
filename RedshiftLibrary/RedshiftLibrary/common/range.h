@@ -1,5 +1,5 @@
-#ifndef _CORE_COMMON_RANGE_
-#define _CORE_COMMON_RANGE_
+#ifndef _REDSHIFT_COMMON_RANGE_
+#define _REDSHIFT_COMMON_RANGE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/log.h>
@@ -10,14 +10,14 @@
 namespace NSEpic {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Templated Range manipulation class
  */
 template <typename T> class CRange
 {
 
   public:
-    CRange() {}
+    CRange(): m_Begin(), m_End() {}
 
     CRange(const T begin, const T end):
         m_Begin(begin), m_End(end) {}

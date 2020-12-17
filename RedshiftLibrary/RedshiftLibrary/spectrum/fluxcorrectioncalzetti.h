@@ -13,8 +13,7 @@ namespace NSEpic
 {
 
 /**
- * /ingroup Redshift
-
+ * \ingroup Redshift
  */
 class CSpectrumFluxCorrectionCalzetti
 {
@@ -26,23 +25,20 @@ public:
     Bool Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n );
     Bool LoadFile( const char* filePath );
 
-    Float64 GetLambdaMin();
-    Float64 GetLambdaMax();
-    Int32 GetNPrecomputedDustCoeffs();
+    Float64 GetLambdaMin() const;
+    Float64 GetLambdaMax() const;
+    Int32 GetNPrecomputedDustCoeffs() const;
 
-    Float64 GetEbmvValue(Int32 k);
+    Float64 GetEbmvValue(Int32 k) const;
 
-    Float64 getDustCoeff(Int32 kDust, Float64 restLambda );
+    Float64 getDustCoeff(Int32 kDust, Float64 restLambda ) const;
 
-    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-
-    Float64 *m_dataCalzetti = NULL;
-    Float64 m_NdataCalzetti;
+    std::vector<Float64> m_dataCalzetti;
 
     Int32 m_nDustCoeff = 0;
     Float64 m_dustCoeffStep;
     Float64 m_dustCoeffStart;
-    Float64* m_dataDustCoeff = NULL;
+    std::vector<Float64> m_dataDustCoeff;
     bool calzettiInitFailed = false;
 
 private:

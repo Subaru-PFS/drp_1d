@@ -1,5 +1,5 @@
-#ifndef CHICORR_H
-#define CHICORR_H
+#ifndef _REDSHIFT_OPERATOR_CHICORR_
+#define _REDSHIFT_OPERATOR_CHICORR_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
@@ -47,5 +47,4 @@ private:
 
 }
 
-#endif // CHICORR_H
-
+#endif // _REDSHIFT_OPERATOR_CHICORR_

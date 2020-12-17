@@ -40,12 +40,12 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(
     m_opt_spcrebin = true;
 
     // ISM
-    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
+    m_ismCorrectionCalzetti = std::unique_ptr<CSpectrumFluxCorrectionCalzetti> (new CSpectrumFluxCorrectionCalzetti());
     m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
     //m_ismCorrectionCalzetti->Init(calibrationPath, -0.6, 0.1, 16);
 
     // IGM
-    m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
+    m_igmCorrectionMeiksin = std::unique_ptr<CSpectrumFluxCorrectionMeiksin> (new CSpectrumFluxCorrectionMeiksin());
     m_igmCorrectionMeiksin->Init(calibrationPath);
 
     m_nPaddedSamples = 0;
@@ -65,8 +65,6 @@ COperatorChiSquareLogLambda::COperatorChiSquareLogLambda(
 
 COperatorChiSquareLogLambda::~COperatorChiSquareLogLambda()
 {
-    delete m_ismCorrectionCalzetti;
-    delete m_igmCorrectionMeiksin;
     freeFFTPlans();
 }
 
@@ -1556,6 +1554,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
 {
     Log.LogDetail("  Operator-ChisquareLog: starting computation for template: %s", tpl.GetName().c_str());
 
+    if(redshifts.size()<2){
+        Log.LogError("       Operator-ChisquareLog::Compute: Cannot compute on a redshift array %d <2", redshifts.size());
+        throw runtime_error("Operator-ChisquareLog::Compute: Cannot compute on a redshift array <2");
+    }
     if ((opt_dustFitting==-10 || opt_dustFitting>-1) && m_ismCorrectionCalzetti->calzettiInitFailed)
     {
         Log.LogError("  Operator-ChisquareLog: no calzetti calib. file loaded... aborting!");
@@ -1712,6 +1714,10 @@ std::shared_ptr<COperatorResult> COperatorChiSquareLogLambda::Compute(const CSpe
     Float64 loglbdamax = log(lambdaRange.GetEnd());
     Int32 loglbdaCount = (Int32) floor((loglbdamax - loglbdamin) / loglbdaStep + 1);
 
+    if(loglbdaCount<2){
+        Log.LogError("       Operator-ChisquareLog::Compute: loglbdaCount = %d <2", loglbdaCount);
+        throw runtime_error("Operator-ChisquareLog::Compute: loglbdaCount <2. Abort!");
+    }
     // Allocate the Log-rebined spectrum and mask
     CSpectrumFluxAxis &spectrumRebinedFluxAxis = m_spectrumRebinedLog.GetFluxAxis();
     CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =  m_spectrumRebinedLog.GetSpectralAxis();
@@ -2146,19 +2152,6 @@ Float64 COperatorChiSquareLogLambda::EstimateLikelihoodCstLog(
     cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
 
     return cstLog;
-}
-
-const Float64 *COperatorChiSquareLogLambda::getDustCoeff(Float64 dustCoeff,
-                                                         Float64 maxLambda)
-{
-    return m_ismCorrectionCalzetti->getDustCoeff(dustCoeff, maxLambda);
-}
-
-const Float64 *COperatorChiSquareLogLambda::getMeiksinCoeff(Int32 meiksinIdx,
-                                                            Float64 redshift,
-                                                            Float64 maxLambda)
-{
-    return m_igmCorrectionMeiksin->getMeiksinCoeff(meiksinIdx, redshift, maxLambda);
 }
 
 void COperatorChiSquareLogLambda::enableSpcLogRebin(Bool enable)

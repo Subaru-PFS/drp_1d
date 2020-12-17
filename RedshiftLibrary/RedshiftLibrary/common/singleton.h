@@ -1,12 +1,12 @@
-#ifndef _CORE_COMMON_SINGLETON_
-#define _CORE_COMMON_SINGLETON_
+#ifndef _REDSHIFT_COMMON_SINGLETON_
+#define _REDSHIFT_COMMON_SINGLETON_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
 namespace NSEpic {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Singleton base class
  */
 template <typename T> class CSingleton

@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_RESULT_
-#define _REDSHIFT_OPERATOR_RESULT_
+#ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
+#define _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/continuum/indexes.h>

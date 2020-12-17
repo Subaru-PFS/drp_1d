@@ -10,13 +10,14 @@
 #include <RedshiftLibrary/statistics/pdfz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+
 #include <RedshiftLibrary/common/quicksort.h>
-
-
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
-#include <float.h>
+#include <cfloat>
+
 using namespace NSEpic;
 using namespace std;
+
 
 CMethodChisquareLogSolve::CMethodChisquareLogSolve( std::string calibrationPath )
 {
@@ -27,7 +28,6 @@ CMethodChisquareLogSolve::~CMethodChisquareLogSolve()
 {
     delete m_chiSquareOperator;
 }
-
 
 const std::string CMethodChisquareLogSolve::GetDescription()
 {
@@ -43,33 +43,33 @@ const std::string CMethodChisquareLogSolve::GetDescription()
     desc.append("\tparam: chisquarelogsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
     desc.append("\tparam: chisquarelogsolve.saveintermediateresults = {""yes"", ""no""}\n");
 
-
     return desc;
 
 }
 
 
 std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataStore& resultStore,
-                                                                              const CSpectrum& spc,
-                                                                              const CSpectrum& spcWithoutCont,
-                                                                              const CTemplateCatalog& tplCatalog,
-                                                                              const TStringList& tplCategoryList,
-                                                                              const TFloat64Range& lambdaRange,
-                                                                              const TFloat64List& redshifts,
-                                                                              Float64 overlapThreshold,
-                                                                              std::vector<CMask> maskList,
-                                                                              const string outputPdfRelDir,
-                                                                              std::string spcComponent,
-                                                                              std::string opt_interp,
-                                                                              std::string opt_extinction,
-                                                                              std::string opt_dustFit)
+                                                                         const CSpectrum& spc,
+                                                                         const CTemplateCatalog& tplCatalog,
+                                                                         const TStringList& tplCategoryList,
+                                                                         const TFloat64Range& lambdaRange,
+                                                                         const TFloat64List& redshifts,
+                                                                         Float64 overlapThreshold,
+                                                                         std::vector<CMask> maskList,
+                                                                         const string outputPdfRelDir,
+                                                                         const Float64 radius,
+                                                                         std::string spcComponent,
+                                                                         std::string opt_interp,
+                                                                         std::string opt_extinction,
+                                                                         std::string opt_dustFit)
 {
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "chisquarelogsolve" );
     std::string scopeStr = "chisquare";
+    m_radius = radius;
 
-    Int32 _type;
+    CChisquareSolveResult::EType _type;
     if(spcComponent=="raw"){
        _type = CChisquareSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
@@ -118,9 +118,8 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
+            Solve(resultStore, spc, tpl, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
             storeResult = true;
         }
@@ -129,8 +128,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareSolveResult>  ChisquareSolveResult =
-                std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "chisquarelogsolve") );
+        std::shared_ptr< CChisquareSolveResult> ChisquareSolveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "chisquarelogsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -162,26 +160,21 @@ std::shared_ptr<CChisquareSolveResult> CMethodChisquareLogSolve::Compute(CDataSt
 }
 
 Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
-                                    const CSpectrum& spc,
-                                    const CSpectrum& spcWithoutCont,
-                                    const CTemplate& tpl,
-                                    const CTemplate& tplWithoutCont,
-                                    const TFloat64Range& lambdaRange,
-                                    const TFloat64List& redshifts,
-                                    Float64 overlapThreshold,
-                                    std::vector<CMask> maskList,
-                                    Int32 spctype,
-                                    std::string opt_interp,
-                                   std::string opt_extinction,
-                                   std::string opt_dustFitting )
+                                     const CSpectrum& spc,
+                                     const CTemplate& tpl,
+                                     const TFloat64Range& lambdaRange,
+                                     const TFloat64List& redshifts,
+                                     Float64 overlapThreshold,
+                                     std::vector<CMask> maskList,
+                                     CChisquareSolveResult::EType spctype,
+                                     std::string opt_interp,
+                                     std::string opt_extinction,
+                                     std::string opt_dustFitting)
 {
-    CSpectrum _spc;
-    CTemplate _tpl;
     std::string scopeStr = "chisquare";
     Int32 _ntype = 1;
-    Int32 _spctype = spctype;
-    Int32 _spctypetab[3] = {CChisquareSolveResult::nType_raw, CChisquareSolveResult::nType_noContinuum, CChisquareSolveResult::nType_continuumOnly};
-
+    CSpectrum::EType _spctype = CSpectrum::nType_raw;
+    CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
     if(opt_extinction=="yes")
@@ -195,51 +188,33 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
         option_dustFitting = -10;
     }
 
-
-
     //case: nType_all
     if(spctype == CChisquareSolveResult::nType_all){
         _ntype = 3;
     }
 
+    const CSpectrum::EType save_spcType = spc.GetType();
+    const CSpectrum::EType save_tplType = tpl.GetType();
+
     for( Int32 i=0; i<_ntype; i++){
         if(spctype == CChisquareSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
-            _spctype = spctype;
+            _spctype = static_cast<CSpectrum::EType>(spctype);
         }
+        spc.SetType(_spctype);
+        tpl.SetType(_spctype);
 
-        if(_spctype == CChisquareSolveResult::nType_continuumOnly){
+        if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
-            _spc = spc;
-            CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
-            spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
-            CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
-            sfluxAxisPtr = spcfluxAxis;
-            _tpl = tpl;
-            CSpectrumFluxAxis tplfluxAxis = _tpl.GetFluxAxis();
-            tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
-            CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-            tfluxAxisPtr = tplfluxAxis;
-
-
             scopeStr = "chisquare_continuum";
-        }else if(_spctype == CChisquareSolveResult::nType_raw){
+
+        }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
-            _spc = spc;
-            _tpl = tpl;
             scopeStr = "chisquare";
 
-        }else if(_spctype == CChisquareSolveResult::nType_noContinuum){
+        }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
-            _spc = spc;
-            CSpectrumFluxAxis spcfluxAxis = spcWithoutCont.GetFluxAxis();
-            CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
-            sfluxAxisPtr = spcfluxAxis;
-            _tpl = tpl;
-            CSpectrumFluxAxis tplfluxAxis = tplWithoutCont.GetFluxAxis();
-            CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-            tfluxAxisPtr = tplfluxAxis;
             scopeStr = "chisquare_nocontinuum";
             //
             option_dustFitting = -1;
@@ -247,8 +222,8 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
 
         // Compute merit function
         //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( _spc,
-                                                                                                           _tpl,
+        auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator->Compute( spc,
+                                                                                                           tpl,
                                                                                                            lambdaRange,
                                                                                                            redshifts,
                                                                                                            overlapThreshold,
@@ -256,7 +231,7 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
                                                                                                            opt_interp,
                                                                                                            enable_extinction,
                                                                                                            option_dustFitting ) );
-        chisquareResult->CallFindExtrema();
+        chisquareResult->CallFindExtrema(m_radius);
 
         if( !chisquareResult )
         {
@@ -265,7 +240,6 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
         }else{
             // Store results
             resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), chisquareResult );
-
 
             //Save intermediate chisquare results
             if(m_opt_enableSaveIntermediateChisquareResults && chisquareResult->ChiSquareIntermediate.size()>0 && chisquareResult->ChiSquareIntermediate.size()==chisquareResult->Redshifts.size())
@@ -296,11 +270,13 @@ Bool CMethodChisquareLogSolve::Solve(CDataStore& resultStore,
         }
     }
 
+    spc.SetType(save_spcType);
+    tpl.SetType(save_tplType);
+
     return true;
 }
 
-
-Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult )
+Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
 {
     Log.LogInfo("chisquarelogsolve: Pdfz computation");
     std::string scope = store.GetCurrentScopeName() + ".";
@@ -405,7 +381,7 @@ Int32 CMethodChisquareLogSolve::CombinePDF(CDataStore &store, std::string scopeS
     return retPdfz;
 }
 
-Bool CMethodChisquareLogSolve::ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list)
+Bool CMethodChisquareLogSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
         std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());

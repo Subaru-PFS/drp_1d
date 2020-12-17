@@ -27,7 +27,7 @@ void CSpectraFluxResult::Save( const CDataStore& store, std::ostream& stream ) c
 {
 	UInt32 p = 13;
 	std::string tx;
-	if        (m_optio ==0) { tx="# Wavelength \tFlux"; }
+	if      (m_optio ==0) { tx="# Wavelength \tFlux"; }
 	else if (m_optio ==1) { tx="# Wavelength \tFilteredFlux";   }
 	else if (m_optio ==2) { tx="# Wavelength \tErrorFiltered";  }
 
@@ -44,9 +44,8 @@ void CSpectraFluxResult::Save( const CDataStore& store, std::ostream& stream ) c
 
 void CSpectraFluxResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
 {
-	stream.precision(10);
+    stream.precision(10);
     stream << "CSpectraFluxResult" << "\t" << fluxes.size() << std::endl;
-
 }
 
 

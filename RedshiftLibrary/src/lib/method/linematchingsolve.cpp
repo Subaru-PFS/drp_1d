@@ -59,7 +59,6 @@ CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
 
 }
 
-
 const std::string CMethodLineMatchingSolve::GetDescription()
 {
     std::string desc;
@@ -83,8 +82,12 @@ const std::string CMethodLineMatchingSolve::GetDescription()
 
 }
 
-std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc,
-                                                                      const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )
+std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( CDataStore& dataStore,
+                                                                             const CSpectrum& spc,
+                                                                             const TFloat64Range& lambdaRange,
+                                                                             const TFloat64Range& redshiftsRange,
+                                                                             Float64 redshiftStep,
+                                                                             const CRayCatalog& restRayCatalog )
 {
     Bool storeResult = false;
 
@@ -137,7 +140,7 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute(  CD
     dataStore.GetScopedParam( "linematching.minmatchnum", opt_minmatchnum, 1.0 );
 
     CRayMatching rayMatching;
-    auto rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
+    auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, opt_minmatchnum, opt_tolerance );
 
     // Store matching results
     if( rayMatchingResult )

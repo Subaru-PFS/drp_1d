@@ -2,12 +2,13 @@
 #define _REDSHIFT_RAY_REGULAMENT_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
 #include <RedshiftLibrary/ray/rule.h>
 
 #include <boost/format.hpp>
 
 namespace NSEpic {
+
+class CLineModelElementList;
 /**
  * \ingroup Redshift
  * \brief Control class for preparing and applying Linemodel rules.
@@ -27,8 +28,8 @@ class CRegulament
     void EnableLogs(bool enable);
 
   private:
-    Float64 m_Redshift;
-    std::vector<CRule *> m_RulesVector;
+    Float64 m_Redshift; 
+    std::vector<std::unique_ptr<CRule>> m_RulesVector;
     std::vector<std::string> m_RulesLog;
     bool m_LogsEnabled = false;
 };

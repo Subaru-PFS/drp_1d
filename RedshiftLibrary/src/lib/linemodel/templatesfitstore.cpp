@@ -78,15 +78,15 @@ void CTemplatesFitStore::initFitValues()
     }
 }
 
-std::vector<Float64> CTemplatesFitStore::GetRedshiftList()
+const std::vector<Float64> & CTemplatesFitStore::GetRedshiftList() const 
 {
     return redshiftgrid;
 }
 
-Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z)
+Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const
 {
     UInt32 redshiftscaledInt = (UInt32)(z/redshiftgridmapPrecision+0.5);
-    std::map<UInt32,UInt32>::iterator it = redshiftgridmap.find(redshiftscaledInt);
+    std::map<UInt32,UInt32>::const_iterator it = redshiftgridmap.find(redshiftscaledInt);
     if(it != redshiftgridmap.end())
     {
         Int32 outputIdx = (Int32)(it->second);
@@ -218,12 +218,12 @@ bool CTemplatesFitStore::Add(std::string tplName,
     return true;
 }
 
-Int32 CTemplatesFitStore::GetContinuumCount()
+Int32 CTemplatesFitStore::GetContinuumCount() const
 {
     return n_continuum_candidates;
 }
 
-CTemplatesFitStore::TemplateFitValues CTemplatesFitStore::GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank)
+CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const
 {
     if(continuumCandidateRank>n_continuum_candidates-1)
     {

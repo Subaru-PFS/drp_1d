@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/log.h>
@@ -25,10 +26,10 @@ CRegulament::~CRegulament()
 }
 void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
-  for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
-    {
-      (*it)->Apply ( LineModelElementList );
-      std::string logRule = (*it)->GetLogs ( );
+  for(unique_ptr<CRule>& rule: m_RulesVector)
+  {
+      rule->Apply( LineModelElementList );
+      std::string logRule = rule->GetLogs( );
       if(logRule.size()>0 && m_LogsEnabled){
         m_RulesLog.push_back(logRule);
       }
@@ -45,74 +46,64 @@ Bool CRegulament::CreateRulesFromJSONFiles( void )
   // To be removed once JSON code is in <--
   Bool True = true;
   linetags ltags;
-  //CRuleBalmerLinearSolver* ARule8 = new CRuleBalmerLinearSolver( );
-  //ARule8->SetUp( True );
-  //m_RulesVector.push_back( dynamic_cast<CRule*>( ARule8 ) );
 
-  //TODO [ml] check all these new objects, they are "possibly lost in loss record" according to valgrind, reveiew CRull... constructor
+  //m_RulesVector.push_back( std::make_unique<CRuleBalmerLinearSolver>() );
+  //m_RulesVector.back()->SetUp( True );
+  
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.halpha_em, ltags.hbeta_em, 1.0/2.86*1.1 );
+ 
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hbeta_em, ltags.hgamma_em, 0.47*1.1 );
 
-  CRule2SingleLinesAmplitude* ARule1 = new CRule2SingleLinesAmplitude( );
-  ARule1->SetUp( True, CRay::nType_Emission, ltags.halpha_em, ltags.hbeta_em, 1.0/2.86*1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule1 ) );
-  CRule2SingleLinesAmplitude* ARule2 = new CRule2SingleLinesAmplitude( );
-  ARule2->SetUp( True, CRay::nType_Emission, ltags.hbeta_em, ltags.hgamma_em, 0.47*1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule2 ) );
-  CRule2SingleLinesAmplitude* ARule3 = new CRule2SingleLinesAmplitude( );
-  ARule3->SetUp( True, CRay::nType_Emission, ltags.hgamma_em, ltags.hdelta_em, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule3 ) );
-  CRule2SingleLinesAmplitude* ARule4 = new CRule2SingleLinesAmplitude( );
-  ARule4->SetUp( True, CRay::nType_Emission, ltags.hdelta_em, ltags.h8_em, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule4 ) );
-  CRule2SingleLinesAmplitude* ARule5 = new CRule2SingleLinesAmplitude( );
-  ARule5->SetUp( True, CRay::nType_Emission, ltags.h8_em, ltags.h9_em, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule5 ) );
-  CRule2SingleLinesAmplitude* ARule6 = new CRule2SingleLinesAmplitude( );
-  ARule6->SetUp( True, CRay::nType_Emission, ltags.h9_em, ltags.h10_em, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule6 ) );
-  CRule2SingleLinesAmplitude* ARule7 = new CRule2SingleLinesAmplitude( );
-  ARule7->SetUp( True, CRay::nType_Emission, ltags.h10_em, ltags.h11_em, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7 ) );
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hgamma_em, ltags.hdelta_em, 1.1 );
 
-  CRule2SingleLinesAmplitude* ARule2A = new CRule2SingleLinesAmplitude( );
-  ARule2A->SetUp( True, CRay::nType_Emission, ltags.hbeta_abs, ltags.hgamma_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule2A ) );
-  CRule2SingleLinesAmplitude* ARule3A = new CRule2SingleLinesAmplitude( );
-  ARule3A->SetUp( True, CRay::nType_Emission, ltags.hgamma_abs, ltags.hdelta_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule3A ) );
-  CRule2SingleLinesAmplitude* ARule4A = new CRule2SingleLinesAmplitude( );
-  ARule4A->SetUp( True, CRay::nType_Emission, ltags.hdelta_abs, ltags.h8_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule4A ) );
-  CRule2SingleLinesAmplitude* ARule5A = new CRule2SingleLinesAmplitude( );
-  ARule5A->SetUp( True, CRay::nType_Emission, ltags.h8_abs, ltags.h9_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule5A ) );
-  CRule2SingleLinesAmplitude* ARule6A = new CRule2SingleLinesAmplitude( );
-  ARule6A->SetUp( True, CRay::nType_Emission, ltags.h9_abs, ltags.h10_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule6A ) );
-  CRule2SingleLinesAmplitude* ARule7A = new CRule2SingleLinesAmplitude( );
-  ARule7A->SetUp( True, CRay::nType_Emission, ltags.h10_abs, ltags.h11_abs, 1.1 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule7A ) );
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hdelta_em, ltags.h8_em, 1.1 );
 
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h8_em, ltags.h9_em, 1.1 );
 
-  CRuleRatioRange* ARule9 = new CRuleRatioRange( );
-  ARule9->SetUp( True, CRay::nType_Emission, ltags.oII3726_em, ltags.oII3729_em, 2.5 );
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h9_em, ltags.h10_em, 1.1 );
 
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule9 ) );
-  CRuleStrongHigherThanWeak* ARule10 = new CRuleStrongHigherThanWeak( );
-  ARule10->SetUp( True, CRay::nType_Emission );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule10 ) );
-  CRuleStrongHigherThanWeak* ARule11 = new CRuleStrongHigherThanWeak( );
-  ARule11->SetUp( True, CRay::nType_Absorption );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule11 ) );
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h10_em, ltags.h11_em, 1.1 );
 
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hbeta_abs, ltags.hgamma_abs, 1.1 );
 
-  CRuleRatioRange* ARule13 = new CRuleRatioRange( );
-  ARule13->SetUp( True, CRay::nType_Emission, ltags.cIII1907_em, ltags.cIII1909_em, 2.0 );
-  m_RulesVector.push_back( dynamic_cast<CRule*>( ARule13 ) );
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hgamma_abs, ltags.hdelta_abs, 1.1  );
 
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.hdelta_abs, ltags.h8_abs, 1.1 );
+
+  m_RulesVector.push_back(  unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h8_abs, ltags.h9_abs, 1.1 );
+
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h9_abs, ltags.h10_abs, 1.1 );
+
+  m_RulesVector.push_back( unique_ptr<CRule2SingleLinesAmplitude>(new CRule2SingleLinesAmplitude()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.h10_abs, ltags.h11_abs, 1.1 );
+
+  m_RulesVector.push_back( unique_ptr<CRuleRatioRange>(new CRuleRatioRange()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.oII3726_em, ltags.oII3729_em, 2.5 );
+
+  m_RulesVector.push_back( unique_ptr<CRuleStrongHigherThanWeak>(new CRuleStrongHigherThanWeak()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission );
+
+  m_RulesVector.push_back( unique_ptr<CRuleStrongHigherThanWeak>(new CRuleStrongHigherThanWeak()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Absorption );
+
+  m_RulesVector.push_back( unique_ptr<CRuleRatioRange>(new CRuleRatioRange()) );
+  m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.cIII1907_em, ltags.cIII1909_em, 2.0 );
+ 
   // OII and Halpha Super Strong
-  //CRuleSuperStrong* ARule12 = new CRuleSuperStrong( );
-  //ARule12->SetUp( True, CRay::nType_Emission, ltags.oII3726_em, ltags.oII3729_em, ltags.halpha_em, 1.1 );
-  //m_RulesVector.push_back( dynamic_cast<CRule*>( ARule12 ) );
+  //m_RulesVector.push_back( unique_ptr<CRuleSuperStrong>(new CRuleSuperStrong()) );
+  //m_RulesVector.back()->SetUp( True, CRay::nType_Emission, ltags.oII3726_em, ltags.oII3729_em, ltags.halpha_em, 1.1 );
 
   if(m_LogsEnabled)
   {
@@ -127,17 +118,17 @@ void CRegulament::EnableRulesAccordingToParameters( std::string Parameters )
     {
         return;
     }
-  for( std::vector<CRule*>::iterator it = m_RulesVector.begin(); it != m_RulesVector.end(); it++ )
+  for(unique_ptr<CRule>& rule: m_RulesVector )
     {
-      Bool enableRule = Parameters.find ( (*it)->Name ) != std::string::npos;
+      Bool enableRule = Parameters.find ( rule->Name ) != std::string::npos;
       if( Parameters=="all" || enableRule )
     {
-      Log.LogDebug( "Enabling rule %s.", (*it)->Name.c_str() );
-      (*it)->Enabled = true;
+      Log.LogDebug( "Enabling rule %s.", rule->Name.c_str() );
+      rule->Enabled = true;
     }else
       {
-          Log.LogDebug( "Disabling rule %s.", (*it)->Name.c_str() );
-          (*it)->Enabled = false;
+          Log.LogDebug( "Disabling rule %s.", rule->Name.c_str() );
+          rule->Enabled = false;
       }
     }
 }

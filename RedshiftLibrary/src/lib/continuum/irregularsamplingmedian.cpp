@@ -150,7 +150,7 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     Int32 nreflex, nbig;
     Int32 j, k;
 
-    const CSpectrumFluxAxis& fluxAxis = s.GetFluxAxis();
+    const CSpectrumFluxAxis& fluxAxis = s.GetRawFluxAxis();
 
     Int32 norig = s.GetSampleCount();
 

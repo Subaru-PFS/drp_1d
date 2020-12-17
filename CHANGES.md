@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.16.0 (2020-12-15)
+### Added
+* [5997] : Add model parameters into HDF5 output for chisquare2 method
+* [6057] : Add ExtremaRedshiftSeparation parameter for candidate finder
+* [6057] : Add halfwindowsize parameter (size of the redshift half-range) for the 2nd pass in linemodel method
+* [6027] : Add continuumfit.method in linemodel, chisquare2 and chisquarelog, methods
+* [6125] : Add pylibamazed python API
+## Changed
+* [5932] : Disable default AVX and SSE build option for third parties
+* [6043] : Upgrade minimum Boost version to 1.57
+* [6051] : Avoid strict overlap of 2nd pass redshfit windows in linemodel method
+* [5976] : Enable method selecting for QSO solver
+## Removed
+* [5648] : Remove systematic continuum estimation
+* [5753] : Remove unused csv output files
+* [6129] : Remove extinction parameter (IGM) for stellar solver
+## Fixed
+* [6130] : Fix core segmentation error in the 2nd of the linemodel method when called with only one redshift
+* [6127] : Fix slightly randomly changing pdf for hight redshift galaxies on different compilers
+* [6131] : Fix wrong redshift values in HDF5 file
+* [6129] : Fix memory leak from one spectra to the other
+
 ## 0.14.0 (2020-10-09)
 ### Added
 * [5929] HDF5 output

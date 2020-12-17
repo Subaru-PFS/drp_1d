@@ -33,7 +33,7 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodDTree7Solve::CMethodDTree7Solve(std::string calibrationPath)
+CMethodDTree7Solve::CMethodDTree7Solve()
 {
     // Peak Detection
     m_winsize = 250.0;
@@ -46,15 +46,12 @@ CMethodDTree7Solve::CMethodDTree7Solve(std::string calibrationPath)
 
     //dtree path
     m_dtreepathnum = -1.0;
-
-    m_calibrationPath = calibrationPath;
 }
 
 CMethodDTree7Solve::~CMethodDTree7Solve()
 {
 
 }
-
 
 const std::string CMethodDTree7Solve::GetDescription()
 {
@@ -74,14 +71,20 @@ const std::string CMethodDTree7Solve::GetDescription()
 
 }
 
-
-std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList, const CRayCatalog &restRayCatalog,
-                                                        const TFloat64Range& lambdaRange, const TFloat64Range& redshiftRange, Float64 redshiftStep,
-                                                        Int32 correlationExtremumCount, Float64 overlapThreshold )
+std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& dataStore,
+                                                                const CSpectrum& spc,
+                                                                const CTemplateCatalog& tplCatalog,
+                                                                const TStringList& tplCategoryList,
+                                                                const CRayCatalog& restRayCatalog,
+                                                                const TFloat64Range& lambdaRange,
+                                                                const TFloat64Range& redshiftRange,
+                                                                Float64 redshiftStep,
+                                                                const Float64 radius,
+                                                                Int32 correlationExtremumCount,
+                                                                Float64 overlapThreshold)
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( dataStore, "dtree7solve" );
 
     dataStore.GetScopedParam( "winsize", m_winsize, 250.0 );
@@ -91,7 +94,7 @@ std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& data
     dataStore.GetScopedParam( "tol", m_tol, 0.002 );
 
     if(correlationExtremumCount==-1){
-        Float64 count=0.0;
+        Float64 count = 0.0;
         dataStore.GetScopedParam( "correlationExtremumCount", count, 5.0 );
         correlationExtremumCount = (Int32)count;
     }
@@ -100,10 +103,10 @@ std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& data
     }
 
 
-    storeResult = SolveDecisionalTree7(dataStore, spc, spcWithoutCont,
+    storeResult = SolveDecisionalTree7(dataStore, spc,
                                        tplCatalog, tplCategoryList, restRayCatalog,
                                        lambdaRange, redshiftRange, redshiftStep,
-                                       correlationExtremumCount, overlapThreshold );
+                                       correlationExtremumCount, overlapThreshold);
 
     //storeResult = true;
     if( storeResult )
@@ -114,16 +117,25 @@ std::shared_ptr<CDTree7SolveResult> CMethodDTree7Solve::Compute(CDataStore& data
     return NULL;
 }
 
-Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpectrum &spc, const CSpectrum &spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog &restRayCatalog, const TFloat64Range &lambdaRange, const TFloat64Range &redshiftRange, Float64 redshiftStep, Int32 correlationExtremumCount, Float64 overlapThreshold)
+Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore& dataStore,
+                                              const CSpectrum& spc,
+                                              const CTemplateCatalog& tplCatalog,
+                                              const TStringList& tplCategoryList,
+                                              const CRayCatalog& restRayCatalog,
+                                              const TFloat64Range& lambdaRange,
+                                              const TFloat64Range& redshiftRange,
+                                              Float64 redshiftStep,
+                                              Int32 correlationExtremumCount,
+                                              Float64 overlapThreshold)
 {
     //Log.LogInfo( "Process Decisional Tree 7" );
 
     //COperatordataStore::CAutoScope resultScope( dataStore, "dtree7" );
 
-    TStringList   filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, "emission" );
+    TStringList filteredTemplateCategoryList = getFilteredTplCategory( tplCategoryList, "emission" );
 
     CPeakDetection peakDetection(m_winsize, m_cut);
-    std::shared_ptr<const CPeakDetectionResult> peakDetectionResult = peakDetection.Compute( spc, lambdaRange);
+    std::shared_ptr<const CPeakDetectionResult> peakDetectionResult = peakDetection.Compute(spc, lambdaRange);
 
     Int32 nPeakDetected = -1;
     if(peakDetectionResult==NULL){
@@ -136,15 +148,13 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
     }
 
     // check Peak Detection results
-    if(nPeakDetected<1){
+    if(nPeakDetected < 1){
         Log.LogInfo( "DTree7 - No Peak found, switching to Blindsolve");
         m_dtreepathnum = 1.1;
-        { //blindsolve
+        {   //blindsolve
             CMethodBlindSolve blindSolve;
-            auto blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                tplCatalog, tplCategoryList,
-                                                                                lambdaRange, redshiftRange, redshiftStep,
-                                                                                correlationExtremumCount, overlapThreshold );
+            auto blindsolveResult = blindSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
                 return true;
@@ -166,12 +176,10 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
     if( nRaysDetected < 1){
         Log.LogInfo( "DTree7 - No lines found, switching to ProcessWithoutEL");
         m_dtreepathnum = 1.11;
-        { //blindsolve
+        {   //blindsolve
             CMethodBlindSolve blindSolve;
-            auto blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                tplCatalog, tplCategoryList,
-                                                                                lambdaRange, redshiftRange, redshiftStep,
-                                                                                correlationExtremumCount, overlapThreshold );
+            auto blindsolveResult = blindSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
                 return true;
@@ -184,7 +192,8 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
 
     // Line Matching
     CRayMatching rayMatching;
-    auto rayMatchingResult = rayMatching.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
+    auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol );
+
     if(rayMatchingResult!=NULL){
         // Store matching results
         dataStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
@@ -193,12 +202,10 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
         if(rayMatchingResult->GetSolutionsListOverNumber(0).size()<1){
             Log.LogInfo( "DTree7 - Not match found [1], switching to ProcessWithoutEL");
             m_dtreepathnum = 1.2;
-            { //blindsolve
+            {   //blindsolve
                 CMethodBlindSolve blindSolve;
-                auto blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                    tplCatalog, tplCategoryList,
-                                                                                    lambdaRange, redshiftRange, redshiftStep,
-                                                                                    correlationExtremumCount, overlapThreshold );
+                auto blindsolveResult = blindSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
                 if( blindsolveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
                     return true;
@@ -211,12 +218,10 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
     }else{
         Log.LogInfo( "DTree7 - Not match found  [0], switching to ProcessWithoutEL");
         m_dtreepathnum = 1.21;
-        { //blindsolve
+        {   //blindsolve
             CMethodBlindSolve blindSolve;
-            auto blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                tplCatalog, tplCategoryList,
-                                                                                lambdaRange, redshiftRange, redshiftStep,
-                                                                                correlationExtremumCount, overlapThreshold );
+            auto blindsolveResult = blindSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
             if( blindsolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
                 return true;
@@ -243,11 +248,10 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
         Log.LogInfo( "DTree7 - compute merits on redshift candidates from line matching" );
         TFloat64List roundedRedshift = rayMatchingResult->GetRoundedRedshiftCandidatesOverNumber(matchNum-1, redshiftStep);
         Log.LogInfo( "DTree7 - (n candidates = %d)", roundedRedshift.size());
-        { //chisolve with emission templqtes only
-            CMethodChisquareSolve chiSolve(m_calibrationPath);
-            auto chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                tplCatalog, filteredTemplateCategoryList,
-                                                                                lambdaRange, roundedRedshift, overlapThreshold );
+        {   //chisolve with emission templqtes only
+            CMethodChisquareSolve chiSolve;
+            auto chisolveResult = chiSolve.Compute( dataStore, spc, tplCatalog, filteredTemplateCategoryList, lambdaRange, roundedRedshift, m_radius, overlapThreshold );
+
             if( chisolveResult ) {
                 dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
                 return true;
@@ -267,18 +271,17 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
     if(nStrongPeaks > 0){
         Log.LogInfo( "DTree7 - Line Matching with %d strong peaks", nStrongPeaks);
         CRayMatching rayMatchingStrong;
-        auto rayMatchingStrongResult = rayMatchingStrong.Compute(lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, CRay::nType_Emission, CRay::nForce_Strong );
+        auto rayMatchingStrongResult = rayMatchingStrong.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftRange, m_minMatchNum, m_tol, CRay::nType_Emission, CRay::nForce_Strong );
         Int32 matchNumStrong = rayMatchingStrongResult->GetMaxMatchingNumber();
 
         if(matchNumStrong>1){
             Log.LogInfo( "DTree7 - match num strong >= 2, compute merits on redshift candidates from strong line matching");
             TFloat64List roundedRedshift = rayMatchingStrongResult->GetRoundedRedshiftCandidatesOverNumber(matchNumStrong-1, redshiftStep);
             m_dtreepathnum = 2.2;
-            { //chisolve with emission templqtes only
-                CMethodChisquareSolve chiSolve(m_calibrationPath);
-                auto chisolveResult = chiSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                    tplCatalog, filteredTemplateCategoryList,
-                                                                                    lambdaRange, roundedRedshift, overlapThreshold );
+            {   //chisolve with emission templqtes only
+                CMethodChisquareSolve chiSolve;
+                auto chisolveResult = chiSolve.Compute( dataStore, spc, tplCatalog, filteredTemplateCategoryList, lambdaRange, roundedRedshift, m_radius, overlapThreshold );
+
                 if( chisolveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", chisolveResult );
                     return true;
@@ -288,14 +291,12 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
                 }
             }
         }else{
-            Log.LogInfo( "DTree7 - Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)");
+            Log.LogInfo( "DTree7 - Not match found with strong lines, switching to ProcessWithoutEL (EZ: only_correlation_... equivalent)" );
             m_dtreepathnum = 3.0;
-            { // corrsolve with emission templates only
+            {   //corrsolve with emission templates only
                 CMethodCorrelationSolve Solve;
-                auto solveResult = Solve.Compute( dataStore, spc, spcWithoutCont,
-                                                                                tplCatalog, filteredTemplateCategoryList,
-                                                                                lambdaRange, redshiftRange, redshiftStep,
-                                                                                overlapThreshold );
+                auto solveResult = Solve.Compute( dataStore, spc, tplCatalog, filteredTemplateCategoryList, lambdaRange, redshiftRange, redshiftStep, overlapThreshold );
+
                 if( solveResult ) {
                     dataStore.StoreScopedGlobalResult( "redshiftresult", solveResult );
                     return true;
@@ -309,12 +310,10 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
 
     Log.LogInfo( "DTree7 - no other path found than switching to ProcessWithoutEL...");
     m_dtreepathnum = 1.3;
-    { //blindsolve
+    {   //blindsolve
         CMethodBlindSolve blindSolve;
-        auto blindsolveResult = blindSolve.Compute( dataStore, spc, spcWithoutCont,
-                                                                            tplCatalog, tplCategoryList,
-                                                                            lambdaRange, redshiftRange, redshiftStep,
-                                                                            correlationExtremumCount, overlapThreshold );
+        auto blindsolveResult = blindSolve.Compute( dataStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshiftRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+
         if( blindsolveResult ) {
             dataStore.StoreScopedGlobalResult( "redshiftresult", blindsolveResult );
             return true;
@@ -325,10 +324,9 @@ Bool CMethodDTree7Solve::SolveDecisionalTree7(CDataStore &dataStore, const CSpec
     }
 }
 
-
 TStringList CMethodDTree7Solve::getFilteredTplCategory( const TStringList& tplCategoryListIn, const std::string& CategoryFilter)
 {
-    TStringList   filteredTemplateCategoryList;
+    TStringList filteredTemplateCategoryList;
     for( UInt32 i=0; i<tplCategoryListIn.size(); i++ )
     {
         std::string category = tplCategoryListIn[i];

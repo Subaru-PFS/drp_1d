@@ -33,14 +33,14 @@ void CLineModelSolveResult::preSave(const CDataStore& store)
    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
-        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);
+        GetBestRedshift( store, m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII );
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", m_redshift);
     }
     else if(m_bestRedshiftMethod==2)
     {
-        if(GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
+        if(GetBestRedshiftFromPdf( store, m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
         {
-        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
+        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", m_redshift);
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplcontinuum=%s", tplcontinuumName.c_str());
         }
@@ -60,8 +60,8 @@ void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
  
 
     stream <<  "#Redshifts\tMerit\tTemplateRatio\tTemplateContinuum\tmethod\tsigma"<< std::endl;
-    stream << redshift << "\t"
-       << merit << "\t"
+    stream << m_redshift << "\t"
+       << m_merit << "\t"
        << tplratioName << "\t"
        << tplcontinuumName << "\t"
        << "LineModelSolve" << "\t"
@@ -100,8 +100,8 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
 
     stream  << store.GetSpectrumName() << "\t"
         << store.GetProcessingID() << "\t"
-	    << redshift << "\t"
-	    << merit << "\t"
+	    << m_redshift << "\t"
+	    << m_merit << "\t"
         << tplratioName << "\t"
         << "LineModelSolve" << "\t"
         << sigma << "\t"
@@ -221,7 +221,7 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
 }
 
 
-Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
+Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) 
 {
     //check if the pdf is stellar/galaxy or else
     std::string outputPdfRelDir  = "zPDF"; //default value set to galaxy zPDF folder
