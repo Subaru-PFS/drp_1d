@@ -68,3 +68,8 @@ wheel
 swig_ext.py
 
 lib/*.so
+
+# Index files for Source Trail
+*.srctrlbm
+*.srctrldb
+*.srctrlprj
