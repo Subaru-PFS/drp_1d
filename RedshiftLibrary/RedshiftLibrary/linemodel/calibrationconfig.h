@@ -1,5 +1,5 @@
-#ifndef _LINEMODEL_CALIBRATIONCONFIG_
-#define _LINEMODEL_CALIBRATIONCONFIG_
+#ifndef _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
+#define _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
@@ -12,8 +12,7 @@ namespace NSEpic
 {
 
 /**
- * /ingroup Redshift
-
+ * \ingroup Redshift
  */
 class CCalibrationConfigHelper
 {

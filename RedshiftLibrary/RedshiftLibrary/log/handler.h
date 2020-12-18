@@ -1,5 +1,5 @@
-#ifndef _CORE_LOG_HANDLER_
-#define _CORE_LOG_HANDLER_
+#ifndef _REDSHIFT_LOG_HANDLER_
+#define _REDSHIFT_LOG_HANDLER_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
@@ -9,7 +9,7 @@ namespace NSEpic
 class CLog;
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Interface for log implementing custom log handler
  */
 class CLogHandler

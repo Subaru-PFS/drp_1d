@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMODELEXTREMARESULT_
-#define _REDSHIFT_OPERATOR_LINEMODELEXTREMARESULT_
+#ifndef _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
+#define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>

@@ -17,19 +17,18 @@ using namespace std;
  * \brief Constructor.
  **/
 CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
-                          const CSpectrum &spectrumContinuum,
-                          const CTemplateCatalog& tplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string& opt_continuumcomponent,
-                          const std::string& widthType,
-                          const Float64 resolution,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string& opt_rules,
-                          const std::string &opt_rigidity)
+                                 const CTemplateCatalog& tplCatalog,
+                                 const TStringList& tplCategoryList,
+                                 const std::string calibrationPath,
+                                 const CRayCatalog::TRayVector& restRayList,
+                                 const std::string& opt_fittingmethod,
+                                 const std::string& opt_continuumcomponent,
+                                 const std::string& widthType,
+                                 const Float64 resolution,
+                                 const Float64 velocityEmission,
+                                 const Float64 velocityAbsorption,
+                                 const std::string& opt_rules,
+                                 const std::string &opt_rigidity)
 {
 
     m_opt_rigidity = opt_rigidity;
@@ -43,16 +42,11 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         std::shared_ptr<CSpectrum> spcRoll = LoadRollSpectrum(spectrum.GetFullPath(), km+irollOffset, irollOffset);
         spcRolls.push_back(spcRoll);
     }
-    CSpectrum spcContinuumForMultimodel = CSpectrum(spectrumContinuum);
 
-    Bool enableOverrideContinuumFromCombined=true;
-    //auto-deactivate override of continuum if not estimated from spectrum
-    if(opt_continuumcomponent!="fromspectrum")
+    // Estimate a common continuum spectrum if the continuum is estimated from spectrum
+    if(opt_continuumcomponent=="fromspectrum")
     {
-        enableOverrideContinuumFromCombined = false;
-    }
-    if(enableOverrideContinuumFromCombined)
-    {
+        // Combine rolls
         CSpectrumCombination spcCombination;
         CSpectrum spcCombined = CSpectrum(*spcRolls[0]);
         Int32 retComb = spcCombination.Combine(spcRolls, spcCombined);
@@ -62,99 +56,18 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         }
 
         // Estimate continuum spectrum
-        TFloat64List dumb_mask;
-        for(Int32 km=0; km<spcCombined.GetSampleCount(); km++)
+        CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
+        for(Int32 km=0; km<nModels; km++)
         {
-            dumb_mask.push_back(1);
+            spcRolls[km]->SetContinuumEstimationMethod(ContinuumFluxAxis);
         }
-        std::shared_ptr<CSpectrum> spectrumWithoutContinuum = std::shared_ptr<CSpectrum>( new CSpectrum(spcCombined, dumb_mask) );
-        //*spectrumWithoutContinuum = *spcCombined;
-        std::shared_ptr<CSpectrum> spectrumForContinuumEstimation = std::shared_ptr<CSpectrum>( new CSpectrum(spcCombined, dumb_mask) );
-        //*spectrumForContinuumEstimation = *spcCombined; //NB: could be set to an individual roll instead.
-
-        std::string medianRemovalMethod = spectrumContinuum.GetContinuumEstimationMethod();
-
-        //const char*     nameBaseline;         // baseline filename
-        Log.LogInfo( "    multirollmodel: Continuum estimation: using %s", medianRemovalMethod.c_str() );
-        if( medianRemovalMethod== "IrregularSamplingMedian")
-        {
-            // nameBaseline = "preprocess/baselineISMedian";
-            CContinuumIrregularSamplingMedian continuum;
-            Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
-            continuum.SetMedianKernelWidth(opt_medianKernelWidth);
-            continuum.SetMeanKernelWidth(opt_medianKernelWidth);
-            spectrumWithoutContinuum->RemoveContinuum( continuum );
-            spectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
-        }else if( medianRemovalMethod== "Median")
-        {
-            // nameBaseline = "preprocess/baselineMedian";
-            CContinuumMedian continuum;
-            Float64 opt_medianKernelWidth=spectrumContinuum.GetMedianWinsize();
-            continuum.SetMedianKernelWidth(opt_medianKernelWidth);
-            spectrumWithoutContinuum->RemoveContinuum( continuum );
-            spectrumWithoutContinuum->SetMedianWinsize(opt_medianKernelWidth);
-
-        }else if( medianRemovalMethod== "waveletsDF")
-        {
-            // nameBaseline = "preprocess/baselineDF";
-            Int64 nscales=spectrumContinuum.GetDecompScales();
-            std::string dfBinPath=spectrumContinuum.GetWaveletsDFBinPath();
-            CContinuumDF continuum(dfBinPath);
-            spectrumWithoutContinuum->SetDecompScales(nscales);
-            bool ret = spectrumWithoutContinuum->RemoveContinuum( continuum );
-            if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
-            {
-                Log.LogError( "    multirollmodel: Failed to apply continuum substraction for multimodel-combined spectrum" );
-                return;
-            }
-        }else if( medianRemovalMethod== "raw")
-        {
-            // nameBaseline = "preprocess/baselineRAW";
-            CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
-            spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
-            CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
-            spcSpectralAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount()  );
-
-
-            for(Int32 k=0; k<spectrumWithoutContinuum->GetSampleCount(); k++)
-            {
-                spcFluxAxis[k] = 0.0;
-            }
-        }else if( medianRemovalMethod== "zero")
-        {
-            // nameBaseline = "preprocess/baselineZERO";
-            CSpectrumFluxAxis& spcFluxAxis = spectrumWithoutContinuum->GetFluxAxis();
-            spcFluxAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount() );
-            CSpectrumSpectralAxis& spcSpectralAxis = spectrumWithoutContinuum->GetSpectralAxis();
-            spcSpectralAxis.SetSize( spectrumForContinuumEstimation->GetSampleCount()  );
-
-
-            for(Int32 k=0; k<spectrumWithoutContinuum->GetSampleCount(); k++)
-            {
-                spcFluxAxis[k] = spectrumForContinuumEstimation->GetFluxAxis()[k];
-            }
-        }
-        spectrumWithoutContinuum->SetContinuumEstimationMethod(medianRemovalMethod);
-
-        spcContinuumForMultimodel = *spectrumForContinuumEstimation;
-        CSpectrumFluxAxis spcfluxAxis = spcContinuumForMultimodel.GetFluxAxis();
-        spcfluxAxis.Subtract( spectrumWithoutContinuum->GetFluxAxis() );
-        CSpectrumFluxAxis& sfluxAxisPtr = spcContinuumForMultimodel.GetFluxAxis();
-        sfluxAxisPtr = spcfluxAxis;
-        spcContinuumForMultimodel.SetMedianWinsize(spectrumWithoutContinuum->GetMedianWinsize());
-        spcContinuumForMultimodel.SetDecompScales(spectrumWithoutContinuum->GetDecompScales());
-        spcContinuumForMultimodel.SetContinuumEstimationMethod(spectrumWithoutContinuum->GetContinuumEstimationMethod());
-        spcContinuumForMultimodel.SetWaveletsDFBinPath(spectrumWithoutContinuum->GetWaveletsDFBinPath());
-        Log.LogInfo("    multirollmodel: ===============================================");
-
-
     }
 
+    Log.LogInfo("    multirollmodel: ===============================================");
     for(Int32 km=0; km<nModels; km++)
     {
-        Float64 lines_nsigmasupport = 6;
+        Float64 lines_nsigmasupport = 6.0;
         m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
-                                                                                             spcContinuumForMultimodel,
                                                                                              tplCatalog,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
@@ -170,22 +83,17 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              opt_rules,
                                                                                              opt_rigidity
                                                                                              )));
-
-
-
         //hardcoded source size definition for each roll
         if(km==0){
-            m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->SetSourcesizeDispersion(0.35);
         }else if(km==1){
-            m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->SetSourcesizeDispersion(0.35);
         }else if(km==2){
-            m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->SetSourcesizeDispersion(0.35);
         }else if(km==3){
-            m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->SetSourcesizeDispersion(0.35);
         }
     }
-
-
 }
 
 /**
@@ -335,7 +243,7 @@ Int32 CMultiRollModel::getSpcNSamples(const TFloat64Range& lambdaRange)
     }
 }
 
-Int32 CMultiRollModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
+Int32 CMultiRollModel::SetFitContinuum_FitStore(std::shared_ptr<const CTemplatesFitStore> & fitStore)
 {
     Int32 ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)
@@ -345,12 +253,12 @@ Int32 CMultiRollModel::SetFitContinuum_FitStore(CTemplatesFitStore* fitStore)
     return ret;
 }
 
-Float64 CMultiRollModel::getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent)
+Float64 CMultiRollModel::getDTransposeD(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += m_models[km]->getDTransposeD(lambdaRange, spcComponent);
+        valf += m_models[km]->getDTransposeD(lambdaRange);
     }
     return valf;
 }
@@ -726,7 +634,7 @@ Float64 CMultiRollModel::getContinuumScaleMargCorrection()
 }
 
 //todo: check if all values are shared between all the models
-Int32 CMultiRollModel::LoadModelSolution(const CLineModelSolution&  modelSolution)
+Int32 CMultiRollModel::LoadModelSolution(const CLineModelSolution& modelSolution)
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {

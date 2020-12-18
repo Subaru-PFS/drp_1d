@@ -716,7 +716,7 @@ Int32 CPdfz::getPmis( const TRedshiftList & redshifts,
     TFloat64Range redshiftsRange(
         redshifts.front(),
         redshifts.back());
-    CExtremum extremum(redshiftsRange, maxpeakscount, radius, false);
+    CExtremum extremum(redshiftsRange, maxpeakscount, 2*radius, false);
     TPointList extremumList;
     extremum.Find(redshifts, valprobalog, extremumList);
     zcandidates.clear();

@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_RESULTSTORE_
-#define _REDSHIFT_OPERATOR_RESULTSTORE_
+#ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULTSTORE_
+#define _REDSHIFT_PROCESSFLOW_OPERATORRESULTSTORE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/exception.h>

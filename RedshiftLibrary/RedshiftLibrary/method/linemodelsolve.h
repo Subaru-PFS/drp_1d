@@ -1,8 +1,9 @@
-#ifndef _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
-#define _REDSHIFT_OPERATOR_LINEMODELMATCHINGSOLVE_
+#ifndef _REDSHIFT_METHOD_LINEMODELSOLVE_
+#define _REDSHIFT_METHOD_LINEMODELSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
+#include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
 
@@ -28,14 +29,26 @@ public:
     ~CLineModelSolve();
 
     const std::string GetDescription();
+
     Bool PopulateParameters( CDataStore& dataStore );
 
+    std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore,
+                                                   const CSpectrum& spc,
+                                                   const CTemplateCatalog& tplCatalog,
+                                                   const TStringList& tplCategoryList,
+                                                   const CRayCatalog& restraycatalog,
+                                                   const TFloat64Range& lambdaRange,
+                                                   const TFloat64List& redshifts,
+                                                   const string outputPdfRelDir,
+                                                   const Float64 radius);
 
-    std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
-                                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts , const string outputPdfRelDir);
-
-    Bool Solve(CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList, const CRayCatalog& restraycatalog,
-                                 const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
+    Bool Solve(CDataStore& resultStore,
+               const CSpectrum& spc,
+               const CTemplateCatalog& tplCatalog,
+               const TStringList& tplCategoryList,
+               const CRayCatalog& restraycatalog,
+               const TFloat64Range& lambdaRange,
+               const TFloat64List& redshifts);
                                  
     Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
 
@@ -50,7 +63,8 @@ private:
                      Float64 opt_modelPriorZStrength,
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                      std::shared_ptr<CPdfLogResult> zPrior);
-    Int32 SaveContinuumPDF(CDataStore &store, std::shared_ptr<const CLineModelResult> result);
+
+    Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
 
     std::string m_opt_linetypefilter;
@@ -61,6 +75,7 @@ private:
     std::string m_opt_skipsecondpass="no";
     std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
+    std::string m_opt_tplfit_method="chisquarelog";
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
@@ -130,9 +145,11 @@ private:
     Float64 m_opt_modelZPriorStrength;
     std::string m_opt_saveintermediateresults;
     bool m_opt_enableSaveChisquareTplshapeResults;
+    Float64 m_opt_secondpass_halfwindowsize;
 
     std::string m_calibrationPath;
     std::string m_outputPdfRelDir;
+    Float64 m_redshiftSeparation;
 
 };
 

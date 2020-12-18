@@ -1,4 +1,3 @@
-
 #include <RedshiftLibrary/method/chisquaresolve.h>
 
 #include <RedshiftLibrary/debug/assert.h>
@@ -13,9 +12,8 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodChisquareSolve::CMethodChisquareSolve(string calibrationPath)
+CMethodChisquareSolve::CMethodChisquareSolve()
 {
-    m_calibrationPath = calibrationPath;
 }
 
 CMethodChisquareSolve::~CMethodChisquareSolve()
@@ -24,12 +22,18 @@ CMethodChisquareSolve::~CMethodChisquareSolve()
 }
 
 
-std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, std::string opt_interp )
+std::shared_ptr<const CChisquareSolveResult> CMethodChisquareSolve::Compute(CDataStore& dataStore,
+                                                                            const CSpectrum& spc,
+                                                                            const CTemplateCatalog& tplCatalog,
+                                                                            const TStringList& tplCategoryList,
+                                                                            const TFloat64Range& lambdaRange,
+                                                                            const TFloat64List& redshifts,
+                                                                            Float64 overlapThreshold,
+                                                                            const Float64 radius,
+                                                                            std::string opt_interp)
 {
     Bool storeResult = false;
-
+    m_radius = radius;
     CDataStore::CAutoScope resultScope( dataStore, "chisquaresolve" );
 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
@@ -39,9 +43,8 @@ std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  C
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            Solve( dataStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshifts, overlapThreshold, nType_full );
+            Solve(dataStore, spc, tpl, lambdaRange, redshifts, overlapThreshold, CSpectrum::nType_raw);
 
             storeResult = true;
         }
@@ -56,43 +59,30 @@ std::shared_ptr<const CChisquareSolveResult>  CMethodChisquareSolve::Compute(  C
     return NULL;
 }
 
-Bool CMethodChisquareSolve::Solve( CDataStore& dataStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64List& redshifts, Float64 overlapThreshold, Int32 spctype, std::string opt_interp )
+Bool CMethodChisquareSolve::Solve(CDataStore& dataStore,
+                                  const CSpectrum& spc,
+                                  const CTemplate& tpl,
+                                  const TFloat64Range& lambdaRange,
+                                  const TFloat64List& redshifts,
+                                  Float64 overlapThreshold,
+                                  CSpectrum::EType spctype,
+                                  std::string opt_interp)
 {
-    CSpectrum _spc;
-    CTemplate _tpl;
+    CSpectrum _spc = spc;
+    CTemplate _tpl = tpl;
 
-    if(spctype == nType_continuumOnly){
-        // use continuum only
-        _spc = spc;
-        CSpectrumFluxAxis spcfluxAxis = _spc.GetFluxAxis();
-        spcfluxAxis.Subtract(spcWithoutCont.GetFluxAxis());
-        CSpectrumFluxAxis& sfluxAxisPtr = _spc.GetFluxAxis();
-        sfluxAxisPtr = spcfluxAxis;
-        _tpl = tpl;
-        CSpectrumFluxAxis tplfluxAxis = _tpl.GetFluxAxis();
-        tplfluxAxis.Subtract(tplWithoutCont.GetFluxAxis());
-        CSpectrumFluxAxis& tfluxAxisPtr = _tpl.GetFluxAxis();
-        tfluxAxisPtr = tplfluxAxis;
-    }else if(spctype == nType_full){
-        // use full spectrum
-        _spc = spc;
-        _tpl = tpl;
+    _spc.SetType(spctype);
+    _tpl.SetType(spctype);
 
-    }else if(spctype == nType_noContinuum){
-        // use spectrum without continuum
-        _spc = spcWithoutCont;
-        _tpl = tplWithoutCont;
-    }
     // prepare the unused masks
     std::vector<CMask> maskList;
 
     // Compute merit function
-    COperatorChiSquare2 chiSquare(m_calibrationPath);
+    COperatorChiSquare2 chiSquare;
     //adding cast to be capable of reading redshift attribute
     auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>(chiSquare.Compute( _spc, _tpl, lambdaRange, redshifts, overlapThreshold, maskList, opt_interp));
     
-    chisquareResult->CallFindExtrema();  
+    chisquareResult->CallFindExtrema(m_radius);  
     
     if( !chisquareResult )
     {

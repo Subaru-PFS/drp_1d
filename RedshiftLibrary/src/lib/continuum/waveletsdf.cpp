@@ -42,8 +42,8 @@ CContinuumDF::~CContinuumDF()
 
 void CContinuumDF::mirror_( const CSpectrum& s, UInt32 nb, float* tab)
 {
-	const Float64* Ys = s.GetFluxAxis().GetSamples();
-	UInt32 nn = s.GetFluxAxis().GetSamplesCount();
+    const Float64* Ys = s.GetRawFluxAxis().GetSamples();
+    UInt32 nn = s.GetRawFluxAxis().GetSamplesCount();
 	UInt32 nall = nn+nb*2;
 	UInt32 k;
 	for (UInt32 j=0; j<nb; j++) {
@@ -65,7 +65,7 @@ void CContinuumDF::mirror_( const CSpectrum& s, UInt32 nb, float* tab)
 
 std::string CContinuumDF::temporaryPath ( const CSpectrum& s, UInt32 nall)
 {
-	UInt32 nb   = round(s.GetFluxAxis().GetSamplesCount()/10);
+    UInt32 nb   = round(s.GetSpectralAxis().GetSamplesCount()/10);
 
 	extendedData_ = new float[nall];
 	mirror_( s, nb,extendedData_ );
@@ -97,8 +97,8 @@ std::string CContinuumDF::temporaryPath ( const CSpectrum& s, UInt32 nall)
 
 Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis)
 {
-	Int32 nb   = round(s.GetFluxAxis().GetSamplesCount()/10);
-	Int32 nn   = s.GetFluxAxis().GetSamplesCount();
+    Int32 nb   = round(s.GetSpectralAxis().GetSamplesCount()/10);
+    Int32 nn   = s.GetSpectralAxis().GetSamplesCount();
 	Int32 nall = nn+nb*2;
 
 	Int32 nscales = s.GetDecompScales();
@@ -226,7 +226,7 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 	wavAxis =  s.GetSpectralAxis();
 
 	baseline.SetSize(nn);
-	CSpectrumFluxAxis fluxAxis = s.GetFluxAxis();
+    CSpectrumFluxAxis fluxAxis = s.GetRawFluxAxis();
 
 	noContinuumFluxAxis.SetSize(nn);
 	for(Int32 j=0;j<nn;j++)

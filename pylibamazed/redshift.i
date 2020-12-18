@@ -162,7 +162,7 @@ public:
 class CTemplateCatalog
 {
 public:
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8, std::string waveletsDFBinPath="");
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
     void Load( const char* filePath );
     void Add( std::shared_ptr<CTemplate> r );
 };
@@ -175,7 +175,7 @@ public:
             std::shared_ptr<const CTemplateCatalog> templateCatalog,
             std::shared_ptr<const CRayCatalog> rayCatalog,
             std::shared_ptr<CParameterStore> paramStore,
-            std::shared_ptr<CClassifierStore> zqualStore  );
+            std::shared_ptr<CClassifierStore> zqualStore);
   CDataStore& GetDataStore();
   COperatorResultStore& GetResultStore();
 };
@@ -244,7 +244,7 @@ class CSpectrum
  %rename(CSpectrum_default) CSpectrum();
  public:
   CSpectrum();
-  CSpectrum(CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
@@ -364,7 +364,7 @@ class CMethodLineMatching2Solve
 class CMethodChisquare2Solve
 {
  public:
-  CMethodChisquare2Solve( std::string calibrationPath="" );
+  CMethodChisquare2Solve();
   ~CMethodChisquare2Solve();
   const std::string GetDescription();
 };
@@ -380,7 +380,7 @@ class CMethodChisquareLogSolve
 class CMethodTplcombinationSolve
 {
  public:
-  CMethodTplcombinationSolve( std::string calibrationPath="" );
+  CMethodTplcombinationSolve();
   ~CMethodTplcombinationSolve();
   const std::string GetDescription();
 };

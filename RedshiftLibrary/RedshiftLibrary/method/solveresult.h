@@ -16,7 +16,7 @@ namespace NSEpic
     CSolveResult();
     virtual ~CSolveResult();
 
-    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const = 0;
+    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) = 0;
     void SetReliabilityLabel( std::string lbl );
     void SetTypeLabel( std::string lbl );
 
@@ -25,12 +25,12 @@ namespace NSEpic
     std::string m_ReliabilityLabel="-1";
     std::string m_TypeLabel="-1";
 
-    Float64 getMerit() {return merit;}
+    Float64 getMerit() {return m_merit;}
     void getData(const std::string& name, std::string& v) const;
 
   protected:
-    Float64 redshift;
-    Float64 merit;
+    Float64 m_redshift;
+    Float64 m_merit;
 
   };
 }

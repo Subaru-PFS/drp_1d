@@ -1,11 +1,11 @@
-#ifndef _REDSHIFT_PRIORHELPER_CONTINUUM_
-#define _REDSHIFT_PRIORHELPER_CONTINUUM_
+#ifndef _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
+#define _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 
 #include <boost/format.hpp>
-#include <float.h>
+#include <cfloat>
 #include <vector>
 #include <string>
 
@@ -13,8 +13,7 @@ namespace NSEpic
 {
 
 /**
- * /ingroup Redshift
-
+ * \ingroup Redshift
  */
 class CPriorHelperContinuum
 {

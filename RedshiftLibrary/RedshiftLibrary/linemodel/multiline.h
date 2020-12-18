@@ -1,5 +1,5 @@
-#ifndef LINEMODEL_ELEMENT_MULTILINE_H
-#define LINEMODEL_ELEMENT_MULTILINE_H
+#ifndef _REDSHIFT_LINEMODEL_MULTILINE_
+#define _REDSHIFT_LINEMODEL_MULTILINE_
 
 #include <RedshiftLibrary/linemodel/element.h>
 #include <RedshiftLibrary/ray/catalog.h>
@@ -61,7 +61,7 @@ public:
 
     void addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx=-1 );
     void addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumFluxAxis, Float64 redshift, bool emissionRay );
-    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx=-1 );
+    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis , const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx=-1 );
     Float64 GetFittedAmplitude(Int32 subeIdx);
     Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
     Float64 GetNominalAmplitude(Int32 subeIdx);
@@ -99,10 +99,9 @@ private:
     //constant
     Float64 m_c_kms;
 
-    bool m_verbose=false;
+    const bool m_verbose=false;
 };
 
 }
 
-
-#endif // ELEMENT_H
+#endif // _REDSHIFT_LINEMODEL_MULTILINE_

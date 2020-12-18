@@ -409,18 +409,22 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
         for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
         {
             std::string resultName = (*it).first;
+            Log.LogInfo("save result %s",resultName.c_str()); 
             auto  result = (*it).second;
 
             bool firstpass = false;
             bool saveThisResult = false;
 	        bool saveJSON = false;
+            
             if(opt_lower=="all" || opt_lower=="global"){
                 saveThisResult = true;
                 //save extrema results
                 std::string extremaresTagRes = "linemodel_extrema";
                 std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
                 if (foundstr!=std::string::npos){
-		            saveJSON = true;
+                  Log.LogInfo("save only json");                   
+                  saveThisResult = false;
+                  saveJSON = true;
                 }
             }
             else if(opt_lower=="linemeas")
@@ -430,13 +434,13 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 if (foundstr!=std::string::npos){
                     saveThisResult=true;
                 }
-            }else if(opt_lower=="default")
+            }else if(opt_lower=="default" || opt_lower=="all" || opt_lower=="global")
             {
                 //save extrema results
                 std::string extremaresTagRes = "linemodel_extrema";
                 std::size_t foundstr = resultName.find(extremaresTagRes.c_str());
                 if (foundstr!=std::string::npos){
-                    saveThisResult=true;
+                    saveThisResult=false;
 		            saveJSON = true;
                 }
 
@@ -480,7 +484,16 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 }
             }
 
-            if(!saveThisResult)
+            if (resultName == "linemodel_extrema" ||  // do not save linemodel_extrema.csv, json works well
+                resultName == "linemodelsolve.linemodel" || // contains useleess chi2 and duplicate info from linemodel_extrema 
+                resultName.find("linemodel_rules_extrema") !=std::string::npos ) // empty files...
+              {
+                Log.LogInfo("do not save csv");
+                saveThisResult=false;
+              
+              }
+              /*            
+            if(!saveThisResult && !saveJSON)
             {
                 continue;
             }
@@ -491,11 +504,16 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             if (foundstr!=std::string::npos){
                     firstpass=true;
             }
-
+              */
             std::fstream outputStream;
             // Save result at root of output directory
-            CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
-            result->Save( store, outputStream);
+
+            if (saveThisResult)
+              {
+                CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
+
+                result->Save( store, outputStream);
+              }
 	        if(saveJSON){
 		        std::fstream outputJSONStream;
 		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
@@ -505,6 +523,8 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
     }
 
     // Store per template results
+    // Do not store per templates result
+    /*
     if(opt_lower=="all"){
         TPerTemplateResultsMap::const_iterator it;
         for( it=m_PerTemplateResults.begin(); it != m_PerTemplateResults.end(); it++ )
@@ -527,6 +547,7 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             }
         }
     }
+    */
 }
 
 
@@ -561,6 +582,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
     
@@ -568,6 +596,13 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
@@ -580,15 +615,28 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0)
     {
-
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
   else if (object_type.compare("star") == 0)
     {
       
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
@@ -604,13 +652,25 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
 
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-      else if (object_type.compare("star") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
-
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else throw Exception("unknown method %s",method.c_str());
     }
   else if (object_type.compare("star") == 0)
     {
       if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
+      else if(method.compare("chisquare2solve") == 0)
+        {
+          std::ostringstream oss;
+          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          result = GetGlobalResult(oss.str());
+          return result.lock()->getData(name,v);
+        }
       else result =  GetGlobalResult("stellarsolve.stellarresult");
     }
   else throw Exception("unknown object_type %s",object_type.c_str());
@@ -624,7 +684,10 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   std::ostringstream oss;
   if (object_type.compare("galaxy") == 0)
     {
-      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      std::string meth = method;
+      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+
+      if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
       else if (name.find("BestContinuum") != std::string::npos)  oss << "linemodelsolve.linemodel_continuum_extrema_"<< rank;
       else if (name.compare("ContinuumIndexesColor") == 0 || name.compare("ContinuumIndexesBreak") == 0)
@@ -666,7 +729,9 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   std::ostringstream oss;
   if (object_type.compare("galaxy") == 0)
     {
-      if (name.find("Model") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
+      std::string meth = method;
+      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+      if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
       else throw Exception("unknown data %s",name.c_str());
     }
@@ -702,6 +767,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   std:weak_ptr<const COperatorResult> result;
   if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
      name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
+  else if(object_type=="classification") result = GetGlobalResult("classificationresult");
   else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }

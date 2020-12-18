@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CLASSIFICATIONRESULT_
-#define _REDSHIFT_OPERATOR_CLASSIFICATIONRESULT_
+#ifndef _REDSHIFT_PROCESSFLOW_CLASSIFICATIONRESULT_
+#define _REDSHIFT_PROCESSFLOW_CLASSIFICATIONRESULT_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/processflow/result.h>

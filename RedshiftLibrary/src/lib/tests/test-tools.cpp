@@ -32,6 +32,9 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
     CSpectrumSpectralAxis spectralAxis(size, false);
     CSpectrumFluxAxis fluxAxis(size);
 
+    spectrum.SetContinuumEstimationMethod("Median");
+    spectrum.SetMedianWinsize(150);
+
     boost::random::taus88 rng;
     boost::random::normal_distribution<double> distribution(mean, 1.35);
 
@@ -268,11 +271,10 @@ static void add_template_category(CTemplateCatalog &catalog,
                                   Float64 lambda_min, Float64 lambda_max,
                                   const string &category)
 {
-    shared_ptr<CTemplate> _template;
     for (int i = 0; i < count; i++)
     {
         string name = category + "_test_template_" + to_string(i) + ".txt";
-        _template = (shared_ptr<CTemplate>)(new CTemplate(name, category));
+        shared_ptr<CTemplate>_template = std::make_shared<CTemplate>(name, category);
         generate_template(*_template, template_size, lambda_min, lambda_max);
         catalog.Add(_template);
     }

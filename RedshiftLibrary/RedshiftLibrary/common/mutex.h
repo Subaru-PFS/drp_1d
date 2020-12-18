@@ -1,5 +1,5 @@
-#ifndef _CORE_COMMON_MUTEX_
-#define _CORE_COMMON_MUTEX_
+#ifndef _REDSHIFT_COMMON_MUTEX_
+#define _REDSHIFT_COMMON_MUTEX_
 
 #include <RedshiftLibrary/common/datatypes.h>
 
@@ -8,7 +8,7 @@
 namespace NSEpic {
 
 /**
- * \ingroup Core
+ * \ingroup Redshift
  * Mutex class
  */
 class CMutex

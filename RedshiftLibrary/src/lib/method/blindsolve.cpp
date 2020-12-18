@@ -21,7 +21,6 @@ CMethodBlindSolve::~CMethodBlindSolve()
 
 }
 
-
 const std::string CMethodBlindSolve::GetDescription()
 {
     std::string desc;
@@ -35,10 +34,15 @@ const std::string CMethodBlindSolve::GetDescription()
 
 }
 
-std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute(  CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont,
-                                                        const CTemplateCatalog& tplCatalog, const TStringList& tplCategoryList,
-                                                        const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep,
-                                                        Int32 correlationExtremumCount, Float64 overlapThreshold )
+std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute( CDataStore& resultStore,
+                                                               const CSpectrum& spc,
+                                                               const CTemplateCatalog& tplCatalog,
+                                                               const TStringList& tplCategoryList,
+                                                               const TFloat64Range& lambdaRange,
+                                                               const TFloat64Range& redshiftsRange,
+                                                               Float64 redshiftStep,
+                                                               Int32 correlationExtremumCount,
+                                                               Float64 overlapThreshold )
 {
     Bool storeResult = false;
 
@@ -60,9 +64,8 @@ std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute(  CDataStore& resu
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
 
-            BlindSolve( resultStore, spc, spcWithoutCont, tpl, tplWithoutCont, lambdaRange, redshiftsRange, redshiftStep, correlationExtremumCount, overlapThreshold );
+            BlindSolve( resultStore, spc, tpl, lambdaRange, redshiftsRange, redshiftStep, correlationExtremumCount, overlapThreshold );
 
             storeResult = true;
         }
@@ -77,18 +80,27 @@ std::shared_ptr<CBlindSolveResult> CMethodBlindSolve::Compute(  CDataStore& resu
     return NULL;
 }
 
-Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& spc, const CSpectrum& spcWithoutCont, const CTemplate& tpl, const CTemplate& tplWithoutCont,
-                               const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, Int32 correlationExtremumCount,
-                               Float64 overlapThreshold )
+Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore,
+                                    const CSpectrum& spc,
+                                    const CTemplate& tpl,
+                                    const TFloat64Range& lambdaRange,
+                                    const TFloat64Range& redshiftsRange,
+                                    Float64 redshiftStep,
+                                    Int32 correlationExtremumCount,
+                                    Float64 overlapThreshold )
 {
-    CSpectrum s = spc;
-    s.GetSpectralAxis().ConvertToLogScale();
+    CSpectrumSpectralAxis spcSpectralAxis = spc.GetSpectralAxis();
+    spcSpectralAxis.ConvertToLogScale();
+    CSpectrumFluxAxis spcFluxAxis = spc.GetWithoutContinuumFluxAxis();
 
-    CTemplate t = tpl;
-    t.GetSpectralAxis().ConvertToLogScale();
+    CSpectrumSpectralAxis tplSpectralAxis = tpl.GetSpectralAxis();
+    tplSpectralAxis.ConvertToLogScale();
+    CSpectrumFluxAxis tplFluxAxis = tpl.GetWithoutContinuumFluxAxis();
 
+    CSpectrum spcWithoutCont(spcSpectralAxis, spcFluxAxis);
+    CTemplate tplWithoutCont(tpl.GetName(), tpl.GetCategory(), tplSpectralAxis, tplFluxAxis);
 
-    // Create redshift initial list by spanning redshift acdross the given range, with the given delta
+    // Create redshift initial list by spanning redshift across the given range, with the given delta
     TFloat64List redshifts = redshiftsRange.SpreadOver( redshiftStep ); //TODO: this should be done in processflow, not in the method itself.
     DebugAssert( redshifts.size() > 0 );
 
@@ -108,8 +120,8 @@ Bool CMethodBlindSolve::BlindSolve( CDataStore& resultStore, const CSpectrum& sp
     
 
     Float64 radius = 0.005;
-        TPointList extremumList;
-    CExtremum extremum( redshiftsRange, correlationExtremumCount, radius);
+    TPointList extremumList;
+    CExtremum extremum( redshiftsRange, correlationExtremumCount, 2*radius);
     extremum.Find( correlationResult->Redshifts, correlationResult->Correlation, extremumList);
     if( extremumList.size() == 0 )
     {

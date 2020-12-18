@@ -32,12 +32,9 @@ public:
     CSpectrum& GetSpectrum();
 
   void getData(const std::string& name, double **data, int *size) const;
-  
-
-  
+ 
 private:
-    CSpectrum m_model;
-
+  CSpectrum m_model;
 };
 
 

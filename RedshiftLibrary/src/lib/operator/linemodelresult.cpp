@@ -89,11 +89,11 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
 }
 
 Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
-                                                    TFloat64List chisquareTplshape,
-                                                    TFloat64List scaleMargCorrTplshape,
-                                                    TBoolList strongEmissionLinePresentTplshape,
-                                                    TInt32List nLinesAboveSNRTplshape,
-                                                    TFloat64List priorLinesTplshape)
+                                                    const TFloat64List & chisquareTplshape,
+                                                    const TFloat64List & scaleMargCorrTplshape,
+                                                    const TBoolList & strongEmissionLinePresentTplshape,
+                                                    const TInt32List & nLinesAboveSNRTplshape,
+                                                    const TFloat64List & priorLinesTplshape)
 {
     if(index_z>=Redshifts.size())
     {
@@ -327,13 +327,6 @@ void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
     }
 
     ExtremaResult.Save(store, stream); //todo: move these into their own file. aview should be adapted.
-
-    // save dTransposeDNocontinuum, on 1 line
-    if(true){
-        stream <<  "#dTransposeDNocontinuum = {";
-        stream <<  dTransposeDNocontinuum << "\t";
-        stream << "}" << std::endl;
-    }
 
     // save dTransposeD, on 1 line
     if(true){

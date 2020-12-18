@@ -12,7 +12,7 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
-#include <RedshiftLibrary/linemodel/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
 namespace NSEpic
 {
 
@@ -21,7 +21,7 @@ class COperatorChiSquare2 : public COperator
 
 public:
 
-    explicit COperatorChiSquare2( std::string calibrationPath );
+    explicit COperatorChiSquare2();
     ~COperatorChiSquare2();
 
      std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
@@ -41,22 +41,22 @@ public:
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
-    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-    Int32           GetSpectrumModel(const CSpectrum& spectrum,
-                                      const CTemplate& tpl,
+
+    Int32           ComputeSpectrumModel(const CSpectrum& spectrum,
+                        	      const CTemplate& tpl,
                                       Float64 redshift,
                                       Float64 IdxDustCoeff,
                                       Int32 meiksinIdx,
                                       Float64 amplitude,
                                       std::string opt_interp,
-                                      std::string opt_extinction,
+				      std::string opt_extinction,
                                       const TFloat64Range& lambdaRange,
-                                      Float64 overlapThreshold);
-    void            SaveSpectrumResults(CDataStore &dataStore);
+                                      Float64 overlapThreshold,
+                                      CModelSpectrumResult& spc);
+
 private:
 
-    void BasicFit_preallocateBuffers(const CSpectrum& spectrum);
+    void BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl);
 
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
@@ -99,8 +99,6 @@ private:
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
-
-    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);

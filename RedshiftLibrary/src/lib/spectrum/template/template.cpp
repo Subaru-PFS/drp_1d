@@ -20,38 +20,39 @@ CTemplate::CTemplate( )
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
-  m_Category( category ),
-  m_Name( name ) 
+  m_Category( category )
 {
+    m_Name = name;
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
 		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
     CSpectrum(spectralAxis, fluxAxis),
-    m_Category( category ),
-    m_Name( name )
+    m_Category( category )
 {
+    m_Name = name;
 }
 
 CTemplate::CTemplate( const CTemplate& other): 
     CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
-    m_Name(other.m_Name),
     m_Category( other.m_Category),
     m_IsmIgm_kstart(other.m_IsmIgm_kstart),
     m_IsmIgm_kend(other.m_IsmIgm_kend),
     m_computedDustCoeff(other.m_computedDustCoeff), 
-    m_computedMeiksingCoeff(other.m_computedDustCoeff)
+    m_computedMeiksingCoeff(other.m_computedDustCoeff),
+    m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
+    m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
 {
-    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
         m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
 }
 
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);
-    m_Name = other.GetName();
+    m_Name = other.m_Name;
 
     if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
         m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
@@ -63,8 +64,11 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_Category = other.m_Category;
     m_IsmIgm_kstart = other.m_IsmIgm_kstart;
     m_IsmIgm_kend = other.m_IsmIgm_kend;
+    m_ismCorrectionCalzetti = other.m_ismCorrectionCalzetti;
+    m_igmCorrectionMeiksin = other.m_igmCorrectionMeiksin;
     return *this;
 }
+
 /**
  * Destructor, empty.
  */
@@ -73,13 +77,6 @@ CTemplate::~CTemplate()
 
 }
 
-/**
- * Returns the value stored in m_Name.
- */
-const std::string& CTemplate::GetName() const
-{
-    return m_Name;
-}
 /**
  * Returns the value stored in m_Category.
  */
@@ -91,9 +88,8 @@ const std::string& CTemplate::GetCategory() const
 void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
     lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
-
-    return;
 }
+
 /**
  * Saves the template in the given filePath.
  */
@@ -131,60 +127,96 @@ Bool CTemplate::Save( const char* filePath ) const
 //Calzetti extinction
 /**
  * if kDust == -1: reset the fluxAxis eliminating only the Dust correction
-*/
-bool  CTemplate::ApplyDustCoeff(Int32 kDust)
+ */
+bool CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     if(m_kDust == kDust)
         return true; 
     m_kDust = kDust;
 
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         if(m_kDust > -1)
-            m_computedDustCoeff[k] = m_ismCorrectionCalzetti.getDustCoeff( kDust, m_SpectralAxis[k]); 
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->getDustCoeff( kDust, m_SpectralAxis[k]); 
         else
             m_computedDustCoeff[k] = 1; 
         
-        m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+        FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
     }
     return true;
 }
 
 /**
  * if meiksinIdx == -1: reset the fluxAxis eliminating only the Meiksin correction
-*/
-bool  CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
+ */
+bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 {
 
     if(m_meiksinIdx == meiksinIdx && m_redshiftMeiksin == redshift)
         return true;
         
-    Int32 redshiftIdx = m_igmCorrectionMeiksin.GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+    Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     m_meiksinIdx = meiksinIdx;
     m_redshiftMeiksin = redshift;
     Bool igmCorrectionAppliedOnce = false;
+
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+
     for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
-        if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin.GetLambdaMax()){
+        if(m_SpectralAxis[k] <= m_igmCorrectionMeiksin->GetLambdaMax()){
             if(m_meiksinIdx > -1){
                 Int32 kLbdaMeiksin = 0;
-                if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin.GetLambdaMin())
+                if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
                 {
-                    kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin.GetLambdaMin());
+                    kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin->GetLambdaMin());
                 }else //if lambda lower than min meiksin value, use lower meiksin value
                 {
                     kLbdaMeiksin = 0;
                 }
-                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin.m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
             }
             else 
                 m_computedMeiksingCoeff[k] = 1;
             
-            m_FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+            FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
             igmCorrectionAppliedOnce = true;
         }
     }
     return igmCorrectionAppliedOnce;
+}
+
+bool CTemplate::CalzettiInitFailed() const
+{
+    bool failed = false;
+    if (!m_ismCorrectionCalzetti)
+    {
+        failed=true;
+    }
+    else if (m_ismCorrectionCalzetti->calzettiInitFailed)
+    {
+        failed = true;
+    }
+    
+    return failed;
+}
+
+bool CTemplate::MeiksinInitFailed() const
+{
+    bool failed = false;
+    
+    if (!m_igmCorrectionMeiksin)
+    {
+        failed = true;
+    }
+    else if (m_igmCorrectionMeiksin->meiksinInitFailed)
+    {
+        failed = true;
+    }
+
+    return failed;
 }
 
 //init ism/igm configuration when we change redshift value
@@ -193,7 +225,7 @@ bool CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
-    m_NoIsmIgmFluxAxis = m_FluxAxis;
+    m_NoIsmIgmFluxAxis = GetFluxAxis();
 
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
@@ -204,8 +236,7 @@ bool CTemplate::InitIsmIgmConfig()
 }
 
 void CTemplate::ScaleFluxAxis(Float64 amplitude){
-    //all spectrum size
-    m_FluxAxis *= amplitude;
+
+    CSpectrum::ScaleFluxAxis(amplitude);
     m_NoIsmIgmFluxAxis *= amplitude;
-    return;
 }

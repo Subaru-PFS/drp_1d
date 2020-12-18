@@ -628,7 +628,7 @@ void CMultiLine::fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis& spectr
                                              Float64 min,
                                              Float64 max)
 {
-    Float64 nRays = m_Rays.size();
+    Int32 nRays = m_Rays.size();
     Int32 nSteps = int((max-min)/step+0.5);
 
     bool atLeastOneOffsetToFit = false;
@@ -731,7 +731,7 @@ void CMultiLine::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
                               Float64 redshift,
                               Int32 lineIdx )
 {
-    Float64 nRays = m_Rays.size();
+    Int32 nRays = m_Rays.size();
 
     m_sumCross = 0.0;
     m_sumGauss = 0.0;
@@ -1085,7 +1085,7 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
 /**
  * \brief For rays inside lambda range, sets the flux to the continuum flux.
  **/
-void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
+void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
 {
     if(m_OutsideLambdaRange)
     {

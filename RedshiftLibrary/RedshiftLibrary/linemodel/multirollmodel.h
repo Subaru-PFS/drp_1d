@@ -1,11 +1,8 @@
-#ifndef MULTIMODEL_H
-#define MULTIMODEL_H
+#ifndef _REDSHIFT_LINEMODEL_MULTIROLLMODEL_
+#define _REDSHIFT_LINEMODEL_MULTIROLLMODEL_
 
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
-
-#include <math.h>
-#include <float.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
@@ -16,6 +13,8 @@
 #include <RedshiftLibrary/linemodel/element.h>
 #include <RedshiftLibrary/linemodel/multiline.h>
 
+#include <cmath>
+#include <cfloat>
 
 
 namespace NSEpic
@@ -27,19 +26,18 @@ class CMultiRollModel
 public:
 
     CMultiRollModel(const CSpectrum& spectrum,
-                          const CSpectrum& spectrumNoContinuum,
-                          const CTemplateCatalog& tplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string &opt_continuumcomponent,
-                          const std::string& lineWidthType,
-                          const Float64 resolution,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string &opt_rules,
-                          const std::string &opt_rigidity);
+                    const CTemplateCatalog& tplCatalog,
+                    const TStringList& tplCategoryList,
+                    const std::string calibrationPath,
+                    const CRayCatalog::TRayVector& restRayList,
+                    const std::string& opt_fittingmethod,
+                    const std::string &opt_continuumcomponent,
+                    const std::string& lineWidthType,
+                    const Float64 resolution,
+                    const Float64 velocityEmission,
+                    const Float64 velocityAbsorption,
+                    const std::string &opt_rules,
+                    const std::string &opt_rigidity);
 
     ~CMultiRollModel();
 
@@ -60,7 +58,7 @@ public:
     Bool initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
-    Float64 getDTransposeD(const TFloat64Range& lambdaRange, std::string spcComponent);
+    Float64 getDTransposeD(const TFloat64Range& lambdaRange);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
 
@@ -79,7 +77,7 @@ public:
     const CSpectrum& GetModelSpectrum() const;
     const CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrumFluxAxis& GetModelContinuum() const;
-    const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
+    const CSpectrum& GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
 
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
@@ -89,13 +87,13 @@ public:
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
 
 
-    Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
+    Int32 LoadModelSolution(const CLineModelSolution& modelSolution);
 
     Int32 setPassMode(Int32 iPass);
     void SetAbsLinesLimit(Float64 limit);
     void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
-    Int32 SetFitContinuum_FitStore(CTemplatesFitStore* fitStore);
+    Int32 SetFitContinuum_FitStore(std::shared_ptr<const CTemplatesFitStore> & fitStore);
     void SetFittingMethod(std::string fitMethod);
     void ResetElementIndexesDisabled();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
@@ -105,7 +103,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
-    std::vector<std::shared_ptr<CLineModelElementList>  > m_models;
+    std::vector<std::shared_ptr<CLineModelElementList> > m_models;
 
 private:
 
@@ -118,9 +116,4 @@ private:
 }
 
 
-
-
-
-
-
-#endif // MULTIMODEL_H
+#endif // _REDSHIFT_LINEMODEL_MULTIROLLMODEL_

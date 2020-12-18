@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_COMMON_MEDIAN__
-#define _REDSHIFT_COMMON_MEDIAN__
+#ifndef _REDSHIFT_COMMON_MEDIAN_
+#define _REDSHIFT_COMMON_MEDIAN_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/quicksort.h>

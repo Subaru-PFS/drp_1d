@@ -40,27 +40,12 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorTplcombination::COperatorTplcombination( std::string calibrationPath )
+COperatorTplcombination::COperatorTplcombination()
 {
-
-    //ISM
-    m_ismCorrectionCalzetti = new CSpectrumFluxCorrectionCalzetti();
-    m_ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
-    //Allocate buffer for Ytpl reinit during Dust-fit loop
-    m_YtplRawBufferMaxBufferSize = 10*1e6; //allows array from 0A to 100000A with dl=0.01
-    m_YtplRawBuffer = new Float64[(int)m_YtplRawBufferMaxBufferSize]();
-
-    //IGM
-    m_igmCorrectionMeiksin = new CSpectrumFluxCorrectionMeiksin();
-    m_igmCorrectionMeiksin->Init(calibrationPath);
-
 }
 
 COperatorTplcombination::~COperatorTplcombination()
 {
-    delete[] m_YtplRawBuffer;
-    delete m_ismCorrectionCalzetti;
-    delete m_igmCorrectionMeiksin;
 }
 
 
@@ -77,6 +62,9 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
         m_templatesRebined_bf[ktpl].GetSpectralAxis().SetSize(spectrum.GetSampleCount());
         m_templatesRebined_bf[ktpl].GetFluxAxis().SetSize(spectrum.GetSampleCount());
         m_masksRebined_bf[ktpl].SetSize(spectrum.GetSampleCount());
+
+        m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti = tplList[ktpl].m_ismCorrectionCalzetti;
+        m_templatesRebined_bf[ktpl].m_igmCorrectionMeiksin = tplList[ktpl].m_igmCorrectionMeiksin;
     }
 }
 
@@ -377,42 +365,42 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  **/
 std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectrum& spectrum,
-                                                                  const std::vector<CTemplate> tplList,
+                                                                  const std::vector<CTemplate> & tplList,
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
                                                                   std::vector<CMask> additional_spcMasks,
+                                                                  const Float64 radius,
                                                                   std::string opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting)
 {
     Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", tplList.size());
 
-
-    if( opt_dustFitting && m_ismCorrectionCalzetti->calzettiInitFailed)
-    {
-        Log.LogError("  Operator-tplcombination: no calzetti calib. file loaded... aborting!");
-        return NULL;
-    }
-    if( opt_extinction && m_igmCorrectionMeiksin->meiksinInitFailed)
-    {
-        Log.LogError("  Operator-tplcombination: no meiksin calib. file loaded... aborting!");
-        return NULL;
-    }
+    m_radius = radius;
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false )
     {
         Log.LogError("  Operator-tplcombination: input spectrum is not in log scale (ignored)");
-        //return NULL;
     }
-
 
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
     {
         if( tplList[ktpl].GetSpectralAxis().IsInLinearScale() == false )
         {
             Log.LogError("  Operator-tplcombination: input template k=%d are not in log scale (ignored)", ktpl);
-            //return NULL;
         }
+        if( opt_dustFitting && tplList[ktpl].m_ismCorrectionCalzetti->calzettiInitFailed)
+        {
+            Log.LogError("  Operator-tplcombination: no calzetti calib. file loaded... aborting!");
+            return NULL;
+        }
+        if( opt_extinction && tplList[ktpl].m_igmCorrectionMeiksin->meiksinInitFailed)
+        {
+            Log.LogError("  Operator-tplcombination: no meiksin calib. file loaded... aborting!");
+            return NULL;
+        }
+
+
     }
 
     Log.LogDebug("  Operator-tplcombination: allocating memory for buffers (N = %d)", tplList.size());
@@ -439,13 +427,13 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     Int32 nDustCoeffs=1;
     if(opt_dustFitting)
     {
-        nDustCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nDustCoeffs = tplList.front().m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
     }
     Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nDustCoeffs);
     Int32 nIGMCoeffs=1;
     if(opt_extinction)
     {
-        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+        nIGMCoeffs = tplList.front().m_igmCorrectionMeiksin->GetIdxCount();
     }
     Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
 
@@ -569,7 +557,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
     
-    result->CallFindExtrema();
+    result->CallFindExtrema(m_radius);
 
     //store spectrum results
     Int32 nMaxExtremaSpectraSave = 1;
@@ -642,87 +630,6 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
     return result;
 
-}
-
-
-/* @brief COperatorTplcombination::getDustCoeff: get the dust coeff at a fixed resolution of 1A
-* @param dustCoeff
-* @param maxLambda
-* @return
-*/
-const Float64*  COperatorTplcombination::getDustCoeff(Float64 dustCoeff, Float64 maxLambda)
-{
-    //find kDust
-    Int32 idxDust = -1;
-    for(Int32 kDust=0; kDust<m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs(); kDust++)
-    {
-        Float64 coeffEBMV = m_ismCorrectionCalzetti->GetEbmvValue(kDust);
-        if(dustCoeff==coeffEBMV)
-        {
-            idxDust = kDust;
-            break;
-        }
-    }
-
-    if(idxDust<0)
-    {
-        return 0;
-    }
-
-    Int32 nSamples = maxLambda+1; //+1 for security
-    Float64* dustCoeffs = new Float64 [(int)nSamples]();
-
-
-    for(Int32 kl=0; kl<nSamples; kl++)
-    {
-        Float64 restLambda = kl;
-        Float64 coeffDust = m_ismCorrectionCalzetti->getDustCoeff( idxDust, restLambda);
-        dustCoeffs[kl] = coeffDust;
-    }
-    return dustCoeffs;
-}
-
-/**
- * @brief COperatorTplcombination::getMeiksinCoeff: get the IGM Meiksin coeff at a fixed resolution of 1A
- * @param dustCoeff
- * @param maxLambda
- * @return
- */
-const Float64*  COperatorTplcombination::getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda)
-{
-    if(meiksinIdx<0 || meiksinIdx>m_igmCorrectionMeiksin->GetIdxCount()-1)
-    {
-        return 0;
-    }
-
-    //find redshiftIdx from redshift value
-   Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift);
-
-    Int32 nSamples = maxLambda+1; //+1 for security
-    Float64* meiksinCoeffs = new Float64 [(int)nSamples]();
-
-
-    for(Int32 kl=0; kl<nSamples; kl++)
-    {
-        Float64 restLambda = kl;
-        Float64 coeffIGM = 1.0;
-        if(restLambda <= m_igmCorrectionMeiksin->GetLambdaMax())
-        {
-            Int32 kLbdaMeiksin = 0;
-            if(restLambda >= m_igmCorrectionMeiksin->GetLambdaMin())
-            {
-                kLbdaMeiksin = Int32(restLambda-m_igmCorrectionMeiksin->GetLambdaMin());
-            }else //if lambda lower than min meiksin value, use lower meiksin value
-            {
-                kLbdaMeiksin = 0;
-            }
-
-            coeffIGM = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
-
-        }
-        meiksinCoeffs[kl] = coeffIGM;
-    }
-    return meiksinCoeffs;
 }
 
 /**

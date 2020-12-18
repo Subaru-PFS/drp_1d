@@ -288,7 +288,7 @@ bool CPriorHelper::SetTNameData(UInt32 k, std::string tname)
     return true;
 }
 
-bool CPriorHelper::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_data)
+bool CPriorHelper::SetEZTData(UInt32 k, const std::vector<std::vector<Float64>> & ezt_data)
 {
     if(k>=m_data.size())
     {
@@ -307,7 +307,7 @@ bool CPriorHelper::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_da
     return true;
 }
 
-bool CPriorHelper::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data)
+bool CPriorHelper::SetAGaussmeanData(UInt32 k, const  std::vector<std::vector<Float64>> & agaussmean_data)
 {
     if(k>=m_data.size())
     {
@@ -326,7 +326,7 @@ bool CPriorHelper::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>>
     return true;
 }
 
-bool CPriorHelper::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data)
+bool CPriorHelper::SetAGausssigmaData(UInt32 k, const std::vector<std::vector<Float64>> & agausssigma_data)
 {
     if(k>=m_data.size())
     {
@@ -345,7 +345,7 @@ bool CPriorHelper::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>
     return true;
 }
 
-bool CPriorHelper::SetPzData(std::vector<Float64> z_data)
+bool CPriorHelper::SetPzData(const std::vector<Float64> & z_data)
 {
     if(z_data.size()!=m_data_pz.size())
     {
@@ -477,10 +477,10 @@ bool CPriorHelper::LoadFileZ(const char* filePath , std::vector<Float64>& data)
  * @param outsideZRangeExtensionMode: 0=extend 0 value for z<m_z0, and n-1 value for z>m_z0+m_dZ*m_nZ, 1=return error if z outside prior range
  * @return
  */
-bool CPriorHelper::GetTplPriorData(std::string tplname,
-                                            std::vector<Float64> redshifts,
+bool CPriorHelper::GetTplPriorData(const std::string & tplname,
+                                            const TRedshiftList & redshifts,
                                             TPriorZEList& zePriorData,
-                                            Int32 outsideZRangeExtensionMode)
+                                            Int32 outsideZRangeExtensionMode) const
 {
     bool verbose=false;
     if(m_betaA<=0.0 && m_betaTE<=0.0 && m_betaZ<=0.0)
@@ -604,11 +604,11 @@ bool CPriorHelper::GetTplPriorData(std::string tplname,
 }
 
 
-bool CPriorHelper::GetTZEPriorData(std::string tplname,
+bool CPriorHelper::GetTZEPriorData(const std::string & tplname,
                                    Int32 EBVIndexfilter,
                                    Float64 redshift,
                                    SPriorTZE& tzePrioData,
-                                   Int32 outsideZRangeExtensionMode)
+                                   Int32 outsideZRangeExtensionMode) const
 {
     if(EBVIndexfilter<0 || EBVIndexfilter>m_nEbv-1)
     {

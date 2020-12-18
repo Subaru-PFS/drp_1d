@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_METHOD_PARAMETERSTORE_
-#define _REDSHIFT_METHOD_PARAMETERSTORE_
+#ifndef _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
+#define _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>

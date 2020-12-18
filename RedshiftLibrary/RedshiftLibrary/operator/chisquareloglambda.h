@@ -40,9 +40,6 @@ public:
                                               Float64 FitDustCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
-    const Float64*  getDustCoeff(Float64 dustCoeff, Float64 maxLambda);
-    const Float64*  getMeiksinCoeff(Int32 meiksinIdx, Float64 redshift, Float64 maxLambda);
-
     void enableSpcLogRebin(Bool enable);
 
 private:
@@ -123,10 +120,10 @@ private:
 
 
     //ISM Calzetti
-    CSpectrumFluxCorrectionCalzetti* m_ismCorrectionCalzetti;
+    std::unique_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
 
     //IGM meiksin
-    CSpectrumFluxCorrectionMeiksin* m_igmCorrectionMeiksin;
+    std::unique_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
