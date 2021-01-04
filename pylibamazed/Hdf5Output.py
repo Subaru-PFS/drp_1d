@@ -18,7 +18,14 @@ class Hdf5Output(AbstractOutput):
             self.object_types.append("star")
 
     def load_classification(self):
-        self.classification = np.array(self.hdf5_group.get("classification"))
+        classification = np.array(self.hdf5_group.get("classification"))
+        self.classification["Type"]=classification["Type"][0].decode('utf-8')
+        self.classification["GalaxyProba"]=classification["ProbGalaxy"][0]
+        self.classification["StarProba"]=classification[ "ProbStar"][0]
+        self.classification["QSOProba"]=classification[ "ProbQSO"][0]
+        self.classification["GalaxyEvidence"] = classification[ "EvidenceGalaxy"][0]
+        self.classification["StarEvidence"] = classification["EvidenceStar"][0]
+        self.classification["QSOEvidence"] = classification["EvidenceQSO"][0]
 
     def load_pdf(self, object_type):
         if object_type not in self.pdf.keys():
