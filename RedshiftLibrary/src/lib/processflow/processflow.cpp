@@ -293,6 +293,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "stellarsolve.overlapThreshold", overlapThreshold, 1.0);
+        TFloat64Range starRedshiftRange;
+        ctx.GetDataStore().GetScopedParam( "starsolve.redshiftrange", starRedshiftRange, TFloat64Range(-1e-3, +1e-3) );
+        Float64 starRedshiftStep;
+        ctx.GetDataStore().GetScopedParam( "starsolve.redshiftstep", starRedshiftStep, 5e-5 );
         std::string opt_spcComponent;
         ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
@@ -304,8 +308,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         // prepare the unused masks
         std::vector<CMask> maskList;
         //define the redshift search grid
-        TFloat64Range starRedshiftRange=TFloat64Range(-1e-3, +1e-3);
-        Float64 starRedshiftStep = 5e-5;
         Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
         TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
         DebugAssert( stars_redshifts.size() > 0 );
