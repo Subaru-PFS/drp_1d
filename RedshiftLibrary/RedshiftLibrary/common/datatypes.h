@@ -60,6 +60,7 @@ typedef Float64 Sample;
 typedef std::vector<Mask> TMaskList;
 typedef std::vector<Redshift> TRedshiftList;
 typedef std::vector<Sample> TAxisSampleList;
+
 } // namespace NSEpic
 
 #endif

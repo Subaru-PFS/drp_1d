@@ -41,17 +41,11 @@ public:
     ~CProcessFlowContext();
 
     bool Init(std::shared_ptr<CSpectrum> spectrum,
-	      std::string processingID,
-	      const char* templateCatalogPath, const char* rayCatalogPath,
-	      std::shared_ptr<CParameterStore> paramStore,
-	      std::shared_ptr<CClassifierStore> zqualStore);
-
-    bool Init(std::shared_ptr<CSpectrum> spectrum,
-	      std::string processingID,
-	      std::shared_ptr<const CTemplateCatalog> templateCatalog,
-	      std::shared_ptr<const CRayCatalog> rayCatalog,
-	      std::shared_ptr<CParameterStore> paramStore,
-	      std::shared_ptr<CClassifierStore> zqualStore);
+              std::string processingID,
+              std::shared_ptr<const CTemplateCatalog> templateCatalog,
+              std::shared_ptr<const CRayCatalog> rayCatalog,
+              std::shared_ptr<CParameterStore> paramStore,
+              std::shared_ptr<CClassifierStore> zqualStore);
 
     const CSpectrum&                GetSpectrum() const;
     const CTemplateCatalog&         GetTemplateCatalog() const;

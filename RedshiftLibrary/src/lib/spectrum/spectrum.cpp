@@ -42,6 +42,8 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_nbScales(other.m_nbScales),
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
+    m_enableLSF(other.m_enableLSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
@@ -87,19 +89,27 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     }
 }
 
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf) :
     m_SpectralAxis(spectralAxis),
     m_RawFluxAxis(fluxAxis),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
     m_dfBinPath(""),
-    m_Name("") 
+    m_Name(""),
+    m_LSF(lsf)
 {
 
 }
 
-//copy constructor,
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis):
+    CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>())
+{
+
+}
+
+
+//copy constructor
 // copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
 // and const members (m_dLambdaFineGrid &m_method2baseline)
 CSpectrum::CSpectrum(const CSpectrum& other):
@@ -112,6 +122,8 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
     m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
+    m_enableLSF(other.m_enableLSF),
     m_Name(other.m_Name),
     alreadyRemoved(other.alreadyRemoved)
 {
@@ -132,6 +144,9 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_ContinuumFluxAxis = other.m_ContinuumFluxAxis;
     m_WithoutContinuumFluxAxis = other.m_WithoutContinuumFluxAxis;
     m_spcType = other.m_spcType;
+
+    m_LSF = other.m_LSF;
+    m_enableLSF = other.m_enableLSF;
 
     m_estimationMethod = other.m_estimationMethod;
     m_dfBinPath = other.m_dfBinPath;
@@ -396,6 +411,20 @@ const CSpectrum::EType CSpectrum::GetType() const
 void CSpectrum::SetType(const CSpectrum::EType type) const
 {
     m_spcType = type;
+}
+
+
+void CSpectrum::EnableLSF()
+{
+    if (m_LSF == nullptr){
+        Log.LogError("%s: Cannot enable LSF, LSF member is not initialized",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF member is not initialized");
+    }else if( ! m_LSF->IsValid()){
+        Log.LogError("%s: Cannot enable LSF, LSF member is not valid",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF member is not valid");
+    } else {
+        m_enableLSF = true;
+    }
 }
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const

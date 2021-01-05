@@ -12,6 +12,8 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CSingleton<CLog>)
+%shared_ptr(CLSF)
+%shared_ptr(CLSFConstantGaussian)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -45,12 +47,13 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/LSFConstant.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/method/linematching2solve.h"
 #include "RedshiftLibrary/method/chisquare2solve.h"
 #include "RedshiftLibrary/method/chisquarelogsolve.h"
-
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -245,6 +248,9 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  std::shared_ptr<const CLSF> GetLSF() const;
+  void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
@@ -335,6 +341,25 @@ class CTemplate : public CSpectrum
   CTemplate( const std::string& name, const std::string& category,
 	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
   bool Save( const char* filePath ) const;
+};
+
+class CLSF
+{
+ public:
+  virtual ~CLSF();
+  virtual Float64 GetSigma(Float64 lambda=-1.0) const=0;
+  virtual void SetSigma(const Float64 sigma)=0;
+  virtual bool IsValid() const=0;
+};
+
+class CLSFConstantGaussian : public CLSF
+{
+ public:
+  CLSFConstantGaussian(const Float64 sigma=0.0);
+  ~CLSFConstantGaussian();
+  Float64 GetSigma(Float64 lambda=-1.0) const;
+  void SetSigma(const Float64 sigma);
+  bool IsValid() const;
 };
 
 class CLineModelSolve
