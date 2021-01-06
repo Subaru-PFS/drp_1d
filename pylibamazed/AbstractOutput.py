@@ -25,7 +25,8 @@ class AbstractOutput:
         self.classification = dict()
         self.nb_candidates = dict()
         self.reference_redshift = None # TODO should be a map or np array with all attributes presents in the ref file
-
+        self.manual_redshift = None
+        
     @abc.abstractmethod
     def load_pdf(self, object_type):
         pass
@@ -101,3 +102,6 @@ class AbstractOutput:
     
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
+
+    def set_manual_redshift_value(self,val):
+        self.manual_redshift=val
