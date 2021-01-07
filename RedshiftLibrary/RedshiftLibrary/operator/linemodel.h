@@ -242,6 +242,8 @@ public:
     Float64 m_opt_tplratio_prior_betaZ=1.0;
     std::string m_opt_tplratio_prior_dirpath="";
 
+    std::string m_opt_enableLSF;
+
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;
     Float64 m_opt_lya_fit_asym_min;

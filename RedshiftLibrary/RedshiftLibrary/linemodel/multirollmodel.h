@@ -100,6 +100,7 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     void SetVelocityEmission(Float64 vel);
 
+    void ActivateLSF();
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 

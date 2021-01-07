@@ -155,6 +155,7 @@ public:
     Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
+    void ActivateLSF();
     std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);

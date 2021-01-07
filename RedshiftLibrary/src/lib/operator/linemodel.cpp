@@ -208,6 +208,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
                 setssSizeInit);
 
+    // activate lsf if necessary
+    if (m_opt_enableLSF=="yes")
+    {
+        m_model->ActivateLSF();
+    }
+
     /*
     CMultiRollModel model( spectrum,
                            tplCatalog,//orthoTplCatalog,

@@ -807,6 +807,14 @@ void CMultiRollModel::SetVelocityEmission(Float64 vel)
     }
 }
 
+void CMultiRollModel::ActivateLSF()
+{
+    for(Int32 km=0; km<m_models.size(); km++)
+    {
+        m_models[km]->ActivateLSF();
+    }
+}
+
 Float64 CMultiRollModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
 {
     Float64 valf=0.0;

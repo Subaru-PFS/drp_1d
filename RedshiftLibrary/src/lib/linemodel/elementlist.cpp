@@ -6525,6 +6525,14 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
     }
 }
 
+void CLineModelElementList::ActivateLSF()
+{
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->ActivateLSF(m_inputSpc.GetLSF());
+    }
+}
+
 void CLineModelElementList::SetVelocityEmission(Float64 vel)
 {
     m_velocityEmission = vel;
