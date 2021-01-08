@@ -18,7 +18,14 @@ class Hdf5Output(AbstractOutput):
             self.object_types.append("star")
 
     def load_classification(self):
-        self.classification = np.array(self.hdf5_group.get("classification"))
+        classification = np.array(self.hdf5_group.get("classification"))
+        self.classification["Type"]=classification["Type"][0].decode('utf-8')
+        self.classification["GalaxyProba"]=classification["ProbGalaxy"][0]
+        self.classification["StarProba"]=classification[ "ProbStar"][0]
+        self.classification["QSOProba"]=classification[ "ProbQSO"][0]
+        self.classification["GalaxyEvidence"] = classification[ "EvidenceGalaxy"][0]
+        self.classification["StarEvidence"] = classification["EvidenceStar"][0]
+        self.classification["QSOEvidence"] = classification["EvidenceQSO"][0]
 
     def load_pdf(self, object_type):
         if object_type not in self.pdf.keys():
@@ -87,7 +94,6 @@ class Hdf5Output(AbstractOutput):
                                                                 intg_area_indexes_df,
                                                                 left_index=True, right_index=True)
 
-                # TODO add line with ref redshift
                 if self.reference_redshift is not None:
                     self.candidates_results[object_type]["abs_deltaZ"] = abs(
                         self.candidates_results[object_type]["Redshift"] -
@@ -105,6 +111,17 @@ class Hdf5Output(AbstractOutput):
                     self.candidates_results[object_type] = self.candidates_results[object_type].append(
                         pd.Series(reference_values),
                         ignore_index=True)
+                manual_values = dict()
+                for col in self.candidates_results[object_type].columns:
+                    if is_numeric_dtype(self.candidates_results[object_type][col]):
+                        manual_values[col] = np.nan
+                    if is_string_dtype(self.candidates_results[object_type][col]):
+                        manual_values[col] = ""
+                    else:
+                        manual_values[col] = []
+                manual_values["Redshift"]=0
+                manual_values["Rank"]=-2
+                self.candidates_results[object_type] = self.candidates_results[object_type].append(pd.Series(manual_values),ignore_index=True)
 
     def load_rays_info(self):
         if self.rays_info is None:
