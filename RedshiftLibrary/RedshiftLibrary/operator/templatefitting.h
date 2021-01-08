@@ -1,10 +1,10 @@
-#ifndef _REDSHIFT_OPERATOR_CHISQUARE2_
-#define _REDSHIFT_OPERATOR_CHISQUARE2_
+#ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
+#define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/common/mask.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
@@ -16,13 +16,13 @@
 namespace NSEpic
 {
 
-class COperatorChiSquare2 : public COperator
+class COperatorTemplateFitting : public COperator
 {
 
 public:
 
-    explicit COperatorChiSquare2();
-    ~COperatorChiSquare2();
+    explicit COperatorTemplateFitting();
+    ~COperatorTemplateFitting();
 
      std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
                                               const CTemplate& tpl,

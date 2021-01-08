@@ -582,10 +582,10 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-      else if(method.compare("chisquare2solve") == 0)
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -595,11 +595,11 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   else if (object_type.compare("star") == 0)
     {
       
-      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
-      else if(method.compare("chisquare2solve") == 0)
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.templatefittingsolve.candidatesresult");
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "stellarsolve.templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -617,10 +617,10 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-      else if(method.compare("chisquare2solve") == 0)
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -629,11 +629,11 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   else if (object_type.compare("star") == 0)
     {
       
-      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
-      else if(method.compare("chisquare2solve") == 0)
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.templatefittingsolve.candidatesresult");
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "stellarsolve.templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -652,10 +652,10 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
 
       if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
-      else if(method.compare("chisquare2solve") == 0)
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -663,11 +663,11 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     }
   else if (object_type.compare("star") == 0)
     {
-      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.chisquare2solve.candidatesresult");
-      else if(method.compare("chisquare2solve") == 0)
+      if(method.compare("all") == 0) result = GetGlobalResult("stellarsolve.templatefittingsolve.candidatesresult");
+      else if(method.compare("templatefittingsolve") == 0)
         {
           std::ostringstream oss;
-          oss << "stellarsolve.chisquare2solve.chisquare2_fitcontinuum_extrema_"<<rank;
+          oss << "stellarsolve.templatefittingsolve.templatefitting_fitcontinuum_extrema_"<<rank;
           result = GetGlobalResult(oss.str());
           return result.lock()->getData(name,v);
         }
@@ -685,7 +685,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   if (object_type.compare("galaxy") == 0)
     {
       std::string meth = method;
-      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+      if (method.compare("templatefittingsolve")==0) meth = "templatefitting";
 
       if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
@@ -700,7 +700,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     }
   else if (object_type.compare("star") == 0)
     {
-      oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_" << rank;
+      oss << "stellarsolve.templatefittingsolve.templatefitting_spc_extrema_" << rank;
     }
   result = GetGlobalResult(oss.str());
   result.lock()->getData(name,data,size);
@@ -730,14 +730,14 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   if (object_type.compare("galaxy") == 0)
     {
       std::string meth = method;
-      if (method.compare("chisquare2solve")==0) meth = "chisquare2";
+      if (method.compare("templatefittingsolve")==0) meth = "templatefitting";
       if (name.find("Model") != std::string::npos)  oss << meth << "solve."<<meth<<"_spc_extrema_"<< rank;
       else if (name.find("FittedRays") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
       else throw Exception("unknown data %s",name.c_str());
     }
   else if (object_type.compare("star") == 0)
     {
-      if (name.find("Model") != std::string::npos)  oss << "stellarsolve.chisquare2solve.chisquare2_spc_extrema_"<< rank;
+      if (name.find("Model") != std::string::npos)  oss << "stellarsolve.templatefittingsolve.templatefitting_spc_extrema_"<< rank;
       else throw Exception("unknown data %s",name.c_str());
     }
   else throw Exception("unknown object_type %s",object_type.c_str());

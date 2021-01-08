@@ -1,11 +1,11 @@
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/tools.h>
 #include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/log/log.h>
@@ -33,17 +33,17 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-COperatorChiSquare2::COperatorChiSquare2()
+COperatorTemplateFitting::COperatorTemplateFitting()
 {
 }
 
-COperatorChiSquare2::~COperatorChiSquare2()
+COperatorTemplateFitting::~COperatorTemplateFitting()
 {
 
 }
 
 
-void COperatorChiSquare2::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl)
+void COperatorTemplateFitting::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl)
 {
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
     m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
@@ -59,7 +59,7 @@ void COperatorChiSquare2::BasicFit_preallocateBuffers(const CSpectrum& spectrum,
 
 
 /**
- * @brief COperatorChiSquare2::BasicFit
+ * @brief COperatorTemplateFitting::BasicFit
  * @param spectrum
  * @param tpl
  * @param pfgTplBuffer
@@ -86,7 +86,7 @@ void COperatorChiSquare2::BasicFit_preallocateBuffers(const CSpectrum& spectrum,
  * @param spcMaskAdditional
  * @param priorjoint_pISM_tpl_z : vector size = nISM, joint prior p(ISM, TPL, Z)
  */
-void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
+void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    const CTemplate& tpl,
                                    const TFloat64Range& lambdaRange,
                                    Float64 redshift,
@@ -139,7 +139,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
-        Log.LogInfo("  Operator-Chisquare2: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
+        Log.LogInfo("  Operator-TemplateFitting: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
         status = nStatus_DataError;
         return ;
     }
@@ -214,7 +214,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
-    Log.LogDebug( "  Operator-Chisquare2: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
+    Log.LogDebug( "  Operator-TemplateFitting: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
@@ -255,7 +255,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
 
         if(kStart==-1 || kEnd==-1)
         {
-            Log.LogDebug( "  Operator-Chisquare2: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
+            Log.LogDebug( "  Operator-TemplateFitting: kStart=%d, kEnd=%d ! Aborting.", kStart, kEnd);
             break;
         }
 
@@ -286,7 +286,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             /*//debug:
             // save final ISM/IGM template model
             if(redshift>=2.4 && redshift<2.4001 && meiksinIdx==6){
-                FILE* f = fopen( "chisquare2_template_finalModel.txt", "w+" );
+                FILE* f = fopen( "templateFitting_template_finalModel.txt", "w+" );
                 for(Int32 m=0; m<itplTplSpectralAxis.GetSamplesCount(); m++){
                     fprintf( f, "%e %e\n", Xtpl[m], Ytpl[m]);
                 }
@@ -370,9 +370,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     /*
                     //check for invalid data
                     if(error[j]!=error[j]){
-                        Log.LogDebug("  Operator-Chisquare2: noise invalid=%e for i=%d", error[j], j);
-                        Log.LogDebug("  Operator-Chisquare2: noise invalid, w=%e for i=%d", spcSpectralAxis_restframe[j], j);
-                        Log.LogDebug("  Operator-Chisquare2: noise invalid,samples count=%d", spcSpectralAxis_restframe.GetSamplesCount(), j);
+                        Log.LogDebug("  Operator-TemplateFitting: noise invalid=%e for i=%d", error[j], j);
+                        Log.LogDebug("  Operator-TemplateFitting: noise invalid, w=%e for i=%d", spcSpectralAxis_restframe[j], j);
+                        Log.LogDebug("  Operator-TemplateFitting: noise invalid,samples count=%d", spcSpectralAxis_restframe.GetSamplesCount(), j);
                     }
                     //*/
 
@@ -388,22 +388,22 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     sumS+= Yspc[j]*Yspc[j]*err2;
 
                     if( std::isinf(err2) || std::isnan(err2) ){
-                        Log.LogError("  Operator-Chisquare2: found invalid inverse variance : err2=%e, for index=%d at restframe wl=%f", err2, j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid inverse variance : err2=%e, for index=%d at restframe wl=%f", err2, j, m_spcSpectralAxis_restframe[j]);
                         status = nStatus_InvalidProductsError;
                         return ;
                     }
 
                     if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
-                        Log.LogError("  Operator-Chisquare2: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, m_spcSpectralAxis_restframe[j]);
-                        Log.LogError("  Operator-Chisquare2: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, m_spcSpectralAxis_restframe[j]);
-                        Log.LogError("  Operator-Chisquare2: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, m_spcSpectralAxis_restframe[j]);
-                        Log.LogError("  Operator-Chisquare2: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, m_spcSpectralAxis_restframe[j]);
                         status = nStatus_InvalidProductsError;
                         return ;
                     }
 
                     if( std::isinf(sumT) || std::isnan(sumT) ){
-                        Log.LogError("  Operator-Chisquare2: found invalid mtm : mtm=%e, for index=%d at restframe wl=%f", sumT, j, m_spcSpectralAxis_restframe[j]);
+                        Log.LogError("  Operator-TemplateFitting: found invalid mtm : mtm=%e, for index=%d at restframe wl=%f", sumT, j, m_spcSpectralAxis_restframe[j]);
                         status = nStatus_InvalidProductsError;
                         return ;
                     }
@@ -475,7 +475,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
                     ampl = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
                     ampl_err = sqrt(sumT)/(sumT+bss2); 
                     /*
-                    Log.LogInfo("  Operator-Chisquare2: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
+                    Log.LogInfo("  Operator-TemplateFitting: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
                     //*/
                 }
 
@@ -502,13 +502,13 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             if(verbose)
             {
                 Log.LogDebug("");
-                Log.LogDebug("  Operator-Chisquare2: z=%f", redshift);
-                Log.LogDebug("  Operator-Chisquare2: fit=%e", fit);
-                Log.LogDebug("  Operator-Chisquare2: sumT=%e", sumT);
-                Log.LogDebug("  Operator-Chisquare2: sumS=%e", sumS);
-                Log.LogDebug("  Operator-Chisquare2: sumCross=%e", sumCross);
-                Log.LogDebug("  Operator-Chisquare2: coeffEBMV=%.2f", coeffEBMV);
-                Log.LogDebug("  Operator-Chisquare2: meiksinIdx=%d", meiksinIdx);
+                Log.LogDebug("  Operator-TemplateFitting: z=%f", redshift);
+                Log.LogDebug("  Operator-TemplateFitting: fit=%e", fit);
+                Log.LogDebug("  Operator-TemplateFitting: sumT=%e", sumT);
+                Log.LogDebug("  Operator-TemplateFitting: sumS=%e", sumS);
+                Log.LogDebug("  Operator-TemplateFitting: sumCross=%e", sumCross);
+                Log.LogDebug("  Operator-TemplateFitting: coeffEBMV=%.2f", coeffEBMV);
+                Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
 
             }
             //*/
@@ -530,9 +530,9 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
             /*
             if(redshift==0.0)
             {
-                Log.LogInfo( "chisquare2 operator: for z=%f dtd = %e", redshift, sumS);
-                Log.LogInfo( "chisquare2 operator: for z=%f dtm = %e", redshift, sumCross);
-                Log.LogInfo( "chisquare2 operator: for z=%f mtm = %e", redshift, sumT);
+                Log.LogInfo( "templateFitting operator: for z=%f dtd = %e", redshift, sumS);
+                Log.LogInfo( "templateFitting operator: for z=%f dtm = %e", redshift, sumCross);
+                Log.LogInfo( "templateFitting operator: for z=%f mtm = %e", redshift, sumT);
             }
             //*/
 
@@ -576,7 +576,7 @@ void COperatorChiSquare2::BasicFit(const CSpectrum& spectrum,
     }
 }
 
-Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
+Int32  COperatorTemplateFitting::RebinTemplate( const CSpectrum& spectrum,
                                 const CTemplate& tpl, 
                                 Float64 redshift,
                                 const TFloat64Range& lambdaRange,
@@ -638,7 +638,7 @@ Int32  COperatorChiSquare2::RebinTemplate( const CSpectrum& spectrum,
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
  **/
-std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& spectrum,
+std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectrum& spectrum,
                                                               const CTemplate& tpl,
                                                               const TFloat64Range& lambdaRange,
                                                               const TFloat64List& redshifts,
@@ -652,7 +652,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
                                                               Float64 FitDustCoeff,
                                                               Float64 FitMeiksinIdx)
 {
-    Log.LogDetail("  Operator-Chisquare2: starting computation for template: %s", tpl.GetName().c_str());
+    Log.LogDetail("  Operator-TemplateFitting: starting computation for template: %s", tpl.GetName().c_str());
 
     if(0)
     {
@@ -660,7 +660,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         CSpectrumSpectralAxis tmp_tplSpectralAxis = tpl.GetSpectralAxis();
         for(UInt32 k=0; k<std::min(Int32(tmp_tplSpectralAxis.GetSamplesCount()), Int32(10)); k++)
         {
-            Log.LogDebug("  Operator-Chisquare2: tpl_SpectralAxis[%d] = %f",
+            Log.LogDebug("  Operator-TemplateFitting: tpl_SpectralAxis[%d] = %f",
                          k,
                          tmp_tplSpectralAxis[k]);
         }
@@ -668,26 +668,26 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
     if( (opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
     {
-        Log.LogError("  Operator-Chisquare2: no calzetti calib. file loaded in template... aborting!");
-        throw std::runtime_error("  Operator-Chisquare2: no calzetti calib. file in template");
+        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting!");
+        throw std::runtime_error("  Operator-TemplateFitting: no calzetti calib. file in template");
     }
     if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
     {
-        Log.LogError("  Operator-Chisquare2: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
+        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
                      opt_dustFitting,
                      tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
-        throw std::runtime_error("  Operator-Chisquare2: calzetti index overflow");
+        throw std::runtime_error("  Operator-TemplateFitting: calzetti index overflow");
     }
 
     if( opt_extinction && tpl.MeiksinInitFailed())
     {
-        Log.LogError("  Operator-Chisquare2: no meiksin calib. file loaded in template... aborting!");
-        throw std::runtime_error("  Operator-Chisquare2: no meiksin calib. file in template");
+        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting!");
+        throw std::runtime_error("  Operator-TemplateFitting: no meiksin calib. file in template");
     }
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
+        Log.LogError("  Operator-TemplateFitting: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
 
@@ -709,7 +709,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         sortedIndexes.push_back(vp[i].second);
     }
 
-    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
     Int32 nDustCoeffs=1;
     if(opt_dustFitting==-10)
     {
@@ -738,12 +738,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     }
     if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
     {
-        Log.LogError("  Operator-Chisquare2: using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
+        Log.LogError("  Operator-TemplateFitting: using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
     }
     if(logpriorze.size()>0 && logpriorze.size()!=sortedRedshifts.size())
     {
-        Log.LogError("  Operator-Chisquare2: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
-        throw std::runtime_error("  Operator-Chisquare2: prior list size didn't match the input redshift-list size");
+        Log.LogError("  Operator-TemplateFitting: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
+        throw std::runtime_error("  Operator-TemplateFitting: prior list size didn't match the input redshift-list size");
     }
 
     for (Int32 i=0;i<sortedRedshifts.size();i++)
@@ -797,7 +797,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
         if(result->Status[i]==nStatus_InvalidProductsError)
         {
-            Log.LogError("  Operator-Chisquare2: found invalid chisquare products for z=%f. Now breaking z loop.", redshift);
+            Log.LogError("  Operator-TemplateFitting: found invalid chisquare products for z=%f. Now breaking z loop.", redshift);
             break;
         }
 
@@ -824,7 +824,7 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
     }
     if(overlapValidInfZ!=sortedRedshifts[0] || overlapValidSupZ!=sortedRedshifts[sortedRedshifts.size()-1])
     {
-        Log.LogInfo("  Operator-Chisquare2: overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+        Log.LogInfo("  Operator-TemplateFitting: overlap warning for %s: minz=%.3f, maxz=%.3f", tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
     //only bad status warning
@@ -834,12 +834,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         if(result->Status[i]==nStatus_OK)
         {
             oneValidStatusFoundIndex=i;
-            Log.LogDebug("  Operator-Chisquare2: STATUS VALID found for %s: at least at index=%d", tpl.GetName().c_str(), i);
+            Log.LogDebug("  Operator-TemplateFitting: STATUS VALID found for %s: at least at index=%d", tpl.GetName().c_str(), i);
             break;
         }
     }if(oneValidStatusFoundIndex==-1)
     {
-        Log.LogWarning("  Operator-Chisquare2: STATUS WARNING for %s: Not even one single valid fit/merit value found", tpl.GetName().c_str());
+        Log.LogWarning("  Operator-TemplateFitting: STATUS WARNING for %s: Not even one single valid fit/merit value found", tpl.GetName().c_str());
     }
 
 
@@ -850,12 +850,12 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
         if(result->Status[i]==nStatus_LoopError)
         {
             loopErrorStatusFoundIndex=i;
-            Log.LogDebug("  Operator-Chisquare2: STATUS Loop Error found for %s: at least at index=%d", tpl.GetName().c_str(), i);
+            Log.LogDebug("  Operator-TemplateFitting: STATUS Loop Error found for %s: at least at index=%d", tpl.GetName().c_str(), i);
             break;
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    chisquare2-operator: Loop Error - chisquare values not set even once");
+        Log.LogWarning("    templateFitting-operator: Loop Error - chisquare values not set even once");
     }
 
     //estimate CstLog for PDF estimation
@@ -868,13 +868,13 @@ std::shared_ptr<COperatorResult> COperatorChiSquare2::Compute(const CSpectrum& s
 
 
 
-const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& spectrum, const CTemplate& tpl,
+const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpectrum& spectrum, const CTemplate& tpl,
                           const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                           Float64 overlapThreshold )
 {
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
     {
-        Log.LogError("  Operator-Chisquare2: input spectrum or template are not in log scale (ignored)");
+        Log.LogError("  Operator-TemplateFitting: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
 
@@ -936,7 +936,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
     }
     std::sort(sortedAmplitudes.begin(), sortedAmplitudes.end());
 
-    CChisquareResult* result = new CChisquareResult();
+    CTemplateFittingResult* result = new CTemplateFittingResult();
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
     result->FitAmplitudeError.resize( sortedRedshifts.size() );
@@ -1006,7 +1006,7 @@ const COperatorResult* COperatorChiSquare2::ExportChi2versusAZ(const CSpectrum& 
 /**
  * \brief this function estimates the likelihood_cstLog term withing the wavelength range
  **/
-Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
+Float64 COperatorTemplateFitting::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const TFloat64List& error = spectrum.GetFluxAxis().GetError();
@@ -1030,7 +1030,7 @@ Float64 COperatorChiSquare2::EstimateLikelihoodCstLog(const CSpectrum& spectrum,
 }
 
 
-Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
+Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
                                            Float64 redshift,
                                            Float64 DustCoeff,
@@ -1042,7 +1042,7 @@ Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
                                            Float64 overlapThreshold,
                                            CModelSpectrumResult& spc)
 {
-    Log.LogDetail("  Operator-COperatorChiSquare2: building spectrum model chisquare2 for candidate Zcand=%f", redshift);
+    Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model templateFitting for candidate Zcand=%f", redshift);
     EStatus status;
     TFloat64Range currentRange;
     Float64 overlapRate = 0.0;
@@ -1073,7 +1073,7 @@ Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
     {
         if (m_templateRebined_bf.CalzettiInitFailed())
         {
-            Log.LogError("  Operator-Chisquare2: asked model with Dust extinction with no calzetti calib. file loaded in template" );
+            Log.LogError("  Operator-TemplateFitting: asked model with Dust extinction with no calzetti calib. file loaded in template" );
             return -1;
         }
         Int32 idxDust = -1;
@@ -1095,7 +1095,7 @@ Int32   COperatorChiSquare2::ComputeSpectrumModel(const CSpectrum& spectrum,
     {
         if (m_templateRebined_bf.MeiksinInitFailed())
         {
-            Log.LogError("  Operator-Chisquare2: asked model with IGM extinction with no Meikin calib. file loaded in template" );
+            Log.LogError("  Operator-TemplateFitting: asked model with IGM extinction with no Meikin calib. file loaded in template" );
             return -1;
         }
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);

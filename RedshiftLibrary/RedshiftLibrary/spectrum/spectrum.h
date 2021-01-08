@@ -100,8 +100,6 @@ public:
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
 
-    void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-
     void                            EnableLSF();
     void                            DisableLSF();
     Bool                            UseOfLSF() const;

@@ -692,43 +692,6 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
     m_dfBinPath = binPath;
 }
 
-void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
-{
-  std::string spcName="";
-  std::string noiseName="";
-
-  CSpectrumIOGenericReader reader;
-
-  if(spectrumFilePath!=NULL)
-      spcName = bfs::path(spectrumFilePath).stem().string() ;
-
-  if(noiseFilePath!=NULL)
-      noiseName = bfs::path(noiseFilePath).stem().string() ;
-
-  SetName(spcName.c_str());
-  SetFullPath(bfs::path( spectrumFilePath ).string().c_str());
-
-  reader.Read(spectrumFilePath, *this);
-  Log.LogInfo("Successfully loaded input spectrum file: (%s), samples : %d",
-	      spcName.c_str(), GetSampleCount() );
-
-  ResetContinuum();
-
-  // add noise if any or add flat noise
-  if( noiseFilePath == NULL )
-    {
-      CNoiseFlat noise;
-      noise.SetStatErrorLevel( 1.0 );
-      noise.AddNoise(*this);
-    }
-  else
-    {
-      CNoiseFromFile noise;
-      noise.SetNoiseFilePath(noiseFilePath, reader);
-      noise.AddNoise(*this);
-      Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
-    }
-}
 
 void CSpectrum::InitPrecomputeFineGrid() const
 {

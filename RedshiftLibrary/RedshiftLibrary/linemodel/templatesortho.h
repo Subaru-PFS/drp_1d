@@ -10,7 +10,7 @@
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/element.h>

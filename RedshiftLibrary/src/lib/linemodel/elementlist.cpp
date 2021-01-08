@@ -150,7 +150,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
     {
-        m_chiSquareOperator = COperatorChiSquare2();
+        m_templateFittingOperator = COperatorTemplateFitting();
         m_observeGridContinuumFlux.resize(modelFluxAxis.GetSamplesCount());
     }
 
@@ -886,7 +886,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 }
 
 /**
- * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
+ * \brief Generates a continuum from the fitting with a set of templates : uses the templatefitting operator
  */
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
@@ -1380,33 +1380,33 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
     // Compute merit function
     //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( m_inputSpc,
-                                                                                                       tpl,
-                                                                                                       lambdaRange,
-                                                                                                       redshifts,
-                                                                                                       overlapThreshold,
-                                                                                                       maskList,
-                                                                                                       opt_interp,
-                                                                                                       opt_extinction,
-                                                                                                       opt_dustFit,
-                                                                                                       zePriorData) );
+    auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( m_inputSpc,
+                                                                                                                        tpl,
+                                                                                                                        lambdaRange,
+                                                                                                                        redshifts,
+                                                                                                                        overlapThreshold,
+                                                                                                                        maskList,
+                                                                                                                        opt_interp,
+                                                                                                                        opt_extinction,
+                                                                                                                        opt_dustFit,
+                                                                                                                        zePriorData) );
 
-    if( !chisquareResult )
+    if( !templateFittingResult )
     {
 
         Log.LogError( "Failed to compute chi square value");
         return false;
     }else{
         // Store results
-        merit = chisquareResult->ChiSquare[0];
-        fitAmplitude = chisquareResult->FitAmplitude[0];
-        fitAmplitudeError = chisquareResult->FitAmplitudeError[0];
-        fitAmplitudeNegative = chisquareResult->FitAmplitudeNegative[0];
-        fitDustCoeff = chisquareResult->FitDustCoeff[0];
-        fitMeiksinIdx = chisquareResult->FitMeiksinIdx[0];
-        fitDtM = chisquareResult->FitDtM[0];
-        fitMtM = chisquareResult->FitMtM[0];
-        fitLogprior = chisquareResult->LogPrior[0];
+        merit = templateFittingResult->ChiSquare[0];
+        fitAmplitude = templateFittingResult->FitAmplitude[0];
+        fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
+        fitAmplitudeNegative = templateFittingResult->FitAmplitudeNegative[0];
+        fitDustCoeff = templateFittingResult->FitDustCoeff[0];
+        fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
+        fitDtM = templateFittingResult->FitDtM[0];
+        fitMtM = templateFittingResult->FitMtM[0];
+        fitLogprior = templateFittingResult->LogPrior[0];
         return true;
     }
 
@@ -1469,26 +1469,26 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
 
     //*
     //Fit contaminant template AMPLITUDE
-    auto  chisquareResult = std::dynamic_pointer_cast<CChisquareResult>( m_chiSquareOperator.Compute( m_inputSpc,
-                                                                                                       m_tplContaminantSpcRebin,
-                                                                                                       lambdaRange,
-                                                                                                       redshifts,
-                                                                                                       overlapThreshold,
-                                                                                                       maskList,
-                                                                                                       opt_interp,
-                                                                                                       opt_extinction,
-                                                                                                       opt_dustFit ) );
+    auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( m_inputSpc,
+                                                                                                                  m_tplContaminantSpcRebin,
+                                                                                                                  lambdaRange,
+                                                                                                                  redshifts,
+                                                                                                                  overlapThreshold,
+                                                                                                                  maskList,
+                                                                                                                  opt_interp,
+                                                                                                                  opt_extinction,
+                                                                                                                  opt_dustFit ) );
 
-    if( !chisquareResult )
+    if( !templateFittingResult )
     {
 
         Log.LogError( "    model: contaminant - Failed to compute chi square value");
         return false;
     }else{
         //Extract amplitude and amplitude error
-        fitAmplitude = chisquareResult->FitAmplitude[0];
-        fitAmplitudeError = chisquareResult->FitAmplitudeError[0];
-        fitAmplitudeNegative = chisquareResult->FitAmplitudeNegative[0];
+        fitAmplitude = templateFittingResult->FitAmplitude[0];
+        fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
+        fitAmplitudeNegative = templateFittingResult->FitAmplitudeNegative[0];
     }
     Log.LogInfo( "    model: contaminant raw fit amplitude is %f.", fitAmplitude);
     //*/

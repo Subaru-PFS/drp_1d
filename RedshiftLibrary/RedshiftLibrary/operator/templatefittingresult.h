@@ -1,5 +1,5 @@
-#ifndef _REDSHIFT_OPERATOR_CHISQUARERESULT_
-#define _REDSHIFT_OPERATOR_CHISQUARERESULT_
+#ifndef _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
+#define _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
 
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
@@ -9,13 +9,13 @@
 namespace NSEpic
 {
 
-class CChisquareResult : public COperatorResult
+class CTemplateFittingResult : public COperatorResult
 {
 
 public:
 
-    CChisquareResult();
-    virtual ~CChisquareResult();
+    CTemplateFittingResult();
+    virtual ~CTemplateFittingResult();
 
     void Init( UInt32 n, Int32 nISM, Int32 nIGM);
 

@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/common/mask.h>
 

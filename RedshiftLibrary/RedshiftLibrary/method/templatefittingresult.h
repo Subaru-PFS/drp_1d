@@ -16,7 +16,7 @@ class CProcessFlowContext;
 /**
  * \ingroup Redshift
  */
-class CChisquareSolveResult : public CSolveResult
+class CTemplateFittingSolveResult : public CSolveResult
 {
 
 public:
@@ -29,7 +29,7 @@ public:
              nType_all = 4,
     };
 
-    CChisquareSolveResult(const EType type=nType_raw, const std::string scope="chisquaresolve");
+    CTemplateFittingSolveResult(const EType type=nType_raw, const std::string scope="chisquaresolve");
 
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
@@ -62,9 +62,8 @@ public:
 private:
 
     std::unordered_map<std::string, std::string> m_scope2name = {
-        {"chisquaresolve",      "ChisquareSolve"},
-        {"chisquare2solve",     "Chisquare2Solve"},
-        {"chisquarelogsolve",   "ChisquareLogSolve"},
+        {"chisquaresolve",      "TemplateFittingSolve"},
+        {"chisquarelogsolve",   "TemplateFittingLogSolve"},
         {"tplcombinationsolve", "TplcombinationSolve"}
     };
 
@@ -85,31 +84,31 @@ private:
 };
 
 inline
-const std::string CChisquareSolveResult::GetTemplateName(){
+const std::string CTemplateFittingSolveResult::GetTemplateName(){
   return m_tplName;
 }
 inline
-const Float64 CChisquareSolveResult::GetAmplitude(){
+const Float64 CTemplateFittingSolveResult::GetAmplitude(){
   return m_amplitude;
 }
 inline 
-const Float64 CChisquareSolveResult::GetMeiksinIdx(){
+const Float64 CTemplateFittingSolveResult::GetMeiksinIdx(){
   return m_meiksinIdx;
 }
 inline
-const Float64 CChisquareSolveResult::GetDustCoeff(){
+const Float64 CTemplateFittingSolveResult::GetDustCoeff(){
   return m_dustCoeff;
 }
 inline
-const Float64 CChisquareSolveResult::GetAmplitudeError(){
+const Float64 CTemplateFittingSolveResult::GetAmplitudeError(){
   return m_amplitudeError;
 }
 inline 
-const Float64 CChisquareSolveResult::GetMerit(){
+const Float64 CTemplateFittingSolveResult::GetMerit(){
   return m_merit;
 }
 inline
-const Float64 CChisquareSolveResult::GetFittingSNR(){
+const Float64 CTemplateFittingSolveResult::GetFittingSNR(){
   return m_fittingSNR;
 }
 

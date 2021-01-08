@@ -51,9 +51,8 @@
 #include "RedshiftLibrary/spectrum/LSFConstant.h"
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
-#include "RedshiftLibrary/method/linematching2solve.h"
-#include "RedshiftLibrary/method/chisquare2solve.h"
-#include "RedshiftLibrary/method/chisquarelogsolve.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
 %}
@@ -253,7 +252,6 @@ class CSpectrum
   void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
-  void LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
   TLambdaRange GetLambdaRange() const;
   %apply Float64& OUTPUT { Float64& mean };
   %apply Float64& OUTPUT { Float64& std };
@@ -369,7 +367,7 @@ class CLineModelSolve
   ~CLineModelSolve();
   const std::string GetDescription();
 };
-
+ 
 class CMethodLineMatchingSolve
 {
  public:
@@ -378,27 +376,19 @@ class CMethodLineMatchingSolve
   const std::string GetDescription();
 };
 
-class CMethodLineMatching2Solve
+class CMethodTemplateFittingSolve
 {
  public:
-  CMethodLineMatching2Solve();
-  ~CMethodLineMatching2Solve();
+  CMethodTemplateFittingSolve();
+  ~CMethodTemplateFittingSolve();
   const std::string GetDescription();
 };
 
-class CMethodChisquare2Solve
+class CMethodTemplateFittingLogSolve
 {
  public:
-  CMethodChisquare2Solve();
-  ~CMethodChisquare2Solve();
-  const std::string GetDescription();
-};
-
-class CMethodChisquareLogSolve
-{
- public:
-  CMethodChisquareLogSolve( std::string calibrationPath="" );
-  ~CMethodChisquareLogSolve();
+  CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
+  ~CMethodTemplateFittingLogSolve();
   const std::string GetDescription();
 };
 

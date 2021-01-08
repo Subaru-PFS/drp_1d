@@ -1,6 +1,6 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/chisquareresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <RedshiftLibrary/processflow/resultstore.h>
@@ -70,7 +70,7 @@ void DeltazTestCompute( const string& sample, const Float64 redshift, const TFlo
     boost::filesystem::path temp = boost::filesystem::unique_path();
     ofstream output(temp.native());
 
-    CChisquareResult chi2Result;
+    CTemplateFittingResult chi2Result;
     chi2Result.Load( input );
     BOOST_CHECK_MESSAGE( chi2Result.ChiSquare.size()>0, "Loaded Chisquare result is empty." );
 

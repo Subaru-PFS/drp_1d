@@ -15,7 +15,7 @@ class CProcessFlowContext;
 /**
  * \ingroup Redshift
  */
-class CLineMatchingSolveResult : public COperatorResult
+  class CLineMatchingSolveResult : public COperatorResult
 {
 
 public:

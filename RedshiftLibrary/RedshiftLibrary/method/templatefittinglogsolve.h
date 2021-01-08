@@ -1,14 +1,12 @@
-#ifndef _REDSHIFT_METHOD_CHISQUARE2SOLVE_
-#define _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+#ifndef _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
+#define _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/chisquaresolveresult.h>
+#include <RedshiftLibrary/method/templatefittingresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefittinglog.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
 
 namespace NSEpic
 {
@@ -20,18 +18,18 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CMethodChisquare2Solve
+class CMethodTemplateFittingLogSolve
 {
 
  public:
 
 
-    CMethodChisquare2Solve();
-    ~CMethodChisquare2Solve();
+    CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
+    ~CMethodTemplateFittingLogSolve();
 
     const std::string GetDescription();
 
-    std::shared_ptr<CChisquareSolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
                                                    const TStringList& tplCategoryList,
@@ -41,24 +39,24 @@ class CMethodChisquare2Solve
                                                    std::vector<CMask> maskList,
                                                    const std::string outputPdfRelDir,
                                                    const Float64 radius,
-                                                   std::string spcComponent="raw" ,
+                                                   std::string spcComponent="raw",
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
 
-    Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, std::string outputPdfRelDir = "zPDF");
-    void SaveSpectrumResults(CDataStore &dataStore);
+    Bool ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list);
+
 
 private:
 
     Bool Solve(CDataStore& resultStore,
                const CSpectrum& spc,
                const CTemplate& tpl,
-               const TFloat64Range& lambdaRange,
+               const TFloat64Range& lambdaRange, 
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CChisquareSolveResult::EType spctype=CChisquareSolveResult::nType_raw,
+               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
@@ -66,17 +64,15 @@ private:
     Int32 CombinePDF(CDataStore& store,
                      std::string scopeStr,
                      std::string opt_combine,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
+                     std::shared_ptr<NSEpic::CPdfMargZLogResult> postmargZResult);
 
-
-
-    COperatorChiSquare2 m_chiSquareOperator;
-    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;
-    Bool m_opt_enableSaveIntermediateChisquareResults=false;
+    Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
+    std::string m_opt_spclogrebin;
+
+    COperatorTemplateFittingLog* m_templateFittingOperator;
     Float64 m_radius;
 
 };
@@ -84,4 +80,4 @@ private:
 
 }
 
-#endif // _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+#endif // _REDSHIFT_METHOD_CHISQUARELOGSOLVE_

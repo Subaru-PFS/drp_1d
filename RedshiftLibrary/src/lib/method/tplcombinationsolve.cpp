@@ -1,9 +1,10 @@
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
+#include <RedshiftLibrary/method/templatefittingresult.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/operator/chisquare.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
@@ -45,7 +46,7 @@ const std::string CMethodTplcombinationSolve::GetDescription()
 }
 
 
-std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
+std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
                                                                            const CSpectrum& spc,
                                                                            const CTemplateCatalog& tplCatalog,
                                                                            const TStringList& tplCategoryList,
@@ -67,17 +68,17 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 //    std::string _scope = "tplcombination";
     std::string scopeStr = "chisquare";
 
-    CChisquareSolveResult::EType _type;
+    CTemplateFittingSolveResult::EType _type;
     if(spcComponent=="raw"){
-       _type = CChisquareSolveResult::nType_raw;
+       _type = CTemplateFittingSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
-       _type = CChisquareSolveResult::nType_noContinuum;
+       _type = CTemplateFittingSolveResult::nType_noContinuum;
        scopeStr = "chisquare_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CChisquareSolveResult::nType_continuumOnly;
+        _type = CTemplateFittingSolveResult::nType_continuumOnly;
         scopeStr = "chisquare_continuum";
     }else if(spcComponent=="all"){
-        _type = CChisquareSolveResult::nType_all;
+        _type = CTemplateFittingSolveResult::nType_all;
     }
 
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
@@ -124,7 +125,7 @@ std::shared_ptr<CChisquareSolveResult> CMethodTplcombinationSolve::Compute(CData
 
     if( storeResult )
     {
-        std::shared_ptr< CChisquareSolveResult> solveResult = std::shared_ptr< CChisquareSolveResult>( new CChisquareSolveResult(_type, "tplcombinationsolve") );
+        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "tplcombinationsolve") );
 
         std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
         Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
@@ -163,7 +164,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
                                        std::vector<CMask> maskList,
-                                       CChisquareSolveResult::EType spctype,
+                                       CTemplateFittingSolveResult::EType spctype,
                                        std::string opt_interp,
                                        std::string opt_extinction,
                                        std::string opt_dustFitting)
@@ -199,7 +200,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
 
     //case: nType_all
-    if(spctype == CChisquareSolveResult::nType_all){
+    if(spctype == CTemplateFittingSolveResult::nType_all){
         _ntype = 3;
     }
 
@@ -211,7 +212,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     }
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CChisquareSolveResult::nType_all){
+        if(spctype == CTemplateFittingSolveResult::nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = static_cast<CSpectrum::EType>(spctype);
@@ -237,7 +238,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CChisquareResult>( m_tplcombinationOperator.Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CTemplateFittingResult>( m_tplcombinationOperator.Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
 
         if( !result )
         {
@@ -278,7 +279,7 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
     {
         throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
-    std::shared_ptr<const CChisquareResult> result = std::dynamic_pointer_cast<const CChisquareResult>( results.lock() );
+    std::shared_ptr<const CTemplateFittingResult> result = std::dynamic_pointer_cast<const CTemplateFittingResult>( results.lock() );
 
     CPdfz pdfz;
     Float64 cstLog = -1;
