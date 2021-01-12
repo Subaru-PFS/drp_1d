@@ -892,15 +892,11 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 }
 
 /**
-<<<<<<< HEAD
- * \brief Generates a continuum from the fitting with a set of templates : uses the templatefitting operator
-=======
  * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
  * TODO: LoadFitContinuum should be limited to reading continuum values from the variable class, especially that 
  * we want that continuum fitting results are saved in tplfitStore container outside CElementList and these stores will be injected 
  * in the class whenever required !
  * TODO: study this possibility before doing the change
->>>>>>> accomodating precompute to the secondpass call; save continuum params into secondpassExtremaResult; inject these params prior to recomputeAroundCand and estimateSecondPassParam
  */
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
 {
@@ -923,7 +919,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     std::string bestTplName="";
     std::vector<Float64> bestFitPolyCoeffs;
 
-    if(m_fitContinuum_option==0){
+    /*if(m_fitContinuum_option==0){
         //hardcoded parameters
         std::string opt_interp = "precomputedfinegrid"; //"lin"; //
         Int32 opt_extinction = m_secondpass_fitContinuum_igm;
@@ -1003,7 +999,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                 } 
             }
         }
-    }else if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
+    }else*/ if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
         if(fitValues.tplName.empty())
         {
@@ -1035,7 +1031,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitLogprior = m_fitContinuum_tplFitLogprior;
         bestFitRedshift = m_fitContinuum_tplFitRedshift;
         bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
-    }else if(m_fitContinuum_option==3){
+    }/*else if(m_fitContinuum_option==3){
         //redo the fit only for the current template continuum, IGM/ISM will be fitted accoring to m_fitContinuum_igm/m_fitContinuum_dustfit
 
         bestFitRedshift = m_Redshift; //using aligned redshift Lines/Continuum
@@ -1107,7 +1103,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     }
         
         }
-    }else{
+    }*/else{
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
 

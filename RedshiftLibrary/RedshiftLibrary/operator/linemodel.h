@@ -77,8 +77,6 @@ public:
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
-                                const Float64 redshiftStep=0.00015,
-                                const string zsampling="log",
                                 bool ignoreLinesSupport=false,
                                 Int32 candidateIdx = -1);
 

@@ -387,20 +387,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto") )
     {
-        Float64 redshiftStepForContinuumFit = opt_twosteplargegridstep;
-        if(redshiftStepForContinuumFit<=0.)
-        {
-            Log.LogError("  Operator-Linemodel: opt_firstpass_zgridstep must be defined for this fit continuum procedure.");
-            throw runtime_error("  Operator-Linemodel: opt_firstpass_zgridstep must be defined (!= -1) for this fit continuum procedure.");
-        }
         PrecomputeContinuumFit(spectrum,
                                *orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
-                               m_sortedRedshifts,
-                               redshiftStepForContinuumFit,
-                               opt_twosteplargegridsampling,
+                               largeGridRedshifts,
                                m_opt_tplfit_ignoreLinesSupport);
     }else{
         if(opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto")
@@ -642,8 +634,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const std::string opt_calibrationPath,
                                                 const TFloat64Range &lambdaRange,
                                                 const TFloat64List& redshifts,
-                                                const Float64 redshiftStep,
-                                                const string zsampling,
                                                 bool ignoreLinesSupport,
                                                 Int32 candidateIdx)
 {
@@ -653,15 +643,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 
     Log.LogInfo("  Operator-Linemodel: continuum tpl fitting: sampling:%s, "
                 "step=%.5e, min=%.5e, max=%.5e",
-                zsampling.c_str(),
-                redshiftStep,
                 redshifts[0],
                 redshifts[redshifts.size()-1]);
-//no need to recreate the redshift grid, we should pass it directly 
-    std::shared_ptr<CTemplatesFitStore> tplfitStore = make_shared<CTemplatesFitStore>(redshifts[0],
-                                                                                        redshifts[redshifts.size()-1],
-                                                                                        redshiftStep,
-                                                                                        zsampling);
+
+    std::shared_ptr<CTemplatesFitStore> tplfitStore = make_shared<CTemplatesFitStore>(redshifts);
     const std::vector<Float64> & redshiftsTplFit = tplfitStore->GetRedshiftList();
     Log.LogInfo("  Operator-Linemodel: continuum tpl redshift list n=%d",redshiftsTplFit.size());
 
@@ -752,8 +737,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 throw runtime_error(" COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range.");
             }
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
-            //read the firstpass templateName
-            const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, m_firstpass_extremaResult.FittedTplName[candidateIdx]);
             keepismigm = 1;//telling that we want to keep the ism and igm indexes
             meiksinIdx = m_firstpass_extremaResult.FittedTplMeiksinIdx[candidateIdx];
             dustCoeff =  m_firstpass_extremaResult.FittedTplDustCoeff[candidateIdx];
@@ -1201,10 +1184,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
     
-    Float64 redshiftStepForContinuumFit;
-    dataStore.GetParam( "redshiftstep", redshiftStepForContinuumFit );
-    std::string twosteplargegridsampling = "log"; //TODO: tmp hardcoded
-    
     //precompute only whenever required and whenever the result can be a tplfitStore
     if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
         m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
@@ -1214,10 +1193,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
-                               m_result->ExtremaResult.ExtremaExtendedRedshifts[i], 
-                               //using default values for the moment
-                               redshiftStepForContinuumFit,//1.5E-4
-                               twosteplargegridsampling,//"log or lin"
+                               m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
                                m_opt_tplfit_ignoreLinesSupport,
                                i);
         }
@@ -1786,8 +1762,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         else{
             //nothing to do cause we already injected the fitStore for cases 1 and 2
         }
-//TODO: as an intermediate step, add continuumFitValues.
-//TODO: once we check that the refactoring is correct, we should remove lines 1809-1823 that override lines 1802
+
         if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
         {
             m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],

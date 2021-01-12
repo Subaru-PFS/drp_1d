@@ -5,20 +5,11 @@
 
 using namespace NSEpic;
 
-
-CTemplatesFitStore::CTemplatesFitStore(Float64 minRedshift, Float64 maxRedshift, Float64 stepRedshift, std::string opt_sampling)
+CTemplatesFitStore::CTemplatesFitStore(const TFloat64List& redshifts):
+    redshiftgrid(redshifts)
 {
-    Float64 marginRedshiftSteps = 3.0;
-    m_minRedshift = minRedshift - marginRedshiftSteps*stepRedshift;
-    m_maxRedshift = maxRedshift + marginRedshiftSteps*stepRedshift;
-    m_stepRedshift = stepRedshift;
-    m_samplingRedshift = opt_sampling;
-
-    prepareRedshiftList();
-
     initFitValues();
 }
-
 /**
  * \brief Empty destructor.
  **/
@@ -26,42 +17,6 @@ CTemplatesFitStore::~CTemplatesFitStore()
 {
 }
 
-/**
- * @brief CTemplatesFitStore::prepareRedshiftList
- * prepare the redshift grid and the redshift map
- * @return
- */
-void CTemplatesFitStore::prepareRedshiftList()
-{
-    if(redshiftgridmapPrecision<0.)
-    {
-        Log.LogError("Failed to Initialize the template fit store redshift map (redshiftgridmapPrecision=%f). Aborting", redshiftgridmapPrecision);
-        throw std::runtime_error("Failed to Initialize the template fit store redshift map due to bad redshiftgridmapPrecision value");
-    }
-
-    std::vector<Float64> redshifts;
-    TFloat64Range redshiftRange = TFloat64Range( m_minRedshift, m_maxRedshift );
-    if(m_samplingRedshift=="log")
-    {
-        redshifts = redshiftRange.SpreadOverLog( m_stepRedshift );
-    }else
-    {
-        redshifts = redshiftRange.SpreadOver( m_stepRedshift );
-    }
-    redshiftgrid = redshifts;
-
-    for(UInt32 kz=0; kz<redshiftgrid.size(); kz++)
-    {
-        UInt32 redshiftscaledInt = (UInt32)(redshiftgrid[kz]/redshiftgridmapPrecision+0.5);
-        redshiftgridmap.insert(std::make_pair(redshiftscaledInt, kz));
-    }
-    if(redshiftgridmap.size()!=redshiftgrid.size())
-    {
-        Log.LogError("Failed to Initialize the template fit store redshift map (n-zgrid=%d, n-zmap=%d). Aborting", redshiftgrid.size(), redshiftgridmap.size());
-        throw std::runtime_error("Failed to Initialize the template fit store redshift map");
-    }
-    return;
-}
 
 /**
  * @brief CTemplatesFitStore::initFitValues
@@ -85,15 +40,11 @@ const std::vector<Float64> & CTemplatesFitStore::GetRedshiftList() const
 
 Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const
 {
-    UInt32 redshiftscaledInt = (UInt32)(z/redshiftgridmapPrecision+0.5);
-    std::map<UInt32,UInt32>::const_iterator it = redshiftgridmap.find(redshiftscaledInt);
-    if(it != redshiftgridmap.end())
-    {
-        Int32 outputIdx = (Int32)(it->second);
-        return outputIdx;
-    }else{
+    auto it = std::find(redshiftgrid.begin(), redshiftgrid.end(), z);
+    if (it != redshiftgrid.end())
+        return std::distance(redshiftgrid.begin(), it);
+    else 
         return -1;
-    }
 }
 
 /**
@@ -258,31 +209,7 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
 
     //find the idxz
     Int32 idxz=-1;
-    if(m_samplingRedshift=="log")
-    {
-        if(redshiftgrid.size()==1)
-        {
-            if(redshiftVal == redshiftgrid[0])
-            {
-                idxz=0;
-            }else{
-                Log.LogError("CTemplatesFitStore::GetFitValues - redshiftgrid.size()==1 but m_fitValues[0].redshift=%e, and redshiftVal=%e",
-                         redshiftgrid[0],
-                        redshiftVal);
-            }
-        }else{
-            for(Int32 k=0; k<redshiftgrid.size()-1; k++)
-            {
-                if(redshiftVal >= redshiftgrid[k] && redshiftVal <= redshiftgrid[k+1] )
-                {
-                    idxz = k;
-                    break;
-                }
-            }
-        }
-    }else{
-        idxz = (redshiftVal-m_minRedshift)/m_stepRedshift;
-    }
+    idxz = GetRedshiftIndex(redshiftVal);
 
     if(idxz<0)
     {
