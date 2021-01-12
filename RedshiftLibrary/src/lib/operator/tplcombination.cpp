@@ -659,13 +659,13 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
     return cstLog;
 }
 
-void COperatorTplcombination::SaveSpectrumResults(CDataStore &dataStore)
+void COperatorTplcombination::SaveSpectrumResults(COperatorResultStore &resultStore)
 {
     Log.LogDetail("  Operator-Tplcombination: now saving spectrum/model tplcombination results n=%d", m_savedModelSpectrumResults.size());
     for(Int32 ie=0; ie<m_savedModelSpectrumResults.size(); ie++)
     {
         std::string fname_spc = (boost::format("tplcombinationmodel_spc_extrema_%1%") % ie).str();
-        //TODO store global result
-          // dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
+       
+        resultStore.StoreGlobalResult("tplcombinationsolve",fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
     }
 }

@@ -98,7 +98,8 @@ public:
     void                            SaveClassificationResult( const boost::filesystem::path& dir );
     void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
 
-
+  COperatorResultStore&           getResultStore() {return m_ResultStore;}
+  
 protected:
 
     std::string                     GetScopedName( const std::string& name ) const;

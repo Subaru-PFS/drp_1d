@@ -948,8 +948,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //FIRST PASS
     //**************************************************
-    Int32 retFirstPass = linemodel.ComputeFirstPass(dataStore,
-                                                    spc,
+    Int32 retFirstPass = linemodel.ComputeFirstPass(spc,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
@@ -1053,8 +1052,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //**************************************************
         //FIRST PASS B
         //**************************************************
-        Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(dataStore,
-                                                            spc,
+        Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(spc,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
@@ -1135,8 +1133,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     bool skipSecondPass = (m_opt_skipsecondpass=="yes");
     if(!skipSecondPass)
     {
-        Int32 retSecondPass = linemodel.ComputeSecondPass(dataStore,
-                                                          spc,
+        Int32 retSecondPass = linemodel.ComputeSecondPass(spc,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,
@@ -1273,7 +1270,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         }
 
         //save linemodel fitting and spectrum-model results
-        linemodel.storeGlobalModelResults(dataStore);
+        linemodel.storeGlobalModelResults(dataStore.getResultStore());
     }
 
     return true;

@@ -13,6 +13,7 @@
 #include <RedshiftLibrary/linemodel/modelrulesresult.h>
 #include <RedshiftLibrary/operator/spectraFluxResult.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/ray/catalog.h>
@@ -31,8 +32,7 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    std::shared_ptr<COperatorResult> Compute(CDataStore &dataStore,
-                                             const CSpectrum& spectrum,
+    std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
                                              const CTemplateCatalog &tplCatalog,
                                              const TStringList &tplCategoryList,
                                              const std::string opt_calibrationPath,
@@ -80,8 +80,7 @@ public:
                                 const string zsampling="log",
                                 bool ignoreLinesSupport=false);
 
-    Int32 ComputeFirstPass(CDataStore &dataStore,
-                           const CSpectrum& spectrum,
+    Int32 ComputeFirstPass(const CSpectrum& spectrum,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
@@ -111,8 +110,7 @@ public:
     Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
 
 
-    Int32 ComputeSecondPass(CDataStore &dataStore,
-                            const CSpectrum& spectrum,
+    Int32 ComputeSecondPass(const CSpectrum& spectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,
@@ -163,8 +161,7 @@ public:
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
 
-    std::shared_ptr<COperatorResult> computeWithUltimPass(CDataStore &dataStore,
-                                                          const CSpectrum& spectrum,
+    std::shared_ptr<COperatorResult> computeWithUltimPass(const CSpectrum& spectrum,
                                                           const CTemplateCatalog& tplCatalog,
                                                           const TStringList& tplCategoryList,
                                                           const std::string opt_calibrationPath,
@@ -201,8 +198,8 @@ public:
 
     void InitTplratioPriors();
 
-    void storeGlobalModelResults( CDataStore &dataStore );
-    void storePerTemplateModelResults( CDataStore &dataStore, const CTemplate& tpl );
+    void storeGlobalModelResults( COperatorResultStore &resultStore );
+
     std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
     std::shared_ptr<CSpectraFluxResult> GetModelSpectrumContinuumResult(Int32 idx);
 

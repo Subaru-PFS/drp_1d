@@ -58,8 +58,7 @@ COperatorLineModel::~COperatorLineModel() {}
  * @brief COperatorLineModel::ComputeFirstPass
  * @return 0=no errors, -1=error
  */
-Int32 COperatorLineModel::ComputeFirstPass(CDataStore &dataStore,
-                                           const CSpectrum &spectrum,
+Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
@@ -1098,8 +1097,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
     return retval;
 }
 
-Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
-                                            const CSpectrum &spectrum,
+Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
@@ -1179,8 +1177,8 @@ Int32 COperatorLineModel::ComputeSecondPass(CDataStore &dataStore,
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
 
-    dataStore.GetScopedParam( "linemodel.extremacount", m_extremaCount, 1.0);
-    dataStore.GetScopedParam( "linemodel.zref", m_Zlinemeasref, -1.0);
+    //    dataStore.GetScopedParam( "linemodel.extremacount", m_extremaCount, 1.0);
+    //dataStore.GetScopedParam( "linemodel.zref", m_Zlinemeasref, -1.0);
     Int32 ret = RecomputeAroundCandidates(m_firstpass_extremumList,
                               lambdaRange,
                               opt_continuumreest,
@@ -2491,7 +2489,6 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::GetFirstpassExtrema
 }
 
 std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
-        CDataStore &dataStore,
         const CSpectrum &spectrum,
         const CTemplateCatalog &tplCatalog,
         const TStringList &tplCategoryList,
@@ -2543,8 +2540,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     //**************************************************
     // FIRST PASS
     //**************************************************
-    Int32 retFirstPass = ComputeFirstPass(dataStore,
-                                          spectrum,
+    Int32 retFirstPass = ComputeFirstPass(spectrum,
                                           tplCatalog,
                                           tplCategoryList,
                                           opt_calibrationPath,
@@ -2589,7 +2585,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     // SECOND PASS
     //**************************************************
     Int32 retSecondPass = ComputeSecondPass(
-                dataStore,
                 spectrum,
                 tplCatalog,
                 tplCategoryList,
@@ -2631,7 +2626,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
  * @return
  */
 std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
-    CDataStore &dataStore,
     const CSpectrum &spectrum,
     const CTemplateCatalog &tplCatalog,
     const TStringList &tplCategoryList,
@@ -2664,7 +2658,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
     const Float64 &opt_absvelocityfitstep)
 {
     auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute(
-        dataStore, spectrum, tplCatalog, tplCategoryList,
+        spectrum, tplCatalog, tplCategoryList,
         opt_calibrationPath, restraycatalog, opt_lineTypeFilter,
         opt_lineForceFilter, lambdaRange, redshifts, opt_extremacount,
         opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType,
@@ -2728,7 +2722,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
         Int32 maxSaveBackup = m_maxModelSaveCount;
         m_maxModelSaveCount = 0;
         auto lastPassResult = std::dynamic_pointer_cast<CLineModelResult>(
-            Compute(dataStore, spectrum, tplCatalog,
+            Compute(spectrum, tplCatalog,
                     tplCategoryList, opt_calibrationPath, restraycatalog,
                     opt_lineTypeFilter, opt_lineForceFilter, lambdaRange,
                     lastPassRedshifts, opt_extremacount_lastPass,
@@ -2806,7 +2800,7 @@ Int32 COperatorLineModel::initContaminant(
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
 ///
-void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
+void COperatorLineModel::storeGlobalModelResults(COperatorResultStore &resultStore)
 {
     Int32 nResults = m_savedModelSpectrumResults.size();
     if (nResults > m_savedModelFittingResults.size())
@@ -2822,22 +2816,22 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     {
         std::string fname_spc =
             (boost::format("linemodel_spc_extrema_tmp_%1%") % k).str();
-        dataStore.StoreScopedGlobalResult(fname_spc.c_str(),
+        resultStore.StoreGlobalResult("linemodelsolve",fname_spc.c_str(),
                                           m_savedModelSpectrumResults[k]);
 
         std::string fname_fit =
             (boost::format("linemodel_fit_extrema_tmp_%1%") % k).str();
-        dataStore.StoreScopedGlobalResult(fname_fit.c_str(),
+        resultStore.StoreGlobalResult("linemodelsolve",fname_fit.c_str(),
                                           m_savedModelFittingResults[k]);
 
         std::string fname_fitcontinuum =
             (boost::format("linemodel_fitcontinuum_extrema_tmp_%1%") % k).str();
-        dataStore.StoreScopedGlobalResult(
+        resultStore.StoreGlobalResult("linemodelsolve",
             fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k]);
 
         std::string fname_rules =
             (boost::format("linemodel_rules_extrema_tmp_%1%") % k).str();
-        dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
+        resultStore.StoreGlobalResult("linemodelsolve",fname_rules.c_str(),
                                           m_savedModelRulesResults[k]);
     }
 //TODO: delete below for loop
@@ -2845,52 +2839,11 @@ void COperatorLineModel::storeGlobalModelResults(CDataStore &dataStore)
     {
         std::string nameBaselineStr =
             (boost::format("linemodel_continuum_extrema_tmp_%1%") % k).str();
-        dataStore.StoreScopedGlobalResult(
+        resultStore.StoreGlobalResult("linemodelsolve",
             nameBaselineStr.c_str(), m_savedModelContinuumSpectrumResults[k]);
     }
 }
 
-///
-/// \brief COperatorLineModel::storePerTemplateModelResults
-/// stores the linemodel results as per template results in the datastore
-///
-void COperatorLineModel::storePerTemplateModelResults(CDataStore &dataStore,
-                                                      const CTemplate &tpl)
-{
-    Int32 nResults = m_savedModelSpectrumResults.size();
-    if (nResults > m_savedModelFittingResults.size())
-    {
-        Log.LogError("Line Model, not as many model fitting results as model "
-                     "spectrum results, (nspc = %d, nfit = %d)",
-                     m_savedModelSpectrumResults.size(),
-                     m_savedModelFittingResults.size());
-        nResults = m_savedModelFittingResults.size();
-    }
-
-    for (Int32 k = 0; k < nResults; k++)
-    {
-        std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_%1%") % k).str();
-        dataStore.StoreScopedPerTemplateResult(tpl, fname_spc.c_str(),
-                                               m_savedModelSpectrumResults[k]);
-
-        std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_%1%") % k).str();
-        dataStore.StoreScopedPerTemplateResult(tpl, fname_fit.c_str(),
-                                               m_savedModelFittingResults[k]);
-
-        std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
-        dataStore.StoreScopedPerTemplateResult(
-            tpl, fname_fitcontinuum.c_str(),
-            m_savedModelContinuumFittingResults[k]);
-
-        std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_%1%") % k).str();
-        dataStore.StoreScopedPerTemplateResult(tpl, fname_rules.c_str(),
-                                               m_savedModelRulesResults[k]);
-    }
-}
 
 std::shared_ptr<CModelSpectrumResult>
 COperatorLineModel::GetModelSpectrumResult(Int32 idx)

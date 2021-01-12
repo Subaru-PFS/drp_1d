@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
 
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
@@ -30,7 +31,7 @@ public:
                                              Float64 overlapThreshold,
                                              std::vector<CMask> additional_spcMasks, const Float64 radius, std::string opt_interp, Int32 opt_extinction=0, Int32 opt_dustFitting=0);
 
-    void SaveSpectrumResults(CDataStore &dataStore);
+    void SaveSpectrumResults(COperatorResultStore &resultStore);
 
 private:
 

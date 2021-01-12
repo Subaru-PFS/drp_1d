@@ -102,7 +102,7 @@ private:
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
-    void SaveSpectrumResults(CDataStore &dataStore, std::shared_ptr<COperatorResult> result);
+
 };
 
 

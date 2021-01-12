@@ -250,7 +250,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
             resultStore.StoreScopedGlobalResult(scopeStr.c_str(), result );
             // Store spectrum results
             Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
-            m_tplcombinationOperator.SaveSpectrumResults(resultStore);
+            m_tplcombinationOperator.SaveSpectrumResults(resultStore.getResultStore());
         }
     }
 
