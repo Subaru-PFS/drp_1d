@@ -22,14 +22,11 @@ public:
 
     void Resize(Int32 size);
     
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveJSON( const CDataStore& store, std::ostream& stream ) const;
+    void Save(std::ostream& stream ) const;
+  void SaveJSON( std::shared_ptr<const COperatorResult> res, std::ostream& stream ) const;
 
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
+    void SaveLine(std::ostream& stream ) const;
+   
     //void Load( std::istream& stream );
     bool RemoveSecondPassCandidatebyIdx(Int32 idx);
   Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;

@@ -50,7 +50,7 @@ void CClassificationResult::SetQ(Float64 evidence, Float64 prob)
 /**
  * \brief
  **/
-void CClassificationResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CClassificationResult::Save( std::ostream& stream ) const
 {
     stream <<  "#Type\tLogEvidenceG\tLogEvidenceS\tLogEvidenceQ\tProbaG\tProbaS\tProbaQ"<< std::endl;
     stream << m_TypeLabel << "\t"
@@ -67,11 +67,11 @@ void CClassificationResult::Save( const CDataStore& store, std::ostream& stream 
 /**
  * \brief
  **/
-void CClassificationResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CClassificationResult::SaveLine(std::ostream& stream ) const
 {
-    stream  << store.GetSpectrumName() << "\t"
-            << store.GetProcessingID() << "\t"
-            << m_TypeLabel << "\t"
+  //stream  << store.GetSpectrumName() << "\t"
+  //          << store.GetProcessingID() << "\t"
+    stream  << m_TypeLabel << "\t"
             << m_evidence_galaxy << "\t"
             << m_evidence_star << "\t"
             << m_evidence_qso << "\t"

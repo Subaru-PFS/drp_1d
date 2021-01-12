@@ -29,8 +29,9 @@ CQualzResult::~CQualzResult()
 
 }
 
-void CQualzResult::Save ( const CDataStore& store, std::ostream& stream ) const
+void CQualzResult::Save (std::ostream& stream ) const
 {
+  /*
 	std::string scope = store.GetScope( *this ) + "zReliability/result.zpredict";
 	auto zqualResults = store.GetGlobalResult(scope.c_str());
 
@@ -62,11 +63,12 @@ void CQualzResult::Save ( const CDataStore& store, std::ostream& stream ) const
 		<<  zQual_vect->m_score->data[i] << "\t"
 		<< std::endl;
 	}
-
+  */
 }
 
-void CQualzResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CQualzResult::SaveLine( std::ostream& stream ) const
 {
+  /*
 	std::string scope = store.GetScope( *this ) + "zReliability/result.zpredict";
 	auto zqualResults = store.GetGlobalResult(scope.c_str());
 
@@ -83,7 +85,7 @@ void CQualzResult::SaveLine( const CDataStore& store, std::ostream& stream ) con
 	<< "PosteriorProba_Pred \t" << std::setprecision(10)<<zQual_vect->m_predProba << "\t"
 	<<store.GetSpectrumName()
 	<<std::endl;
-
+  */
 
 }
 

@@ -191,13 +191,13 @@ Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList co
 }
 
 
-void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfCandidateszResult::Save( std::ostream& stream ) const
 {
     stream  << "#fullwidth = " << "6* Deltaz" << std::endl;
     stream  << "#method = " << optMethod << std::endl;
     stream  << std::endl;
 
-    stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
+    //    stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     stream  << std::endl;
 
     stream  << "#" << "rank" << "\t"  << "IDs" << "\t"<< "redshift" << "\t" << "intgProba"<< "\t" << "Rank_PDF" << "\t" <<"Deltaz";
@@ -228,9 +228,9 @@ void CPdfCandidateszResult::Save( const CDataStore& store, std::ostream& stream 
     stream << std::endl;
 }
 
-void CPdfCandidateszResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfCandidateszResult::SaveLine( std::ostream& stream ) const
 {
-    stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
+  //    stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
     for(Int32 i=0; i<Rank.size(); i++)
     {
         Int32 k = Rank[i];

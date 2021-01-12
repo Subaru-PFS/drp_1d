@@ -188,7 +188,7 @@ void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bf
 
         auto  result = GetGlobalResult( "redshiftresult" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine( outputStream );
         }else{
             throw std::runtime_error("Unable to retrieve redshift result for saving");
         }
@@ -230,7 +230,7 @@ void COperatorResultStore::SaveStellarResult( const CDataStore& store, const bfs
 
         auto  result = GetGlobalResult( "stellarsolve.stellarresult" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine(outputStream );
         }//else{
         //    throw std::runtime_error("Unable to retrieve stellar result for saving");
         //}
@@ -273,7 +273,7 @@ void COperatorResultStore::SaveQsoResult( const CDataStore& store, const bfs::pa
 
         auto  result = GetGlobalResult( "qsosolve.qsoresult" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine(outputStream );
         }//else{
         //    throw std::runtime_error("Unable to retrieve stellar result for saving");
         //}
@@ -316,7 +316,7 @@ void COperatorResultStore::SaveClassificationResult( const CDataStore& store, co
 
         auto  result = GetGlobalResult( "classificationresult" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine( outputStream );
         }//else{
         //    throw std::runtime_error("Unable to retrieve classification result for saving");
         //}
@@ -358,7 +358,7 @@ void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const 
 
         auto  result = GetGlobalResult( "candidatesresult" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine( outputStream );
         }
     }
 }
@@ -392,7 +392,7 @@ void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const
 
         auto  result = GetGlobalResult( "zReliability/result.zpredict" ).lock();
         if(result){
-            result->SaveLine( store, outputStream );
+            result->SaveLine( outputStream );
         }
     }
 }
@@ -511,13 +511,14 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
             if (saveThisResult)
               {
                 CreateResultStorage( outputStream, bfs::path( resultName + ".csv"), dir );
-
-                result->Save( store, outputStream);
+                result->Save(outputStream);
               }
 	        if(saveJSON){
 		        std::fstream outputJSONStream;
+                TResultsMap::const_iterator it = m_GlobalResults.find("candidatesresult" );
+ 
 		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
-		        result->SaveJSON(store,outputJSONStream);
+		        result->SaveJSON((*it).second,outputJSONStream);
 	        }
         }
     }

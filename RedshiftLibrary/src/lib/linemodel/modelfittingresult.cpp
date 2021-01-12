@@ -50,7 +50,7 @@ CModelFittingResult::~CModelFittingResult()
 /**
  * \brief Prints the results of the Linemodel in the argument store, using the argument stream as output.
  **/
-void CModelFittingResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CModelFittingResult::Save(std::ostream& stream ) const
 {
     // save linemodel solution
     if(true){
@@ -187,7 +187,7 @@ void CModelFittingResult::Load( const char* filePath )
 /**
  * \brief Empty method.
  **/
-void CModelFittingResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CModelFittingResult::SaveLine( std::ostream& stream ) const
 {
 
 }

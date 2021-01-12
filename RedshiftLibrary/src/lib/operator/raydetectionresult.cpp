@@ -22,7 +22,7 @@ CLineDetectionResult::~CLineDetectionResult()
 /**
  * Call "Save" on each entry of "RayCatalog". Then output comments with each entry of "PeakListDetectionStatus".
  */
-void CLineDetectionResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineDetectionResult::Save(std::ostream& stream ) const
 {
     CRayCatalog::TRayVector::const_iterator it;
 
@@ -50,7 +50,7 @@ void CLineDetectionResult::Save( const CDataStore& store, std::ostream& stream )
 /**
  * Stub method.
  */
-void CLineDetectionResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineDetectionResult::SaveLine(std::ostream& stream ) const
 {
     stream << "not implemented" << std::endl;
 }

@@ -31,8 +31,8 @@ public:
     CLineModelSolveResult();
     virtual ~CLineModelSolveResult();
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
+    void Save(std::ostream& stream ) const;
+    void SaveLine(std::ostream& stream ) const;
     Bool GetBestRedshift(const CDataStore& store,
                          Float64& redshift,
                          Float64& merit ,

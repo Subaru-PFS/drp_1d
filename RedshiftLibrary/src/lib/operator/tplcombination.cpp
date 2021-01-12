@@ -665,6 +665,7 @@ void COperatorTplcombination::SaveSpectrumResults(CDataStore &dataStore)
     for(Int32 ie=0; ie<m_savedModelSpectrumResults.size(); ie++)
     {
         std::string fname_spc = (boost::format("tplcombinationmodel_spc_extrema_%1%") % ie).str();
-        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
+        //TODO store global result
+          // dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
     }
 }

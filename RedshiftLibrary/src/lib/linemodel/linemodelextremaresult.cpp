@@ -180,7 +180,7 @@ Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std:
 /**
  * \brief Empty method.
  **/
-void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CLineModelExtremaResult::SaveLine( std::ostream& stream ) const
 {
 
 }
@@ -196,8 +196,9 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
+void CLineModelExtremaResult::Save( std::ostream& stream) const
 {
+  /*
     //here there is no scope set--> error in accessing results using GetScope()
     auto res = store.GetGlobalResult( "candidatesresult"  );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
@@ -210,10 +211,10 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
          Int32 n = Rank_PDF.size();
         if(n<Extrema.size()){
             //in this case, rank doesnt mean anything
-            /*Rank_PDF.clear();
-            for(Int32 i = 0; i<Extrema.size(); i++){
-                Rank_PDF.push_back(i);
-            }*/
+            //Rank_PDF.clear();
+            //for(Int32 i = 0; i<Extrema.size(); i++){
+           //     Rank_PDF.push_back(i);
+           // }
             //in this case, rank doesnt mean anything
             Rank_PDF.clear();
             for(Int32 i = 0; i<Extrema.size(); i++){
@@ -707,7 +708,7 @@ if(!zeros){
         stream << "}" << std::endl;
     }
 
-
+*/
 
 }
 
@@ -723,10 +724,10 @@ if(!zeros){
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
+void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> res, std::ostream& stream) const
 {
-  auto res = store.GetGlobalResult( "candidatesresult");
-  auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+  //  auto res = store.GetGlobalResult( "candidatesresult");
+  auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>(res);
   TInt32List order = candResults->Rank;
 
   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
