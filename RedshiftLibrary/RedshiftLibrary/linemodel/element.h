@@ -116,7 +116,7 @@ class CLineModelElement
 
     void SetSourcesizeDispersion(Float64 sigma);
 
-    void ActivateLSF(std::shared_ptr<const CLSF> lsf);
+    void ActivateLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitWidthCoeff(Float64 coeff);
     Float64 GetAsymfitWidthCoeff();
@@ -199,7 +199,7 @@ class CLineModelElement
     Float64 m_fitAmplitude = 0.0;
 
     // Constant
-    Float64 m_speedOfLightInVacuum = GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
+    const Float64 m_speedOfLightInVacuum = GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
     bool m_enableLSF = false;
     std::shared_ptr<const CLSF> m_LSF;

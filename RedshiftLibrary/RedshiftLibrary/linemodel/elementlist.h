@@ -46,6 +46,7 @@ public:
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
                           const std::string& lineWidthType,
+                          const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
@@ -155,7 +156,6 @@ public:
     Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
-    void ActivateLSF();
     std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
@@ -324,6 +324,7 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
+    void ActivateLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);

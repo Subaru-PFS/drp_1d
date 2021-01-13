@@ -172,6 +172,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 opt_fittingmethod,
                 opt_continuumcomponent,
                 opt_lineWidthType,
+                m_opt_enableLSF,
                 m_linesmodel_nsigmasupport,
                 opt_resolution,
                 opt_velocityEmission,
@@ -197,6 +198,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                          opt_fittingmethod,
                                                          opt_continuumcomponent,
                                                          opt_lineWidthType,
+                                                         m_opt_enableLSF,
                                                          m_linesmodel_nsigmasupport,
                                                          opt_resolution,
                                                          opt_velocityEmission,
@@ -207,12 +209,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model->SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
                 setssSizeInit);
-
-    // activate lsf if necessary
-    if (m_opt_enableLSF=="yes")
-    {
-        m_model->ActivateLSF();
-    }
 
     /*
     CMultiRollModel model( spectrum,

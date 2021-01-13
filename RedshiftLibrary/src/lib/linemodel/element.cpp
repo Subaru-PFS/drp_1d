@@ -112,25 +112,19 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     const Float64 angstromPix = 13.4;
     Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
 
-    Float64 instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+    Float64 instrumentSigma = m_enableLSF ? m_LSF->GetSigma(redshiftedlambda) : redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
     Float64 velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
-    Float64 sourcesizeSigma = 0.0;
+    Float64 sourcesizeSigma = 0.0;        
 
     switch (m_LineWidthType) {
     case INSTRUMENTDRIVEN:
-        if (m_enableLSF)
-            instrumentSigma = m_LSF->GetSigma();
-
-        velocitySigma = 0.0;
+         velocitySigma = 0.0;
         break;
     case FIXED:
         instrumentSigma = m_NominalWidth;
         velocitySigma = 0.0;
         break;
     case COMBINED:
-        if (m_enableLSF)
-            instrumentSigma = m_LSF->GetSigma();
-
         break;
     case VELOCITYDRIVEN:
         instrumentSigma = 0.0;
@@ -510,7 +504,7 @@ void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
     m_SourceSizeDispersion = sigma;
 }
 
-void CLineModelElement::ActivateLSF(std::shared_ptr<const CLSF> lsf)
+void CLineModelElement::ActivateLSF(const std::shared_ptr<const CLSF> & lsf)
 {
     m_enableLSF = true;
     m_LSF = lsf;

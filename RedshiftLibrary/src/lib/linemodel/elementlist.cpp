@@ -57,6 +57,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const std::string& opt_fittingmethod,
                                              const std::string& opt_continuumcomponent,
                                              const std::string& widthType,
+                                             const std::string & opt_enable_LSF,
                                              const Float64 nsigmasupport,
                                              const Float64 resolution,
                                              const Float64 velocityEmission,
@@ -196,6 +197,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
     */
+
+    if (opt_enable_LSF=="yes") ActivateLSF();
 
     //TODO [ml] m_dTransposeDLambdaRange, m_forceDisableLyaFitting must be initialized in contructor
 }
