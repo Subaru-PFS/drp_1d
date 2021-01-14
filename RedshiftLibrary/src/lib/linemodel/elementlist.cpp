@@ -6530,9 +6530,19 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
 
 void CLineModelElementList::ActivateLSF()
 {
+    const std::shared_ptr<const CLSF> & lsf = m_inputSpc.GetLSF();
+
+    if (lsf == nullptr){
+        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF spetrum member is not initialized");
+    }else if( ! lsf->IsValid()){
+        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not valid",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF spectrum member is not valid");
+    }
+
     for(Int32 j=0; j<m_Elements.size(); j++)
     {
-        m_Elements[j]->ActivateLSF(m_inputSpc.GetLSF());
+        m_Elements[j]->ActivateLSF(lsf);
     }
 }
 

@@ -100,10 +100,6 @@ public:
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
 
-    void                            EnableLSF();
-    void                            DisableLSF();
-    Bool                            UseOfLSF() const;
-
     void                            ScaleFluxAxis(Float64 scale);
 
     void                            InitPrecomputeFineGrid() const;
@@ -116,7 +112,6 @@ protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
     std::shared_ptr<CLSF>           m_LSF;
-    Bool                            m_enableLSF = false;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -277,18 +272,5 @@ void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
     m_LSF = lsf;
 }
 
-inline
-void CSpectrum::DisableLSF()
-{
-    m_enableLSF = false;
 }
-
-inline
-Bool CSpectrum::UseOfLSF() const
-{
-    return m_enableLSF;
-}
-
-}
-
 #endif
