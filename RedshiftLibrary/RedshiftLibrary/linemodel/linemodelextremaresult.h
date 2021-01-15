@@ -104,7 +104,8 @@ public:
 
   mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
   mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
-  
+
+  mutable TInt32List Rank_PDF;
 };
 
 
