@@ -18,11 +18,11 @@ FittedRaysLambda	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
 FittedRaysLambdaRest	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
 FittedRaysID	i	list[int]	linemodel			FALSE	fitted_rays	multi	galaxy
 FittedRaysFlux	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
-ModelLambda	f8	list[double]	linemodel/chisquare2solve			FALSE	model	multi	star/galaxy
-ModelFlux	f8	list[double]	linemodel/chisquare2solve			FALSE	model	multi	star/galaxy
+ModelLambda	f8	list[double]	linemodel/templatefittingsolve			FALSE	model	multi	star/galaxy
+ModelFlux	f8	list[double]	linemodel/templatefittingsolve			FALSE	model	multi	star/galaxy
 BestContinuumLambda	f8	list[double]	linemodel			FALSE	continuum	multi	galaxy
 BestContinuumFlux	f8	list[double]	linemodel			FALSE	continuum	multi	galaxy
-ModelMeiksinIdx	i	int	chisquare2solve	FALSE	IgmIdx	FALSE	model_parameters	mono	star/galaxy
-ModelTplName	S40	string	chisquare2solve	FALSE	Name	FALSE	model_parameters	mono	star/galaxy
-ModelDustCoeff	f8	double	chisquare2solve	FALSE	IsmCoeff	FALSE	model_parameters	mono	star/galaxy
-ModelAmplitude	f8	double	chisquare2solve	FALSE	Amp	FALSE	model_parameters	mono	star/galaxy
+ModelMeiksinIdx	i	int	templatefittingsolve	FALSE	IgmIdx	FALSE	model_parameters	mono	star/galaxy
+ModelTplName	S40	string	templatefittingsolve	FALSE	Name	FALSE	model_parameters	mono	star/galaxy
+ModelDustCoeff	f8	double	templatefittingsolve	FALSE	IsmCoeff	FALSE	model_parameters	mono	star/galaxy
+ModelAmplitude	f8	double	templatefittingsolve	FALSE	Amp	FALSE	model_parameters	mono	star/galaxy
