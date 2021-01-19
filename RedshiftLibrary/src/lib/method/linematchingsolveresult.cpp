@@ -25,33 +25,38 @@ CLineMatchingSolveResult::~CLineMatchingSolveResult()
 /**
  * Collects from GetBestResult in the store and pretty outputs to stream.
  */
-void CLineMatchingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::Save(std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
 
-    GetBestResult( store, redshift, merit );
+    //TODO review this (commented after removing DataStore from Save and SaveLine)
+    /*
+      GetBestResult( store, redshift, merit );
 
     stream << "#Spectrum\tRedshifts\tMatchNum\t"<< std::endl;
 
     stream << store.GetSpectrumName() << "\t"
 	   << redshift << "\t"
 	   << merit << std::endl;
+    */
 }
 
 /**
  * Collects from GetBestResult in the store and pretty outputs to stream, with a "LineMatchingSolve" suffix.
  */
-void CLineMatchingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineMatchingSolveResult::SaveLine(std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
-
+    //TODO review this (commented after removing DataStore from Save and SaveLine)      
+    /*
     GetBestResult( store, redshift, merit );
     stream << store.GetSpectrumName() << "\t"
 	   << redshift << "\t"
 	   << merit << "\t"
 	   << "LineMatchingSolve" << std::endl;
+    */
 }
 
 /**

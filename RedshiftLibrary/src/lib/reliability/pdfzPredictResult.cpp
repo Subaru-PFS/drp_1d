@@ -26,7 +26,7 @@ CPdfzPredictResult::~CPdfzPredictResult()
 }
 
 
-void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfzPredictResult::Save(std::ostream& stream ) const
 {
     stream << "#Predicted_Label(zReliability) "<<" \t" << m_predLabel.c_str() << std::endl;
 	stream << "#Class \t PosteriorProbability_Prediction" << "\t"<< std::endl;
@@ -50,12 +50,12 @@ void CPdfzPredictResult::Save( const CDataStore& store, std::ostream& stream ) c
 }
 
 
-void CPdfzPredictResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfzPredictResult::SaveLine( std::ostream& stream ) const
 {
 	stream
     << "#zReliability_Pred \t" <<m_predLabel.c_str() << "\t"
     << "PosteriorProba_Pred \t" << std::setprecision(10)<< m_predProba << "\t"
-    << store.GetSpectrumName()
+      // << store.GetSpectrumName()
     << std::endl;
 
 }

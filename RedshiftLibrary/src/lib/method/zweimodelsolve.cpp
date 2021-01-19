@@ -839,8 +839,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     Float64 _secondPass_velfit_dzStep = 4e-4;
     Float64 _vStep = 50.0;
 
-    auto  result_s1 = linemodel_s1.Compute( dataStore,
-                                            spc,
+    auto  result_s1 = linemodel_s1.Compute( spc,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -897,8 +896,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
     _secondPass_velfit_dzInfLim = 4e-4;
     _secondPass_velfit_dzSupLim = 4e-4;
     _secondPass_velfit_dzStep = 4e-4;
-    auto  result_s2 = linemodel_s2.Compute( dataStore,
-                                            *contSpectrum,
+    auto  result_s2 = linemodel_s2.Compute( *contSpectrum,
                                             tplCatalog,
                                             tplCategoryList,
                                             m_calibrationPath,
@@ -997,8 +995,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
         _secondPass_velfit_dzSupLim = 0; //no z refinement
         _secondPass_velfit_dzStep = 2e-4;
         Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
-        auto result_s1_c2zX = linemodel_s1c2X.Compute( dataStore,
-                                                       spc,
+        auto result_s1_c2zX = linemodel_s1c2X.Compute( spc,
                                                        tplCatalog,
                                                        tplCategoryList,
                                                        m_calibrationPath,
@@ -1079,8 +1076,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                 _secondPass_velfit_dzStep = 2e-4;
                 Int32 _opt_extremacount = -1; //no extrema search calculating on all redshifts
                 std::vector<Float64> redshifts_s2(1, zcandidates_s2[kzs2]);
-                auto result_s2_c1zY = linemodel_s2c1Y.Compute( dataStore,
-                                                               *contSpectrum,
+                auto result_s2_c1zY = linemodel_s2c1Y.Compute( *contSpectrum,
                                                                tplCatalog,
                                                                tplCategoryList,
                                                                m_calibrationPath,

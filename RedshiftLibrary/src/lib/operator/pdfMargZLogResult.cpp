@@ -24,7 +24,7 @@ CPdfMargZLogResult::~CPdfMargZLogResult()
 
 }
 
-void CPdfMargZLogResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfMargZLogResult::Save(std::ostream& stream ) const
 {
     stream << "#z_tested \tLog P( z | priors )" <<std::endl;
     stream << "#EvidenceLog=" << valEvidenceLog << std::endl;
@@ -105,7 +105,7 @@ Int32 CPdfMargZLogResult::Load( std::string filePath )
     return 0;
 }
 
-void CPdfMargZLogResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfMargZLogResult::SaveLine(std::ostream& stream ) const
 {
 	stream.precision(20);
     stream << "CPdfMargZLogResult" << "\t" << Redshifts.size() << std::endl;

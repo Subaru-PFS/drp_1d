@@ -489,6 +489,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             //truncate based on maxCount
             ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
             Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
+
+            
+            auto res = ctx.GetDataStore().GetGlobalResult( "candidatesresult"  );
+            auto lm_extrema_results = ctx.GetDataStore().GetGlobalResult( "linemodelsolve.linemodel_extrema");
+            auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+            auto lmResults = std::dynamic_pointer_cast<const CLineModelExtremaResult>(lm_extrema_results.lock());
+            TInt32List Rank_PDF = candResults->Rank;
+            lmResults->Rank_PDF = Rank_PDF;
         }
 
     }else if(methodName  == "zweimodelsolve" ){

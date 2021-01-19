@@ -180,7 +180,7 @@ Int32 CLineModelExtremaResult::FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std:
 /**
  * \brief Empty method.
  **/
-void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CLineModelExtremaResult::SaveLine( std::ostream& stream ) const
 {
 
 }
@@ -196,8 +196,9 @@ void CLineModelExtremaResult::SaveLine(const CDataStore &store, std::ostream& st
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& stream) const
+void CLineModelExtremaResult::Save( std::ostream& stream) const
 {
+  /*
     //here there is no scope set--> error in accessing results using GetScope()
     auto res = store.GetGlobalResult( "candidatesresult"  );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
@@ -210,10 +211,10 @@ void CLineModelExtremaResult::Save( const CDataStore& store, std::ostream& strea
          Int32 n = Rank_PDF.size();
         if(n<Extrema.size()){
             //in this case, rank doesnt mean anything
-            /*Rank_PDF.clear();
-            for(Int32 i = 0; i<Extrema.size(); i++){
-                Rank_PDF.push_back(i);
-            }*/
+            //Rank_PDF.clear();
+            //for(Int32 i = 0; i<Extrema.size(); i++){
+           //     Rank_PDF.push_back(i);
+           // }
             //in this case, rank doesnt mean anything
             Rank_PDF.clear();
             for(Int32 i = 0; i<Extrema.size(); i++){
@@ -707,7 +708,7 @@ if(!zeros){
         stream << "}" << std::endl;
     }
 
-
+*/
 
 }
 
@@ -723,10 +724,10 @@ if(!zeros){
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& stream) const
+void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> res, std::ostream& stream) const
 {
-  auto res = store.GetGlobalResult( "candidatesresult");
-  auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
+  //  auto res = store.GetGlobalResult( "candidatesresult");
+  auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>(res);
   TInt32List order = candResults->Rank;
 
   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
@@ -920,27 +921,27 @@ void CLineModelExtremaResult::SaveJSON( const CDataStore& store, std::ostream& s
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
-  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
-  else if (name.compare("VelocityEmission") == 0) v = Elv[rank];
-  else if (name.compare("VelocityAbsorption") == 0) v = Alv[rank];
-  else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[rank];
-  else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[rank];
-  else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[rank];
-  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
+  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[Rank_PDF[rank]];
+  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[Rank_PDF[rank]];
+  else if (name.compare("VelocityEmission") == 0) v = Elv[Rank_PDF[rank]];
+  else if (name.compare("VelocityAbsorption") == 0) v = Alv[Rank_PDF[rank]];
+  else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[Rank_PDF[rank]];
+  else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[Rank_PDF[rank]];
+  else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[Rank_PDF[rank]];
+  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[Rank_PDF[rank]];
   else throw Exception("unknown candidate Float64 data %s",name.c_str());
 
 }
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
-  if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
+  if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[Rank_PDF[rank]];
   else throw Exception("unknown candidate integer data %s",name.c_str());
 }
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
-  if (name.compare("TemplateName") == 0) v = FittedTplName[rank];
-  else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[rank];
+  if (name.compare("TemplateName") == 0) v = FittedTplName[Rank_PDF[rank]];
+  else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[Rank_PDF[rank]];
   else throw Exception("unknown candidate string data %s",name.c_str());
 
 }
@@ -948,22 +949,22 @@ void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{
   if (name.compare("ContinuumIndexesColor") == 0)
     {
-      *size = ContinuumIndexes[rank].size();
+      *size = ContinuumIndexes[Rank_PDF[rank]].size();
       if (continuumIndexesColorCopy.find(rank) != continuumIndexesColorCopy.end())
 	{
-	  continuumIndexesColorCopy[rank] = TFloat64List(*size);
-	  for (UInt32 j=0; j<*size;j++) continuumIndexesColorCopy[rank].emplace_back(ContinuumIndexes[rank][j].Color);
-	  *data = const_cast<double *>(continuumIndexesColorCopy[rank].data());
+	  continuumIndexesColorCopy[Rank_PDF[rank]] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesColorCopy[Rank_PDF[rank]].emplace_back(ContinuumIndexes[Rank_PDF[rank]][j].Color);
+	  *data = const_cast<double *>(continuumIndexesColorCopy[Rank_PDF[rank]].data());
 	}
     }
   else if( name.compare("ContinuumIndexesBreak") == 0)
     {
-      *size = ContinuumIndexes[rank].size();
+      *size = ContinuumIndexes[Rank_PDF[rank]].size();
       if (continuumIndexesBreakCopy.find(rank) != continuumIndexesBreakCopy.end())
 	{
-	  continuumIndexesBreakCopy[rank] = TFloat64List(*size);
-	  for (UInt32 j=0; j<*size;j++) continuumIndexesBreakCopy[rank].emplace_back(ContinuumIndexes[rank][j].Break);
-	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
+	  continuumIndexesBreakCopy[Rank_PDF[rank]] = TFloat64List(*size);
+	  for (UInt32 j=0; j<*size;j++) continuumIndexesBreakCopy[Rank_PDF[rank]].emplace_back(ContinuumIndexes[Rank_PDF[rank]][j].Break);
+	  *data = const_cast<double *>(continuumIndexesBreakCopy[Rank_PDF[rank]].data());
 	}
     }
   else throw Exception("unknown candidate string data %s",name.c_str());

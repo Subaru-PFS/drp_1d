@@ -318,7 +318,7 @@ void CLineModelResult::Load( std::istream& stream )
  * Print each SigmaZ as a comment.
  * Print each LogArea as a comment.
  **/
-void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelResult::Save( std::ostream& stream ) const
 {
     stream <<  "#Redshifts\tChiSquare"<< std::endl;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -326,7 +326,7 @@ void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
     }
 
-    ExtremaResult.Save(store, stream); //todo: move these into their own file. aview should be adapted.
+    ExtremaResult.Save(stream); //todo: move these into their own file. aview should be adapted.
 
     // save dTransposeD, on 1 line
     if(true){
@@ -340,7 +340,7 @@ void CLineModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 /**
  * \brief Prints the argument store's number of redshift results in the argument stream.
  **/
-void CLineModelResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineModelResult::SaveLine(  std::ostream& stream ) const
 {
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }

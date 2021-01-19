@@ -26,7 +26,7 @@ CRayMatchingResult::~CRayMatchingResult()
 /**
  * Will output to stream the current results and filtered results at index 0.
  */
-void CRayMatchingResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CRayMatchingResult::Save(std::ostream& stream ) const
 {
   /*
   // We should also save best result:
@@ -114,7 +114,7 @@ void CRayMatchingResult::SaveSolutionSetToStream( std::ostream& stream,  TSoluti
 /**
  * Empty method.
  */
-void CRayMatchingResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CRayMatchingResult::SaveLine(std::ostream& stream ) const
 {
 
 }

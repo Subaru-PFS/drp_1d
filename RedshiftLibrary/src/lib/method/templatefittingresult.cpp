@@ -37,7 +37,7 @@ void CTemplateFittingSolveResult::preSave(const CDataStore& store)
         m_tplName = "Undefined";
 }
 
-void CTemplateFittingSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
 {
 
   
@@ -65,9 +65,9 @@ void CTemplateFittingSolveResult::Save( const CDataStore& store, std::ostream& s
     stream << std::endl;
     stream << std::endl;
     std::string detailStr;
-    GetBestRedshiftPerTemplateString( store, detailStr);
-
-    stream << detailStr.c_str();
+    //TODO review this (commented after removing DataStore from Save and SaveLine)      
+    //    GetBestRedshiftPerTemplateString( store, detailStr);
+    //stream << detailStr.c_str();
 }
 
 Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
@@ -119,10 +119,13 @@ Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataS
 
 }
 //called for saving redshift.csv for Xi2
-void CTemplateFittingSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CTemplateFittingSolveResult::SaveLine(std::ostream& stream ) const
 {
     char tmpChar[256];
     Float64 dtreepathnum;
+    
+    //TODO review this (commented after removing DataStore from Save and SaveLine)      
+    /*
     store.GetParam( "dtreepathnum", dtreepathnum );
     sprintf(tmpChar, "%.2f", dtreepathnum);
 
@@ -141,7 +144,7 @@ void CTemplateFittingSolveResult::SaveLine( const CDataStore& store, std::ostrea
                 << "-1" << "\t"
                 << "-1" << "\t"
                 << m_TypeLabel << std::endl; //reliability label
-
+    */
 }
 
 Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store) 

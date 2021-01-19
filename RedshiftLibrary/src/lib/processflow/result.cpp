@@ -12,7 +12,7 @@ COperatorResult::~COperatorResult()
 
 }
 
-void COperatorResult::SaveJSON(const CDataStore& store, std::ostream& stream) const
+void COperatorResult::SaveJSON(std::shared_ptr<const COperatorResult> res, std::ostream& stream) const
 {
   // does nothing, -> no need to cast COperatorResult to LineModelResult in COperatorResultStore::SaveAllResults
 }

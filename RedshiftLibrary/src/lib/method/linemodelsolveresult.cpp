@@ -54,7 +54,7 @@ void CLineModelSolveResult::preSave(const CDataStore& store)
 /**
  * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
  **/
-void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CLineModelSolveResult::Save(std::ostream& stream ) const
 {
 
  
@@ -71,7 +71,7 @@ void CLineModelSolveResult::Save( const CDataStore& store, std::ostream& stream 
 /**
  * \brief Prints into the output stream the redshift, merit and template name for the best redshift obtained.
  **/
-void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CLineModelSolveResult::SaveLine( std::ostream& stream ) const
 {
     Float64 redshift;
     Float64 merit;
@@ -87,17 +87,19 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
     //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
+    //TODO review this (commented after removing DataStore from Save and SaveLine)      
+        //        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
         //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);;
     }else if(m_bestRedshiftMethod==2)
     {
-        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName);
+          //TODO review this (commented after removing DataStore from Save and SaveLine)
+      //        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName);
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
     }else{
         //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }
-
-
+    //TODO review this (commented after removing DataStore from Save and SaveLine)      
+    /*
     stream  << store.GetSpectrumName() << "\t"
         << store.GetProcessingID() << "\t"
 	    << m_redshift << "\t"
@@ -111,6 +113,7 @@ void CLineModelSolveResult::SaveLine( const CDataStore& store, std::ostream& str
         << snrOII << "\t"
         << lfOII << "\t"
         << m_TypeLabel << std::endl;
+    */
 }
 
 /**

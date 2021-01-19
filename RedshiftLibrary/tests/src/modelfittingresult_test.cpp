@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CModelFittingResult result = CModelFittingResult(lineModelSolution, 0.5, 1.2,
 						   _restRayList, -1.0, -1.0 );
 
-  result.Save(store, stream);
+  result.Save(stream);
 
   result_loaded.Load(temp.c_str());
 
