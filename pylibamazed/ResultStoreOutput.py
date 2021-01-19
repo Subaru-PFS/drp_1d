@@ -195,7 +195,6 @@ class ResultStoreOutput(AbstractOutput):
         for index, row in cand_specs[cand_specs["dimension"] == "multi"].iterrows():
             comp_type.append((row["name"], "object"))
 
-        nb_records = self.get_attribute(next(cand_specs.iterrows())[1],object_type,rank).size
         df = pd.DataFrame()
         for index, row in cand_specs.iterrows():
             df[row["name"]] = self.get_attribute(row, object_type, rank)
@@ -205,7 +204,7 @@ class ResultStoreOutput(AbstractOutput):
         if object_type == "galaxy":
             return self.parameters["method"]
         else:
-            return "chisquare2solve"
+            return "templatefittingsolve"
 
     def write_candidate_dataset_to_hdf5(self, dataset,rank , datatype):
         data = self.__getattr__(dataset)[object_type][rank].to_records()
