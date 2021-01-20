@@ -684,6 +684,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         } else
         {
             Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
+            throw std::runtime_error("  Operator-Linemodel: unable to parse templatefitting continuum fit operator. use templatefitting or templatefittinglog");
         }
     }
    

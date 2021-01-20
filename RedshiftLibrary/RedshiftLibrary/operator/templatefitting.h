@@ -3,7 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/operator/templatefittingBase.h>
 #include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/common/mask.h>
 
@@ -16,7 +16,7 @@
 namespace NSEpic
 {
 
-class COperatorTemplateFitting : public COperator
+class COperatorTemplateFitting : public COperatorTemplateFittingBase
 {
 
 public:

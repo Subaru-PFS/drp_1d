@@ -12,10 +12,6 @@
 namespace NSEpic
 {
 
-class CSpectrum;
-class CTemplate;
-class COperatorResult;
-
 /**
  * \ingroup Redshift
  */
@@ -38,19 +34,6 @@ public:
     COperator();
     virtual ~COperator()=0;
 
-    virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
-                                                       const CTemplate& tpl,
-                                                       const TFloat64Range& lambdaRange,
-                                                       const TFloat64List& redshifts,
-                                                       Float64 overlapThreshold,
-                                                       std::vector<CMask> additional_spcMasks,
-                                                       std::string opt_interp,
-                                                       Int32 opt_extinction,
-                                                       Int32 opt_dustFitting,
-                                                       CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
-                                                       Bool keepigmism = false,
-                                                       Float64 FitDustCoeff=-1,
-                                                       Float64 FitMeiksinIdx=-1) = 0;
 
 protected:
 

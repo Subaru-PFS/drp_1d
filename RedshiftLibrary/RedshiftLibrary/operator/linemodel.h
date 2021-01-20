@@ -277,7 +277,7 @@ private:
 
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
     
-    std::shared_ptr<COperator> templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> templateFittingOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
