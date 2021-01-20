@@ -222,7 +222,7 @@ public:
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
     std::string m_opt_tplfit_method = "chisquarelog"; //only for firstpass
-    std::string m_opt_tplfit_method_secondpass = "chisquare2"; //"chisquareloglambda"//only for secondpass
+    std::string m_opt_tplfit_method_secondpass = "templateFitting"; //"chisquareloglambda"//only for secondpass
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
@@ -270,8 +270,7 @@ private:
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
-
-
+    std::shared_ptr<CTemplateCatalog> m_orthoTplCatalog;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
     Float64 m_extremaCount;

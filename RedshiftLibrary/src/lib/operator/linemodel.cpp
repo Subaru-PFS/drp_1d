@@ -184,7 +184,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     // CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; // only one ortho config for now
-    std::shared_ptr<CTemplateCatalog> orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
+    m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo("  Operator-Linemodel: Templates store prepared.");
     //*/
     //below commented code is currently for test purposes 
@@ -192,7 +192,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          tplCatalog,
-                                                         *orthoTplCatalog,
+                                                         *m_orthoTplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
@@ -388,7 +388,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     if (enableFitContinuumPrecomputed && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto") )
     {
         PrecomputeContinuumFit(spectrum,
-                               *orthoTplCatalog,
+                               *m_orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
@@ -639,10 +639,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 {
     boost::chrono::thread_clock::time_point start_tplfitprecompute =
         boost::chrono::thread_clock::now();
-
-
-    Log.LogInfo("  Operator-Linemodel: continuum tpl fitting: sampling:%s, "
-                "step=%.5e, min=%.5e, max=%.5e",
+    Log.LogInfo("  Operator-Linemodel: continuum tpl fitting: min=%.5e, max=%.5e",
                 redshifts[0],
                 redshifts[redshifts.size()-1]);
 
@@ -666,6 +663,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         m_opt_tplfit_method = "templateFitting";
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
+    }
+    if(m_model->GetPassNumber() == 2){
+        //use Chi2 for continuum fit in secondpass, to compare with develop
+        m_opt_tplfit_method = "templateFitting";
     }
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
@@ -729,18 +730,20 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         opt_tplfit_integer_chi2_dustfit=-10;
     }
 
-    Float64 meiksinIdx = -1, dustCoeff = -1, keepismigm = -2;
+    Float64 meiksinIdx = -1, dustCoeff = -1;
+    Bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
             if(candidateIdx<0 || candidateIdx> m_firstpass_extremaResult.Extrema.size()-1){
                 Log.LogError("    COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range");
                 throw runtime_error(" COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range.");
             }
+            opt_interp = "lin"; //in SolveContinuum, case=3, we use linear interpolation!
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
-            keepismigm = 1;//telling that we want to keep the ism and igm indexes
+            keepismigm = true;//telling that we want to keep the ism and igm indexes
             meiksinIdx = m_firstpass_extremaResult.FittedTplMeiksinIdx[candidateIdx];
             dustCoeff =  m_firstpass_extremaResult.FittedTplDustCoeff[candidateIdx];
-            opt_tplfit_integer_chi2_dustfit = dustCoeff;
+            opt_tplfit_integer_chi2_dustfit = Int32(dustCoeff*10);
         }
     }          
 
@@ -756,7 +759,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             
             //case where we only want to refit using one template:
             if( m_continnuum_fit_option == 3){
-                if(tpl.GetName() != m_firstpass_extremaResult.FittedTplName[i])
+                if(tpl.GetName() != m_firstpass_extremaResult.FittedTplName[candidateIdx])
                     continue;   
                 else
                     found= true;          
@@ -1189,7 +1192,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
         for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
             PrecomputeContinuumFit(spectrum,
-                               tplCatalog,
+                               *m_orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
                                lambdaRange,
@@ -1199,7 +1202,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         }
     }else{
         //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
-        //Question: should we create a "customized" secondpass tplfitstore for each candidate or simply copying the fit store
         //copy the firstpass tplfitstore into the secondpass tplfitstore
         m_tplfitStore_secondpass.resize(1);
         if(m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
@@ -1350,12 +1352,7 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                                            m_secondpass_parameters_extremaResult.FittedTplMtm[index_extremum],
                                            m_secondpass_parameters_extremaResult.FittedTplLogPrior[index_extremum],
                                            m_secondpass_parameters_extremaResult.FittedTplpCoeffs[index_extremum]);
-        
-        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[index_extremum]);
-        else{
-            //nothing to do cause we already injected the fitStore for cases 1 and 2
-        }
+
         m_model->SetFitContinuum_Option(2);
         // find the index in the zaxis results
         Int32 idx = m_result->getRedshiftIndex(z);
@@ -2235,7 +2232,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
             //moved here to override the previously set option value
             //since all 
-            m_model->SetFitContinuum_Option(tplfit_option);
+            //m_model->SetFitContinuum_Option(tplfit_option);
             Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
             
             // find the index in the zaxis results

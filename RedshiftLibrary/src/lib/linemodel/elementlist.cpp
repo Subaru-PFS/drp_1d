@@ -1944,8 +1944,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //INFO: tplshape can override the lyafitting, see m_opt_lya_forcefit
                 setLyaProfile(redshift, spectralAxis);
             }
-//end of continuum
-//fit of ray amplitude
             //generate random amplitudes
             if(m_fittingmethod=="random")
             {
@@ -2117,7 +2115,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         m_Redshift = bestController->getRedshift();
                     }
                     const CTemplate* tpl = bestController->getTemplate();
-                    //Mira s hook: appl template continuum by interpolating the grid as defined in initContinuum
+                    
                     ApplyContinuumOnGrid(*tpl, m_Redshift);
                     std::vector<Float64> polyCoeffs;
                     setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), bestController->getContinuumAmpErr(), polyCoeffs);
@@ -3162,7 +3160,6 @@ CMask CLineModelElementList::getOutsideLinesMask()
 
     std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
     std::vector<UInt32> supportIdxes = getSupportIndexes( validEltsIdx );
-    //_mask(spectralAxis.GetSamplesCount(), 1); //initialize with a given size and value = 1
     for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
     {
         _mask[i]=1;
@@ -4421,8 +4418,6 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( const std::
     }
 
     std::vector<UInt32> xInds;
-    //Mira: why not calling  getSupportIndexes( EltsIdx )?
-    //maybe also we should use the intersect method
     for(Int32 i=0; i<spectralAxis.GetSamplesCount(); i++)
     {
         if(spectralAxis[i]>=lambdaRange.GetBegin() && spectralAxis[i]<=lambdaRange.GetEnd())
