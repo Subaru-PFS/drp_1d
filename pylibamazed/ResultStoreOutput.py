@@ -84,11 +84,15 @@ class ResultStoreOutput(AbstractOutput):
         self.classification["QSOEvidence"] = self.result_store.Get_Float64Data("classification", "all", "EvidenceQSO")
 
     def load_all_fitted_rays(self,object_type):
+        if object_type == "star":
+            return
         nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
         for rank in range(nb_candidates):
             self.load_fitted_rays(object_type,rank)
 
     def load_all_best_continuum(self,object_type):
+        if object_type == "star":
+            return
         nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
         for rank in range(nb_candidates):
             self.load_fitted_continuum_by_rank(object_type,rank)

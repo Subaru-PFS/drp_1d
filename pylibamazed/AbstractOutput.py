@@ -58,7 +58,7 @@ class AbstractOutput:
 
     def get_candidate_data(self, object_type, rank, data_name):
         self.load_candidates_results(object_type)
-        return self.candidates_results[object_type][self.candidates_results[object_type]['Rank'] == rank][data_name].at[0]
+        return self.candidates_results[object_type][self.candidates_results[object_type]['Rank'] == rank][data_name].iat[0]
     
     def get_candidate_results(self, object_type, rank, columns=[]):
         self.load_candidates_results(object_type)
