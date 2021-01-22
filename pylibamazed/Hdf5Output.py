@@ -20,12 +20,12 @@ class Hdf5Output(AbstractOutput):
     def load_classification(self):
         classification = np.array(self.hdf5_group.get("classification"))
         self.classification["Type"]=classification["Type"][0].decode('utf-8')
-        self.classification["GalaxyProba"]=classification["ProbGalaxy"][0]
-        self.classification["StarProba"]=classification[ "ProbStar"][0]
-        self.classification["QSOProba"]=classification[ "ProbQSO"][0]
-        self.classification["GalaxyEvidence"] = classification[ "EvidenceGalaxy"][0]
-        self.classification["StarEvidence"] = classification["EvidenceStar"][0]
-        self.classification["QSOEvidence"] = classification["EvidenceQSO"][0]
+        self.classification["GalaxyProba"]=classification["GalaxyProba"][0]
+        self.classification["StarProba"]=classification[ "StarProba"][0]
+        self.classification["QSOProba"]=classification[ "QSOProba"][0]
+        self.classification["GalaxyEvidence"] = classification[ "GalaxyEvidence"][0]
+        self.classification["StarEvidence"] = classification["StarEvidence"][0]
+        self.classification["QSOEvidence"] = classification["QSOEvidence"][0]
 
     def load_pdf(self, object_type):
         if object_type not in self.pdf.keys():
@@ -124,8 +124,8 @@ class Hdf5Output(AbstractOutput):
                 self.candidates_results[object_type] = self.candidates_results[object_type].append(pd.Series(manual_values),ignore_index=True)
 
     def load_rays_info(self):
-        if self.rays_info is None:
-            self.rays_info = np.array(self.hdf5_group.get("rays_info"))
+        if self.rays_infos is None:
+            self.rays_infos = np.array(self.hdf5_group.get("rays_info"))
 
     def load_fitted_rays(self, object_type, rank):
         if rank not in self.fitted_rays[object_type].keys():
@@ -147,3 +147,7 @@ class Hdf5Output(AbstractOutput):
         if rank not in self.model[object_type]:
             cand = self.hdf5_group.get(object_type + "/candidates/"  + self.get_candidate_group_name(rank))
             self.model[object_type][rank] = np.array(cand.get("model"))
+
+    def load_nb_candidates(self,object_type):
+        self.nb_candidates[object_type] = len(self.hdf5_group.get(object_type + "/candidates"))
+

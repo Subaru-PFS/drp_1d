@@ -83,34 +83,10 @@ class ResultStoreOutput(AbstractOutput):
         self.classification["StarEvidence"] = self.result_store.Get_Float64Data("classification", "all", "EvidenceStar")
         self.classification["QSOEvidence"] = self.result_store.Get_Float64Data("classification", "all", "EvidenceQSO")
 
-    def load_all_fitted_rays(self,object_type):
-        if object_type == "star":
-            return
-        nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
-        for rank in range(nb_candidates):
-            self.load_fitted_rays(object_type,rank)
-
-    def load_all_best_continuum(self,object_type):
-        if object_type == "star":
-            return
-        nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
-        for rank in range(nb_candidates):
-            self.load_fitted_continuum_by_rank(object_type,rank)
-
-    def load_all_models(self,object_type):
-        nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
-        for rank in range(nb_candidates):
-            self.load_model_by_rank(object_type,rank)
-
-    def load_all(self):
-        self.load_classification()
-        self.load_rays_info()
-        for object_type in self.object_types:
-            self.load_candidates_results(object_type)
-            self.load_all_models(object_type)
-            self.load_all_best_continuum(object_type)
-            self.load_all_fitted_rays(object_type)
-            self.load_pdf(object_type)
+    @abc.abstractmethod
+    def load_nb_candidates(self,object_type):
+        if object_type not in self.nb_candidates:
+            self.nb_candidates[object_type] = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
 
     def get_attribute(self,spec_row, object_type, rank):
         if spec_row["method"] == "all":
@@ -142,8 +118,7 @@ class ResultStoreOutput(AbstractOutput):
         for index, row in cand_specs[cand_specs["dimension"] == "multi"].iterrows():
             comp_type.append((row["name"], "object"))
 
-        nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
-        self.nb_candidates[object_type]=nb_candidates
+        nb_candidates = self.get_nb_candidate(object_type)
         ra = np.recarray((nb_candidates,), dtype=comp_type)
         for rank in range(nb_candidates):
             for index, row in cand_specs.iterrows():
@@ -159,8 +134,8 @@ class ResultStoreOutput(AbstractOutput):
         df = pd.DataFrame()
         comp_type = []
 
-        nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
-        self.nb_candidates[object_type]=nb_candidates
+        nb_candidates = self.get_nb_candidates(object_type)
+    
         columns_data = dict()
         for index, row in cand_specs.iterrows():
             columns_data[row["name"]]=[]
