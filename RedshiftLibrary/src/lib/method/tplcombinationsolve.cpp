@@ -8,6 +8,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <RedshiftLibrary/statistics/deltaz.h>
@@ -329,11 +330,12 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
             }
         }
 
+        CZPrior zpriorhelper;
         for(Int32 kism=0; kism<nISM; kism++)
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                priors.push_back(pdfz.GetConstantLogZPrior(result->Redshifts.size()));
+                priors.push_back(zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
                 chiSquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);

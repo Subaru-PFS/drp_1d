@@ -24,11 +24,6 @@ public:
     ~CPdfz();
 
     Int32 Compute(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
-    TFloat64List GetConstantLogZPrior(UInt32 nredshifts);
-    TFloat64List GetStrongLinePresenceLogZPrior(const TBoolList & linePresence, const Float64 penalization_factor);
-    TFloat64List GetNLinesSNRAboveCutLogZPrior(const TInt32List & nlinesAboveSNR, const Float64 penalization_factor);
-    TFloat64List GetEuclidNhaLogZPrior(const TFloat64List & redshifts, const Float64 aCoeff);
-    TFloat64List CombineLogZPrior(const TFloat64List & logprior1, const TFloat64List & logprior2);
 
     Float64 getSumTrapez(const TRedshiftList &redshifts, const TFloat64List &valprobalog);
     Float64 getSumRect(const TRedshiftList &redshifts, const TFloat64List &valprobalog);

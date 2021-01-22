@@ -11,6 +11,7 @@
 #include <RedshiftLibrary/processflow/datastore.h>
 
 #include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
@@ -292,6 +293,7 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore& store,
     Log.LogInfo("Linemodel: Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
+    CZPrior zpriorhelper;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
     Float64 logEvidence;
@@ -313,13 +315,14 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore& store,
         {
             zPrior->Redshifts[k] = result->Redshifts[k];
         }
+
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
             TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
-            zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+            zPrior->valProbaLog = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
-            zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
         }
 
         //correct chi2 if necessary: todo add switch
@@ -351,10 +354,10 @@ Int32 CZweiModelSolve::CombinePDF(CDataStore& store,
             if(zPriorStrongLinePresence)
             {
                 TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
-                zpriorsTplshapes.push_back(pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior));
+                zpriorsTplshapes.push_back(zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior));
             }else
             {
-                zpriorsTplshapes.push_back(pdfz.GetConstantLogZPrior(result->Redshifts.size()));
+                zpriorsTplshapes.push_back(zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
             }
         }
 
@@ -406,6 +409,7 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
     Log.LogInfo("Linemodel: continuum Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
+    CZPrior zpriorhelper;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
     Float64 logEvidence;
@@ -419,7 +423,7 @@ Int32 CZweiModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
 
-    zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+    zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
 
 
     //correct chi2 if necessary: todo add switch

@@ -8,6 +8,7 @@
 #include <RedshiftLibrary/processflow/datastore.h>
 
 #include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
@@ -548,6 +549,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
 
     Log.LogInfo("Linemodel: Pdfz computation");
     CPdfz pdfz;
+    CZPrior zpriorhelper;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
     Float64 logEvidence;
@@ -573,26 +575,26 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             UInt32 lineTypeFilter = 1;// for emission lines only
             TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
 
-            zPrior->valProbaLog = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+            zPrior->valProbaLog = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
-            zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+            zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
         }
         if(zPriorHaStrongestLine)
         {
             TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
-            std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorHaStrongest);
+            std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
+            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorHaStrongest);
         }
         if(zPriorEuclidNHa)
         {
-            std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
+            std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
+            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
         }
         if(zPriorNLineSNR)
         {
             std::vector<Int32> n_lines_above_snr = result->GetNLinesAboveSnrcut(result->LineModelSolutions);
-            std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-            zPrior->valProbaLog = pdfz.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
+            std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
         }
 
         //correct chi2 if necessary
@@ -632,28 +634,28 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             if(zPriorStrongLinePresence)
             {
                 TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
-                _prior = pdfz.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+                _prior = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
             }else
             {
-                _prior = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+                _prior = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
             }
 
             if(zPriorHaStrongestLine)
             {
                 TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
-                std::vector<Float64> zlogPriorHaStrongest = pdfz.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorHaStrongest);
+                std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
+                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorHaStrongest);
             }
             if(zPriorEuclidNHa)
             {
-                std::vector<Float64> zlogPriorNHa = pdfz.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNHa);
+                std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
+                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorNHa);
             }
             if(zPriorNLineSNR)
             {
                 std::vector<Int32> n_lines_above_snr = result->NLinesAboveSNRTplshapes[k];
-                std::vector<Float64> zlogPriorNLinesAboveSNR = pdfz.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-                _prior = pdfz.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
+                std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
             }
             zpriorsTplshapes.push_back(std::move(_prior));
         }
@@ -727,6 +729,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
     Log.LogInfo("Linemodel: continuum Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
     CPdfz pdfz;
+    CZPrior zpriorhelper;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
     Float64 logEvidence;
@@ -740,7 +743,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
         zPrior->Redshifts[k] = result->Redshifts[k];
     }
 
-    zPrior->valProbaLog = pdfz.GetConstantLogZPrior(result->Redshifts.size());
+    zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
 
 
     //correct chi2 if necessary: todo add switch
