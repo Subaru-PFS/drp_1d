@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
 
+#include <gsl/gsl_const_mksa.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
@@ -115,6 +116,8 @@ class CLineModelElement
 
     void SetSourcesizeDispersion(Float64 sigma);
 
+    void ActivateLSF(const std::shared_ptr<const CLSF> & lsf);
+
     void SetAsymfitWidthCoeff(Float64 coeff);
     Float64 GetAsymfitWidthCoeff();
     void SetAsymfitAlphaCoeff(Float64 coeff);
@@ -188,13 +191,18 @@ class CLineModelElement
 
     Float64 *m_dataExtinctionFlux = NULL;
     Float64 m_dataStepLambda = 0.1;
-    Float64 m_dataN = 3000;
+    Float64 m_dataN = 3000.0;
 
     Float64 m_sumCross = 0.0;
     Float64 m_sumGauss = 0.0;
-    Float64 m_dtmFree =
-        0.0; // dtmFree is the non-positive-constrained version of sumCross
+    Float64 m_dtmFree =  0.0; // dtmFree is the non-positive-constrained version of sumCross
     Float64 m_fitAmplitude = 0.0;
+
+    // Constant
+    const Float64 m_speedOfLightInVacuum = GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
+
+    bool m_enableLSF = false;
+    std::shared_ptr<const CLSF> m_LSF;
 
   private:
 };

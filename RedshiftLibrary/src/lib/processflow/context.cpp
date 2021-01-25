@@ -66,12 +66,6 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
 
 void CProcessFlowContext::InitSpectrum()
 {
-    // Enable LSF if necessary
-    std::string enableLSF;
-    m_ParameterStore->Get( "linemodelsolve.linemodel.enableLSF", enableLSF, "no" );
-    if( enableLSF == "yes" )
-        m_Spectrum->EnableLSF();
-
     // Smooth flux
     Int64 smoothWidth;
     m_ParameterStore->Get( "smoothWidth", smoothWidth, 0 );

@@ -46,6 +46,7 @@ public:
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
                           const std::string& lineWidthType,
+                          const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
@@ -323,6 +324,7 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
+    void ActivateLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);

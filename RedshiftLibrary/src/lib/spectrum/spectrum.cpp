@@ -43,7 +43,6 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
-    m_enableLSF(other.m_enableLSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
@@ -123,7 +122,6 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
-    m_enableLSF(other.m_enableLSF),
     m_Name(other.m_Name),
     alreadyRemoved(other.alreadyRemoved)
 {
@@ -146,7 +144,6 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_spcType = other.m_spcType;
 
     m_LSF = other.m_LSF;
-    m_enableLSF = other.m_enableLSF;
 
     m_estimationMethod = other.m_estimationMethod;
     m_dfBinPath = other.m_dfBinPath;
@@ -413,19 +410,6 @@ void CSpectrum::SetType(const CSpectrum::EType type) const
     m_spcType = type;
 }
 
-
-void CSpectrum::EnableLSF()
-{
-    if (m_LSF == nullptr){
-        Log.LogError("%s: Cannot enable LSF, LSF member is not initialized",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF member is not initialized");
-    }else if( ! m_LSF->IsValid()){
-        Log.LogError("%s: Cannot enable LSF, LSF member is not valid",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF member is not valid");
-    } else {
-        m_enableLSF = true;
-    }
-}
 
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 {

@@ -52,7 +52,6 @@ const std::string CLineModelSolve::GetDescription()
 
     desc.append("\tparam: linemodel.linetypefilter = {""no"", ""E"", ""A""}\n");
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
-    desc.append("\tparam: linemodel.enableLSF = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
     desc.append("\tparam: linemodel.continuumfit.method = {""templateFitting"", ""chisquarelog""}\n");
@@ -75,6 +74,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.tplratio.priors.catalog_dirpath = <path>\n");
 
     desc.append("\tparam: linemodel.offsets_catalog = <relative path>\n");
+    desc.append("\tparam: linemodel.enableLSF = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
     desc.append("\tparam: linemodel.nsigmasupport = <float value>\n");
     desc.append("\tparam: linemodel.instrumentresolution = <float value>\n");
@@ -140,7 +140,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 {
     dataStore.GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     dataStore.GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
-    dataStore.GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );
     dataStore.GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
     dataStore.GetScopedParam( "linemodel.secondpasslcfittingmethod", m_opt_secondpasslcfittingmethod, "no" );
     dataStore.GetScopedParam( "linemodel.skipsecondpass", m_opt_skipsecondpass, "no" );
@@ -190,6 +189,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     }
     dataStore.GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
+    dataStore.GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );
     dataStore.GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     dataStore.GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
     dataStore.GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
@@ -250,8 +250,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     Log.LogInfo( "Linemodel parameters:");
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
-    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
+    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
     if(m_opt_lineWidthType=="combined"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
@@ -916,6 +916,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         linemodel.m_opt_tplfit_continuumprior_betaTE = m_opt_tplfit_continuumprior_betaTE;
         linemodel.m_opt_tplfit_continuumprior_betaZ = m_opt_tplfit_continuumprior_betaZ;
     }
+
+    linemodel.m_opt_enableLSF=m_opt_enableLSF;
 
     linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
     linemodel.m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;

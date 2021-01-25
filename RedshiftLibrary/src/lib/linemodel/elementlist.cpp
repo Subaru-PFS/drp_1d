@@ -57,6 +57,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const std::string& opt_fittingmethod,
                                              const std::string& opt_continuumcomponent,
                                              const std::string& widthType,
+                                             const std::string & opt_enable_LSF,
                                              const Float64 nsigmasupport,
                                              const Float64 resolution,
                                              const Float64 velocityEmission,
@@ -196,6 +197,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
         }
     }
     */
+
+    if (opt_enable_LSF=="yes") ActivateLSF();
 
     //TODO [ml] m_dTransposeDLambdaRange, m_forceDisableLyaFitting must be initialized in contructor
 }
@@ -6522,6 +6525,24 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
     for(Int32 j=0; j<m_Elements.size(); j++)
     {
         m_Elements[j]->SetSourcesizeDispersion(sizeArcsec);
+    }
+}
+
+void CLineModelElementList::ActivateLSF()
+{
+    const std::shared_ptr<const CLSF> & lsf = m_inputSpc.GetLSF();
+
+    if (lsf == nullptr){
+        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF spetrum member is not initialized");
+    }else if( ! lsf->IsValid()){
+        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not valid",__func__);
+        throw std::runtime_error("Cannot enable LSF, LSF spectrum member is not valid");
+    }
+
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->ActivateLSF(lsf);
     }
 }
 

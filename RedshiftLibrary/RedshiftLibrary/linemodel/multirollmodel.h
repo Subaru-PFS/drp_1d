@@ -33,6 +33,7 @@ public:
                     const std::string& opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
                     const std::string& lineWidthType,
+                    const std::string& opt_enable_LSF,
                     const Float64 resolution,
                     const Float64 velocityEmission,
                     const Float64 velocityAbsorption,
@@ -99,7 +100,6 @@ public:
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetVelocityAbsorption(Float64 vel);
     void SetVelocityEmission(Float64 vel);
-
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
