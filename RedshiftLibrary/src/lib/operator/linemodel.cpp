@@ -656,17 +656,17 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
 
-    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "templateFitting")
+    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "chisquare2")
         // warning arbitrary number of redshifts threshold
         // to consider templateFitting faster than chisquarelog
     {
-        m_opt_tplfit_method = "templateFitting";
+        m_opt_tplfit_method = "chisquare2";
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
     if(m_model->GetPassNumber() == 2){
         //use Chi2 for continuum fit in secondpass, to compare with develop
-        m_opt_tplfit_method = "templateFitting";
+        m_opt_tplfit_method = "chisquare2";
     }
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
@@ -687,7 +687,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         std::shared_ptr<COperatorTemplateFittingLog> chiSquareLogOperator =
             std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
         chiSquareLogOperator->enableSpcLogRebin(enableLogRebin);
-    } else if (m_opt_tplfit_method == "templateFitting")
+    } else if (m_opt_tplfit_method == "chisquare2")
     {
         templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
     } else
@@ -696,7 +696,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     Float64 overlapThreshold = 1.0;
-    if (m_opt_tplfit_method != "templateFitting" && ignoreLinesSupport==true)
+    if (m_opt_tplfit_method != "chisquare2" && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
