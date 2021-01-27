@@ -868,10 +868,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                             _vStep,
                                             m_opt_abs_velocity_fit_min,
                                             m_opt_abs_velocity_fit_max,
-                                            _vStep,
-                                            _secondPass_velfit_dzInfLim,
-                                            _secondPass_velfit_dzSupLim,
-                                            _secondPass_velfit_dzStep);
+                                            _vStep);
     if( !result_s1 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s1");
@@ -925,10 +922,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                             _vStep,
                                             m_opt_abs_velocity_fit_min,
                                             m_opt_abs_velocity_fit_max,
-                                            _vStep,
-                                            _secondPass_velfit_dzInfLim,
-                                            _secondPass_velfit_dzSupLim,
-                                            _secondPass_velfit_dzStep);
+                                            _vStep);
     if( !result_s2 )
     {
         Log.LogInfo( "Zweimodel - Failed to compute linemodel s2");
@@ -1024,10 +1018,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                        _vStep,
                                                        m_opt_abs_velocity_fit_min,
                                                        m_opt_abs_velocity_fit_max,
-                                                       _vStep,
-                                                       _secondPass_velfit_dzInfLim,
-                                                       _secondPass_velfit_dzSupLim,
-                                                       _secondPass_velfit_dzStep);
+                                                       _vStep);
 
         if( !result_s1_c2zX )
         {
@@ -1105,10 +1096,7 @@ Bool CZweiModelSolve::Solve( CDataStore& dataStore,
                                                                _vStep,
                                                                m_opt_abs_velocity_fit_min,
                                                                m_opt_abs_velocity_fit_max,
-                                                               _vStep,
-                                                               _secondPass_velfit_dzInfLim,
-                                                               _secondPass_velfit_dzSupLim,
-                                                               _secondPass_velfit_dzStep);
+                                                               _vStep);
 
                 if( !result_s2_c1zY )
                 {
