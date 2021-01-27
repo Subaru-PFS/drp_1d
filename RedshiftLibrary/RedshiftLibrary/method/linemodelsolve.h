@@ -26,7 +26,6 @@ class CLineModelSolve
 public:
 
     CLineModelSolve(std::string calibrationPath="");
-    ~CLineModelSolve();
 
     const std::string GetDescription();
 
@@ -63,6 +62,11 @@ private:
                      Float64 opt_modelPriorZStrength,
                      std::shared_ptr<CPdfMargZLogResult> postmargZResult,
                      std::shared_ptr<CPdfLogResult> zPrior);
+
+    Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
+                                 const TFloat64List & Extrema,  
+                                 const std::vector<TFloat64List> & ExtremaExtendedRedshifts,
+                                 TFloat64List& candidates ) const;
 
     Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 

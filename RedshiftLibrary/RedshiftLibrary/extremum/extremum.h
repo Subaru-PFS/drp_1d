@@ -21,7 +21,6 @@ public:
 
     CExtremum( Bool invertForMinSearch = false );
     CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount = 10, Float64 peakSeparation = 0.005*2, Bool invertForMinSearch=false, Bool usePeakSeparation=true);
-    ~CExtremum();
 
     void SetMaxPeakCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );

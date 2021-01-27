@@ -121,8 +121,8 @@ void CDataStore::DeleteScopedGlobalResult( const std::string& name )
 }
 void CDataStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )
 {
-    
-    auto  result = GetGlobalResult( oldkey ).lock();
+    const std::string scoped_oldkey  = GetCurrentScopeName() + "." + oldkey;
+    auto  result = GetGlobalResult( scoped_oldkey ).lock();
     StoreScopedGlobalResult(newkey, result);
     DeleteScopedGlobalResult(oldkey);
 }

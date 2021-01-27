@@ -472,33 +472,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  galaxy_method_pdf_reldir,
                                  radius);
 
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
-            std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
-            std::vector<Float64> zcandidates_unordered_list;
-            //simple reading from datastore
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-            //compute the integratedPDF and sort candidates based on intg PDF
-            //truncate based on maxCount
-            ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
-            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
-
-            
-            auto res = ctx.GetDataStore().GetGlobalResult( "candidatesresult"  );
-            auto lm_extrema_results = ctx.GetDataStore().GetGlobalResult( "linemodelsolve.linemodel_extrema");
-            auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
-            auto lmResults = std::dynamic_pointer_cast<const CLineModelExtremaResult>(lm_extrema_results.lock());
-            TInt32List Rank_PDF = candResults->Rank;
-            lmResults->Rank_PDF = Rank_PDF;
-        }
-
     }else if(methodName  == "zweimodelsolve" ){
 
         CZweiModelSolve Solve(calibrationDirPath);
@@ -539,23 +512,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  galaxy_method_pdf_reldir,
                                  radius,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from TemplateFittingsolve method results" );
-            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
-            /*Int32 n_cand = 5; //this is hardcoded for now for this method
-            std::vector<Float64> zcandidates_unordered_list;
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-            
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);*/
-        }
 
     }else if(methodName  == "templatefittinglogsolve" ){
         Float64 overlapThreshold;

@@ -10,17 +10,13 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 #include <iostream>
+#include <numeric>
 
-CPdfCandidateszResult::CPdfCandidateszResult()
+CPdfCandidateszResult::CPdfCandidateszResult():
+    optMethod(0),   // di
+    //optMethod(1), // gaussian fit
+    dzDefault(1e-3) // default value in case deltaz couldnt be calculted, should be instrument dependant (parameter ?)
 {
-    optMethod = 0; //di
-    //optMethod = 1; //gaussian fit
-    dzDefault = 1e-3;//default value in case deltaz couldnt be calculted, should be instrument dependant (parameter ?)
-}
-
-CPdfCandidateszResult::~CPdfCandidateszResult()
-{
-
 }
 
 void CPdfCandidateszResult::Init(TRedshiftList const & zc, const TRedshiftList & deltaz, const TStringList & IDs)
@@ -179,13 +175,8 @@ Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList co
             }
         }
     }
-
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++)
-    {
-        Rank[i] = i;
-    }
     
-    SortByValSumProbaInt(Rank);//update only ranks based on valproba
+    SortByValSumProbaInt();//update only ranks based on valproba
 
     return 0;
 }
@@ -247,138 +238,14 @@ void CPdfCandidateszResult::SaveLine( std::ostream& stream ) const
 }
 
 
-void CPdfCandidateszResult::SortByValSumProbaInt(TInt32List& flist)
+void CPdfCandidateszResult::SortByValSumProbaInt()
 {
-    //sort the valProbaSum and reorder flist accordingly
-    TFloat64List sortedProba;
-    TInt32List sortedFlist;
-
-    // This is a vector of {value,index} pairs
-    vector<pair<Float64,Int32> > vp;
-    vp.reserve(Redshifts.size());
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        vp.push_back(make_pair(ValSumProba[i], flist[i]));
-    }
-    std::sort(vp.rbegin(), vp.rend()); //sort reverse order
-    for (Int32 i = 0 ; i < vp.size() ; i++) {
-        sortedProba.push_back(vp[i].first);
-        sortedFlist.push_back(vp[i].second);
-    }
-
-    for (Int32 i = 0 ; i < Redshifts.size() ; i++) {
-        flist[i] = sortedFlist[i];
-    }
+    iota(Rank.begin(), Rank.end(), 0);
+    
+    const TFloat64List & v = ValSumProba;
+    sort(Rank.begin(), Rank.end(), 
+        [&v](Int32 i1, Int32 i2){return v[i1] > v[i2];});
 }
-
-Bool CPdfCandidateszResult::GetBestRedshiftsFromPdf(const CDataStore& store, 
-                                                    TFloat64List Extrema,  
-                                                    std::vector<TFloat64List> ExtremaExtendedRedshifts,
-                                                    TFloat64List& candidates ) const
-{
-        //check if the pdf is stellar/galaxy or else
-        std::string outputPdfRelDir = "zPDF"; //default value set to galaxy zPDF folder
-        std::string scope = store.GetCurrentScopeName();
-        std::size_t foundstr_stellar = scope.find("stellarsolve");
-        std::size_t foundstr_qso = scope.find("qsosolve");
-        if (foundstr_stellar!=std::string::npos){
-            outputPdfRelDir = "stellar_zPDF";
-        }else if (foundstr_qso!=std::string::npos){
-            outputPdfRelDir = "qso_zPDF";
-        }
-        std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-        auto results_pdf = store.GetGlobalResult( scope_res.c_str() );
-        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-        if(!logzpdf1d)
-        {
-            Log.LogError( "GetBestRedshiftsFromPdf: no pdf results retrieved from scope: %s", scope_res.c_str());
-            return false;
-        }
-        Float64 Fullwidth = 6e-3;//should be replaced with deltaz?
-        Int32 method = 0; //0=maxpdf, 1=direct integration on peaks only
-        for( Int32 i=0; i<Extrema.size(); i++ )
-        {
-            Float64 tmpIntgProba = -DBL_MAX;
-            Float64 tmpRedshift = Extrema[i]; //by default
-            //TODO: below commented code should replace executing code once the new finder is ready; find() arguments shd also be updated
-            TPointList extremumList;
-            TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i]);
-            //call Find on each secondpass range and retrieve the best 10 peaks?
-            /*CExtremum extremum(redshiftsRange, 5, 0.005, false, false);
-            extremum.DeactivateSlidingWindow();
-            extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
-            if(method == 0){
-                candidates.push_back(extremumList[0].X);
-                continue;
-            }
-            for(Int32 j = 0; j < extremumList.size(); j++){
-                CPdfz pdfz;
-                Float64 flux_integral = -1;
-                flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList[j].X, Fullwidth);
-                if(flux_integral>tmpIntgProba){
-                        tmpRedshift = extremumList[j].X;
-                        tmpIntgProba = flux_integral;
-                }
-            }*/
-            Float64 tmpProbaLog = -DBL_MAX;
-            for(Int32 kval=0; kval<ExtremaExtendedRedshifts[i].size(); kval++)
-            {
-                Float64 zInCandidateRange = ExtremaExtendedRedshifts[i][kval];
-                UInt32 solIdx = logzpdf1d->getIndex(zInCandidateRange);
-                if(solIdx<0 || solIdx>=logzpdf1d->valProbaLog.size())
-                {
-                    Log.LogError( "GetBestRedshiftsFromPdf: pdf proba value not found for extremumIndex = %d", i);
-                    return false;
-                }
-
-                Float64 probaLog = logzpdf1d->valProbaLog[solIdx];
-                
-                if(method == 0){
-                    if(probaLog>tmpProbaLog){
-                        tmpRedshift = zInCandidateRange;
-                        tmpProbaLog = probaLog;
-                    }
-                }    
-                if(method == 1){//max integrated proba but only on peaks in this range
-                    CPdfz pdfz;
-                    Float64 flux_integral = -1;
-                    Float64 prev, next;
-                    if(solIdx == 0){
-                        prev = logzpdf1d->valProbaLog[solIdx];
-                    }else{
-                        prev = logzpdf1d->valProbaLog[solIdx-1];
-                    }
-
-                    if(solIdx == logzpdf1d->valProbaLog.size() - 1){
-                        next = logzpdf1d->valProbaLog[solIdx];
-                    }else{
-                        next = logzpdf1d->valProbaLog[solIdx+1];
-                    }
-                    if((probaLog > prev&& probaLog > next) ||
-                        (solIdx == 0 && probaLog>next) ||
-                        (solIdx == logzpdf1d->valProbaLog.size()-1 && probaLog > prev)){
-                        //if current value is a peak
-                        Float64 Fullwidth_zp1 = Fullwidth*(zInCandidateRange + 1);
-                        TFloat64Range zrange(zInCandidateRange-Fullwidth_zp1/2, zInCandidateRange+Fullwidth_zp1/2);
-                        flux_integral = pdfz.getCandidateSumTrapez( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, zInCandidateRange, zrange);
-                        if(flux_integral>tmpIntgProba){
-                            tmpRedshift = zInCandidateRange;
-                            tmpIntgProba = flux_integral;
-                        }
-                    }
-                    else 
-                    {
-                        continue; //it doesnt work to compute here the pdfz
-                    }
-                } 
-            }
-
-            candidates.push_back(tmpRedshift);
-        }
-
-    return true;
-}
-
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
   {

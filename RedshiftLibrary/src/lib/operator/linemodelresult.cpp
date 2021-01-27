@@ -568,7 +568,7 @@ UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
 
 std::shared_ptr<CLineModelExtremaResult> CLineModelResult::GetExtremaResult() const
 {
-    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::shared_ptr<CLineModelExtremaResult>(new CLineModelExtremaResult(ExtremaResult));
+    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::make_shared<CLineModelExtremaResult>(ExtremaResult);
     return extremaresult;
 }
 

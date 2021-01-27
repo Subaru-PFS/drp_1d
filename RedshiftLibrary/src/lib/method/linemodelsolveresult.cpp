@@ -191,10 +191,17 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
 {
     std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
     auto results = store.GetGlobalResult( scope.c_str() );
+    if(results.expired())
+    {
+        Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: linemodel result not accessible");
+        throw runtime_error("linemodel result not accessible");
+    }
+
     auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
     //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
+    // -> No, lineModelResult contains linemodel operator results, thus no pdf related stuff (DV)
     
-    scope = store.GetScope( *this ) + "candidatesresult";
+    scope = store.GetScope( *this ) + "linemodelsolve.candidatesresult";
     auto res = store.GetGlobalResult( scope.c_str() );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
     TFloat64List ExtremaPDF = candResults->ValSumProba;
@@ -207,9 +214,6 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
        Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: Can't access best redshift ");
        throw runtime_error("Can't access best redshift");
     }
-    if(results.expired())
-        return false;
-    //is not possible, we are reading values from datastore that we update in pdfzcandidatesresult!!!
     redshift = Extrema[bestIdx];
     probaLog = ExtremaPDF[bestIdx];
     sigma = ExtremaDeltaz[bestIdx];

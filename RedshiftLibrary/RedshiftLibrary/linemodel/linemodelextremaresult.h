@@ -101,11 +101,10 @@ public:
     TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
     TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
 
-
   mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
   mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
 
-  mutable TInt32List Rank_PDF;
+    TInt32List Rank_PDF;
 };
 
 

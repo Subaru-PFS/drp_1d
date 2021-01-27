@@ -15,7 +15,6 @@ class CPdfCandidateszResult : public COperatorResult
 public:
 
     CPdfCandidateszResult();
-    virtual ~CPdfCandidateszResult();
 
     void Save(std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;
@@ -29,10 +28,6 @@ public:
 
     TInt32List SetIntegrationWindows(const TRedshiftList &Pdfz, TFloat64RangeList & ranges);
 
-    Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
-                                TFloat64List Extrema,  
-                                std::vector<TFloat64List> ExtremaExtendedRedshifts, 
-                                TFloat64List& candidates) const;
   Float64 getDouble(std::string name,Int32 rank) const;
   std::string getString(std::string name,Int32 rank) const;
   Int32 getInt(std::string name,Int32 rank) const;
@@ -68,7 +63,7 @@ public:
 
 private:
 
-    void SortByValSumProbaInt(TInt32List& flist);
+    void SortByValSumProbaInt(); 
 };
 
 }

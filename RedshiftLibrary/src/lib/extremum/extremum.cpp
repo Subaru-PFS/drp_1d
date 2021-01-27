@@ -58,14 +58,6 @@ CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 
 }
 
 /**
- * Empty destructor.
- */
-CExtremum::~CExtremum()
-{
-
-}
-
-/**
  *  Sets m_XRange to r.
  */
 void CExtremum::SetXRange( const TFloat64Range& r )
@@ -105,7 +97,7 @@ void CExtremum::SortIndexes(TFloat64List&  maxY) const
     m_sortedIndexes.resize(maxY.size());
     iota(m_sortedIndexes.begin(), m_sortedIndexes.end(), 0);
     sort(m_sortedIndexes.begin(), m_sortedIndexes.end(),
-       [&maxY](Float64 i1, Float64 i2) {return maxY[i1] > maxY[i2];});
+       [&maxY](Int32 i1, Int32 i2) {return maxY[i1] > maxY[i2];});
 }
 
 /**
