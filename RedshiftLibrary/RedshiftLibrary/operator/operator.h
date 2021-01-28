@@ -47,7 +47,7 @@ public:
                                                        std::string opt_interp,
                                                        Int32 opt_extinction,
                                                        Int32 opt_dustFitting,
-                                                       CPriorHelper::TPriorZEList logprior,
+                                                       CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
                                                        Bool keepigmism = false,
                                                        Float64 FitDustCoeff=-1,
                                                        Float64 FitMeiksinIdx=-1) = 0;
@@ -55,7 +55,6 @@ public:
 protected:
 
 };
-
 
 }
 

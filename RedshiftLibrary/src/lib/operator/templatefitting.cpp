@@ -277,9 +277,9 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             {
                 coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
                 //check that we got the same coeff:
-                if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
-                    Log.LogInfo("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
-                }
+                /*if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
+                    Log.LogDebug("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
+                }*/
                 m_templateRebined_bf.ApplyDustCoeff(kDust);
             }
             //*/

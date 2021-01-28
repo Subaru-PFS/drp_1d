@@ -76,9 +76,9 @@ public:
                                 const TStringList &tplCategoryList,
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
-                                const Float64 redshiftStep=0.00015,
-                                const string zsampling="log",
-                                bool ignoreLinesSupport=false);
+                                const TFloat64List& redshifts,
+                                bool ignoreLinesSupport=false,
+                                Int32 candidateIdx = -1);
 
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
                            const CTemplateCatalog &tplCatalog,
@@ -221,7 +221,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
-    std::string m_opt_tplfit_method = "chisquarelog";
+    std::string m_opt_tplfit_method = "chisquarelog"; //only for firstpass
+    std::string m_opt_tplfit_method_secondpass = "templateFitting"; //"chisquareloglambda"//only for secondpass
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
@@ -257,7 +258,7 @@ public:
     Float64 m_opt_lya_fit_delta_step;
 
     std::string m_opt_enableImproveBalmerFit;
-
+    Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
     TPointList m_firstpass_extremumList;
     std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
@@ -269,8 +270,7 @@ private:
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
-
-
+    std::shared_ptr<CTemplateCatalog> m_orthoTplCatalog;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
     Float64 m_extremaCount;
@@ -297,6 +297,10 @@ private:
     std::vector<std::shared_ptr<CModelFittingResult>> mlmfit_savedModelFittingResults_lmfit;
     std::vector<std::shared_ptr<CModelRulesResult>> mlmfit_savedModelRulesResults_lmfit;
     std::vector<std::shared_ptr<CSpectraFluxResult>> mlmfit_savedBaselineResult_lmfit;
+
+    std::shared_ptr<CPriorHelper> m_phelperContinuum;
+    std::shared_ptr<CTemplatesFitStore> m_tplfitStore_firstpass; 
+    std::vector<std::shared_ptr<CTemplatesFitStore>> m_tplfitStore_secondpass;
 
 };
 
