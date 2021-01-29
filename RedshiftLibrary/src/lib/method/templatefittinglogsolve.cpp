@@ -19,14 +19,9 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodTemplateFittingLogSolve::CMethodTemplateFittingLogSolve( std::string calibrationPath )
+CMethodTemplateFittingLogSolve::CMethodTemplateFittingLogSolve( std::string calibrationPath ):
+    m_templateFittingOperator( calibrationPath )
 {
-    m_templateFittingOperator = new COperatorTemplateFittingLog( calibrationPath );
-}
-
-CMethodTemplateFittingLogSolve::~CMethodTemplateFittingLogSolve()
-{
-    delete m_templateFittingOperator;
 }
 
 const std::string CMethodTemplateFittingLogSolve::GetDescription()
@@ -104,9 +99,9 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
 
     if(m_opt_spclogrebin=="yes")
     {
-        m_templateFittingOperator->enableSpcLogRebin(true);
+        m_templateFittingOperator.enableSpcLogRebin(true);
     }else{
-        m_templateFittingOperator->enableSpcLogRebin(false);
+        m_templateFittingOperator.enableSpcLogRebin(false);
     }
 
     Log.LogInfo( "Iterating over %d tplCategories", tplCategoryList.size());
@@ -209,7 +204,7 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
 
         // Compute merit function
         //CRef<CTemplateFittingResult>  chisquareResult = (CTemplateFittingResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  chisquareResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator->Compute( spc,
+        auto  chisquareResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( spc,
                                                                                                                        tpl,
                                                                                                                        lambdaRange,
                                                                                                                        redshifts,

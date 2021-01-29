@@ -26,7 +26,7 @@ class CMethodTemplateFittingLogSolve
 
 
     CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
-    ~CMethodTemplateFittingLogSolve();
+    ~CMethodTemplateFittingLogSolve() = default;
 
     const std::string GetDescription();
 
@@ -69,7 +69,7 @@ private:
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
     std::string m_opt_spclogrebin;
 
-    COperatorTemplateFittingLog* m_templateFittingOperator;
+    COperatorTemplateFittingLog m_templateFittingOperator;
     Float64 m_radius;
 
 };
