@@ -20,41 +20,27 @@ using namespace std;
  * Constructs CExtremum with default values, and SetSignSearch ( -1.0 ) if argument is true, SetSignSearch ( 1.0 ) otherwise.
  */
 CExtremum::CExtremum( Bool invertForMinSearch ) :
-    m_MaxPeakCount( 10 ),
-    m_XRange( 0.0, 0.0 ),
-    m_SignSearch( 1.0 ),
-    m_extrema_separation(0.005),
-    m_meritCut(-2)
+  CExtremum( TFloat64Range( 0.0, 0.0), 10, 0.005, invertForMinSearch, true, -2 )
 {
-    if( invertForMinSearch )
-      {
-        SetSignSearch( -1.0 );
-      }
-    else
-      {
-        SetSignSearch( 1.0 );
-      }
 }
 
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, UInt32 maxPeakCount, Float64 peakSeparation, Bool invertForMinSearch, Bool usePeakSeparation ) :
+CExtremum::CExtremum( const TFloat64Range& xRange, 
+                      UInt32 maxPeakCount,
+                      Float64 peakSeparation, 
+                      Bool invertForMinSearch, 
+                      Bool usePeakSeparation,
+                      Float64 meritcut 
+                      ) :
     m_MaxPeakCount( maxPeakCount ),
     m_XRange( xRange ),
-    m_SignSearch( 1.0 ),
+    m_SignSearch(invertForMinSearch ? -1.0 : 1.0 ),
     m_extrema_separation(peakSeparation),
-    m_meritCut(-2),
+    m_meritCut(meritcut),
     m_PeakSeparationActive(usePeakSeparation)
 {
-    if( invertForMinSearch )
-      {
-        SetSignSearch( -1.0 );
-      }
-    else
-      {
-        SetSignSearch( 1.0 );
-      }
 }
 
 /**
@@ -85,7 +71,7 @@ void CExtremum::SetMeritCut( Float64 n )
  * Sets m_SignSearch to val.
  */
 void CExtremum::SetSignSearch( Float64 val )
-{
+{   
     m_SignSearch = val;
 }
 
@@ -193,12 +179,15 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     //refine: eliminate very close candidates when possible. 
     Bool b;
     if(m_PeakSeparationActive)
+    {
       b = FilterOutNeighboringPeaksAndTruncate(maxX, maxY, keepMinN, maxPoint);
-    else{
+      
+      //verify that peaks are well separated by at least secondpassradius
+      Bool verified = verifyPeakSeparation(maxPoint);
+
+    }else{
       Truncate(maxX, maxY, maxPoint);
     }
-    //verify that peaks are well separated by at least secondpassradius
-    Bool verified = verifyPeakSeparation(maxPoint);
     return true;
 }
 
@@ -228,6 +217,7 @@ Bool CExtremum::verifyPeakSeparation( TPointList& maxPoint) const{
     maxX[i] = maxPoint[i].X;
   return verifyPeakSeparation(maxX);
 }
+
 /**
  * prominence: vertical distance between a summit and the key col, i.e., the closest (horizontal) minima
  * joint prominence_merit cut
