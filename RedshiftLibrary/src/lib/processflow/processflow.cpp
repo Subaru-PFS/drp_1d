@@ -11,7 +11,7 @@
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
-#include <RedshiftLibrary/method/zweimodelsolve.h>
+//#include <RedshiftLibrary/method/zweimodelsolve.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
 #include <RedshiftLibrary/processflow/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
@@ -471,7 +471,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  redshifts,
                                  galaxy_method_pdf_reldir,
                                  radius);
-
+    /*
     }else if(methodName  == "zweimodelsolve" ){
 
         CZweiModelSolve Solve(calibrationDirPath);
@@ -482,7 +482,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts );
-
+    */
     }else if(methodName  == "templatefittingsolve" ){
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);

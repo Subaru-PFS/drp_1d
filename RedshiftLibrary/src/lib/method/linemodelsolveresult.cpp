@@ -8,7 +8,7 @@
 #include <math.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 
 using namespace NSEpic;
 

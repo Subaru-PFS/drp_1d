@@ -18,7 +18,7 @@
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
 
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>

@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
-
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
@@ -40,6 +40,10 @@ public:
                                                    const TFloat64List& redshifts,
                                                    const string outputPdfRelDir,
                                                    const Float64 radius);
+                                 
+    Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
+
+private:
 
     Bool Solve(CDataStore& resultStore,
                const CSpectrum& spc,
@@ -48,10 +52,14 @@ public:
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
-                                 
-    Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
 
-private:
+    ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
+                                        std::string opt_rigidity,
+                                        std::string opt_combine,
+                                        Float64 opt_stronglinesprior,
+                                        Float64 opt_hapriorstrength,
+                                        Float64 opt_euclidNHaEmittersPriorStrength,
+                                        Float64 opt_modelPriorZStrength) const;
 
     Int32 CombinePDF(std::shared_ptr<const CLineModelResult> result,
                      std::string opt_rigidity,

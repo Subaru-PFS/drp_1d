@@ -20,12 +20,12 @@ class COperatorResult
 
 public:
 
-    COperatorResult();
-    virtual ~COperatorResult();
+    COperatorResult() = default;
+    virtual ~COperatorResult() = default;
 
     virtual void Save(std::ostream& stream) const = 0;
     virtual void SaveLine(std::ostream& stream ) const = 0;
-  virtual void SaveJSON(std::shared_ptr<const COperatorResult> res, std::ostream& stream) const;
+    virtual void SaveJSON(std::shared_ptr<const COperatorResult> res, std::ostream& stream) const;
     //virtual void Load( std::istream& stream ) = 0;
 
 

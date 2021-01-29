@@ -10,7 +10,7 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/linemodel/linemodelsolution.h>
 #include <RedshiftLibrary/linemodel/continuummodelsolution.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
 
 namespace NSEpic

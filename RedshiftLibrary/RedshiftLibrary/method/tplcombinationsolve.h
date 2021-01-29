@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/tplcombination.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
 namespace NSEpic
@@ -60,15 +61,10 @@ private:
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
-
-    Int32 CombinePDF(CDataStore& store,
-                     std::string scopeStr,
-                     std::string opt_combine,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
-
+    
+    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
 
     COperatorTplcombination m_tplcombinationOperator;
-
 
     std::string m_opt_pdfcombination;
     std::string m_opt_saveintermediateresults;

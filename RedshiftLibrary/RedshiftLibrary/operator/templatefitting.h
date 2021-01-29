@@ -20,9 +20,8 @@ class COperatorTemplateFitting : public COperatorTemplateFittingBase
 {
 
 public:
-
-    explicit COperatorTemplateFitting();
-    ~COperatorTemplateFitting();
+    explicit COperatorTemplateFitting() = default;
+    ~COperatorTemplateFitting() = default;
 
      std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
                                               const CTemplate& tpl,
@@ -41,7 +40,6 @@ public:
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
-
     Int32           ComputeSpectrumModel(const CSpectrum& spectrum,
                         	      const CTemplate& tpl,
                                       Float64 redshift,
@@ -95,13 +93,14 @@ private:
                           Float64 overlapThreshold);// const;
 
     Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
+
+    //Likelihood
+    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+
     // buffers for the interpolated axis (template & spectrum)
     CTemplate       m_templateRebined_bf; //buffer
     CMask           m_mskRebined_bf; //buffer
     CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
-
-    //Likelihood
-    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 
 };
 

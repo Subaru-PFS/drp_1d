@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/log/log.h>
 
@@ -144,7 +144,7 @@ Int32 CPdfCandidateszResult::Compute(TRedshiftList const & zc , TRedshiftList co
 
     TFloat64RangeList ranges;
     TInt32List duplicates = SetIntegrationWindows( Pdfz, ranges);
-    CPdfz pdfz;
+    COperatorPdfz pdfz;
     for(Int32 kc=0; kc<zc.size(); kc++)
     {
         if(optMethod==0)
@@ -246,6 +246,7 @@ void CPdfCandidateszResult::SortByValSumProbaInt()
     sort(Rank.begin(), Rank.end(), 
         [&v](Int32 i1, Int32 i2){return v[i1] > v[i2];});
 }
+
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
   {

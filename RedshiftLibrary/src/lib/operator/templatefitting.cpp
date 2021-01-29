@@ -33,16 +33,6 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-COperatorTemplateFitting::COperatorTemplateFitting()
-{
-}
-
-COperatorTemplateFitting::~COperatorTemplateFitting()
-{
-
-}
-
-
 void COperatorTemplateFitting::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl)
 {
     // Pre-Allocate the rebined template and mask with regard to the spectrum size

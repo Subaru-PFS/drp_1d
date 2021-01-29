@@ -7,7 +7,7 @@
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
@@ -126,29 +126,16 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
 
     if( storeResult )
     {
-        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "tplcombinationsolve") );
+        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, "tplcombinationsolve");
 
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
+        COperatorPdfz pdfz;
 
-        if(retCombinePdf==0)
         {
-            //check pdf sum=1
-            CPdfz pdfz;
-            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Log.LogDetail("    tplcombinationsolve: Pdfz normalization - sum rect. = %e", sumRect);
-            Log.LogDetail("    tplcombinationsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
-            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-            if(!pdfSumCheck){
-                Log.LogError("    tplcombinationsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
-            }
+            ChisquareArray chisquares = BuildChisquareArray(resultStore, scopeStr);
+            pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
 
-
-            {
-                std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-                resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-            }
+            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+            resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
 
         return solveResult;
@@ -267,9 +254,11 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     return true;
 }
 
-Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const
 {
-    Log.LogInfo("tplcombinationsolve: Pdfz computation");
+    ChisquareArray chisquarearray;
+
+    Log.LogDetail("tplcombinationsolve: build chisquare array");
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
@@ -282,13 +271,9 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
     }
     std::shared_ptr<const CTemplateFittingResult> result = std::dynamic_pointer_cast<const CTemplateFittingResult>( results.lock() );
 
-    CPdfz pdfz;
-    Float64 cstLog = -1;
+    chisquarearray.cstLog = -1;
 
     Int32 retPdfz=-1;
-    std::vector<TFloat64List> priors;
-    std::vector<TFloat64List> chiSquares;
-    std::vector<Float64> redshifts;
     {
         Int32 nISM = -1;
         Int32 nIGM = -1;
@@ -300,20 +285,21 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
                 nIGM = result->ChiSquareIntermediate[0][0].size();
             }
         }
-        if(cstLog==-1)
+        if(chisquarearray.cstLog==-1)
         {
-            cstLog = result->CstLog;
-            Log.LogInfo("tplcombinationsolve: using cstLog = %f", cstLog);
-        }else if ( cstLog != result->CstLog)
+            chisquarearray.cstLog = result->CstLog;
+            Log.LogInfo("tplcombinationsolve: using cstLog = %f", chisquarearray.cstLog);
+        }else if ( chisquarearray.cstLog != result->CstLog)
         {
-            Log.LogError("tplcombinationsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, result->CstLog);
+            Log.LogError("tplcombinationsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, result->CstLog);
+            throw runtime_error("tplcombinationsolve: Found different cstLog values in results");
         }
-        if(redshifts.size()==0)
+        if(chisquarearray.redshifts.size()==0)
         {
-            redshifts = result->Redshifts;
+            chisquarearray.redshifts = result->Redshifts;
         }
 
-        //check chi2 results status
+        //check chi2 results status for this template
         {
             Bool foundBadStatus = 0;
             for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
@@ -327,6 +313,7 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
             if(foundBadStatus)
             {
                 Log.LogError("tplcombinationsolve: Found bad status result...");
+                throw runtime_error("tplcombinationsolve: Found bad status result");
             }
         }
 
@@ -335,44 +322,21 @@ Int32 CMethodTplcombinationSolve::CombinePDF(CDataStore& store, std::string scop
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                priors.push_back(zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
+                chisquarearray.zpriors.push_back(zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                chiSquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
+                chisquarearray.chisquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
+                TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
                 for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
-                    chiSquares.back()[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                    logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit #%d for ism=%d, igm=%d", chiSquares.size()-1, kism, kigm);
+                Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit #%d for ism=%d, igm=%d", chisquarearray.chisquares.size()-1, kism, kigm);
             }
         }
     }
 
-    if(chiSquares.size()>0)
-    {
-        if(opt_combine=="marg")
-        {
-            Log.LogInfo("    tplcombinationsolve: Pdfz combination - Marginalization");
-            retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
-        }else if(opt_combine=="bestchi2")
-        {
-            Log.LogInfo("    tplcombinationsolve: Pdfz combination - BestChi2");
-            retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
-        }else{
-            Log.LogError("    tplcombinationsolve: Unable to parse pdf combination method option");
-        }
-    }else
-    {
-        Log.LogError("    tplcombinationsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
-    }
-
-
-    if(retPdfz!=0)
-    {
-        Log.LogError("    tplcombinationsolve: Pdfz computation failed");
-    }
-
-    return retPdfz;
+    return chisquarearray;
 }
 
 Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)

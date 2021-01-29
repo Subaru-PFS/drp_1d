@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/templatefitting.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
@@ -25,9 +26,8 @@ class CMethodTemplateFittingSolve
 
  public:
 
-
-    CMethodTemplateFittingSolve();
-    ~CMethodTemplateFittingSolve();
+    CMethodTemplateFittingSolve() = default;
+    ~CMethodTemplateFittingSolve() = default;
 
     const std::string GetDescription();
 
@@ -63,12 +63,7 @@ private:
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
-    Int32 CombinePDF(CDataStore& store,
-                     std::string scopeStr,
-                     std::string opt_combine,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult);
-
-
+    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
 
     COperatorTemplateFitting m_templateFittingOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;

@@ -22,7 +22,7 @@ class COperatorTemplateFittingLog : public COperatorTemplateFittingBase
 {
 
 public:
-
+    COperatorTemplateFittingLog() = delete;
     COperatorTemplateFittingLog(std::string calibrationPath);
     ~COperatorTemplateFittingLog();
 

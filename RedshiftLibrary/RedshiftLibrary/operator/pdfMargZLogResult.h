@@ -14,10 +14,10 @@ class CPdfMargZLogResult : public COperatorResult
 {
 
   public:
-
-    CPdfMargZLogResult();
-    virtual ~CPdfMargZLogResult();
-
+    CPdfMargZLogResult() = default;
+    ~CPdfMargZLogResult() = default;
+    CPdfMargZLogResult(const TFloat64List & redshifts);
+    
     void Save(std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;
    

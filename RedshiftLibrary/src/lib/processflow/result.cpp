@@ -2,16 +2,6 @@
 
 using namespace NSEpic;
 
-COperatorResult::COperatorResult()
-{
-
-}
-
-COperatorResult::~COperatorResult()
-{
-
-}
-
 void COperatorResult::SaveJSON(std::shared_ptr<const COperatorResult> res, std::ostream& stream) const
 {
   // does nothing, -> no need to cast COperatorResult to LineModelResult in COperatorResultStore::SaveAllResults

@@ -894,7 +894,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
  */
 Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
                                             const Int32 opt_sign,
-                                            const std::vector<Float64> floatValues,
+                                            const std::vector<Float64> & floatValues,
                                             const Float64 meritCut)
 {
     Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d", opt_extremacount);

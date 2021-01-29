@@ -106,7 +106,7 @@ public:
 
     Int32 ComputeCandidates(const Int32 opt_extremacount,
                             const Int32 opt_sign,
-                            const std::vector<Float64> floatValues,
+                            const std::vector<Float64> & floatValues,
                             const Float64 meritCut);
     Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
 

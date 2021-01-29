@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
@@ -128,36 +128,23 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
 
     if( storeResult )
     {
-        std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = std::shared_ptr< CTemplateFittingSolveResult>( new CTemplateFittingSolveResult(_type, "templatefittinglogsolve") );
+        std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = std::make_shared<CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
 
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retCombinePdf = CombinePDF(resultStore, scopeStr, m_opt_pdfcombination, postmargZResult);
+        COperatorPdfz pdfz;
 
-        if(retCombinePdf==0)
         {
-            //check pdf sum=1
-            CPdfz pdfz;
-            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Log.LogDetail("    templatefittinglogsolve: Pdfz normalization - sum rect. = %e", sumRect);
-            Log.LogDetail("    templatefittinglogsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
-            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-            if(!pdfSumCheck){
-                Log.LogError("    templatefittinglogsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
-            }
+            ChisquareArray chisquares = BuildChisquareArray(resultStore, scopeStr);
+            Int32 retCombinePdf = pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
 
-
-            {
-                std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-                resultStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-            }
+            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+            resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
 
         return TemplateFittingSolveResult;
     }
 
     return NULL;
-}
+}                                    
 
 Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
                                      const CSpectrum& spc,
@@ -276,9 +263,11 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
     return true;
 }
 
-Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string scopeStr, std::string opt_combine, std::shared_ptr<CPdfMargZLogResult> postmargZResult)
+ChisquareArray CMethodTemplateFittingLogSolve::BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const
 {
-    Log.LogInfo("templatefittinglogsolve: Pdfz computation");
+    ChisquareArray chisquarearray;
+
+    Log.LogDetail("templatefittinglogsolve: build chisquare array");
     std::string scope = store.GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
@@ -286,13 +275,10 @@ Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string 
 
     TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
 
-    CPdfz pdfz;
-    Float64 cstLog = -1;
+    chisquarearray.cstLog = -1;
 
     Int32 retPdfz=-1;
-    std::vector<TFloat64List> priors;
-    std::vector<TFloat64List> chiSquares;
-    std::vector<Float64> redshifts;
+
     for( TOperatorResultMap::const_iterator it = meritResults.begin(); it != meritResults.end(); it++ )
     {
         auto meritResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( (*it).second );
@@ -306,17 +292,18 @@ Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string 
                 nIGM = meritResult->ChiSquareIntermediate[0][0].size();
             }
         }
-        if(cstLog==-1)
+        if(chisquarearray.cstLog==-1)
         {
-            cstLog = meritResult->CstLog;
-            Log.LogInfo("templatefittinglogsolve: using cstLog = %f", cstLog);
-        }else if ( cstLog != meritResult->CstLog)
+            chisquarearray.cstLog = meritResult->CstLog;
+            Log.LogInfo("templatefittinglogsolve: using cstLog = %f", chisquarearray.cstLog);
+        }else if ( chisquarearray.cstLog != meritResult->CstLog)
         {
-            Log.LogError("templatefittinglogsolve: Found different cstLog values in results... val-1=%f != val-2=%f", cstLog, meritResult->CstLog);
+            Log.LogError("templatefittinglogsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, meritResult->CstLog);
+            throw runtime_error("templatefittinglogsolve: Found different cstLog values in results");
         }
-        if(redshifts.size()==0)
+        if(chisquarearray.redshifts.size()==0)
         {
-            redshifts = meritResult->Redshifts;
+            chisquarearray.redshifts = meritResult->Redshifts;
         }
 
         //check chi2 results status for this template
@@ -333,6 +320,7 @@ Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string 
             if(foundBadStatus)
             {
                 Log.LogError("templatefittinglogsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
+                throw runtime_error("templatefittinglogsolve: Found bad status result");
             }
         }
 
@@ -341,45 +329,21 @@ Int32 CMethodTemplateFittingLogSolve::CombinePDF(CDataStore& store, std::string 
         {
             for(Int32 kigm=0; kigm<nIGM; kigm++)
             {
-                priors.push_back(zpriorhelper.GetConstantLogZPrior(meritResult->Redshifts.size()));
+                chisquarearray.zpriors.push_back(zpriorhelper.GetConstantLogZPrior(meritResult->Redshifts.size()));
 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
-                chiSquares.emplace_back(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
-                TFloat64List & logLikelihoodCorrected = chiSquares.back();
+                chisquarearray.chisquares.emplace_back(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
+                TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
                 for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
-                Log.LogDetail("    templatefittinglogsolve: Pdfz combine - prepared merit  #%d for model : %s, ism=%d, igm=%d", chiSquares.size()-1, ((*it).first).c_str(), kism, kigm);
+                Log.LogDetail("    templatefittinglogsolve: Pdfz combine - prepared merit  #%d for model : %s", chisquarearray.chisquares.size()-1, ((*it).first).c_str());
             }
         }
     }
 
-    if(chiSquares.size()>0)
-    {
-        if(opt_combine=="marg")
-        {
-            Log.LogInfo("    templatefittinglogsolve: Pdfz combination - Marginalization");
-            retPdfz = pdfz.Marginalize( redshifts, chiSquares, priors, cstLog, postmargZResult);
-        }else if(opt_combine=="bestchi2")
-        {
-            Log.LogInfo("    templatefittinglogsolve: Pdfz combination - BestChi2");
-            retPdfz = pdfz.BestChi2( redshifts, chiSquares, priors, cstLog, postmargZResult);
-        }else{
-            Log.LogError("    templatefittinglogsolve: Unable to parse pdf combination method option");
-        }
-    }else
-    {
-        Log.LogError("    templatefittinglogsolve: Unable to find any chisquares prepared for combination. chiSquares.size()=%d", chiSquares.size());
-    }
-
-
-    if(retPdfz!=0)
-    {
-        Log.LogError("    templatefittinglogsolve: Pdfz computation failed");
-    }
-
-    return retPdfz;
+    return chisquarearray;
 }
 
 Bool CMethodTemplateFittingLogSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)

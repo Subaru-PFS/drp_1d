@@ -7,7 +7,7 @@
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
@@ -31,7 +31,6 @@ using namespace boost;
 CLineModelSolve::CLineModelSolve(string calibrationPath):
     m_calibrationPath(calibrationPath)
 {
-    
 }
 
 /**
@@ -376,43 +375,30 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         }
         std::shared_ptr<const CLineModelResult> result = std::dynamic_pointer_cast<const CLineModelResult>( results.lock());
 
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::make_shared<CPdfMargZLogResult>();
-        std::shared_ptr<CPdfLogResult> zpriorResult = std::make_shared<CPdfLogResult>();
-        Int32 retCombinePdf = CombinePDF(result,
-                                         m_opt_rigidity,
-                                         m_opt_pdfcombination,
-                                         m_opt_stronglinesprior,
-                                         m_opt_haPrior,
-                                         m_opt_euclidNHaEmittersPriorStrength,
-                                         m_opt_modelZPriorStrength,
-                                         postmargZResult,
-                                         zpriorResult);
+        //std::shared_ptr<CPdfLogResult> zpriorResult = std::make_shared<CPdfLogResult>();
+        
+        ChisquareArray chisquares = BuildChisquareArray(result,
+                                                        m_opt_rigidity,
+                                                        m_opt_pdfcombination,
+                                                        m_opt_stronglinesprior,
+                                                        m_opt_haPrior,
+                                                        m_opt_euclidNHaEmittersPriorStrength,
+                                                        m_opt_modelZPriorStrength);
 
-        if(retCombinePdf!=0)
-        {
-            Log.LogError("Linemodel: Pdfz computation failed");
-            throw runtime_error("Linemodel: Pdfz computation failed");
-        }else{
+        COperatorPdfz pdfz;
 
-            Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
-            std::string priorPath = outputPdfRelDir+"/logprior.logP_Z_data";
-            dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
+        pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
 
-            //check pdf sum=1
-            CPdfz pdfz;
-            Float64 sumRect = pdfz.getSumRect(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Float64 sumTrapez = pdfz.getSumTrapez(postmargZResult->Redshifts, postmargZResult->valProbaLog);
-            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum rect. = %e", sumRect);
-            Log.LogDetail("    linemodelsolve: Pdfz normalization - sum trapz. = %e", sumTrapez);
-            Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-            if(!pdfSumCheck){
-                Log.LogWarning("    linemodelsolve: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
-            }
+        Log.LogDetail("%s: Storing PDF results", __func__);
+        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+        dataStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
 
-            Log.LogDetail("    linemodelsolve: Storing PDF results");
-            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-            dataStore.StoreGlobalResult( pdfPath.c_str(), postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-        }
+        /*
+        Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
+        std::string priorPath = outputPdfRelDir+"/logprior.logP_Z_data";
+        dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
+        */
+        
         {
             TFloat64List zcandidates_unordered_list;
             //std::shared_ptr<CPdfCandidateszResult> pdfcandResult_obj = std::make_shared<CPdfCandidateszResult>();
@@ -514,38 +500,45 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     return lmsolveresult;
 }
 
-Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result,
-                                  std::string opt_rigidity,
-                                  std::string opt_combine,
-                                  Float64 opt_stronglinesprior,
-                                  Float64 opt_hapriorstrength,
-                                  Float64 opt_euclidNHaEmittersPriorStrength,
-                                  Float64 opt_modelPriorZStrength,
-                                  std::shared_ptr<CPdfMargZLogResult> postmargZResult,
-                                  std::shared_ptr<CPdfLogResult> zPrior)
+ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
+                                                    std::string opt_rigidity,
+                                                    std::string opt_combine,
+                                                    Float64 opt_stronglinesprior,
+                                                    Float64 opt_hapriorstrength,
+                                                    Float64 opt_euclidNHaEmittersPriorStrength,
+                                                    Float64 opt_modelPriorZStrength) const
 {
+    Log.LogDetail("LinemodelSolve: building chisquare array");
+
+    ChisquareArray chisquarearray;
+    
+    chisquarearray.cstLog = result->cstLog;
+    Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
+        
+    chisquarearray.redshifts = result->Redshifts; 
+
     bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
     if(zPriorStrongLinePresence)
     {
-        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior enabled: factor=%e", opt_stronglinesprior);
+        Log.LogDetail("%s: StrongLinePresence prior enabled: factor=%e", __func__, opt_stronglinesprior);
     }else{
-        Log.LogDetail("Linemodel: Pdfz computation: StrongLinePresence prior disabled");
+        Log.LogDetail("%s: StrongLinePresence prior disabled", __func__);
     }
     bool zPriorHaStrongestLine = (opt_hapriorstrength>0.0);
     if(zPriorHaStrongestLine)
     {
-        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior enabled: factor=%e", opt_hapriorstrength);
+        Log.LogDetail("%s: Ha strongest line prior enabled: factor=%e", __func__, opt_hapriorstrength);
     }else{
-        Log.LogDetail("Linemodel: Pdfz computation: Ha strongest line prior disabled");
+        Log.LogDetail("%s: Ha strongest line prior disabled", __func__);
     }
 
     Float64 opt_nlines_snr_penalization_factor = -1;
     bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
     if(zPriorNLineSNR)
     {
-        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior enabled: factor=%e", opt_nlines_snr_penalization_factor);
+        Log.LogDetail("%s: N lines snr>cut prior enabled: factor=%e", __func__, opt_nlines_snr_penalization_factor);
     }else{
-        Log.LogDetail("Linemodel: Pdfz computation: N lines snr>cut prior disabled");
+        Log.LogDetail("%s: N lines snr>cut prior disabled", __func__);
     }
 
     //hardcoded Euclid-NHaZprior parameter
@@ -553,73 +546,56 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
     if(opt_euclidNHaEmittersPriorStrength>0.0)
     {
         zPriorEuclidNHa = true;
-        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior enabled, with strength-coeff: %e", opt_euclidNHaEmittersPriorStrength);
+        Log.LogDetail("%s: EuclidNHa prior enabled, with strength-coeff: %e", __func__, opt_euclidNHaEmittersPriorStrength);
     }else{
-        Log.LogDetail("Linemodel: Pdfz computation: EuclidNHa prior disabled");
+        Log.LogDetail("%s: EuclidNHa prior disabled", __func__);
     }
 
     bool zPriorLines = true;
-    Log.LogDetail("Linemodel: Pdfz computation: PriorLinesTplshapes.size()=%d", result->PriorLinesTplshapes.size());
+    Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__, result->PriorLinesTplshapes.size());
     if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
     {
         zPriorLines = false;
     }
     if(zPriorLines)
     {
-        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior enabled");
+        Log.LogDetail("%s: Lines Prior enabled", __func__);
     }else{
-        Log.LogDetail("Linemodel: Pdfz computation: Lines Prior disabled");
+        Log.LogDetail("%s: Lines Prior disabled", __func__);
     }
 
-
-    Log.LogInfo("Linemodel: Pdfz computation");
-    CPdfz pdfz;
     CZPrior zpriorhelper;
-    Float64 cstLog = result->cstLog;
-    TFloat64List logProba;
-    Float64 logEvidence;
 
-    Int32 retPdfz=-1;
     if(opt_rigidity!="tplshape" || opt_combine=="bestchi2")
     {
-        if(opt_rigidity!="tplshape")
-        {
-            Log.LogInfo("Linemodel: Pdfz computation - simple (no combination)");
-        }
-        if(opt_combine=="bestchi2")
-        {
-            Log.LogInfo("Linemodel: Pdfz computation - simple (method=bestchi2)");
-        }
-        zPrior->SetSize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-        {
-            zPrior->Redshifts[k] = result->Redshifts[k];
-        }
+        chisquarearray.zpriors.emplace_back();
+        TFloat64List & zpriors = chisquarearray.zpriors.back();
+
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
             TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
 
-            zPrior->valProbaLog = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+            zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
-            zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
+            zpriors = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
         }
         if(zPriorHaStrongestLine)
         {
             TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
             std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorHaStrongest);
+            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
         }
         if(zPriorEuclidNHa)
         {
             std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNHa);
+            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
         }
         if(zPriorNLineSNR)
         {
             std::vector<Int32> n_lines_above_snr = result->GetNLinesAboveSnrcut(result->LineModelSolutions);
             std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-            zPrior->valProbaLog = zpriorhelper.CombineLogZPrior(zPrior->valProbaLog, zlogPriorNLinesAboveSNR);
+            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
         }
 
         //correct chi2 if necessary
@@ -635,66 +611,54 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                 logLikelihoodCorrected[k] += result->ScaleMargCorrection[k];
             }
         }
-        retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
-        if(retPdfz==0){
-            postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
-            postmargZResult->Redshifts.resize(result->Redshifts.size());
-            postmargZResult->valProbaLog.resize(result->Redshifts.size());
-            for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-            {
-                postmargZResult->Redshifts[k] = result->Redshifts[k] ;
-                postmargZResult->valProbaLog[k] = logProba[k];
-            }
-            postmargZResult->valEvidenceLog = logEvidence;
-        }
-    }
-    else if(opt_combine=="bestproba" || opt_combine=="marg"){
+        
+        chisquarearray.chisquares.push_back(std::move(logLikelihoodCorrected));
 
-        Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
-        std::vector<TFloat64List> zpriorsTplshapes;
+    }else if(opt_combine=="bestproba" || opt_combine=="marg"){
+
+        //Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-
-            TFloat64List _prior;
+            chisquarearray.zpriors.emplace_back();
+            TFloat64List & zpriors = chisquarearray.zpriors.back();
+    
             if(zPriorStrongLinePresence)
             {
                 TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
-                _prior = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
+                zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
             }else
             {
-                _prior = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
+                zpriors = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
             }
 
             if(zPriorHaStrongestLine)
             {
                 TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
                 std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorHaStrongest);
+                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
             }
             if(zPriorEuclidNHa)
             {
                 std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorNHa);
+                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
             }
             if(zPriorNLineSNR)
             {
                 std::vector<Int32> n_lines_above_snr = result->NLinesAboveSNRTplshapes[k];
                 std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-                _prior = zpriorhelper.CombineLogZPrior(_prior, zlogPriorNLinesAboveSNR);
+                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
             }
-            zpriorsTplshapes.push_back(std::move(_prior));
         }
 
         //correct chi2 if necessary
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            ChiSquareTplshapesCorrected.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
-            TFloat64List & logLikelihoodCorrected = ChiSquareTplshapesCorrected.back();
-            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
-            {
-                logLikelihoodCorrected[kz] = result->ChiSquareTplshapes[k][kz];
-            }
+            chisquarearray.chisquares.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
+            
+            logLikelihoodCorrected = result->ChiSquareTplshapes[k];
+
             if(m_opt_pdf_margAmpCorrection=="yes") //nb: this is experimental.
             {
                 //find max scalemargcorr
@@ -707,7 +671,7 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
                         maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
                     }
                 }
-                Log.LogError("Linemodel: maxscalemargcorr= %e", maxscalemargcorr);
+                Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
                 //*/
                 for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
                 {
@@ -726,34 +690,26 @@ Int32 CLineModelSolve::CombinePDF(std::shared_ptr<const CLineModelResult> result
             }
         }
 
-        if(opt_combine=="marg")
-        {
-            retPdfz = pdfz.Marginalize(result->Redshifts,
-                                       ChiSquareTplshapesCorrected,
-                                       zpriorsTplshapes,
-                                       cstLog,
-                                       postmargZResult,
-                                       result->PriorTplshapes);
-        }else{
-            retPdfz = pdfz.BestProba(result->Redshifts,
-                                     ChiSquareTplshapesCorrected,
-                                     zpriorsTplshapes,
-                                     cstLog,
-                                     postmargZResult);
-        }
-        // todo: store priors for each tplshape model ?
+        chisquarearray.modelpriors = result->PriorTplshapes;
+
+
+        // todo : store priors for each tplshape model ?
+        //  ->  in ::compute with ChisquareArray
+
     }else{
         Log.LogError("Linemodel: Unable to parse pdf combination method option");
     }
 
-    return retPdfz;
+    return chisquarearray;
+
 }
 
+/*
 Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result)
 {
     Log.LogInfo("Linemodel: continuum Pdfz computation");
     std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-    CPdfz pdfz;
+    COperatorPdfz pdfz;
     CZPrior zpriorhelper;
     Float64 cstLog = result->cstLog;
     TFloat64List logProba;
@@ -777,7 +733,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
     {
         logLikelihoodCorrected[k] = result->ChiSquareContinuum[k];// + result->ScaleMargCorrectionContinuum[k];
     }
-    retPdfz = pdfz.Compute(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
+    retPdfz = pdfz.ComputePdf(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
     if(retPdfz==0){
         store.StoreGlobalResult( "zPDF/logpriorcontinuum.logP_Z_data", zPrior);
 
@@ -797,6 +753,7 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
 
     return 0;
 }
+*/
 
 /**
  * \brief
@@ -998,6 +955,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     if( retFirstPass!=0 )
     {
         Log.LogError( "Linemodel, first pass failed. Aborting" );
+        throw runtime_error("Linemodel, first pass failed. Aborting");
         return false;
     }
 
@@ -1013,27 +971,21 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         sign = -1;
         fvals = lmresult->ChiSquare;
     }else{
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
-        Int32 retCombinePdf = CombinePDF(lmresult,
-                                         m_opt_rigidity,
-                                         m_opt_pdfcombination,
-                                         m_opt_stronglinesprior,
-                                         m_opt_haPrior,
-                                         m_opt_euclidNHaEmittersPriorStrength,
-                                         m_opt_modelZPriorStrength,
-                                         postmargZResult,
-                                         zpriorResult);
 
-        if(retCombinePdf!=0)
-        {
-            Log.LogError("Linemodel: Candidates search - Pdfz computation failed");
-            return false;
-        }else{
-            sign = 1;
-            fvals = postmargZResult->valProbaLog;
-        }
+        ChisquareArray chisquares = BuildChisquareArray(lmresult,
+                                                        m_opt_rigidity,
+                                                        m_opt_pdfcombination,
+                                                        m_opt_stronglinesprior,
+                                                        m_opt_haPrior,
+                                                        m_opt_euclidNHaEmittersPriorStrength,
+                                                        m_opt_modelZPriorStrength);
+        COperatorPdfz pdfz;
+        pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
+        
+        sign = 1;
+        fvals = std::move(pdfz.m_postmargZResult->valProbaLog);
     }
+
     Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
     if( retCandidates!=0 )
     {
@@ -1117,26 +1069,19 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
             sign = -1;
             fvals = lmresult->ChiSquare;
         }else{
-            std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-            std::shared_ptr<CPdfLogResult> zpriorResult = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
-            Int32 retCombinePdf = CombinePDF(lmresult,
-                                             m_opt_rigidity,
-                                             m_opt_pdfcombination,
-                                             m_opt_stronglinesprior,
-                                             m_opt_haPrior,
-                                             m_opt_euclidNHaEmittersPriorStrength,
-                                             m_opt_modelZPriorStrength,
-                                             postmargZResult,
-                                             zpriorResult);
+            ChisquareArray chisquares = BuildChisquareArray(lmresult,
+                                                            m_opt_rigidity,
+                                                            m_opt_pdfcombination,
+                                                            m_opt_stronglinesprior,
+                                                            m_opt_haPrior,
+                                                            m_opt_euclidNHaEmittersPriorStrength,
+                                                            m_opt_modelZPriorStrength);
+            COperatorPdfz pdfz;
+            pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
+            
+            sign = 1;
+            fvals = std::move(pdfz.m_postmargZResult->valProbaLog);
 
-            if(retCombinePdf!=0)
-            {
-                Log.LogError("linemodel_fpb: Candidates search - Pdfz computation failed");
-                return false;
-            }else{
-                sign = 1;
-                fvals = postmargZResult->valProbaLog;
-            }
         }
         Int32 retCandidates = linemodel_fpb.ComputeCandidates(m_opt_extremacountB, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
         if( retCandidates!=0 )
@@ -1309,7 +1254,7 @@ Bool CLineModelSolve::GetBestRedshiftsFromPdf(const CDataStore& store,
                     }
                 }    
                 if(method == 1){//max integrated proba but only on peaks in this range
-                    CPdfz pdfz;
+                    COperatorPdfz pdfz;
                     Float64 flux_integral = -1;
                     Float64 prev, next;
                     if(solIdx == 0){

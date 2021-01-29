@@ -14,15 +14,15 @@ using namespace std;
 using namespace NSEpic;
 
 
-CPdfMargZLogResult::CPdfMargZLogResult()
+CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
+    Redshifts(redshifts),
+    countTPL(redshifts.size()), // assumed 1 model per z
+    valProbaLog(redshifts.size(), -DBL_MAX),
+    valEvidenceLog(-1.0)
 {
-    valEvidenceLog=-1;
+
 }
 
-CPdfMargZLogResult::~CPdfMargZLogResult()
-{
-
-}
 
 void CPdfMargZLogResult::Save(std::ostream& stream ) const
 {
