@@ -118,6 +118,11 @@ class AbstractOutput:
     def get_classification_type(self):
         return self.classification["Type"]
 
+    def get_classification(self):
+        if not self.classification:
+            self.load_classification()
+        return self.classification
+
     def get_fitted_continuum_by_rank(self, object_type, rank):
         self.load_fitted_continuum_by_rank(object_type,rank)
         return self.best_continuum[object_type][rank]
