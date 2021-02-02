@@ -18,15 +18,12 @@ class CExtremum
 
 
 public:
-
-    CExtremum( Bool invertForMinSearch = false );
-    CExtremum( const TFloat64Range& xRange, 
-               UInt32 maxPeakCount = 10,
-               Float64 peakSeparation = 0.005*2, 
-               Bool invertForMinSearch=false, 
-               Bool usePeakSeparation=true,
-               Float64 meritcut = -2 // <0 = no cut thresholding 
-               );
+    
+    CExtremum( UInt32 maxPeakCount=10,
+                Float64 peakSeparation= 0.005*2, 
+                Float64 meritcut = -1, // <0 = no cut thresholding 
+                Bool invertForMinSearch=false, 
+                const TFloat64Range& xRange=TFloat64Range());
 
     void SetMaxPeakCount( UInt32 n );
     void SetXRange( const TFloat64Range& r );

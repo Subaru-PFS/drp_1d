@@ -1215,7 +1215,7 @@ Bool CLineModelSolve::GetBestRedshiftsFromPdf(const CDataStore& store,
             TFloat64Range redshiftsRange = TFloat64Range( ExtremaExtendedRedshifts[i]);
 
             //call Find on each secondpass range and retrieve the best  peak
-            CExtremum extremum(redshiftsRange, 1, 0.005, false, false); // no peak separation, no cut
+            CExtremum extremum( 1, 0.0); // 1 peak only , no peak separation, no cut
             extremum.Find(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList);
             candidates.push_back(extremumList[0].X);
         }

@@ -379,7 +379,7 @@ Bool CTemplateFittingSolveResult::GetRedshiftCandidates( const CDataStore& store
 
     // Find extrema
     TPointList extremumList;
-    CExtremum extremum(TFloat64Range(0.0, DBL_MAX), n_candidates);
+    CExtremum extremum(n_candidates);
     extremum.Find( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList );
     for(Int32 k=0; k<extremumList.size(); k++)
     {

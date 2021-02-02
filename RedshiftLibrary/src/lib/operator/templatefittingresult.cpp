@@ -301,7 +301,7 @@ bool CTemplateFittingResult::CallFindExtrema(Float64 radius)
   TPointList extremumList;
   TFloat64Range redshiftsRange( Redshifts[0], Redshifts[Redshifts.size() - 1]);
 
-    CExtremum extremum(redshiftsRange, extremumCount, 2*radius, true);
+    CExtremum extremum(extremumCount, 2*radius, 0.0, true); //no cut, invert sign search (chi2)
 
     if (Redshifts.size() == 1 || Redshifts.size() < extremumCount)
     {

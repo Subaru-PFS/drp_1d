@@ -16,30 +16,21 @@
 using namespace NSEpic;
 using namespace std;
 
-/**
- * Constructs CExtremum with default values, and SetSignSearch ( -1.0 ) if argument is true, SetSignSearch ( 1.0 ) otherwise.
- */
-CExtremum::CExtremum( Bool invertForMinSearch ) :
-  CExtremum( TFloat64Range( 0.0, 0.0), 10, 0.005, invertForMinSearch, true, -2 )
-{
-}
 
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( const TFloat64Range& xRange, 
-                      UInt32 maxPeakCount,
+CExtremum::CExtremum( UInt32 maxPeakCount,
                       Float64 peakSeparation, 
+                      Float64 meritcut,
                       Bool invertForMinSearch, 
-                      Bool usePeakSeparation,
-                      Float64 meritcut 
-                      ) :
+                      const TFloat64Range& xRange) :
     m_MaxPeakCount( maxPeakCount ),
-    m_XRange( xRange ),
-    m_SignSearch(invertForMinSearch ? -1.0 : 1.0 ),
     m_extrema_separation(peakSeparation),
     m_meritCut(meritcut),
-    m_PeakSeparationActive(usePeakSeparation)
+    m_SignSearch(invertForMinSearch ? -1.0 : 1.0 ),
+    m_PeakSeparationActive(peakSeparation > 0),
+    m_XRange( xRange )
 {
 }
 
@@ -122,20 +113,11 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     }
     else
     {
-    	// Find index range for the given lambda range
-        for( UInt32 i=0; i<n; i++ )
-        {
-            if( rangeXBeginIndex==-1 && xAxis[i]>=m_XRange.GetBegin() )
-            {
-                rangeXBeginIndex = i;
-            }
-
-            if( xAxis[i]<=m_XRange.GetEnd() )
-            {
-                rangeXEndIndex = i;
-            }
-        }
+        Bool rangeok;
+        rangeok = m_XRange.getClosedIntervalIndices(xAxis, rangeXBeginIndex, rangeXEndIndex);
+        if (!rangeok) return false;
     }
+  
     
     vector < Float64 >  maxX, minX;
     vector < Float64 >  maxY, minY;

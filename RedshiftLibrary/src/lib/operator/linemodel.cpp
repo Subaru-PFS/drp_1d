@@ -913,7 +913,7 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     Int32 extremacount = 5;
     /*if(opt_extremacount > extremacount)
         extremacount = opt_extremacount;*/
-    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, 2*m_secondPass_halfwindowsize, invertForMinSearch);
+    CExtremum extremum(/*opt_*/extremacount, 2*m_secondPass_halfwindowsize, 0.0, invertForMinSearch);
 
     if (m_result->Redshifts.size() == 1)
     {
