@@ -724,16 +724,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                 {
                     kism_best=0;
                 }else{
-                    Int32 nISM = ismEbmvCoeffs.size();
-                    for (Int32 kISM = 0; kISM < nISM; kISM++)
-                    {
-                        Float64 ebmv = m_ismCorrectionCalzetti->GetEbmvValue(kISM);
-                        if(ebmv==subresult->FitEbmvCoeff[isubz])
-                        {
-                            kism_best = kISM;
-                            break;
-                        }
-                    }
+                    kism_best = m_ismCorrectionCalzetti->GetEbmvIndex(subresult->FitEbmvCoeff[isubz]);
                 }
 
                 CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];

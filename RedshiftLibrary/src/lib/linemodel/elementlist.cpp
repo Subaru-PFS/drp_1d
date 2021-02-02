@@ -1033,15 +1033,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
             Log.LogError("  no calzetti calib. file loaded in template... aborting!");
             throw std::runtime_error("  no calzetti calib. file in template");
         }
-        for(Int32 kDust=0; kDust<tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs(); kDust++)
-        {
-            Float64 coeffEBMV = tpl.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
-            if(m_fitContinuum_tplFitEbmvCoeff==coeffEBMV)
-            {
-                idxDust = kDust;
-                break;
-            }
-        }
+        idxDust = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum_tplFitEbmvCoeff);
     }
     if(idxDust!=-1)
     {
@@ -1051,6 +1043,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
             lambda = Xsrc[ktpl];
             Ysrc[ktpl]*=tpl.m_ismCorrectionCalzetti->GetDustCoeff(idxDust, Int32(lambda)); //dust coeff is rounded at the nearest 1 angstrom value
         }
+        //tpl.ApplyDustCoeff(idxDust);
     }
 
     //apply igm meiksin extinction
@@ -1068,6 +1061,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
             throw std::runtime_error(" meiksin index outside available range");
         }
                 
+        //tpl.ApplyMeiksinCoeff(meiksinIdx, m_redshift);        
         Int32 redshiftIdx = tpl.m_igmCorrectionMeiksin->GetRedshiftIndex(m_Redshift);
 
         Float64 lambda = 0.0;
@@ -1117,7 +1111,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
       }
       fclose( f );
       //*/
-  }
+    }
 
   gsl_spline_free (spline);
   gsl_interp_accel_free (accelerator);
