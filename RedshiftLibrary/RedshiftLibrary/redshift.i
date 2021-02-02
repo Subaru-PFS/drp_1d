@@ -57,15 +57,29 @@
 #include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 using namespace NSEpic;
-//static PyObject* pParameterException;
-//static PyObject* pGlobalException;
-//static PyObject* pSolveException;
+static PyObject* pParameterException;
+static PyObject* pGlobalException;
+static PyObject* pSolveException;
+static PyObject* pAmzException;
  %}
 
 %include numpy.i
 
 %init %{
-import_array();
+  import_array();
+  pParameterException = PyErr_NewException("redshift_.ParameterException", 0, 0);
+  Py_INCREF(pParameterException);
+  PyModule_AddObject(m, "ParameterException", pParameterException);
+  pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
+  Py_INCREF(pGlobalException);
+  PyModule_AddObject(m, "GlobalException", pGlobalException);
+  pSolveException = PyErr_NewException("redshift_.SolveException", 0, 0);
+  Py_INCREF(pSolveException);
+  PyModule_AddObject(m, "SolveException", pSolveException);
+  pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
+  Py_INCREF(pAmzException);
+  PyModule_AddObject(m, "AmzException", pAmzException);
+
 %}
 
 %{
@@ -79,13 +93,6 @@ import_array();
        SWIG_fail; \
     } \
       
-#define CATCH_PE_ERR(Exception) \
-    catch(const Exception &e) \
-    { \
-      PyErr_SetString(SWIG_Python_ExceptionType(SWIGTYPE_p_##Exception), e.what()); \
-      SWIG_fail; \
-    } \
-
   /**/
 
 // should be in "derived first" order
@@ -93,7 +100,7 @@ import_array();
    ACTION(ParameterException)       \
    ACTION(GlobalException) \
    ACTION(SolveException) \
-   ACTION(Exception) \
+   ACTION(AmzException) \
 /**/
 %}
 
@@ -101,7 +108,7 @@ import_array();
     try {
         $action
     }
-    FOR_EACH_EXCEPTION(CATCH_PE)
+    FOR_EACH_EXCEPTION(CATCH_PE)     
     catch (const std::exception & e)
     {
         SWIG_exception(SWIG_RuntimeError, (std::string("C++ std::exception: ") + e.what()).c_str());
@@ -112,7 +119,7 @@ import_array();
     }
 }
 
-%exceptionclass Exception;
+%exceptionclass AmzException;
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
 typedef long long Int64;
@@ -450,37 +457,58 @@ class CMethodTplcombinationSolve
   const std::string GetDescription();
 };
 
+  typedef enum ErrorCode
+    {
+      INVALID_SPECTRA_FLUX=	0,
+      INVALID_NOISE	,
+      SMALL_WAVELENGTH_RANGE ,
+      NEGATIVE_CONTINUUMFIT	,
+      BAD_CONTINUUMFIT	,
+      NULL_AMPLITUDES	,
+      PEAK_NOT_FOUND_PDF	,
+      MAX_AT_BORDER_PDF	,
+      UNKNOWN_PARAMETER  ,
+      BAD_PARAMETER_VALUE,
+      UNKNOWN_ATTRIBUTE ,
+      BAD_LINECATALOG
+    } ErrorCode;
 
-class Exception : public std::exception
+
+class AmzException : public std::exception
 {
-  %rename(GetMessage) getMessage(std::string &out_str);
+
  public:
-  Exception(ErrorCode ec,std::string message);
-  ~Exception();
-  void getMessage(std::string &out_str);
+  AmzException(ErrorCode ec,std::string message);
+  ~AmzException();
+ 
+  const char* getStackTrace() const;
+  ErrorCode getErrorCode();
+  virtual const char* what() ;
 };
 
 
-class GlobalException: public Exception
+class GlobalException: public AmzException
 {
  public:
   GlobalException(ErrorCode ec,std::string message);
+  GlobalException(const GlobalException& e);
   ~GlobalException();
 };
 
-class SolveException: public Exception
+
+class SolveException: public AmzException
 {
  public:
   SolveException(ErrorCode ec,std::string message);
+  SolveException(const SolveException& e);
   ~SolveException();
 };
 
-class ParameterException: public Exception
+
+class ParameterException: public AmzException
 {
-  %rename(GetMessage) getMessage(std::string &out_str);
  public:
   ParameterException(ErrorCode ec,std::string message);
-  ~ParameterException();
-  void getMessage(std::string &out_str);
-
+  ParameterException(const ParameterException& e);
+  ~ParameterException();  
 };
