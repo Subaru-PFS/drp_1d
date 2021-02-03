@@ -422,19 +422,19 @@ const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
     if( error < DBL_MIN ){
         //check if noise is below minimum normalized positive value of double
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found subnormal noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found subnormal noise value (=%e) at index=%d", error, index);
     }
     if( std::isnan(error) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found nan noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found nan noise value (=%e) at index=%d", error, index);
     }
     if( std::isinf(error) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found inf noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found inf noise value (=%e) at index=%d", error, index);
     }
     if( error != error ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found invalid noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found invalid noise value (=%e) at index=%d", error, index);
     }
     return validValue;
 }

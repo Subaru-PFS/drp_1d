@@ -17,7 +17,7 @@
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/log/log.h>
-
+#include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/common/quicksort.h>
 #include <math.h>
@@ -1013,18 +1013,12 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 /**
  * Apply the template continuum by interpolating the grid as define in Init Continuum
  */
-Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum){
+Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum)
+{    
     m_fitContinuum_tplName = tpl.GetName();
-
     Int32 n = tpl.GetSampleCount();
-    CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
+
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-
-    //initialize and allocate the gsl objects
-    Float64* Ysrc = tplFluxAxis.GetSamples();
-    const Float64* Xsrc = tplSpectralAxis.GetSamples();
-
-    //apply dust attenuation
     Int32 idxDust = -1;
     if (m_fitContinuum_tplFitEbmvCoeff >0.)
     {
@@ -1035,60 +1029,51 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
         }
         idxDust = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum_tplFitEbmvCoeff);
     }
+
+    TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
+/*  //future code: 
+    CMask    tmp_mskRebined_bf;
+    tmp_mskRebined_bf.SetSize(m_SpectrumModel.GetSampleCount());
+ 
+    CTemplate tmp(tplSpectralAxis, *m_observeGridContinuumFlux);
+    tpl.Rebin( range, m_SpectrumModel.GetSpectralAxis(), tmp, tmp_mskRebined_bf, "spline");
+    //m_observeGridContinuumFlux = tmp.GetFluxAxis();
+*/
+    CTemplate tmpRebined_bf = const_cast<CTemplate&>(tpl); //hack: create a non-const copy, but a real copy  
+    
+    if(idxDust!=-1 || m_fitContinuum_tplFitMeiksinIdx>-1){
+        tmpRebined_bf.InitIsmIgmConfig();        
+        tmpRebined_bf.SetIsmIgmLambdaRange( range );
+    }
+    //apply dust attenuation
     if(idxDust!=-1)
     {
-        Float64 lambda = 0.0;
-        for(Int32 ktpl=0; ktpl<n; ktpl++)
-        {
-            lambda = Xsrc[ktpl];
-            Ysrc[ktpl]*=tpl.m_ismCorrectionCalzetti->GetDustCoeff(idxDust, Int32(lambda)); //dust coeff is rounded at the nearest 1 angstrom value
-        }
-        //tpl.ApplyDustCoeff(idxDust);
+        tmpRebined_bf.ApplyDustCoeff(idxDust);
     }
-
     //apply igm meiksin extinction
     Float64 coeffIGM = 1.0;
-    Int32 meiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
-    if (meiksinIdx>=0)// &&        
+    if (m_fitContinuum_tplFitMeiksinIdx>=0)       
     {
         if (tpl.MeiksinInitFailed())
         {
             Log.LogError("  no meiksin calib. file loaded in template... aborting!");
             throw std::runtime_error("  no meiksin calib. file in template");
-        }else if (meiksinIdx>tpl.m_igmCorrectionMeiksin->GetIdxCount()-1)
+        }else if (m_fitContinuum_tplFitMeiksinIdx>tpl.m_igmCorrectionMeiksin->GetIdxCount()-1)
         {
             Log.LogError("  meiksin index outside available range... aborting!");
             throw std::runtime_error(" meiksin index outside available range");
-        }
-                
-        //tpl.ApplyMeiksinCoeff(meiksinIdx, m_redshift);        
-        Int32 redshiftIdx = tpl.m_igmCorrectionMeiksin->GetRedshiftIndex(m_Redshift);
-
-        Float64 lambda = 0.0;
-        for(Int32 ktpl=0; ktpl<n; ktpl++)
-        {
-            lambda = Xsrc[ktpl];
-            Float64 coeffIGM = 1.0;
-            if(lambda <= tpl.m_igmCorrectionMeiksin->GetLambdaMax())
-            {
-                Int32 kLbdaMeiksin = 0;
-                if(lambda >= tpl.m_igmCorrectionMeiksin->GetLambdaMin())
-                {
-                    kLbdaMeiksin = Int32(lambda-tpl.m_igmCorrectionMeiksin->GetLambdaMin());
-                }else //if lambda lower than min meiksin value, use lower meiksin value
-                {
-                    kLbdaMeiksin = 0;
-                }
-                coeffIGM = tpl.m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
-            }
-
-            Ysrc[ktpl] *= coeffIGM;
-        }
+        }               
+        tmpRebined_bf.ApplyMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift);
     }
 
+    CSpectrumFluxAxis& tplIsmIgm = tmpRebined_bf.GetFluxAxis();
+    const TAxisSampleList& Xtpl = tplSpectralAxis.GetSamplesVector();
+    const TAxisSampleList& Ytpl = tplIsmIgm.GetSamplesVector();
+
+    //initialize and allocate the gsl objects
     //spline
     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xsrc, Ysrc, n);
+    gsl_spline_init (spline, Xtpl.data(), Ytpl.data(), n);
     gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
     Int32 k = 0;
     Float64 x = 0.0;
@@ -1112,6 +1097,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
       fclose( f );
       //*/
     }
+   
 
   gsl_spline_free (spline);
   gsl_interp_accel_free (accelerator);
@@ -1990,20 +1976,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
 
                 //re-interpolate the continuum on the grid
-                for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
-                {
-                    std::string category = m_tplCategoryList[i];
-
-                    for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
-                    {
-                        const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-
-                        if(tpl.GetName()==m_fitContinuum_tplName)
-                        {
-                            ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
-                        }
-                    }
-                }
+                const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+                ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
                 m_fitContinuum_tplFitAmplitude = 1.0;
                 m_fitContinuum_tplFitAmplitudeError = 1.0;
