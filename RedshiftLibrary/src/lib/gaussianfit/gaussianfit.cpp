@@ -138,6 +138,8 @@ void CGaussianFit::ComputeFirstGuess( const CSpectrum& spectrum, const TInt32Ran
     {
         gaussAmp = (x[n-1]-x[1])/ 6.;
     }
+
+    free(v);
 }
 
 /**
