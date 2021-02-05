@@ -221,8 +221,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
-    std::string m_opt_tplfit_method = "chisquarelog"; //only for firstpass
-    std::string m_opt_tplfit_method_secondpass = "templateFitting"; //"chisquareloglambda"//only for secondpass
+    std::string m_opt_tplfit_method = "templatefittinglog"; //only for firstpass
+    std::string m_opt_tplfit_method_secondpass = "templatefitting"; //"templatefittingloglambda"//only for secondpass
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;

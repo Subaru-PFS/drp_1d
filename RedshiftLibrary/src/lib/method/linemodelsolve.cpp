@@ -54,7 +54,7 @@ const std::string CLineModelSolve::GetDescription()
     desc.append("\tparam: linemodel.lineforcefilter = {""no"", ""S""}\n");
     desc.append("\tparam: linemodel.fittingmethod = {""hybrid"", ""individual""}\n");
     desc.append("\tparam: linemodel.continuumcomponent = {""fromspectrum"", ""tplfit"", ""nocontinuum"", ""zero""}\n");
-    desc.append("\tparam: linemodel.continuumfit.method = {""templateFitting"", ""chisquarelog""}\n");
+    desc.append("\tparam: linemodel.continuumfit.method = {""templatefitting"", ""templatefittinglog""}\n");
     desc.append("\tparam: linemodel.continuumfit.ismfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumfit.igmfit = {""no"", ""yes""}\n");
     desc.append("\tparam: linemodel.continuumfit.count = <float value>\n");

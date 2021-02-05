@@ -86,6 +86,12 @@ class AbstractOutput:
             self.load_all_fitted_rays(object_type)
             self.load_pdf(object_type)
 
+    def get_solve_method(self,object_type):
+        if object_type == "galaxy":
+            return self.parameters["method"]
+        else:
+            return "templatefittingsolve"
+
     def get_candidate_data(self, object_type, rank, data_name):
         self.load_candidates_results(object_type)
         return self.candidates_results[object_type][self.candidates_results[object_type]['Rank'] == rank][data_name].iat[0]

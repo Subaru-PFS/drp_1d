@@ -62,8 +62,8 @@ public:
 private:
 
     std::unordered_map<std::string, std::string> m_scope2name = {
-        {"chisquaresolve",      "TemplateFittingSolve"},
-        {"chisquarelogsolve",   "TemplateFittingLogSolve"},
+        {"templatefittingsolve",      "TemplateFittingSolve"},
+        {"templatefittinglogsolve",   "TemplateFittingLogSolve"},
         {"tplcombinationsolve", "TplcombinationSolve"}
     };
 
