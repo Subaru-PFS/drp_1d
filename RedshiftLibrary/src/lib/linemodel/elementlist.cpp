@@ -1018,7 +1018,6 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     m_fitContinuum_tplName = tpl.GetName();
     Int32 n = tpl.GetSampleCount();
 
-    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     Int32 idxDust = -1;
     if (m_fitContinuum_tplFitEbmvCoeff >0.)
     {
@@ -1029,78 +1028,25 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
         }
         idxDust = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum_tplFitEbmvCoeff);
     }
-
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
-/*  //future code: 
-    CMask    tmp_mskRebined_bf;
-    tmp_mskRebined_bf.SetSize(m_SpectrumModel.GetSampleCount());
- 
-    CTemplate tmp(tplSpectralAxis, *m_observeGridContinuumFlux);
-    tpl.Rebin( range, m_SpectrumModel.GetSpectralAxis(), tmp, tmp_mskRebined_bf, "spline");
-    //m_observeGridContinuumFlux = tmp.GetFluxAxis();
-*/
-    CTemplate tmpRebined_bf = const_cast<CTemplate&>(tpl); //hack: create a non-const copy, but a real copy  
-    
-    if(idxDust!=-1 || m_fitContinuum_tplFitMeiksinIdx>-1){
-        tmpRebined_bf.InitIsmIgmConfig();        
-        tmpRebined_bf.SetIsmIgmLambdaRange( range );
-    }
-    //apply dust attenuation
-    if(idxDust!=-1)
-    {
-        tmpRebined_bf.ApplyDustCoeff(idxDust);
-    }
-    //apply igm meiksin extinction
-    Float64 coeffIGM = 1.0;
-    if (m_fitContinuum_tplFitMeiksinIdx>=0)       
-    {
-        if (tpl.MeiksinInitFailed())
-        {
-            Log.LogError("  no meiksin calib. file loaded in template... aborting!");
-            throw std::runtime_error("  no meiksin calib. file in template");
-        }else if (m_fitContinuum_tplFitMeiksinIdx>tpl.m_igmCorrectionMeiksin->GetIdxCount()-1)
-        {
-            Log.LogError("  meiksin index outside available range... aborting!");
-            throw std::runtime_error(" meiksin index outside available range");
-        }               
-        tmpRebined_bf.ApplyMeiksinCoeff(m_fitContinuum_tplFitMeiksinIdx, m_Redshift);
-    }
 
-    CSpectrumFluxAxis& tplIsmIgm = tmpRebined_bf.GetFluxAxis();
-    const TAxisSampleList& Xtpl = tplSpectralAxis.GetSamplesVector();
-    const TAxisSampleList& Ytpl = tplIsmIgm.GetSamplesVector();
+    CModelSpectrumResult spcmodel;
+    std::string inter_opt = "spline";
+    Float64 overlapThreshold = 1., amplitude = 1.; 
+    //called BasicFit_preallocateBuffers cause we need to initialize  m_spcSpectralAxis_restframe among others
+    m_templateFittingOperator.BasicFit_preallocateBuffers(m_SpectrumModel, tpl);
+    m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
+                                                 zcontinuum,
+                                                 m_fitContinuum_tplFitDustCoeff, 
+                                                 m_fitContinuum_tplFitMeiksinIdx, 
+                                                 amplitude,
+                                                 inter_opt, m_fitContinuum_tplFitMeiksinIdx==-1?"no":"yes", range, 
+                                                 overlapThreshold, spcmodel);
 
-    //initialize and allocate the gsl objects
-    //spline
-    gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
-    gsl_spline_init (spline, Xtpl.data(), Ytpl.data(), n);
-    gsl_interp_accel * accelerator =  gsl_interp_accel_alloc();
-    Int32 k = 0;
-    Float64 x = 0.0;
-    const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
+    //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
+    m_observeGridContinuumFlux = spcmodel.GetSpectrum().GetFluxAxis().GetSamplesVector();
 
-    for(k=0; k<spcSpectralAxis.GetSamplesCount(); k++){
-        x = spcSpectralAxis[k]/(1+zcontinuum);
-        if(x < tplSpectralAxis[0] || x > tplSpectralAxis[n-1]){
-            m_observeGridContinuumFlux[k] = 0.0;
-        }else{
-            m_observeGridContinuumFlux[k] = gsl_spline_eval (spline, x, accelerator);//m_fitContinuum_tplFitAmplitude*
-
-        }
-      /*//debug:
-      // save reflex data
-      FILE* f = fopen( "observegrid.txt", "w+" );
-      for( Int32 t=0;t<spcSpectralAxis.GetSamplesCount();t++)
-      {
-          fprintf( f, "%f %f\n", spcSpectralAxis[t], m_observeGridContinuumFlux[t]);
-      }
-      fclose( f );
-      //*/
-    }
-   
-
-  gsl_spline_free (spline);
-  gsl_interp_accel_free (accelerator);
   return 0;
 }
 

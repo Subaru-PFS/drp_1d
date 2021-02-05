@@ -30,7 +30,7 @@ public:
 
     const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;
     CSpectrumFluxAxis&          GetFluxAxisWithoutIsmIgm();
-
+    
     Bool Save(const char *filePath ) const;
 
     bool ApplyDustCoeff(Int32 kDust);

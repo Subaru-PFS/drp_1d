@@ -550,7 +550,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
 }
 
-
 /**
  * \brief
  *
