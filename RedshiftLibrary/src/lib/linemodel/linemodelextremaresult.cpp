@@ -921,27 +921,32 @@ void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> r
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-  if (name.compare("ContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[Rank_PDF[rank]];
-  else if (name.compare("ContinuumAmplitude") == 0) v = FittedTplAmplitude[Rank_PDF[rank]];
-  else if (name.compare("VelocityEmission") == 0) v = Elv[Rank_PDF[rank]];
-  else if (name.compare("VelocityAbsorption") == 0) v = Alv[Rank_PDF[rank]];
+  if (name.compare("ContinuumIsmCoeff") == 0 || name.compare("FirstpassContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[Rank_PDF[rank]];
+  else if (name.compare("FirstpassRedshift") == 0) v = Extrema[Rank_PDF[rank]];
+  else if (name.compare("FirstpassMerit") == 0) v = ExtremaMerit[Rank_PDF[rank]];
+  else if (name.compare("ContinuumAmplitude") == 0 || name.compare("FirstpassContinuumAmplitude") == 0) v = FittedTplAmplitude[Rank_PDF[rank]];
+  else if (name.compare("VelocityEmission") == 0 || name.compare("FirstpassVelocityEmission") == 0) v = Elv[Rank_PDF[rank]];
+  else if (name.compare("VelocityAbsorption") == 0 || name.compare("FirstpassVelocityAbsorption") == 0) v = Alv[Rank_PDF[rank]];
   else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[Rank_PDF[rank]];
   else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplshapeIsmCoeff[Rank_PDF[rank]];
   else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplshapeAmplitude[Rank_PDF[rank]];
-  else if (name.compare("ContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[Rank_PDF[rank]];
+  else if (name.compare("FirstpassFittedTemplateDtm") == 0) v = FittedTplDtm[Rank_PDF[rank]];
+  else if (name.compare("FirstpassFittedTemplateMtm") == 0) v = FittedTplMtm[Rank_PDF[rank]];
+  else if (name.compare("ContinuumAmplitudeError") == 0 || name.compare("FirstpassContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[Rank_PDF[rank]];
   else throw Exception("unknown candidate Float64 data %s",name.c_str());
 
 }
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
-  if (name.compare("ContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[Rank_PDF[rank]];
+  if (name.compare("ContinuumIgmIndex") == 0 || name.compare("FirstpassContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[Rank_PDF[rank]];
   else throw Exception("unknown candidate integer data %s",name.c_str());
 }
 
 void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
-  if (name.compare("TemplateName") == 0) v = FittedTplName[Rank_PDF[rank]];
+  if (name.compare("TemplateName") == 0 || name.compare("FirstpassTemplateName") == 0) v = FittedTplName[Rank_PDF[rank]];
   else if (name.compare("LinesRatioName") == 0) v = FittedTplshapeName[Rank_PDF[rank]];
+  else if (name.compare("ExtremaIds") == 0) v = ExtremaIDs[Rank_PDF[rank]];
   else throw Exception("unknown candidate string data %s",name.c_str());
 
 }
