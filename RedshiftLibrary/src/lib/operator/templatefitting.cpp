@@ -115,7 +115,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
-        Log.LogInfo("  Operator-TemplateFitting: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
+        Log.LogInfo("  Operator-TemplateFitting: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
         status = nStatus_DataError;
         return ;
     }
@@ -186,7 +186,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             }
         }
     }else{//at least have one element
-        MeiksinList.push_back(-1);
+        MeiksinList.push_nIsmEbmvCoeffsback(-1);
     }
 
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
@@ -587,12 +587,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
     if( (opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting!");
+        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting");
         throw std::runtime_error("  Operator-TemplateFitting: no calzetti calib. file in template");
     }
     if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
-        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting!",
+        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting",
                      opt_dustFitting,
                      tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
         throw std::runtime_error("  Operator-TemplateFitting: calzetti index overflow");
@@ -600,7 +600,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
     if( opt_extinction && tpl.MeiksinInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting!");
+        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting");
         throw std::runtime_error("  Operator-TemplateFitting: no meiksin calib. file in template");
     }
 
@@ -771,7 +771,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    templateFitting-operator: Loop Error - chisquare values not set even once");
+        Log.LogWarning("    Operator-TemplateFitting: Loop Error - chisquare values not set even once");
     }
 
     //estimate CstLog for PDF estimation

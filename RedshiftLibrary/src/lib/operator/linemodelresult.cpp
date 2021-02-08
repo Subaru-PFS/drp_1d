@@ -436,17 +436,3 @@ Float64 CLineModelResult::GetMaxChiSquare() const
     }
     return max;
 }
-
-Int32 CLineModelResult::getRedshiftIndex(Float64 z)
-{
-  std::vector<Float64>::iterator itr = std::lower_bound(Redshifts.begin(),
-                                                        Redshifts.end(),
-                                                        z);
-
-  if (itr == Redshifts.end() || *itr != z)
-    {
-      Log.LogError("CLineModelResult::getRedshiftIndex: Could not find redshift index for %f", z);
-      throw runtime_error("CLineModelResult::getRedshiftIndex: Could not find redshift index");
-    }
-  return (itr - Redshifts.begin()); 
-}

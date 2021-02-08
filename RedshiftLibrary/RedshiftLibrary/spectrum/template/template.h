@@ -40,6 +40,7 @@ public:
     Int32 GetIgmCoeff() const;
 
     void SetIsmIgmLambdaRange(TFloat64Range& lbdaRange);
+    void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend); //temporary
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);

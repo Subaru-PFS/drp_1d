@@ -29,6 +29,7 @@ public:
                                  Float64 _ismCoeff,
                                  Int32 _igmIndex,
                                  Float64 _fitting_snr);
+
     CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
 

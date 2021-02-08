@@ -153,7 +153,9 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
  * @return
  */
 
-
+//TODO:should we compare this code with CTemplate::ApplyMeiksinCoeff?? 
+//Note that getCoeff is only used once in TFLOG::FitRangez
+//one main diff here: kLbdaMeiksin = Int32(restLambda-GetLambdaMin()+0.5);
 Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda) const
 {
     Int32 redshiftIdx = GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range

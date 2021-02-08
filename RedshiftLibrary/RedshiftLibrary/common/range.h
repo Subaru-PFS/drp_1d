@@ -222,6 +222,22 @@ template <typename T> class CRange
     return true;
   } 
 
+  //getIndex in ordered_values corresponding to value:
+  //value[index] can be equal or smaller than Z
+  bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) const
+  {
+    if(value < ordered_values.front() || value > ordered_values.back())
+      {
+        return false;
+      }
+    
+    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+    if(*it_min > value) it_min = it_min -1; 
+
+    i_min = it_min - ordered_values.begin();
+    return true;
+  }
+
   private:
     T m_Begin;
     T m_End;

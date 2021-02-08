@@ -48,6 +48,12 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) 
 {
 }
 
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) :
+    CSpectrumAxis( samples, n ),
+    m_SpectralFlags( 0 )
+{
+}
+
 /**
  * Constructor, shifts origin along direction an offset distance.
  */
