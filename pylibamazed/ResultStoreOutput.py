@@ -84,11 +84,15 @@ class ResultStoreOutput(AbstractOutput):
         self.classification["QSOEvidence"] = self.result_store.Get_Float64Data("classification", "all", "EvidenceQSO")
 
     def load_all_fitted_rays(self,object_type):
+        if object_type == "star":
+            return
         nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
         for rank in range(nb_candidates):
             self.load_fitted_rays(object_type,rank)
 
     def load_all_best_continuum(self,object_type):
+        if object_type == "star":
+            return
         nb_candidates = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
         for rank in range(nb_candidates):
             self.load_fitted_continuum_by_rank(object_type,rank)
@@ -195,7 +199,6 @@ class ResultStoreOutput(AbstractOutput):
         for index, row in cand_specs[cand_specs["dimension"] == "multi"].iterrows():
             comp_type.append((row["name"], "object"))
 
-        nb_records = self.get_attribute(next(cand_specs.iterrows())[1],object_type,rank).size
         df = pd.DataFrame()
         for index, row in cand_specs.iterrows():
             df[row["name"]] = self.get_attribute(row, object_type, rank)
