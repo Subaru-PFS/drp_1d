@@ -118,6 +118,11 @@ class AbstractOutput:
     def get_classification_type(self):
         return self.classification["Type"]
 
+    def get_classification(self):
+        if not self.classification:
+            self.load_classification()
+        return self.classification
+
     def get_fitted_continuum_by_rank(self, object_type, rank):
         self.load_fitted_continuum_by_rank(object_type,rank)
         return self.best_continuum[object_type][rank]
@@ -140,54 +145,84 @@ class AbstractOutput:
     def set_manual_redshift_value(self,val):
         self.manual_redshift=val
 
+    def compare_candidates_results(self,other,object_type,quiet):
+        if not self.candidates_results[object_type].equals(other.candidates_results[object_type]):
+            if not quiet:
+                print("difference in " + object_type + "candidates results")
+                print(self.candidates_results[object_type].compare(other.candidates_results[object_type]))
+            return False
+        else:
+            return True
+        
+    def compare_pdf(self,other,object_type,quiet):
+        pdf = self.pdf[object_type]
+        opdf = other.pdf[object_type]
+        if not pdf.equals(opdf):
+            if not quiet:
+                print("difference in " + object_type + " pdf")
+            return False
+        else:
+            return True
+
+    def compare_fitted_rays(self,other,object_type,rank,quiet):
+        fr = self.fitted_rays[object_type][rank]
+        ofr = other.fitted_rays[object_type][rank]
+        if not fr.equals(ofr):
+            if not quiet:
+                print(" difference in " + object_type + " fitted rays for candidate n° " + str(rank))
+                print(fr.compare(ofr))
+            return False
+        else:
+            return True
+
+    def compare_best_continuum(self,other,object_type,rank,quiet):
+        bc = self.best_continuum[object_type][rank]
+        obc = other.best_continuum[object_type][rank]
+        if not (bc==obc).all():
+            if not quiet:
+                print(" difference in " + object_type + " best continuum for candidate n° " + str(rank))
+                return False
+        else:
+            return True
+
+    def compare_model(self,other,object_type,rank,quiet):
+        m = self.model[object_type][rank]
+        om = other.model[object_type][rank]
+        if not (m==om).all():
+            if not quiet:
+                print(" difference in " + object_type + " model for candidate n° " + str(rank))
+            return False
+        else:
+            return True
+
+    def compare_classification(self,other,quiet):
+        equal = True
+        for k in self.classification.keys():
+            if self.classification[k] != other.classification[k]:
+                if not quiet:
+                    print("classification " + k + " different : " + str(self.classification[k]) + " vs " + str(other.classification[k]))
+                equal = False
+        return equal
+        
     def diff(self,other,object_types=["galaxy","star","qso"],quiet=False):
         equal = True
         for object_type in object_types:
-            if not self.candidates_results[object_type].equals(other.candidates_results[object_type]):
-                if not quiet:
-                    print("difference in " + object_type + "candidates results")
-                    print(self.candidates_results[object_type].compare(other.candidates_results[object_type]))
-                equal = False
-            pdf = self.pdf[object_type]
-            opdf = other.pdf[object_type]
-            if not pdf.equals(opdf):
-                equal = False
-                if not quiet:
-                    print("difference in " + object_type + " pdf")
-                
+            equal = self.compare_candidates_results(other,object_type,quiet)
+            equal = equal and self.compare_pdf(other,object_type,quiet)                           
             nb_cand = self.nb_candidates[object_type]
             if nb_cand != other.nb_candidates[object_type]:
                 equal = False
                 if not quiet:
-                    print(object_type + " results do not have same number of candidates : " + nb_cand + " vs " + other.nb_candidates[object_type] + ". Terminating diff operation")
+                    print(object_type + " results do not have same number of candidates : " + str(nb_cand) + " vs " + str(other.nb_candidates[object_type]) + ". Terminating diff operation")
                 return equal
             for cand in range(nb_cand):
-                fr = self.fitted_rays[object_type][cand]
-                ofr = other.fitted_rays[object_type][cand]
-                if not fr.equals(ofr):
-                    equal = False
-                    if not quiet:
-                        print(" difference in " + object_type + " fitted rays for candidate n° " + cand)
-                        print(fr.compare(ofr))
-            for cand in range(nb_cand):
-                m = self.model[object_type][cand]
-                om = other.model[object_type][cand]
-                if not (m == om).all():
-                    equal = False
-                    if not quiet:
-                        print(" difference in " + object_type + " model for candidate n° " + cand)
-                        # print(m.compare(om))
-            for cand in range(nb_cand):
-                bc = self.best_continuum[object_type][cand]
-                obc = other.best_continuum[object_type][cand]
-                if not (bc==obc).all():
-                    equal = False
-                    if not quiet:
-                        print(" difference in " + object_type + " best continuum for candidate n° " + cand)
-                        # print(bc.compare(obc))
-        for k in self.classification.keys():
-            if self.classification[k] != other.classification[k]:
-                equal = False
-                if not quiet:
-                    print("classification " + k + " different : " + str(self.classification[k]) + " vs " + str(other.classification[k]))
+                equal = equal and self.compare_model(other,object_type,cand,quiet)
+            if object_type == 'galaxy':
+                for cand in range(nb_cand):
+                    equal = equal and self.compare_fitted_rays(other,object_type,cand,quiet)
+                for cand in range(nb_cand):
+                    equal = equal and self.compare_best_continuum(other,object_type,cand,quiet)
+        equal = equal and self.compare_classification(other,quiet)
         return equal
+
+    

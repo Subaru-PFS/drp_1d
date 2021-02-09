@@ -1,1 +1,1 @@
-recursive-include pylibamazed/resources *
+recursive-include pylibamazed/python/pylibamazed/resources *

@@ -17,6 +17,7 @@ setup(
     license="GPLv3+",
     url="http://www.lam.fr",
     packages=['pylibamazed'],
+    package_dir = {'':'pylibamazed/python'},
     include_package_data=True,
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),
