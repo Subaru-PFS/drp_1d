@@ -242,7 +242,7 @@ public:
     Float64 m_opt_tplratio_prior_betaTE=1.0;
     Float64 m_opt_tplratio_prior_betaZ=1.0;
     std::string m_opt_tplratio_prior_dirpath="";
-
+    std::string m_opt_continuumcomponent;
     std::string m_opt_enableLSF;
 
     std::string m_opt_lya_forcefit;

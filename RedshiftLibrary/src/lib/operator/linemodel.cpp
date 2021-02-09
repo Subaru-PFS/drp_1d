@@ -89,6 +89,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         m_enableFastFitLargeGrid = 1;
     }
 
+    m_opt_continuumcomponent = opt_continuumcomponent; 
+
     TFloat64List largeGridRedshifts;
     //*
     if (m_enableFastFitLargeGrid == 1)
@@ -1158,7 +1160,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
 {
     boost::chrono::thread_clock::time_point start_secondpass =
             boost::chrono::thread_clock::now();
-
     // Set model parameters to SECOND-PASS
     m_model->setPassMode(2);
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();//the first time was set in precomputeContinuumFit
@@ -1187,33 +1188,33 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", m_continnuum_fit_option);
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
-    
-    //precompute only whenever required and whenever the result can be a tplfitStore
-    if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
-        m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
-        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
-            PrecomputeContinuumFit(spectrum,
-                               *m_orthoTplCatalog,
-                               tplCategoryList,
-                               opt_calibrationPath,
-                               lambdaRange,
-                               m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
-                               m_opt_tplfit_ignoreLinesSupport,
-                               i);
+    if(opt_continuumcomponent== "tplfit" || opt_continuumcomponent== "tplfitauto"){
+        //precompute only whenever required and whenever the result can be a tplfitStore
+        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
+            m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
+            for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
+                PrecomputeContinuumFit(spectrum,
+                                *m_orthoTplCatalog,
+                                tplCategoryList,
+                                opt_calibrationPath,
+                                lambdaRange,
+                                m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
+                                m_opt_tplfit_ignoreLinesSupport,
+                                i);
+            }
+        }else{
+            //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
+            //copy the firstpass tplfitstore into the secondpass tplfitstore
+            m_tplfitStore_secondpass.resize(1);
+            if(m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
+                m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
+            //belwo line is redundant since in the first call to precompute we already set the fitStore
+            m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass);
+            //duplicated: double make sure that these info are present in the modelElement
+            m_model->SetFitContinuum_SNRMax( m_tplfitStore_firstpass->m_fitContinuum_tplFitSNRMax);
+            m_model->m_opt_fitcontinuum_maxCount  = m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
         }
-    }else{
-        //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
-        //copy the firstpass tplfitstore into the secondpass tplfitstore
-        m_tplfitStore_secondpass.resize(1);
-        if(m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
-            m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
-        //belwo line is redundant since in the first call to precompute we already set the fitStore
-        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass);
-        //duplicated: double make sure that these info are present in the modelElement
-        m_model->SetFitContinuum_SNRMax( m_tplfitStore_firstpass->m_fitContinuum_tplFitSNRMax);
-        m_model->m_opt_fitcontinuum_maxCount  = m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
     }
-    
     m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){ 
         if(m_continnuum_fit_option == 2)
@@ -1753,30 +1754,30 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
         //assign same IDs to extremum of second pass
         m_secondpass_parameters_extremaResult.ExtremaIDs[i] = m_firstpass_extremaResult.ExtremaIDs[i];
-        
-        //inject continuumFitValues of current candidate 
-        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-        else{
-            //nothing to do cause we already injected the fitStore for cases 1 and 2
-        }
+        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){        
+            //inject continuumFitValues of current candidate 
+            if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
+                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+            else{
+                //nothing to do cause we already injected the fitStore for cases 1 and 2
+            }
 
-        if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
-        {
-            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitude[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-                                            m_firstpass_extremaResult.FittedTplMerit[i],
-                                            m_firstpass_extremaResult.FittedTplDustCoeff[i],
-                                            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-                                            m_firstpass_extremaResult.FittedTplRedshift[i],
-                                            m_firstpass_extremaResult.FittedTplDtm[i],
-                                            m_firstpass_extremaResult.FittedTplMtm[i],
-                                            m_firstpass_extremaResult.FittedTplLogPrior[i],
-                                            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
-            m_model->SetFitContinuum_Option(2);
-        }
-
+            if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
+            {
+                m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
+                                                m_firstpass_extremaResult.FittedTplAmplitude[i],
+                                                m_firstpass_extremaResult.FittedTplAmplitudeError[i],
+                                                m_firstpass_extremaResult.FittedTplMerit[i],
+                                                m_firstpass_extremaResult.FittedTplDustCoeff[i],
+                                                m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
+                                                m_firstpass_extremaResult.FittedTplRedshift[i],
+                                                m_firstpass_extremaResult.FittedTplDtm[i],
+                                                m_firstpass_extremaResult.FittedTplMtm[i],
+                                                m_firstpass_extremaResult.FittedTplLogPrior[i],
+                                                m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(2);
+            }
+    }
 
         // find the index in the zaxis results
         Int32 idx = -1; idx = m_result->getRedshiftIndex(z); 
@@ -2204,32 +2205,32 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                             m_model->GetVelocityAbsorption());
             }
 
-
-            // fix some fitcontinuum values for this extremum
-            if(tplfit_option==2)
-            {
-                m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMerit[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplDtm[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMtm[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplLogPrior[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-                m_model->SetFitContinuum_Option(tplfit_option); 
-            }
-            if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
-                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-            else{
-                if(tplfit_option == 1){
-                    //nothing to do cause we already injected the fitStore for cases 1 and 2
-                    m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
+            if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
+                // fix some fitcontinuum values for this extremum
+                if(tplfit_option==2)
+                {
+                    m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMerit[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplDtm[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMtm[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
+                    m_model->SetFitContinuum_Option(tplfit_option); 
+                }
+                if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
+                    m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+                else{
+                    if(tplfit_option == 1){
+                        //nothing to do cause we already injected the fitStore for cases 1 and 2
+                        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
+                    }
                 }
             }
-
 
             //moved here to override the previously set option value
             //since all 
