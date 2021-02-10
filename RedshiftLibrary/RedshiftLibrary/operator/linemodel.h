@@ -66,7 +66,12 @@ public:
                                              const Float64 &opt_manvelfit_dzmax=6e-4,
                                              const Float64 &opt_manvelfit_dzstep=1e-4);
 
-    Int32 Init(const CSpectrum& spectrum, const TFloat64List& redshifts, const Float64 nsigmasupport, const Float64 halfwdwsize, const Float64 radius);
+    Int32 Init( const CSpectrum& spectrum, 
+                const TFloat64List& redshifts, 
+                const std::string &opt_continuumcomponent,
+                const Float64 nsigmasupport, 
+                const Float64 halfwdwsize, 
+                const Float64 radius);
 
     std::shared_ptr<COperatorResult> getResult();
     std::shared_ptr<CLineModelExtremaResult> GetFirstpassExtremaResult() const;
@@ -89,7 +94,6 @@ public:
                            const std::string &opt_lineForceFilter,
                            const TFloat64Range& lambdaRange,
                            const std::string &opt_fittingmethod,
-                           const std::string &opt_continuumcomponent,
                            const std::string& opt_lineWidthType,
                            const Float64 opt_resolution,
                            const Float64 opt_velocityEmission,
@@ -119,7 +123,6 @@ public:
                             const std::string &opt_lineForceFilter,
                             const TFloat64Range& lambdaRange,
                             const std::string &opt_fittingmethod,
-                            const std::string &opt_continuumcomponent,
                             const std::string& opt_lineWidthType,
                             const Float64 opt_resolution,
                             const Float64 opt_velocityEmission,
