@@ -162,7 +162,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
-        dataStore.GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "chisquarelog" );
+        dataStore.GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "templatefittinglog" );
         dataStore.GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
