@@ -2,7 +2,6 @@ stages:
   - build
   - test
   - build-wheel
-  - test-wheel
   - push-rc
   - test-rc
   - push-prod
@@ -61,20 +60,6 @@ wheel36-osx:
     - cd ..
     - MACOSX_DEPLOYMENT_TARGET=10.7 CC=clang CXX=clang++ python setup.py bdist_wheel
     - delocate-wheel -w wheel/ dist/pylibamazed-*-cp36-cp36m-*.whl
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
-  cache:
-    key: osx
-    untracked: true
-
-test-wheel-osx:
-  stage: test-wheel
-  tags:
-    - osx
-  script:
-    - conda activate gitlab-ci-amazed-p36
     - pip install wheel/pylibamazed*
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - cd /
@@ -82,8 +67,10 @@ test-wheel-osx:
   after_script:
     - conda activate gitlab-ci-amazed-p36
     - pip uninstall -y pylibamazed
-  dependencies:
-    - wheel36-osx
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
   cache:
     key: osx
     untracked: true
@@ -156,6 +143,13 @@ wheel36-manylinux2010:
     - cd ..
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp36-cp36m-*.whl -w wheel --plat manylinux2010_x86_64
+    - pip install wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - cd /
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - source /venv/p36/bin/activate
+    - pip uninstall -y pylibamazed
   artifacts:
     paths:
       - wheel/
@@ -175,37 +169,6 @@ wheel37-manylinux2010:
     - cd ..
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp37-cp37m-*.whl -w wheel --plat manylinux2010_x86_64
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
-  cache:
-    key: manylinux2010
-    untracked: true
-
-test-wheel36-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
-  stage: test-wheel
-  script:
-    - source /venv/p36/bin/activate
-    - pip install wheel/pylibamazed-*-cp36-cp36m-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p36/bin/activate
-    - pip uninstall -y pylibamazed
-  cache:
-    key: manylinux2010
-    untracked: true
-  dependencies:
-    - wheel36-manylinux2010
-
-test-wheel37-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
-  stage: test-wheel
-  script:
-    - source /venv/p37/bin/activate
     - pip install wheel/pylibamazed-*-cp37-cp37m-*.whl
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - cd /
@@ -213,11 +176,13 @@ test-wheel37-manylinux2010:
   after_script:
     - source /venv/p37/bin/activate
     - pip uninstall -y pylibamazed
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
   cache:
     key: manylinux2010
     untracked: true
-  dependencies:
-    - wheel37-manylinux2010
 
 push-rc-36-manylinux2010:
   image: portus.lam.fr/amazed/amazed-manylinux2010
@@ -275,9 +240,9 @@ test-centos7:
   dependencies:
     - build-centos7
 
-test-wheel36-centos7:
+wheel36-centos7:
   image: portus.lam.fr/amazed/amazed-centos7
-  stage: test-wheel
+  stage: build-test-wheel
   when: manual
   script:
     - pip3.6 install wheel/pylibamazed-*-cp36-cp36m-*.whl
