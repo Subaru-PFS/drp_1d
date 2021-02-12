@@ -892,7 +892,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
 }
 
 /**
- * \brief Generates a continuum from the fitting with a set of templates : uses the chisquare2 operator
+ * \brief Generates a continuum from the fitting with a set of templates : uses the templatefitting operator
  * TODO: LoadFitContinuum should be limited to reading continuum values from the variable class, especially that 
  * we want that continuum fitting results are saved in tplfitStore container outside CElementList and these stores will be injected 
  * in the class whenever required !

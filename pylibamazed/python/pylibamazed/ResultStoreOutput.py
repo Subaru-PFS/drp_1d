@@ -179,12 +179,6 @@ class ResultStoreOutput(AbstractOutput):
             df[row["name"]] = self.get_attribute(row, object_type, rank)
         return df
 
-    def get_solve_method(self,object_type):
-        if object_type == "galaxy":
-            return self.parameters["method"]
-        else:
-            return "templatefittingsolve"
-
     def write_candidate_dataset_to_hdf5(self, dataset,rank , datatype):
         data = self.__getattr__(dataset)[object_type][rank].to_records()
     # model = np.array()

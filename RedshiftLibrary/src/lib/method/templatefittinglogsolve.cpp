@@ -65,7 +65,7 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
     Bool storeResult = false;
 
     CDataStore::CAutoScope resultScope( resultStore, "templatefittinglogsolve" );
-    std::string scopeStr = "chisquare";
+    std::string scopeStr = "templatefitting";
     m_radius = radius;
 
     CTemplateFittingSolveResult::EType _type;
@@ -170,7 +170,7 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
                                      std::string opt_extinction,
                                      std::string opt_dustFitting)
 {
-    std::string scopeStr = "chisquare";
+    std::string scopeStr = "templatefitting";
     Int32 _ntype = 1;
     CSpectrum::EType _spctype = CSpectrum::nType_raw;
     CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
@@ -210,7 +210,7 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
 
         }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
-            scopeStr = "chisquare";
+            scopeStr = "templatefitting";
 
         }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
