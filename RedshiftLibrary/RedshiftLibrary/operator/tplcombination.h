@@ -29,7 +29,10 @@ public:
                                              const TFloat64Range& lambdaRange,
                                              const TFloat64List& redshifts,
                                              Float64 overlapThreshold,
-                                             std::vector<CMask> additional_spcMasks, const Float64 radius, std::string opt_interp, Int32 opt_extinction=0, Int32 opt_dustFitting=0);
+                                             std::vector<CMask> additional_spcMasks, 
+                                             std::string opt_interp, 
+                                             Int32 opt_extinction=0, 
+                                             Int32 opt_dustFitting=0);
 
     void SaveSpectrumResults(COperatorResultStore &resultStore);
 
@@ -66,7 +69,6 @@ private:
 
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
-    Float64 m_radius;
 
 };
 

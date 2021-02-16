@@ -30,7 +30,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
-#include <boost/progress.hpp>
+//#include <boost/progress.hpp>
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN
@@ -371,14 +371,12 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
                                                                   std::vector<CMask> additional_spcMasks,
-                                                                  const Float64 radius,
                                                                   std::string opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting)
 {
     Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", tplList.size());
 
-    m_radius = radius;
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false )
     {
         Log.LogError("  Operator-tplcombination: input spectrum is not in log scale (ignored)");
@@ -558,10 +556,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
     
-    result->CallFindExtrema(m_radius);
-
     //store spectrum results
-    Int32 nMaxExtremaSpectraSave = 1;
+/*    Int32 nMaxExtremaSpectraSave = 1;
     for( Int32 ie=0; ie<result->Extrema.size(); ie++ )
     {
         if(ie>=nMaxExtremaSpectraSave)
@@ -623,7 +619,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }else{
             Log.LogError("  Operator-Tplcombination: Unable to find the z index for spectrum result save");
         }
-    }
+    }*/
 
     // Deallocate the rebined template and mask buffers
     m_templatesRebined_bf.clear();

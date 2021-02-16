@@ -29,7 +29,7 @@ class CMethodTemplateFittingSolve
     CMethodTemplateFittingSolve() = default;
     ~CMethodTemplateFittingSolve() = default;
 
-    const std::string GetDescription();
+    const std::string GetDescription() const;
 
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
@@ -40,14 +40,13 @@ class CMethodTemplateFittingSolve
                                                    Float64 overlapThreshold,
                                                    std::vector<CMask> maskList,
                                                    const std::string outputPdfRelDir,
-                                                   const Float64 radius,
+                                                   const Float64 redshiftSeparation,
                                                    std::string spcComponent="raw" ,
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
 
-    Bool ExtractCandidateResults(CDataStore &store, std::vector<Float64> zcandidates_unordered_list, std::string outputPdfRelDir = "zPDF");
-    void SaveSpectrumResults(CDataStore &dataStore);
+    
 
 private:
 
@@ -64,16 +63,17 @@ private:
                std::string opt_dustFitting="no");
 
     ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
-
+    void SaveSpectrumResults(CDataStore &dataStore) const ;
+    
     COperatorTemplateFitting m_templateFittingOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 
     std::string m_opt_pdfcombination;
+    Float64 m_redshiftSeparation;
+    Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
-    Float64 m_radius;
-
 };
 
 

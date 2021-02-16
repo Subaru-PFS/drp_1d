@@ -39,7 +39,6 @@ public:
     Int32 GetBestModel(const CDataStore& store, Float64 z);
     
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence);
-    Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir = "zPDF") const;
 
     Int32 m_bestRedshiftMethod = 2; //best chi2, best proba
 

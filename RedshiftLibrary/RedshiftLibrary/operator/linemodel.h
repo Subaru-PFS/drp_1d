@@ -32,36 +32,6 @@ public:
     COperatorLineModel();
     virtual ~COperatorLineModel();
 
-    std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                             const CTemplateCatalog &tplCatalog,
-                                             const TStringList &tplCategoryList,
-                                             const std::string opt_calibrationPath,
-                                             const CRayCatalog& restraycatalog,
-                                             const std::string &opt_lineTypeFilter,
-                                             const std::string &opt_lineForceFilter,
-                                             const TFloat64Range& lambdaRange,
-                                             const TFloat64List& redshifts ,
-                                             const Int32 opt_extremacount,
-                                             const std::string &opt_fittingmethod,
-                                             const std::string &opt_continuumcomponent,
-                                             const std::string& opt_lineWidthType,
-                                             const Float64 opt_resolution,
-                                             const Float64 opt_velocityEmission,
-                                             const Float64 opt_velocityAbsorption,
-                                             const std::string &opt_continuumreest="no",
-                                             const std::string &opt_rules="all",
-                                             const std::string &opt_velocityFitting="no",
-                                             const Float64 &opt_twosteplargegridstep=0.001,
-                                             const std::string &opt_twosteplargegridsampling="log",
-                                             const std::string &opt_rigidity="rules",
-                                             const string &opt_tplratioCatRelPath="",
-                                             const string &opt_offsetCatRelPath="",
-                                             const Float64 &opt_emvelocityfitmin=20.,
-                                             const Float64 &opt_emvelocityfitmax=500.,
-                                             const Float64 &opt_emvelocityfitstep=20.,
-                                             const Float64 &opt_absvelocityfitmin=150.,
-                                             const Float64 &opt_absvelocityfitmax=500.,
-                                             const Float64 &opt_absvelocityfitstep=20.);
 
     Int32 Init( const CSpectrum& spectrum, 
                 const TFloat64List& redshifts, 
@@ -104,10 +74,8 @@ public:
                            const string &opt_tplratioCatRelPath="",
                            const string &opt_offsetCatRelPath="");
 
-    Int32 ComputeCandidates(const Int32 opt_extremacount,
-                            const Int32 opt_sign,
-                            const std::vector<Float64> & floatValues,
-                            const Float64 meritCut);
+    Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
+
     Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
 
 
@@ -149,42 +117,11 @@ public:
                                        const Float64 &opt_absvelocityfitmax,
                                        const Float64 &opt_absvelocityfitstep);
 
-    Int32 RecomputeAroundCandidates(TPointList input_extremumList,
-                                    const TFloat64Range &lambdaRange,
+    Int32 RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
                                     const std::string &opt_continuumreest,
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
 
-    std::shared_ptr<COperatorResult> computeWithUltimPass(const CSpectrum& spectrum,
-                                                          const CTemplateCatalog& tplCatalog,
-                                                          const TStringList& tplCategoryList,
-                                                          const std::string opt_calibrationPath,
-                                                          const CRayCatalog& restraycatalog,
-                                                          const std::string& opt_lineTypeFilter,
-                                                          const std::string& opt_lineForceFilter,
-                                                          const TFloat64Range& lambdaRange,
-                                                          const TFloat64List& redshifts,
-                                                          const Int32 opt_extremacount,
-                                                          const std::string& opt_fittingmethod,
-                                                          const std::string& opt_continuumcomponent,
-                                                          const std::string& opt_lineWidthType,
-                                                          const Float64 opt_resolution,
-                                                          const Float64 opt_velocityEmission,
-                                                          const Float64 opt_velocityAbsorption,
-                                                          const std::string& opt_continuumreest,
-                                                          const std::string& opt_rules,
-                                                          const std::string& opt_velocityFitting,
-                                                          const Float64 &opt_twosteplargegridstep,
-                                                          const string &opt_twosteplargegridsampling,
-                                                          const std::string& opt_rigidity,
-                                                          const string &opt_tplratioCatRelPath,
-                                                          const string &opt_offsetCatRelPath,
-                                                          const Float64 &opt_emvelocityfitmin,
-                                                          const Float64 &opt_emvelocityfitmax,
-                                                          const Float64 &opt_emvelocityfitstep,
-                                                          const Float64 &opt_absvelocityfitmin,
-                                                          const Float64 &opt_absvelocityfitmax,
-                                                          const Float64 &opt_absvelocityfitstep);
 
     Int32 SaveResults(const CSpectrum& spectrum,
                       const TFloat64Range& lambdaRange,
@@ -253,7 +190,6 @@ public:
     std::string m_opt_enableImproveBalmerFit;
     Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
-    TPointList m_firstpass_extremumList;
     std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
     CLineModelExtremaResult m_firstpass_extremaResult;
     CLineModelExtremaResult m_secondpass_parameters_extremaResult;
@@ -268,6 +204,8 @@ private:
     Int32 m_estimateLeastSquareFast = 0;
     Float64 m_extremaCount;
     Float64 m_Zlinemeasref;
+
+    TFloat64List SpanRedshiftWindow(Float64 z) const;
 
     void ComputeArea1(CLineModelResult& results);
     void ComputeArea2(CLineModelResult& results);

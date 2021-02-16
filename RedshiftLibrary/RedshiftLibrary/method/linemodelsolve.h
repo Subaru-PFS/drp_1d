@@ -41,7 +41,7 @@ public:
                                                    const string outputPdfRelDir,
                                                    const Float64 radius);
                                  
-    Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
+    // Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
 
 private:
 
@@ -138,8 +138,8 @@ private:
     std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_offsets_reldirpath="";
 
-    Float64 m_opt_extremacount;
-    Float64 m_opt_extremacountB;
+    Int64 m_opt_extremacount;
+    Int64 m_opt_extremacountB;
 
     Float64 m_opt_candidatesLogprobaCutThreshold;
     Float64 m_opt_firstpass_largegridstep;

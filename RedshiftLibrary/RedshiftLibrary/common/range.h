@@ -23,7 +23,9 @@ template <typename T> class CRange
         m_Begin(begin), m_End(end) {}
 
     CRange(const std::vector<T> & v):
-        m_Begin(v.front()), m_End(v.back()) {}
+        m_Begin(v.empty() ? T() : v.front()), 
+        m_End(v.empty() ?  T() : v.back()) 
+        {}
 
     ~CRange() {}
 

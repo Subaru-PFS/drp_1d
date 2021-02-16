@@ -88,6 +88,8 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplshapeAmplitude.resize(size);
     FittedTplshapeDtm.resize(size);
     FittedTplshapeMtm.resize(size);
+
+    Rank_PDF.resize(size, -1);
 }
 
 bool CLineModelExtremaResult::RemoveSecondPassCandidatebyIdx(Int32 idx){
@@ -728,20 +730,25 @@ void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> r
 {
   //  auto res = store.GetGlobalResult( "candidatesresult");
   auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>(res);
-  TInt32List order = candResults->Rank;
+  const TCandidateZbyRank & Candidates = candResults->m_ranked_candidates;
+  //TInt32List order = candResults->Rank;
+  TInt32List order(Candidates.size()); 
+  std::iota(order.begin(), order.end(), 0);
 
+    
   bool zeros = std::all_of(ExtremaMeritContinuum.begin(), ExtremaMeritContinuum.end(), [](int i) { return i==0; });
+  /*
   if(zeros){
         //saving firstpass data
         //in the case where some candidates from first-pass are eliminated from second-pass
         //make sure to save all data we collected from first pass
-        Int32 n = order.size();
+        Int32 n = candResults->m_ranked_candidates.size();
         if(n<Extrema.size()){
             order.clear(); //in this case, rank doesnt mean anything
             /*
             for(Int32 i = 0; i<Extrema.size(); i++){
                 order.push_back(i);
-            }*/
+            }*//*
             std::vector<std::string> ids = candResults->ExtremaIDs;
             Int32 ret = FixRanksUsingSortedIDs(order, ids);
             if(ret<0){
@@ -749,7 +756,7 @@ void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> r
                 throw std::runtime_error("   CLineModelExtremaResult::FixRanksUsingSortedIDs failed!");
             }
         }
-    }
+    }*/
   stream << "{"<< std::endl;
   // save extrema list, on 1 line
   SaveTFloat64List(stream,"z_extrema", Extrema, order);
@@ -769,7 +776,8 @@ void CLineModelExtremaResult::SaveJSON( std::shared_ptr<const COperatorResult> r
     stream << "," << std::endl;
 
     // save extremaPDF list, on 1 line
-    TFloat64List intgPDF = candResults->ValSumProba;
+    TFloat64List intgPDF;
+    for (auto c:Candidates) intgPDF.push_back(c.second.ValSumProba);
     SaveTFloat64List(stream,"z_extremaIntgPDF", intgPDF, order);
     stream << "," << std::endl;
   }

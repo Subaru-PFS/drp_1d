@@ -2,6 +2,7 @@
 #define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
 #include <RedshiftLibrary/method/solveresult.h>
+#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/ray/catalog.h>
 
@@ -53,7 +54,7 @@ public:
                                 Float64 &lfOII,
                                 std::string &modelTplratio,
                                 std::string &modelTplContinuum) const;
-    Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
+    // Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) ;
 
@@ -62,8 +63,9 @@ public:
 
 private:
 
+    std::shared_ptr<CLineModelExtremaResult> m_extremaResult;
 
-        UInt32 m_bestRedshiftMethod = 2;
+    UInt32 m_bestRedshiftMethod = 2;
 
     std::string tplratioName="-1";
     std::string tplcontinuumName="-1";

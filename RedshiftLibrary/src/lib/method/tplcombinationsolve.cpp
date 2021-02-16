@@ -1,33 +1,20 @@
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
-#include <RedshiftLibrary/method/templatefittingresult.h>
 #include <RedshiftLibrary/operator/templatefittingresult.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
-#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
 #include <cfloat>
 
 using namespace NSEpic;
 using namespace std;
 
 
-CMethodTplcombinationSolve::CMethodTplcombinationSolve()
-{
-}
-
-CMethodTplcombinationSolve::~CMethodTplcombinationSolve()
-{
-}
-
-const std::string CMethodTplcombinationSolve::GetDescription()
+const std::string CMethodTplcombinationSolve::GetDescription() const
 {
     std::string desc;
 
@@ -56,32 +43,33 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
                                                                            Float64 overlapThreshold,
                                                                            std::vector<CMask> maskList,
                                                                            const std::string outputPdfRelDir,
-                                                                           const Float64 radius,
+                                                                           const Float64 redshiftSeparation,
                                                                            std::string spcComponent,
                                                                            std::string opt_interp,
                                                                            std::string opt_extinction,
                                                                            std::string opt_dustFit)
 {
     Bool storeResult = false;
-    m_radius = radius;
+    m_redshiftSeparation = redshiftSeparation;
 //    std::string _name = "Tplcombination";
     CDataStore::CAutoScope resultScope( resultStore, "tplcombinationsolve" );
 //    std::string _scope = "tplcombination";
-    std::string scopeStr = "chisquare";
+    std::string scopeStr = "templatefitting";
 
     CTemplateFittingSolveResult::EType _type;
     if(spcComponent=="raw"){
        _type = CTemplateFittingSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
        _type = CTemplateFittingSolveResult::nType_noContinuum;
-       scopeStr = "chisquare_nocontinuum";
+       scopeStr = "templatefitting_nocontinuum";
     }else if(spcComponent=="continuum"){
         _type = CTemplateFittingSolveResult::nType_continuumOnly;
-        scopeStr = "chisquare_continuum";
+        scopeStr = "templatefitting_continuum";
     }else if(spcComponent=="all"){
         _type = CTemplateFittingSolveResult::nType_all;
     }
 
+    resultStore.GetScopedParam( "extremacount", m_opt_maxCandidate, 5);
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
     resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
     if(m_opt_saveintermediateresults=="yes")
@@ -108,35 +96,32 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
-//    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
-//    {
-//        std::string category = tplCategoryList[i];
-
-//        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
-//        {
-//            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-//            const CTemplate& tplWithoutCont = tplCatalog.GetTemplateWithoutContinuum( category, j );
-
     Solve(resultStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
     storeResult = true;
-//        }
-//    }
-
 
     if( storeResult )
     {
-        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, "tplcombinationsolve");
 
-        COperatorPdfz pdfz;
+        COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);
 
+        std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
+
+        // save in resultstore candidates results
         {
-            ChisquareArray chisquares = BuildChisquareArray(resultStore, scopeStr);
-            pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
-
-            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-            resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+            std::string name;
+            if(resultStore.GetCurrentScopeName()=="templatefittingsolve")
+                name = "candidatesresult";
+            else  
+                name = resultStore.GetCurrentScopeName() + "." +"candidatesresult";
+            resultStore.StoreGlobalResult( name, candidateResult );
         }
+
+        //for each candidate, get best model by reading from datastore and selecting best fit
+        /////////////////////////////////////////////////////////////////////////////////////
+        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
+
+        // TBD
 
         return solveResult;
     }
@@ -212,21 +197,29 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
         if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
-            scopeStr = "chisquare_continuum";
+            scopeStr = "tplcombination_continuum";
 
         }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
-            scopeStr = "chisquare";
+            scopeStr = "tplcombination";
 
         }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
-            scopeStr = "chisquare_nocontinuum";
+            scopeStr = "tplcombination_nocontinuum";
             //
             enable_dustFitting = 0;
         }
 
         // Compute merit function
-        auto  result = std::dynamic_pointer_cast<CTemplateFittingResult>( m_tplcombinationOperator.Compute( spc, tplList, lambdaRange, redshifts, overlapThreshold, maskList, m_radius, opt_interp, enable_extinction, enable_dustFitting ) );
+        auto  result = std::dynamic_pointer_cast<CTemplateFittingResult>( m_tplcombinationOperator.Compute( spc, 
+                                                                                                            tplList, 
+                                                                                                            lambdaRange, 
+                                                                                                            redshifts, 
+                                                                                                            overlapThreshold, 
+                                                                                                            maskList, 
+                                                                                                            opt_interp, 
+                                                                                                            enable_extinction, 
+                                                                                                            enable_dustFitting ) );
 
         if( !result )
         {
@@ -339,31 +332,3 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(const CDataStore&
     return chisquarearray;
 }
 
-Bool CMethodTplcombinationSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)
-{
-        Log.LogInfo( "Computing candidates Probabilities" );
-        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
-
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-        auto results =  store.GetGlobalResult( scope_res.c_str() );
-        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
-
-        if(!logzpdf1d)
-        {
-            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
-        }
-        //Compute Deltaz should happen after marginalization
-        // use it for computing the integrated PDF
-        TFloat64List deltaz;
-        CDeltaz deltaz_obj;
-        for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
-            Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(deltaz_obj.GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
-        }
-        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-
-    return true;
-}

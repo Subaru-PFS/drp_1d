@@ -2,6 +2,7 @@
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
 #include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/spectrum/LSF.h>

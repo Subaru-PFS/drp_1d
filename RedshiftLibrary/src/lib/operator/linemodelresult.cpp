@@ -606,9 +606,8 @@ Int32 CLineModelResult::getRedshiftIndex(Float64 z)
 
   if (itr == Redshifts.end() || *itr != z)
     {
-      size_t size = snprintf( nullptr, 0, "Could not find extrema solution index for %f", z) + 1; // Extra space for '\0'
-      std::unique_ptr<char[]> buf( new char[ size ] );                                                        snprintf( buf.get(), size, "Could not find extrema solution index for %f", z);                          std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-      throw runtime_error(_msg.c_str());
+      Log.LogError("CLineModelResult::getRedshiftIndex: Could not find redshift index for %f", z);
+      throw runtime_error("CLineModelResult::getRedshiftIndex: Could not find redshift index");
     }
   return (itr - Redshifts.begin()); 
 }

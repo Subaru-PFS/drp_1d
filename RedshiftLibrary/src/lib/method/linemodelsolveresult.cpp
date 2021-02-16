@@ -201,14 +201,19 @@ Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
     //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
     // -> No, lineModelResult contains linemodel operator results, thus no pdf related stuff (DV)
     
-    scope = store.GetScope( *this ) + "linemodelsolve.candidatesresult";
+    scope = store.GetScope( *this ) + "candidatesresult";
     auto res = store.GetGlobalResult( scope.c_str() );
     auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
-    TFloat64List ExtremaPDF = candResults->ValSumProba;
-    //reading from candResults cause deltaz is computed correctly there and what is saved in datastore is bad
-    TFloat64List ExtremaDeltaz = candResults->Deltaz;
-    TFloat64List Extrema = candResults->Redshifts;
-    Int32 bestIdx = candResults->Rank[0];
+    const TCandidateZbyRank & candidates = candResults->m_ranked_candidates;
+    TFloat64List ExtremaPDF;
+    TFloat64List ExtremaDeltaz;
+    TFloat64List Extrema;
+    for (auto c:candidates){
+        ExtremaPDF.push_back(c.second.ValSumProba);
+        ExtremaDeltaz.push_back(c.second.Deltaz);
+        Extrema.push_back(c.second.Redshift);
+    }
+    Int32 bestIdx = 0;
 
     if(bestIdx>=Extrema.size() || !Extrema.size()){
        Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: Can't access best redshift ");
@@ -321,6 +326,7 @@ Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStor
     return true;
 }
 
+/*
 Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
 {
     Log.LogDebug( "CLineModelSolveResult::GetRedshiftCandidates" );
@@ -337,7 +343,7 @@ Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std
     }
 
     return true;
-}
+}*/
 
 void CLineModelSolveResult::getData(const std::string& name, Float64& v) const
 {

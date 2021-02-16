@@ -9,10 +9,9 @@
 
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
+#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -211,8 +210,8 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
 
     dataStore.GetScopedParam( "linemodel.continuumreestimation", m_opt_continuumreest, "no" );
     dataStore.GetScopedParam( "linemodel.rules", m_opt_rules, "all" );
-    dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10.0 );
-    dataStore.GetScopedParam( "linemodel.extremacountB", m_opt_extremacountB, 0.0 );
+    dataStore.GetScopedParam( "linemodel.extremacount", m_opt_extremacount, 10 );
+    dataStore.GetScopedParam( "linemodel.extremacountB", m_opt_extremacountB, 0 );
     dataStore.GetScopedParam( "linemodel.extremacutprobathreshold", m_opt_candidatesLogprobaCutThreshold, -1 );
     dataStore.GetScopedParam( "linemodel.stronglinesprior", m_opt_stronglinesprior, -1);
     dataStore.GetScopedParam( "linemodel.haprior", m_opt_haPrior, -1);
@@ -359,6 +358,9 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     m_redshiftSeparation = radius;
 
     PopulateParameters( dataStore );
+
+    std::shared_ptr<CLineModelSolveResult> lmsolveresult = std::make_shared<CLineModelSolveResult>();
+
     Int32 retSolve = Solve( dataStore, spc, tplCatalog, tplCategoryList, restraycatalog, lambdaRange, redshifts );
 
     if(retSolve){
@@ -377,6 +379,16 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
         //std::shared_ptr<CPdfLogResult> zpriorResult = std::make_shared<CPdfLogResult>();
         
+        COperatorPdfz pdfz(m_opt_pdfcombination, 
+                           0.0, // no peak Separation in 2nd pass
+                           0.0, // cut threshold
+                           m_opt_extremacount, // max nb of final (2nd pass) candidates
+                           "SPE", //Id_prefix
+                           1,  // one peak/window only
+                           result->ExtremaResult.ExtremaExtendedRedshifts,
+                           result->ExtremaResult.ExtremaIDs
+                           ); 
+        
         ChisquareArray chisquares = BuildChisquareArray(result,
                                                         m_opt_rigidity,
                                                         m_opt_pdfcombination,
@@ -385,10 +397,10 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                                                         m_opt_euclidNHaEmittersPriorStrength,
                                                         m_opt_modelZPriorStrength);
 
-        COperatorPdfz pdfz;
+        std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(chisquares);
+        
 
-        pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
-
+        // store results
         Log.LogDetail("%s: Storing PDF results", __func__);
         std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
         dataStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
@@ -399,37 +411,68 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         dataStore.StoreGlobalResult( priorPath.c_str(), zpriorResult);
         */
         
+        auto ExtremaResultPtr = result->GetExtremaResult(); // this is pointing to a non-const copy 
+        
         {
-            TFloat64List zcandidates_unordered_list;
-            //std::shared_ptr<CPdfCandidateszResult> pdfcandResult_obj = std::make_shared<CPdfCandidateszResult>();
-            GetBestRedshiftsFromPdf(dataStore, 
-                                    result->ExtremaResult.Extrema,
-                                    result->ExtremaResult.ExtremaExtendedRedshifts,
-                                    zcandidates_unordered_list);
-            /*
-            for(Int32 idx = 0; idx<zcandidates_unordered_list.size(); idx++){
-                //Important TODO:
-                //we'd rather separate saveresults into two functions: one to do more calculations and one to save into m_results data to be saved in datastore
-                result->ExtremaResult.Extrema[idx] = zcandidates_unordered_list[idx];
-            }*/
+            std::vector<std::string> info = {"spc", "fit", "fitcontinuum", "rules", "continuum"};
 
-            auto ExtremaResultPtr = result->GetExtremaResult(); // this is a non-const copy !
-            ExtremaResultPtr->Extrema = zcandidates_unordered_list;
+            Int32 rank = 0;
+            for (auto & c: candidateResult->m_ranked_candidates){
+                Float64 & z = c.second.Redshift;    
+                std::string & Id = c.first;
+                // temporary, TO BE changed, get idx corresponding to same id.
+                Int32 idx=-1;
+                for (Int32 i=0; i<ExtremaResultPtr->ExtremaIDs.size(); ++i ){
+                    if (Id.find(ExtremaResultPtr->ExtremaIDs[i])!=std::string::npos){
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx!=-1){
+                    ExtremaResultPtr->Extrema[idx] = z;
+                    ExtremaResultPtr->Rank_PDF[rank] = idx;// to be compatible with obsolete rank (TB removed in future commit)
 
-            //compute the integratedPDF and sort candidates based on intg PDF
-            //truncate based on maxCount
-            Bool b = ExtractCandidateResults(dataStore, zcandidates_unordered_list, m_opt_extremacount);
+                    // rename extrema resultts in the store by their final rank (TB removed in future commit)
+                    for(auto & f: info) {
+                        std::string fname_new =
+                            (boost::format("linemodel_%1%_extrema_%2%") % f % rank).str();
+                        std::string fname_old =
+                            (boost::format("linemodel_%1%_extrema_tmp_%2%") % f % idx).str();
+                        dataStore.ChangeScopedGlobalResult(fname_old, fname_new);    
+                    }
 
-            auto res = dataStore.GetGlobalResult("linemodelsolve.candidatesresult");
-            auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
-            TInt32List Rank_PDF = candResults->Rank;
-            ExtremaResultPtr->Rank_PDF = Rank_PDF;
+                }
+                else{
+                    Log.LogError("Linemodelsolve: pdf extrema has an Id not found in the linemodel extrema list");
+                    throw runtime_error("Linemodelsolve: pdf extrema has an Id not found in the linemodel extrema list");
+                }
 
+                ++rank;
+            }
+                    
+            //Delete extra tmp data corresponding to truncated candidates (TB removed in future commit)
+            for (Int32 i=0; i< ExtremaResultPtr->Extrema.size(); ++i){
+                const std::string & ID = ExtremaResultPtr->ExtremaIDs[i];
+                const TCandidateZbyRank & cands = candidateResult->m_ranked_candidates;
+                if (std::none_of(cands.begin(),
+                                 cands.end(),
+                                 [&ID](std::pair<std::string, TCandidateZ> p){return (p.first == ID); } )){
+                    for(auto & f: info) {
+                        const std::string fname_old =
+                            (boost::format("linemodel_%1%_extrema_tmp_%2%") % f % i).str();
+                        dataStore.DeleteScopedGlobalResult(fname_old);
+                    }
+                }
+            }
+        
             //save linemodel extrema results
             std::string extremaResultsStr = "linemodel_extrema";
             Log.LogDetail("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
             dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResultPtr );
             
+            dataStore.StoreGlobalResult("candidatesresult", candidateResult);
+
+
         }
 
         //SaveContinuumPDF(dataStore, result);
@@ -496,7 +539,6 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
         return NULL;
     }
 
-    std::shared_ptr<CLineModelSolveResult> lmsolveresult = std::make_shared<CLineModelSolveResult>();
     return lmsolveresult;
 }
 
@@ -962,37 +1004,28 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     //Compute z-candidates
     //**************************************************
-    Bool overrideUseBestchi2forCandidates = false;
-    Int32 sign = 1;
-    std::vector<Float64> fvals;
     std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel.getResult() );
-    if(overrideUseBestchi2forCandidates)
-    {
-        sign = -1;
-        fvals = lmresult->ChiSquare;
-    }else{
 
-        ChisquareArray chisquares = BuildChisquareArray(lmresult,
-                                                        m_opt_rigidity,
-                                                        m_opt_pdfcombination,
-                                                        m_opt_stronglinesprior,
-                                                        m_opt_haPrior,
-                                                        m_opt_euclidNHaEmittersPriorStrength,
-                                                        m_opt_modelZPriorStrength);
-        COperatorPdfz pdfz;
-        pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
-        
-        sign = 1;
-        fvals = std::move(pdfz.m_postmargZResult->valProbaLog);
-    }
+    ChisquareArray chisquares = BuildChisquareArray(lmresult,
+                                                    m_opt_rigidity,
+                                                    m_opt_pdfcombination,
+                                                    m_opt_stronglinesprior,
+                                                    m_opt_haPrior,
+                                                    m_opt_euclidNHaEmittersPriorStrength,
+                                                    m_opt_modelZPriorStrength);
 
-    Int32 retCandidates = linemodel.ComputeCandidates(m_opt_extremacount, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
-    if( retCandidates!=0 )
-    {
-        Log.LogError( "Linemodel: Search for z-candidates failed. Aborting" );
-        throw std::runtime_error("Linemodel: Search for z-candidates failed. Aborting");
-    }
+    //TODO deal with the case lmresult->Redshifts=1
+    Int32 extremacount = 5;
+    COperatorPdfz pdfz(m_opt_pdfcombination,
+                        2*m_opt_secondpass_halfwindowsize, // peak separation
+                        m_opt_candidatesLogprobaCutThreshold,
+                        extremacount,
+                        "FPE");
 
+    std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+    
+    linemodel.SetFirstPassCandidates(candResult->m_ranked_candidates);
+ 
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
@@ -1060,35 +1093,28 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
         //**************************************************
         //Compute z-candidates B
         //**************************************************
-        Bool overrideUseBestchi2forCandidates = false;
-        Int32 sign = 1;
-        std::vector<Float64> fvals;
         std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel_fpb.getResult() );
-        if(overrideUseBestchi2forCandidates)
-        {
-            sign = -1;
-            fvals = lmresult->ChiSquare;
-        }else{
-            ChisquareArray chisquares = BuildChisquareArray(lmresult,
-                                                            m_opt_rigidity,
-                                                            m_opt_pdfcombination,
-                                                            m_opt_stronglinesprior,
-                                                            m_opt_haPrior,
-                                                            m_opt_euclidNHaEmittersPriorStrength,
-                                                            m_opt_modelZPriorStrength);
-            COperatorPdfz pdfz;
-            pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
-            
-            sign = 1;
-            fvals = std::move(pdfz.m_postmargZResult->valProbaLog);
+                    
+        ChisquareArray chisquares = BuildChisquareArray(lmresult,
+                                                        m_opt_rigidity,
+                                                        m_opt_pdfcombination,
+                                                        m_opt_stronglinesprior,
+                                                        m_opt_haPrior,
+                                                        m_opt_euclidNHaEmittersPriorStrength,
+                                                        m_opt_modelZPriorStrength);
+ 
 
-        }
-        Int32 retCandidates = linemodel_fpb.ComputeCandidates(m_opt_extremacountB, sign, fvals, m_opt_candidatesLogprobaCutThreshold);
-        if( retCandidates!=0 )
-        {
-            Log.LogError( "linemodel_fpb: Search for z-candidates failed. Aborting" );
-            throw std::runtime_error("linemodel_fpb: Search for z-candidates failed. Aborting");
-        }
+        //TODO deal with the case lmresult->Redshifts=1
+        Int32 extremacount = 5;
+        COperatorPdfz pdfz(m_opt_pdfcombination,
+                            2*m_opt_secondpass_halfwindowsize, // peak separation
+                            m_opt_candidatesLogprobaCutThreshold,
+                            extremacount,
+                            "FPE");
+
+        std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+        
+        linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
 
         //**************************************************
         //COMBINE CANDIDATES
@@ -1183,7 +1209,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     return true;
 }
 
-
+/*
 Bool CLineModelSolve::GetBestRedshiftsFromPdf(const CDataStore& store, 
                                                     const TFloat64List & Extrema,  
                                                     const std::vector<TFloat64List> & ExtremaExtendedRedshifts,
@@ -1222,7 +1248,8 @@ Bool CLineModelSolve::GetBestRedshiftsFromPdf(const CDataStore& store,
 
     return true;
 }
-
+*/
+/*
 Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List const & zcandidates_unordered_list, Int32 maxCount)
 {
         Log.LogInfo( "Computing candidates Probabilities" );
@@ -1285,3 +1312,4 @@ Bool CLineModelSolve::ExtractCandidateResults(CDataStore &store,  TFloat64List c
 
         return true;
 }
+*/

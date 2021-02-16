@@ -362,33 +362,6 @@ Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64
     return 1;
 }
 
-Bool CTemplateFittingSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates, Int32 n_candidates, std::string outputPdfRelDir) const
-{
-    Log.LogDebug( "C%sSolveResult::GetRedshiftCandidates", m_name.c_str() );
-    redshiftcandidates.clear();
-
-    std::string scope_res = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-    auto results_pdf =  store.GetGlobalResult( scope_res.c_str() );
-    std::shared_ptr<const CPdfMargZLogResult> logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        Log.LogError( "GetRedshiftCandidates: no pdf results retrieved from scope: %s", scope_res.c_str());
-        return -1;
-    }
-
-    // Find extrema
-    TPointList extremumList;
-    CExtremum extremum(n_candidates);
-    extremum.Find( logzpdf1d->Redshifts, logzpdf1d->valProbaLog, extremumList );
-    for(Int32 k=0; k<extremumList.size(); k++)
-    {
-        redshiftcandidates.push_back(extremumList[k].X);
-    }
-
-    return true;
-}
-
 void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) const
 {
   if (name.compare("snrHa") == 0)  v = -1;

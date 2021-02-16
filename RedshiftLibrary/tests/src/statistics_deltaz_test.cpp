@@ -122,6 +122,8 @@ BOOST_AUTO_TEST_CASE(Deltazbordermax)
     DeltazTestCompute( chi2sample, center_redshift, redshiftRange);
 
 }
+
+/*
 //both redshifts belong to overlapping range
 BOOST_AUTO_TEST_CASE(Deltaz_overlapping1)
 {
@@ -190,5 +192,5 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
     BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
     BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
     BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
-}
+}*/
 BOOST_AUTO_TEST_SUITE_END()

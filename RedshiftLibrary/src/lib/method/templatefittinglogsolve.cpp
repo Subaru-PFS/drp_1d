@@ -1,19 +1,14 @@
 #include <RedshiftLibrary/method/templatefittinglogsolve.h>
+#include <RedshiftLibrary/operator/templatefitting.h> //needed to compute model at the end
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/operator/pdfLogresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
-#include <cfloat>
+//#include <cfloat>
 
 using namespace NSEpic;
 using namespace std;
@@ -24,7 +19,7 @@ CMethodTemplateFittingLogSolve::CMethodTemplateFittingLogSolve( std::string cali
 {
 }
 
-const std::string CMethodTemplateFittingLogSolve::GetDescription()
+const std::string CMethodTemplateFittingLogSolve::GetDescription() const
 {
     std::string desc;
 
@@ -52,7 +47,7 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
                                                                          Float64 overlapThreshold,
                                                                          std::vector<CMask> maskList,
                                                                          const string outputPdfRelDir,
-                                                                         const Float64 radius,
+                                                                         const Float64 redshiftSeparation,
                                                                          std::string spcComponent,
                                                                          std::string opt_interp,
                                                                          std::string opt_extinction,
@@ -62,21 +57,22 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
 
     CDataStore::CAutoScope resultScope( resultStore, "templatefittinglogsolve" );
     std::string scopeStr = "templatefitting";
-    m_radius = radius;
+    m_redshiftSeparation = redshiftSeparation;
 
     CTemplateFittingSolveResult::EType _type;
     if(spcComponent=="raw"){
        _type = CTemplateFittingSolveResult::nType_raw;
     }else if(spcComponent=="nocontinuum"){
        _type = CTemplateFittingSolveResult::nType_noContinuum;
-       scopeStr = "chisquare_nocontinuum";
+       scopeStr = "templatefitting_nocontinuum";
     }else if(spcComponent=="continuum"){
         _type = CTemplateFittingSolveResult::nType_continuumOnly;
-        scopeStr = "chisquare_continuum";
+        scopeStr = "templatefitting_continuum";
     }else if(spcComponent=="all"){
         _type = CTemplateFittingSolveResult::nType_all;
     }
 
+    resultStore.GetScopedParam( "extremacount", m_opt_maxCandidate, 5);
     resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
     resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
     if(m_opt_saveintermediateresults=="yes")
@@ -123,18 +119,63 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTemplateFittingLogSolve::Com
 
     if( storeResult )
     {
-        std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = std::make_shared<CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
+        COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);
 
-        COperatorPdfz pdfz;
+        std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
+        // save in resultstore pdf results
+        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+        resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+        
+        // save in resultstore candidates results
         {
-            ChisquareArray chisquares = BuildChisquareArray(resultStore, scopeStr);
-            Int32 retCombinePdf = pdfz.CombinePDF(chisquares, m_opt_pdfcombination);
-
-            std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-            resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+            std::string name;
+            if(resultStore.GetCurrentScopeName()=="templatefittinglogsolve")
+                name = "candidatesresult";
+            else  
+                name = resultStore.GetCurrentScopeName() + "." +"candidatesresult";
+            resultStore.StoreGlobalResult( name, candidateResult );
         }
 
+        //for each candidate, get best model by reading from datastore and selecting best fit
+        /////////////////////////////////////////////////////////////////////////////////////
+        std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = std::make_shared<CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
+
+        //for(Int32 i = 0; i<zcandidates_unordered_list.size(); i++){
+        for (auto c:candidateResult->m_ranked_candidates){ // ranked loop
+            Float64 & z = c.second.Redshift;
+            Int32 ret = TemplateFittingSolveResult->GetBestModel(resultStore, z); //, tplName, MeiksinIdx, DustCoeff, Amplitude);
+
+            if(ret==-1){
+                Log.LogError("  TemplateFittingSolve: Couldn't find best model for candidate %f", z);
+                continue;
+            }
+            //now that we have best tplName, we have access to meiksin index & EBMV to create the model spectrum
+            const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, TemplateFittingSolveResult->GetTemplateName());
+            CModelSpectrumResult spcmodel;
+            COperatorTemplateFitting templateFittingOperator;
+            templateFittingOperator.ComputeSpectrumModel(spc, tpl, 
+                                                z,
+                                                TemplateFittingSolveResult->GetDustCoeff(), 
+                                                TemplateFittingSolveResult->GetMeiksinIdx(), 
+                                                TemplateFittingSolveResult->GetAmplitude(),
+                                                opt_interp, opt_extinction, lambdaRange, 
+                                                overlapThreshold, spcmodel);
+            m_savedModelSpectrumResults.push_back(std::make_shared<CModelSpectrumResult>(spcmodel));
+            m_savedModelContinuumFittingResults.push_back(std::make_shared<CModelContinuumFittingResult>(
+                                                                            z,
+                                                                            tpl.GetName(), 
+                                                                            TemplateFittingSolveResult->GetMerit(),
+                                                                            TemplateFittingSolveResult->GetAmplitude(),
+                                                                            TemplateFittingSolveResult->GetAmplitudeError(),
+                                                                            TemplateFittingSolveResult->GetDustCoeff(),
+                                                                            TemplateFittingSolveResult->GetMeiksinIdx(),
+                                                                            TemplateFittingSolveResult->GetFittingSNR()));          
+
+                    
+        }
+        SaveSpectrumResults(resultStore);
+    
         return TemplateFittingSolveResult;
     }
 
@@ -189,7 +230,7 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
 
         if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
-            scopeStr = "chisquare_continuum";
+            scopeStr = "templatefitting_continuum";
 
         }else if(_spctype == CSpectrum::nType_raw){
             // use full spectrum
@@ -197,7 +238,7 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
 
         }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
-            scopeStr = "chisquare_nocontinuum";
+            scopeStr = "templatefitting_nocontinuum";
             //
             option_dustFitting = -1;
         }
@@ -213,7 +254,6 @@ Bool CMethodTemplateFittingLogSolve::Solve(CDataStore& resultStore,
                                                                                                                        opt_interp,
                                                                                                                        enable_extinction,
                                                                                                                        option_dustFitting ) );
-        chisquareResult->CallFindExtrema(m_radius);
 
         if( !chisquareResult )
         {
@@ -341,33 +381,21 @@ ChisquareArray CMethodTemplateFittingLogSolve::BuildChisquareArray(const CDataSt
     return chisquarearray;
 }
 
-Bool CMethodTemplateFittingLogSolve::ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list)
+void CMethodTemplateFittingLogSolve::SaveSpectrumResults(CDataStore &dataStore) const
 {
-        Log.LogInfo( "Computing candidates Probabilities" );
-        std::shared_ptr<CPdfCandidateszResult> zcand = std::shared_ptr<CPdfCandidateszResult>(new CPdfCandidateszResult());
+    if( m_savedModelContinuumFittingResults.size()!= m_savedModelSpectrumResults.size()){
+        Log.LogError(" CMethodTemplateFittingLogSolve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size.");
+        throw runtime_error(" CMethodTemplateFittingLogSolve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size. Aborting!");
+    }
 
-        std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-        auto results =  store.GetGlobalResult( scope_res.c_str() );
-        auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results.lock() );
+    Log.LogDetail("  Methode-COperatorTemplatefittingLog: now saving spectrum/model templatefitting results n=%d", m_savedModelSpectrumResults.size());
+    for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
+    {
+        std::string fname_spc = (boost::format("templatefitting_spc_extrema_%1%") % i).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
 
-        if(!logzpdf1d)
-        {
-            Log.LogError( "Extract Proba. for z candidates: no results retrieved from scope: %s", scope_res.c_str());
-            throw std::runtime_error("Extract Proba. for z candidates: no results retrieved from scope");
-        }
-        //Compute Deltaz should happen after marginalization
-        // use it for computing the integrated PDF
-        TFloat64List deltaz;
-        CDeltaz deltaz_obj;
-        for(Int32 i =0; i<zcandidates_unordered_list.size(); i++){
-            Float64 z = zcandidates_unordered_list[i];
-            deltaz.push_back(deltaz_obj.GetDeltaz(logzpdf1d->Redshifts, logzpdf1d->valProbaLog, z));
-        }
-
-        Log.LogInfo( "  Integrating %d candidates proba.", zcandidates_unordered_list.size() );
-        zcand->Compute(zcandidates_unordered_list, logzpdf1d->Redshifts, logzpdf1d->valProbaLog, deltaz);
-        
-        store.StoreScopedGlobalResult( "candidatesresult", zcand ); 
-
-    return true;
+        fname_spc = (boost::format("templatefitting_fitcontinuum_extrema_%1%") % i).str();
+        dataStore.StoreScopedGlobalResult( fname_spc.c_str(),  m_savedModelContinuumFittingResults[i] );
+    }
+    return;
 }

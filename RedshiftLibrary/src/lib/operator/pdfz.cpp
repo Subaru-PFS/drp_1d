@@ -1,93 +1,81 @@
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
-
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/extremum/extremum.h>
 
 using namespace NSEpic;
 using namespace std;
 #include <fstream>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit.h>
-#include <gsl/gsl_multifit_nlin.h>
+#include <algorithm>
+#include <cfloat>
 
-//** gaussian fit **//
-struct pdfz_lmfitdata {
-    size_t n;
-    Float64 *y;
-    Float64 *z;
-    Float64 zcenter;
-};
-
-int pdfz_lmfit_f(const gsl_vector *x, void *data, gsl_vector *f)
+COperatorPdfz::COperatorPdfz(const std::string & opt_combine, 
+                             Float64 peakSeparation,
+                             Float64 meritcut,
+                             UInt32 maxCandidate,
+                             const std::string & Id_prefix,
+                             UInt32 maxPeakCount_per_window,
+                             const std::vector<TFloat64List> & candidatesRedshifts,
+                             const TStringList & candidatesIds
+                             ):
+    m_opt_combine(opt_combine),
+    m_peakSeparation(peakSeparation),
+    m_meritcut(meritcut),
+    m_maxPeakCount_per_window(maxPeakCount_per_window<=0? maxCandidate:maxPeakCount_per_window),
+    m_maxCandidate(maxCandidate),
+    m_Id_prefix(Id_prefix)
 {
-    Int32 verbose = 0;
-    size_t n = ((struct pdfz_lmfitdata *)data)->n;
-    Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
-    Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
-    Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
-
-    double a = gsl_vector_get(x, 0);
-    double sigma = gsl_vector_get(x, 1);
-    if (verbose)
+    TStringList::const_iterator begin1 = candidatesIds.begin();
+    TStringList::const_iterator end1 = candidatesIds.end();
+    std::vector<TFloat64List>::const_iterator begin2 = candidatesRedshifts.begin();
+    std::vector<TFloat64List>::const_iterator end2 = candidatesRedshifts.end();
+    TStringList::const_iterator i1;
+    std::vector<TFloat64List>::const_iterator i2;
+    for(i1=begin1, i2=begin2; (i1!=end1) && (i2!=end2); ++i1, ++i2)
     {
-        Log.LogDebug("Pdfz: Pdfz computation: pdfz_lmfit_f : a=%e, sigma=%e, zcenter=%.5f ", a, sigma, zcenter);
+        m_candidatesZRanges[*i1] = TFloat64Range(*i2); 
+        // with nocandidatesRedshifts given will be with Id="" and empty range value.
     }
-
-    for (Int32 i = 0; i < n; i++)
-    {
-        Float64 t = z[i] - zcenter;
-        const Float64 xsurc = t / sigma;
-        Float64 Yi = a * exp(-0.5 * xsurc * xsurc);
-        if (0 && verbose)
-        {
-            Log.LogDebug("Pdfz: Pdfz computation: pdfz_lmfit_f : for i=%d, Yi=%e", i, Yi);
-        }
-        gsl_vector_set(f, i, Yi - y[i]);
-    }
-
-    return GSL_SUCCESS;
 }
 
-int pdfz_lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J)
-{
-    size_t n = ((struct pdfz_lmfitdata *)data)->n;
-    Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
-    Float64 zcenter = ((struct pdfz_lmfitdata *)data)->zcenter;
-
-    double a = gsl_vector_get(x, 0);
-    double sigma = gsl_vector_get(x, 1);
-
-    size_t i;
-
-    for (i = 0; i < n; i++)
-    {
-        Float64 t = z[i] - zcenter;
-        const Float64 xsurc = t / sigma;
-
-        gsl_matrix_set(J, i, 0, exp(-0.5 * xsurc * xsurc));
-        gsl_matrix_set(J, i, 1, t * t / (sigma * sigma * sigma) * a * exp(-0.5 * xsurc * xsurc));
-    }
-    return GSL_SUCCESS;
-}
-//** gaussian fit end**//
 
 /*
 * Main Pdf operator entrance
 *  combine pdf and search for candidates.
 */
-/*Int32 COperatorPdfz::compute(redshifts, chiSquares, priors, cstLog, std::string opt_combine)
+std::shared_ptr<CPdfCandidateszResult> COperatorPdfz::Compute(const ChisquareArray & chisquarearray,
+                                                              Bool integ)
 {
 
+    // build PDF from chisquares and priors
+    CombinePDF(chisquarearray);
 
+    // find candidates redshifts
+    TCandidateZbyID zcandidates; // will be sorted by the id syntax inside each redhisftwindow
+    searchMaxPDFcandidates(zcandidates);
 
+    std::shared_ptr<CPdfCandidateszResult> CandidateszResult;
+    if (integ){
+        // compute pdf candidate properties (deltaz, integ, rank )
+        CPdfCandidatesZ zcand_op =  CPdfCandidatesZ(zcandidates);
+        CandidateszResult = zcand_op.Compute(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog);
 
+        //eventually truncate candidates at maxcount
+        size_t newsize = std::min(CandidateszResult->m_ranked_candidates.size(), size_t(m_maxCandidate));
+        CandidateszResult->m_ranked_candidates.resize(newsize);
+    }else{
+        CandidateszResult = std::make_shared<CPdfCandidateszResult>();
+            for (auto c:zcandidates){
+                CandidateszResult->m_ranked_candidates.emplace_back(c);
+            }
+    }
 
+    return CandidateszResult;
 }
-*/
 
 
-Int32 COperatorPdfz::CombinePDF(const ChisquareArray & chisquarearray, const std::string & opt_combine)
+
+Int32 COperatorPdfz::CombinePDF(const ChisquareArray & chisquarearray)
 {
     Log.LogInfo("Pdfz combination");
 
@@ -98,17 +86,17 @@ Int32 COperatorPdfz::CombinePDF(const ChisquareArray & chisquarearray, const std
         // initialize m_postmargZResult
         m_postmargZResult = std::make_shared<CPdfMargZLogResult>(chisquarearray.redshifts);
 
-        if(opt_combine=="marg")
+        if(m_opt_combine=="marg")
         {
             Log.LogInfo("    Pdfz combination - Marginalization");
             retPdfz = Marginalize( chisquarearray);
             
-        }else if(opt_combine=="bestchi2")
+        }else if(m_opt_combine=="bestchi2")
         {
             Log.LogInfo("    Pdfz combination - BestChi2");
             retPdfz = BestChi2( chisquarearray);
 
-        }else if(opt_combine=="bestproba"){
+        }else if(m_opt_combine=="bestproba"){
             Log.LogInfo("    Pdfz combination - BestProba");
             retPdfz = BestProba( chisquarearray);
 
@@ -157,13 +145,52 @@ Bool COperatorPdfz::checkPdfSum()
     return ret;
 }
 
+
+Bool COperatorPdfz::searchMaxPDFcandidates(TCandidateZbyID & candidates) const
+{
+    candidates.clear();
+
+    for (const auto & cand : m_candidatesZRanges)
+    {
+        TPointList extremumList;
+        const TFloat64Range & redshiftsRange = cand.second;
+        std::string id = cand.first;
+
+        if (id!="") id += "_";
+
+        //call Find on each secondpass range and retrieve the best  peak
+        Bool invertForMinSearch=false;
+        CExtremum extremum_op = CExtremum( m_maxPeakCount_per_window, m_peakSeparation, m_meritcut, invertForMinSearch, redshiftsRange); // no peak separation, no cut
+        Bool findok = extremum_op.Find(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog, extremumList);
+        if (!findok)
+        {   
+            Log.LogError("COperatorPdfz: searchMaxPDFcandidates failed");
+            throw runtime_error("COperatorPdfz: searchMaxPDFcandidates failed");
+            return false;
+        }
+        Int32 i = 0 ;
+        for (const auto & extremum : extremumList)
+        {   
+            std::string newid = id + m_Id_prefix + std::to_string(i);
+            candidates[newid].Redshift = extremum.X;
+            candidates[newid].ValProba = extremum.Y;    
+            ++i;
+        }
+    }
+
+    return true;
+}
+
+
+
+
 /**
  * Use the log sum exp trick to sum up small numbers while avoiding underflows
  *   * ------------------------------------------------------------------
      * NOTE: this uses the LOG-SUM-EXP trick originally suggested by S. Jamal
      * ------------------------------------------------------------------  *
 */
-Float64 COperatorPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshifts, Int32 sumMethod) const
+Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloat64List & redshifts, Int32 sumMethod)
 {
 
     Float64 logfactor = -DBL_MAX;
@@ -250,8 +277,8 @@ Float64 COperatorPdfz::logSumExpTrick(TFloat64List valproba, TFloat64List redshi
  * @return 0: success, 1:problem, 3 not enough z values, 4: zPrior not valid
  */
 Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List & redshifts,
-                     const Float64 cstLog, const TFloat64List & logZPrior,
-                     TFloat64List &logPdf, Float64 &logEvidence)
+                                        const Float64 cstLog, const TFloat64List & logZPrior,
+                                        TFloat64List &logPdf, Float64 &logEvidence)
 {
     Bool verbose = true;
     Int32 sumMethod = 1; // 0=rect, 1=trapez
@@ -392,7 +419,7 @@ Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List 
 }
 
 Float64 COperatorPdfz::getSumTrapez(const TRedshiftList & redshifts,
-                            const TFloat64List & valprobalog) const
+                            const TFloat64List & valprobalog)
 {
     Float64 sum = 0.0;
     if(redshifts.size()==0)
@@ -413,7 +440,7 @@ Float64 COperatorPdfz::getSumTrapez(const TRedshiftList & redshifts,
 }
 
 Float64 COperatorPdfz::getSumRect(const TRedshiftList & redshifts,
-                          const TFloat64List & valprobalog) const
+                          const TFloat64List & valprobalog)
 {
     Float64 sum = 0.0;
     // prepare LogEvidence
@@ -437,462 +464,9 @@ Int32 COperatorPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
     return solutionIdx;
 }
 
-/**
- * @brief COperatorPdfz::getCandidateSumTrapez
- * @param redshifts
- * @param valprobalog
- * @param zcandidate
- * @param zrange corresponds to the concerned range
- * @return -1.0 if error, else sum around the candidate
- */
-Float64 COperatorPdfz::getCandidateSumTrapez(const TRedshiftList & redshifts,
-                                     const TFloat64List & valprobalog,
-                                     const Redshift zcandidate,
-                                     const TFloat64Range & zrange) const
-{
-    //TODO use a std function and throw exception
-  //TODO check that this is really necessary and not just a debug functionnality
-  //     -> use a DEBUG directive ? 
-
-    // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
-    {
-        if (redshifts[k] < redshifts[k - 1])
-        {
-            Log.LogError("    COperatorPdfz::getCandidateSumTrapez - redshifts are not sorted for (at least) index={}", k);
-            return -1.0;
-        }
-    }
-
-    // find indexes kmin, kmax so that zmin and zmax are inside [
-    // redshifts[kmin]:redshifts[kmax] ]
 
 
-    Int32 kmin = -1;
-    Int32 kmax = -1;
-    
-    bool ok = zrange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),zcandidate,kmin,kmax);
 
-    if(!ok || kmin==-1 || kmax==-1){
-        Log.LogError("COperatorPdfz::getCandidateSumTrapez could not find enclosing interval"); 
-        throw runtime_error("COperatorPdfz::getCandidateSumTrapez could not find enclosing interval");
-    }
-        
-    TFloat64List ZinRange;
-    TFloat64List valprobainRange;
-    for(Int32 i = kmin; i < kmax+1; i++){
-        ZinRange.push_back(redshifts[i]);
-        valprobainRange.push_back(valprobalog[i]);
-    }
-
-    Int32 sumMethod = 1;
-    Float64 logSum = logSumExpTrick( valprobainRange, ZinRange, sumMethod);
-    Float64 sum = exp(logSum);
-
-    return sum;
-}
-
-//TODO: this requires a deeper check to include the updates window support range
-Int32 COperatorPdfz::getCandidateRobustGaussFit(const TRedshiftList & redshifts,
-                                        const TFloat64List & valprobalog,
-                                        const Float64 zcandidate, const TFloat64Range & zrange,
-                                        Float64 &gaussAmp, Float64 &gaussAmpErr,
-                                        Float64 &gaussSigma, Float64 &gaussSigmaErr)
-{
-    Int32 fitSuccessful = false;
-    Int32 nTry = 5;
-    Int32 iTry = 0;
-
-    TFloat64Range current_zrange = zrange;
-    Float64 zwidth_max = std::max(zcandidate-zrange.GetBegin(), zrange.GetEnd() - zcandidate);
-    while (!fitSuccessful && iTry < nTry)
-    {
-        Int32 retFit = getCandidateGaussFit(
-            redshifts, valprobalog, zcandidate, current_zrange, gaussAmp,
-            gaussAmpErr, gaussSigma, gaussSigmaErr);
-        if (!retFit && gaussSigma < zwidth_max * 2.0 &&
-            std::abs(gaussSigma / gaussSigmaErr) > 1e-2)
-        {
-            fitSuccessful = true;
-        }
-        else
-        {
-            Log.LogDebug("    COperatorPdfz::getCandidateRobustGaussFit - iTry=%d", iTry);
-            Log.LogDebug("    COperatorPdfz::getCandidateRobustGaussFit -    for zcandidate=%.5f", zcandidate);
-            Log.LogDebug("    COperatorPdfz::getCandidateRobustGaussFit -       found gaussAmp=%e", gaussAmp);
-            Log.LogDebug("    COperatorPdfz::getCandidateRobustGaussFit -       found gaussSigma=%e", gaussSigma);
-            Log.LogDebug("    COperatorPdfz::getCandidateRobustGaussFit -       now going to retry w. different parameters", gaussSigma);
-        }
-        zwidth_max /= 2.0;
-        current_zrange.IntersectWith(TFloat64Range(zcandidate - zwidth_max, zcandidate + zwidth_max));
-        iTry++;
-    }
-
-    if (fitSuccessful)
-    {
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
-}
-
-Int32 COperatorPdfz::getCandidateGaussFit(const TRedshiftList & redshifts,
-                                  const TFloat64List & valprobalog,
-                                  const Float64 zcandidate, const TFloat64Range & zrange,
-                                  Float64 &gaussAmp, Float64 &gaussAmpErr,
-                                  Float64 &gaussSigma, Float64 &gaussSigmaErr)
-{
-    Int32 verbose = 0;
-    Int32 ret = 0;
-    Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
-
-    // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
-    {
-        if (redshifts[k] < redshifts[k - 1])
-        {
-            Log.LogError("    COperatorPdfz::getCandidateSumGaussFit - redshifts are not sorted for (at least) index={}", k);
-            return -1;
-        }
-    }
-
-    // find indexes kmin, kmax so that zmin and zmax are inside [
-    // redshifts[kmin]:redshifts[kmax] ]
-    Int32 kmin = 0;
-    Int32 kmax = redshifts.size() - 1;
-    for (UInt32 k = 0; k < redshifts.size(); k++)
-    {
-        if (redshifts[k] < zrange.GetBegin())
-        {
-            kmin = k;
-        }
-    }
-    if (verbose)
-    {
-        Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - kmin index=%d", kmin);
-    }
-
-    for (UInt32 k = redshifts.size() - 1; k > 0; k--)
-    {
-        if (redshifts[k] > zrange.GetEnd())
-        {
-            kmax = k;
-        }
-    }
-    if (verbose)
-    {
-        Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - kmax index=%d", kmax);
-    }
-
-    // initialize GSL
-    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
-    gsl_multifit_fdfsolver *s;
-    int status, info;
-    size_t i;
-    size_t n = kmax - kmin + 2; // n samples on the support, /* number of data points to fit */
-    size_t p = 2; // DOF = 1.amplitude + 2.width
-
-    if (verbose)
-    {
-        Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - n=%d, p=%d", n, p);
-    }
-    if (n < p)
-    {
-        Log.LogError("    COperatorPdfz::getCandidateSumGaussFit - LMfit not enough samples on support");
-        return -1;
-    }
-
-    gsl_matrix *J = gsl_matrix_alloc(n, p);
-    gsl_matrix *covar = gsl_matrix_alloc(p, p);
-    double y[n], weights[n], z[n];
-    Float64 zc = zcandidate;
-    gsl_multifit_function_fdf f;
-
-    Float64 *x_init = (Float64 *)calloc(p, sizeof(Float64));
-    if (x_init == 0)
-    {
-        Log.LogError("    COperatorPdfz::getCandidateSumGaussFit - Unable to allocate x_init");
-        return -1;
-    }
-
-    // initialize lmfit with previously estimated values ?
-    //
-    Float64 maxP = 0.0;
-    for (i = 0; i < n; i++)
-    {
-        Float64 idx = i + kmin;
-        Float64 _p = exp(valprobalog[idx]);
-        if (_p > maxP)
-        {
-            maxP = _p;
-        }
-    }
-    Float64 normFactor = maxP;
-    if (normFactor <= 0.0)
-    {
-        normFactor = 1.0;
-    }
-    if (maxP > 0.0)
-    {
-        x_init[0] = maxP / normFactor;
-    }
-    else
-    {
-        x_init[0] = 1.0;
-    }
-    x_init[1] = std::max(zcandidate - zrange.GetBegin(), zrange.GetEnd() - zcandidate)/2.0;
-    if (verbose)
-    {
-        Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - init a=%e", x_init[0]);
-        Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - init sigma=%e", x_init[1]);
-    }
-
-    gsl_vector_view x = gsl_vector_view_array(x_init, p);
-    //    if(x.vector==0){
-    //        Log.LogError( "    COperatorPdfz::getCandidateSumGaussFit - Unable to
-    //        allocate x"); return -1;
-    //    }
-    gsl_vector_view w = gsl_vector_view_array(weights, n);
-    //    if(w.vector==0){
-    //        Log.LogError( "    COperatorPdfz::getCandidateSumGaussFit - Unable to
-    //        allocate w"); return -1;
-    //    }
-    gsl_vector *res_f;
-    double chi, chi0;
-
-    const double xtol = 1e-8;
-    const double gtol = 1e-8;
-    const double ftol = 1e-8;
-    Int32 maxIterations = 500;
-
-    // This is the data to be fitted;
-    for (i = 0; i < n; i++)
-    {
-        Float64 idx = i + kmin;
-        weights[i] = 1.0; // no weights
-        y[i] = exp(valprobalog[idx]) / normFactor;
-        z[i] = redshifts[idx];
-    }
-
-    struct pdfz_lmfitdata d = {n, y, z, zc};
-    f.f = &pdfz_lmfit_f;
-    f.df = &pdfz_lmfit_df;
-    f.n = n;
-    f.p = p;
-    f.params = &d;
-
-    Log.LogDebug("    COperatorPdfz::getCandidateSumGaussFit - LMfit data ready");
-
-    s = gsl_multifit_fdfsolver_alloc(T, n, p);
-    if (s == 0)
-    {
-        Log.LogError("    COperatorPdfz::getCandidateSumGaussFit - Unable to allocate the multifit solver s");
-        return -1;
-    }
-
-    /* initialize solver with starting point and weights */
-    gsl_multifit_fdfsolver_wset(s, &f, &x.vector, &w.vector);
-
-    /* compute initial residual norm */
-    res_f = gsl_multifit_fdfsolver_residual(s);
-    chi0 = gsl_blas_dnrm2(res_f);
-
-    /* solve the system with a maximum of maxIterations iterations */
-    status = gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
-
-    gsl_multifit_fdfsolver_jac(s, J);
-    gsl_multifit_covar(J, 0.0, covar);
-
-    /* compute final residual norm */
-    chi = gsl_blas_dnrm2(res_f);
-
-    double dof = n - p;
-    double c = GSL_MAX_DBL(1, chi / sqrt(dof));
-    if (verbose)
-    {
-#define FIT(i) gsl_vector_get(s->x, i)
-#define ERR(i) sqrt(gsl_matrix_get(covar, i, i))
-
-        Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
-        Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
-        Log.LogDebug("function evaluations: %zu", f.nevalf);
-        Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
-        Log.LogDebug("reason for stopping: %s", (info == 1) ? "small step size " : (info == 2) ? "small gradient" : "small change in f");
-        Log.LogDebug("initial |f(x)| = %g", chi0);
-        Log.LogDebug("final   |f(x)| = %g", chi);
-
-        {
-            Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
-
-            for (Int32 k = 0; k < p; k++)
-            {
-                if (FIT(k) < 1e-3)
-                {
-                    Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c * ERR(k));
-                } else
-                {
-                    Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c * ERR(k));
-                }
-            }
-        }
-        Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
-    }
-
-    gaussAmp = gsl_vector_get(s->x, 0) * normFactor;
-    gaussAmpErr = c * ERR(0) * normFactor;
-    gaussSigma = abs(gsl_vector_get(s->x, 1));
-    gaussSigmaErr = c * ERR(1);
-
-    return ret;
-}
-
-Int32 COperatorPdfz::getPmis( const TRedshiftList & redshifts,
-                      const TFloat64List & valprobalog,
-                      const Float64 zbest,
-                      TRedshiftList & zcandidates,
-                      const Float64 zwidth,
-                       Float64 & pmis)
-{
-    Float64 halfzwidth = zwidth/2.;
-    pmis = -1.;
-
-    //definition of the lines for mismatch
-    TFloat64List lambda_mis;
-    lambda_mis.push_back(9533.2); //SIII9530
-    lambda_mis.push_back(9071.1); //SIII9068
-
-    lambda_mis.push_back(7753.2); //ArIII7751
-
-    lambda_mis.push_back(7332.2); //OII7330
-    lambda_mis.push_back(7321); //OII7319
-
-    lambda_mis.push_back(6564.61); //halpha
-    lambda_mis.push_back(3729.88); //[OII]3729
-    lambda_mis.push_back(3727.09); //[OII]3726
-    lambda_mis.push_back(5008.24); //[OIII](doublet-1)
-    lambda_mis.push_back(4960.29); //[OIII](doublet-1/3)
-    lambda_mis.push_back(4862.72); //Hbeta
-
-
-    //definition of relzerr_mis
-    TFloat64List relzerr_mis;
-    relzerr_mis.clear();
-    for (Int32 kl1 = 0; kl1 < lambda_mis.size(); kl1++)
-    {
-        for (Int32 kl2 = 0; kl2 < lambda_mis.size(); kl2++)
-        {
-            if(kl1 != kl2)
-            {
-                Float64 relzerr = (lambda_mis[kl1]/lambda_mis[kl2])-1.;
-                relzerr_mis.push_back(relzerr);
-                Log.LogDebug("Pdfz: Found l1=%f, l2=%f, relzerr=%f", lambda_mis[kl1], lambda_mis[kl2], relzerr);
-            }
-        }
-    }
-
-    Int32 n_relzerr_mis = relzerr_mis.size();
-    Log.LogDetail("Pdfz: Found n relzerr for mismatch =%d", n_relzerr_mis);
-
-    //override amazed-zcandidates by all pdf peaks found
-    Int32 maxpeakscount = 1000;
-    Float64 radius = 0.005;
-    TFloat64Range redshiftsRange(
-        redshifts.front(),
-        redshifts.back());
-    CExtremum extremum(maxpeakscount, 2*radius);
-    TPointList extremumList;
-    extremum.Find(redshifts, valprobalog, extremumList);
-    zcandidates.clear();
-    for (Int32 i = 0; i < extremumList.size(); i++)
-    {
-        Float64 x = extremumList[i].X;
-        zcandidates.push_back(x);
-    }
-    Log.LogDetail("Pdfz: Found n candidates for mismatch calc.=%d", zcandidates.size());
-
-    TInt32List indexes_candidates_selected;
-    //for(Int32 k_zmap=0; k_zmap<zcandidates.size(); k_zmap++)
-    {
-        //Int32 zmap = zcandidates[k_zmap];
-        Float64 zmap = zbest;
-
-        //find zcandidates corresponding to a relzerr value wrt to zmap
-        for(Int32 k_cand=0; k_cand<zcandidates.size(); k_cand++)
-        {
-            Redshift zmin = zcandidates[k_cand]-halfzwidth*(1+zcandidates[k_cand]);
-            Redshift zmax = zcandidates[k_cand]+halfzwidth*(1+zcandidates[k_cand]);
-            for(Int32 k_relzerr_mis=0; k_relzerr_mis<n_relzerr_mis; k_relzerr_mis++)
-            {
-                if(true)
-                    //if(relzerr_mis[k_relzerr_mis] > halfzwidth*2.0) //avoid zmap candidates selection
-                {
-                    //convert relzerr in z value for zmap
-                    Float64 z_mis = relzerr_mis[k_relzerr_mis]*(1+zmap)+zmap;
-                    //Log.LogDetail("Pdfz: Found zmis=%f for relzerr=%f", z_mis, relzerr_mis[k_relzerr_mis]);
-
-                    if(z_mis>zmin && z_mis<zmax)
-                    {
-                        indexes_candidates_selected.push_back(k_cand);
-                        Log.LogDetail("Pdfz: Found mismatch for relzerr=%f, for zmap=%f: candidate at z=%f", relzerr_mis[k_relzerr_mis], zmap, zcandidates[k_cand]);
-                    }
-                }
-            }
-        }
-    }
-    Log.LogDetail("Pdfz: Found n indexes_candidates_selected=%d", indexes_candidates_selected.size());
-
-    //find redshift indexes corresponding to selected candidates surrounding
-    TInt32List indexes_zsamples_selected;
-    Int32 n_indexes_candidates_selected = indexes_candidates_selected.size();//min((Int32)1, (Int32)indexes_candidates_selected.size());
-    for(Int32 k_cand_sel=0; k_cand_sel<n_indexes_candidates_selected; k_cand_sel++)
-    {
-        Int32 k_cand = indexes_candidates_selected[k_cand_sel];
-        Redshift zmin = zcandidates[k_cand]-halfzwidth*(1+zcandidates[k_cand]);
-        Redshift zmax = zcandidates[k_cand]+halfzwidth*(1+zcandidates[k_cand]);
-
-        //find zcandidate index
-        for(Int32 kz=0; kz<redshifts.size(); kz++)
-        {
-            if(redshifts[kz]>zmin && redshifts[kz]<zmax)
-            {
-                indexes_zsamples_selected.push_back(kz);
-            }
-        }
-    }
-
-    Log.LogDetail("Pdfz: Found n NON-UNIQUE indexes_zsamples_selected=%d", indexes_zsamples_selected.size());
-    //remove duplicate indexes
-    std::sort(indexes_zsamples_selected.begin(), indexes_zsamples_selected.end());
-    indexes_zsamples_selected.erase( std::unique( indexes_zsamples_selected.begin(), indexes_zsamples_selected.end() ), indexes_zsamples_selected.end() );
-
-    Log.LogDetail("Pdfz: Found n UNIQUE indexes_zsamples_selected=%d", indexes_zsamples_selected.size());
-
-    //now integrate over the selected unique z indexes
-    //warning, integrating exp. values directly. supposing that no overflow will occur if pdf is normalized
-    Float64 pmis_raw = 0.0;
-    std::vector<Float64> valprobalog_selected;
-    std::vector<Float64> redshifts_selected;
-    for(Int32 kz=0; kz<indexes_zsamples_selected.size(); kz++)
-    {
-        redshifts_selected.push_back(redshifts[indexes_zsamples_selected[kz]]);
-        valprobalog_selected.push_back(valprobalog[indexes_zsamples_selected[kz]]);
-    }
-    pmis_raw = getSumTrapez(redshifts_selected, valprobalog_selected);
-
-    //estimate zcalc intg proba
-    TFloat64Range zrange(zbest + halfzwidth*(1+zbest), zbest-halfzwidth*(1+zbest));
-    Float64 pzcalc = getCandidateSumTrapez( redshifts, valprobalog, zbest,  zrange);
-
-    Log.LogDetail("Pdfz: <pmisraw><%.6e>", pmis_raw);
-    Log.LogDetail("Pdfz: <pmap><%.6e>", pzcalc);
-
-    pmis = pmis_raw/(1.-pzcalc);
-    Log.LogDetail("Pdfz: <pmis><%.6e>", pmis);
-
-    return 0;
-}
 
 /*Int32 COperatorPdfz::Marginalize(const TFloat64List & redshifts,
                          const std::vector<TFloat64List> & meritResults,

@@ -359,7 +359,7 @@ void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const 
         }
         //*/
 
-        auto  result = GetGlobalResult( "linemodelsolve.candidatesresult" ).lock();
+        auto  result = GetGlobalResult( "candidatesresult" ).lock();
         if(result){
             result->SaveLine( outputStream );
         }
@@ -518,7 +518,7 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
               }
 	        if(saveJSON){
 		        std::fstream outputJSONStream;
-                TResultsMap::const_iterator it = m_GlobalResults.find("linemodelsolve.candidatesresult" );
+                TResultsMap::const_iterator it = m_GlobalResults.find("candidatesresult" );
  
 		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
 		        result->SaveJSON((*it).second,outputJSONStream);
@@ -584,7 +584,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0)
     {
-      if(method.compare("all") == 0) result = GetGlobalResult("linemodelsolve.candidatesresult");
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
       else if(method.compare("templatefittingsolve") == 0)
         {
@@ -619,7 +619,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
  std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("galaxy") == 0)
     {
-      if(method.compare("all") == 0) result = GetGlobalResult("linemodelsolve.candidatesresult");
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
       else if(method.compare("templatefittingsolve") == 0)
         {
@@ -654,7 +654,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
   if (object_type.compare("galaxy") == 0)
     {
 
-      if(method.compare("all") == 0) result = GetGlobalResult("linemodelsolve.candidatesresult");
+      if(method.compare("all") == 0) result = GetGlobalResult("candidatesresult");
       else if(method.compare("linemodel") == 0) result = GetGlobalResult("linemodelsolve.linemodel_extrema");
       else if(method.compare("templatefittingsolve") == 0)
         {
@@ -754,7 +754,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 {
   if (object_type.compare("galaxy") == 0)
     {
-   auto result = GetGlobalResult("linemodelsolve.candidatesresult");
+   auto result = GetGlobalResult("candidatesresult");
    result.lock()->getData(name,v);
     }
   else if (object_type.compare("star") == 0)
@@ -772,7 +772,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
   if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
      name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
   else if(object_type=="classification") result = GetGlobalResult("classificationresult");
-  else result = GetGlobalResult("linemodelsolve.candidatesresult");
+  else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }
 
@@ -780,7 +780,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 {
   std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("classification") == 0) result = GetGlobalResult("classificationresult");
-  else result = GetGlobalResult("linemodelsolve.candidatesresult");
+  else result = GetGlobalResult("candidatesresult");
   result.lock()->getData(name,v);
 }
 

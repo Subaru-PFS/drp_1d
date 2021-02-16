@@ -4,8 +4,6 @@
 #include <RedshiftLibrary/common/median.h>
 #include <RedshiftLibrary/common/mean.h>
 #include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
 
 #include <math.h>
 #include <RedshiftLibrary/log/log.h>

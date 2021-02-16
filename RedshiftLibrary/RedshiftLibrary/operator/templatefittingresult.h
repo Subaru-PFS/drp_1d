@@ -4,7 +4,6 @@
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/common/quicksort.h>
 
 namespace NSEpic
 {
@@ -36,7 +35,7 @@ public:
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
     TFloat64List            LogPrior;
-    bool    CallFindExtrema(const Float64 radius);
+
     //intermediate chisquare results
     std::vector<std::vector<TFloat64List>> ChiSquareIntermediate; // chi2 for each intermediate results (for each config [z][Calzetti][Meiksin])
     std::vector<std::vector<TFloat64List>> IsmDustCoeffIntermediate; // calzetti dust coeff for each intermediate result (for each config [z][Calzetti][Meiksin])
@@ -46,7 +45,6 @@ public:
 
     Float64                 CstLog;
     TFloat64List            Overlap;
-    TFloat64List            Extrema;
     COperator::TStatusList  Status;
 
 };
