@@ -23,12 +23,14 @@ using namespace std;
 CExtremum::CExtremum( UInt32 maxPeakCount,
                       Float64 peakSeparation, 
                       Float64 meritcut,
-                      Bool invertForMinSearch, 
+                      Bool invertForMinSearch,
+                      Bool allow_extrema_at_border, 
                       const TFloat64Range& xRange) :
     m_MaxPeakCount( maxPeakCount ),
     m_extrema_separation(peakSeparation),
     m_meritCut(meritcut),
     m_SignSearch(invertForMinSearch ? -1.0 : 1.0 ),
+    m_allow_extrema_at_border(allow_extrema_at_border),
     m_PeakSeparationActive(peakSeparation > 0),
     m_XRange( xRange )
 {
@@ -56,14 +58,6 @@ void CExtremum::SetMaxPeakCount( UInt32 n )
 void CExtremum::SetMeritCut( Float64 n )
 {
     m_meritCut = n;
-}
-
-/**
- * Sets m_SignSearch to val.
- */
-void CExtremum::SetSignSearch( Float64 val )
-{   
-    m_SignSearch = val;
 }
 
 /**
@@ -96,37 +90,40 @@ Bool CExtremum::DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& 
 Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint) const
 {
     Int32 n = xAxis.size();
-    const Float64* selectedXAxis = xAxis.data();
-    const Float64* selectedYAxis = yAxis.data();
+    
+    if( n == 0 ){
+      Log.LogError("CExtremum::Find, input X vector is empty");
+      throw runtime_error("CExtremum::Find, input vector is empty");
+    }
 
-    Int32 rangeXBeginIndex = -1;
-    Int32 rangeXEndIndex = -1;
+    if ( n != yAxis.size()){
+      Log.LogError("CExtremum::Find, input X and Y vector have not the same size");
+      throw ("CExtremum::Find, input X and Y vector have not the same size");
+    }
 
-    if( n == 0 )
-        return false;
+    Int32 BeginIndex = 0;
+    Int32 EndIndex = n-1;
 
     // Find index in xAxis that correspond to the boundary specified by m_XRange
-    if( m_XRange.GetIsEmpty() )
-    {
-        rangeXBeginIndex = 0;
-        rangeXEndIndex = n-1;
-    }
-    else
+    if( !m_XRange.GetIsEmpty() )
     {
         Bool rangeok;
-        rangeok = m_XRange.getClosedIntervalIndices(xAxis, rangeXBeginIndex, rangeXEndIndex);
-        if (!rangeok) return false;
+        rangeok = m_XRange.getClosedIntervalIndices(xAxis, BeginIndex , EndIndex);
+        if (!rangeok){
+          Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]", 
+              m_XRange.GetBegin(), m_XRange.GetEnd(), xAxis.front(), xAxis.back());
+          throw runtime_error("CExtremum::Find, bad range");
+        }
     }
-  
     
-    vector < Float64 >  maxX, minX;
-    vector < Float64 >  maxY, minY;
-    Bool method = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, maxX, maxY );    
+    TFloat64List  maxX, minX;
+    TFloat64List  maxY, minY;
+    Bool method = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY );    
 
     //Look for all local minima
     Bool activateprominence = false;
     if(activateprominence){
-      Bool method_min = FindAllPeaks( selectedXAxis+rangeXBeginIndex, selectedYAxis+rangeXBeginIndex, (rangeXEndIndex-rangeXBeginIndex)+1, minX, minY, -1*m_SignSearch); 
+      Bool method_min = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, minX, minY, true); // invert signSearch
     
       for(Int32 i = 0; i <minX.size(); i++){
         minY[i] = -1*minY[i];
@@ -410,200 +407,104 @@ Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat6
   return true;
 }
 
-/**
- * Brief: Attempts to find peaks, returning (when appropriate) the points where they reside in the maxPoint argument.
- * Extended to include distance between peaks and a threshold to eliminate peaks
- */
-Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY) const {
-  if (n == 0)
-    return false;
-
-  vector < Float64 > tmpX(n);
-  vector < Float64 > tmpY(n);
-
-  for (UInt32 t = 0; t < n; t++) {
-    tmpX[t] = xAxis[t];
-    tmpY[t] = m_SignSearch * yAxis[t];
-  }
-
-  Int32 maxCount = 0;
-
-    // find first and last non Nan element
-    Int32 firstNonNanInd = 0;
-    for (Int32 iFirst = 0; iFirst < n - 1; iFirst++) {
-      if (!std::isnan((double) tmpY[iFirst])) {
-        firstNonNanInd = iFirst;
-        break;
-      }
-    }
-    Int32 lastNonNanInd = n - 1;
-    for (Int32 iLast = n - 1; iLast > 0; iLast--) {
-      if (!std::isnan(tmpY[iLast])) {
-        lastNonNanInd = iLast; 
-        break;
-      }
-    }
-    
-    bool plank = false; Int32 cnt_plk = 0; 
-    // First element
-    if (tmpY[firstNonNanInd] > tmpY[firstNonNanInd + 1]) {
-      maxX.push_back(tmpX[firstNonNanInd]);
-      maxY.push_back(tmpY[firstNonNanInd]);
-      maxCount++;
-    }else{
-      if(tmpY[firstNonNanInd] == tmpY[firstNonNanInd + 1]) {
-        plank = true;
-        cnt_plk++;
-      }
-    }
-
-    for (Int32 i = firstNonNanInd + 1; i < lastNonNanInd; i++) {
-     if ((tmpY[i] > tmpY[i - 1]) && (tmpY[i] > tmpY[i + 1])) {
-        maxX.push_back(tmpX[i]);
-        maxY.push_back(tmpY[i]);
-        maxCount++;
-        continue;
-      }
-      if((tmpY[i] > tmpY[i - 1]) && (tmpY[i] == tmpY[i + 1])){
-        //plank start point
-        plank = true;
-        cnt_plk++;
-        continue;
-      }
-      if((tmpY[i] == tmpY[i - 1])){ 
-        //high plank: signal is decreasing after the plank. Peak identified
-        if (tmpY[i] > tmpY[i + 1] && plank){ //check if we already identified a high plank
-          cnt_plk++;
-          Int32 idx_plk = i - round(cnt_plk/2);
-          //plank end point
-          maxX.push_back(tmpX[idx_plk]);
-          maxY.push_back(tmpY[idx_plk]);
-          maxCount++; 
-          plank = false;
-          cnt_plk = 0;
-          continue;
-        }
-        //low plank: pdf is increasing after the plank. No peak here!
-        if(tmpY[i] < tmpY[i + 1]){
-          plank = false; //end
-          cnt_plk = 0;
-        } else { //Plank is getting larger
-          cnt_plk++;
-        }
-      }
-    }
-    // last element: check if plank is extended
-    if (tmpY[lastNonNanInd - 1] <= tmpY[lastNonNanInd]) {
-      Int32 idx;
-      if(plank){
-        cnt_plk++;
-        idx = lastNonNanInd - round(cnt_plk/2);
-      }else{ 
-        idx = lastNonNanInd;
-      }
-
-      maxX.push_back(tmpX[idx]);
-      maxY.push_back(tmpY[idx]);
-      maxCount++;
-    }
-  return  true;
-}
-
-Bool CExtremum::FindAllPeaks(const Float64* xAxis, const Float64* yAxis, UInt32 n, TFloat64List& maxX, TFloat64List& maxY, Float64 SignSearch) const 
+Bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yAxis,
+                             Int32 BeginIndex, Int32 EndIndex, 
+                             TFloat64List& maxX, TFloat64List& maxY,
+                             Bool invertSearch) const
 {
-  if (n == 0)
-    return false;
+  const Float64 SignSearch = invertSearch ? -1.0*m_SignSearch : m_SignSearch;
+  TFloat64List tmpY(yAxis);
+  for (Float64 & val: tmpY) val *= SignSearch;
 
-  vector < Float64 > tmpX(n);
-  vector < Float64 > tmpY(n);
-
-  for (UInt32 t = 0; t < n; t++) {
-    tmpX[t] = xAxis[t];
-    tmpY[t] = SignSearch * yAxis[t];
-  }
+  auto goup = [&tmpY](Int32 i){return tmpY[i] < tmpY[i+1];};
+  auto godown = [&tmpY](Int32 i){return tmpY[i] > tmpY[i+1];};
+  auto goflat = [&tmpY](Int32 i){return tmpY[i] == tmpY[i+1];};
 
   Int32 maxCount = 0;
 
-    // find first and last non Nan element
-    Int32 firstNonNanInd = 0;
-    for (Int32 iFirst = 0; iFirst < n - 1; iFirst++) {
-      if (!std::isnan((double) tmpY[iFirst])) {
-        firstNonNanInd = iFirst;
-        break;
-      }
-    }
-    Int32 lastNonNanInd = n - 1;
-    for (Int32 iLast = n - 1; iLast > 0; iLast--) {
-      if (!std::isnan(tmpY[iLast])) {
-        lastNonNanInd = iLast; 
-        break;
-      }
-    }
-    
-    bool plank = false; Int32 cnt_plk = 0; 
-    // First element
-    if (tmpY[firstNonNanInd] > tmpY[firstNonNanInd + 1]) {
-      maxX.push_back(tmpX[firstNonNanInd]);
-      maxY.push_back(tmpY[firstNonNanInd]);
-      maxCount++;
-    }else{
-      if(tmpY[firstNonNanInd] == tmpY[firstNonNanInd + 1]) {
-        plank = true;
-        cnt_plk++;
-      }
-    }
+  // find first and last non Nan element
+  TFloat64List::const_iterator firstNonNan;
+  for (; BeginIndex!=EndIndex; ++BeginIndex)
+    if (!std::isnan(yAxis[BeginIndex])) break; 
+  
+  for (; BeginIndex!=EndIndex; --EndIndex)
+    if (!std::isnan(yAxis[EndIndex])) break;
 
-    for (Int32 i = firstNonNanInd + 1; i < lastNonNanInd; i++) {
-     if ((tmpY[i] > tmpY[i - 1]) && (tmpY[i] > tmpY[i + 1])) {
-        maxX.push_back(tmpX[i]);
-        maxY.push_back(tmpY[i]);
-        maxCount++;
-        continue;
-      }
-      if((tmpY[i] > tmpY[i - 1]) && (tmpY[i] == tmpY[i + 1])){
-        //plank start point
-        plank = true;
+  // check at least 3 points left (to get an extrema)
+  if ( (EndIndex - BeginIndex) <2 ){
+    Log.LogError("CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
+    throw runtime_error("CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
+  }
+
+  bool plank = false; Int32 cnt_plk = 0; 
+
+  // First element
+  if (m_allow_extrema_at_border){
+    if (godown(BeginIndex)){
+      maxX.push_back(xAxis[BeginIndex]);
+      maxY.push_back(tmpY[BeginIndex]);
+      maxCount++;
+    }else if (goflat(BeginIndex)) {
+      plank = true;
+      cnt_plk++;
+    }
+  }
+
+  for (Int32 i = BeginIndex + 1; i < EndIndex; i++) {
+    if ( goup(i-1)  &&  godown(i)) {
+      maxX.push_back(xAxis[i]);
+      maxY.push_back(tmpY[i]);
+      maxCount++;
+      continue;
+    }
+    if( goup(i-1) && goflat(i)){
+      //plank start point
+      plank = true;
+      cnt_plk++;
+      continue;
+    }
+    if( goflat(i-1)) { 
+      //high plank: signal is decreasing after the plank. Peak identified
+      if ( godown(i) && plank){ //check if we already identified a high plank
         cnt_plk++;
+        Int32 idx_plk = i - round(cnt_plk/2);
+        //plank end point
+        maxX.push_back(xAxis[idx_plk]);
+        maxY.push_back(tmpY[idx_plk]);
+        maxCount++; 
+        plank = false;
+        cnt_plk = 0;
         continue;
       }
-      if((tmpY[i] == tmpY[i - 1])){ 
-        //high plank: signal is decreasing after the plank. Peak identified
-        if (tmpY[i] > tmpY[i + 1] && plank){ //check if we already identified a high plank
-          cnt_plk++;
-          Int32 idx_plk = i - round(cnt_plk/2);
-          //plank end point
-          maxX.push_back(tmpX[idx_plk]);
-          maxY.push_back(tmpY[idx_plk]);
-          maxCount++; 
-          plank = false;
-          cnt_plk = 0;
-          continue;
-        }
-        //low plank: pdf is increasing after the plank. No peak here!
-        if(tmpY[i] < tmpY[i + 1]){
-          plank = false; //end
-          cnt_plk = 0;
-        } else { //Plank is getting larger
-          cnt_plk++;
-        }
+      //low plank: pdf is increasing after the plank. No peak here!
+      if( goup(i)){
+        plank = false; //end
+        cnt_plk = 0;
+      } else { //Plank is getting larger
+        cnt_plk++;
       }
     }
-    // last element: check if plank is extended
-    if (tmpY[lastNonNanInd - 1] <= tmpY[lastNonNanInd]) {
+  }
+
+  // last element: check if plank is extended
+  if (m_allow_extrema_at_border){
+    if ( goup(EndIndex-1) || goflat(EndIndex-1) ) {
       Int32 idx;
       if(plank){
         cnt_plk++;
-        idx = lastNonNanInd - round(cnt_plk/2);
+        idx = EndIndex - round(cnt_plk/2);
       }else{ 
-        idx = lastNonNanInd;
+        idx = EndIndex;
       }
-
-      maxX.push_back(tmpX[idx]);
+      maxX.push_back(xAxis[idx]);
       maxY.push_back(tmpY[idx]);
       maxCount++;
     }
+  }
+
   return  true;
 }
+
 /**
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
 */

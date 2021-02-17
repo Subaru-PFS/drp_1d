@@ -384,6 +384,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                            0.0, // cut threshold
                            m_opt_extremacount, // max nb of final (2nd pass) candidates
                            "SPE", //Id_prefix
+                           false, // do not allow extrema at border
                            1,  // one peak/window only
                            result->ExtremaResult.ExtremaExtendedRedshifts,
                            result->ExtremaResult.ExtremaIDs
@@ -450,7 +451,7 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
                 ++rank;
             }
                     
-            //Delete extra tmp data corresponding to truncated candidates (TB removed in future commit)
+            //Delete extra tmp data corresponding to truncated  (or eliminated) candidates (TB removed in future commit)
             for (Int32 i=0; i< ExtremaResultPtr->Extrema.size(); ++i){
                 const std::string & ID = ExtremaResultPtr->ExtremaIDs[i];
                 const TCandidateZbyRank & cands = candidateResult->m_ranked_candidates;

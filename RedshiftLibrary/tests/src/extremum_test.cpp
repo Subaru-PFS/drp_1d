@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
   
     maxPoint.clear();
-    BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
+    BOOST_CHECK_THROW( peaks1.Find( x_empty, y, maxPoint), runtime_error);
     print_point(maxPoint);
 
 
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.2;
-    CExtremum peaks1( 5, radius, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.8,8}, {0.1,5.0}, {0.4,1.0}})); 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.05;
-    CExtremum peaks1( 5, radius, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.08,8},{0.02, 5}})); 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2)
     TFloat64List y = { 1.0, 3.0, 0.0, 4.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.005;
-    CExtremum peaks1( 5, radius, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.08,8}, {0.06,6.0}, {0.03,4.0}, {0.1,4.0}, {0.02, 3}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF)
     TFloat64List y = { 1.0, 3.0, 4.0, 5.0, 6.0, 7.1, 8.0, 9.5, 10.0, 11.0, 14.0 };
 
     Float64 radius = 0.005;
-    CExtremum peaks1( 5, radius, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2)
     TFloat64List y = { 1.0, 5.0};
 
     Float64 radius = 0.2;
-    CExtremum peaks1( 5, radius, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     //testing only the sliding window algo
     Int32  keepmin = 2;
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_negativeX)
     TFloat64List y = { 3.0, 4.0};
 
     Float64 peakseparationDist = 0.005*2;
-    CExtremum peaks1( 1, peakseparationDist, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( 1, peakseparationDist, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     //testing only the sliding window algo
     Int32  keepmin = 1;
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(Extremum_Truncate)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Int32 maxCount = 2;
-    CExtremum peaks1( maxCount,  0.005*2, -1, false, TFloat64Range(-10.0, 10.0));
+    CExtremum peaks1( maxCount,  0.005*2, -1, false, true, TFloat64Range(-10.0, 10.0));
     peaks1.SortIndexes(y);
     peaks1.Truncate( x, y, maxPoint);
     

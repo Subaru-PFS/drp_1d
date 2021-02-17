@@ -14,6 +14,7 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
                              Float64 meritcut,
                              UInt32 maxCandidate,
                              const std::string & Id_prefix,
+                             Bool allow_extrema_at_border,
                              UInt32 maxPeakCount_per_window,
                              const std::vector<TFloat64List> & candidatesRedshifts,
                              const TStringList & candidatesIds
@@ -21,6 +22,7 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
     m_opt_combine(opt_combine),
     m_peakSeparation(peakSeparation),
     m_meritcut(meritcut),
+    m_allow_extrema_at_border(allow_extrema_at_border),
     m_maxPeakCount_per_window(maxPeakCount_per_window<=0? maxCandidate:maxPeakCount_per_window),
     m_maxCandidate(maxCandidate),
     m_Id_prefix(Id_prefix)
@@ -160,7 +162,8 @@ Bool COperatorPdfz::searchMaxPDFcandidates(TCandidateZbyID & candidates) const
 
         //call Find on each secondpass range and retrieve the best  peak
         Bool invertForMinSearch=false;
-        CExtremum extremum_op = CExtremum( m_maxPeakCount_per_window, m_peakSeparation, m_meritcut, invertForMinSearch, redshiftsRange); // no peak separation, no cut
+        CExtremum extremum_op = CExtremum( m_maxPeakCount_per_window, m_peakSeparation, m_meritcut, 
+                                           invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
         Bool findok = extremum_op.Find(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog, extremumList);
         if (!findok)
         {   
