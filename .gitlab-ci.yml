@@ -108,7 +108,7 @@ auto-push-rc-osx:
 # Manylinux2010 stages
 
 build-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: build
   script:
     - source /venv/p36/bin/activate
@@ -121,7 +121,7 @@ build-manylinux2010:
     untracked: true
 
 test-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: test
   allow_failure: true
   script:
@@ -133,7 +133,7 @@ test-manylinux2010:
     untracked: true
 
 wheel36-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: build-wheel
   script:
     - source /venv/p36/bin/activate
@@ -159,7 +159,7 @@ wheel36-manylinux2010:
     untracked: true
 
 wheel37-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: build-wheel
   script:
     - source /venv/p37/bin/activate
@@ -185,9 +185,8 @@ wheel37-manylinux2010:
     untracked: true
 
 wheel38-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: build-wheel
-  when: manual
   script:
     - source /venv/p38/bin/activate
     - cd build
@@ -212,7 +211,7 @@ wheel38-manylinux2010:
     untracked: true
 
 push-rc-36-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
@@ -225,7 +224,7 @@ push-rc-36-manylinux2010:
     - wheel36-manylinux2010
 
 push-rc-37-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
@@ -238,7 +237,7 @@ push-rc-37-manylinux2010:
     - wheel37-manylinux2010
 
 push-rc-38-manylinux2010:
-  image: portus.lam.fr/amazed/amazed-manylinux2010
+  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
