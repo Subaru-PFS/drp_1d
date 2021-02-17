@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.6)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.12)
 PROJECT( cpf-redshift )
 
 # extra path for modules
@@ -36,21 +36,11 @@ SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
 SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
 SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
-set(Python_ADDITIONAL_VERSIONS 3.8 3.7 3.6 3.5 3.4 2.7)
-
-FIND_PACKAGE(PythonInterp)
-IF (NOT PYTHONINTERP_FOUND)
-  MESSAGE(FATAL_ERROR "Can't find Python interpreter")
+FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+IF (NOT Python3_Interpreter_FOUND)
+  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
 ENDIF()
-
-# PythonInterp is deprecated since version 3.12
-# Use Python3 in future version of pylibamazed
-#
-#FIND_PACKAGE(Python3 COMPONENTS Interpreter)
-#IF (NOT Python3_Interpreter_FOUND)
-#  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
-#ENDIF()
-#set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
