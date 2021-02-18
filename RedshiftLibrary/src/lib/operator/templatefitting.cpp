@@ -1046,9 +1046,6 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
     EStatus status;
     TFloat64Range currentRange;
     Float64 overlapRate = 0.0;
-    
-    if ((DustCoeff>0.) || (meiksinIdx>0))
-        m_templateRebined_bf.InitIsmIgmConfig();
 
     Int32 ret = RebinTemplate(  spectrum, 
                                 tpl,
@@ -1068,6 +1065,9 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
     }
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
+
+    if ((DustCoeff>0.) || (meiksinIdx>0))
+        m_templateRebined_bf.InitIsmIgmConfig();
 
     if (DustCoeff>0.)
     {
