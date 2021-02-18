@@ -896,11 +896,11 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
     // Compute with linemodel operator
     COperatorLineModel linemodel;
-    Int32 retInit = linemodel.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = linemodel.Init(spc, redshifts, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         Log.LogError( "Linemodel, init failed. Aborting" );
-        return false;
+        throw std::runtime_error( "Linemodel, init failed. Aborting" );
     }
     linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
@@ -959,7 +959,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                     m_opt_lineforcefilter,
                                                     lambdaRange,
                                                     m_opt_fittingmethod,
-                                                    m_opt_continuumcomponent,
                                                     m_opt_lineWidthType,
                                                     m_opt_resolution,
                                                     m_opt_velocity_emission,
@@ -1023,7 +1022,8 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //**************************************************
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
-    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    std::string fpb_opt_continuumcomponent = "fromspectrum";//Note: this is hardocoded! given that condition for FPB relies on having "tplfit"
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
@@ -1035,7 +1035,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
 
         linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
         //
-        std::string fpb_opt_continuumcomponent = "fromspectrum";
+
         if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
             linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
             linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
@@ -1063,7 +1063,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                             m_opt_lineforcefilter,
                                                             lambdaRange,
                                                             m_opt_fittingmethod,
-                                                            fpb_opt_continuumcomponent,
                                                             m_opt_lineWidthType,
                                                             m_opt_resolution,
                                                             m_opt_velocity_emission,
@@ -1144,7 +1143,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_lineforcefilter,
                                                           lambdaRange,
                                                           m_opt_fittingmethod,
-                                                          m_opt_continuumcomponent,
                                                           m_opt_lineWidthType,
                                                           m_opt_resolution,
                                                           m_opt_velocity_emission,

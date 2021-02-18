@@ -67,7 +67,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const std::string &opt_lineForceFilter,
                                            const TFloat64Range &lambdaRange,
                                            const std::string &opt_fittingmethod,
-                                           const std::string &opt_continuumcomponent,
                                            const std::string &opt_lineWidthType,
                                            const Float64 opt_resolution,
                                            const Float64 opt_velocityEmission,
@@ -93,7 +92,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //*
     if (m_enableFastFitLargeGrid == 1)
     {
-        // Log.LogInfo("Line Model, Fast Fit Large Grid enabled");
+        // Log.LogInfo("  Operator-Linemodel:  Fast Fit Large Grid enabled");
         // calculate on a wider grid, defined by a minimum step
         Float64 dz_thres = opt_twosteplargegridstep;
         Int32 lastKeptInd = 0;
@@ -160,7 +159,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //tpl orthogonalization obligatory when doing Full-model
     //Two methods for orthogonalisation: using line masks or line-free orthogonalisation
     //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
-    bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto");
+    bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
 
     // prepare continuum templates catalog
@@ -170,7 +169,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 opt_calibrationPath,
                 restRayList,
                 opt_fittingmethod,
-                opt_continuumcomponent,
+                m_opt_continuumcomponent,
                 opt_lineWidthType,
                 m_opt_enableLSF,
                 m_linesmodel_nsigmasupport,
@@ -197,7 +196,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                          opt_calibrationPath,
                                                          restRayList,
                                                          opt_fittingmethod,
-                                                         opt_continuumcomponent,
+                                                         m_opt_continuumcomponent,
                                                          opt_lineWidthType,
                                                          m_opt_enableLSF,
                                                          m_linesmodel_nsigmasupport,
@@ -340,10 +339,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             m_model->initTplratioCatalogs(opt_tplratioCatRelPath, m_opt_tplratio_ismFit);
         if (!tplratioInitRet)
         {
-            Log.LogError(
-                "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+            Log.LogError("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
             throw runtime_error("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
-            return -1;
         }
 
         m_model->m_opt_firstpass_forcedisableTplratioISMfit = !m_opt_firstpass_tplratio_ismFit;
@@ -360,6 +357,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     {
         Log.LogError("  Operator-Linemodel: Failed to init lambda offsets. "
                      "Continuing without offsets...");
+        throw std::runtime_error("  Operator-Linemodel: Failed to init lambda offsets. "
+                     "Continuing without offsets...");
     }
 
     Int32 resultInitRet = m_result->Init(m_sortedRedshifts, restRayList,
@@ -367,10 +366,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                          m_model->getTplshape_priors());
     if (resultInitRet != 0)
     {
-        Log.LogError("  Operator-Linemodel: ERROR while initializing linemodel "
-                     "result (ret=%d)",
-                     resultInitRet);
-        return -1;
+        Log.LogError("  Operator-Linemodel: ERROR while initializing linemodel result (ret=%d)", resultInitRet);
+        throw std::runtime_error("  Operator-Linemodel: ERROR while initializing linemodel result");
     }
 
     Log.LogInfo("  Operator-Linemodel: initialized");
@@ -385,7 +382,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model->SetFitContinuum_PriorHelper(m_phelperContinuum);
     // fit continuum
     bool enableFitContinuumPrecomputed = true;
-    if (enableFitContinuumPrecomputed && (opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto") )
+    if (enableFitContinuumPrecomputed && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto") )
     {
         PrecomputeContinuumFit(spectrum,
                                *m_orthoTplCatalog,
@@ -395,12 +392,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                largeGridRedshifts,
                                m_opt_tplfit_ignoreLinesSupport);
     }else{
-        if(opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto")
+        if(m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
         {
             m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
         }
     }
-    if(opt_continuumcomponent == "tplfit" || opt_continuumcomponent == "tplfitauto")
+    if(m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
     {
         m_model->m_opt_firstpass_forcedisableMultipleContinuumfit = m_opt_firstpass_multiplecontinuumfit_disable;
     }
@@ -949,7 +946,6 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
         {
             Log.LogError("  Operator-Linemodel: Extremum find method failed");
             throw runtime_error("  Operator-Linemodel: Extremum find method failed");
-            return -1;
         }
     }
 
@@ -1136,7 +1132,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const std::string &opt_lineForceFilter,
                                             const TFloat64Range &lambdaRange,
                                             const std::string &opt_fittingmethod,
-                                            const std::string &opt_continuumcomponent,
                                             const std::string &opt_lineWidthType,
                                             const Float64 opt_resolution,
                                             const Float64 opt_velocityEmission,
@@ -1158,7 +1153,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
 {
     boost::chrono::thread_clock::time_point start_secondpass =
             boost::chrono::thread_clock::now();
-
     // Set model parameters to SECOND-PASS
     m_model->setPassMode(2);
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();//the first time was set in precomputeContinuumFit
@@ -1187,33 +1181,33 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         Log.LogError("  Operator-Linemodel: continnuum_fit_option not found: %d", m_continnuum_fit_option);
         throw runtime_error("  Operator-Linemodel: continnuum_fit_option not found");
     }
-    
-    //precompute only whenever required and whenever the result can be a tplfitStore
-    if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
-        m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
-        for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
-            PrecomputeContinuumFit(spectrum,
-                               *m_orthoTplCatalog,
-                               tplCategoryList,
-                               opt_calibrationPath,
-                               lambdaRange,
-                               m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
-                               m_opt_tplfit_ignoreLinesSupport,
-                               i);
+    if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
+        //precompute only whenever required and whenever the result can be a tplfitStore
+        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
+            m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
+            for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
+                PrecomputeContinuumFit(spectrum,
+                                *m_orthoTplCatalog,
+                                tplCategoryList,
+                                opt_calibrationPath,
+                                lambdaRange,
+                                m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
+                                m_opt_tplfit_ignoreLinesSupport,
+                                i);
+            }
+        }else{
+            //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
+            //copy the firstpass tplfitstore into the secondpass tplfitstore
+            m_tplfitStore_secondpass.resize(1);
+            if(m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
+                m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
+            //belwo line is redundant since in the first call to precompute we already set the fitStore
+            m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass);
+            //duplicated: double make sure that these info are present in the modelElement
+            m_model->SetFitContinuum_SNRMax( m_tplfitStore_firstpass->m_fitContinuum_tplFitSNRMax);
+            m_model->m_opt_fitcontinuum_maxCount  = m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
         }
-    }else{
-        //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
-        //copy the firstpass tplfitstore into the secondpass tplfitstore
-        m_tplfitStore_secondpass.resize(1);
-        if(m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
-            m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
-        //belwo line is redundant since in the first call to precompute we already set the fitStore
-        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass);
-        //duplicated: double make sure that these info are present in the modelElement
-        m_model->SetFitContinuum_SNRMax( m_tplfitStore_firstpass->m_fitContinuum_tplFitSNRMax);
-        m_model->m_opt_fitcontinuum_maxCount  = m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
     }
-    
     m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
     for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){ 
         if(m_continnuum_fit_option == 2)
@@ -1753,30 +1747,30 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
         //assign same IDs to extremum of second pass
         m_secondpass_parameters_extremaResult.ExtremaIDs[i] = m_firstpass_extremaResult.ExtremaIDs[i];
-        
-        //inject continuumFitValues of current candidate 
-        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-        else{
-            //nothing to do cause we already injected the fitStore for cases 1 and 2
-        }
+        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){        
+            //inject continuumFitValues of current candidate 
+            if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
+                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+            else{
+                //nothing to do cause we already injected the fitStore for cases 1 and 2
+            }
 
-        if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
-        {
-            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitude[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-                                            m_firstpass_extremaResult.FittedTplMerit[i],
-                                            m_firstpass_extremaResult.FittedTplDustCoeff[i],
-                                            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-                                            m_firstpass_extremaResult.FittedTplRedshift[i],
-                                            m_firstpass_extremaResult.FittedTplDtm[i],
-                                            m_firstpass_extremaResult.FittedTplMtm[i],
-                                            m_firstpass_extremaResult.FittedTplLogPrior[i],
-                                            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
-            m_model->SetFitContinuum_Option(2);
-        }
-
+            if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
+            {
+                m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
+                                                m_firstpass_extremaResult.FittedTplAmplitude[i],
+                                                m_firstpass_extremaResult.FittedTplAmplitudeError[i],
+                                                m_firstpass_extremaResult.FittedTplMerit[i],
+                                                m_firstpass_extremaResult.FittedTplDustCoeff[i],
+                                                m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
+                                                m_firstpass_extremaResult.FittedTplRedshift[i],
+                                                m_firstpass_extremaResult.FittedTplDtm[i],
+                                                m_firstpass_extremaResult.FittedTplMtm[i],
+                                                m_firstpass_extremaResult.FittedTplLogPrior[i],
+                                                m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(2);
+            }
+    }
 
         // find the index in the zaxis results
         Int32 idx = -1; idx = m_result->getRedshiftIndex(z); 
@@ -1904,11 +1898,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         idxVelfitGroups.size());
                             if (m_firstpass_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
                             {
-                                Log.LogError(
-                                            "  Operator-Linemodel: not allowed to "
-                                            "use more than 1 group per E/A for "
-                                            "more than 1 extremum (see .json "
-                                            "linemodel.extremacount)");
+                                Log.LogError("  Operator-Linemodel: not allowed to use more than 1 group per E/A for "
+                                            "more than 1 extremum (see .json linemodel.extremacount)");
                             }
                         }
                     } else
@@ -2140,7 +2131,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     {
         Log.LogError("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
         throw runtime_error("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
-        return -1;
     }
 
     TPointList _secondpass_recomputed_extremumList;
@@ -2204,32 +2194,32 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                             m_model->GetVelocityAbsorption());
             }
 
-
-            // fix some fitcontinuum values for this extremum
-            if(tplfit_option==2)
-            {
-                m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMerit[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplDtm[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplMtm[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplLogPrior[i],
-                                                m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-                m_model->SetFitContinuum_Option(tplfit_option); 
-            }
-            if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
-                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-            else{
-                if(tplfit_option == 1){
-                    //nothing to do cause we already injected the fitStore for cases 1 and 2
-                    m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
+            if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
+                // fix some fitcontinuum values for this extremum
+                if(tplfit_option==2)
+                {
+                    m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMerit[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplDtm[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplMtm[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[i],
+                                                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
+                    m_model->SetFitContinuum_Option(tplfit_option); 
+                }
+                if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
+                    m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+                else{
+                    if(tplfit_option == 1){
+                        //nothing to do cause we already injected the fitStore for cases 1 and 2
+                        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
+                    }
                 }
             }
-
 
             //moved here to override the previously set option value
             //since all 
@@ -2442,7 +2432,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
                 if(s == input_extremumList.size()){
                     Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
                     throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                    return -1;
                 }
                 for(Int32 i = s-1; i>=0; i--){
                     m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
@@ -2477,6 +2466,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
     if (m_secondpass_indiceSortedCandidatesList.size() == 0)
     {
         Log.LogError("  Operator-Linemodel: Extremum Ordering failed");
+        throw std::runtime_error("  Operator-Linemodel: Extremum Ordering failed");
     }
 
     return 0;
@@ -2484,10 +2474,10 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumLis
 
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
                                const TFloat64List &redshifts,
+                               const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
                                const Float64 halfwdwsize,
-                               const Float64 radius
-                               )
+                               const Float64 radius)
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
@@ -2495,10 +2485,10 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 
     if (spectrum.GetSpectralAxis().IsInLinearScale() == false)
     {
-        Log.LogError(
-            "Line Model, input spectrum is not in linear scale (ignored).");
-        return -1;
+        Log.LogError("  Operator-Linemodel: input spectrum is not in linear scale (ignored).");
+        throw std::runtime_error("  Operator-Linemodel: input spectrum is not in linear scale (ignored).");
     }
+    m_opt_continuumcomponent = opt_continuumcomponent; 
 
     // sort the redshifts
     m_sortedRedshifts = redshifts;
@@ -2576,10 +2566,10 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
 
     if (spectrum.GetSpectralAxis().IsInLinearScale() == false)
     {
-        Log.LogError(
-            "Line Model, input spectrum is not in linear scale (ignored).");
+        Log.LogError("  Operator-Linemodel:  input spectrum is not in linear scale.");
+        throw std::runtime_error( "  Operator-Linemodel:  input spectrum is not in linear scale.");
     }
-
+    m_opt_continuumcomponent = opt_continuumcomponent;
     // sort the redshifts
     m_sortedRedshifts = redshifts;
     std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
@@ -2596,7 +2586,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
                                           opt_lineForceFilter,
                                           lambdaRange,
                                           opt_fittingmethod,
-                                          opt_continuumcomponent,
                                           opt_lineWidthType,
                                           opt_resolution,
                                           opt_velocityEmission,
@@ -2610,7 +2599,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
                                           opt_offsetCatRelPath);
     if (retFirstPass != 0)
     {
-        Log.LogError("Line Model, first pass failed. Aborting");
+        Log.LogError("  Operator-Linemodel:  first pass failed. Aborting");
         return m_result;
     }
 
@@ -2618,13 +2607,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
     // Compute z-candidates
     //**************************************************
 
-    Log.LogInfo("Line Model, compute z-candidates from best-chisquare values "
-                "(nb. no priors)");
+    Log.LogInfo("  Operator-Linemodel:  compute z-candidates from best-chisquare values (nb. no priors)");
     Int32 retCandidates =
         ComputeCandidates(opt_extremacount, -1, m_result->ChiSquare, -1);
     if (retCandidates != 0)
     {
-        Log.LogError("Line Model, compute z-candidates failed. Aborting");
+        Log.LogError("  Operator-Linemodel:  compute z-candidates failed. Aborting");
         return m_result;
     }
 
@@ -2641,7 +2629,6 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
                 opt_lineForceFilter,
                 lambdaRange,
                 opt_fittingmethod,
-                opt_continuumcomponent,
                 opt_lineWidthType,
                 opt_resolution,
                 opt_velocityEmission,
@@ -2661,7 +2648,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
                 opt_manvelfit_dzstep);
     if (retSecondPass != 0)
     {
-        Log.LogError("Line Model, second pass failed. Aborting");
+        Log.LogError("  Operator-Linemodel:  second pass failed. Aborting");
         return m_result;
     }
 
@@ -2672,6 +2659,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
  * @brief COperatorLineModel::processPass
  * @return
  */
+//Note: obsolete function so no clue how and when should be called
 std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
     const CSpectrum &spectrum,
     const CTemplateCatalog &tplCatalog,
@@ -2704,11 +2692,12 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
     const Float64 &opt_absvelocityfitmax,
     const Float64 &opt_absvelocityfitstep)
 {
+    m_opt_continuumcomponent = opt_continuumcomponent;
     auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute(
         spectrum, tplCatalog, tplCategoryList,
         opt_calibrationPath, restraycatalog, opt_lineTypeFilter,
         opt_lineForceFilter, lambdaRange, redshifts, opt_extremacount,
-        opt_fittingmethod, opt_continuumcomponent, opt_lineWidthType,
+        opt_fittingmethod, m_opt_continuumcomponent, opt_lineWidthType,
         opt_resolution, opt_velocityEmission, opt_velocityAbsorption,
         opt_continuumreest, opt_rules, opt_velocityFitting,
         opt_twosteplargegridstep, opt_twosteplargegridsampling, opt_rigidity,
@@ -2773,7 +2762,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
                     tplCategoryList, opt_calibrationPath, restraycatalog,
                     opt_lineTypeFilter, opt_lineForceFilter, lambdaRange,
                     lastPassRedshifts, opt_extremacount_lastPass,
-                    opt_fittingmethod, opt_continuumcomponent,
+                    opt_fittingmethod, m_opt_continuumcomponent,
                     opt_lineWidthType, opt_resolution, opt_velocityEmission,
                     opt_velocityAbsorption, opt_continuumreest, opt_rules,
                     opt_velocityFitting, opt_twosteplargegridstep,
@@ -2852,7 +2841,7 @@ void COperatorLineModel::storeGlobalModelResults(COperatorResultStore &resultSto
     Int32 nResults = m_savedModelSpectrumResults.size();
     if (nResults > m_savedModelFittingResults.size())
     {
-        Log.LogError("Line Model, not as many model fitting results as model "
+        Log.LogError("  Operator-Linemodel:  not as many model fitting results as model "
                      "spectrum results, (nspc = %d, nfit = %d)",
                      m_savedModelSpectrumResults.size(),
                      m_savedModelFittingResults.size());
