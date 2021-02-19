@@ -69,6 +69,54 @@ wheel36-osx:
     key: osx
     untracked: true
 
+wheel37-osx:
+  stage: build-wheel
+  tags:
+    - osx
+  when: manual
+  script:
+    - source /Users/grunner/venv/amazed37/bin/activate
+    - python setup.py bdist_wheel
+    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp37-cp37m-*.whl
+    - pip install wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - cd /
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - source /Users/grunner/venv/amazed36/bin/activate
+    - pip uninstall -y pylibamazed
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
+  cache:
+    key: osx
+    untracked: true
+
+wheel38-osx:
+  stage: build-wheel
+  tags:
+    - osx
+  when: manual
+  script:
+    - source /Users/grunner/venv/amazed38/bin/activate
+    - python setup.py bdist_wheel
+    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp38-cp38m-*.whl
+    - pip install wheel/pylibamazed-*-cp38-cp38m-*.whl
+    - cd /
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - source /Users/grunner/venv/amazed36/bin/activate
+    - pip uninstall -y pylibamazed
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
+  cache:
+    key: osx
+    untracked: true
+  
 push-rc-osx:
   stage: push-rc
   tags:
