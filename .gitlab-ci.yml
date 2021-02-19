@@ -25,11 +25,10 @@ build-osx:
   tags:
     - osx
   script:
-    - conda activate gitlab-ci-amazed-p36
     - mkdir -p build
     - cd build
     - cmake ..
-    - make -j4
+    - make -j 2
   cache:
     key: osx
     untracked: true
@@ -40,7 +39,6 @@ test-osx:
     - osx
   allow_failure: true
   script:
-    - conda activate gitlab-ci-amazed-p36
     - cd build
     - make install
     - make test
@@ -53,19 +51,15 @@ wheel36-osx:
   tags:
     - osx
   script:
-    - conda activate gitlab-ci-amazed-p36
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-    - MACOSX_DEPLOYMENT_TARGET=10.7 CC=clang CXX=clang++ python setup.py bdist_wheel
+    - source /Users/grunner/venv/amazed36/bin/activate
+    - python setup.py bdist_wheel
     - delocate-wheel -w wheel/ dist/pylibamazed-*-cp36-cp36m-*.whl
-    - pip install wheel/pylibamazed*
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - pip install wheel/pylibamazed-*-cp36-cp36m-*.whl
     - cd /
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
-    - conda activate gitlab-ci-amazed-p36
+    - source /Users/grunner/venv/amazed36/bin/activate
     - pip uninstall -y pylibamazed
   artifacts:
     paths:
