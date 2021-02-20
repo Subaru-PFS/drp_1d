@@ -196,8 +196,10 @@ template <typename T> class CRange
     
     typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
     typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
-
-    if(*it_max > m_End) it_max = it_max -1;
+    
+    if (it_max==ordered_values.end()) --it_max;
+    
+    else if(*it_max > m_End) --it_max;
 
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
