@@ -135,7 +135,7 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
     {
       return (*it).second;
     }
-    Log.LogError("COperatorResultStore::GetGlobalResult, global result %s not found",name.c_str());
+    //Log.LogError("COperatorResultStore::GetGlobalResult, global result %s not found",name.c_str());
     //throw runtime_error("COperatorResultStore::GetGlobalResult, global result not found");
     return std::weak_ptr<const COperatorResult>();
 }
@@ -521,7 +521,7 @@ void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::p
                 TResultsMap::const_iterator it = m_GlobalResults.find("candidatesresult" );
  
 		        CreateResultStorage( outputJSONStream, bfs::path( resultName + ".json"), dir );
-		        result->SaveJSON((*it).second,outputJSONStream);
+		        result->SaveJSON(outputJSONStream);
 	        }
         }
     }

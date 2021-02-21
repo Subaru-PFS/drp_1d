@@ -48,13 +48,13 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
 std::shared_ptr<CPdfCandidateszResult> COperatorPdfz::Compute(const ChisquareArray & chisquarearray,
                                                               Bool integ)
 {
+    Log.LogInfo("%s: Pdfz computation", __func__);    
 
     // build PDF from chisquares and priors
     CombinePDF(chisquarearray);
 
     // find candidates redshifts
-    TCandidateZbyID zcandidates; // will be sorted by the id syntax inside each redhisftwindow
-    searchMaxPDFcandidates(zcandidates);
+    TCandidateZbyID zcandidates = searchMaxPDFcandidates(); // will be sorted by the id syntax inside each redhisftwindow
 
     std::shared_ptr<CPdfCandidateszResult> CandidateszResult;
     if (integ){
@@ -148,40 +148,51 @@ Bool COperatorPdfz::checkPdfSum()
 }
 
 
-Bool COperatorPdfz::searchMaxPDFcandidates(TCandidateZbyID & candidates) const
+TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const
 {
-    candidates.clear();
-
+    TCandidateZbyID candidates;
+    
     for (const auto & cand : m_candidatesZRanges)
     {
         TPointList extremumList;
         const TFloat64Range & redshiftsRange = cand.second;
         std::string id = cand.first;
 
-        if (id!="") id += "_";
-
         //call Find on each secondpass range and retrieve the best  peak
         Bool invertForMinSearch=false;
         CExtremum extremum_op = CExtremum( m_maxPeakCount_per_window, m_peakSeparation, m_meritcut, 
                                            invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
         Bool findok = extremum_op.Find(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog, extremumList);
-        if (!findok)
-        {   
-            Log.LogError("COperatorPdfz: searchMaxPDFcandidates failed");
-            throw runtime_error("COperatorPdfz: searchMaxPDFcandidates failed");
-            return false;
+        if (!findok){
+            if (m_candidatesZRanges.size() >1){ // we are in 2nd pass (several redshift ranges)
+                Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass fitting degenerates the first-pass results of candidate:%s in range [%f , %f]\n", 
+                                cand.first, redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
+                Log.LogInfo(" Flag - Eliminating a second-pass candidate");
+                continue; 
+            }
+            else{
+                Log.LogError("COperatorPdfz: searchMaxPDFcandidates failed");
+                throw runtime_error("COperatorPdfz: searchMaxPDFcandidates failed");
+            }       
         }
         Int32 i = 0 ;
-        for (const auto & extremum : extremumList)
+        const std::string Id_prefix = (id=="" ? m_Id_prefix : id + "_" + m_Id_prefix);
+        for (const auto & extremum : extremumList) // ranked by ValProba (from CExtremum::Find)
         {   
-            std::string newid = id + m_Id_prefix + std::to_string(i);
+            std::string newid = Id_prefix + std::to_string(i++);
             candidates[newid].Redshift = extremum.X;
-            candidates[newid].ValProba = extremum.Y;    
-            ++i;
+            candidates[newid].ValProba = extremum.Y;
+            if (id!="") // this extrema has a parent id 
+                candidates[newid].ParentId = id;   
         }
     }
 
-    return true;
+    if (candidates.empty()){
+        Log.LogError("COperatorPdfz: searchMaxPDFcandidates failed");
+        throw runtime_error("COperatorPdfz: searchMaxPDFcandidates failed");
+    }
+
+    return candidates;
 }
 
 

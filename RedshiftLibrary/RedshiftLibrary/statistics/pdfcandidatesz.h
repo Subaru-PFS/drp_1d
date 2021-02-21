@@ -21,6 +21,8 @@ struct TCandidateZ {
     Float64           	  ValSumProbaZmin = NAN;
     Float64           	  ValSumProbaZmax = NAN;
 
+    std::string           ParentId = "";
+
     //opt 1: direct integration
     //
     //opt 2: gaussian fit
@@ -30,17 +32,6 @@ struct TCandidateZ {
     Float64           		GaussSigmaErr = NAN;
 
 };
-/*
-struct TCandidateZ: TCandidateZ 
-{  
-  std::string Id;
-
-  TCandidateZRanked(const TCandidateZ & _candidate, 
-                     cosnt std::string> & _Id):
-      TCandidateZ(_candidate),
-      Id(_Id)
-  {}
-*/
 
 
 typedef std::map<std::string, TCandidateZ> TCandidateZbyID;

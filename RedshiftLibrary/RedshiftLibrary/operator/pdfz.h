@@ -71,7 +71,7 @@ private:
     Int32 BestProba(const ChisquareArray & chisquarearray);
     Int32 BestChi2(const ChisquareArray & chisquarearray);
 
-    Bool searchMaxPDFcandidates(TCandidateZbyID & candidates) const;
+    TCandidateZbyID searchMaxPDFcandidates() const;
 
     const std::string m_opt_combine;
     TCandidateZRangebyID m_candidatesZRanges;

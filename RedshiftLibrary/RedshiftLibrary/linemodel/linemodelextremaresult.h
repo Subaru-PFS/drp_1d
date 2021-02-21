@@ -1,35 +1,41 @@
 #ifndef _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 #define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
-
+#include <RedshiftLibrary/operator/extremaresult.h>
 #include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/continuum/indexes.h>
 #include <RedshiftLibrary/linemodel/linemodelsolution.h>
+
+//#include <RedshiftLibrary/operator/modelspectrumresult.h>
+//#include <RedshiftLibrary/linemodel/modelfittingresult.h>
+//#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+//#include <RedshiftLibrary/linemodel/modelrulesresult.h>
+//#include <RedshiftLibrary/operator/spectraFluxResult.h>
+
 
 namespace NSEpic
 {
+class CModelSpectrumResult;
+class CModelFittingResult;
+class CModelContinuumFittingResult;
+class CModelRulesResult;
+class CSpectraFluxResult;
 
-class CLineModelExtremaResult : public COperatorResult
+class CLineModelExtremaResult : public CExtremaResult
 {
 
 public:
 
-    CLineModelExtremaResult();
-    ~CLineModelExtremaResult();
+  CLineModelExtremaResult() = default;
+  CLineModelExtremaResult(Int32 n);
+  ~CLineModelExtremaResult() = default;
 
-    void Resize(Int32 size);
-    
-    void Save(std::ostream& stream ) const;
-  void SaveJSON( std::shared_ptr<const COperatorResult> res, std::ostream& stream ) const;
+  void Resize(Int32 size);
+  
+  void Save(std::ostream& stream ) const {}; 
+  void SaveJSON( std::ostream& stream ) const;
 
-    void SaveLine(std::ostream& stream ) const;
+  void SaveLine(std::ostream& stream ) const {};
    
-    //void Load( std::istream& stream );
-    bool RemoveSecondPassCandidatebyIdx(Int32 idx);
-  Int32 FixRanksUsingSortedIDs(TInt32List& Rank_PDF, std::vector<std::string> ids) const;
   void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
   void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
   void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
@@ -41,31 +47,23 @@ public:
   void getData(const std::string& name, double **data, int *size) const;
 
     //Extrema results
-    TFloat64List            ExtremaPDF;    // Ranks extrema
-    std::vector<std::string> ExtremaIDs;    // Ranks extrema 
+    TFloat64List            MeritContinuum; //extrema merit for continuum
 
-    TFloat64List            Extrema;    // z extrema
-    TFloat64List            ExtremaMerit;    // extrema merit
-    TFloat64List            ExtremaMeritContinuum; //extrema merit for continuum
-    TFloat64List            DeltaZ;    // extrema delta z
     TFloat64List            mTransposeM;    // extrema model norm
     TFloat64List            CorrScaleMarg;    // extrema scale marg. correction
-    std::vector<Int32>      NDof;   //non zero elements in the lambdarange
-    TFloat64List            ExtremaLastPass; //z extrema with more precision
-    TFloat64List            lmfitPass;// z found with lmfit
+    TInt32List              NDof;   //non zero elements in the lambdarange
+    TFloat64List            Redshift_lmfit;// z found with lmfit
     TFloat64List            snrHa;
     TFloat64List            lfHa;
     TFloat64List            snrOII;
     TFloat64List            lfOII;
 
-    //Deprecated?
-    std::vector<TFloat64List> ExtremaExtendedRedshifts;    // z range around extrema
-    TFloat64List            Posterior;    // z extrema
-    TFloat64List            LogArea;    // log area for each extrema
-    TFloat64List            LogAreaCorrectedExtrema;    //corrected z for each extrema
-    TFloat64List            SigmaZ; //sigmaz for each extrema
+    std::vector<TFloat64List> ExtendedRedshifts;    // z range around extrema
+    TFloat64List            NLinesOverThreshold;  
+    TFloat64List            LogArea;   // log area for each extrema
+    TFloat64List            LogAreaCorrectedExtrema;   // corrected z for each extrema
+    TFloat64List            SigmaZ;    // sigmaz for each extrema
 
-    //
     TFloat64List            StrongELSNR;
     std::vector<std::vector<std::string>>            StrongELSNRAboveCut;
     TFloat64List            bic;    // bayesian information criterion for each extrema
@@ -80,31 +78,26 @@ public:
     std::vector<TFloat64List>      GroupsELv;   //per fitting group line width , EL
     std::vector<TFloat64List>      GroupsALv;   //per fitting group line width , AL
 
-
-    //template continuum
-    std::vector<std::string>      FittedTplName;    //Name of the best template fitted for continuum
-    TFloat64List            FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
-    TFloat64List            FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
-    TFloat64List            FittedTplMerit;     //Chisquare for the best template fitted for continuum
-    TFloat64List            FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
-    std::vector<Int32>      FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
+    //template continuum (+ base class)
     TFloat64List      FittedTplRedshift;    //Redshift for the best template fitted for continuum
-    TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
-    TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
-    TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
     std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio
-    std::vector<std::string>      FittedTplshapeName;   //Name of the best template fitted for tplcorr/tplshape
-    TFloat64List      FittedTplshapeAmplitude;   //amp of the best template fitted for tplcorr/tplshape
-    TFloat64List      FittedTplshapeDtm;   //dtm of the best template fitted for tplcorr/tplshape
-    TFloat64List      FittedTplshapeMtm;   //mtm of the best template fitted for tplcorr/tplshape
-    TFloat64List      FittedTplshapeIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplshape
+    std::vector<std::string>      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioAmplitude;   //amp of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioDtm;   //dtm of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioMtm;   //mtm of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplratio
 
-  mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
-  mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
+    mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
+    mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
+    
+    std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
+    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
+    std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
+    std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
-    TInt32List Rank_PDF;
 };
 
 

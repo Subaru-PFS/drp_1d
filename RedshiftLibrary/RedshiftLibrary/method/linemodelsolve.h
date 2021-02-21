@@ -61,23 +61,15 @@ private:
                                         Float64 opt_euclidNHaEmittersPriorStrength,
                                         Float64 opt_modelPriorZStrength) const;
 
-    Int32 CombinePDF(std::shared_ptr<const CLineModelResult> result,
-                     std::string opt_rigidity,
-                     std::string opt_combine,
-                     Float64 opt_stronglinesprior,
-                     Float64 opt_hapriorstrength,
-                     Float64 opt_euclidNHaEmittersPriorStrength,
-                     Float64 opt_modelPriorZStrength,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult,
-                     std::shared_ptr<CPdfLogResult> zPrior);
+    //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
-                                 const TFloat64List & Extrema,  
-                                 const std::vector<TFloat64List> & ExtremaExtendedRedshifts,
-                                 TFloat64List& candidates ) const;
+    void storeExtremaModelResults( COperatorResultStore &resultStore, 
+                                                std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
 
-    Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
+    void StoreChisquareTplShapeResults(CDataStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
 
+
+    COperatorLineModel m_linemodel;
 
     std::string m_opt_linetypefilter;
     std::string m_opt_lineforcefilter;

@@ -41,7 +41,6 @@ public:
                 const Float64 radius);
 
     std::shared_ptr<COperatorResult> getResult();
-    std::shared_ptr<CLineModelExtremaResult> GetFirstpassExtremaResult() const;
 
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
                                 const CTemplateCatalog &tplCatalog,
@@ -76,7 +75,7 @@ public:
 
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
-    Int32 Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b);
+    Int32 Combine_firstpass_candidates(std::shared_ptr<const CLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
@@ -122,18 +121,12 @@ public:
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
 
-
-    Int32 SaveResults(const CSpectrum& spectrum,
-                      const TFloat64Range& lambdaRange,
-                      const std::string &opt_continuumreest="no");
+    std::shared_ptr<CLineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
+                                                         const TFloat64Range& lambdaRange,
+                                                         const TCandidateZbyRank & zCandidates,
+                                                         const std::string &opt_continuumreest="no");
 
     void InitTplratioPriors();
-
-    void storeGlobalModelResults( COperatorResultStore &resultStore );
-
-    std::shared_ptr<CModelSpectrumResult> GetModelSpectrumResult(Int32 idx);
-    std::shared_ptr<CSpectraFluxResult> GetModelSpectrumContinuumResult(Int32 idx);
-
 
     bool m_enableWidthFitByGroups = false;
 
@@ -190,8 +183,7 @@ public:
     std::string m_opt_enableImproveBalmerFit;
     Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
-    std::vector<Int32> m_secondpass_indiceSortedCandidatesList;
-    CLineModelExtremaResult m_firstpass_extremaResult;
+    std::shared_ptr<CLineModelExtremaResult> m_firstpass_extremaResult;
     CLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
 private:
@@ -207,8 +199,8 @@ private:
 
     TFloat64List SpanRedshiftWindow(Float64 z) const;
 
-    void ComputeArea1(CLineModelResult& results);
-    void ComputeArea2(CLineModelResult& results);
+    void ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
+    void ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
     Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
 
     Bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
@@ -216,11 +208,6 @@ private:
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
     
     std::shared_ptr<COperatorTemplateFittingBase> templateFittingOperator;
-    std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
-    std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
-    std::vector<std::shared_ptr<CModelRulesResult>  > m_savedModelRulesResults;
-    std::vector<std::shared_ptr<CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
     //lmfit
 

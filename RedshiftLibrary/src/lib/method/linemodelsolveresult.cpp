@@ -33,12 +33,12 @@ void CLineModelSolveResult::preSave(const CDataStore& store)
    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
     if(m_bestRedshiftMethod==0)
     {
-        GetBestRedshift( store, m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII );
+        GetBestRedshift( m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII );
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", m_redshift);
     }
     else if(m_bestRedshiftMethod==2)
     {
-        if(GetBestRedshiftFromPdf( store, m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
+        if(GetBestRedshiftFromPdf( m_redshift, m_merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName ))
         {
         Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", m_redshift);
         Log.LogInfo( "Linemodelsolve-result: extracted best model-tplratio=%s", tplratioName.c_str());
@@ -72,7 +72,7 @@ void CLineModelSolveResult::Save(std::ostream& stream ) const
  * \brief Prints into the output stream the redshift, merit and template name for the best redshift obtained.
  **/
 void CLineModelSolveResult::SaveLine( std::ostream& stream ) const
-{
+{/*
     Float64 redshift;
     Float64 merit;
     std::string tplratioName="-1";
@@ -124,8 +124,7 @@ void CLineModelSolveResult::SaveLine( std::ostream& stream ) const
  *   if this entry is less than the temporary merit, update the temporary merit and redshift values with the result stored in this entry.
  * Set the redshift and merit referenced arguments with the best values found.
  **/
-Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
-                                            Float64& redshift,
+Bool CLineModelSolveResult::GetBestRedshift(Float64& redshift,
                                             Float64& merit,
                                             Float64& sigma,
                                             Float64& snrHa,
@@ -133,9 +132,6 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
                                             Float64 &snrOII,
                                             Float64 &lfOII) const
 {
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-
     Float64 tmpMerit = DBL_MAX;
     Float64 tmpRedshift = 0.0;
     Float64 tmpSigma = -1.0;
@@ -143,25 +139,20 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
     Float64 tmpLFHa = -1.0;
     Float64 tmpSnrOII = -1.0;
     Float64 tmpLFOII = -1.0;
-
-    if( !results.expired() )
+    
+    for( Int32 i=0; i<ExtremaResult->size(); i++ )
     {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
+        Float64 merit = ExtremaResult->ValProba(i); 
+        if( merit > tmpMerit )
         {
-            Float64 merit = lineModelResult->GetExtremaMerit(i);
-            if( merit < tmpMerit )
-            {
-                tmpMerit = merit;
-                //tmpRedshift = lineModelResult->Extrema[i];
-                tmpRedshift = lineModelResult->ExtremaResult.ExtremaLastPass[i];
-                //tmpRedshift = lineModelResult->lmfitPass[i];
-                tmpSigma = lineModelResult->ExtremaResult.DeltaZ[i];
-                tmpSnrHa = lineModelResult->ExtremaResult.snrHa[i];
-                tmpLFHa = lineModelResult->ExtremaResult.lfHa[i];
-                tmpSnrOII = lineModelResult->ExtremaResult.snrOII[i];
-                tmpLFOII = lineModelResult->ExtremaResult.lfOII[i];
-            }
+            tmpMerit = merit;
+            tmpRedshift = ExtremaResult->Redshift(i);
+            //tmpRedshift = ExtremaResult->Redshift_lmfit[i];
+            tmpSigma = ExtremaResult->DeltaZ(i);
+            tmpSnrHa = ExtremaResult->snrHa[i];
+            tmpLFHa = ExtremaResult->lfHa[i];
+            tmpSnrOII = ExtremaResult->snrOII[i];
+            tmpLFOII = ExtremaResult->lfOII[i];
         }
     }
 
@@ -178,57 +169,29 @@ Bool CLineModelSolveResult::GetBestRedshift(const CDataStore& store,
 /**
  * Simply reading from datastore info related to the best Candidate
 */
-Bool CLineModelSolveResult::GetBestRedshiftFromPdf(const CDataStore& store,
-                                            Float64& redshift,
-                                            Float64& probaLog,
-                                            Float64& sigma,
-                                            Float64& snrHa,
-                                            Float64& lfHa ,
-                                            Float64 &snrOII,
-                                            Float64 &lfOII,
-                                            std::string& modelTplratio,
-                                            std::string& modelTplContinuum ) const
-{
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-    if(results.expired())
-    {
-        Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: linemodel result not accessible");
-        throw runtime_error("linemodel result not accessible");
-    }
-
-    auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-    //ideally ExtremaPDF should be saved in resultstore as part of lineModelResult object! 
-    // -> No, lineModelResult contains linemodel operator results, thus no pdf related stuff (DV)
-    
-    scope = store.GetScope( *this ) + "candidatesresult";
-    auto res = store.GetGlobalResult( scope.c_str() );
-    auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
-    const TCandidateZbyRank & candidates = candResults->m_ranked_candidates;
-    TFloat64List ExtremaPDF;
-    TFloat64List ExtremaDeltaz;
-    TFloat64List Extrema;
-    for (auto c:candidates){
-        ExtremaPDF.push_back(c.second.ValSumProba);
-        ExtremaDeltaz.push_back(c.second.Deltaz);
-        Extrema.push_back(c.second.Redshift);
-    }
+Bool CLineModelSolveResult::GetBestRedshiftFromPdf( Float64& redshift,
+                                                    Float64& probaLog,
+                                                    Float64& sigma,
+                                                    Float64& snrHa,
+                                                    Float64& lfHa ,
+                                                    Float64 &snrOII,
+                                                    Float64 &lfOII,
+                                                    std::string& modelTplratio,
+                                                    std::string& modelTplContinuum ) const
+{    
     Int32 bestIdx = 0;
 
-    if(bestIdx>=Extrema.size() || !Extrema.size()){
-       Log.LogError("CLineModelSolveResult::GetBestRedshiftFromPdf: Can't access best redshift ");
-       throw runtime_error("Can't access best redshift");
-    }
-    redshift = Extrema[bestIdx];
-    probaLog = ExtremaPDF[bestIdx];
-    sigma = ExtremaDeltaz[bestIdx];
-    //not sure that below values are correct! im right..they are not
-    snrHa = lineModelResult->ExtremaResult.snrHa[bestIdx];
-    lfHa = lineModelResult->ExtremaResult.lfHa[bestIdx];
-    snrOII = lineModelResult->ExtremaResult.snrOII[bestIdx];
-    lfOII = lineModelResult->ExtremaResult.lfOII[bestIdx];
-    modelTplratio = lineModelResult->ExtremaResult.FittedTplshapeName[bestIdx];
-    modelTplContinuum = lineModelResult->ExtremaResult.FittedTplName[bestIdx];
+    const TCandidateZ & bestZCandidate = ExtremaResult->Candidates[bestIdx].second;
+
+    redshift = bestZCandidate.Redshift;
+    probaLog = bestZCandidate.ValSumProba;
+    sigma =   bestZCandidate.Deltaz;
+    snrHa = ExtremaResult->snrHa[bestIdx];
+    lfHa = ExtremaResult->lfHa[bestIdx];
+    snrOII = ExtremaResult->snrOII[bestIdx];
+    lfOII = ExtremaResult->lfOII[bestIdx];
+    modelTplratio = ExtremaResult->FittedTplratioName[bestIdx];
+    modelTplContinuum = ExtremaResult->FittedTplName[bestIdx];
     return true;
 }
 
@@ -269,81 +232,24 @@ Int32 CLineModelSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64
  *   if this entry is larger than the temporary merit, update the temporary merit and redshift values with the results stored in this entry.
  * Set the redshift and merit referenced arguments with the best values found.
  **/
-Bool CLineModelSolveResult::GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const
+Bool CLineModelSolveResult::GetBestRedshiftLogArea( Float64& redshift, Float64& merit ) const
 {
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-
     Float64 tmpMerit = -DBL_MAX ;
     Float64 tmpRedshift = 0.0;
 
-    if(!results.expired())
+    for( Int32 i=0; i<ExtremaResult->LogArea.size(); i++ )
       {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.LogArea.size(); i++ )
-      {
-            if( lineModelResult->ExtremaResult.LogArea[i] > tmpMerit )
+            if( ExtremaResult->LogArea[i] > tmpMerit )
             {
-                tmpMerit = lineModelResult->ExtremaResult.LogArea[i];
-                tmpRedshift = lineModelResult->ExtremaResult.LogAreaCorrectedExtrema[i];
+                tmpMerit = ExtremaResult->LogArea[i];
+                tmpRedshift = ExtremaResult->LogAreaCorrectedExtrema[i];
             }
-      }
       }
 
     redshift = tmpRedshift;
     merit = tmpMerit;
     return true;
 }
-
-/**
- * \brief Searches all the extrema results for the lowest, using the StrongELSnrPrior to correct the initial Chi2 value
- **/
-Bool CLineModelSolveResult::GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const
-{
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-
-    Float64 tmpMerit = DBL_MAX ;
-    Float64 tmpRedshift = 0.0;
-
-    if(!results.expired())
-    {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        for( Int32 i=0; i<lineModelResult->ExtremaResult.Extrema.size(); i++ )
-        {
-            Float64 coeff =10.0;
-            Float64 correctedMerit = lineModelResult->GetExtremaMerit(i)-coeff*lineModelResult->ExtremaResult.StrongELSNR[i];
-            if( correctedMerit < tmpMerit )
-            {
-                tmpMerit = correctedMerit;
-                tmpRedshift = lineModelResult->ExtremaResult.Extrema[i];
-            }
-        }
-    }
-
-    redshift = tmpRedshift;
-    merit = tmpMerit;
-    return true;
-}
-
-/*
-Bool CLineModelSolveResult::GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const
-{
-    Log.LogDebug( "CLineModelSolveResult::GetRedshiftCandidates" );
-    redshiftcandidates.clear();
-    std::string scope = store.GetScope( *this ) + "linemodelsolve.linemodel";
-    auto results = store.GetGlobalResult( scope.c_str() );
-
-    if(!results.expired())
-    {
-        auto lineModelResult = std::dynamic_pointer_cast<const CLineModelResult>( results.lock() );
-        redshiftcandidates = lineModelResult->ExtremaResult.Extrema;
-    }else{
-        return false;
-    }
-
-    return true;
-}*/
 
 void CLineModelSolveResult::getData(const std::string& name, Float64& v) const
 {

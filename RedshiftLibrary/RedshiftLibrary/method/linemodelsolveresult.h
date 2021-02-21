@@ -6,7 +6,9 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/ray/catalog.h>
 
+#include <memory>
 #include <vector>
+
 
 namespace NSEpic
 {
@@ -34,18 +36,15 @@ public:
 
     void Save(std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;
-    Bool GetBestRedshift(const CDataStore& store,
-                         Float64& redshift,
+    Bool GetBestRedshift(Float64& redshift,
                          Float64& merit ,
                          Float64 &sigma,
                          Float64 &snrHa,
                          Float64 &lfHa,
                          Float64 &snrOII,
                          Float64 &lfOII) const;
-    Bool GetBestRedshiftLogArea( const CDataStore& store, Float64& redshift, Float64& merit ) const;
-    Bool GetBestRedshiftWithStrongELSnrPrior( const CDataStore& store, Float64& redshift, Float64& merit ) const;
-    Bool GetBestRedshiftFromPdf(const CDataStore& store,
-                                Float64& redshift,
+    Bool GetBestRedshiftLogArea( Float64& redshift, Float64& merit ) const;
+    Bool GetBestRedshiftFromPdf(Float64& redshift,
                                 Float64& merit,
                                 Float64& sigma,
                                 Float64 &snrHa,
@@ -58,12 +57,14 @@ public:
 
     Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) ;
 
-  void preSave(const CDataStore& store);
-  void getData(const std::string& name, Float64& v) const;
+    void preSave(const CDataStore& store);
+    void getData(const std::string& name, Float64& v) const;
+
+    //Extrema results
+    std::shared_ptr<CLineModelExtremaResult> ExtremaResult;
 
 private:
 
-    std::shared_ptr<CLineModelExtremaResult> m_extremaResult;
 
     UInt32 m_bestRedshiftMethod = 2;
 

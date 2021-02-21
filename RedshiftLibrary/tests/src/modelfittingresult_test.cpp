@@ -38,8 +38,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelResult linemodelResult = CLineModelResult();
   linemodelResult.Redshifts.push_back(0.6);
   linemodelResult.Redshifts.push_back(0.8);
-  linemodelResult.ExtremaResult.Extrema.push_back(0.8);
-  linemodelResult.ExtremaResult.Extrema.push_back(0.6);
 
   lineModelSolution.ElementId.push_back(0);
   lineModelSolution.ElementId.push_back(1);

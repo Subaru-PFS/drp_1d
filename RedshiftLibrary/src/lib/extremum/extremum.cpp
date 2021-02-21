@@ -120,6 +120,14 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     TFloat64List  maxY, minY;
     Bool method = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY );    
 
+    if(maxX.size() == 0){ 
+      // we should not raise an exception here 
+      // (we can accept a missing candidate in second pass window)
+      // The boolean return has to be tested by the caller
+      Log.LogWarning("          CExtremum::Find: FindAllPeaks returned empty MaxX");
+      return false;
+    }
+
     //Look for all local minima
     Bool activateprominence = false;
     if(activateprominence){
@@ -128,22 +136,15 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
       for(Int32 i = 0; i <minX.size(); i++){
         minY[i] = -1*minY[i];
       }
-    }
-
-    if(maxX.size() == 0){
-      Log.LogError("          CExtremum::Find: FindAllPeaks returned empty MaxX");
-      throw runtime_error("CExtremum::Find: FindAllPeaks returned empty MaxX");
-    }
-
-    //Calculate prominence and remove "low" prominence peaks
-    //this is ALSO useful for eliminating neighboring peaks in some cases
-    // Deactivate Cut_Prominence_Merit for the moment until stat tests are ready
-    if(activateprominence){
+    
+      //Calculate prominence and remove "low" prominence peaks
+      //this is ALSO useful for eliminating neighboring peaks in some cases
+      // Deactivate Cut_Prominence_Merit for the moment until stat tests are ready
       TFloat64List ret_prominences = Cut_Prominence_Merit(maxX, maxY, minX, minY);    
 
       if(maxX.size() == 0){
-        Log.LogError("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
-        throw runtime_error("CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+        Log.LogWarning("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+        return false;
       }
     }
 
@@ -155,6 +156,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     if(m_meritCut>0.0 && maxX.size()>keepMinN){ 
         Bool v = Cut_Threshold(maxX, maxY, keepMinN);
     }
+    
     //refine: eliminate very close candidates when possible. 
     Bool b;
     if(m_PeakSeparationActive)
