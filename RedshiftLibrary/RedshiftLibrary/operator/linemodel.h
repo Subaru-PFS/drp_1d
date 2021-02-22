@@ -61,10 +61,7 @@ public:
                                              const Float64 &opt_emvelocityfitstep=20.,
                                              const Float64 &opt_absvelocityfitmin=150.,
                                              const Float64 &opt_absvelocityfitmax=500.,
-                                             const Float64 &opt_absvelocityfitstep=20.,
-                                             const Float64 &opt_manvelfit_dzmin=-6e-4,
-                                             const Float64 &opt_manvelfit_dzmax=6e-4,
-                                             const Float64 &opt_manvelfit_dzstep=1e-4);
+                                             const Float64 &opt_absvelocityfitstep=20.);
 
     Int32 Init( const CSpectrum& spectrum, 
                 const TFloat64List& redshifts, 
@@ -137,9 +134,6 @@ public:
                             const Float64 &opt_absvelocityfitmin=150.,
                             const Float64 &opt_absvelocityfitmax=500.,
                             const Float64 &opt_absvelocityfitstep=20.,
-                            const Float64 &opt_manvelfit_dzmin=-6e-4,
-                            const Float64 &opt_manvelfit_dzmax=6e-4,
-                            const Float64 &opt_manvelfit_dzstep=1e-4,
                             const string &opt_continuumfit_method="fromfirstpass");
 
     Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
@@ -153,10 +147,7 @@ public:
                                        const Float64 &opt_emvelocityfitstep,
                                        const Float64 &opt_absvelocityfitmin,
                                        const Float64 &opt_absvelocityfitmax,
-                                       const Float64 &opt_absvelocityfitstep,
-                                       const Float64 &opt_manvelfit_dzmin,
-                                       const Float64 &opt_manvelfit_dzmax,
-                                       const Float64 &opt_manvelfit_dzstep);
+                                       const Float64 &opt_absvelocityfitstep);
 
     Int32 RecomputeAroundCandidates(TPointList input_extremumList,
                                     const TFloat64Range &lambdaRange,
@@ -225,7 +216,7 @@ public:
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
     std::string m_opt_tplfit_method = "templatefittinglog"; //only for firstpass
-    std::string m_opt_tplfit_method_secondpass = "templatefitting"; //"templatefittingloglambda"//only for secondpass
+    std::string m_opt_tplfit_method_secondpass = "templatefittinglog"; 
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
@@ -240,7 +231,6 @@ public:
     Int32 m_opt_firstpass_multiplecontinuumfit_disable=1;
     std::string m_opt_firstpass_fittingmethod;
     std::string m_opt_secondpasslcfittingmethod="-1";
-    Int32 m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass=1; //0: load fit continuum, 1 (default): use the best continuum from first pass
     Float64 m_opt_tplratio_prior_betaA=1.0;
     Float64 m_opt_tplratio_prior_betaTE=1.0;
     Float64 m_opt_tplratio_prior_betaZ=1.0;
@@ -286,7 +276,8 @@ private:
     Bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
-
+    
+    std::shared_ptr<COperator> templateFittingOperator;
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<CModelFittingResult>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;

@@ -185,9 +185,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     Int32 ctlgIdx = 0; // only one ortho config for now
     m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
     Log.LogInfo("  Operator-Linemodel: Templates store prepared.");
-    //*/
-    //below commented code is currently for test purposes 
-    //m_opt_tplfit_method_secondpass = "templatefittinglog"
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          tplCatalog,
@@ -658,13 +655,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         // to consider templateFitting faster than chisquarelog
     {
         m_opt_tplfit_method = "templatefitting";
+        m_opt_tplfit_method_secondpass = "templatefitting";
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
-    if(m_model->GetPassNumber() == 2){
-        //use Chi2 for continuum fit in secondpass, to compare with develop
-        m_opt_tplfit_method = "templatefitting";
-    }
+
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
                 m_opt_tplfit_method.c_str());
@@ -674,24 +669,24 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 m_opt_tplfit_extinction);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum opt_interp = %s",
                 opt_interp.c_str());
-
-    std::shared_ptr<COperator> templateFittingOperator;
-    if (m_opt_tplfit_method == "templatefittinglog")
-    {
-        // COperatorTemplateFittingLog* templateFittingOperator;
-        bool enableLogRebin = true;
-        templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(opt_calibrationPath);
-        std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
-            std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
-        templateFittingLogOperator->enableSpcLogRebin(enableLogRebin);
-    } else if (m_opt_tplfit_method == "templatefitting")
-    {
-        templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
-    } else
-    {
-        Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
-         throw std::runtime_error("  Operator-Linemodel: unable to parse templatefitting continuum fit operator. use templatefitting or templatefittinglog");
+    //reuse the shared pointer for secondpass
+    if(templateFittingOperator == nullptr) {
+        if (m_opt_tplfit_method == "templatefittinglog" && m_opt_tplfit_method_secondpass == "templatefittinglog")
+        {
+            bool enableLogRebin = true;
+            templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(opt_calibrationPath);
+            std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
+                std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
+            templateFittingLogOperator->enableSpcLogRebin(enableLogRebin);
+        } else if (m_opt_tplfit_method == "templatefitting" && m_opt_tplfit_method_secondpass == "templatefitting")
+        {
+            templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
+        } else
+        {
+            Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
+        }
     }
+   
 
     Float64 overlapThreshold = 1.0;
     if (m_opt_tplfit_method != "templatefitting" && ignoreLinesSupport==true)
@@ -806,7 +801,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         }
         if(found) break;
     }
-    templateFittingOperator.reset();
 
     // fill the fit store with fitted values: only the best fitted values FOR EACH TEMPLATE are used
     Float64 bestTplFitSNR = 0.0;
@@ -1146,9 +1140,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const Float64 &opt_absvelocityfitmin,
                                             const Float64 &opt_absvelocityfitmax,
                                             const Float64 &opt_absvelocityfitstep,
-                                            const Float64 &opt_manvelfit_dzmin,
-                                            const Float64 &opt_manvelfit_dzmax,
-                                            const Float64 &opt_manvelfit_dzstep,
                                             const std::string &opt_continuumfit_method)
 {
     boost::chrono::thread_clock::time_point start_secondpass =
@@ -1239,10 +1230,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                  opt_emvelocityfitstep,
                                  opt_absvelocityfitmin,
                                  opt_absvelocityfitmax,
-                                 opt_absvelocityfitstep,
-                                 opt_manvelfit_dzmin,
-                                 opt_manvelfit_dzmax,
-                                 opt_manvelfit_dzstep);
+                                 opt_absvelocityfitstep);
 
     // recompute the fine grid results around the extrema
 
@@ -1694,10 +1682,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                                        const Float64 &opt_emvelocityfitstep,
                                                        const Float64 &opt_absvelocityfitmin,
                                                        const Float64 &opt_absvelocityfitmax,
-                                                       const Float64 &opt_absvelocityfitstep,
-                                                       const Float64 &opt_manvelfit_dzmin,
-                                                       const Float64 &opt_manvelfit_dzmax,
-                                                       const Float64 &opt_manvelfit_dzstep)
+                                                       const Float64 &opt_absvelocityfitstep)
 {
     // setup velocity fitting
     bool enableVelocityFitting = true;
@@ -1747,30 +1732,25 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
         //assign same IDs to extremum of second pass
         m_secondpass_parameters_extremaResult.ExtremaIDs[i] = m_firstpass_extremaResult.ExtremaIDs[i];
-        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){        
-            //inject continuumFitValues of current candidate 
-            if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-            else{
-                //nothing to do cause we already injected the fitStore for cases 1 and 2
-            }
-
-            if(m_opt_secondpass_estimateParms_tplfit_fixfromfirstpass)
-            {
-                m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
-                                                m_firstpass_extremaResult.FittedTplAmplitude[i],
-                                                m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-                                                m_firstpass_extremaResult.FittedTplMerit[i],
-                                                m_firstpass_extremaResult.FittedTplDustCoeff[i],
-                                                m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-                                                m_firstpass_extremaResult.FittedTplRedshift[i],
-                                                m_firstpass_extremaResult.FittedTplDtm[i],
-                                                m_firstpass_extremaResult.FittedTplMtm[i],
-                                                m_firstpass_extremaResult.FittedTplLogPrior[i],
-                                                m_firstpass_extremaResult.FittedTplpCoeffs[i]);
-                m_model->SetFitContinuum_Option(2);
-            }
-    }
+        
+        //inject continuumFitValues of current candidate 
+        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
+            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+        else{
+            //nothing to do cause we already injected the fitStore for cases 1 and 2
+            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
+                                            m_firstpass_extremaResult.FittedTplAmplitude[i],
+                                            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
+                                            m_firstpass_extremaResult.FittedTplMerit[i],
+                                            m_firstpass_extremaResult.FittedTplDustCoeff[i],
+                                            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
+                                            m_firstpass_extremaResult.FittedTplRedshift[i],
+                                            m_firstpass_extremaResult.FittedTplDtm[i],
+                                            m_firstpass_extremaResult.FittedTplMtm[i],
+                                            m_firstpass_extremaResult.FittedTplLogPrior[i],
+                                            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+            m_model->SetFitContinuum_Option(2);
+        }
 
         // find the index in the zaxis results
         Int32 idx = -1; idx = m_result->getRedshiftIndex(z); 
@@ -1872,16 +1852,12 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
                 std::vector<std::vector<Int32>> idxVelfitGroups;
-
+                Int32 lowerzIdx = -6, higherzIdx = 6;
                 for (Int32 iLineType = 0; iLineType < 2; iLineType++)
                 {
                     Float64 vInfLim;
                     Float64 vSupLim;
                     Float64 vStep;
-
-                    Float64 dzInfLim = roundf(opt_manvelfit_dzmin*10000)/10000;//set precision to 10^4
-                    Float64 dzStep = opt_manvelfit_dzstep;
-                    Float64 dzSupLim = roundf(10000*opt_manvelfit_dzmax)/10000;
 
                     if (iLineType == 0)
                     {
@@ -1943,35 +1919,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     }
                     //*/
 
-                    if (m_result->Redshifts[idx] + dzInfLim <
-                            m_result->Redshifts[0])
-                    {
-                        dzInfLim = m_result->Redshifts[0] -
-                                m_result->Redshifts[idx];
-                    }
-                    if (m_result->Redshifts[idx] + dzSupLim >
-                            m_result->Redshifts[m_result->Redshifts.size() - 1])
-                    {
-                        dzSupLim =
-                                m_result->Redshifts[m_result->Redshifts.size() -
-                                1] -
-                                m_result->Redshifts[idx];
-                    }
-
-                    Int32 nDzSteps = round((dzSupLim - dzInfLim) / dzStep);
-                    if (nDzSteps == 0)
-                    {
-                        nDzSteps = 1;
-                        dzInfLim = 0.;
-                        dzSupLim = 0.;
-                    }else
-                    {
-                        Log.LogDetail("  Operator-Linemodel: dzInfLim n=%e", dzInfLim);
-                        Log.LogDetail("  Operator-Linemodel: dzSupLim n=%e", dzSupLim);
-                        Log.LogDetail("  Operator-Linemodel: manualStep n=%d", nDzSteps);
-                    }
-
-
                     for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
                     {
                         Log.LogDetail("  Operator-Linemodel: manualStep fitting group=%d", kgroup);
@@ -1979,9 +1926,12 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
                         Float64 z_vOptim = -1.0;
-                        for (Int32 kdz = 0; kdz < nDzSteps; kdz++)
+
+                        for (Int32 kdz = lowerzIdx; kdz <= higherzIdx; kdz++)
                         {
-                            Float64 dzTest = dzInfLim + kdz * dzStep;
+                            Int32 idzTest;
+                            idzTest = (idx + kdz)<0?0:idx+kdz; //control lower border
+                            idzTest = (idx + kdz)> m_result->Redshifts.size()-1? m_result->Redshifts.size()-1:idx+kdz;//control higher border
                             for (Int32 kv = 0; kv < nVelSteps; kv++)
                             {
                                 Float64 vTest = velfitlist[kv];
@@ -2016,7 +1966,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 // Log.LogInfo( "  Operator-Linemodel:
                                 // testing v=%f", vTest);
                                 Float64 meritv;
-                                Float64 zTest = m_result->Redshifts[idx] + dzTest*(1.+m_result->Redshifts[idx]);
+                                Float64 zTest = m_result->Redshifts[idzTest];
                                 meritv = m_model->fit(zTest,
                                                       lambdaRange,
                                                       m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
@@ -2555,10 +2505,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
         const Float64 &opt_emvelocityfitstep,
         const Float64 &opt_absvelocityfitmin,
         const Float64 &opt_absvelocityfitmax,
-        const Float64 &opt_absvelocityfitstep,
-        const Float64 &opt_manvelfit_dzmin,
-        const Float64 &opt_manvelfit_dzmax,
-        const Float64 &opt_manvelfit_dzstep)
+        const Float64 &opt_absvelocityfitstep)
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
@@ -2642,10 +2589,7 @@ std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
                 opt_emvelocityfitstep,
                 opt_absvelocityfitmin,
                 opt_absvelocityfitmax,
-                opt_absvelocityfitstep,
-                opt_manvelfit_dzmin,
-                opt_manvelfit_dzmax,
-                opt_manvelfit_dzstep);
+                opt_absvelocityfitstep);
     if (retSecondPass != 0)
     {
         Log.LogError("  Operator-Linemodel:  second pass failed. Aborting");

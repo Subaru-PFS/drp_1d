@@ -163,6 +163,7 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
     dataStore.GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         dataStore.GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "templatefittinglog" );
+        m_opt_tplfit_method_secondpass = m_opt_tplfit_method; //for the moment, we use the same method for both passes
         dataStore.GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         dataStore.GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
@@ -203,9 +204,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         dataStore.GetScopedParam( "linemodel.absvelocityfitmin", m_opt_abs_velocity_fit_min, 150.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitmax", m_opt_abs_velocity_fit_max, 500.0 );
         dataStore.GetScopedParam( "linemodel.absvelocityfitstep", m_opt_abs_velocity_fit_step, 50.0 );
-        dataStore.GetScopedParam( "linemodel.manvelocityfitdzmin", m_opt_manvelfit_dz_min, -6e-4 );
-        dataStore.GetScopedParam( "linemodel.manvelocityfitdzmax", m_opt_manvelfit_dz_max, 6e-4 );
-        dataStore.GetScopedParam( "linemodel.manvelocityfitdzstep", m_opt_manvelfit_dz_step, 1e-4 );
     }
     dataStore.GetScopedParam( "linemodel.lyaforcefit", m_opt_lya_forcefit, "no" );
     dataStore.GetScopedParam( "linemodel.lyaforcedisablefit", m_opt_lya_forcedisablefit, "no" );
@@ -284,9 +282,6 @@ Bool CLineModelSolve::PopulateParameters( CDataStore& dataStore )
         Log.LogInfo( "    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
         Log.LogInfo( "    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
         Log.LogInfo( "    -abs velocity fit step : %.1f", m_opt_abs_velocity_fit_step);
-        Log.LogInfo( "    -man velocity fit dz min : %.2e", m_opt_manvelfit_dz_min);
-        Log.LogInfo( "    -man velocity fit dz max : %.2e", m_opt_manvelfit_dz_max);
-        Log.LogInfo( "    -man velocity fit dz step : %.2e", m_opt_manvelfit_dz_step);
     }
 
     Log.LogInfo( "    -rigidity: %s", m_opt_rigidity.c_str());
@@ -906,6 +901,7 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
         linemodel.m_opt_tplfit_method = m_opt_tplfit_method;
+        linemodel.m_opt_tplfit_method_secondpass = m_opt_tplfit_method_secondpass;
         linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
@@ -1157,9 +1153,6 @@ Bool CLineModelSolve::Solve( CDataStore& dataStore,
                                                           m_opt_abs_velocity_fit_min,
                                                           m_opt_abs_velocity_fit_max,
                                                           m_opt_abs_velocity_fit_step,
-                                                          m_opt_manvelfit_dz_min,
-                                                          m_opt_manvelfit_dz_max,
-                                                          m_opt_manvelfit_dz_step,
                                                           m_opt_secondpass_continuumfit);
         if( retSecondPass!=0 )
         {
