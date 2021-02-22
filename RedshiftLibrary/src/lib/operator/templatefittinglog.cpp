@@ -1545,29 +1545,6 @@ void COperatorTemplateFittingLog::enableSpcLogRebin(Bool enable)
     Log.LogDetail("  Operator-TemplateFittingLog: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }
 
-/**
- * Multiple questions goes here:
- * 1 . do we consider that the passed spec and tpl are already in log scale?
- * For the moment, Im gonna consider they are in log scale
- * Note that my current objective is to identify the relevant functions to construct spectrum model
- */
-Int32   COperatorTemplateFittingLog::ComputeSpectrumModel(  const CSpectrum& spectrum,
-                                                            const CTemplate& tpl,
-                                                            Float64 redshift,
-                                                            Float64 dustCoeff,
-                                                            Int32 meiksinIdx,
-                                                            Float64 amplitude,
-                                                            std::string opt_interp,
-                                                            std::string opt_extinction,
-                                                            const TFloat64Range& lambdaRange,
-                                                            Float64 overlapThreshold,
-                                                            CModelSpectrumResult& spc)
-{
-    Log.LogDetail("  Operator-COperatorTemplateFittingLog: building spectrum model templateFitting for candidate Zcand=%f", redshift);
-    spc = m_templateRebinedLog;
-    return 0;
-}
-
 //TODO: to move elsewhere the sooner we decide on where to place them for better usage in the beginning of processflow
 /**
  * Brief: Get loglambdastep and update the zrange accordingly

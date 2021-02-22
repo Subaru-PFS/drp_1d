@@ -46,17 +46,6 @@ public:
                                               Float64 FitMeiksinIdx=-1);
 
     void enableSpcLogRebin(Bool enable);
-    Int32   ComputeSpectrumModel(const CSpectrum& spectrum,
-                                const CTemplate& tpl,
-                                Float64 redshift,
-                                Float64 DustCoeff,
-                                Int32 meiksinIdx,
-                                Float64 amplitude,
-                                std::string opt_interp,
-                                std::string opt_extinction,
-                                const TFloat64Range& lambdaRange,
-                                Float64 overlapThreshold,
-                                CModelSpectrumResult& spc);
         
     Float64 Computelogstep( const CSpectrum &spectrum,
                             const CTemplate &tpl,

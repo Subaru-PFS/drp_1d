@@ -8,6 +8,7 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/common/quicksort.h>
+#include <RedshiftLibrary/common/indexing.h>
 
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/log/log.h>
@@ -586,10 +587,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     
     //store spectrum results
 /*    Int32 nMaxExtremaSpectraSave = 1, n = min(int(result->Extrema.size()), nMaxExtremaSpectraSave);
+    TFloat64Index indexing;
     for( Int32 ie=0; ie<n; ie++ )
     {
         Int32 i=-1;
-        i = COperator::getIndex(result->Redshifts, result->Extrema[ie]);
+        i = indexing.getIndex(result->Redshifts, result->Extrema[ie]);
         if(i==-1){
             Log.LogError("  Operator-Tplcombination: Unable to find the z index for spectrum result save");
             throw std::runtime_error("  Operator-Tplcombination: Unable to find the z index for spectrum result save");

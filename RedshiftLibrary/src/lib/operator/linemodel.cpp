@@ -16,6 +16,7 @@
 #include <RedshiftLibrary/statistics/priorhelper.h>
 
 #include <RedshiftLibrary/common/quicksort.h>
+#include <RedshiftLibrary/common/indexing.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 
@@ -945,11 +946,12 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
     }
 
+    TFloat64Index indexing;
     //now preparing the candidates extrema results
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         // find the index in the zaxis results
-        Int32 idx = COperator::getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
+        Int32 idx = indexing.getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
@@ -982,6 +984,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
 
     m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() );
     Int32 startIdx = m_firstpass_extremaResult->size();
+    TFloat64Index indexing;
     for (Int32 keb = 0; keb < firstpass_results_b->size(); keb++)
     {
         const Float64 & z_fpb = firstpass_results_b->Redshift(keb);
@@ -1030,7 +1033,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
         }else{
             // find the index in the zaxis results
           
-            Int32 idx =  COperator::getIndex(m_result->Redshifts, z_fpb);
+            Int32 idx =  indexing.getIndex(m_result->Redshifts, z_fpb);
           
             //save the continuum fitting parameters from first pass
             m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
@@ -1244,13 +1247,14 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
     Int32 savedModels = 0;
 
     Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d", extremumCount);
+    TFloat64Index indexing;
     for (Int32 i = 0; i < extremumCount; i++)
     {
         std::string Id = zCandidates[i].first;
         Float64 z = zCandidates[i].second.Redshift;
 
         // find the index in the zaxis results
-        Int32 idx = COperator::getIndex(m_result->Redshifts, z);
+        Int32 idx = indexing.getIndex(m_result->Redshifts, z);
         Float64 m = m_result->ChiSquare[idx];
         
         Int32 i_2pass = -1;
@@ -1665,7 +1669,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
             }
         }
         // find the index in the zaxis results
-        Int32 idx = -1; idx = COperator::getIndex(m_result->Redshifts, z); 
+        Int32 idx = -1; idx = indexing.getIndex(m_result->Redshifts, z); 
 
         // reestimate the model (eventually with continuum reestimation) on
         // the extrema selected
