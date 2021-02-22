@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
 {
   // test RebinVarianceWeighted
-  Float64 lambdas[] = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
+  TFloat64List lambdas = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
   CSpectrumFluxAxis sourceFluxAxis(10);
   CSpectrumSpectralAxis sourceSpectralAxis(10, false);
   CSpectrumSpectralAxis bogus_sourceSpectralAxis(4, false);

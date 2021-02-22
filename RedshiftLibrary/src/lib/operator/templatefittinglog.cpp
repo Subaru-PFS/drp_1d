@@ -1,6 +1,7 @@
 #include <RedshiftLibrary/operator/templatefittinglog.h>
 
 #include <RedshiftLibrary/common/mask.h>
+#include <RedshiftLibrary/common/indexing.h>
 #include <RedshiftLibrary/common/quicksort.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 #include <RedshiftLibrary/operator/templatefittingresult.h>
@@ -55,20 +56,6 @@ COperatorTemplateFittingLog::COperatorTemplateFittingLog()
 COperatorTemplateFittingLog::~COperatorTemplateFittingLog()
 {
     freeFFTPlans();
-}
-
-void COperatorTemplateFittingLog::BasicFit_preallocateBuffers(const CTemplate & tpl, const Int32 logGridCount)
-{
-    //m_templateRebinedLog.GetSpectralAxis().SetSize(logGridCount);//logGridCount);
-    //m_templateRebinedLog.GetFluxAxis().SetSize(logGridCount); //logGridCount);
-    
-    m_spectrumRebinedLog.GetSpectralAxis().SetSize(logGridCount);
-    m_spectrumRebinedLog.GetSpectralAxis().SetSize(logGridCount);
-    
-    m_mskRebinedLog.SetSize(logGridCount);
-
-    m_templateRebinedLog.m_ismCorrectionCalzetti = tpl.m_ismCorrectionCalzetti;
-    m_templateRebinedLog.m_igmCorrectionMeiksin = tpl.m_igmCorrectionMeiksin;
 }
 
 Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const std::vector<Float64>& X,
@@ -518,7 +505,6 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
     // calculation
     TInt32RangeList izrangelist;
     TInt32List zindexesFullLstSquare;
-    CRange<Float64> range;
     if (m_enableIGM && result->Redshifts.size() > 1)
     {
         zindexesFullLstSquare.push_back(0); // first index is always a mandatory full Lstsq Calculation case
@@ -526,7 +512,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         for (Int32 k = 0; k < zlistsegments.size(); k++)
         {
             Int32 i_min = -1;
-            bool b = range.getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
+            bool b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
             if(b)
                 zindexesFullLstSquare.push_back(i_min);
         }
@@ -831,7 +817,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         overrideNIGMTobesaved = nIGM;
         nIGM = 1;
         enableIGM = 0; 
-        Log.LogDetail("  Operator-TemplateFittingLog: deactivating IGM cause rebinned template starts with lambda>1216");
         if (verboseLogFitFitRangez)
         {
             Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: IGM disabled, min-tpl-lbda=%f", tplRebinedLambdaGlobal[kstart]);
@@ -1087,6 +1072,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             result->Redshifts.size(),
             result->Redshifts.front(),
             result->Redshifts.back());
+    //probably no more need to interpolate on initial grid?!
     InterpolateResult(bestChi2,
                       z_vect,
                       result->Redshifts,
@@ -1292,8 +1278,8 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor
  **/
-std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpectrum &spectrum,
-                                                                    const CTemplate &tpl,
+std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpectrum &rebinnedSpectrum,
+                                                                    const CTemplate &rebinnedTpl,
                                                                     const TFloat64Range &lambdaRange,
                                                                     const TFloat64List &redshifts,
                                                                     Float64 overlapThreshold,
@@ -1306,34 +1292,34 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                                                                     Float64 FitEbmvCoeff,
                                                                     Float64 FitMeiksinIdx)
 {
-    Log.LogDetail("  Operator-TemplateFittingLog: starting computation for template: %s", tpl.GetName().c_str());
+    Log.LogDetail("  Operator-TemplateFittingLog: starting computation for template: %s", rebinnedTpl.GetName().c_str());
 
     if(redshifts.size()<2)
     {
         Log.LogError("       Operator-TemplateFittingLog::Compute: Cannot compute on a redshift array %d <2", redshifts.size());
         throw runtime_error("Operator-TemplateFittingLog::Compute: Cannot compute on a redshift array <2");
     }
-    if ((opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
+    if ((opt_dustFitting==-10 || opt_dustFitting>-1) && rebinnedTpl.CalzettiInitFailed())
     {
         Log.LogError("  Operator-TemplateFittingLog: no calzetti calib. file loaded... aborting");
         throw std::runtime_error("  Operator-TemplateFittingLog: no calzetti calib. file in template");
     }
-    if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
+    if( opt_dustFitting>-1 && opt_dustFitting>rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
         Log.LogError("  Operator-TemplateFittingLog: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting",
                      opt_dustFitting,
-                     tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
+                     rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
         throw std::runtime_error("  Operator-TemplateFittingLog: calzetti index overflow");
     }
 
-    if (opt_extinction && tpl.MeiksinInitFailed())
+    if (opt_extinction && rebinnedTpl.MeiksinInitFailed())
     {
         Log.LogError("  Operator-TemplateFittingLog: no meiksin calib. file loaded... aborting");
         throw std::runtime_error("  Operator-TemplateFittingLog: no meiksin calib. file in template");
     }
 
-    if (spectrum.GetSpectralAxis().IsInLinearScale() == false ||
-        tpl.GetSpectralAxis().IsInLinearScale() == false)
+    if (rebinnedSpectrum.GetSpectralAxis().IsInLogScale() == false ||
+        rebinnedTpl.GetSpectralAxis().IsInLogScale() == false)
     {
         Log.LogError("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");
         throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");
@@ -1356,56 +1342,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         sortedRedshifts.push_back(vp[i].first);
         sortedIndexes.push_back(vp[i].second);
     }
-
-    /****************************************************************
-     *                                                   
-     *  Determine the loglambda step and check coverage
-     *   it will be used for: Spectrum, template and redshift grid
-     *
-     ****************************************************************/
-    // Create/Retrieve the spectrum log-lambda spectral axis
-    TFloat64Range newZrange;
-    Float64 logGridStep; 
-    logGridStep = Computelogstep(spectrum, tpl, lambdaRange, sortedRedshifts, newZrange);
-    // Display the template coverage
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-Rebin: tpl[min] = %f, tpl[min]*(1 + zmax_new) = %f", tpl.GetSpectralAxis()[0], tpl.GetSpectralAxis()[0] * (1. + newZrange.GetBegin()));
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-Rebin: tpl[max] = %f, tpl[max]*(1 + zmin_new) = %f", tpl.GetSpectralAxis()[tpl.GetSampleCount() - 1], tpl.GetSpectralAxis()[tpl.GetSampleCount() - 1] * (1. + newZrange.GetBegin()));
-
-    /****************************************************************
-     *                                                   
-     *  Rebin the spectrum
-     *  or check that the raw spectrum grid is in log-regular grid 
-     *  with expected step
-     *
-     ****************************************************************/
-    Int32 logGridCount = (Int32) floor((log(lambdaRange.GetEnd()) -  log(lambdaRange.GetBegin())) / logGridStep + 1);
-    if(logGridCount<2){
-        Log.LogError("   Operator-TemplateFittingLog::Compute: logGridCount = %d <2", logGridCount);
-        throw runtime_error("   Operator-TemplateFittingLog::Compute: logGridCount <2. Abort");
-    }
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-Rebin: logGridCount = %d", logGridCount);
-
-    BasicFit_preallocateBuffers( tpl, logGridCount);
-
-    if (m_opt_spcrebin)
-    {
-        bool enableVarianceWeightedRebin = true;
-        std:string errorRebinMethod = "rebin";
-        if (enableVarianceWeightedRebin)
-            errorRebinMethod = "rebinVariance";
-        LoglambdaRebinSpectrum(spectrum, lambdaRange, logGridStep, errorRebinMethod);
-    } else 
-    {
-         CheckLoglambdaRebinSpectrum(spectrum, lambdaRange, logGridStep);
-    }
-
-     /****************************************************************
-     *                                                   
-     *  Rebin the template
-     *
-     ****************************************************************/
-
-    LogRebinTemplate(tpl, logGridStep, newZrange);
+    //it seems important to keep these two as members, otherwise we will have to pass them from ::compute to FitAllz to ::FitRangez
+    m_spectrumRebinedLog = rebinnedSpectrum;
+    m_templateRebinedLog = rebinnedTpl;
 
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
@@ -1414,7 +1353,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     Int32 nIGMCoeffs = 1;
     if (opt_extinction)
     {
-        nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
+        nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
         igmMeiksinCoeffs.resize(nIGMCoeffs);
         for (Int32 kigm = 0; kigm < nIGMCoeffs; kigm++)
         {
@@ -1431,7 +1370,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     Int32 nISMCoeffs = 1;
     if (opt_dustFitting==-10)
     {
-        nISMCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+        nISMCoeffs = rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
         ismEbmvCoeffs.resize(nISMCoeffs);
         for (Int32 kism = 0; kism < nISMCoeffs; kism++)
         {
@@ -1500,7 +1439,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1])
     {
         Log.LogInfo("  Operator-TemplateFittingLog: overlap warning for %s: minz=%.3f, maxz=%.3f",
-                    tpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
+                    rebinnedTpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
     }
 
     // estimate CstLog for PDF estimation
@@ -1545,272 +1484,3 @@ void COperatorTemplateFittingLog::enableSpcLogRebin(Bool enable)
     Log.LogDetail("  Operator-TemplateFittingLog: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }
 
-//TODO: to move elsewhere the sooner we decide on where to place them for better usage in the beginning of processflow
-/**
- * Brief: Get loglambdastep and update the zrange accordingly
- * Below code relies on the fact that both loglambda grid and the log(Redshift+1) grid follows the same arithmetic progession with a common step
- * This step corresponds to log(1+1/R)
-*/
-Float64 COperatorTemplateFittingLog::Computelogstep(const CSpectrum &spectrum,
-                                                    const CTemplate &tpl,
-                                                    const TFloat64Range &lambdaRange, 
-                                                    const TFloat64List &sortedRedshifts, 
-                                                    TFloat64Range& newZrange)
-{    
-    Int32 lbdaMinIdx, lbdaMaxIdx;
-    bool ok = lambdaRange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(spectrum.GetSpectralAxis().GetSamplesVector()),lbdaMinIdx,lbdaMaxIdx);
-    if(!ok || lbdaMaxIdx <= lbdaMinIdx)    
-    {
-        Log.LogError("  Operator-TemplateFittingLog: lambdarange is not strictly included in the spectrum spectral range");
-        throw std::runtime_error("  Operator-TemplateFittingLog: lambdarange is not strictly included in the spectrum spectral range");
-    }
-
-    Log.LogDetail("  Operator-TemplateFittingLog: ORIGINAL grid spectrum count = %d", lbdaMaxIdx - lbdaMinIdx + 1);
-    Float64 logGridStep_fromOriSpc = log(spectrum.GetSpectralAxis()[lbdaMaxIdx])-log(spectrum.GetSpectralAxis()[lbdaMaxIdx - 1]);
-
-    //find logGridStep from tgt redshift grid
-    Float64 tgtDzOnepzMin=DBL_MAX;
-    for (Int32 k = 1; k < sortedRedshifts.size(); k++)
-    {
-        Float64 tgtDzOnepz=(sortedRedshifts[k]-sortedRedshifts[k-1])/(1+sortedRedshifts[k-1]);
-        tgtDzOnepzMin = min(tgtDzOnepzMin, tgtDzOnepz);
-    }
-    Log.LogDetail("  Log-Rebin: tgtDzOnepzMin = %f", tgtDzOnepzMin);
-    Float64 logGridStep_fromTgtZgrid = log(1.0+tgtDzOnepzMin);
-    
-    //deciding on the common step for logarithmic spectral grid and logarithmic (redshift+1) grid
-    Float64 logGridStep = logGridStep_fromTgtZgrid;
-    Log.LogDetail("  Log-Rebin: logGridStep = %f", logGridStep);
-
-    // compute the effective zrange of the new redshift grid
-    // set the min to the initial min
-    // set the max to an interger number of log(z+1) steps 
-    Float64 zmin_new = sortedRedshifts[0],
-            zmax_new = sortedRedshifts[sortedRedshifts.size() - 1];
-    {
-        Float64 log_zmin_new_p1 = log(zmin_new + 1.);
-        Float64 log_zmax_new_p1 = log(zmax_new + 1.);
-        Int32 nb_z = Int32( ceil((log_zmax_new_p1 - log_zmin_new_p1)/logGridStep) );
-        zmax_new = exp(log_zmin_new_p1 + nb_z*logGridStep) - 1.;
-    }
-    newZrange = TFloat64Range(zmin_new, zmax_new); //updating zrange based on the new logstep
-
-    // Check the template coverage wrt the new effective redshift range
-    Bool overlapFull = true;
-    if (lambdaRange.GetBegin() < tpl.GetSpectralAxis()[0] * (1. + zmax_new))
-    {
-        overlapFull = false;
-    }
-    if (lambdaRange.GetEnd() >
-        tpl.GetSpectralAxis()[tpl.GetSampleCount() - 1] * (1. + zmin_new))
-    {
-        overlapFull = false;
-    }
-    if (!overlapFull)
-    {
-        Log.LogError("  Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range");
-        Log.LogError("  Operator-TemplateFittingLog: for zmin=%f, tpl.lbdamax is %f (should be >%f)",
-                     zmin_new,
-                     tpl.GetSpectralAxis()[tpl.GetSampleCount() - 1],
-                     lambdaRange.GetEnd() / (1 + zmin_new));
-        Log.LogError("  Operator-TemplateFittingLog: for zmax=%f, tpl.lbdamin is %f (should be <%f)",
-                     zmax_new,
-                     tpl.GetSpectralAxis()[0],
-                     lambdaRange.GetBegin() /(1 + zmax_new));
-        throw runtime_error("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
-    }
- return logGridStep;
-}
-/**
-*  Rebin the spectrum with the calculated logGridStep
-*  step1: construct the spectralAxis
-*  step2: validate borders
-*  step3: do the rebin
-*/
-Int32 COperatorTemplateFittingLog::LoglambdaRebinSpectrum(  const CSpectrum& spectrum, 
-                                                            const TFloat64Range& lambdaRange, 
-                                                            Float64 logGridStep,
-                                                            std::string errorRebinMethod)
-{
-    Float64 loglbdamin = log(lambdaRange.GetBegin()),
-            loglbdamax = log(lambdaRange.GetEnd());
-    TFloat64Range spcLbdaRange(exp(loglbdamin - 0.5 * logGridStep),
-                            exp(loglbdamax + 0.5 * logGridStep));
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
-
-    CSpectrumSpectralAxis targetSpectralAxis( m_spectrumRebinedLog.GetSampleCount(), 0);    
-    computeTargetLogSpectralAxis(spectrum.GetSpectralAxis(),
-                                logGridStep,
-                                loglbdamin,
-                                targetSpectralAxis);
-    // rebin the spectrum
-    spectrum.Rebin(spcLbdaRange, targetSpectralAxis,
-                    m_spectrumRebinedLog,
-                    m_mskRebinedLog, rebinMethod, errorRebinMethod);
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling FINISHED");
-    return 0;
-    
-}
-// check that the raw spectrum grid is in log-regular grid
-Int32 COperatorTemplateFittingLog::CheckLoglambdaRebinSpectrum( const CSpectrum &spectrum, 
-                                                                const TFloat64Range &lambdaRange, 
-                                                                Float64 logGridStep)
-{
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling OFF");
-    Int32 lbdaMinIdx, lbdaMaxIdx;
-    bool ok = lambdaRange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(spectrum.GetSpectralAxis().GetSamplesVector()),lbdaMinIdx,lbdaMaxIdx);
-    if(!ok){
-        Log.LogError("  Operator-TemplateFittingLog: lambdarange is not strictly included in the spectrum spectral range");
-        throw std::runtime_error("  Operator-TemplateFittingLog: lambdarange is not strictly included in the spectrum spectral range");
-    }
-
-    bool logRegLbdaCheck = true;
-    Float64 relativelogGridStepTol = 1e-1;
-    Float64 maxAbsRelativeError = 0.0; 
-    Float64 lbda1 = spectrum.GetSpectralAxis()[lbdaMinIdx];
-    for (Int32 t = 1; t < m_spectrumRebinedLog.GetSampleCount(); t++)
-    {
-        Float64 lbda2 =  spectrum.GetSpectralAxis()[lbdaMinIdx + t];
-        Float64 _logGridStep = log(lbda2) - log(lbda1);
-
-        Float64 relativeErrAbs = std::abs((_logGridStep - logGridStep) / logGridStep);
-        maxAbsRelativeError = max(relativeErrAbs, maxAbsRelativeError);
-
-        if (relativeErrAbs > relativelogGridStepTol)
-        {
-            logRegLbdaCheck = false;
-            break;
-        }
-        lbda1 = lbda2;
-    }
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda check: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda check (for rel-tol=%f): (1=success, 0=fail) CHECK = %d", relativelogGridStepTol, logRegLbdaCheck);
-    if (!logRegLbdaCheck)
-    {
-        Log.LogError("  Operator-TemplateFittingLog: Log-regular lambda check FAILED");
-        throw runtime_error("  Operator-TemplateFittingLog: Log-regular lambda check FAILED");
-    }
-    
-    CSpectrumFluxAxis &spectrumRebinedFluxAxis = m_spectrumRebinedLog.GetFluxAxis();
-    CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =  m_spectrumRebinedLog.GetSpectralAxis();
-    // prepare data for log-regular computation
-    for (Int32 t = 0; t <  m_spectrumRebinedLog.GetSampleCount(); t++)
-    {
-        spectrumRebinedFluxAxis[t] = spectrum.GetFluxAxis()[lbdaMinIdx + t];
-        spectrumRebinedSpectralAxis[t] =  spectrum.GetSpectralAxis()[lbdaMinIdx + t];
-        spectrumRebinedFluxAxis.GetError()[t] = spectrum.GetFluxAxis().GetError()[lbdaMinIdx + t];
-        m_mskRebinedLog[t] = 1;
-    }
-    return 0;
-}
-/** 
- *                          
- * Brief: Log Rebin the template spectral axis
- * Important: below function considered that we have already constructed the new log spectralAxis of our spectrum
- * Step1: align the rebined spectrum max lambda at min redshift. 
- * Step2: get grid count for target template and update size accordingly
- * Step3: construct target loglambda axis for the template and check borders
- * Step4: rebin the template --> rebinned flux is saved in m_templateRebinedLog
-**/
-Int32 COperatorTemplateFittingLog::LogRebinTemplate(const CTemplate &tpl, 
-                                                    Float64 logGridStep, 
-                                                    TFloat64Range& newZrange)
-{
-    Int32 s = m_spectrumRebinedLog.GetSampleCount();
-    Float64 loglbdamin = log( m_spectrumRebinedLog.GetSpectralAxis()[0]/(1.0 + newZrange.GetEnd()));
-    Float64 loglbdamax = log( m_spectrumRebinedLog.GetSpectralAxis()[s - 1]/ (1.0 + newZrange.GetBegin()));
-    Int32 logGridCount = Int32(ceil((loglbdamax - loglbdamin)/logGridStep)) + 1;
-
-    Float64 tgt_loglbdamax = loglbdamax;
-    Float64 tgt_loglbdamin = loglbdamax - (logGridCount-1)*logGridStep;
-    TFloat64Range tplLbdaRange(exp(tgt_loglbdamin - 0.5 * logGridStep),
-                                exp(tgt_loglbdamax + 0.5 * logGridStep));
-	Log.LogDetail("  Operator-TemplateFittingLog: Log-Rebin: tpl raw loglbdamin=%f : raw loglbdamax=%f", loglbdamin, loglbdamax);
-	Log.LogDetail("  Operator-TemplateFittingLog: zmin_new = %f, tpl.lbdamax = %f", newZrange.GetBegin(), exp(loglbdamax));
-	Log.LogDetail("  Operator-TemplateFittingLog: zmax_new = %f, tpl.lbdamin = %f", newZrange.GetEnd(), exp(loglbdamin));
-    
-    m_templateRebinedLog.GetSpectralAxis().SetSize(logGridCount);
-    m_templateRebinedLog.GetFluxAxis().SetSize(logGridCount);
-	// Recheck the template coverage is larger,
-	//  by construction only the min has to be re-checked,
-	//  since the max is aligned to the max of the rebined spectrum at zmin which is
-	// smaller to the max input lamdba range at min already checked 
-	if (exp(tgt_loglbdamin) < tpl.GetSpectralAxis()[0] )
-	{
-	    Log.LogError("  Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range");
-        Log.LogError("  Operator-TemplateFittingLog: for zmax=%f, tpl.lbdamin is %f (should be <%f)",
-			        newZrange.GetEnd(), tpl.GetSpectralAxis()[0], exp(tgt_loglbdamin));
-	    throw std::runtime_error("  Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range");
-	}
-
-    CSpectrumSpectralAxis tpl_targetSpectralAxis(logGridCount, 0);
-    computeTargetLogSpectralAxis(tpl.GetSpectralAxis(),
-                                logGridStep,
-                                tgt_loglbdamin,
-                                tpl_targetSpectralAxis);
-
-    tpl.Rebin(tplLbdaRange,
-                tpl_targetSpectralAxis,
-                m_templateRebinedLog,
-                m_mskRebinedLog);
-    return 0;
-}
-
-Int32 COperatorTemplateFittingLog::computeTargetLogSpectralAxis(const CSpectrumSpectralAxis &ref_axis, 
-                                                                Float64 logGridStep,
-                                                                Float64 tgt_loglbdamin,
-                                                                CSpectrumSpectralAxis& targetSpectralAxis)
-{
-    Int32 logGridCount = targetSpectralAxis.GetSamplesCount();
-    for (Int32 k = 0; k < logGridCount; k++)
-    {
-        targetSpectralAxis[k] = exp(tgt_loglbdamin + k * logGridStep);
-    }
-    // check Beginning for precision problem due to exp/log 
-    Float64 delta = targetSpectralAxis[0] - ref_axis[0];
-    Float64 step = targetSpectralAxis[1] - targetSpectralAxis[0];
-    if (delta < 0.0 && abs(delta) < step * 1e-5)
-    {
-        targetSpectralAxis[0] = ref_axis[0];
-    }
-    UInt32 len = ref_axis.GetSamplesCount();
-    // check End for precision problem due to exp/log 
-    delta = targetSpectralAxis[logGridCount - 1] - ref_axis[len - 1];
-    step = targetSpectralAxis[logGridCount - 1] - targetSpectralAxis[logGridCount - 2];
-    if (delta > 0.0 && abs(delta) < step * 1e-5)
-    {
-        targetSpectralAxis[logGridCount - 1] = ref_axis[len -1];
-    }
-
-    // precision problem due to exp/log - beginning
-    delta = targetSpectralAxis[0] - ref_axis[0];
-    if (delta < 0.0)
-    {
-        Log.LogError("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. Target "
-                        "MIN lbda value=%f, input tpl min lbda value=%f",
-                        targetSpectralAxis[0], ref_axis[0]);
-        Log.LogError("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. "
-                        "Extend your input template wavelength range or "
-                        "modify the processing parameter <lambdarange>");
-        throw std::runtime_error("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. "
-                        "Extend your input template wavelength range or "
-                        "modify the processing parameter <lambdarange>");
-    }
-    // precision problem due to exp/log - end
-    delta = targetSpectralAxis[targetSpectralAxis.GetSamplesCount() -1] - ref_axis[len - 1];
-    if (delta > 0.0)
-    {
-        Log.LogError("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. Target "
-                        "MAX lbda value=%f, input tpl max lbda value=%f",
-                        targetSpectralAxis[targetSpectralAxis.GetSamplesCount() - 1],
-                        ref_axis[len -1]);
-        Log.LogError("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. "
-                        "Extend your input template wavelength range or "
-                        "modify the processing parameter <lambdarange>");
-        throw std::runtime_error("  Operator-TemplateFittingLog: Log-Rebin: tpl rebin error. "
-                        "Extend your input template wavelength range or "
-                        "modify the processing parameter <lambdarange>");
-    }
-
-    return 0;
-}

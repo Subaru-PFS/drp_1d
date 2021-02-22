@@ -34,8 +34,6 @@ public:
     COperator();
     virtual ~COperator()=0;
 
-
-    static Int32 getIndex(TFloat64List& list, Float64 z);
 protected:
 
 };

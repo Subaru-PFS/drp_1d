@@ -1,10 +1,7 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
-
-//#include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/log.h>
-
-//#include <cmath>
 #include <vector>
 
 namespace NSEpic {
@@ -17,9 +14,8 @@ template <typename T> class CIndexing
 {
 
   public:
-    CIndexing() {}
 
-    Int32 getIndex(std::vector<T>& list, Float64 z)
+    static Int32 getIndex( std::vector<T>& list, T z)
     {
         typename std::vector<T>::iterator itr = std::lower_bound(list.begin(),list.end(), z);
 
@@ -34,9 +30,21 @@ template <typename T> class CIndexing
         return (itr - list.begin()); 
     }
 
-  /*private:
-    T m_Begin;
-    T m_End;*/
+    //getIndex in orded_values corresponding to value:
+    //value[index] can be equal or smaller than Z
+    static bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) 
+    {
+      if(value < ordered_values.front() || value > ordered_values.back())
+        {
+          return false;
+        }
+      
+      typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+      if(*it_min > value) it_min = it_min -1; 
+
+      i_min = it_min - ordered_values.begin();
+      return true;
+    }
 };
 typedef CIndexing<Int32> TInt32Index;
 typedef CIndexing<Float64> TFloat64Index;

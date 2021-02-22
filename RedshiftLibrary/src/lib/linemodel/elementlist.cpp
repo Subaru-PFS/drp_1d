@@ -1031,7 +1031,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
 
-    CModelSpectrumResult spcmodel;
+    std::shared_ptr<CModelSpectrumResult> spcmodel; 
     std::string inter_opt = "spline";
     Float64 overlapThreshold = 1., amplitude = 1.; 
     //called BasicFit_preallocateBuffers cause we need to initialize  m_spcSpectralAxis_restframe among others
@@ -1045,7 +1045,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
                                                  overlapThreshold, spcmodel);
 
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
-    m_observeGridContinuumFlux = spcmodel.GetSpectrum().GetFluxAxis().GetSamplesVector();
+    m_observeGridContinuumFlux = (*spcmodel).GetSpectrum().GetFluxAxis().GetSamplesVector();
 
   return 0;
 }

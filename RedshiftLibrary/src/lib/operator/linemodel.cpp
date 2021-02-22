@@ -675,7 +675,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         if (m_opt_tplfit_method == "templatefittinglog" && m_opt_tplfit_method_secondpass == "templatefittinglog")
         {
             bool enableLogRebin = true;
-            templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(opt_calibrationPath);
+            templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
             std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
                 std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
             templateFittingLogOperator->enableSpcLogRebin(enableLogRebin);
@@ -946,12 +946,11 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
     }
 
-    TFloat64Index indexing;
     //now preparing the candidates extrema results
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         // find the index in the zaxis results
-        Int32 idx = indexing.getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
@@ -984,7 +983,6 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
 
     m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() );
     Int32 startIdx = m_firstpass_extremaResult->size();
-    TFloat64Index indexing;
     for (Int32 keb = 0; keb < firstpass_results_b->size(); keb++)
     {
         const Float64 & z_fpb = firstpass_results_b->Redshift(keb);
@@ -1033,7 +1031,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
         }else{
             // find the index in the zaxis results
           
-            Int32 idx =  indexing.getIndex(m_result->Redshifts, z_fpb);
+            Int32 idx =  CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
           
             //save the continuum fitting parameters from first pass
             m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
@@ -1247,14 +1245,13 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
     Int32 savedModels = 0;
 
     Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d", extremumCount);
-    TFloat64Index indexing;
     for (Int32 i = 0; i < extremumCount; i++)
     {
         std::string Id = zCandidates[i].first;
         Float64 z = zCandidates[i].second.Redshift;
 
         // find the index in the zaxis results
-        Int32 idx = indexing.getIndex(m_result->Redshifts, z);
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
         Float64 m = m_result->ChiSquare[idx];
         
         Int32 i_2pass = -1;
@@ -1669,7 +1666,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
             }
         }
         // find the index in the zaxis results
-        Int32 idx = -1; idx = indexing.getIndex(m_result->Redshifts, z); 
+        Int32 idx = -1; idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z); 
 
         // reestimate the model (eventually with continuum reestimation) on
         // the extrema selected
@@ -2005,7 +2002,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
         Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-        Float64 z = extremaResult.Redshift(i);
+        Float64 Z = extremaResult.Redshift(i);
 
         if(m_enableWidthFitByGroups)
         {
@@ -2082,7 +2079,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
         Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
         
         // find the index in the zaxis results
-        const Int32 idx = m_result->getRedshiftIndex(z);
+        const Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, Z); 
 
         // reestimate the model (eventually with continuum reestimation) on
         // the extrema selected
@@ -2101,7 +2098,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                     extremaResult.ExtendedRedshifts[i].back());
         for (const Float64 z:extremaResult.ExtendedRedshifts[i])
         {
-            const Int32 iz = m_result->getRedshiftIndex(z);
+            const Int32 iz = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
             Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, z);
 
             m_result->ChiSquare[iz] =

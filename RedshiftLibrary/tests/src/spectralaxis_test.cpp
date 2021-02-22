@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CSpectrumSpectralAxis n32Axis = CSpectrumSpectralAxis(n3Array, 1, true);
   BOOST_CHECK(n32Axis.GetSamplesCount()==1);
 
-  CSpectrumSpectralAxis n33Axis = CSpectrumSpectralAxis(n3Array, 1);
+  TFloat64List n3ArrayList(1, 1);
+  CSpectrumSpectralAxis n33Axis = CSpectrumSpectralAxis(n3ArrayList, 1);
 
   // Clone from an other spectral axis redshift 0
   CSpectrumSpectralAxis n41Axis  = CSpectrumSpectralAxis(1, false);

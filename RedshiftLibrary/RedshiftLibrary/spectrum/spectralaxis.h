@@ -36,7 +36,6 @@ public:
     CSpectrumSpectralAxis(CSpectrumSpectralAxis && other) = default;
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
-    CSpectrumSpectralAxis( const Float64* samples, UInt32 n);
     CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) ;
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;
@@ -65,7 +64,9 @@ public:
     Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
-
+    void                SetLogScale();
+    void                CheckLoglambdaSampling(Float64 logGridStep) const;
+    void                CheckLoglambdaSampling() const;
 private:
 
     UInt32              m_SpectralFlags;

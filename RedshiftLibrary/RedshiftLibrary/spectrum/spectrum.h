@@ -38,6 +38,7 @@ public:
     };
 
     CSpectrum();
+    CSpectrum(const std::string& name);
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
@@ -46,7 +47,7 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
-    void SetName(const char* name);
+    void SetName(const std::string name);
     void SetType(const EType type) const;
 
     const std::string&              GetName() const;
@@ -94,9 +95,9 @@ public:
     const std::string&              GetContinuumEstimationMethod() const;
     const std::string&              GetWaveletsDFBinPath() const;
 
-    void 			    SetFullPath(const char* nameP);
-    void 			    SetDecompScales(Int32 decompScales);
-    void 			    SetMedianWinsize(Float64 winsize);
+    void 			                SetFullPath(const char* nameP);
+    void 			                SetDecompScales(Int32 decompScales);
+    void 			                SetMedianWinsize(Float64 winsize);
     void                            SetContinuumEstimationMethod(std::string method);
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
@@ -108,7 +109,7 @@ public:
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
                                            const std::string opt_error_interp="no" ) const;
-
+    Int32                           extract(const CSpectrum& other, Int32 startIdx, Int32 endIdx);
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
@@ -271,6 +272,15 @@ inline
 void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
 {
     m_LSF = lsf;
+}
+
+inline
+Int32  CSpectrum::extract(const CSpectrum& other, Int32 startIdx, Int32 endIdx)
+{
+    m_SpectralAxis.extract(other.GetSpectralAxis(), startIdx, endIdx);
+    m_RawFluxAxis.extract(other.GetFluxAxis(), startIdx, endIdx);
+    //probably we should do the save for all axis of the spectrum
+    return 0;
 }
 
 }

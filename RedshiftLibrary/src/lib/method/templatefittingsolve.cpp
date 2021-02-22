@@ -44,8 +44,9 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   
   if(fft_processing)
     {
-      m_opt_spclogrebin = inputContext->GetParameterStore()->GetScoped<std::string>("enablespclogrebin");
-      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(calibration_dir));
+        //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
+      //m_opt_spclogrebin = inputContext.m_ParameterStore->GetScoped<std::string>("enablespclogrebin");//removed
+      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
     }
   else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
 

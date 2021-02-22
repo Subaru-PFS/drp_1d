@@ -388,18 +388,6 @@ BOOST_AUTO_TEST_CASE(Closed_interval)
     BOOST_CHECK( i_max == 0);
 }
 
-
-BOOST_AUTO_TEST_CASE(LowestIndex)
-{
-    TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
-    const Float64 target = 2.2;
-    Int32 i_min = -1;
-
-    CRange<Float64> range;   
-    range.getClosestLowerIndex(myVector,target,i_min);
-    BOOST_CHECK( myVector[i_min] <= target);
-}
-
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END ()

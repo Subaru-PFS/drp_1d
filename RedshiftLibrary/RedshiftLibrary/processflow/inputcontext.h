@@ -18,13 +18,13 @@ class CInputContext
                 std::shared_ptr<CTemplateCatalog> tmplCatalog,
                 std::shared_ptr<CRayCatalog> rayCatalog,
                 std::shared_ptr<CParameterStore> paramStore);
-  ~CInputContext(){}
 
   // const getters
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_Spectrum;}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_TemplateCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_RayCatalog;}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
+  void RebinInputs();
 
   // mutable getters
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
@@ -32,13 +32,10 @@ class CInputContext
   std::shared_ptr<CRayCatalog>  GetRayCatalog() {return m_RayCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 
-  TFloat64Range m_lambdaRange;
-
+  TFloat64Range   m_lambdaRange;
+  TFloat64Range   m_zrange;
+  Float64         m_logGridStep;
 private:
-
-    void                                       InitSpectrum();
-  //This should be a method of CTemplateCatalog, withou calibrationDirPath
-    void                                       InitIsmIgm(const std::string & CalibrationDirPath);
 
   std::shared_ptr<CSpectrum> m_Spectrum;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;

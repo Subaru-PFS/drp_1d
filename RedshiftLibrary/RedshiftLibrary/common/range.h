@@ -94,31 +94,34 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta) const
+    std::vector<T> SpreadOverLog(Float64 delta, Float64 offset=0.) const
     {
-	std::vector<T> v;
-	if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
-	{
-	    v.resize(1);
-	    v[0] = m_Begin;
-	    return v;
-	}
+        std::vector<T> v;
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+        {
+            v.resize(1);
+            v[0] = m_Begin;
+            return v;
+        }
 
-        Float64 x = m_Begin + 1.;
+        Float64 x = m_Begin + offset;
         Float64 edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while (x < m_End+1. && count < maxCount)
+        while (x <= m_End && count < maxCount)
         {
-            v.push_back(x-1.);
+            v.push_back(x - offset);
             count++;
             x *= edelta;
         }
-
         return v;
+    }  
+    //spread over log (z+1)
+    std::vector<T> SpreadOverLogZplusOne(Float64 delta) const
+    {
+        return SpreadOverLog(delta, 1.);
     }
-
-  //  template<typename T>
+    //  template<typename T>
   friend std::ostream& operator<< (std::ostream &out, const CRange<T> &range)
   {
     out <<"["<< range.m_Begin<<","<< range.m_End<<"]";
@@ -132,7 +135,6 @@ template <typename T> class CRange
     return in;
  }
 
-  
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
   bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
   {
@@ -221,22 +223,6 @@ template <typename T> class CRange
     i_max = it_max - ordered_values.begin();
     return true;
   } 
-
-  //getIndex in ordered_values corresponding to value:
-  //value[index] can be equal or smaller than Z
-  bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) const
-  {
-    if(value < ordered_values.front() || value > ordered_values.back())
-      {
-        return false;
-      }
-    
-    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
-    if(*it_min > value) it_min = it_min -1; 
-
-    i_min = it_min - ordered_values.begin();
-    return true;
-  }
 
   private:
     T m_Begin;

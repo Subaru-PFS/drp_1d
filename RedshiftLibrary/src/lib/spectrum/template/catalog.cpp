@@ -19,21 +19,15 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath )
+CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath, Bool scale )
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
     m_continuumRemovalWaveletsNScales = waveletsScales;
     m_continuumRemovalWaveletsBinPath = waveletsDFBinPath;
+    m_logscale = scale;
 }
 
-/**
- * Empty destructor.
- */
-CTemplateCatalog::~CTemplateCatalog()
-{
-
-}
 
 TTemplateConstRefList CTemplateCatalog::const_TTemplateRefList_cast(const TTemplateRefList & list)
 {
@@ -54,7 +48,10 @@ TTemplateRefList CTemplateCatalog::GetTemplate_( const TStringList& categoryList
     {
         for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); j++ )
         {
-            list.push_back( m_List.at( categoryList[i] )[j] );
+            if(!m_logscale)
+                list.push_back( m_List.at( categoryList[i] )[j] );
+            else
+                list.push_back( m_ListRebinned.at( categoryList[i] )[j] );
         }
     }
 
@@ -84,9 +81,16 @@ const CTemplate&  CTemplateCatalog::GetTemplateByName(const TStringList& tplCate
 TStringList CTemplateCatalog::GetCategoryList() const
 {
     TStringList l;
-
-    for( auto it = m_List.begin(); it != m_List.end(); it++ ) {
-        l.push_back( it->first );
+    
+    if(!m_logscale)
+        for( auto it = m_List.begin(); it != m_List.end(); it++ ) {
+            l.push_back( it->first );
+        }
+    else
+    {
+        for( auto it = m_ListRebinned.begin(); it != m_List.end(); it++ ) {
+            l.push_back( it->first );
+        }
     }
 
     return l;
@@ -96,22 +100,31 @@ TStringList CTemplateCatalog::GetCategoryList() const
  * Returns the size of the category entry in m_List.
  */
 UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
-{
-    if( m_List.find( category ) == m_List.end() )
-        return 0;
-
-    return m_List.at( category ).size();
+{   
+    UInt32 l; 
+    if(!m_logscale){
+        if( m_List.find( category ) == m_List.end() )
+            return 0;
+        l = m_List.at( category ).size();
+    }else{
+        if( m_ListRebinned.find( category ) == m_List.end() )
+            return 0;
+        l = m_ListRebinned.at( category ).size();
+    }
+    return l;
 }
 
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
  */
-void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r )
+void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string scale)
 {
     if( r->GetCategory().empty() )
       throw runtime_error("Template has no category");
-
-    m_List[r->GetCategory()].push_back( r );
+    if(scale == "lin")
+        m_List[r->GetCategory()].push_back( r );
+    if(scale == "log")
+        m_ListRebinned[r->GetCategory()].push_back( r );
 }
 
 /**
@@ -245,3 +258,4 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  ca
 
     return true;
 }
+

@@ -24,15 +24,14 @@ class COperatorTemplateFittingLog : public COperatorTemplateFittingBase
 {
 
 public:
-    COperatorTemplateFittingLog() = delete;
     COperatorTemplateFittingLog();
     ~COperatorTemplateFittingLog();
 
     COperatorTemplateFittingLog(COperatorTemplateFittingLog const& other) = delete;
     COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog const& other) = delete;  
 
-    std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
-                                              const CTemplate& tpl,
+    std::shared_ptr<COperatorResult> Compute( const CSpectrum& rebinnedSpectrum,
+                                              const CTemplate& rebinnedTpl,
                                               const TFloat64Range& lambdaRange,
                                               const TFloat64List& redshifts,
                                               Float64 overlapThreshold,
@@ -46,32 +45,12 @@ public:
                                               Float64 FitMeiksinIdx=-1);
 
     void enableSpcLogRebin(Bool enable);
-        
-    Float64 Computelogstep( const CSpectrum &spectrum,
-                            const CTemplate &tpl,
-                            const TFloat64Range &lambdaRange, 
-                            const TFloat64List &sortedRedshifts, 
-                            TFloat64Range& newZrange);
-    Int32   LoglambdaRebinSpectrum(const CSpectrum &spectrum, const TFloat64Range &lambdaRange, Float64 logGridStep, std::string errorRebinMethod="");
-    Int32   CheckLoglambdaRebinSpectrum(const CSpectrum &spectrum, const TFloat64Range &lambdaRange, Float64 logGridStep);
-    Int32   LogRebinTemplate(const CTemplate &tpl, 
-                            Float64 logGridStep,
-                            TFloat64Range& zrange);
-    void    BasicFit_preallocateBuffers(const CTemplate & tpl, const Int32 logGridCount);
+
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
                                     const Float64 redshiftStep);
-    Int32 computeTargetLogSpectralAxis(const CSpectrumSpectralAxis &ref_axis, 
-                                        Float64 logGridStep,
-                                        Float64 tgt_loglbdamin,
-                                        CSpectrumSpectralAxis& targetSpectralAxis);
+
 private:
-
-    //hardcoded config: REBIN
-    Bool verboseLogRebin = 0;
-    Bool verboseExportLogRebin = 0;
-    const std::string rebinMethod = "lin";
-
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
     bool verboseExportFitRangez = false;
@@ -115,7 +94,6 @@ private:
 
     //log grid data
     CTemplate       m_templateRebinedLog;
-    CMask           m_mskRebinedLog;
     CSpectrum       m_spectrumRebinedLog;
 
     Bool m_enableISM = 1;

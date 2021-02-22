@@ -42,12 +42,6 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, 
 /**
  * Constructor.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
-    CSpectrumAxis( samples, n ),
-    m_SpectralFlags( 0 )
-{
-}
-
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
@@ -387,4 +381,46 @@ Bool CSpectrumSpectralAxis::ConvertToLogScale()
     m_SpectralFlags |= nFLags_LogScale;
 
     return true;
+}
+
+void CSpectrumSpectralAxis::SetLogScale() 
+{
+    m_SpectralFlags |= nFLags_LogScale; //not sure what is the difference between these two flags      
+}
+
+/**
+ * Check if spectralAxis is well rebinned in log
+*/
+void CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep) const
+{
+    Float64 relativelogGridStepTol = 1e-1;
+    Float64 maxAbsRelativeError = 0.0; 
+    Float64 lbda1 = m_Samples[0];
+    for (Int32 t = 1; t < m_Samples.size(); t++)
+    {
+        Float64 lbda2 =  m_Samples[t];
+        Float64 _logGridStep = log(lbda2) - log(lbda1);
+
+        Float64 relativeErrAbs = std::abs((_logGridStep - logGridStep) / logGridStep);
+        maxAbsRelativeError = max(relativeErrAbs, maxAbsRelativeError);
+
+        if (relativeErrAbs > relativelogGridStepTol)
+        {
+            Log.LogError("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
+            throw runtime_error("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
+        }
+        lbda1 = lbda2;
+    }
+    Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
+    return;
+}
+
+void CSpectrumSpectralAxis::CheckLoglambdaSampling() const
+{
+    if(IsInLogScale())
+        return CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
+    else{
+        Log.LogError("CSpectrumSpectralAxis::CheckLoglambdaSampling:: Spectral axis is not in log scale.");
+        throw runtime_error("CSpectrumSpectralAxis::CheckLoglambdaSampling: Spectral axis is not in log scale.");
+    }
 }

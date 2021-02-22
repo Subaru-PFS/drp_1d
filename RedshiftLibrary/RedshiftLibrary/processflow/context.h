@@ -11,7 +11,6 @@
 #include <RedshiftLibrary/spectrum/io/reader.h>
 #include <RedshiftLibrary/linemodel/calibrationconfig.h> 
 
-
 #include <gsl/gsl_errno.h>
 
 #include <map>
@@ -57,13 +56,23 @@ public:
   TScopeStack                     m_ScopeStack;
 private:
 
-  std::shared_ptr<COperatorResultStore>      m_ResultStore;
+    std::shared_ptr<COperatorResultStore>  m_ResultStore;
 
   std::shared_ptr<const CInputContext>  m_inputContext;
  
+    //added below variables - to discuss if we only define them here (and no more in processflow)
+    TFloat64Range m_spclambdaRange;
+    TFloat64Range m_redshiftRange;
+    TFloat64List  m_redshifts;
+    std::string   m_redshiftSampling;
 
-
+    std::shared_ptr<const CSpectrum>           m_rebinnedSpectrum;
 };
+inline
+std::shared_ptr<const CSpectrum> CProcessFlowContext::GetRebinnedSpectrum() const
+{
+    return m_rebinnedSpectrum;
+}
 
 
 }

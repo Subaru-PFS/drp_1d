@@ -34,6 +34,8 @@ CSpectrum::CSpectrum():
 
 }
 
+CSpectrum::CSpectrum(const std::string& name):m_Name(name){};
+
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_estimationMethod(other.m_estimationMethod),
     m_dfBinPath(other.m_dfBinPath),
@@ -43,7 +45,9 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
     alreadyRemoved(other.alreadyRemoved),
-    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
+    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale()),
+    m_LogrebinZStep(other.m_LogrebinZStep),
+    m_LogrebinRefLambda(other.m_LogrebinRefLambda)
 {
     const CSpectrumNoiseAxis    &otherRawError = other.m_RawFluxAxis.GetError(),
                                 &otherContinuumError = other.m_ContinuumFluxAxis.GetError(),
@@ -117,7 +121,7 @@ CSpectrum::~CSpectrum()
 }
 
 //copy assignment operator
-// same logic than copy constructor
+// same logic as copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.m_SpectralAxis;
@@ -134,7 +138,6 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_nbScales = other.m_nbScales;
     m_Name = other.m_Name;
     alreadyRemoved = other.alreadyRemoved;
-
     return *this;
 }
 
@@ -378,7 +381,7 @@ const std::string & CSpectrum::GetName() const
     return m_Name;
 }
 
-void CSpectrum::SetName(const char* name)
+void CSpectrum::SetName(std::string name)
 {
     m_Name = name;
 }

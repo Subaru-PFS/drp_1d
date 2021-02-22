@@ -89,7 +89,7 @@ void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
     lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
 }
-//temporary, knowing that we can use SetIsmIgmLambdaRange
+
 void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
 {
     m_IsmIgm_kstart = kstart; m_IsmIgm_kend = kend;
