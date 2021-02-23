@@ -1852,7 +1852,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
                 std::vector<std::vector<Int32>> idxVelfitGroups;
-                Int32 lowerzIdx = -6, higherzIdx = 6;
                 for (Int32 iLineType = 0; iLineType < 2; iLineType++)
                 {
                     Float64 vInfLim;
@@ -1926,12 +1925,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
                         Float64 z_vOptim = -1.0;
-
-                        for (Int32 kdz = lowerzIdx; kdz <= higherzIdx; kdz++)
+                        const Int32 half_nb_zsteps =6;
+                        Int32 lowerzIdx = std::max(0, idx - half_nb_zsteps);
+                        Int32 higherzIdx = std::min( idx + half_nb_zsteps, Int32(m_result->Redshifts.size()-1) );
+                        for(Int32 idzTest=lowerzIdx; idzTest<=higherzIdx; ++idzTest)
                         {
-                            Int32 idzTest;
-                            idzTest = (idx + kdz)<0?0:idx+kdz; //control lower border
-                            idzTest = (idx + kdz)> m_result->Redshifts.size()-1? m_result->Redshifts.size()-1:idx+kdz;//control higher border
                             for (Int32 kv = 0; kv < nVelSteps; kv++)
                             {
                                 Float64 vTest = velfitlist[kv];
