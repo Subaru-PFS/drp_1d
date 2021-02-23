@@ -1258,7 +1258,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
             if (m_secondpass_parameters_extremaResult.ID(j)==zCandidates[i].second.ParentId) 
                 i_2pass = j;
         if (i_2pass == -1){
-            Log.LogError("%s: impossible to find the first pass extrema id corresponding to 2nd pass extrema %s", __func__, Id);
+            Log.LogError("%s: impossible to find the first pass extrema id corresponding to 2nd pass extrema %s", __func__, Id.c_str());
             throw runtime_error("COperatorLinemodel: impossible to find the 1st pass extrema id of a 2nd pass candidate");
         }
 

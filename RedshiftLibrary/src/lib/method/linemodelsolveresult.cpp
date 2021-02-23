@@ -107,7 +107,6 @@ void CLineModelSolveResult::SaveLine( std::ostream& stream ) const
         //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
     }
     //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    /*
     stream  << store.GetSpectrumName() << "\t"
         << store.GetProcessingID() << "\t"
 	    << m_redshift << "\t"

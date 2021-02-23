@@ -166,7 +166,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const
         if (!findok){
             if (m_candidatesZRanges.size() >1){ // we are in 2nd pass (several redshift ranges)
                 Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass fitting degenerates the first-pass results of candidate:%s in range [%f , %f]\n", 
-                                cand.first, redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
+                                cand.first.c_str(), redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
                 Log.LogInfo(" Flag - Eliminating a second-pass candidate");
                 continue; 
             }
