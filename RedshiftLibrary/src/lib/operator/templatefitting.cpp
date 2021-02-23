@@ -1027,10 +1027,10 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
                                            Int32 meiksinIdx,
                                            Float64 amplitude,
                                            std::string opt_interp,
-					   std::string opt_extinction,
+					                       std::string opt_extinction,
                                            const TFloat64Range& lambdaRange,
                                            Float64 overlapThreshold,
-                                           CModelSpectrumResult& spc)
+                                           std::shared_ptr<CModelSpectrumResult> & spcPtr)
 {
     Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model templateFitting for candidate Zcand=%f", redshift);
     EStatus status;
@@ -1091,7 +1091,7 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
-    spc = m_templateRebined_bf;
+    spcPtr = std::make_shared<CModelSpectrumResult>(m_templateRebined_bf);
     return 0;
 }
 

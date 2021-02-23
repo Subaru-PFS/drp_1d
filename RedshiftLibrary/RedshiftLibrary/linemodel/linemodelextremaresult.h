@@ -92,9 +92,7 @@ public:
     mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
     mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
     
-    std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
-    std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
     std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 

@@ -56,17 +56,17 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
 //    std::string _scope = "tplcombination";
     std::string scopeStr = "templatefitting";
 
-    CTemplateFittingSolveResult::EType _type;
+    EType _type;
     if(spcComponent=="raw"){
-       _type = CTemplateFittingSolveResult::nType_raw;
+       _type = nType_raw;
     }else if(spcComponent=="nocontinuum"){
-       _type = CTemplateFittingSolveResult::nType_noContinuum;
+       _type = nType_noContinuum;
        scopeStr = "templatefitting_nocontinuum";
     }else if(spcComponent=="continuum"){
-        _type = CTemplateFittingSolveResult::nType_continuumOnly;
+        _type = nType_continuumOnly;
         scopeStr = "templatefitting_continuum";
     }else if(spcComponent=="all"){
-        _type = CTemplateFittingSolveResult::nType_all;
+        _type = nType_all;
     }
 
     resultStore.GetScopedParam( "extremacount", m_opt_maxCandidate, 5);
@@ -107,6 +107,10 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
 
         std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
+        // save in resultstore pdf results
+        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
+        resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+
         // save in resultstore candidates results
         {
             std::string name;
@@ -119,11 +123,11 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
 
         //for each candidate, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
+        //std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
 
         // TBD
 
-        return solveResult;
+        return NULL;
     }
 
     return NULL;
@@ -137,7 +141,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
                                        std::vector<CMask> maskList,
-                                       CTemplateFittingSolveResult::EType spctype,
+                                       EType spctype,
                                        std::string opt_interp,
                                        std::string opt_extinction,
                                        std::string opt_dustFitting)
@@ -173,7 +177,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
 
 
     //case: nType_all
-    if(spctype == CTemplateFittingSolveResult::nType_all){
+    if(spctype == nType_all){
         _ntype = 3;
     }
 
@@ -185,7 +189,7 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     }
 
     for( Int32 i=0; i<_ntype; i++){
-        if(spctype == CTemplateFittingSolveResult::nType_all){
+        if(spctype == nType_all){
             _spctype = _spctypetab[i];
         }else{
             _spctype = static_cast<CSpectrum::EType>(spctype);

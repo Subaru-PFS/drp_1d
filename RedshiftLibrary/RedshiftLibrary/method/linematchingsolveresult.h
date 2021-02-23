@@ -25,10 +25,6 @@ public:
 
     void Save(std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
 
     Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 

@@ -1,15 +1,13 @@
-#ifndef _REDSHIFT_METHOD_CHISQUARE2SOLVE_
-#define _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+#ifndef _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
+#define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/templatefittingresult.h>
+#include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/templatefitting.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
 
 namespace NSEpic
 {
@@ -25,6 +23,15 @@ class CMethodTemplateFittingSolve
 {
 
  public:
+
+    enum EType
+    {
+             nType_raw = 1,
+             nType_continuumOnly = 2,
+             nType_noContinuum = 3,
+             nType_all = 4,
+    };
+
 
     CMethodTemplateFittingSolve() = default;
     ~CMethodTemplateFittingSolve() = default;
@@ -57,17 +64,27 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
+               EType spctype=nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
     ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
-    void SaveSpectrumResults(CDataStore &dataStore) const ;
+
+    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const CDataStore& store, const std::string & scopeStr,
+                                                                const TCandidateZbyRank & ranked_zCandidates,
+                                                                const CSpectrum& spc,
+                                                                const CTemplateCatalog& tplCatalog,
+                                                                const TStringList& tplCategoryList,
+                                                                const TFloat64Range& lambdaRange,
+                                                                Float64 overlapThreshold,
+                                                                std::string opt_interp,
+                                                                std::string opt_extinction
+                                                                );
+
+    void StoreExtremaResults(CDataStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
     COperatorTemplateFitting m_templateFittingOperator;
-    std::vector<std::shared_ptr<CModelSpectrumResult>>  m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<CModelContinuumFittingResult>> m_savedModelContinuumFittingResults;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
@@ -79,4 +96,4 @@ private:
 
 }
 
-#endif // _REDSHIFT_METHOD_CHISQUARE2SOLVE_
+#endif

@@ -1,22 +1,33 @@
-#include <RedshiftLibrary/method/templatefittingresult.h>
+#include <RedshiftLibrary/method/templatefittingsolveresult.h>
 
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
+#include <RedshiftLibrary/common/exception.h>
+
 #include <stdio.h>
 #include <float.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
+#include <RedshiftLibrary/method/solveresult.h>
+#include <memory>
 
 using namespace NSEpic;
 
-CTemplateFittingSolveResult::CTemplateFittingSolveResult(const EType type, const std::string scope):
-    m_type(type),
-    m_scope(scope)
-{  
-    m_name = m_scope2name[m_scope];
-}
+CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & scope, 
+                                                         const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+                                                         const std::string & opt_pdfcombination,
+                                                         Float64 evidence ):
+    CSolveResult( ExtremaResult, opt_pdfcombination, evidence),
+    m_scope(scope),
+    ExtremaResult(ExtremaResult),
+    m_tplName(ExtremaResult->FittedTplName[0]),
+    m_amplitude(ExtremaResult->FittedTplAmplitude[0]),
+    m_amplitudeError(ExtremaResult->FittedTplAmplitudeError[0]),
+    m_dustCoeff(ExtremaResult->FittedTplDustCoeff[0]),
+    m_meiksinIdx(ExtremaResult->FittedTplMeiksinIdx[0]),
+    m_fittingSNR(ExtremaResult->FittedTplSNR[0])
+{}
 
+/*
 void CTemplateFittingSolveResult::preSave(const CDataStore& store)
 {
     if(m_bestRedshiftMethod==0)//bestXi2
@@ -35,7 +46,7 @@ void CTemplateFittingSolveResult::preSave(const CDataStore& store)
     }
     if(m_tplName=="")
         m_tplName = "Undefined";
-}
+}*/
 
 void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
 {
@@ -70,6 +81,7 @@ void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
     //stream << detailStr.c_str();
 }
 
+/*
 Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
     std::string scopeStr;
@@ -117,7 +129,8 @@ Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataS
 
     return true;
 
-}
+}*/
+
 //called for saving redshift.csv for Xi2
 void CTemplateFittingSolveResult::SaveLine(std::ostream& stream ) const
 {
@@ -147,6 +160,7 @@ void CTemplateFittingSolveResult::SaveLine(std::ostream& stream ) const
     */
 }
 
+/*
 Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store) 
 {
     std::string scopeStr;
@@ -204,6 +218,7 @@ Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store)
     return false;
 
 }
+*/
 
 /**
  * \brief Searches the best_z = argmax(pdf)
@@ -211,6 +226,7 @@ Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store)
  * output: merit = chi2(redshift)
  *
  **/
+/*
 Bool CTemplateFittingSolveResult::GetBestRedshiftFromPdf( const CDataStore& store ) 
 {
     //check if the pdf is stellar/galaxy or else
@@ -252,7 +268,8 @@ Bool CTemplateFittingSolveResult::GetBestRedshiftFromPdf( const CDataStore& stor
 
     return true;
 }
-
+*/
+/*
 Int32 CTemplateFittingSolveResult::GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) 
 {
     //check if the pdf is stellar/galaxy or else
@@ -278,7 +295,7 @@ Int32 CTemplateFittingSolveResult::GetEvidenceFromPdf(const CDataStore& store, F
     m_evidence = logzpdf1d->valEvidenceLog;
     evidence = m_evidence; //prob not useful
     return 0;
-}
+}*/
 
 /**
  * @brief CTemplateFittingSolveResult::GetBestModel
@@ -290,6 +307,7 @@ Int32 CTemplateFittingSolveResult::GetEvidenceFromPdf(const CDataStore& store, F
  * @param DustCoeff (optional return)
  * @return
  */
+/*
 Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64 z)
 {
     Bool foundRedshiftAtLeastOnce = false;
@@ -361,6 +379,7 @@ Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64
     }
     return 1;
 }
+*/
 
 void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) const
 {

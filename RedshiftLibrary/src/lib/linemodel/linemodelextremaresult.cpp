@@ -65,9 +65,7 @@ void CLineModelExtremaResult::Resize(Int32 size)
     FittedTplratioMtm.resize(size);
     FittedTplratioIsmCoeff.resize(size);
     
-    m_savedModelSpectrumResults.resize(size);
     m_savedModelFittingResults.resize(size);
-    m_savedModelContinuumFittingResults.resize(size);
     m_savedModelRulesResults.resize(size);
     m_savedModelContinuumSpectrumResults.resize(size);
 }

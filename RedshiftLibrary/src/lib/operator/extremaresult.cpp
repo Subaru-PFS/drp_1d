@@ -31,6 +31,10 @@ void CExtremaResult::Resize(Int32 size)
     FittedTplDtm.resize(size);
     FittedTplMtm.resize(size);
     FittedTplLogPrior.resize(size);
+    FittedTplSNR.resize(size);
+    
+    m_savedModelSpectrumResults.resize(size);
+    m_savedModelContinuumFittingResults.resize(size);
 }
 
 TStringList CExtremaResult::GetIDs() const

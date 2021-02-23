@@ -26,10 +26,6 @@ public:
 
     void Save( std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
 
     void SetTypeLabel( std::string lbl );
     void SetG(Float64 evidence, Float64 prob);

@@ -40,17 +40,18 @@ public:
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
-    Int32           ComputeSpectrumModel(const CSpectrum& spectrum,
-                        	      const CTemplate& tpl,
+
+    Int32        ComputeSpectrumModel(const CSpectrum& spectrum,
+                        	          const CTemplate& tpl,
                                       Float64 redshift,
                                       Float64 IdxDustCoeff,
                                       Int32 meiksinIdx,
                                       Float64 amplitude,
                                       std::string opt_interp,
-				      std::string opt_extinction,
+				                      std::string opt_extinction,
                                       const TFloat64Range& lambdaRange,
                                       Float64 overlapThreshold,
-                                      CModelSpectrumResult& spc);
+                                      std::shared_ptr<CModelSpectrumResult> & spc);
 
 private:
 

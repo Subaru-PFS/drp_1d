@@ -359,7 +359,6 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
 
     PopulateParameters( dataStore );
 
-    std::shared_ptr<CLineModelSolveResult> lmsolveresult = std::make_shared<CLineModelSolveResult>();
 
     /* ------------------------  Solve the Linemodel  --------------------------  */
 
@@ -421,21 +420,22 @@ std::shared_ptr<CLineModelSolveResult> CLineModelSolve::Compute( CDataStore& dat
     dataStore.StoreGlobalResult("candidatesresult", candidateResult);
 
     // Get linemodel results at extrema (recompute spectrum model etc.)
-    lmsolveresult->ExtremaResult = m_linemodel.SaveExtremaResults(spc, 
-                                                                    lambdaRange, 
-                                                                    candidateResult->m_ranked_candidates, 
-                                                                    m_opt_continuumreest);
+    std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =
+        m_linemodel.SaveExtremaResults( spc, lambdaRange, candidateResult->m_ranked_candidates, 
+                                        m_opt_continuumreest);
 
     // store extrema results
-    std::string extremaResultsStr = "linemodel_extrema";
-    Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
-    dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), lmsolveresult->ExtremaResult );
-    storeExtremaModelResults(dataStore.getResultStore(), lmsolveresult->ExtremaResult );
-
-
-    
+    storeExtremaResults(dataStore, ExtremaResult );
 
     //SaveContinuumPDF(dataStore, result);
+    // TBD
+
+    // create the solveresult
+    std::shared_ptr<CLineModelSolveResult> lmsolveresult = 
+        std::make_shared<CLineModelSolveResult>( ExtremaResult, 
+                                                 m_opt_pdfcombination,
+                                                 pdfz.m_postmargZResult->valEvidenceLog);
+
 
     return lmsolveresult;
 }
@@ -700,40 +700,41 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
 ///
-void CLineModelSolve::storeExtremaModelResults( COperatorResultStore &resultStore, 
-                                                std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const 
+void CLineModelSolve::storeExtremaResults( CDataStore &dataStore,
+                                           std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const 
 {
+    std::string extremaResultsStr = "linemodel_extrema";
+    Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
+    dataStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResult );
+
     Int32 nResults = ExtremaResult->size();
 
     for (Int32 k = 0; k < nResults; k++)
     {
         std::string fname_spc =
             (boost::format("linemodel_spc_extrema_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_spc.c_str(),
+        dataStore.StoreScopedGlobalResult(fname_spc.c_str(),
                                           ExtremaResult->m_savedModelSpectrumResults[k]);
 
         std::string fname_fit =
             (boost::format("linemodel_fit_extrema_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_fit.c_str(),
+        dataStore.StoreScopedGlobalResult(fname_fit.c_str(),
                                           ExtremaResult->m_savedModelFittingResults[k]);
 
         std::string fname_fitcontinuum =
             (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",
-            fname_fitcontinuum.c_str(), ExtremaResult->m_savedModelContinuumFittingResults[k]);
+        dataStore.StoreScopedGlobalResult(fname_fitcontinuum.c_str(), 
+                                          ExtremaResult->m_savedModelContinuumFittingResults[k]);
 
         std::string fname_rules =
             (boost::format("linemodel_rules_extrema_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_rules.c_str(),
+        dataStore.StoreScopedGlobalResult(fname_rules.c_str(),
                                           ExtremaResult->m_savedModelRulesResults[k]);
-    }
-//TODO: delete below for loop
-    for (Int32 k = 0; k < nResults; k++)
-    {
+
         std::string nameBaselineStr =
             (boost::format("linemodel_continuum_extrema_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",
-            nameBaselineStr.c_str(), ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
+        dataStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), 
+                                         ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
     }
 }
 

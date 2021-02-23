@@ -63,8 +63,8 @@ private:
 
     //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    void storeExtremaModelResults( COperatorResultStore &resultStore, 
-                                                std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
+    void storeExtremaResults( CDataStore &dataStore,
+                              std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(CDataStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
 

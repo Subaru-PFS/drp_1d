@@ -464,7 +464,7 @@ Float64 COperatorPdfz::getSumRect(const TRedshiftList & redshifts,
     return sum;
 }
 
-Int32 COperatorPdfz::getIndex( std::vector<Float64> redshifts, Float64 z )
+Int32 COperatorPdfz::getIndex( const std::vector<Float64> & redshifts, Float64 z )
 {
     Int32 solutionIdx=-1;
     for ( UInt32 i2=0; i2<redshifts.size(); i2++)

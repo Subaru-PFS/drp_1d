@@ -48,7 +48,6 @@ public:
     Int32 CombinePDF(const ChisquareArray & chisquares);
 
 
-    Int32 getIndex( std::vector<Float64> redshifts, Float64 z );
 
     Bool checkPdfSum();
 
@@ -56,6 +55,9 @@ public:
 
     // static member function to do calculation on pdfs
     ///////////////////////////////////////////////////
+
+    static Int32 getIndex( const std::vector<Float64> & redshifts, Float64 z );
+
     static Int32 ComputePdf(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
 
     static Float64 getSumTrapez(const TRedshiftList &redshifts, const TFloat64List &valprobalog);

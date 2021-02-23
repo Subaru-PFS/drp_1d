@@ -316,7 +316,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
-        starResult->preSave(ctx.GetDataStore());
+        //starResult->preSave(ctx.GetDataStore());
     }
 
     // Quasar method
@@ -452,7 +452,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store qso result.");
         }
-        qsoResult->preSave(ctx.GetDataStore());
+        //qsoResult->preSave(ctx.GetDataStore());
     }
 
     // Galaxy method
@@ -580,6 +580,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                 ctx.GetRayCatalog() );
 
     */
+    /*
     else if(methodName  == "reliability" ){
         Log.LogInfo( "Processing RELIABILITY ONLY");
         //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
@@ -601,16 +602,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
 
-    }else{
+    }*/
+    else{
         throw std::runtime_error("Problem found while parsing the method parameter");
     }
 
-    mResult->preSave(ctx.GetDataStore());
+    //mResult->preSave(ctx.GetDataStore());
     //Process Reliability estimation
     if(!mResult){
         Log.LogWarning( "Reliability skipped - no redshift results found");
     }else if(!isPdfValid(ctx)){
         Log.LogWarning( "Reliability skipped - no valid pdf result found");
+    }else if(mResult->m_bestRedshiftMethod!=2){
+        Log.LogWarning( "Reliability skipped - best redshift merit is not integrated on the pdf");
     }else{
       Float64 merit = mResult->getMerit();
       if (std::isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
@@ -629,7 +633,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo("===============================================");
 
     CClassificationSolve classifier(enableStarFitting, enableQsoFitting);
-    classifier.Classify(ctx.GetDataStore(), mResult, starResult, qsoResult);
+    classifier.Classify(mResult, starResult, qsoResult);
 
     if(mResult){
         Log.LogInfo( "Setting object type: %s", classifier.typeLabel.c_str());

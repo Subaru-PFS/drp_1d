@@ -2,7 +2,7 @@
 #define _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/templatefittingresult.h>
+#include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/tplcombination.h>
@@ -23,6 +23,14 @@ class CMethodTplcombinationSolve
 {
 
  public:
+
+    enum EType
+    {
+             nType_raw = 1,
+             nType_continuumOnly = 2,
+             nType_noContinuum = 3,
+             nType_all = 4,
+    };
 
     CMethodTplcombinationSolve() = default;
     ~CMethodTplcombinationSolve() = default;
@@ -54,7 +62,7 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
+               EType spctype=nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
@@ -62,7 +70,6 @@ private:
     ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
 
     COperatorTplcombination m_tplcombinationOperator;
-    //void SaveSpectrumResults(CDataStore &dataStore) const ;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
