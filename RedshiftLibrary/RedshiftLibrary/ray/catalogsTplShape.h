@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/ray/ray.h>
 #include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 
 #include <boost/format.hpp>

@@ -10,7 +10,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
-#include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
 #include <cmath>

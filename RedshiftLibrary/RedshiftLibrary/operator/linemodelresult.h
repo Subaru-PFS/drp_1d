@@ -10,7 +10,7 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/linemodel/linemodelsolution.h>
 #include <RedshiftLibrary/linemodel/continuummodelsolution.h>
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
 
 namespace NSEpic
@@ -33,15 +33,10 @@ public:
    
     void Load( std::istream& stream );
 
-    Int32 GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const;
+    Int32 GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const;
     TBoolList GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
     TBoolList GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const;
     std::vector<Int32> GetNLinesAboveSnrcut( std::vector<CLineModelSolution> linemodelsols ) const;
-
-    Float64 GetExtremaMerit(Int32 extremaIdx) const;
-    UInt32 GetExtremaIndex(UInt32 extremaIdx) const;
-
-    std::shared_ptr<CLineModelExtremaResult> GetExtremaResult() const;
 
     Float64 GetMinChiSquare() const;
     Float64 GetMaxChiSquare() const;
@@ -57,13 +52,12 @@ public:
     TBoolList GetStrongELPresentTplshapeResult( Int32 index );
     std::vector<Int32> GetNLinesAboveSNRTplshapeResult( Int32 index );
     std::vector<Float64> GetPriorLinesTplshapeResult( Int32 index_z );
-  Int32 getRedshiftIndex(Float64 z);
+    Int32 getRedshiftIndex(Float64 z);
 
     //Merit results
     TFloat64List            Redshifts;  // z axis
     TFloat64List            ChiSquare;  // min chi2
     TFloat64List            ScaleMargCorrection;  // margCorrection for min chi2
-    std::vector<std::string> ExtremaIDs; //extrema IDs, i.g.,"E1", inherited from firstpass results
 
     std::vector<TFloat64List> ChiSquareTplshapes; // full chi2 results (for each tplshape)
     std::vector<Float64> PriorTplshapes; // model prior (for each tplshape)
@@ -76,9 +70,6 @@ public:
 
     std::vector<CLineModelSolution> LineModelSolutions;
     std::vector<CContinuumModelSolution> ContinuumModelSolutions;
-
-    //Extrema results
-    CLineModelExtremaResult ExtremaResult;
 
     COperator::TStatusList  Status;
     CRayCatalog::TRayVector restRayList;

@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
-
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
@@ -26,7 +26,6 @@ class CLineModelSolve
 public:
 
     CLineModelSolve(std::string calibrationPath="");
-    ~CLineModelSolve();
 
     const std::string GetDescription();
 
@@ -41,6 +40,10 @@ public:
                                                    const TFloat64List& redshifts,
                                                    const string outputPdfRelDir,
                                                    const Float64 radius);
+                                 
+    // Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
+
+private:
 
     Bool Solve(CDataStore& resultStore,
                const CSpectrum& spc,
@@ -49,23 +52,24 @@ public:
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
-                                 
-    Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
 
-private:
+    ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
+                                        std::string opt_rigidity,
+                                        std::string opt_combine,
+                                        Float64 opt_stronglinesprior,
+                                        Float64 opt_hapriorstrength,
+                                        Float64 opt_euclidNHaEmittersPriorStrength,
+                                        Float64 opt_modelPriorZStrength) const;
 
-    Int32 CombinePDF(std::shared_ptr<const CLineModelResult> result,
-                     std::string opt_rigidity,
-                     std::string opt_combine,
-                     Float64 opt_stronglinesprior,
-                     Float64 opt_hapriorstrength,
-                     Float64 opt_euclidNHaEmittersPriorStrength,
-                     Float64 opt_modelPriorZStrength,
-                     std::shared_ptr<CPdfMargZLogResult> postmargZResult,
-                     std::shared_ptr<CPdfLogResult> zPrior);
+    //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
+    void storeExtremaResults( CDataStore &dataStore,
+                              std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
 
+    void StoreChisquareTplShapeResults(CDataStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
+
+
+    COperatorLineModel m_linemodel;
 
     std::string m_opt_linetypefilter;
     std::string m_opt_lineforcefilter;
@@ -126,8 +130,8 @@ private:
     std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_offsets_reldirpath="";
 
-    Float64 m_opt_extremacount;
-    Float64 m_opt_extremacountB;
+    Int64 m_opt_extremacount;
+    Int64 m_opt_extremacountB;
 
     Float64 m_opt_candidatesLogprobaCutThreshold;
     Float64 m_opt_firstpass_largegridstep;

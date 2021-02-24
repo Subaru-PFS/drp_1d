@@ -326,7 +326,7 @@ void CLineModelResult::Save( std::ostream& stream ) const
         stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
     }
 
-    ExtremaResult.Save(stream); //todo: move these into their own file. aview should be adapted.
+    //ExtremaResult.Save(stream); //todo: move these into their own file. aview should be adapted.
 
     // save dTransposeD, on 1 line
     if(true){
@@ -345,22 +345,10 @@ void CLineModelResult::SaveLine(  std::ostream& stream ) const
     stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
 }
 
-Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 extremaIdx, Float64 snrThres, Float64 fitThres) const
+Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const
 {
-    if( ExtremaResult.Extrema.size()<=extremaIdx )
-    {
-        return 0;
-    }
     Int32 nSol=0;
-    Int32 solutionIdx=0;
-    for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
-    {
-        if( Redshifts[i2]==ExtremaResult.Extrema[extremaIdx] )
-        {
-            solutionIdx = i2;
-            break;
-        }
-    }
+
     std::vector<Int32> indexesSols;
     for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
     {
@@ -531,47 +519,6 @@ TBoolList CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution
     return strongestIsHa;
 }
 
-
-
-
-/**
- * \brief Returns the value of the ChiSquare of the Extrema indexed by the argument extremaIdx - if it is a valid index.
- * Let result be -1.
- * Return the result.
- **/
-Float64 CLineModelResult::GetExtremaMerit( Int32 extremaIdx ) const
-{
-    Float64 outVal=-1.0;
-    if( ExtremaResult.Extrema.size()>extremaIdx && ExtremaResult.ExtremaMerit.size()>extremaIdx )
-    {
-        outVal = ExtremaResult.ExtremaMerit[extremaIdx];
-    }
-    return outVal;
-}
-
-UInt32 CLineModelResult::GetExtremaIndex(UInt32 extremaIdx) const
-{
-    UInt32 solutionIdx=-1;
-    if( ExtremaResult.Extrema.size()>extremaIdx && extremaIdx>=0 )
-    {
-        for ( UInt32 i2=0; i2<LineModelSolutions.size(); i2++)
-        {
-            if( Redshifts[i2]==ExtremaResult.Extrema[extremaIdx] )
-            {
-                solutionIdx = i2;
-                break;
-            }
-        }
-    }
-    return solutionIdx;
-}
-
-std::shared_ptr<CLineModelExtremaResult> CLineModelResult::GetExtremaResult() const
-{
-    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::shared_ptr<CLineModelExtremaResult>(new CLineModelExtremaResult(ExtremaResult));
-    return extremaresult;
-}
-
 Float64 CLineModelResult::GetMinChiSquare() const
 {
     Float64 min=DBL_MAX;
@@ -606,9 +553,8 @@ Int32 CLineModelResult::getRedshiftIndex(Float64 z)
 
   if (itr == Redshifts.end() || *itr != z)
     {
-      size_t size = snprintf( nullptr, 0, "Could not find extrema solution index for %f", z) + 1; // Extra space for '\0'
-      std::unique_ptr<char[]> buf( new char[ size ] );                                                        snprintf( buf.get(), size, "Could not find extrema solution index for %f", z);                          std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-      throw runtime_error(_msg.c_str());
+      Log.LogError("CLineModelResult::getRedshiftIndex: Could not find redshift index for %f", z);
+      throw runtime_error("CLineModelResult::getRedshiftIndex: Could not find redshift index");
     }
   return (itr - Redshifts.begin()); 
 }

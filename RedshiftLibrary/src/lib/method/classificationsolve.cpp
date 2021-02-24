@@ -14,9 +14,9 @@ CClassificationSolve::~CClassificationSolve()
 
 }
 
-void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qsoResult)    
+void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qsoResult)    
 {
-    classifResult = std::shared_ptr<CClassificationResult>( new CClassificationResult() );
+    classifResult = std::make_shared<CClassificationResult>();
     
     Float64 qsoLogEvidence = -INFINITY ;
     Float64 stellarLogEvidence = -INFINITY;
@@ -24,7 +24,7 @@ void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSo
     Float64 MaxLogEvidence = -INFINITY;
 
     if(galaxyResult){
-        galaxyResult->GetEvidenceFromPdf(store, galaxyLogEvidence);
+        galaxyLogEvidence = galaxyResult->getEvidence();
         Log.LogInfo( "Found galaxy LogEvidence: %e", galaxyLogEvidence);
         if (galaxyLogEvidence > MaxLogEvidence){
             MaxLogEvidence = galaxyLogEvidence;
@@ -33,27 +33,22 @@ void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSo
     }
 
     if(m_enableStarFitting=="yes"){
-        Int32 retStellarEv = starResult->GetEvidenceFromPdf(store, stellarLogEvidence);
-        if(retStellarEv==0)
+    stellarLogEvidence = starResult->getEvidence();
+        Log.LogInfo( "Found stellar LogEvidence: %e", stellarLogEvidence);
+        if(stellarLogEvidence > MaxLogEvidence)
         {
-            Log.LogInfo( "Found stellar LogEvidence: %e", stellarLogEvidence);
-            if(stellarLogEvidence > MaxLogEvidence)
-            {
-                MaxLogEvidence = stellarLogEvidence;
-                typeLabel = "S";
-            }
+            MaxLogEvidence = stellarLogEvidence;
+            typeLabel = "S";
         }
     }
+
     if(m_enableQsoFitting=="yes"){
-        Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(store, qsoLogEvidence);
-        if(retQsoEv==0)
+        qsoLogEvidence = qsoResult->getEvidence();
+        Log.LogInfo( "Found qso LogEvidence: %e", qsoLogEvidence);
+        if(qsoLogEvidence>MaxLogEvidence)
         {
-            Log.LogInfo( "Found qso LogEvidence: %e", qsoLogEvidence);
-            if(qsoLogEvidence>MaxLogEvidence)
-            {
-                MaxLogEvidence = qsoLogEvidence;
-                typeLabel = "Q";
-            }
+            MaxLogEvidence = qsoLogEvidence;
+            typeLabel = "Q";
         }
     }
 

@@ -23,7 +23,9 @@ template <typename T> class CRange
         m_Begin(begin), m_End(end) {}
 
     CRange(const std::vector<T> & v):
-        m_Begin(v.front()), m_End(v.back()) {}
+        m_Begin(v.empty() ? T() : v.front()), 
+        m_End(v.empty() ?  T() : v.back()) 
+        {}
 
     ~CRange() {}
 
@@ -116,7 +118,7 @@ template <typename T> class CRange
         return v;
     }
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
-  bool getEnclosingIntervalIndices(std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
+  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
   {
     if (value < m_Begin || value > m_End)
       {
@@ -128,9 +130,9 @@ template <typename T> class CRange
         Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
-    typename std::vector<T>::iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
-    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),it,m_Begin);
-    typename std::vector<T>::iterator it_max = std::lower_bound(it,ordered_values.end(),m_End);
+    typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
+    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),it,m_Begin);
+    typename std::vector<T>::const_iterator it_max = std::lower_bound(it,ordered_values.end(),m_End);
 
     if(*it_min > m_Begin) it_min = it_min -1;
 
@@ -139,7 +141,7 @@ template <typename T> class CRange
     return true;
   }
 
-  bool getEnclosingIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
@@ -147,8 +149,8 @@ template <typename T> class CRange
         return false;
       }
     
-    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
-    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
 
     if(*it_min > m_Begin) it_min = it_min -1;
 
@@ -157,7 +159,7 @@ template <typename T> class CRange
     return true;
   }
 
-    bool getExactEnclosingIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+    bool getExactEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
@@ -165,8 +167,8 @@ template <typename T> class CRange
         return false;
       }
     
-    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
-    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
 
     if(*it_min != m_Begin)
       {
@@ -184,18 +186,20 @@ template <typename T> class CRange
     return true;
   }
   //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
-  bool getClosedIntervalIndices(std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  bool getClosedIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
   {
-    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
+    if(m_End < ordered_values.front() || m_Begin > ordered_values.back())
       {
         Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
     
-    typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
-    typename std::vector<T>::iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
-
-    if(*it_max > m_End) it_max = it_max -1;
+    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
+    typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
+    
+    if (it_max==ordered_values.end()) --it_max;
+    
+    else if(*it_max > m_End) --it_max;
 
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();

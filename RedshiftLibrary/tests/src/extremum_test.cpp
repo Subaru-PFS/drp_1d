@@ -33,17 +33,12 @@ void check_points(TPointList points, TPointList test_points) {
 BOOST_AUTO_TEST_CASE(Extremum1)
 {
     CExtremum peaks1;
-    CExtremum peaks2(true);
-    CExtremum peaks_empty;
+
     TPointList maxPoint;
     TFloat64List x = { 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List y_2 = { 5.0, 0.0, 0.0, 3.0, 9.0, 0.1, 0.2, 0.5, 8.0, 1.0, 4.0 };
     TFloat64List x_empty = {};
-
-    Float64 radius = 0.005;
-    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, radius, true);
-    peaks2 = CExtremum(TFloat64Range(-10.0, 10.0), 5, radius, false);
 
     peaks1.SetMaxPeakCount(2);
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
@@ -55,49 +50,10 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
   
     maxPoint.clear();
-    BOOST_CHECK( peaks1.Find( x_empty, y, maxPoint) == false);
+    BOOST_CHECK_THROW( peaks1.Find( x_empty, y, maxPoint), runtime_error);
     print_point(maxPoint);
 
-    // peaks1.Find( x_empty, x_empty, maxPoint);
-    // print_point(maxPoint);
-//    BOOST_ERROR("FIXME: fails with empty list");
 
-/*
-    // Simple test
-    {
-        TPointList maxPoint;
-
-        peaks.SetMaxPeakCount( 2 );
-        peaks.SetRefreshCount( 2 );
-        peaks.Find( x, y, 11, maxPoint);
-
-        CPPUNIT_ASSERT( maxPoint.size() == 1 );
-
-        CPPUNIT_ASSERT( maxPoint[0].X == x[4] );
-        CPPUNIT_ASSERT( maxPoint[0].Y == y[4] );
-
-        CPPUNIT_ASSERT( maxPoint[1].X == x[8] );
-        CPPUNIT_ASSERT( maxPoint[1].Y == y[8] );
-    }
-
-    // Test with full range specified
-    {
-        TPointList maxPoint;
-
-        peaks.SetMaxPeakCount( 2 );
-        peaks.SetRefreshCount( 2 );
-        peaks.SetXRange( TFloat64Range( 0.0, 1.0 ) );
-        peaks.Find( x, y, 11, maxPoint);
-
-        CPPUNIT_ASSERT( maxPoint.size() == 2 );
-
-        CPPUNIT_ASSERT( maxPoint[0].X == x[4] );
-        CPPUNIT_ASSERT( maxPoint[0].Y == y[4] );
-
-        CPPUNIT_ASSERT( maxPoint[1].X == x[8] );
-        CPPUNIT_ASSERT( maxPoint[1].Y == y[8] );
-    }
-    */
 }
 
 BOOST_AUTO_TEST_CASE(Extremum_PlankDetection)
@@ -142,13 +98,8 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated)
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
     peaks1.SetMeritCut(3);
 
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
-
+    peaks1.SortIndexes(y);
+    
     Bool v = peaks1.Cut_Threshold(x, y, 2);
     for (Int32 i = 0; i < x.size(); i++) {       
         maxPoint.push_back(SPoint(x[i],  y[i]) );
@@ -169,12 +120,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak)
     peaks1.SetXRange( TFloat64Range(-10.0, 10.0) );
     peaks1.SetMeritCut(3);
 
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    peaks1.SortIndexes(y);
 
     Bool v = peaks1.Cut_Threshold(x, y, 2);
     for (Int32 i = 0; i < x.size(); i++) {       
@@ -190,13 +136,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.2;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.8,8}, {0.1,5.0}, {0.4,1.0}})); 
 }
@@ -209,13 +150,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.05;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.08,8},{0.02, 5}})); 
 }
@@ -229,13 +165,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_consecutifClosePeaks2)
     TFloat64List y = { 1.0, 3.0, 0.0, 4.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Float64 radius = 0.005;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
     check_points(maxPoint, TPointList({{0.08,8}, {0.06,6.0}, {0.03,4.0}, {0.1,4.0}, {0.02, 3}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
 }
@@ -248,13 +179,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_increasingPDF)
     TFloat64List y = { 1.0, 3.0, 4.0, 5.0, 6.0, 7.1, 8.0, 9.5, 10.0, 11.0, 14.0 };
 
     Float64 radius = 0.005;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, 2, maxPoint);
 
     check_points(maxPoint, TPointList({ {0.1,14.0}, {0.09, 11.0}, {0.08,10.0}, {0.07, 9.5}, {0.06,8.0}})); //here we lose a good peak (0.6, 6) since it is close to 0.8, within sliding windows 
@@ -275,13 +201,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks2)
     TFloat64List y = { 1.0, 5.0};
 
     Float64 radius = 0.2;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 5, radius, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 5, radius, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     //testing only the sliding window algo
     Int32  keepmin = 2;
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin, maxPoint);
@@ -297,13 +218,8 @@ BOOST_AUTO_TEST_CASE(Extremum_FilterOutNeighboringPeaks_negativeX)
     TFloat64List y = { 3.0, 4.0};
 
     Float64 peakseparationDist = 0.005*2;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), 1, peakseparationDist, false);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( 1, peakseparationDist, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     //testing only the sliding window algo
     Int32  keepmin = 1;
     peaks1.FilterOutNeighboringPeaksAndTruncate(x, y, keepmin, maxPoint);
@@ -318,13 +234,8 @@ BOOST_AUTO_TEST_CASE(Extremum_Truncate)
     TFloat64List y = { 1.0, 5.0, 0.0, 3.0, 1.0, 0.1, 6.0, 0.5, 8.0, 1.0, 4.0 };
 
     Int32 maxCount = 2;
-    CExtremum peaks1( TFloat64Range(-10.0, 10.0), maxCount);
-    TInt32List sortedIndexes(x.size());
-    iota(sortedIndexes.begin(), sortedIndexes.end(), 0);
-    sort(sortedIndexes.begin(), sortedIndexes.end(),
-       [&y](Float64 i1, Float64 i2) {return y[i1] > y[i2];});
-
-    peaks1.SetSortedIndexes(sortedIndexes);
+    CExtremum peaks1( maxCount,  0.005*2, -1, false, true, TFloat64Range(-10.0, 10.0));
+    peaks1.SortIndexes(y);
     peaks1.Truncate( x, y, maxPoint);
     
     check_points(maxPoint, TPointList({{0.8,8}, {0.6,6}}));

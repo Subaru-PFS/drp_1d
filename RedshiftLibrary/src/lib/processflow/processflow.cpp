@@ -11,7 +11,6 @@
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
-#include <RedshiftLibrary/method/zweimodelsolve.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
 #include <RedshiftLibrary/processflow/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
@@ -50,12 +49,12 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     TFloat64Range redshiftRange;
     Float64       redshiftStep;
     Float64       maxCount; 
-    Float64       radius;
+    Float64       redshiftseparation;
 
     ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
     ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
     ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
-    ctx.GetParameterStore().Get( "extremaredshiftseparation", radius, 0.005);//todo: decide on the default values using latest analyses plots
+    ctx.GetParameterStore().Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
 
     TFloat64Range spcLambdaRange;
     ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
@@ -306,7 +305,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                     overlapThreshold,
                                     maskList,
                                     "stellar_zPDF",
-                                    radius,
+                                    redshiftseparation,
                                     opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
 
 
@@ -317,7 +316,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
-        starResult->preSave(ctx.GetDataStore());
+        //starResult->preSave(ctx.GetDataStore());
     }
 
     // Quasar method
@@ -398,7 +397,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
-                                       radius,
+                                       redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         }else if(qso_method=="templatefittinglogsolve"){
             opt_interp="unused";
@@ -412,7 +411,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
-                                       radius,
+                                       redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         }else if(qso_method=="tplcombinationsolve"){
             opt_interp="lin";
@@ -428,7 +427,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
-                                       radius,
+                                       redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         /*}else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
@@ -441,7 +440,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        spcLambdaRange,
                                        qso_redshifts,
                                        "qso_zPDF",
-                                       radius);*/
+                                       redshiftseparation);*/
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
@@ -453,7 +452,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             Log.LogError( "Unable to store qso result.");
         }
-        qsoResult->preSave(ctx.GetDataStore());
+        //qsoResult->preSave(ctx.GetDataStore());
     }
 
     // Galaxy method
@@ -470,35 +469,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  spcLambdaRange,
                                  redshifts,
                                  galaxy_method_pdf_reldir,
-                                 radius);
-
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from Linemodel method results" );
-            std::shared_ptr<CLineModelSolveResult> solveResult = std::dynamic_pointer_cast<CLineModelSolveResult>( mResult );
-            std::vector<Float64> zcandidates_unordered_list;
-            //simple reading from datastore
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-            //compute the integratedPDF and sort candidates based on intg PDF
-            //truncate based on maxCount
-            ctx.GetDataStore().GetScopedParam( "linemodelsolve.linemodel.extremacount", maxCount);
-            Bool b = Solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list, maxCount);
-
-            
-            auto res = ctx.GetDataStore().GetGlobalResult( "candidatesresult"  );
-            auto lm_extrema_results = ctx.GetDataStore().GetGlobalResult( "linemodelsolve.linemodel_extrema");
-            auto candResults = std::dynamic_pointer_cast<const CPdfCandidateszResult>( res.lock());
-            auto lmResults = std::dynamic_pointer_cast<const CLineModelExtremaResult>(lm_extrema_results.lock());
-            TInt32List Rank_PDF = candResults->Rank;
-            lmResults->Rank_PDF = Rank_PDF;
-        }
-
+                                 redshiftseparation);
+    /*
     }else if(methodName  == "zweimodelsolve" ){
 
         CZweiModelSolve Solve(calibrationDirPath);
@@ -509,7 +481,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts );
-
+    */
     }else if(methodName  == "templatefittingsolve" ){
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
@@ -537,25 +509,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
-                                 radius,
+                                 redshiftseparation,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from TemplateFittingsolve method results" );
-            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
-            /*Int32 n_cand = 5; //this is hardcoded for now for this method
-            std::vector<Float64> zcandidates_unordered_list;
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-            
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);*/
-        }
 
     }else if(methodName  == "templatefittinglogsolve" ){
         Float64 overlapThreshold;
@@ -583,25 +538,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
-                                 radius,
+                                 redshiftseparation,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from TemplateFittingLogsolve method results" );
-            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
-            Int32 n_cand = 5; //this is hardcoded for now for this method
-            std::vector<Float64> zcandidates_unordered_list;
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
-        }
 
     }else if(methodName  == "tplcombinationsolve" ){
         Float64 overlapThreshold;
@@ -627,25 +565,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
-                                 radius,
+                                 redshiftseparation,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
-        if( mResult )
-        {
-            Log.LogInfo( "Extracting z-candidates from TplcombinationSolve method results" );
-            std::shared_ptr<CTemplateFittingSolveResult> solveResult = std::dynamic_pointer_cast<CTemplateFittingSolveResult>( mResult );
-            Int32 n_cand = 5; //this is hardcoded for now for this method
-            std::vector<Float64> zcandidates_unordered_list;
-            Bool retzc = solveResult->GetRedshiftCandidates( ctx.GetDataStore(), zcandidates_unordered_list, n_cand);
-            if(retzc)
-            {
-                Log.LogInfo( "  Found %d z-candidates", zcandidates_unordered_list.size() );
-            }else{
-                Log.LogError( "  Failed to get z candidates from these results");
-            }
-            //compute the integratedPDF and sort candidates based on intg PDF
-            Bool b = solve.ExtractCandidateResults(ctx.GetDataStore(), zcandidates_unordered_list);
-        }
 
     }
     /*
@@ -659,6 +580,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                 ctx.GetRayCatalog() );
 
     */
+    /*
     else if(methodName  == "reliability" ){
         Log.LogInfo( "Processing RELIABILITY ONLY");
         //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
@@ -680,16 +602,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
 
-    }else{
+    }*/
+    else{
         throw std::runtime_error("Problem found while parsing the method parameter");
     }
 
-    mResult->preSave(ctx.GetDataStore());
+    //mResult->preSave(ctx.GetDataStore());
     //Process Reliability estimation
     if(!mResult){
         Log.LogWarning( "Reliability skipped - no redshift results found");
     }else if(!isPdfValid(ctx)){
         Log.LogWarning( "Reliability skipped - no valid pdf result found");
+    }else if(mResult->m_bestRedshiftMethod!=2){
+        Log.LogWarning( "Reliability skipped - best redshift merit is not integrated on the pdf");
     }else{
       Float64 merit = mResult->getMerit();
       if (std::isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
@@ -708,7 +633,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo("===============================================");
 
     CClassificationSolve classifier(enableStarFitting, enableQsoFitting);
-    classifier.Classify(ctx.GetDataStore(), mResult, starResult, qsoResult);
+    classifier.Classify(mResult, starResult, qsoResult);
 
     if(mResult){
         Log.LogInfo( "Setting object type: %s", classifier.typeLabel.c_str());

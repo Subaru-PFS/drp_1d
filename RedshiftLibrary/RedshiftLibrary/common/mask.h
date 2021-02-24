@@ -2,12 +2,9 @@
 #define _REDSHIFT_COMMON_WEIGHTS_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
 
 namespace NSEpic
 {
-
-class CSpectrum;
 
 /**
  * \ingroup Redshift

@@ -1,12 +1,14 @@
-#ifndef _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
-#define _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
+#ifndef _REDSHIFT_METHOD_TEMPLATEFITTINGLOGSOLVE_
+#define _REDSHIFT_METHOD_TEMPLATEFITTINGLOGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/templatefittingresult.h>
+#include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/templatefittinglog.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+
 
 namespace NSEpic
 {
@@ -23,11 +25,19 @@ class CMethodTemplateFittingLogSolve
 
  public:
 
+    enum EType
+    {
+             nType_raw = 1,
+             nType_continuumOnly = 2,
+             nType_noContinuum = 3,
+             nType_all = 4,
+    };
+
 
     CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
-    ~CMethodTemplateFittingLogSolve();
+    ~CMethodTemplateFittingLogSolve() = default;
 
-    const std::string GetDescription();
+    const std::string GetDescription() const ;
 
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
@@ -38,14 +48,11 @@ class CMethodTemplateFittingLogSolve
                                                    Float64 overlapThreshold,
                                                    std::vector<CMask> maskList,
                                                    const std::string outputPdfRelDir,
-                                                   const Float64 radius,
+                                                   const Float64 redshiftSeparation,
                                                    std::string spcComponent="raw",
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
-
-    Bool ExtractCandidateResults(CDataStore& store, std::vector<Float64> zcandidates_unordered_list);
-
 
 private:
 
@@ -56,28 +63,37 @@ private:
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
-               CTemplateFittingSolveResult::EType spctype=CTemplateFittingSolveResult::nType_raw,
+               EType spctype=nType_raw,
                std::string opt_interp="lin",
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
-    Int32 CombinePDF(CDataStore& store,
-                     std::string scopeStr,
-                     std::string opt_combine,
-                     std::shared_ptr<NSEpic::CPdfMargZLogResult> postmargZResult);
+    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
 
+    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const CDataStore& store, const std::string & scopeStr,
+                                                                const TCandidateZbyRank & ranked_zCandidates,
+                                                                const CSpectrum& spc,
+                                                                const CTemplateCatalog& tplCatalog,
+                                                                const TStringList& tplCategoryList,
+                                                                const TFloat64Range& lambdaRange,
+                                                                Float64 overlapThreshold,
+                                                                std::string opt_interp,
+                                                                std::string opt_extinction
+                                                                );
+    
+    void StoreExtremaResults(CDataStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
 
     std::string m_opt_pdfcombination;
+    Float64 m_redshiftSeparation;
+    Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
     std::string m_opt_spclogrebin;
 
-    COperatorTemplateFittingLog* m_templateFittingOperator;
-    Float64 m_radius;
-
+    COperatorTemplateFittingLog m_templateFittingOperator;
 };
 
 
 }
 
-#endif // _REDSHIFT_METHOD_CHISQUARELOGSOLVE_
+#endif 

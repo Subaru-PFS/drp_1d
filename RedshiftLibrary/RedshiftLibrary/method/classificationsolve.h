@@ -16,7 +16,7 @@ namespace NSEpic
     CClassificationSolve(std::string enableStarFitting, std::string enableQsoFitting);
     ~CClassificationSolve();
 
-    void Classify(const CDataStore& store, std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qspResult);
+    void Classify(std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qspResult);
     
     std::string typeLabel = "U";//"G"/"S"/"Q"
     std::shared_ptr<CClassificationResult> classifResult;

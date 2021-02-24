@@ -22,7 +22,7 @@
 #include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
-#include <boost/progress.hpp>
+//#include <boost/progress.hpp>
 
 #include <RedshiftLibrary/processflow/datastore.h>
 #include <RedshiftLibrary/spectrum/io/genericreader.h>
@@ -47,7 +47,7 @@ using namespace std;
 
 /**
  **/
-COperatorLineModel::COperatorLineModel() { m_maxModelSaveCount = 20; }
+COperatorLineModel::COperatorLineModel():m_maxModelSaveCount(20)  { }
 
 /**
  * \brief Empty destructor.
@@ -684,6 +684,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         } else
         {
             Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
+            throw std::runtime_error("  Operator-Linemodel: unable to parse templatefitting continuum fit operator. use templatefitting or templatefittinglog");
         }
     }
    
@@ -727,15 +728,15 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
-            if(candidateIdx<0 || candidateIdx> m_firstpass_extremaResult.Extrema.size()-1){
+            if(candidateIdx<0 || candidateIdx> m_firstpass_extremaResult->size()-1){
                 Log.LogError("    COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range");
                 throw runtime_error(" COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range.");
             }
             opt_interp = "lin"; //in SolveContinuum, case=3, we use linear interpolation!
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
             keepismigm = true;//telling that we want to keep the ism and igm indexes
-            meiksinIdx = m_firstpass_extremaResult.FittedTplMeiksinIdx[candidateIdx];
-            dustCoeff =  m_firstpass_extremaResult.FittedTplDustCoeff[candidateIdx];
+            meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
+            dustCoeff =  m_firstpass_extremaResult->FittedTplDustCoeff[candidateIdx];
             opt_tplfit_integer_chi2_dustfit = Int32(dustCoeff*10);
         }
     }          
@@ -752,7 +753,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             
             //case where we only want to refit using one template:
             if( m_continnuum_fit_option == 3){
-                if(tpl.GetName() != m_firstpass_extremaResult.FittedTplName[candidateIdx])
+                if(tpl.GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
                     continue;   
                 else
                     found= true;          
@@ -886,121 +887,80 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 }
 
 /**
+ * @brief COperatorLineModel::SpanRedshiftWindow
+ * @param z
+ * @return extendedList
+ */
+TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
+{
+    TFloat64List extendedList;
+
+    const TFloat64Range redshiftsRange(m_result->Redshifts);    
+    Float64 left_border =
+        max(redshiftsRange.GetBegin(), z - m_secondPass_halfwindowsize*(1.+z));
+    Float64 right_border =
+        min(redshiftsRange.GetEnd(), z + m_secondPass_halfwindowsize*(1.+z));
+    for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
+    {
+        if (m_result->Redshifts[i] >= left_border &&
+            m_result->Redshifts[i] <= right_border)
+        {
+            extendedList.push_back( m_result->Redshifts[i]);
+        }
+    }
+
+    return extendedList;
+}
+
+
+/**
  * @brief COperatorLineModel::ComputeCandidates
  * @param opt_extremacount
  * @param meritCut: optionally cut the number of candidates by merit (-1=disabled)
  * @return
  */
-Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
-                                            const Int32 opt_sign,
-                                            const std::vector<Float64> floatValues,
-                                            const Float64 meritCut)
+Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candidatesz)
 {
-    Log.LogDebug("  Operator-Linemodel: opt_extremacount = %d", opt_extremacount);
-    TFloat64Range redshiftsRange(
-        m_result->Redshifts[0],
-        m_result->Redshifts[m_result->Redshifts.size() - 1]);
-    Log.LogDebug("  Operator-Linemodel: redshiftsRange.GetBegin() = %f, "
-                 "redshiftsRange.GetEnd() = %f",
-                 redshiftsRange.GetBegin(), redshiftsRange.GetEnd());
+    m_firstpass_extremaResult = std::make_shared<CLineModelExtremaResult>(candidatesz.size());
 
-    Bool invertForMinSearch = true; 
-    if(opt_sign == 1){
-     invertForMinSearch = false;
-    }
-
-    Int32 extremacount = 5;
-    /*if(opt_extremacount > extremacount)
-        extremacount = opt_extremacount;*/
-    CExtremum extremum(redshiftsRange, /*opt_*/extremacount, 2*m_secondPass_halfwindowsize, invertForMinSearch);
-
-    if (m_result->Redshifts.size() == 1)
-    {
-        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList); 
-        Log.LogInfo("  Operator-Linemodel: found only 1 redshift calculated, "
-                    "thus using only 1 extremum");
-    } else if (/*opt_*/extremacount == -1)
-    {
-        extremum.DefaultExtremum( m_result->Redshifts, m_result->ChiSquare, m_firstpass_extremumList);
-        Log.LogInfo("  Operator-Linemodel: all initial redshifts considered as "
-                    "extrema");
-    } else{
-        Log.LogDetail("  Operator-Linemodel: ChiSquare min val = %e",
-                      m_result->GetMinChiSquare());
-        Log.LogDetail("  Operator-Linemodel: ChiSquare max val = %e",
-                      m_result->GetMaxChiSquare());
-
-        if(meritCut>0.0)
-            extremum.SetMeritCut(meritCut);
-
-        extremum.Find(m_result->Redshifts, floatValues, m_firstpass_extremumList);
-        Log.LogInfo("  Operator-Linemodel: found %d extrema",
-                    m_firstpass_extremumList.size());
-        if (m_firstpass_extremumList.size() == 0)
-        {
-            Log.LogError("  Operator-Linemodel: Extremum find method failed");
-            throw runtime_error("  Operator-Linemodel: Extremum find method failed");
-        }
-    }
-
-    m_firstpass_extremaResult.Resize(m_firstpass_extremumList.size());
+    m_firstpass_extremaResult->Candidates = candidatesz;
 
     // extend z around the extrema
-    m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size());
-    for (Int32 j = 0; j < m_firstpass_extremumList.size(); j++)
+    for (Int32 j = 0; j < candidatesz.size(); j++)
     {
-        Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
-                    m_firstpass_extremumList[j].X, m_firstpass_extremumList[j].Y);
-        Float64 x = m_firstpass_extremumList[j].X;
-        Float64 left_border =
-            max(redshiftsRange.GetBegin(), x - m_secondPass_halfwindowsize*(1.+x));
-        Float64 right_border =
-            min(redshiftsRange.GetEnd(), x + m_secondPass_halfwindowsize*(1.+x));
-        TFloat64List extendedList;
-        for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
-        {
-            if (m_result->Redshifts[i] >= left_border &&
-                m_result->Redshifts[i] <= right_border)
-            {
-                extendedList.push_back( m_result->Redshifts[i]);
-            }
-        }
-        m_result->ExtremaResult.ExtremaExtendedRedshifts[j] = extendedList;
-        m_firstpass_extremaResult.ExtremaExtendedRedshifts[j] = extendedList;
-    }
-    //*/
-    // TODO: remove duplicate redshifts from the extended extrema list
+        std::string Id = candidatesz[j].first;
+        const TCandidateZ & cand = candidatesz[j].second;
 
+        Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
+                    cand.Redshift, cand.ValProba);
+
+        const Float64 & x = cand.Redshift;
+        const TFloat64List extendedList = SpanRedshiftWindow(x);
+        m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
+    }
 
     //now preparing the candidates extrema results
-    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+    for (Int32 i = 0; i < m_firstpass_extremaResult->Candidates.size(); i++)
     {
-        Float64 z = m_firstpass_extremumList[i].X;
-        Float64 m = m_firstpass_extremumList[i].Y;
         // find the index in the zaxis results
-        Int32 idx = m_result->getRedshiftIndex(z);
+        Int32 idx = m_result->getRedshiftIndex(candidatesz[i].second.Redshift);
 
         //save basic fitting info from first pass
-        m_firstpass_extremaResult.Extrema[i] = z;
-        //Index refers to "F"irst "P"ass "E"xtremum following by an index
-        std::string id = "FPE"+ std::to_string(i);
-        m_firstpass_extremaResult.ExtremaIDs[i] = id;
-        m_firstpass_extremaResult.ExtremaMerit[i] = m;
-        m_firstpass_extremaResult.Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
-        m_firstpass_extremaResult.Alv[i] = m_result->LineModelSolutions[idx].AbsorptionVelocity;
+        m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
+        m_firstpass_extremaResult->Alv[i] = m_result->LineModelSolutions[idx].AbsorptionVelocity;
 
         //save the continuum fitting parameters from first pass
-        m_firstpass_extremaResult.FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
-        m_firstpass_extremaResult.FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
-        m_firstpass_extremaResult.FittedTplAmplitudeError[i] = m_result->ContinuumModelSolutions[idx].tplAmplitudeError;
-        m_firstpass_extremaResult.FittedTplMerit[i] = m_result->ContinuumModelSolutions[idx].tplMerit;
-        m_firstpass_extremaResult.FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
-        m_firstpass_extremaResult.FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
-        m_firstpass_extremaResult.FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
-        m_firstpass_extremaResult.FittedTplDtm[i] = m_result->ContinuumModelSolutions[idx].tplDtm;
-        m_firstpass_extremaResult.FittedTplMtm[i] = m_result->ContinuumModelSolutions[idx].tplMtm;
-        m_firstpass_extremaResult.FittedTplLogPrior[i] = m_result->ContinuumModelSolutions[idx].tplLogPrior;
-        m_firstpass_extremaResult.FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
+        m_firstpass_extremaResult->FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
+        m_firstpass_extremaResult->FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
+        m_firstpass_extremaResult->FittedTplAmplitudeError[i] = m_result->ContinuumModelSolutions[idx].tplAmplitudeError;
+        m_firstpass_extremaResult->FittedTplMerit[i] = m_result->ContinuumModelSolutions[idx].tplMerit;
+        m_firstpass_extremaResult->FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
+        m_firstpass_extremaResult->FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
+        m_firstpass_extremaResult->FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
+        m_firstpass_extremaResult->FittedTplDtm[i] = m_result->ContinuumModelSolutions[idx].tplDtm;
+        m_firstpass_extremaResult->FittedTplMtm[i] = m_result->ContinuumModelSolutions[idx].tplMtm;
+        m_firstpass_extremaResult->FittedTplLogPrior[i] = m_result->ContinuumModelSolutions[idx].tplLogPrior;
+        m_firstpass_extremaResult->FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
 
         if(m_result->ContinuumModelSolutions[idx].tplName=="")
         {
@@ -1015,22 +975,22 @@ Int32 COperatorLineModel::ComputeCandidates(const Int32 opt_extremacount,
     return 0;
 }
 
-Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineModelExtremaResult> firstpass_results_b)
+Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLineModelExtremaResult> firstpass_results_b)
 {
     Int32 retval = 0;
     Float64 skip_thres_absdiffz = 5e-4; //threshold to remove duplicate extrema/candidates
 
-    m_result->ExtremaResult.ExtremaExtendedRedshifts.resize(m_firstpass_extremumList.size() + firstpass_results_b->Extrema.size());
-    Int32 startIdx = m_firstpass_extremumList.size();
-    for (Int32 keb = 0; keb < firstpass_results_b->Extrema.size(); keb++)
+    m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() );
+    Int32 startIdx = m_firstpass_extremaResult->size();
+    for (Int32 keb = 0; keb < firstpass_results_b->size(); keb++)
     {
-        Float64 z_fpb = firstpass_results_b->Extrema[keb];
-        Float64 m_fpb = firstpass_results_b->ExtremaMerit[keb];
+        const Float64 & z_fpb = firstpass_results_b->Redshift(keb);
+        const Float64 & m_fpb = firstpass_results_b->ValProba(keb);
         //skip if z_fpb is nearly the same as any z_fp
         Float64 minAbsDiffz = DBL_MAX;
-        for (Int32 ke = 0; ke < m_firstpass_extremaResult.Extrema.size(); ke++)
+        for (Int32 ke = 0; ke < m_firstpass_extremaResult->size(); ke++)
         {
-            Float64 z_diff = z_fpb - m_firstpass_extremaResult.Extrema[ke];
+            Float64 z_diff = z_fpb - m_firstpass_extremaResult->Redshift(ke);
             if(std::abs(z_diff) < minAbsDiffz)
             {
                 minAbsDiffz = std::abs(z_diff);
@@ -1038,72 +998,52 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<CLineMode
         }
         if(minAbsDiffz<skip_thres_absdiffz)
         {
-            Log.LogInfo(" Combine firstpass results: dropping cand B, idx=%d, z_fpb=%f", keb, firstpass_results_b->Extrema[keb]);
+            Log.LogInfo(" Combine firstpass results: dropping cand B, idx=%d, z_fpb=%f", 
+                            keb, firstpass_results_b->Redshift(keb));
             continue;
         }
 
-        //append the candidate to m_firstpass_extremumList and m_firstpass_extremaResult
-        m_firstpass_extremumList.push_back(SPoint(z_fpb, m_fpb));
-
-        
+        //append the candidate to m_firstpass_extremaResult
+        m_firstpass_extremaResult->Candidates[startIdx + keb] = firstpass_results_b->Candidates[keb];
+            
         // extend z around the extrema
-        TFloat64Range redshiftsRange(
-            m_result->Redshifts[0],
-            m_result->Redshifts[m_result->Redshifts.size() - 1]);
-        Float64 left_border =
-                max(redshiftsRange.GetBegin(), z_fpb - m_secondPass_halfwindowsize*(1.+z_fpb));
-        Float64 right_border =
-                min(redshiftsRange.GetEnd(), z_fpb + m_secondPass_halfwindowsize*(1.+z_fpb));
-        TFloat64List extendedRedshifts;
-        for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
-        {
-            if (m_result->Redshifts[i] >= left_border &&
-                    m_result->Redshifts[i] <= right_border)
-            {
-                extendedRedshifts.push_back(m_result->Redshifts[i]);
-            }
-        }
-        m_result->ExtremaResult.ExtremaExtendedRedshifts[startIdx + keb] = extendedRedshifts;
-        //*/
-        // TODO: remove duplicate redshifts from the extended extrema list
+        m_firstpass_extremaResult->ExtendedRedshifts[startIdx + keb] = SpanRedshiftWindow(z_fpb);
 
         //save basic fitting info from first pass
-        m_firstpass_extremaResult.Extrema.push_back(z_fpb);
-        m_firstpass_extremaResult.ExtremaMerit.push_back(m_fpb);
-        m_firstpass_extremaResult.Elv.push_back(firstpass_results_b->Elv[keb]);
-        m_firstpass_extremaResult.Alv.push_back(firstpass_results_b->Alv[keb]);
+        m_firstpass_extremaResult->Elv.push_back(firstpass_results_b->Elv[keb]);
+        m_firstpass_extremaResult->Alv.push_back(firstpass_results_b->Alv[keb]);
 
         //save the continuum fitting parameters from first pass
         if(0) //cannot work since the fpb is linemodel without cont. tplfit...
         {
-            m_firstpass_extremaResult.FittedTplName.push_back(firstpass_results_b->FittedTplName[keb]);
-            m_firstpass_extremaResult.FittedTplAmplitude.push_back(firstpass_results_b->FittedTplAmplitude[keb]);
-            m_firstpass_extremaResult.FittedTplAmplitudeError.push_back(firstpass_results_b->FittedTplAmplitudeError[keb]);
-            m_firstpass_extremaResult.FittedTplMerit.push_back(firstpass_results_b->FittedTplMerit[keb]);
-            m_firstpass_extremaResult.FittedTplDustCoeff.push_back(firstpass_results_b->FittedTplDustCoeff[keb]);
-            m_firstpass_extremaResult.FittedTplMeiksinIdx.push_back(firstpass_results_b->FittedTplMeiksinIdx[keb]);
-            m_firstpass_extremaResult.FittedTplRedshift.push_back(firstpass_results_b->FittedTplRedshift[keb]);
-            m_firstpass_extremaResult.FittedTplDtm.push_back(firstpass_results_b->FittedTplDtm[keb]);
-            m_firstpass_extremaResult.FittedTplMtm.push_back(firstpass_results_b->FittedTplMtm[keb]);
-            m_firstpass_extremaResult.FittedTplLogPrior.push_back(firstpass_results_b->FittedTplLogPrior[keb]);
-            m_firstpass_extremaResult.FittedTplpCoeffs.push_back(firstpass_results_b->FittedTplpCoeffs[keb]);
+            m_firstpass_extremaResult->FittedTplName.push_back(firstpass_results_b->FittedTplName[keb]);
+            m_firstpass_extremaResult->FittedTplAmplitude.push_back(firstpass_results_b->FittedTplAmplitude[keb]);
+            m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(firstpass_results_b->FittedTplAmplitudeError[keb]);
+            m_firstpass_extremaResult->FittedTplMerit.push_back(firstpass_results_b->FittedTplMerit[keb]);
+            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(firstpass_results_b->FittedTplDustCoeff[keb]);
+            m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(firstpass_results_b->FittedTplMeiksinIdx[keb]);
+            m_firstpass_extremaResult->FittedTplRedshift.push_back(firstpass_results_b->FittedTplRedshift[keb]);
+            m_firstpass_extremaResult->FittedTplDtm.push_back(firstpass_results_b->FittedTplDtm[keb]);
+            m_firstpass_extremaResult->FittedTplMtm.push_back(firstpass_results_b->FittedTplMtm[keb]);
+            m_firstpass_extremaResult->FittedTplLogPrior.push_back(firstpass_results_b->FittedTplLogPrior[keb]);
+            m_firstpass_extremaResult->FittedTplpCoeffs.push_back(firstpass_results_b->FittedTplpCoeffs[keb]);
         }else{
             // find the index in the zaxis results
           
             Int32 idx =  m_result->getRedshiftIndex(z_fpb);
           
             //save the continuum fitting parameters from first pass
-            m_firstpass_extremaResult.FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
-            m_firstpass_extremaResult.FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
-            m_firstpass_extremaResult.FittedTplAmplitudeError.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitudeError);
-            m_firstpass_extremaResult.FittedTplMerit.push_back(m_result->ContinuumModelSolutions[idx].tplMerit);
-            m_firstpass_extremaResult.FittedTplDustCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplDustCoeff);
-            m_firstpass_extremaResult.FittedTplMeiksinIdx.push_back(m_result->ContinuumModelSolutions[idx].tplMeiksinIdx);
-            m_firstpass_extremaResult.FittedTplRedshift.push_back(m_result->ContinuumModelSolutions[idx].tplRedshift);
-            m_firstpass_extremaResult.FittedTplDtm.push_back(m_result->ContinuumModelSolutions[idx].tplDtm);
-            m_firstpass_extremaResult.FittedTplMtm.push_back(m_result->ContinuumModelSolutions[idx].tplMtm);
-            m_firstpass_extremaResult.FittedTplLogPrior.push_back(m_result->ContinuumModelSolutions[idx].tplLogPrior);
-            m_firstpass_extremaResult.FittedTplpCoeffs.push_back(m_result->ContinuumModelSolutions[idx].pCoeffs);
+            m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
+            m_firstpass_extremaResult->FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
+            m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitudeError);
+            m_firstpass_extremaResult->FittedTplMerit.push_back(m_result->ContinuumModelSolutions[idx].tplMerit);
+            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplDustCoeff);
+            m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(m_result->ContinuumModelSolutions[idx].tplMeiksinIdx);
+            m_firstpass_extremaResult->FittedTplRedshift.push_back(m_result->ContinuumModelSolutions[idx].tplRedshift);
+            m_firstpass_extremaResult->FittedTplDtm.push_back(m_result->ContinuumModelSolutions[idx].tplDtm);
+            m_firstpass_extremaResult->FittedTplMtm.push_back(m_result->ContinuumModelSolutions[idx].tplMtm);
+            m_firstpass_extremaResult->FittedTplLogPrior.push_back(m_result->ContinuumModelSolutions[idx].tplLogPrior);
+            m_firstpass_extremaResult->FittedTplpCoeffs.push_back(m_result->ContinuumModelSolutions[idx].pCoeffs);
 
             if(m_result->ContinuumModelSolutions[idx].tplName=="")
             {
@@ -1175,14 +1115,14 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
     if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
         //precompute only whenever required and whenever the result can be a tplfitStore
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
-            m_tplfitStore_secondpass.resize(m_firstpass_extremumList.size());
-            for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){    
+            m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
+            for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
                 PrecomputeContinuumFit(spectrum,
                                 *m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
                                 lambdaRange,
-                                m_result->ExtremaResult.ExtremaExtendedRedshifts[i],
+                                m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 m_opt_tplfit_ignoreLinesSupport,
                                 i);
             }
@@ -1199,21 +1139,22 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_model->m_opt_fitcontinuum_maxCount  = m_tplfitStore_firstpass->m_opt_fitcontinuum_maxCount;
         }
     }
-    m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremumList.size());
-    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++){ 
-        if(m_continnuum_fit_option == 2)
-        { //copy from firstpassResult already done in estimatesecondpassparams
-            m_secondpass_parameters_extremaResult.FittedTplName[i] = m_firstpass_extremaResult.FittedTplName[i];
-            m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult.FittedTplAmplitude[i];
-            m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i] = m_firstpass_extremaResult.FittedTplAmplitudeError[i];
-            m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult.FittedTplMerit[i];
-            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult.FittedTplDustCoeff[i];
-            m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult.FittedTplMeiksinIdx[i];
-            m_secondpass_parameters_extremaResult.FittedTplDtm[i] = m_firstpass_extremaResult.FittedTplDtm[i];
-            m_secondpass_parameters_extremaResult.FittedTplMtm[i] = m_firstpass_extremaResult.FittedTplMtm[i];
-            m_secondpass_parameters_extremaResult.FittedTplLogPrior[i] = m_firstpass_extremaResult.FittedTplLogPrior[i];
-            m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_firstpass_extremaResult.FittedTplRedshift[i];
-            m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult.FittedTplpCoeffs[i];
+    
+    m_secondpass_parameters_extremaResult.Resize(m_firstpass_extremaResult->size());
+    if(m_continnuum_fit_option == 2)
+    {
+        for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){         
+            m_secondpass_parameters_extremaResult.FittedTplName[i] = m_firstpass_extremaResult->FittedTplName[i];
+            m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult->FittedTplAmplitude[i];
+            m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i] = m_firstpass_extremaResult->FittedTplAmplitudeError[i];
+            m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult->FittedTplMerit[i];
+            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult->FittedTplDustCoeff[i];
+            m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult->FittedTplMeiksinIdx[i];
+            m_secondpass_parameters_extremaResult.FittedTplDtm[i] = m_firstpass_extremaResult->FittedTplDtm[i];
+            m_secondpass_parameters_extremaResult.FittedTplMtm[i] = m_firstpass_extremaResult->FittedTplMtm[i];
+            m_secondpass_parameters_extremaResult.FittedTplLogPrior[i] = m_firstpass_extremaResult->FittedTplLogPrior[i];
+            m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_firstpass_extremaResult->FittedTplRedshift[i];
+            m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult->FittedTplpCoeffs[i];
         }
     } 
 
@@ -1233,46 +1174,33 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                  opt_absvelocityfitstep);
 
     // recompute the fine grid results around the extrema
-
-    //    dataStore.GetScopedParam( "linemodel.extremacount", m_extremaCount, 1.0);
-    //dataStore.GetScopedParam( "linemodel.zref", m_Zlinemeasref, -1.0);
-    Int32 ret = RecomputeAroundCandidates(m_firstpass_extremumList,
-                              lambdaRange,
-                              opt_continuumreest,
-                              m_continnuum_fit_option); //0: retry all cont. templates at this stage
+    Int32 ret = RecomputeAroundCandidates(lambdaRange,
+                                          opt_continuumreest,
+                                          m_continnuum_fit_option); //0: retry all cont. templates at this stage
 
     // additional fitting with fittingmethod=svdlcp2
     if(m_opt_secondpasslcfittingmethod=="svdlc" || m_opt_secondpasslcfittingmethod=="svdlcp2")
     {
-        TPointList _secondpass_extremumList;
-        for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.Extrema.size(); i++)
-        {
-            SPoint _point(m_secondpass_parameters_extremaResult.Extrema[i],
-                          m_secondpass_parameters_extremaResult.ExtremaMerit[i]);
-            _secondpass_extremumList.push_back(_point);
-        }
         Log.LogInfo("  Operator-Linemodel: now computing second-pass %s on each secondpass candidate (n=%d)",
                     m_opt_secondpasslcfittingmethod.c_str(),
-                    _secondpass_extremumList.size());
+                    m_secondpass_parameters_extremaResult.size());
         bool useSecondPassRedshiftValue = true;
         if(useSecondPassRedshiftValue)
         {
-            for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.Extrema.size(); i++)
+            for (Int32 i = 0; i < m_secondpass_parameters_extremaResult.size(); i++)
             {
-                m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_secondpass_parameters_extremaResult.Extrema[i];
+                m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = m_secondpass_parameters_extremaResult.Redshift(i);
             }
         }
         m_model->SetFittingMethod(m_opt_secondpasslcfittingmethod);
-        RecomputeAroundCandidates(_secondpass_extremumList,
-                                  lambdaRange,
+        RecomputeAroundCandidates(lambdaRange,
                                   opt_continuumreest,
                                   2,
                                   true);
         m_model->SetFittingMethod(opt_fittingmethod);
 
         Log.LogInfo("  Operator-Linemodel: now re-computing the final chi2 for each candidate");
-        RecomputeAroundCandidates(_secondpass_extremumList,
-                                  lambdaRange,
+        RecomputeAroundCandidates(lambdaRange,
                                   opt_continuumreest,
                                   2);
     }
@@ -1292,56 +1220,65 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
     return 0;
 }
 
-Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
-                                      const TFloat64Range &lambdaRange,
-                                      const std::string &opt_continuumreest)
+std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
+                                                                         const TFloat64Range &lambdaRange,
+                                                                         const TCandidateZbyRank & zCandidates,
+                                                                         const std::string &opt_continuumreest)
 {
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
-    Int32 extremumCount = m_secondpass_parameters_extremaResult.Extrema.size();
+
+    Int32 extremumCount = zCandidates.size();
     if( extremumCount > m_maxModelSaveCount){
       Log.LogError("COperatorLineModel::SaveResults: ExtremumCount [%d] is greater the maxModelSaveCount [%d]", extremumCount, m_maxModelSaveCount);
-      throw runtime_error("COperatorLineModel::SaveResults: ExtremumCount passed in param.json exceeds the count limit, ie., 10. Abort!");
+      throw runtime_error("COperatorLineModel::SaveResults: ExtremumCount passed in param.json exceeds the maximum limit, Abort!");
     }
 
-    m_result->ExtremaResult.Resize(extremumCount);
-
+    std::shared_ptr<CLineModelExtremaResult> ExtremaResult = make_shared<CLineModelExtremaResult>(extremumCount);
+    
     // Int32 start =
     // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
     // Int32 end =
     // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
     // Int32 nsamples = end - start + 1;
     Int32 savedModels = 0;
-    m_savedModelSpectrumResults.clear();
-    m_savedModelFittingResults.clear();
-    m_savedModelRulesResults.clear();
-    m_savedModelContinuumSpectrumResults.clear();
 
     Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d", extremumCount);
     for (Int32 i = 0; i < extremumCount; i++)
     {
-        Int32 index_extremum = m_secondpass_indiceSortedCandidatesList[i];
-        Float64 z = m_secondpass_parameters_extremaResult.Extrema[index_extremum];
-        Float64 m = m_secondpass_parameters_extremaResult.ExtremaMerit[index_extremum];
+        std::string Id = zCandidates[i].first;
+        Float64 z = zCandidates[i].second.Redshift;
 
-        m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplAmplitude[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplMerit[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplDustCoeff[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplRedshift[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplDtm[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplMtm[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplLogPrior[index_extremum],
-                                           m_secondpass_parameters_extremaResult.FittedTplpCoeffs[index_extremum]);
-
-        m_model->SetFitContinuum_Option(2);
         // find the index in the zaxis results
         Int32 idx = m_result->getRedshiftIndex(z);
+        Float64 m = m_result->ChiSquare[idx];
+        
+        Int32 i_2pass = -1;
+        for (Int32 j=0; j!=m_secondpass_parameters_extremaResult.size(); ++j)
+            if (m_secondpass_parameters_extremaResult.ID(j)==zCandidates[i].second.ParentId) 
+                i_2pass = j;
+        if (i_2pass == -1){
+            Log.LogError("%s: impossible to find the first pass extrema id corresponding to 2nd pass extrema %s", __func__, Id.c_str());
+            throw runtime_error("COperatorLinemodel: impossible to find the 1st pass extrema id of a 2nd pass candidate");
+        }
+
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Saving candidate #%d, idx=%d, z=%f, m=%f",
-                    index_extremum, idx, m_result->Redshifts[idx], m_result->ChiSquare[idx]);
+                    i, idx, m_result->Redshifts[idx], m);
+
+        m_model->SetFitContinuum_FitValues(m_result->ContinuumModelSolutions[idx].tplName,
+                                           m_result->ContinuumModelSolutions[idx].tplAmplitude,
+                                           m_result->ContinuumModelSolutions[idx].tplAmplitudeError,
+                                           m_result->ContinuumModelSolutions[idx].tplMerit,   
+                                           m_result->ContinuumModelSolutions[idx].tplDustCoeff,
+                                           m_result->ContinuumModelSolutions[idx].tplMeiksinIdx,
+                                           m_result->ContinuumModelSolutions[idx].tplRedshift,
+                                           m_result->ContinuumModelSolutions[idx].tplDtm,
+                                           m_result->ContinuumModelSolutions[idx].tplMtm,
+                                           m_result->ContinuumModelSolutions[idx].tplLogPrior,
+                                           m_result->ContinuumModelSolutions[idx].pCoeffs);
+
+        m_model->SetFitContinuum_Option(2);
 
         // reestimate the model (eventually with continuum reestimation) on the
         // extrema selected
@@ -1350,9 +1287,6 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             opt_continuumreest == "onlyextrema")
         {
             contreest_iterations = 8; // 4
-        } else
-        {
-            contreest_iterations = 0;
         }
 
         if(m_enableWidthFitByGroups)
@@ -1360,39 +1294,40 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             std::vector<std::vector<Int32>> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(
-                        CRay::nType_Absorption);
+            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
             std::string alv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
                 for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[index_extremum][kgroup],
+                    m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[i_2pass][kgroup],
                                                              idxVelfitGroups[kgroup][ke]);
                 }
-                alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[index_extremum][kgroup]));
+                alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[i_2pass][kgroup]));
             }
             Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s", alv_list_str.c_str());
             //emission
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(
-                        CRay::nType_Emission);
+            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Emission);
             std::string elv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
                 for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[index_extremum][kgroup],
+                    m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[i_2pass][kgroup],
                                                              idxVelfitGroups[kgroup][ke]);
                 }
-                elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[index_extremum][kgroup]));
+                elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[i_2pass][kgroup]));
             }
             Log.LogInfo("    Operator-Linemodel: saveResults with groups elv=%s", elv_list_str.c_str());
 
         }else
         {
-            m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[index_extremum]);
-            m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[index_extremum]);
+            //m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i_2pass]); 
+            //m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i_2pass]);
+            m_model->SetVelocityEmission(m_result->LineModelSolutions[idx].EmissionVelocity); 
+            m_model->SetVelocityAbsorption(m_result->LineModelSolutions[idx].AbsorptionVelocity);
+
         }
 
         if (!mlmfit_modelInfoSave)
@@ -1437,12 +1372,12 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
             if (mlmfit_modelInfoSave)
             {
                 Log.LogInfo("Save model store during lm_fit");
-                m_savedModelSpectrumResults.push_back(mlmfit_savedModelSpectrumResults_lmfit[index_extremum]);
-                m_savedModelFittingResults.push_back(mlmfit_savedModelFittingResults_lmfit[index_extremum]);
-                m_savedModelRulesResults.push_back(mlmfit_savedModelRulesResults_lmfit[index_extremum]);
+                ExtremaResult->m_savedModelSpectrumResults[i] = mlmfit_savedModelSpectrumResults_lmfit[i_2pass];
+                ExtremaResult->m_savedModelFittingResults[i] = mlmfit_savedModelFittingResults_lmfit[i_2pass];
+                ExtremaResult->m_savedModelRulesResults[i] = mlmfit_savedModelRulesResults_lmfit[i_2pass];
                 if (savedModels < maxSaveNLinemodelContinua && contreest_iterations > 0)
                 {
-                    m_savedModelContinuumSpectrumResults.push_back(mlmfit_savedBaselineResult_lmfit[index_extremum]);
+                    ExtremaResult->m_savedModelContinuumSpectrumResults[i] = mlmfit_savedBaselineResult_lmfit[i_2pass];
                 }
             } else
             {
@@ -1471,24 +1406,22 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                 // std::shared_ptr<CModelSpectrumResult>( new
                 // CModelSpectrumResult(m_model->GetSpectrumModelContinuum()) );
 
-                m_savedModelSpectrumResults.push_back(resultspcmodel);
+                ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
                 // CModelFittingResult
                 std::shared_ptr<CModelFittingResult> resultfitmodel =
-                    std::shared_ptr<CModelFittingResult>(
-                        new CModelFittingResult(
+                    make_shared<CModelFittingResult>(
                             m_result->LineModelSolutions[idx],
                             m_result->Redshifts[idx], m_result->ChiSquare[idx],
                             m_result->restRayList,
                             m_model->GetVelocityEmission(),
-                            m_model->GetVelocityAbsorption()));
-                m_savedModelFittingResults.push_back(resultfitmodel);
+                            m_model->GetVelocityAbsorption());
+                ExtremaResult->m_savedModelFittingResults[i] = resultfitmodel;
 
                 // CModelContinuumFittingResult : mira: below is the content of output files _fitcontinuum_extrema
                 std::shared_ptr<CModelContinuumFittingResult>
                     resultfitcontinuummodel =
-                        std::shared_ptr<CModelContinuumFittingResult>(
-                            new CModelContinuumFittingResult(
+                        std::make_shared<CModelContinuumFittingResult>(
                                 m_result->Redshifts[idx],
                                 m_model->getFitContinuum_tplName(),
                                 m_model->getFitContinuum_tplMerit(),
@@ -1496,15 +1429,13 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                                 m_model->getFitContinuum_tplAmplitudeError(),
                                 m_model->getFitContinuum_tplIsmDustCoeff(),
                                 m_model->getFitContinuum_tplIgmMeiksinIdx(),
-                                m_model->getFitContinuum_snr()));
-                m_savedModelContinuumFittingResults.push_back(
-                    resultfitcontinuummodel);
+                                m_model->getFitContinuum_snr());
+                ExtremaResult->m_savedModelContinuumFittingResults[i] = resultfitcontinuummodel;
 
                 // CModelRulesResult
                 std::shared_ptr<CModelRulesResult> resultrulesmodel =
-                    std::shared_ptr<CModelRulesResult>(
-                        new CModelRulesResult(m_model->GetModelRulesLog()));
-                m_savedModelRulesResults.push_back(resultrulesmodel);
+                    std::make_shared<CModelRulesResult>(m_model->GetModelRulesLog());
+                ExtremaResult->m_savedModelRulesResults[i] = resultrulesmodel;
 
                 if (savedModels < maxSaveNLinemodelContinua)
                 {
@@ -1526,106 +1457,90 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
                         baselineResult->wavel[k] =
                             (spectrum.GetSpectralAxis())[k];
                     }
-                    m_savedModelContinuumSpectrumResults.push_back(
-                        baselineResult);
+                    ExtremaResult->m_savedModelContinuumSpectrumResults[i] = baselineResult;
                 }
             }
             savedModels++;
         }
-
-        m_result->ExtremaResult.Extrema[i] = z;
-        m_result->ExtremaResult.ExtremaMerit[i] = m;
-        m_result->ExtremaResult.Elv[i] = m_model->GetVelocityEmission();
-        m_result->ExtremaResult.Alv[i] = m_model->GetVelocityAbsorption();
         
-        m_result->ExtremaResult.ExtremaIDs[i] = m_secondpass_parameters_extremaResult.ExtremaIDs[index_extremum];
+        ExtremaResult->Candidates = zCandidates;
 
+        ExtremaResult->Elv[i] = m_model->GetVelocityEmission();
+        ExtremaResult->Alv[i] = m_model->GetVelocityAbsorption();
+        
         if (!m_estimateLeastSquareFast)
         {
-            m_result->ExtremaResult.ExtremaMeritContinuum[i] =
+            ExtremaResult->MeritContinuum[i] =
                 m_model->getLeastSquareContinuumMerit(lambdaRange);
         } else
         {
-            m_result->ExtremaResult.ExtremaMeritContinuum[i] =
+            ExtremaResult->MeritContinuum[i] =
                 m_model->getLeastSquareContinuumMeritFast();
         }
 
-        m_result->ExtremaResult.ExtremaLastPass[i] = z; // refined extremum is initialized here.
-
-        //m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz( z );
-        //deltaz cannot be calculated here, but mostly on the new peaks in the pdf
-        // m_result->ExtremaResult.DeltaZ[i] = m_result->GetDeltaz(postmargZResult->Redshifts, postmargZResult->valProbaLog, z);
-
         // store model Ha SNR & Flux
-        m_result->ExtremaResult.snrHa[i] =
+        ExtremaResult->snrHa[i] =
             m_result->LineModelSolutions[idx].snrHa;
-        m_result->ExtremaResult.lfHa[i] =
+        ExtremaResult->lfHa[i] =
             m_result->LineModelSolutions[idx].lfHa;
 
         // store model OII SNR & Flux
-        m_result->ExtremaResult.snrOII[i] =
+        ExtremaResult->snrOII[i] =
             m_result->LineModelSolutions[idx].snrOII;
-        m_result->ExtremaResult.lfOII[i] =
+        ExtremaResult->lfOII[i] =
             m_result->LineModelSolutions[idx].lfOII;
 
         // store the model norm
-        m_result->ExtremaResult.mTransposeM[i] =
+        ExtremaResult->mTransposeM[i] =
             m_model->EstimateMTransposeM(lambdaRange);
 
         // scale marginalization correction
         Float64 corrScaleMarg = m_model->getScaleMargCorrection(); //
-        m_result->ExtremaResult.CorrScaleMarg[i] = corrScaleMarg;
+        ExtremaResult->CorrScaleMarg[i] = corrScaleMarg;
 
         static Float64 cutThres = 3.0;
-        Int32 nValidLines =
-            m_result->GetNLinesOverCutThreshold(i, cutThres, cutThres);
-        m_result->ExtremaResult.Posterior[i] =
-            nValidLines; // m/Float64(1+nValidLines);
+        Int32 nValidLines = m_result->GetNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+        ExtremaResult->NLinesOverThreshold[i] = nValidLines; // m/Float64(1+nValidLines);
         Float64 cumulStrongELSNR = m_model->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
-        m_result->ExtremaResult.StrongELSNR[i] = cumulStrongELSNR;
+        ExtremaResult->StrongELSNR[i] = cumulStrongELSNR;
 
         std::vector<std::string> strongELSNRAboveCut = m_model->getLinesAboveSNR(3.5);
-        m_result->ExtremaResult.StrongELSNRAboveCut[i] = strongELSNRAboveCut;
-
-
-        m_result->ExtremaResult.LogArea[i] = -DBL_MAX;
-        m_result->ExtremaResult.LogAreaCorrectedExtrema[i] = -1.0;
+        ExtremaResult->StrongELSNRAboveCut[i] = strongELSNRAboveCut;
 
         Int32 nddl = m_model->GetNElements(); // get the total number of
                                               // elements in the model
-        nddl = m_result->LineModelSolutions[idx]
-                   .nDDL; // override nddl by the actual number of elements in
+        nddl = m_result->LineModelSolutions[idx].nDDL; // override nddl by the actual number of elements in
                           // the fitted model
-        m_result->ExtremaResult.NDof[i] =
+        ExtremaResult->NDof[i] =
             m_model->GetModelNonZeroElementsNDdl();
 
         Float64 bic = m + nddl * log(m_result->nSpcSamples); // BIC
         // Float64 aic = m + 2*nddl; //AIC
-        m_result->ExtremaResult.bic[i] = bic;
+        ExtremaResult->bic[i] = bic;
         // m_result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
         // //AICc, better when nsamples small
 
         // compute continuum indexes
         CContinuumIndexes continuumIndexes;
-        m_result->ExtremaResult.ContinuumIndexes[i] =
+        ExtremaResult->ContinuumIndexes[i] =
             continuumIndexes.getIndexes(spectrum, z);
 
         // save the outsideLinesMask
-        m_result->ExtremaResult.OutsideLinesMask[i] =
+        ExtremaResult->OutsideLinesMask[i] =
             m_model->getOutsideLinesMask();
 
-        m_result->ExtremaResult.OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1, lambdaRange);
-        m_result->ExtremaResult.OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2, lambdaRange);
+        ExtremaResult->OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1, lambdaRange);
+        ExtremaResult->OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2, lambdaRange);
         Float64 ratioSTD = -1;
-        if(m_result->ExtremaResult.OutsideLinesSTDError[i]>0.0)
+        if(ExtremaResult->OutsideLinesSTDError[i]>0.0)
         {
-            ratioSTD = m_result->ExtremaResult.OutsideLinesSTDFlux[i]/m_result->ExtremaResult.OutsideLinesSTDError[i];
+            ratioSTD = ExtremaResult->OutsideLinesSTDFlux[i]/ExtremaResult->OutsideLinesSTDError[i];
             Float64 ratio_thres = 1.5;
             if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
             {
-                Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, m_result->ExtremaResult.OutsideLinesSTDFlux[i], m_result->ExtremaResult.OutsideLinesSTDError[i]);
+                Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, ExtremaResult->OutsideLinesSTDFlux[i], ExtremaResult->OutsideLinesSTDError[i]);
             }else{
-                Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, m_result->ExtremaResult.OutsideLinesSTDFlux[i], m_result->ExtremaResult.OutsideLinesSTDError[i]);
+                Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, ExtremaResult->OutsideLinesSTDFlux[i], ExtremaResult->OutsideLinesSTDError[i]);
             }
         }else{
             Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
@@ -1633,34 +1548,34 @@ Int32 COperatorLineModel::SaveResults(const CSpectrum &spectrum,
 
 
         // save the continuum tpl fitting results
-        m_result->ExtremaResult.FittedTplName[i] = m_model->getFitContinuum_tplName();
-        m_result->ExtremaResult.FittedTplAmplitude[i] = m_model->getFitContinuum_tplAmplitude();
-        m_result->ExtremaResult.FittedTplAmplitudeError[i] = m_model->getFitContinuum_tplAmplitudeError();
-        m_result->ExtremaResult.FittedTplMerit[i] = m_model->getFitContinuum_tplMerit();
-        m_result->ExtremaResult.FittedTplDustCoeff[i] = m_model->getFitContinuum_tplIsmDustCoeff();
-        m_result->ExtremaResult.FittedTplMeiksinIdx[i] = m_model->getFitContinuum_tplIgmMeiksinIdx();
+        ExtremaResult->FittedTplName[i] = m_model->getFitContinuum_tplName();
+        ExtremaResult->FittedTplAmplitude[i] = m_model->getFitContinuum_tplAmplitude();
+        ExtremaResult->FittedTplAmplitudeError[i] = m_model->getFitContinuum_tplAmplitudeError();
+        ExtremaResult->FittedTplMerit[i] = m_model->getFitContinuum_tplMerit();
+        ExtremaResult->FittedTplDustCoeff[i] = m_model->getFitContinuum_tplIsmDustCoeff();
+        ExtremaResult->FittedTplMeiksinIdx[i] = m_model->getFitContinuum_tplIgmMeiksinIdx();
 
         CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
-        m_result->ExtremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
-        m_result->ExtremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
+        ExtremaResult->FittedTplRedshift[i] = csolution.tplRedshift;
+        ExtremaResult->FittedTplpCoeffs[i] = csolution.pCoeffs;
 
-        m_result->ExtremaResult.FittedTplDtm[i] = csolution.tplDtm;
-        m_result->ExtremaResult.FittedTplMtm[i] = csolution.tplMtm;
-        m_result->ExtremaResult.FittedTplLogPrior[i] = csolution.tplLogPrior;
+        ExtremaResult->FittedTplDtm[i] = csolution.tplDtm;
+        ExtremaResult->FittedTplMtm[i] = csolution.tplMtm;
+        ExtremaResult->FittedTplLogPrior[i] = csolution.tplLogPrior;
 
         // save the tplcorr/tplratio results
-        m_result->ExtremaResult.FittedTplshapeName[i] = m_model->getTplshape_bestTplName();
-        m_result->ExtremaResult.FittedTplshapeIsmCoeff[i] = m_model->getTplshape_bestTplIsmCoeff();
-        m_result->ExtremaResult.FittedTplshapeAmplitude[i] = m_model->getTplshape_bestAmplitude();
-        m_result->ExtremaResult.FittedTplshapeDtm[i] = m_model->getTplshape_bestDtm();
-        m_result->ExtremaResult.FittedTplshapeMtm[i] = m_model->getTplshape_bestMtm();
+        ExtremaResult->FittedTplratioName[i] = m_model->getTplshape_bestTplName();
+        ExtremaResult->FittedTplratioIsmCoeff[i] = m_model->getTplshape_bestTplIsmCoeff();
+        ExtremaResult->FittedTplratioAmplitude[i] = m_model->getTplshape_bestAmplitude();
+        ExtremaResult->FittedTplratioDtm[i] = m_model->getTplshape_bestDtm();
+        ExtremaResult->FittedTplratioMtm[i] = m_model->getTplshape_bestMtm();
     }
 
-    // ComputeArea2(*m_result);
+    // ComputeArea2(ExtremaResult);
 
     m_model->SetFitContinuum_Option(savedFitContinuumOption);
 
-    return 0;
+    return ExtremaResult;
 }
 
 /**
@@ -1715,40 +1630,37 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     bool enable_secondpass_parameters_estimation = true;
     if (!enable_secondpass_parameters_estimation) //?
     {
-        m_secondpass_parameters_extremaResult = m_firstpass_extremaResult;
+        m_secondpass_parameters_extremaResult = *m_firstpass_extremaResult;
         return 0;
     }
 
     //std::cout << "Second Pass" << std::endl;
-    for (Int32 i = 0; i < m_firstpass_extremumList.size(); i++)
+    m_secondpass_parameters_extremaResult.Candidates = m_firstpass_extremaResult->Candidates;
+    for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Second pass - estimate parameters for candidate #%d", i);
         Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-        Float64 z = m_firstpass_extremumList[i].X;
-        Float64 m = m_firstpass_extremumList[i].Y;
+        Float64 z = m_firstpass_extremaResult->Redshift(i);
+        Float64 m = m_firstpass_extremaResult->ValProba(i);
 
-        m_secondpass_parameters_extremaResult.Extrema[i] = z;
-        m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m;
-        //assign same IDs to extremum of second pass
-        m_secondpass_parameters_extremaResult.ExtremaIDs[i] = m_firstpass_extremaResult.ExtremaIDs[i];
-        
+        m_secondpass_parameters_extremaResult.ExtendedRedshifts[i] = m_firstpass_extremaResult->ExtendedRedshifts[i];
+
         //inject continuumFitValues of current candidate 
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
             m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
         else{
-            //nothing to do cause we already injected the fitStore for cases 1 and 2
-            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitude[i],
-                                            m_firstpass_extremaResult.FittedTplAmplitudeError[i],
-                                            m_firstpass_extremaResult.FittedTplMerit[i],
-                                            m_firstpass_extremaResult.FittedTplDustCoeff[i],
-                                            m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
-                                            m_firstpass_extremaResult.FittedTplRedshift[i],
-                                            m_firstpass_extremaResult.FittedTplDtm[i],
-                                            m_firstpass_extremaResult.FittedTplMtm[i],
-                                            m_firstpass_extremaResult.FittedTplLogPrior[i],
-                                            m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult->FittedTplName[i],
+                                            m_firstpass_extremaResult->FittedTplAmplitude[i],
+                                            m_firstpass_extremaResult->FittedTplAmplitudeError[i],
+                                            m_firstpass_extremaResult->FittedTplMerit[i],
+                                            m_firstpass_extremaResult->FittedTplDustCoeff[i],
+                                            m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
+                                            m_firstpass_extremaResult->FittedTplRedshift[i],
+                                            m_firstpass_extremaResult->FittedTplDtm[i],
+                                            m_firstpass_extremaResult->FittedTplMtm[i],
+                                            m_firstpass_extremaResult->FittedTplLogPrior[i],
+                                            m_firstpass_extremaResult->FittedTplpCoeffs[i]);
             m_model->SetFitContinuum_Option(2);
         }
 
@@ -1829,8 +1741,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 mlmfit_savedBaselineResult_lmfit.push_back(baselineResult_lmfit);
 
                 z = m_result->LineModelSolutions[idx].Redshift;
-                m_result->ExtremaResult.lmfitPass.push_back(z);
-                // m_result->Redshifts[idx] = z;
+                m_secondpass_parameters_extremaResult.Redshift_lmfit.push_back(z);
 
                 m_model->SetFittingMethod(opt_fittingmethod);
                 m_model->ResetElementIndexesDisabled();
@@ -1871,7 +1782,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                             idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d",
                                         idxVelfitGroups.size());
-                            if (m_firstpass_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
                             {
                                 Log.LogError("  Operator-Linemodel: not allowed to use more than 1 group per E/A for "
                                             "more than 1 extremum (see .json linemodel.extremacount)");
@@ -1891,7 +1802,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                         CRay::nType_Emission);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups EMISSION - n = %d",
                                         idxVelfitGroups.size());
-                            if (m_firstpass_extremumList.size() > 1 && idxVelfitGroups.size() > 1)
+                            if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
                             {
                                 Log.LogError("  Operator-Linemodel: not allowed to use more than 1 group per E/A for more than 1 extremum (see .json linemodel.extremacount)");
                             }
@@ -2069,352 +1980,153 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     return 0;
 }
 
-Int32 COperatorLineModel::RecomputeAroundCandidates(TPointList input_extremumList,
-                                                    const TFloat64Range &lambdaRange,
+Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
                                                     const string &opt_continuumreest,
                                                     const Int32 tplfit_option,
                                                     const bool overrideRecomputeOnlyOnTheCandidate)
 {
-    if(input_extremumList.size()<1)
+    CLineModelExtremaResult &  extremaResult =  m_secondpass_parameters_extremaResult;
+    if(extremaResult.size()<1)
     {
         Log.LogError("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
         throw runtime_error("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
     }
-
-    TPointList _secondpass_recomputed_extremumList;
-    _secondpass_recomputed_extremumList.resize(input_extremumList.size());
+        
     Log.LogInfo("");
-    Log.LogInfo("  Operator-Linemodel: Second pass - recomputing around n=%d candidates", input_extremumList.size());
+    Log.LogInfo("  Operator-Linemodel: Second pass - recomputing around n=%d candidates", extremaResult.size());
 
-    bool enable_recompute_around_candidate = true;
-    if (enable_recompute_around_candidate)
+
+    for (Int32 i = 0; i <extremaResult.size(); i++)
     {
-        m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.clear();
-        m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts.resize(input_extremumList.size());
-        TInt32List eliminateIdx; 
-        for (Int32 i = 0; i < input_extremumList.size(); i++)
+        Log.LogInfo("");
+        Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
+        Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
+        Float64 z = extremaResult.Redshift(i);
+
+        if(m_enableWidthFitByGroups)
         {
-            Log.LogInfo("");
-            Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
-            Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-            Float64 z = input_extremumList[i].X;
-
-            if(m_enableWidthFitByGroups)
+            std::vector<std::vector<Int32>> idxVelfitGroups;
+            //absorption
+            idxVelfitGroups.clear();
+            idxVelfitGroups = m_model->GetModelVelfitGroups(
+                        CRay::nType_Absorption);
+            std::string alv_list_str = "";
+            for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
-                std::vector<std::vector<Int32>> idxVelfitGroups;
-                //absorption
-                idxVelfitGroups.clear();
-                idxVelfitGroups = m_model->GetModelVelfitGroups(
-                            CRay::nType_Absorption);
-                std::string alv_list_str = "";
-                for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+                for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
-                    {
-                        m_model->SetVelocityAbsorptionOneElement(m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup],
-                                                                 idxVelfitGroups[kgroup][ke]);
-                    }
-                    alv_list_str.append(boost::str(boost::format("%.2f, ") %m_secondpass_parameters_extremaResult.GroupsALv[i][kgroup]));
+                    m_model->SetVelocityAbsorptionOneElement(extremaResult.GroupsALv[i][kgroup],
+                                                                idxVelfitGroups[kgroup][ke]);
                 }
-                Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s", alv_list_str.c_str());
-                //emission
-                idxVelfitGroups.clear();
-                idxVelfitGroups = m_model->GetModelVelfitGroups(
-                            CRay::nType_Emission);
-                std::string elv_list_str = "";
-                for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+                alv_list_str.append(boost::str(boost::format("%.2f, ") %extremaResult.GroupsALv[i][kgroup]));
+            }
+            Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s", alv_list_str.c_str());
+            //emission
+            idxVelfitGroups.clear();
+            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Emission);
+            std::string elv_list_str = "";
+            for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+            {
+                for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                    for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
-                    {
-                        m_model->SetVelocityEmissionOneElement(m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup],
-                                                                 idxVelfitGroups[kgroup][ke]);
-                    }
-                    elv_list_str.append(boost::str(boost::format("%.2f") %m_secondpass_parameters_extremaResult.GroupsELv[i][kgroup]));
+                    m_model->SetVelocityEmissionOneElement(extremaResult.GroupsELv[i][kgroup],
+                                                                idxVelfitGroups[kgroup][ke]);
                 }
-                Log.LogInfo("    Operator-Linemodel: recompute with groups elv=%s", elv_list_str.c_str());
-
-            }else
-            {
-                m_model->SetVelocityEmission(m_secondpass_parameters_extremaResult.Elv[i]);
-                m_model->SetVelocityAbsorption(m_secondpass_parameters_extremaResult.Alv[i]);
-                Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
-                            m_model->GetVelocityEmission(),
-                            m_model->GetVelocityAbsorption());
+                elv_list_str.append(boost::str(boost::format("%.2f") %extremaResult.GroupsELv[i][kgroup]));
             }
+            Log.LogInfo("    Operator-Linemodel: recompute with groups elv=%s", elv_list_str.c_str());
 
-            if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
-                // fix some fitcontinuum values for this extremum
-                if(tplfit_option==2)
-                {
-                    m_model->SetFitContinuum_FitValues(m_secondpass_parameters_extremaResult.FittedTplName[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplMerit[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplDtm[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplMtm[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[i],
-                                                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i]);
-                    m_model->SetFitContinuum_Option(tplfit_option); 
-                }
-                if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
-                    m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-                else{
-                    if(tplfit_option == 1){
-                        //nothing to do cause we already injected the fitStore for cases 1 and 2
-                        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
-                    }
-                }
-            }
-
-            //moved here to override the previously set option value
-            //since all 
-            //m_model->SetFitContinuum_Option(tplfit_option);
-            Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
-            
-            // find the index in the zaxis results
-            Int32 idx = -1; idx = m_result->getRedshiftIndex(z);
-
-            // reestimate the model (eventually with continuum reestimation) on
-            // the extrema selected
-            Int32 contreest_iterations = 0;
-            if (opt_continuumreest == "always")
-            {
-                contreest_iterations = 1;
-            }
-
-            // finally compute the redshifts on the z-range around the extremum
-            TFloat64Range redshiftsRange(
-                m_result->Redshifts[0],
-                m_result->Redshifts[m_result->Redshifts.size() - 1]);
-            Float64 left_border = max(redshiftsRange.GetBegin(),
-                                      z - m_secondPass_halfwindowsize*(1.+z));
-            Float64 right_border = min(redshiftsRange.GetEnd(),
-                                       z + m_secondPass_halfwindowsize*(1.+z));
-            // m_model->SetFittingMethod("nofit");
-            _secondpass_recomputed_extremumList[i].Y = DBL_MAX;
-            _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[idx];
-            Int32 idx2 = idx;
-
-            //find the candidate z-range min/max indexes
-            Int32 izmin_cand = -1;
-            Int32 izmax_cand = -1;
-            if(!overrideRecomputeOnlyOnTheCandidate)
-            {
-                izmin_cand = m_result->Redshifts.size();
-                izmax_cand = -1;
-                for (Int32 iz = 0; iz < m_result->Redshifts.size(); iz++)
-                {
-                    if (m_result->Redshifts[iz] >= left_border &&
-                            m_result->Redshifts[iz] <= right_border)
-                    {
-                        if(izmin_cand>iz)
-                        {
-                            izmin_cand = iz;
-                        }
-                        if(izmax_cand<iz)
-                        {
-                            izmax_cand = iz;
-                        }
-                    }
-                }
-            }else{
-                izmin_cand = idx;
-                izmax_cand = idx;
-            }
-
-            Int32 n_progresssteps = izmax_cand-izmin_cand+1;
-            Log.LogInfo("    Operator-Linemodel: Fit n=%d values for z in [%.6f; %.6f]",
-                        n_progresssteps,
-                        m_result->Redshifts[izmin_cand],
-                        m_result->Redshifts[izmax_cand]);
-
-            for (Int32 iz = izmin_cand; iz <= izmax_cand; iz++)
-            {
-                Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, m_result->Redshifts[iz]);
-                m_secondpass_parameters_extremaResult.ExtremaExtendedRedshifts[i].push_back(m_result->Redshifts[iz]);
-
-                m_result->ChiSquare[iz] =
-                        m_model->fit(m_result->Redshifts[iz],
-                                     lambdaRange,
-                                     m_result->LineModelSolutions[iz],
-                                     m_result->ContinuumModelSolutions[iz],
-                                     contreest_iterations, false);
-                m_result->ScaleMargCorrection[iz] =
-                        m_model->getScaleMargCorrection();
-                m_result->SetChisquareTplshapeResult(iz,
-                                                     m_model->GetChisquareTplshape(),
-                                                     m_model->GetScaleMargTplshape(),
-                                                     m_model->GetStrongELPresentTplshape(),
-                                                     m_model->GetNLinesAboveSNRTplshape(),
-                                                     m_model->GetPriorLinesTplshape());
-                if (!m_estimateLeastSquareFast)
-                {
-                    m_result->ChiSquareContinuum[iz] =
-                            m_model->getLeastSquareContinuumMerit(lambdaRange);
-                } else
-                {
-                    m_result->ChiSquareContinuum[iz] =
-                            m_model->getLeastSquareContinuumMeritFast();
-                }
-                m_result->ScaleMargCorrectionContinuum[iz] =
-                        m_model->getContinuumScaleMargCorrection();
-                if (m_result->ChiSquare[iz] < _secondpass_recomputed_extremumList[i].Y)
-                {
-                    _secondpass_recomputed_extremumList[i].X = m_result->Redshifts[iz];
-                    _secondpass_recomputed_extremumList[i].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
-
-                    // set the second pass parameters used in the model export procedure in computeSecondPass()
-                    m_secondpass_parameters_extremaResult.Extrema[i] = m_result->Redshifts[iz];
-                    m_secondpass_parameters_extremaResult.ExtremaMerit[i] = m_result->ChiSquare[iz];
-                    CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
-                    m_secondpass_parameters_extremaResult.FittedTplName[i] = csolution.tplName;
-                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = csolution.tplAmplitude;
-                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i] = csolution.tplAmplitudeError;
-                    m_secondpass_parameters_extremaResult.FittedTplMerit[i] = csolution.tplMerit;
-                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = csolution.tplDustCoeff;
-                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = csolution.tplMeiksinIdx;
-                    m_secondpass_parameters_extremaResult.FittedTplRedshift[i] = csolution.tplRedshift;
-                    m_secondpass_parameters_extremaResult.FittedTplDtm[i] = csolution.tplDtm;
-                    m_secondpass_parameters_extremaResult.FittedTplMtm[i] = csolution.tplMtm;
-                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[i] = csolution.tplLogPrior;
-                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = csolution.pCoeffs;
-
-
-                    idx2 = iz;
-                }
-            }
-            // m_model->SetFittingMethod(opt_fittingmethod);
-            //if the recomputed peak corresponds to a candidate on the border of the recompution window, raise an error
-            //we cannot be sure that it corresponds to a real one unless we enlarge the window to compare it with its neighbors!
-            //TODO: Investigate why the fit of the second pass degenarated?!
-            //TODO: Deltaz computation considers a radius of 0.002(1+zcand) around each candidate:
-            //We should ensure that Deltaz window interesects with the secondpass_radius and not only with the redshift range.
-            //TODO: check that it is still the best peak on the range used to compute Deltaz!!
-            if((idx2==izmin_cand || idx2==izmax_cand)){
-                Log.LogWarning("  Operator-Linemodel: Second-pass fitting degenerates the first-pass results: Recomputed extr %f is at the border of zrange", m_secondpass_parameters_extremaResult.Extrema[i]);
-                Log.LogWarning(" Flag - Operator-Linemodel: Eliminating a second-pass candidate");
-                eliminateIdx.push_back(i);
-                continue;
-            }
-            Log.LogInfo("  Operator-Linemodel: Recomputed extr #%d, idx=%d, z_e.X=%f, m_e.Y=%f",
-                        i,
-                        idx2,
-                        _secondpass_recomputed_extremumList[i].X,
-                        _secondpass_recomputed_extremumList[i].Y);
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplName=%s",
-                          i,
-                          m_secondpass_parameters_extremaResult.FittedTplName[i].c_str());
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplAmplitude=%.4e, FittedTplAmplitudeError=%.4e",
-                          i,
-                          m_secondpass_parameters_extremaResult.FittedTplAmplitude[i],
-                          m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i]);
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplDustCoeff=%f, FittedTplMeiksinIdx=%d",
-                          i,
-                          m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i],
-                          m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i]);
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplLogPrior=%e",
-                          i,
-                          m_secondpass_parameters_extremaResult.FittedTplLogPrior[i]);
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplRedshiftf=%.6f",
-                          i,
-                          m_secondpass_parameters_extremaResult.FittedTplRedshift[i]);
-
-            Float64 pCoeff0 = -1;
-            Float64 pCoeff1 = -1;
-            Float64 pCoeff2 = -1;
-            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>0)
-            {
-                pCoeff0=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][0];
-            }
-            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>1)
-            {
-                pCoeff1=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][1];
-            }
-            if(m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i].size()>2)
-            {
-                pCoeff2=m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i][2];
-            }
-            Log.LogDetail("  Operator-Linemodel: Recomputed extr #%d, FittedTplpCoeffs_0=%.4e, FittedTplpCoeffs_1=%.4e, FittedTplpCoeffs_2=%.4e",
-                          i,
-                          pCoeff0,
-                          pCoeff1,
-                          pCoeff2);
-        }
-        //Candidate elimination should be moved to the PDF method once the 5815 refactoring starts
-        Int32 s = eliminateIdx.size();
-        if(s){
-            //case of linemeas
-            if( m_Zlinemeasref >-1 && m_extremaCount == 1){// a bit redundant
-                //  with no degree of freedom, i.e., only one z in the range dont eliminate
-                if(m_result->Redshifts.size() == 1){
-                    //dont eliminate nothing
-                } 
-                if(m_result->Redshifts.size() >1){//i.e., z moved to the range border
-                    //find idx of zref and save data
-                    auto iz = std::find(m_result->Redshifts.begin(), m_result->Redshifts.end(), m_Zlinemeasref) - m_result->Redshifts.begin();
-                    _secondpass_recomputed_extremumList[0].X = m_result->Redshifts[iz];
-                    _secondpass_recomputed_extremumList[0].Y = m_result->ChiSquare[iz]; //WARNING: here the priors should be included in the comparison !
-
-                    // set the second pass parameters used in the model export procedure in computeSecondPass()
-                    m_secondpass_parameters_extremaResult.Extrema[0] = m_result->Redshifts[iz];
-                    m_secondpass_parameters_extremaResult.ExtremaMerit[0] = m_result->ChiSquare[iz];
-                    CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[iz];//.GetContinuumModelSolution();
-                    m_secondpass_parameters_extremaResult.FittedTplName[0] = csolution.tplName;
-                    m_secondpass_parameters_extremaResult.FittedTplAmplitude[0] = csolution.tplAmplitude;
-                    m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[0] = csolution.tplAmplitudeError;
-                    m_secondpass_parameters_extremaResult.FittedTplMerit[0] = csolution.tplMerit;
-                    m_secondpass_parameters_extremaResult.FittedTplDustCoeff[0] = csolution.tplDustCoeff;
-                    m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[0] = csolution.tplMeiksinIdx;
-                    m_secondpass_parameters_extremaResult.FittedTplRedshift[0] = csolution.tplRedshift;
-                    m_secondpass_parameters_extremaResult.FittedTplDtm[0] = csolution.tplDtm;
-                    m_secondpass_parameters_extremaResult.FittedTplMtm[0] = csolution.tplMtm;
-                    m_secondpass_parameters_extremaResult.FittedTplLogPrior[0] = csolution.tplLogPrior;
-                    m_secondpass_parameters_extremaResult.FittedTplpCoeffs[0] = csolution.pCoeffs;
-
-                }
-            }
-            else {
-                if(s == input_extremumList.size()){
-                    Log.LogError("  Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                    throw runtime_error(" Operator-Linemodel: Second-pass fitting degenerated all results from first-pass. Aborting");
-                }
-                for(Int32 i = s-1; i>=0; i--){
-                    m_secondpass_parameters_extremaResult.RemoveSecondPassCandidatebyIdx(eliminateIdx[i]);
-                    _secondpass_recomputed_extremumList.erase(_secondpass_recomputed_extremumList.begin() + eliminateIdx[i]);
-                }
-            }
-        }
-    } else
-    {
-        for (Int32 i = 0; i < input_extremumList.size(); i++)
+        }else
         {
-            _secondpass_recomputed_extremumList[i].X = input_extremumList[i].X;
-            _secondpass_recomputed_extremumList[i].Y = input_extremumList[i].Y;
+            m_model->SetVelocityEmission(extremaResult.Elv[i]);
+            m_model->SetVelocityAbsorption(extremaResult.Alv[i]);
+            Log.LogInfo("    Operator-Linemodel: recompute with elv=%.1f, alv=%.1f",
+                        m_model->GetVelocityEmission(),
+                        m_model->GetVelocityAbsorption());
         }
-    }
 
-    m_secondpass_indiceSortedCandidatesList.clear();
-    for ( Int32 ie = 0; ie < _secondpass_recomputed_extremumList.size(); ie++){
-        m_secondpass_indiceSortedCandidatesList.push_back(ie);
-    }
+        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){
+            // fix some fitcontinuum values for this extremum
+            if(tplfit_option==2)
+            {
+                m_model->SetFitContinuum_FitValues(extremaResult.FittedTplName[i],
+                                                extremaResult.FittedTplAmplitude[i],
+                                                extremaResult.FittedTplAmplitudeError[i],
+                                                extremaResult.FittedTplMerit[i],
+                                                extremaResult.FittedTplDustCoeff[i],
+                                                extremaResult.FittedTplMeiksinIdx[i],
+                                                extremaResult.FittedTplRedshift[i],
+                                                extremaResult.FittedTplDtm[i],
+                                                extremaResult.FittedTplMtm[i],
+                                                extremaResult.FittedTplLogPrior[i],
+                                                extremaResult.FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(tplfit_option); 
+            }
+            if(tplfit_option == 0 || tplfit_option == 3)//for these cases we called precompute in secondpass, so we have new fitstore
+                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+            else{
+                if(tplfit_option == 1){
+                    //nothing to do cause we already injected the fitStore for cases 1 and 2
+                    m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); //1
+                }
+            }
+        }
 
-    if (mlmfit_modelInfoSave)
-    {
-        TFloat64List OrderedLMZ;
-        for (Int32 ie2 = 0; ie2 < m_secondpass_indiceSortedCandidatesList.size(); ie2++)
+        //moved here to override the previously set option value
+        //since all 
+        //m_model->SetFitContinuum_Option(tplfit_option);
+        Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
+        
+        // find the index in the zaxis results
+        const Int32 idx = m_result->getRedshiftIndex(z);
+
+        // reestimate the model (eventually with continuum reestimation) on
+        // the extrema selected
+        Int32 contreest_iterations = 0;
+        if (opt_continuumreest == "always")
         {
-            OrderedLMZ.push_back(
-                m_result->ExtremaResult.lmfitPass[m_secondpass_indiceSortedCandidatesList[ie2]]);
+            contreest_iterations = 1;
         }
-        m_result->ExtremaResult.lmfitPass = OrderedLMZ;
-    }
-    if (m_secondpass_indiceSortedCandidatesList.size() == 0)
-    {
-        Log.LogError("  Operator-Linemodel: Extremum Ordering failed");
-        throw std::runtime_error("  Operator-Linemodel: Extremum Ordering failed");
+
+        // finally compute the redshifts on the z-range around the extremum
+        // m_model->SetFittingMethod("nofit");
+        Int32 n_progresssteps = extremaResult.ExtendedRedshifts[i].size(); 
+        Log.LogInfo("    Operator-Linemodel: Fit n=%d values for z in [%.6f; %.6f]",
+                    n_progresssteps,
+                    extremaResult.ExtendedRedshifts[i].front(),
+                    extremaResult.ExtendedRedshifts[i].back());
+        for (const Float64 z:extremaResult.ExtendedRedshifts[i])
+        {
+            const Int32 iz = m_result->getRedshiftIndex(z);
+            Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, z);
+
+            m_result->ChiSquare[iz] =
+                    m_model->fit(m_result->Redshifts[iz],
+                                    lambdaRange,
+                                    m_result->LineModelSolutions[iz],
+                                    m_result->ContinuumModelSolutions[iz],
+                                    contreest_iterations, false);
+            m_result->ScaleMargCorrection[iz] =
+                    m_model->getScaleMargCorrection();
+            m_result->SetChisquareTplshapeResult(iz,
+                                                    m_model->GetChisquareTplshape(),
+                                                    m_model->GetScaleMargTplshape(),
+                                                    m_model->GetStrongELPresentTplshape(),
+                                                    m_model->GetNLinesAboveSNRTplshape(),
+                                                    m_model->GetPriorLinesTplshape());
+            if (!m_estimateLeastSquareFast)
+            {
+                m_result->ChiSquareContinuum[iz] =
+                        m_model->getLeastSquareContinuumMerit(lambdaRange);
+            } else
+            {
+                m_result->ChiSquareContinuum[iz] =
+                        m_model->getLeastSquareContinuumMeritFast();
+            }
+            m_result->ScaleMargCorrectionContinuum[iz] =
+                    m_model->getContinuumScaleMargCorrection();
+        }
+
     }
 
     return 0;
@@ -2429,7 +2141,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
 {
     // initialize empty results so that it can be returned anyway in case of an
     // error
-    m_result = std::shared_ptr<CLineModelResult>(new CLineModelResult());
+    m_result = std::make_shared<CLineModelResult>();
 
     if (spectrum.GetSpectralAxis().IsInLinearScale() == false)
     {
@@ -2464,270 +2176,6 @@ void COperatorLineModel::InitTplratioPriors()
 std::shared_ptr<COperatorResult> COperatorLineModel::getResult()
 {
     return m_result;
-}
-
-
-std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::GetFirstpassExtremaResult() const
-{
-    std::shared_ptr<CLineModelExtremaResult> extremaresult = std::shared_ptr<CLineModelExtremaResult>(new CLineModelExtremaResult(m_firstpass_extremaResult));
-    return extremaresult;
-}
-
-std::shared_ptr<COperatorResult> COperatorLineModel::Compute(
-        const CSpectrum &spectrum,
-        const CTemplateCatalog &tplCatalog,
-        const TStringList &tplCategoryList,
-        const std::string opt_calibrationPath,
-        const CRayCatalog &restraycatalog,
-        const std::string &opt_lineTypeFilter,
-        const std::string &opt_lineForceFilter,
-        const TFloat64Range &lambdaRange,
-        const TFloat64List &redshifts,
-        const Int32 opt_extremacount,
-        const std::string &opt_fittingmethod,
-        const std::string &opt_continuumcomponent,
-        const std::string &opt_lineWidthType,
-        const Float64 opt_resolution,
-        const Float64 opt_velocityEmission,
-        const Float64 opt_velocityAbsorption,
-        const std::string &opt_continuumreest,
-        const std::string &opt_rules,
-        const std::string &opt_velocityFitting,
-        const Float64 &opt_twosteplargegridstep,
-        const string &opt_twosteplargegridsampling,
-        const std::string &opt_rigidity,
-        const string &opt_tplratioCatRelPath,
-        const string &opt_offsetCatRelPath,
-        const Float64 &opt_emvelocityfitmin,
-        const Float64 &opt_emvelocityfitmax,
-        const Float64 &opt_emvelocityfitstep,
-        const Float64 &opt_absvelocityfitmin,
-        const Float64 &opt_absvelocityfitmax,
-        const Float64 &opt_absvelocityfitstep)
-{
-    // initialize empty results so that it can be returned anyway in case of an
-    // error
-    m_result = std::shared_ptr<CLineModelResult>(new CLineModelResult());
-
-    if (spectrum.GetSpectralAxis().IsInLinearScale() == false)
-    {
-        Log.LogError("  Operator-Linemodel:  input spectrum is not in linear scale.");
-        throw std::runtime_error( "  Operator-Linemodel:  input spectrum is not in linear scale.");
-    }
-    m_opt_continuumcomponent = opt_continuumcomponent;
-    // sort the redshifts
-    m_sortedRedshifts = redshifts;
-    std::sort(m_sortedRedshifts.begin(), m_sortedRedshifts.end());
-
-    //**************************************************
-    // FIRST PASS
-    //**************************************************
-    Int32 retFirstPass = ComputeFirstPass(spectrum,
-                                          tplCatalog,
-                                          tplCategoryList,
-                                          opt_calibrationPath,
-                                          restraycatalog,
-                                          opt_lineTypeFilter,
-                                          opt_lineForceFilter,
-                                          lambdaRange,
-                                          opt_fittingmethod,
-                                          opt_lineWidthType,
-                                          opt_resolution,
-                                          opt_velocityEmission,
-                                          opt_velocityAbsorption,
-                                          opt_continuumreest,
-                                          opt_rules, opt_velocityFitting,
-                                          opt_twosteplargegridstep,
-                                          opt_twosteplargegridsampling,
-                                          opt_rigidity,
-                                          opt_tplratioCatRelPath,
-                                          opt_offsetCatRelPath);
-    if (retFirstPass != 0)
-    {
-        Log.LogError("  Operator-Linemodel:  first pass failed. Aborting");
-        return m_result;
-    }
-
-    //**************************************************
-    // Compute z-candidates
-    //**************************************************
-
-    Log.LogInfo("  Operator-Linemodel:  compute z-candidates from best-chisquare values (nb. no priors)");
-    Int32 retCandidates =
-        ComputeCandidates(opt_extremacount, -1, m_result->ChiSquare, -1);
-    if (retCandidates != 0)
-    {
-        Log.LogError("  Operator-Linemodel:  compute z-candidates failed. Aborting");
-        return m_result;
-    }
-
-    //**************************************************
-    // SECOND PASS
-    //**************************************************
-    Int32 retSecondPass = ComputeSecondPass(
-                spectrum,
-                tplCatalog,
-                tplCategoryList,
-                opt_calibrationPath,
-                restraycatalog,
-                opt_lineTypeFilter,
-                opt_lineForceFilter,
-                lambdaRange,
-                opt_fittingmethod,
-                opt_lineWidthType,
-                opt_resolution,
-                opt_velocityEmission,
-                opt_velocityAbsorption,
-                opt_continuumreest,
-                opt_rules,
-                opt_velocityFitting,
-                opt_rigidity,
-                opt_emvelocityfitmin,
-                opt_emvelocityfitmax,
-                opt_emvelocityfitstep,
-                opt_absvelocityfitmin,
-                opt_absvelocityfitmax,
-                opt_absvelocityfitstep);
-    if (retSecondPass != 0)
-    {
-        Log.LogError("  Operator-Linemodel:  second pass failed. Aborting");
-        return m_result;
-    }
-
-    return m_result;
-}
-
-/**
- * @brief COperatorLineModel::processPass
- * @return
- */
-//Note: obsolete function so no clue how and when should be called
-std::shared_ptr<COperatorResult> COperatorLineModel::computeWithUltimPass(
-    const CSpectrum &spectrum,
-    const CTemplateCatalog &tplCatalog,
-    const TStringList &tplCategoryList,
-    const std::string opt_calibrationPath,
-    const CRayCatalog &restraycatalog,
-    const std::string &opt_lineTypeFilter,
-    const std::string &opt_lineForceFilter,
-    const TFloat64Range &lambdaRange,
-    const TFloat64List &redshifts,
-    const Int32 opt_extremacount,
-    const std::string &opt_fittingmethod,
-    const std::string &opt_continuumcomponent,
-    const std::string &opt_lineWidthType,
-    const Float64 opt_resolution,
-    const Float64 opt_velocityEmission,
-    const Float64 opt_velocityAbsorption,
-    const std::string &opt_continuumreest,
-    const std::string &opt_rules,
-    const std::string &opt_velocityFitting,
-    const Float64 &opt_twosteplargegridstep,
-    const string &opt_twosteplargegridsampling,
-    const std::string &opt_rigidity,
-    const string &opt_tplratioCatRelPath,
-    const string &opt_offsetCatRelPath,
-    const Float64 &opt_emvelocityfitmin,
-    const Float64 &opt_emvelocityfitmax,
-    const Float64 &opt_emvelocityfitstep,
-    const Float64 &opt_absvelocityfitmin,
-    const Float64 &opt_absvelocityfitmax,
-    const Float64 &opt_absvelocityfitstep)
-{
-    m_opt_continuumcomponent = opt_continuumcomponent;
-    auto result = std::dynamic_pointer_cast<CLineModelResult>(Compute(
-        spectrum, tplCatalog, tplCategoryList,
-        opt_calibrationPath, restraycatalog, opt_lineTypeFilter,
-        opt_lineForceFilter, lambdaRange, redshifts, opt_extremacount,
-        opt_fittingmethod, m_opt_continuumcomponent, opt_lineWidthType,
-        opt_resolution, opt_velocityEmission, opt_velocityAbsorption,
-        opt_continuumreest, opt_rules, opt_velocityFitting,
-        opt_twosteplargegridstep, opt_twosteplargegridsampling, opt_rigidity,
-        opt_tplratioCatRelPath, opt_offsetCatRelPath, opt_emvelocityfitmin,
-        opt_emvelocityfitmax, opt_emvelocityfitstep, opt_absvelocityfitmin,
-        opt_absvelocityfitmax, opt_absvelocityfitstep));
-
-    if (result && opt_rigidity == "tplshape")
-    {
-        Log.LogInfo("  Operator-Linemodel - Last Pass: begin");
-        //
-        // do the last pass on the 1st extremum range
-        //
-        Float64 halfRange = 1e-3;
-        Float64 lastPassStep = 1e-4;
-        // find the best extremum redhift
-        Float64 bestRedshift = -1;
-        Float64 bestMerit = DBL_MAX;
-        Int32 bestIndex = -1;
-        for (Int32 k = 0; k < result->ExtremaResult.Extrema.size(); k++)
-        {
-            Log.LogInfo("  Operator-Linemodel - Last Pass: k = %d", k);
-            Log.LogInfo(
-                "  Operator-Linemodel - Last Pass: result->Extrema[k] = %.5f",
-                result->ExtremaResult.Extrema[k]);
-            Log.LogInfo("  Operator-Linemodel - Last Pass: "
-                        "result->ExtremaMerit[k] = %.5f",
-                        result->ExtremaResult.ExtremaMerit[k]);
-
-            if (bestMerit > result->ExtremaResult.ExtremaMerit[k])
-            {
-                bestMerit = result->ExtremaResult.ExtremaMerit[k];
-                bestRedshift = result->ExtremaResult.Extrema[k];
-                bestIndex = k;
-            }
-        }
-        Log.LogInfo("  Operator-Linemodel - Last Pass: around extrema z = %.5f",
-                    bestRedshift);
-        Float64 z = bestRedshift - halfRange;
-        std::vector<Float64> lastPassRedshifts;
-        if (z < redshifts[0])
-        {
-            z = redshifts[0];
-        }
-        while (z < bestRedshift + halfRange)
-        {
-            lastPassRedshifts.push_back(z);
-            z += lastPassStep;
-        }
-        Log.LogInfo(
-            "  Operator-Linemodel - Last Pass: range zmin=%.5f, zmax=%.5f",
-            lastPassRedshifts[0],
-            lastPassRedshifts[lastPassRedshifts.size() - 1]);
-
-        std::string opt_rigidity_lastPass = "rules";
-        Int32 opt_extremacount_lastPass = 1;
-
-        Int32 maxSaveBackup = m_maxModelSaveCount;
-        m_maxModelSaveCount = 0;
-        auto lastPassResult = std::dynamic_pointer_cast<CLineModelResult>(
-            Compute(spectrum, tplCatalog,
-                    tplCategoryList, opt_calibrationPath, restraycatalog,
-                    opt_lineTypeFilter, opt_lineForceFilter, lambdaRange,
-                    lastPassRedshifts, opt_extremacount_lastPass,
-                    opt_fittingmethod, m_opt_continuumcomponent,
-                    opt_lineWidthType, opt_resolution, opt_velocityEmission,
-                    opt_velocityAbsorption, opt_continuumreest, opt_rules,
-                    opt_velocityFitting, opt_twosteplargegridstep,
-                    opt_twosteplargegridsampling, opt_rigidity_lastPass,
-                    opt_tplratioCatRelPath, opt_offsetCatRelPath,
-                    opt_emvelocityfitmin, opt_emvelocityfitmax,
-                    opt_emvelocityfitstep, opt_absvelocityfitmin,
-                    opt_absvelocityfitmax, opt_absvelocityfitstep));
-
-        m_maxModelSaveCount = maxSaveBackup;
-        Float64 refinedExtremum = lastPassResult->ExtremaResult.Extrema[0];
-        Log.LogInfo("  Operator-Linemodel - Last Pass: found refined z=%.5f",
-                    refinedExtremum);
-
-        result->ExtremaResult.ExtremaLastPass[bestIndex] = refinedExtremum;
-    } else
-    {
-        Log.LogInfo("  Operator-Linemodel - Last Pass: failed to do linemodel, "
-                    "rigidity=%s",
-                    opt_rigidity.c_str());
-    }
-
-    return result;
 }
 
 /**
@@ -2772,81 +2220,6 @@ Int32 COperatorLineModel::initContaminant(
 
     m_enableLoadContTemplate = true;
     return 0;
-}
-
-///
-/// \brief COperatorLineModel::storeGlobalModelResults
-/// stores the linemodel results as global results in the datastore
-///
-void COperatorLineModel::storeGlobalModelResults(COperatorResultStore &resultStore)
-{
-    Int32 nResults = m_savedModelSpectrumResults.size();
-    if (nResults > m_savedModelFittingResults.size())
-    {
-        Log.LogError("  Operator-Linemodel:  not as many model fitting results as model "
-                     "spectrum results, (nspc = %d, nfit = %d)",
-                     m_savedModelSpectrumResults.size(),
-                     m_savedModelFittingResults.size());
-        nResults = m_savedModelFittingResults.size();
-    }
-
-    for (Int32 k = 0; k < nResults; k++)
-    {
-        std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_tmp_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_spc.c_str(),
-                                          m_savedModelSpectrumResults[k]);
-
-        std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_tmp_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_fit.c_str(),
-                                          m_savedModelFittingResults[k]);
-
-        std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_tmp_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",
-            fname_fitcontinuum.c_str(), m_savedModelContinuumFittingResults[k]);
-
-        std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_tmp_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",fname_rules.c_str(),
-                                          m_savedModelRulesResults[k]);
-    }
-//TODO: delete below for loop
-    for (Int32 k = 0; k < m_savedModelContinuumSpectrumResults.size(); k++)
-    {
-        std::string nameBaselineStr =
-            (boost::format("linemodel_continuum_extrema_tmp_%1%") % k).str();
-        resultStore.StoreGlobalResult("linemodelsolve",
-            nameBaselineStr.c_str(), m_savedModelContinuumSpectrumResults[k]);
-    }
-}
-
-
-std::shared_ptr<CModelSpectrumResult>
-COperatorLineModel::GetModelSpectrumResult(Int32 idx)
-{
-    Int32 nResults = m_savedModelSpectrumResults.size();
-    if (idx >= nResults)
-    {
-        return NULL;
-    } else
-    {
-        return m_savedModelSpectrumResults[idx];
-    }
-}
-
-std::shared_ptr<CSpectraFluxResult>
-COperatorLineModel::GetModelSpectrumContinuumResult(Int32 idx)
-{
-    Int32 nResults = m_savedModelContinuumSpectrumResults.size();
-    if (idx >= nResults)
-    {
-        return NULL;
-    } else
-    {
-        return m_savedModelContinuumSpectrumResults[idx];
-    }
 }
 
 std::shared_ptr<CModelSpectrumResult>
@@ -2901,54 +2274,41 @@ Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(
     return 0;
 }
 
-void COperatorLineModel::ComputeArea1(CLineModelResult &results)
+void COperatorLineModel::ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults)
 {
     // prepare p
     Float64 maxp = DBL_MIN;
     CSpectrum pspc;
     CSpectrumFluxAxis &spcFluxAxis = pspc.GetFluxAxis();
-    spcFluxAxis.SetSize(results.Redshifts.size());
+    spcFluxAxis.SetSize(m_result->Redshifts.size());
     CSpectrumSpectralAxis &spcSpectralAxis = pspc.GetSpectralAxis();
-    spcSpectralAxis.SetSize(results.Redshifts.size());
-    for (Int32 i2 = 0; i2 < results.Redshifts.size(); i2++)
+    spcSpectralAxis.SetSize(m_result->Redshifts.size());
+    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
     {
-        if (maxp < results.ChiSquare[i2])
+        if (maxp < m_result->ChiSquare[i2])
         {
-            maxp = results.ChiSquare[i2];
+            maxp = m_result->ChiSquare[i2];
         }
     }
-    for (Int32 i2 = 0; i2 < results.Redshifts.size(); i2++)
+    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
     {
-        spcFluxAxis[i2] = expm1(-(results.ChiSquare[i2] - maxp) / 2.0);
-        spcSpectralAxis[i2] = results.Redshifts[i2];
+        spcFluxAxis[i2] = expm1(-(m_result->ChiSquare[i2] - maxp) / 2.0);
+        spcSpectralAxis[i2] = m_result->Redshifts[i2];
     }
-
-    /*//debug:
-    FILE* f = fopen( "getbestredshiftbayes_dbg.txt", "w+" );
-    for( Int32 i=0; i<spcFluxAxis.GetSamplesCount(); i++ )
-    {
-        if( spcFluxAxis[i] < 0.0001 ){
-            fprintf( f, "%e %e\n", spcSpectralAxis[i], spcFluxAxis[i]);
-        }else{
-            fprintf( f, "%f %f\n", spcSpectralAxis[i], spcFluxAxis[i]);
-        }
-    }
-    fclose( f );
-    //*/
 
     Float64 winsize = 0.0025;
     Float64 inclusionThresRatio = 0.25;
     Int32 iz0 = 0;
-    for (Int32 i = 0; i < results.ExtremaResult.Extrema.size(); i++)
+    for (Int32 i = 0; i < ExtremaResults->size(); i++)
     {
         // find iz, izmin and izmax
         Int32 izmin = -1;
         Int32 iz = -1;
         Int32 izmax = -1;
-        for (Int32 i2 = 0; i2 < results.Redshifts.size(); i2++)
+        for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
         {
             if (iz == -1 &&
-                (results.ExtremaResult.Extrema[i]) <= results.Redshifts[i2])
+                (ExtremaResults->Redshift(i)) <= m_result->Redshifts[i2])
             {
                 iz = i2;
                 if (i == 0)
@@ -2956,20 +2316,20 @@ void COperatorLineModel::ComputeArea1(CLineModelResult &results)
                     iz0 = iz;
                 }
             }
-            if (izmin == -1 && (results.ExtremaResult.Extrema[i] -
-                                winsize / 2.0) <= results.Redshifts[i2])
+            if (izmin == -1 && (ExtremaResults->Redshift(i) -
+                                winsize / 2.0) <= m_result->Redshifts[i2])
             {
                 izmin = i2;
             }
-            if (izmax == -1 && (results.ExtremaResult.Extrema[i] +
-                                winsize / 2.0) <= results.Redshifts[i2])
+            if (izmax == -1 && (ExtremaResults->Redshift(i) +
+                                winsize / 2.0) <= m_result->Redshifts[i2])
             {
                 izmax = i2;
                 break;
             }
         }
-        Float64 di = abs(results.ChiSquare[iz] - maxp);
-        Float64 d0 = abs(results.ChiSquare[iz0] - maxp);
+        Float64 di = abs(m_result->ChiSquare[iz] - maxp);
+        Float64 d0 = abs(m_result->ChiSquare[iz0] - maxp);
         if (di < inclusionThresRatio * d0)
         {
             continue;
@@ -2994,7 +2354,7 @@ void COperatorLineModel::ComputeArea1(CLineModelResult &results)
         */
         Float64 gaussWidth =
             FitBayesWidth(spcSpectralAxis, spcFluxAxis,
-                          results.ExtremaResult.Extrema[i], izmin, izmax);
+                          ExtremaResults->Redshift(i), izmin, izmax);
         Float64 gaussAmp = spcFluxAxis[iz];
 
         Float64 area = 0.0;
@@ -3002,14 +2362,14 @@ void COperatorLineModel::ComputeArea1(CLineModelResult &results)
         {
             Float64 x = spcSpectralAxis[i2];
             Float64 Yi =
-                gaussAmp * exp(-1. * (x - results.ExtremaResult.Extrema[i]) *
-                               (x - results.ExtremaResult.Extrema[i]) /
+                gaussAmp * exp(-1. * (x - ExtremaResults->Redshift(i)) *
+                               (x - ExtremaResults->Redshift(i)) /
                                (2 * gaussWidth * gaussWidth));
             area += Yi;
         }
 
         // Float64 area = gaussAmp*gaussWidth*sqrt(2.0*3.141592654);
-        results.ExtremaResult.LogArea[i] = area;
+        ExtremaResults->LogArea[i] = area;
     }
 }
 
@@ -3018,29 +2378,29 @@ void COperatorLineModel::ComputeArea1(CLineModelResult &results)
 /// computes the Laplace approx for a given Chi2 result around the N best
 /// extrema
 ///
-void COperatorLineModel::ComputeArea2(CLineModelResult &results)
+void COperatorLineModel::ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults)
 {
     Float64 maxp = DBL_MIN;
-    for (Int32 i2 = 0; i2 < results.Redshifts.size(); i2++)
+    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
     {
-        if (maxp < results.ChiSquare[i2])
+        if (maxp < m_result->ChiSquare[i2])
         {
-            maxp = results.ChiSquare[i2];
+            maxp = m_result->ChiSquare[i2];
         }
     }
     Float64 winsize = 0.001;
     Float64 inclusionThresRatio = 0.01;
     Int32 iz0 = 0;
-    for (Int32 indz = 0; indz < results.ExtremaResult.Extrema.size(); indz++)
+    for (Int32 indz = 0; indz < ExtremaResults->size(); indz++)
     {
         // find iz, izmin and izmax
         Int32 izmin = -1;
         Int32 iz = -1;
         Int32 izmax = -1;
-        for (Int32 i2 = 0; i2 < results.Redshifts.size(); i2++)
+        for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
         {
             if (iz == -1 &&
-                (results.ExtremaResult.Extrema[indz]) <= results.Redshifts[i2])
+                (ExtremaResults->Redshift(indz)) <= m_result->Redshifts[i2])
             {
                 iz = i2;
                 if (indz == 0)
@@ -3048,20 +2408,20 @@ void COperatorLineModel::ComputeArea2(CLineModelResult &results)
                     iz0 = iz;
                 }
             }
-            if (izmin == -1 && (results.ExtremaResult.Extrema[indz] -
-                                winsize / 2.0) <= results.Redshifts[i2])
+            if (izmin == -1 && (ExtremaResults->Redshift(indz) -
+                                winsize / 2.0) <= m_result->Redshifts[i2])
             {
                 izmin = i2;
             }
-            if (izmax == -1 && (results.ExtremaResult.Extrema[indz] +
-                                winsize / 2.0) <= results.Redshifts[i2])
+            if (izmax == -1 && (ExtremaResults->Redshift(indz) +
+                                winsize / 2.0) <= m_result->Redshifts[i2])
             {
                 izmax = i2;
                 break;
             }
         }
-        Float64 di = abs(results.ChiSquare[iz] - maxp);
-        Float64 d0 = abs(results.ChiSquare[iz0] - maxp);
+        Float64 di = abs(m_result->ChiSquare[iz] - maxp);
+        Float64 d0 = abs(m_result->ChiSquare[iz0] - maxp);
         if (di < inclusionThresRatio * d0)
         {
             continue;
@@ -3086,12 +2446,12 @@ void COperatorLineModel::ComputeArea2(CLineModelResult &results)
         c = gsl_vector_alloc(3);
         cov = gsl_matrix_alloc(3, 3);
 
-        double x0 = results.ExtremaResult.Extrema[indz];
+        double x0 = ExtremaResults->Redshift(indz);
         for (i = 0; i < n; i++)
         {
             double xi, yi, ei;
-            xi = results.Redshifts[i + izmin];
-            yi = results.ChiSquare[i + izmin];
+            xi = m_result->Redshifts[i + izmin];
+            yi = m_result->ChiSquare[i + izmin];
             ei = 1.0; // TODO: estimate weighting ?
             gsl_matrix_set(X, i, 0, 1.0);
             gsl_matrix_set(X, i, 1, xi - x0);
@@ -3119,7 +2479,7 @@ void COperatorLineModel::ComputeArea2(CLineModelResult &results)
         Float64 logarea = log(sigma) + logK + log(2.0 * M_PI);
         if (0)
         {
-            Log.LogInfo("Extrema: %g", results.ExtremaResult.Extrema[indz]);
+            Log.LogInfo("Extrema: %g", ExtremaResults->Redshift(indz));
             Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
             if (false) // debug
             {
@@ -3144,9 +2504,9 @@ void COperatorLineModel::ComputeArea2(CLineModelResult &results)
         gsl_vector_free(c);
         gsl_matrix_free(cov);
 
-        results.ExtremaResult.LogArea[indz] = logarea;
-        results.ExtremaResult.SigmaZ[indz] = sigma;
-        results.ExtremaResult.LogAreaCorrectedExtrema[indz] = zcorr;
+        ExtremaResults->LogArea[indz] = logarea;
+        ExtremaResults->SigmaZ[indz] = sigma;
+        ExtremaResults->LogAreaCorrectedExtrema[indz] = zcorr;
     }
 }
 
