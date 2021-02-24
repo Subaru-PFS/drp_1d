@@ -43,7 +43,7 @@ public:
                 );
 
     
-    std::shared_ptr<CPdfCandidateszResult> Compute(const ChisquareArray & chisquares, Bool integ=true);
+  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(const ChisquareArray & chisquares, Bool integ=true);
 
     Int32 CombinePDF(const ChisquareArray & chisquares);
 

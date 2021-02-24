@@ -1,0 +1,41 @@
+hdf5_name	hdf5_dataset	hdf5_type	ResultStore_key	dimension	debug	level	OperatorResult_name	c_type	object_type	method	in_summary
+Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double	star/galaxy	linemodelsolve/templatefittingsolve	TRUE
+RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double	star/galaxy	linemodelsolve/templatefittingsolve	TRUE
+RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double	star/galaxy	linemodelsolve/templatefittingsolve	TRUE
+RedshiftProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+RedshiftProbaZmin	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmin	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+RedshiftProbaZmax	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmax	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumName	model_parameters	S40	extrema_results	mono	False	candidate	FittedTplName	string	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplEbmvCoeff	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumIgmIndex	model_parameters	i	extrema_results	mono	False	candidate	FittedTplMeiksinIdx	int	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitude	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumAmplitudeUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitudeError	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumMtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMtm	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+ContinuumDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDtm	double	star/galaxy	linemodelsolve/templatefittingsolve	FALSE
+LinesRatioName	model_parameters	S60	extrema_results	mono	False	candidate	FittedTplratioName	string	galaxy	linemodelsolve	TRUE
+VelocityEmission	model_parameters	f8	extrema_results	mono	False	candidate	Elv	double	galaxy	linemodelsolve	TRUE
+VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	double	galaxy	linemodelsolve	TRUE
+StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double	galaxy	linemodelsolve	FALSE
+LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double	galaxy	linemodelsolve	FALSE
+LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double	galaxy	linemodelsolve	FALSE
+FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	FittedRaysLambda	list[double]	galaxy	linemodelsolve	FALSE
+FittedRaysLambdaRest	fitted_rays	f8	extrema_results	multi	False	candidate	rayLambdaRest	list[double]	galaxy	linemodelsolve	FALSE
+FittedRaysID	fitted_rays	i	extrema_results	multi	False	candidate	rayId	list[int]	galaxy	linemodelsolve	FALSE
+FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	FittedRaysFlux	list[double]	galaxy	linemodelsolve	FALSE
+ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]	star/galaxy	linemodel/templatefittingsolve	FALSE
+ModelFlux	model	f8	extrema_results	multi	False	candidate	ModelFlux	list[double]	star/galaxy	linemodel/templatefittingsolve	FALSE
+BestContinuumLambda	continuum	f8	extrema_results	multi	False	candidate	wavel	list[double]	galaxy	linemodel	FALSE
+BestContinuumFlux	continuum	f8	extrema_results	multi	False	candidate	fluxes	list[double]	galaxy	linemodel	FALSE
+GaussianPDFAmp	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmp				FALSE
+GaussianPDFAmpErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmpErr				FALSE
+GaussianPDFSigma	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigma				FALSE
+GaussianPDFSigmaErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigmaErr				FALSE
+GalaxyEvidence	classification	f8	solveResult	mono	False	root	m_evidence_galaxy		classification		FALSE
+StarEvidence	classification	f8	solveResult	mono	False	root	m_evidence_star		classification		FALSE
+QSOEvidence	classification	f8	solveResult	mono	False	root	m_evidence_qso		classification		FALSE
+GalaxyProba	classification	f8	solveResult	mono	False	root	m_prob_galaxy		classification		FALSE
+StarProba	classification	f8	solveResult	mono	False	root	m_prob_star		classification		FALSE
+QSOProba	classification	f8	solveResult	mono	False	root	m_prob_qso		classification		FALSE
+Type	classification	S1	solveResult	mono	False	root	m_TypeLabel		classification		FALSE
+PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts		star/galaxy		FALSE
+PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog		star/galaxy		FALSE

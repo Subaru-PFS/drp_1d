@@ -13,18 +13,11 @@
 using namespace NSEpic;
 
 CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & scope, 
-                                                         const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+                                                         const TCandidateZ & BestExtremumResult,
                                                          const std::string & opt_pdfcombination,
                                                          Float64 evidence ):
-    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
-    m_scope(scope),
-    ExtremaResult(ExtremaResult),
-    m_tplName(ExtremaResult->FittedTplName[0]),
-    m_amplitude(ExtremaResult->FittedTplAmplitude[0]),
-    m_amplitudeError(ExtremaResult->FittedTplAmplitudeError[0]),
-    m_EbmvCoeff(ExtremaResult->FittedTplEbmvCoeff[0]),
-    m_meiksinIdx(ExtremaResult->FittedTplMeiksinIdx[0]),
-    m_fittingSNR(ExtremaResult->FittedTplSNR[0])
+    CPdfSolveResult( BestExtremumResult, opt_pdfcombination, evidence),
+    m_scope(scope)
 {}
 
 // TODO DV erase this ?
@@ -300,44 +293,3 @@ Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64
 }
 */
 
-void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) const
-{
-  if (name.compare("snrHa") == 0)  v = -1;
-  else if (name.compare("lfHa") == 0)  v = -1;
-  else if (name.compare("snrOII") == 0)  v = -1;
-  else if (name.compare("lfOII") == 0)  v = -1;
-  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-}
-
-void CTemplateFittingSolveResult::getData(const std::string& name, std::string& v) const
-{
-  if (name.compare("TemplateName") == 0) v = m_tplName;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-} 
-
-void CTemplateFittingSolveResult::getData(const std::string& name, Int32& v) const
-{
-  if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-} 
-
-void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
-{
-  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
-  else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
-  else if (name.compare("ContinuumAmplitudeError") == 0) v = m_amplitudeError; 
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-}
-
-void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
-{
-  if (name.compare("TemplateName") == 0) v = m_tplName;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-} 
-
-void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
-{
-  if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
-}

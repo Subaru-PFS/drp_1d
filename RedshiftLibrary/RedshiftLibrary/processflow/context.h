@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <RedshiftLibrary/processflow/datastore.h>
+
 #include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/ray/ray.h>
@@ -25,7 +25,6 @@ class CTemplateCatalog;
 class CRayCatalog;
 class CParameterStore;
 class COperatorResultStore;
-class CDataStore;
 class CClassifierStore;
 class CInputContext;
 /**
@@ -54,6 +53,8 @@ public:
   std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
 
   TScopeStack                     m_ScopeStack;
+
+  void testResultStore(); 
 private:
 
     std::shared_ptr<COperatorResultStore>  m_ResultStore;

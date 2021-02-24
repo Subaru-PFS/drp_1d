@@ -846,10 +846,12 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
     tplfitStore->m_fitContinuum_tplFitSNRMax = bestTplFitSNR;
     Log.LogDetail("  Operator-Linemodel: fitcontinuum_snrMAX set to %f", bestTplFitSNR);
+    Log.LogDetail("  Operator-Linemodel: continuumcount set to %d", tplfitStore->GetContinuumCount());
     
     Int32 v = std::min(m_opt_fitcontinuum_maxN, tplfitStore->GetContinuumCount());
+    //TODO if v < a_value_to_compute log warning or throw error (if v = 1, we'll have 1st pass redshift=nan)
     tplfitStore->m_opt_fitcontinuum_maxCount = (m_opt_fitcontinuum_maxN == -1? tplfitStore->GetContinuumCount(): v); 
-    Log.LogInfo("  Operator-Linemodel: fitStore with fitcontinuum_maxCount set to %d", tplfitStore->m_opt_fitcontinuum_maxCount);
+    Log.LogInfo("  Operator-Linemodel: fitStore with fitcontinuum_maxCount set to %f", tplfitStore->m_opt_fitcontinuum_maxCount);
     
     if(m_model->GetPassNumber() == 1)//firstpass
         m_tplfitStore_firstpass = tplfitStore;
@@ -919,7 +921,7 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
  */
 Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candidatesz)
 {
-    m_firstpass_extremaResult = std::make_shared<CLineModelExtremaResult>(candidatesz.size());
+    m_firstpass_extremaResult = std::make_shared<COperatorLineModelExtremaResult>(candidatesz.size());
 
     m_firstpass_extremaResult->m_ranked_candidates = candidatesz;
 
@@ -946,7 +948,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         //save basic fitting info from first pass
         m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
         m_firstpass_extremaResult->Alv[i] = m_result->LineModelSolutions[idx].AbsorptionVelocity;
-
+        
         //save the continuum fitting parameters from first pass
         m_firstpass_extremaResult->FittedTplName[i] = m_result->ContinuumModelSolutions[idx].tplName;
         m_firstpass_extremaResult->FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
@@ -967,7 +969,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
     return 0;
 }
 
-Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLineModelExtremaResult> firstpass_results_b)
+Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b)
 {
     Int32 retval = 0;
     Float64 skip_thres_absdiffz = 5e-4; //threshold to remove duplicate extrema/candidates
@@ -1023,7 +1025,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
             // find the index in the zaxis results
           
             Int32 idx =  CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
-          
+
             //save the continuum fitting parameters from first pass
             m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
             m_firstpass_extremaResult->FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
@@ -1215,10 +1217,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
     return 0;
 }
 
-std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
-                                                                         const TFloat64Range &lambdaRange,
-                                                                         const TCandidateZbyRank & zCandidates,
-                                                                         const std::string &opt_continuumreest)
+std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum, const TFloat64Range &lambdaRange, const TCandidateZbyRank & zCandidates, const std::string &opt_continuumreest)
 {
     Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
     Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
@@ -1229,7 +1228,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
       throw runtime_error("COperatorLineModel::SaveResults: ExtremumCount passed in param.json exceeds the maximum limit, Abort!");
     }
 
-    std::shared_ptr<CLineModelExtremaResult> ExtremaResult = make_shared<CLineModelExtremaResult>(extremumCount);
+    std::shared_ptr<LineModelExtremaResult> ExtremaResult = make_shared<LineModelExtremaResult>(zCandidates);
     
     // Int32 start =
     // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
@@ -1439,7 +1438,6 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
                     std::shared_ptr<CSpectraFluxResult> baselineResult =
                         (std::shared_ptr<
                             CSpectraFluxResult>)new CSpectraFluxResult();
-                    baselineResult->m_optio = 0;
                     const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
                     UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
@@ -1457,113 +1455,18 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
             }
             savedModels++;
         }
+
+        // code here has been moved to TLineModelResult::updateFromModel
+        ExtremaResult->m_ranked_candidates[i].second.updateFromModel(m_model,m_result,m_estimateLeastSquareFast,idx,lambdaRange,i_2pass);
         
-        ExtremaResult->m_ranked_candidates = zCandidates;
-
-        ExtremaResult->Elv[i] = m_model->GetVelocityEmission();
-        ExtremaResult->Alv[i] = m_model->GetVelocityAbsorption();
-        
-        if (!m_estimateLeastSquareFast)
-        {
-            ExtremaResult->MeritContinuum[i] =
-                m_model->getLeastSquareContinuumMerit(lambdaRange);
-        } else
-        {
-            ExtremaResult->MeritContinuum[i] =
-                m_model->getLeastSquareContinuumMeritFast();
-        }
-
-        // store model Ha SNR & Flux
-        ExtremaResult->snrHa[i] =
-            m_result->LineModelSolutions[idx].snrHa;
-        ExtremaResult->lfHa[i] =
-            m_result->LineModelSolutions[idx].lfHa;
-
-        // store model OII SNR & Flux
-        ExtremaResult->snrOII[i] =
-            m_result->LineModelSolutions[idx].snrOII;
-        ExtremaResult->lfOII[i] =
-            m_result->LineModelSolutions[idx].lfOII;
-
-        // store the model norm
-        ExtremaResult->mTransposeM[i] =
-            m_model->EstimateMTransposeM(lambdaRange);
-
-        // scale marginalization correction
-        Float64 corrScaleMarg = m_model->getScaleMargCorrection(); //
-        ExtremaResult->CorrScaleMarg[i] = corrScaleMarg;
-
-        static Float64 cutThres = 3.0;
-        Int32 nValidLines = m_result->GetNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
-        ExtremaResult->NLinesOverThreshold[i] = nValidLines; // m/Float64(1+nValidLines);
-        Float64 cumulStrongELSNR = m_model->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
-        ExtremaResult->StrongELSNR[i] = cumulStrongELSNR;
-
-        std::vector<std::string> strongELSNRAboveCut = m_model->getLinesAboveSNR(3.5);
-        ExtremaResult->StrongELSNRAboveCut[i] = strongELSNRAboveCut;
-
-        Int32 nddl = m_model->GetNElements(); // get the total number of
-                                              // elements in the model
-        nddl = m_result->LineModelSolutions[idx].nDDL; // override nddl by the actual number of elements in
-                          // the fitted model
-        ExtremaResult->NDof[i] =
-            m_model->GetModelNonZeroElementsNDdl();
-
-        Float64 bic = m + nddl * log(m_result->nSpcSamples); // BIC
-        // Float64 aic = m + 2*nddl; //AIC
-        ExtremaResult->bic[i] = bic;
-        // m_result->bic[i] = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
-        // //AICc, better when nsamples small
-
-        // compute continuum indexes
-        CContinuumIndexes continuumIndexes;
-        ExtremaResult->ContinuumIndexes[i] =
-            continuumIndexes.getIndexes(spectrum, z);
-
-        // save the outsideLinesMask
-        ExtremaResult->OutsideLinesMask[i] =
-            m_model->getOutsideLinesMask();
-
-        ExtremaResult->OutsideLinesSTDFlux[i] = m_model->getOutsideLinesSTD(1, lambdaRange);
-        ExtremaResult->OutsideLinesSTDError[i] = m_model->getOutsideLinesSTD(2, lambdaRange);
-        Float64 ratioSTD = -1;
-        if(ExtremaResult->OutsideLinesSTDError[i]>0.0)
-        {
-            ratioSTD = ExtremaResult->OutsideLinesSTDFlux[i]/ExtremaResult->OutsideLinesSTDError[i];
-            Float64 ratio_thres = 1.5;
-            if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
-            {
-                Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, ExtremaResult->OutsideLinesSTDFlux[i], ExtremaResult->OutsideLinesSTDError[i]);
-            }else{
-                Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, ExtremaResult->OutsideLinesSTDFlux[i], ExtremaResult->OutsideLinesSTDError[i]);
-            }
-        }else{
-            Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
-        }
-
-
         // save the continuum tpl fitting results
-        ExtremaResult->FittedTplName[i] = m_model->getFitContinuum_tplName();
-        ExtremaResult->FittedTplAmplitude[i] = m_model->getFitContinuum_tplAmplitude();
-        ExtremaResult->FittedTplAmplitudeError[i] = m_model->getFitContinuum_tplAmplitudeError();
-        ExtremaResult->FittedTplMerit[i] = m_model->getFitContinuum_tplMerit();
-        ExtremaResult->FittedTplEbmvCoeff[i] = m_model->getFitContinuum_tplIsmEbmvCoeff();
-        ExtremaResult->FittedTplMeiksinIdx[i] = m_model->getFitContinuum_tplIgmMeiksinIdx();
+        ExtremaResult->m_ranked_candidates[i].second.updateContinuumFromModel(m_model);
 
         CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
-        ExtremaResult->FittedTplRedshift[i] = csolution.tplRedshift;
-        ExtremaResult->FittedTplpCoeffs[i] = csolution.pCoeffs;
-
-        ExtremaResult->FittedTplDtm[i] = csolution.tplDtm;
-        ExtremaResult->FittedTplMtm[i] = csolution.tplMtm;
-        ExtremaResult->FittedTplLogPrior[i] = csolution.tplLogPrior;
+        ExtremaResult->m_ranked_candidates[i].second.updateFromContinuumModelSolution(csolution,false);
+        ExtremaResult->m_ranked_candidates[i].second.updateTplRatioFromModel(m_model);
 
         // save the tplcorr/tplratio results
-        ExtremaResult->FittedTplratioName[i] = m_model->getTplshape_bestTplName();
-        ExtremaResult->FittedTplratioIsmCoeff[i] = m_model->getTplshape_bestTplIsmCoeff();
-        ExtremaResult->FittedTplratioAmplitude[i] = m_model->getTplshape_bestAmplitude();
-        ExtremaResult->FittedTplratioDtm[i] = m_model->getTplshape_bestDtm();
-        ExtremaResult->FittedTplratioMtm[i] = m_model->getTplshape_bestMtm();
     }
 
     // ComputeArea2(ExtremaResult);
@@ -1635,10 +1538,10 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     {
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Second pass - estimate parameters for candidate #%d", i);
-        Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
         Float64 z = m_firstpass_extremaResult->Redshift(i);
         Float64 m = m_firstpass_extremaResult->ValProba(i);
-
+	Log.LogInfo("  Operator-Linemodel: redshift=%.2f proba=%2f", z,m);
+	
         m_secondpass_parameters_extremaResult.ExtendedRedshifts[i] = m_firstpass_extremaResult->ExtendedRedshifts[i];
         if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){   
             //inject continuumFitValues of current candidate 
@@ -1719,8 +1622,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 std::shared_ptr<CSpectraFluxResult> baselineResult_lmfit =
                         (std::shared_ptr<
                          CSpectraFluxResult>)new CSpectraFluxResult();
-                baselineResult_lmfit->m_optio = 0;
-                const CSpectrumFluxAxis &modelContinuumFluxAxis =
+                 const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
                 UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
 
@@ -1984,7 +1886,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                                                     const Int32 tplfit_option,
                                                     const bool overrideRecomputeOnlyOnTheCandidate)
 {
-    CLineModelExtremaResult &  extremaResult =  m_secondpass_parameters_extremaResult;
+    COperatorLineModelExtremaResult &  extremaResult =  m_secondpass_parameters_extremaResult;
     if(extremaResult.size()<1)
     {
         Log.LogError("  Operator-Linemodel: RecomputeAroundCandidates n<1...");
@@ -2262,239 +2164,6 @@ Int32 COperatorLineModel::interpolateLargeGridOnFineGrid(
     return 0;
 }
 
-void COperatorLineModel::ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults)
-{
-    // prepare p
-    Float64 maxp = DBL_MIN;
-    //CSpectrum pspc;
-    CSpectrumFluxAxis spcFluxAxis(m_result->Redshifts.size());
-    CSpectrumSpectralAxis spcSpectralAxis(m_result->Redshifts.size());
-    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-    {
-        if (maxp < m_result->ChiSquare[i2])
-        {
-            maxp = m_result->ChiSquare[i2];
-        }
-    }
-    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-    {
-        spcFluxAxis[i2] = expm1(-(m_result->ChiSquare[i2] - maxp) / 2.0);
-        spcSpectralAxis[i2] = m_result->Redshifts[i2];
-    }
-
-    Float64 winsize = 0.0025;
-    Float64 inclusionThresRatio = 0.25;
-    Int32 iz0 = 0;
-    for (Int32 i = 0; i < ExtremaResults->size(); i++)
-    {
-        // find iz, izmin and izmax
-        Int32 izmin = -1;
-        Int32 iz = -1;
-        Int32 izmax = -1;
-        for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-        {
-            if (iz == -1 &&
-                (ExtremaResults->Redshift(i)) <= m_result->Redshifts[i2])
-            {
-                iz = i2;
-                if (i == 0)
-                {
-                    iz0 = iz;
-                }
-            }
-            if (izmin == -1 && (ExtremaResults->Redshift(i) -
-                                winsize / 2.0) <= m_result->Redshifts[i2])
-            {
-                izmin = i2;
-            }
-            if (izmax == -1 && (ExtremaResults->Redshift(i) +
-                                winsize / 2.0) <= m_result->Redshifts[i2])
-            {
-                izmax = i2;
-                break;
-            }
-        }
-        Float64 di = abs(m_result->ChiSquare[iz] - maxp);
-        Float64 d0 = abs(m_result->ChiSquare[iz0] - maxp);
-        if (di < inclusionThresRatio * d0)
-        {
-            continue;
-        }
-
-        /*
-        CGaussianFitSimple fitter;
-        CGaussianFitSimple::EStatus status = fitter.Compute( pspc, TInt32Range(
-        izmin, izmax ) );
-        if(status!=NSEpic::CGaussianFitSimple::nStatus_Success){
-            continue;
-        }
-
-        Float64 gaussAmp;
-        Float64 gaussPos;
-        Float64 gaussWidth;
-        fitter.GetResults( gaussAmp, gaussPos, gaussWidth );
-        Float64 gaussAmpErr;
-        Float64 gaussPosErr;
-        Float64 gaussWidthErr;
-        fitter.GetResultsError( gaussAmpErr, gaussPosErr, gaussWidthErr );
-        */
-        Float64 gaussWidth =
-            FitBayesWidth(spcSpectralAxis, spcFluxAxis,
-                          ExtremaResults->Redshift(i), izmin, izmax);
-        Float64 gaussAmp = spcFluxAxis[iz];
-
-        Float64 area = 0.0;
-        for (Int32 i2 = izmin; i2 < izmax; i2++)
-        {
-            Float64 x = spcSpectralAxis[i2];
-            Float64 Yi =
-                gaussAmp * exp(-1. * (x - ExtremaResults->Redshift(i)) *
-                               (x - ExtremaResults->Redshift(i)) /
-                               (2 * gaussWidth * gaussWidth));
-            area += Yi;
-        }
-
-        // Float64 area = gaussAmp*gaussWidth*sqrt(2.0*3.141592654);
-        ExtremaResults->LogArea[i] = area;
-    }
-}
-
-///
-/// \brief COperatorLineModel::ComputeArea2
-/// computes the Laplace approx for a given Chi2 result around the N best
-/// extrema
-///
-void COperatorLineModel::ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults)
-{
-    Float64 maxp = DBL_MIN;
-    for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-    {
-        if (maxp < m_result->ChiSquare[i2])
-        {
-            maxp = m_result->ChiSquare[i2];
-        }
-    }
-    Float64 winsize = 0.001;
-    Float64 inclusionThresRatio = 0.01;
-    Int32 iz0 = 0;
-    for (Int32 indz = 0; indz < ExtremaResults->size(); indz++)
-    {
-        // find iz, izmin and izmax
-        Int32 izmin = -1;
-        Int32 iz = -1;
-        Int32 izmax = -1;
-        for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
-        {
-            if (iz == -1 &&
-                (ExtremaResults->Redshift(indz)) <= m_result->Redshifts[i2])
-            {
-                iz = i2;
-                if (indz == 0)
-                {
-                    iz0 = iz;
-                }
-            }
-            if (izmin == -1 && (ExtremaResults->Redshift(indz) -
-                                winsize / 2.0) <= m_result->Redshifts[i2])
-            {
-                izmin = i2;
-            }
-            if (izmax == -1 && (ExtremaResults->Redshift(indz) +
-                                winsize / 2.0) <= m_result->Redshifts[i2])
-            {
-                izmax = i2;
-                break;
-            }
-        }
-        Float64 di = abs(m_result->ChiSquare[iz] - maxp);
-        Float64 d0 = abs(m_result->ChiSquare[iz0] - maxp);
-        if (di < inclusionThresRatio * d0)
-        {
-            continue;
-        }
-        if (izmin == -1 || izmax == -1)
-        {
-            continue;
-        }
-
-        // quadratic fit
-        int i, n;
-        double chisq;
-        gsl_matrix *X, *cov;
-        gsl_vector *y, *w, *c;
-
-        n = izmax - izmin + 1;
-
-        X = gsl_matrix_alloc(n, 3);
-        y = gsl_vector_alloc(n);
-        w = gsl_vector_alloc(n);
-
-        c = gsl_vector_alloc(3);
-        cov = gsl_matrix_alloc(3, 3);
-
-        double x0 = ExtremaResults->Redshift(indz);
-        for (i = 0; i < n; i++)
-        {
-            double xi, yi, ei;
-            xi = m_result->Redshifts[i + izmin];
-            yi = m_result->ChiSquare[i + izmin];
-            ei = 1.0; // TODO: estimate weighting ?
-            gsl_matrix_set(X, i, 0, 1.0);
-            gsl_matrix_set(X, i, 1, xi - x0);
-            gsl_matrix_set(X, i, 2, (xi - x0) * (xi - x0));
-
-            gsl_vector_set(y, i, yi);
-            gsl_vector_set(w, i, 1.0 / (ei * ei));
-        }
-
-        {
-            gsl_multifit_linear_workspace *work =
-                gsl_multifit_linear_alloc(n, 3);
-            gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
-            gsl_multifit_linear_free(work);
-        }
-
-#define C(i) (gsl_vector_get(c, (i)))
-#define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-
-        double zcorr = x0 - C(1) / (2.0 * C(2));
-        double sigma = sqrt(1.0 / C(2));
-        Float64 a = (Float64)(C(0));
-        Float64 b2sur4c = (Float64)(C(1) * C(1) / ((Float64)(4.0 * C(2))));
-        Float64 logK = (-(a - b2sur4c) / 2.0);
-        Float64 logarea = log(sigma) + logK + log(2.0 * M_PI);
-        if (0)
-        {
-            Log.LogInfo("Extrema: %g", ExtremaResults->Redshift(indz));
-            Log.LogInfo("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
-            if (false) // debug
-            {
-                Log.LogInfo("# covariance matrix:\n");
-                Log.LogInfo("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1),
-                            COV(0, 2));
-                Log.LogInfo("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1),
-                            COV(1, 2));
-                Log.LogInfo("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1),
-                            COV(2, 2));
-            }
-            Log.LogInfo("# chisq/n = %g", chisq / n);
-            Log.LogInfo("# zcorr = %g", zcorr);
-            Log.LogInfo("# sigma = %g", sigma);
-            Log.LogInfo("# logarea = %g", logarea);
-            Log.LogInfo("\n");
-        }
-
-        gsl_matrix_free(X);
-        gsl_vector_free(y);
-        gsl_vector_free(w);
-        gsl_vector_free(c);
-        gsl_matrix_free(cov);
-
-        ExtremaResults->LogArea[indz] = logarea;
-        ExtremaResults->SigmaZ[indz] = sigma;
-        ExtremaResults->LogAreaCorrectedExtrema[indz] = zcorr;
-    }
-}
 
 /**
  * \brief Returns a non-negative value for the width that yields the least

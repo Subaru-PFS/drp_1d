@@ -10,17 +10,42 @@
 
 using namespace NSEpic;
 
-void CModelSpectrumResult::getData(const std::string& name, double **data, int *size) const
+/**
+ * \brief Empty constructor.
+ **/
+/*
+CModelSpectrumResult::CModelSpectrumResult()
 {
-  if( name.compare("ModelLambda") == 0)
-    {
-      *size = m_model.GetSpectralAxis().GetSamplesCount();
-      *data = const_cast<double *>(m_model.GetSpectralAxis().GetSamples());
-    }
-  else if( name.compare("ModelFlux") == 0)
-    {
-      *size = m_model.GetFluxAxis().GetSamplesCount();
-      *data = const_cast<double *>(m_model.GetFluxAxis().GetSamples());
-    }
-  
+  this->m_type = "CModelSpectrumResult";
+  ModelLambda = TFloat64List(0);
+  ModelFlux = TFloat64List(0);
 }
+*/
+/**
+ * \brief Sets the model to CSpectrum ( spc ).
+ **/
+CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
+  m_model(spc),
+  ModelLambda(m_model.GetSpectralAxis().GetSamplesVector()),
+  ModelFlux(m_model.GetFluxAxis().GetSamplesVector())
+{
+  this->m_type = "CModelSpectrumResult";
+
+  
+  //probably can add model params as class variable here..
+}
+
+/**
+ * \brief Empty destructor.
+ **/
+CModelSpectrumResult::~CModelSpectrumResult()
+{
+
+}
+
+
+CSpectrum& CModelSpectrumResult::GetSpectrum()
+{
+    return m_model;
+}
+

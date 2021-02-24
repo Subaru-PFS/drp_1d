@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/processflow/context.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
 #include <RedshiftLibrary/processflow/inputcontext.h>
 
 #include <RedshiftLibrary/log/log.h>
@@ -46,3 +47,7 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
 
 }
 
+void CProcessFlowContext::testResultStore() {
+  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
+    m_ResultStore->test();
+  }

@@ -23,7 +23,7 @@ public:
     CLineMatchingSolveResult();
     virtual ~CLineMatchingSolveResult();
 
-    Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
+  //    Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 
 };
 

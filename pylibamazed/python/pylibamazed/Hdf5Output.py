@@ -1,5 +1,5 @@
 from .AbstractOutput import AbstractOutput
-from .OutputSpecifications import candidate_specifications
+from .OutputSpecifications import results_specifications
 import numpy as np
 import pandas as pd
 import abc
@@ -19,6 +19,24 @@ class Hdf5Output(AbstractOutput):
         if self.parameters["enableqsosolve"] == "yes":
             self.object_types.append("qso")
 
+    def load_all():
+        rs = results_specifications
+        rs = rs[rs["level"] == "root"]
+        root_datasets = list(rs["dataset"].unique())
+        for ds in root_datasets:
+            ds_attributes = rs[rs["dataset"]=ds]
+            self.root_results[ds]=dict()
+            for index,ds_row in ds_attributes.iterrow():
+#            for attr in list(ds_attributes["hdf5_name"]):
+                if self.hdf5_group.hasAttribute("root",ds,attr):
+                    self.root_results[ds][ds_row["hdf5_name"]]=self.get_attribute(ds_row)
+
+    def get_attribute(attribute_spec):
+        if attribute_spec["dimension"] == "mono":
+            if attribute_spec["level"] == "root":
+                return self.hdf5_group.get(attribute_spec["dataset"]).attrs[attribute_spec["hdf5_name"]]
+            elif attribute_spec["level"] == "object":
+                    
     def load_classification(self):
         classification = np.array(self.hdf5_group.get("classification"))
         self.classification["Type"]=classification["Type"][0].decode('utf-8')

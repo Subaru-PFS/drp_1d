@@ -33,9 +33,6 @@ public:
     CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
 
-    void getData(const std::string& name, Int32& v) const;
-    void getData(const std::string& name, std::string& v) const;
-    void getData(const std::string& name, Float64& v) const;
 private:
 
     Float64 Redshift;

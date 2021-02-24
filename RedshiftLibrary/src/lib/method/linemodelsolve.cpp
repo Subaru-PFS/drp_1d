@@ -11,6 +11,7 @@
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
 #include <RedshiftLibrary/statistics/deltaz.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
 
 #include <boost/tokenizer.hpp>
@@ -341,7 +342,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                         m_linemodel.m_secondpass_parameters_extremaResult.GetIDs()
                         ); 
     
-    std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(chisquares);
+    std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> candidateResult = pdfz.Compute(chisquares);
 
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
@@ -351,7 +352,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     TFloat64Range clampedlambdaRange; 
     spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange );
     // Get linemodel results at extrema (recompute spectrum model etc.)
-    std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =
+    std::shared_ptr<const LineModelExtremaResult> ExtremaResult =
         m_linemodel.SaveExtremaResults( spc, clampedlambdaRange, candidateResult->m_ranked_candidates, 
                                         m_opt_continuumreest);
 
@@ -363,11 +364,12 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
 
     // create the solveresult
     std::shared_ptr<CLineModelSolveResult> lmsolveresult = 
-        std::make_shared<CLineModelSolveResult>( ExtremaResult, 
+        std::make_shared<CLineModelSolveResult>( ExtremaResult->m_ranked_candidates[0].second, 
                                                  m_opt_pdfcombination,
                                                  pdfz.m_postmargZResult->valEvidenceLog);
 
 
+    
     return lmsolveresult;
 }
 
@@ -631,15 +633,16 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
 ///
+
 void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore> resultStore,
-                                           std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const 
+                                           std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const 
 {
     std::string extremaResultsStr = "linemodel_extrema";
     Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
-    resultStore->StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResult );
+    resultStore->StoreScopedGlobalResult( "extrema_results", ExtremaResult );
 
     Int32 nResults = ExtremaResult->size();
-
+    /*
     for (Int32 k = 0; k < nResults; k++)
     {
         std::string fname_spc =
@@ -667,6 +670,7 @@ void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore>
         resultStore->StoreScopedGlobalResult(nameBaselineStr.c_str(), 
                                          ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
     }
+    */
 }
 
 
@@ -858,6 +862,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     m_linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
+        Log.LogDetail("  method Linemodel wit tplfit: fitcontinuum_maxN set to %.0f", m_opt_continuumfitcount);
+
         m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
         m_linemodel.m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing_secondpass;
         m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
@@ -956,7 +962,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                         extremacount,
                         "FPE");
 
-    std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+    std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
     
     m_linemodel.SetFirstPassCandidates(candResult->m_ranked_candidates);
  
@@ -982,6 +988,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
             linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
             linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+	    Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
             linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
             linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
             linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
@@ -1047,7 +1054,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                             extremacount,
                             "FPB");
 
-        std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+        std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
         
         linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
 
@@ -1117,7 +1124,9 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         std::string firstpassExtremaResultsStr=scopeStr.c_str();
         firstpassExtremaResultsStr.append("_firstpass_extrema");
         //Log.LogError("Linemodel, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
-        resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
+
+            //TODO restore this after converting it from COperatorLineModelExtremaResult to LineModelExtremaResult
+        //resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
 
         //save linemodel firstpass extrema B results
         if(enableFirstpass_B)
@@ -1125,7 +1134,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
             std::string firstpassbExtremaResultsStr=scopeStr.c_str();
             firstpassbExtremaResultsStr.append("_firstpassb_extrema");
             //Log.LogError("Linemodel, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
-            resultStore->StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
+            //TODO restore this after converting it from COperatorLineModelExtremaResult to LineModelExtremaResult
+            //  resultStore->StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
         }
 
     }

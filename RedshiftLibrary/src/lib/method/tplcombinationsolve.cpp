@@ -105,7 +105,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);
 
-    std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
+    std::shared_ptr<PdfCandidatesZResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
     // save in resultstore pdf results
 
@@ -119,7 +119,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     /////////////////////////////////////////////////////////////////////////////////////
 
     
-    std::shared_ptr<const CExtremaResult> ExtremaResult = std::make_shared<CExtremaResult>();
+    std::shared_ptr<ExtremaResult> extremaResult = std::make_shared<ExtremaResult>(candidateResult->m_ranked_candidates);
     //TODO this is taken from templatefittingsolve, make it work here ?
     // common base class for templatefitting and tplcombination 
       /*                    SaveExtremaResult( resultStore, scopeStr,
@@ -138,11 +138,8 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     
     std::shared_ptr<CTplCombinationSolveResult> solveResult = 
-      std::make_shared<CTplCombinationSolveResult>(  m_opt_pdfcombination=="marg" ? candidateResult->m_ranked_candidates[0].second.ValSumProba : candidateResult->m_ranked_candidates[0].second.ValProba,
-                                                     candidateResult->m_ranked_candidates[0].second.Redshift,
-                                                     resultStore->GetCurrentScopeName(),
-                                                     m_opt_pdfcombination,
-                                                     pdfz.m_postmargZResult->valEvidenceLog);
+      std::make_shared<CTplCombinationSolveResult>( resultStore->GetCurrentScopeName(),
+                                                     extremaResult->m_ranked_candidates[0].second);
 
     // TBD 
 

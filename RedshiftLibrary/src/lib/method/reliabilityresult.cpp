@@ -16,8 +16,3 @@ CReliabilityResult::CReliabilityResult():
   CSolveResult()
 {
 }
-
-void CReliabilityResult::getData(const std::string& name, std::string& v) const
-{
-  v = m_ReliabilityLabel;
-}

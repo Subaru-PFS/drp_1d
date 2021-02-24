@@ -18,9 +18,187 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/ray/catalog.h>
 
+#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
+
 namespace NSEpic
 {
 
+class COperatorLineModelExtremaResult 
+{
+
+public:
+
+  COperatorLineModelExtremaResult() = default;
+  COperatorLineModelExtremaResult(Int32 n)
+  {
+    Resize(n);
+  }
+  ~COperatorLineModelExtremaResult() = default;
+
+  void Resize(Int32 size)
+  {
+    m_ranked_candidates.resize(size);
+    FittedTplName.resize(size);
+    FittedTplAmplitude.resize(size);
+    FittedTplAmplitudeError.resize(size);
+    FittedTplMerit.resize(size);
+    FittedTplEbmvCoeff.resize(size);
+    FittedTplMeiksinIdx.resize(size);
+    FittedTplDtm.resize(size);
+    FittedTplMtm.resize(size);
+    FittedTplLogPrior.resize(size);
+    FittedTplSNR.resize(size);
+    
+    m_savedModelSpectrumResults.resize(size);
+    m_savedModelContinuumFittingResults.resize(size);
+        MeritContinuum.resize(size);
+
+    mTransposeM.resize(size);
+    CorrScaleMarg.resize(size);
+    NDof.resize(size);
+    Redshift_lmfit.resize(size);
+    snrHa.resize(size);
+    lfHa.resize(size);
+    snrOII.resize(size);
+    lfOII.resize(size);
+
+    ExtendedRedshifts.resize(size);
+    NLinesOverThreshold.resize(size);
+    LogArea.resize(size);
+    LogAreaCorrectedExtrema.resize(size);
+    SigmaZ.resize(size);
+
+    StrongELSNR.resize(size);
+    StrongELSNRAboveCut.resize(size);
+    bic.resize(size);
+    ContinuumIndexes.resize(size);
+    OutsideLinesMask.resize(size);
+    OutsideLinesSTDFlux.resize(size);
+    OutsideLinesSTDError.resize(size);
+
+    Elv.resize(size);
+    Alv.resize(size);
+    GroupsELv.resize(size);
+    GroupsALv.resize(size);
+    for(Int32 ke=0; ke<size; ke++)
+    {
+        GroupsELv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
+        GroupsALv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
+    }
+
+    FittedTplRedshift.resize(size);
+    FittedTplpCoeffs.resize(size);
+
+    FittedTplratioName.resize(size);
+    FittedTplratioAmplitude.resize(size);
+    FittedTplratioDtm.resize(size);
+    FittedTplratioMtm.resize(size);
+    FittedTplratioIsmCoeff.resize(size);
+    
+    m_savedModelFittingResults.resize(size);
+    m_savedModelRulesResults.resize(size);
+    m_savedModelContinuumSpectrumResults.resize(size);
+  }
+  TFloat64List GetRedshifts() const
+  {
+    TFloat64List redshifts;
+    redshifts.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) redshifts.push_back(c.second.Redshift);
+    return redshifts;
+  }
+
+  TStringList GetIDs() const
+  {
+    TStringList ids;
+    ids.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) ids.push_back(c.first);
+    return ids;
+}
+
+   std::string ID(Int32 i) const {return m_ranked_candidates[i].first;}
+ Float64 Redshift(Int32 i) const { return m_ranked_candidates[i].second.Redshift;}
+ Float64 ValProba(Int32 i) const { return m_ranked_candidates[i].second.ValProba;}
+ Float64 ValSumProba(Int32 i) const { return m_ranked_candidates[i].second.ValSumProba;}
+ Float64 DeltaZ(Int32 i) const { return m_ranked_candidates[i].second.Deltaz;}
+
+  Int32 size() const { return m_ranked_candidates.size();}
+  
+  Int32                       m_optMethod; //0: direct integration, 1:gaussian fit
+
+  TCandidateZbyRank m_ranked_candidates;
+
+  
+
+    //template continuum
+  TStringList       FittedTplName;    //Name of the best template fitted for continuum
+  TFloat64List      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
+  TFloat64List      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
+  TFloat64List      FittedTplMerit;     //Chisquare for the best template fitted for continuum
+  TFloat64List      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
+  TInt32List        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
+  TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
+  TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
+  TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
+  TFloat64List      FittedTplSNR; 
+
+  std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
+  std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
+
+
+    //Extrema results
+    TFloat64List            MeritContinuum; //extrema merit for continuum
+
+    TFloat64List            mTransposeM;    // extrema model norm
+    TFloat64List            CorrScaleMarg;    // extrema scale marg. correction
+    TInt32List              NDof;   //non zero elements in the lambdarange
+    TFloat64List            Redshift_lmfit;// z found with lmfit
+    TFloat64List            snrHa;
+    TFloat64List            lfHa;
+    TFloat64List            snrOII;
+    TFloat64List            lfOII;
+
+    std::vector<TFloat64List> ExtendedRedshifts;    // z range around extrema
+    TFloat64List            NLinesOverThreshold;  
+    TFloat64List            LogArea;   // log area for each extrema
+    TFloat64List            LogAreaCorrectedExtrema;   // corrected z for each extrema
+    TFloat64List            SigmaZ;    // sigmaz for each extrema
+
+    TFloat64List            StrongELSNR;
+    std::vector<std::vector<std::string>>            StrongELSNRAboveCut;
+    TFloat64List            bic;    // bayesian information criterion for each extrema
+    std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
+    std::vector<CMask>      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
+    TFloat64List            OutsideLinesSTDFlux;    //STD measured on the spectrum continuum substracted outside lines
+    TFloat64List            OutsideLinesSTDError;   //STD measured on the error spectrum outside lines
+
+    //line width
+    TFloat64List      Elv;   //emission line width
+    TFloat64List      Alv;   //absorption line width
+    std::vector<TFloat64List>      GroupsELv;   //per fitting group line width , EL
+    std::vector<TFloat64List>      GroupsALv;   //per fitting group line width , AL
+
+    //template continuum (+ base class)
+    TFloat64List      FittedTplRedshift;    //Redshift for the best template fitted for continuum
+    std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
+
+    //template ratio
+    std::vector<std::string>      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioAmplitude;   //amp of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioDtm;   //dtm of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioMtm;   //mtm of the best template fitted for tplcorr/tplratio
+    TFloat64List      FittedTplratioIsmCoeff;   //IsmCoeff/EBMV of the best template fitted for tplcorr/tplratio
+
+    mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
+    mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
+    
+    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
+    std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
+
+};
+
+
+  
 /**
  * \ingroup Redshift
  */
@@ -77,7 +255,7 @@ public:
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
-    Int32 Combine_firstpass_candidates(std::shared_ptr<const CLineModelExtremaResult> firstpass_results_b);
+  Int32 Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
@@ -124,7 +302,7 @@ public:
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
 
-    std::shared_ptr<CLineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
+  std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,
                                                          const TCandidateZbyRank & zCandidates,
                                                          const std::string &opt_continuumreest="no");
@@ -187,8 +365,8 @@ public:
     std::string m_opt_enableImproveBalmerFit;
     Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
-    std::shared_ptr<CLineModelExtremaResult> m_firstpass_extremaResult;
-    CLineModelExtremaResult m_secondpass_parameters_extremaResult;
+  std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
+    COperatorLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
 private:
 
@@ -203,9 +381,7 @@ private:
 
     TFloat64List SpanRedshiftWindow(Float64 z) const;
 
-    void ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
-    void ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
-    Float64 FitBayesWidth( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
+    Float64 FitBayesWidth(const CSpectrumSpectralAxis& spectralAxis,const CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
 
     Bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 

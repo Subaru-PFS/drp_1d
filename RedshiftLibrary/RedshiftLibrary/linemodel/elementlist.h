@@ -86,20 +86,20 @@ public:
                         Float64& fitDtM,
                         Float64& fitMtM,
                         Float64 &fitLogprior);
-    const std::string & getFitContinuum_tplName();
-    Float64 getFitContinuum_tplAmplitude();
-    Float64 getFitContinuum_tplAmplitudeError();
-    Float64 getFitContinuum_snr();
-    Float64 getFitContinuum_tplMerit();
+    const std::string & getFitContinuum_tplName() const;
+    Float64 getFitContinuum_tplAmplitude() const;
+    Float64 getFitContinuum_tplAmplitudeError() const;
+    Float64 getFitContinuum_snr() const;
+    Float64 getFitContinuum_tplMerit() const;
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
-    Float64 getFitContinuum_tplIsmEbmvCoeff();
-    Float64 getFitContinuum_tplIgmMeiksinIdx();
+    Float64 getFitContinuum_tplIsmEbmvCoeff() const;
+    Float64 getFitContinuum_tplIgmMeiksinIdx() const;
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
     Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
-    Int32 GetFitContinuum_Option();
+    Int32 GetFitContinuum_Option() const;
     void SetFitContinuum_FitValues(std::string tplfit_name,
                                    Float64 tplfit_amp,
                                    Float64 tplfit_amperr,
@@ -123,18 +123,18 @@ public:
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul);
 
-    const std::string & getTplshape_bestTplName();
-    Float64 getTplshape_bestTplIsmCoeff();
-    Float64 getTplshape_bestAmplitude();
-    Float64 getTplshape_bestDtm();
-    Float64 getTplshape_bestMtm();
+    const std::string & getTplshape_bestTplName() const ;
+    Float64 getTplshape_bestTplIsmCoeff() const ;
+    Float64 getTplshape_bestAmplitude() const ;
+    Float64 getTplshape_bestDtm() const ;
+    Float64 getTplshape_bestMtm() const ;
     Int32 getTplshape_count();
     const std::vector<Float64> & getTplshape_priors();
-    const std::vector<Float64> & GetChisquareTplshape();
-    std::vector<Float64> GetPriorLinesTplshape();
-    const std::vector<Float64> & GetScaleMargTplshape();
-    const TBoolList & GetStrongELPresentTplshape();
-    const std::vector<Int32> & GetNLinesAboveSNRTplshape();
+    const std::vector<Float64> & GetChisquareTplshape() const ;
+    std::vector<Float64> GetPriorLinesTplshape() const ;
+    const std::vector<Float64> & GetScaleMargTplshape() const ;
+    const TBoolList & GetStrongELPresentTplshape() const ;
+    const std::vector<Int32> & GetNLinesAboveSNRTplshape() const ;
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
     Int32 GetNElements();

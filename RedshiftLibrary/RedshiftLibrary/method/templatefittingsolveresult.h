@@ -23,7 +23,7 @@ class CTemplateFittingSolveResult : public CPdfSolveResult
 
 public:
     CTemplateFittingSolveResult(const std::string & scope, 
-                                const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+                                const TCandidateZ& ExtremaResult,
                                 const std::string & opt_pdfcombination,
                                 Float64 evidence );
     //CTemplateFittingSolveResult(const EType type=nType_raw, const std::string scope="templatefittingsolve");
@@ -35,33 +35,10 @@ public:
     
 /*  void preSave(const CDataStore& store);*/
 
-  void getData(const std::string& name, Float64& v) const;
-  void getData(const std::string& name, std::string& v) const;
-  void getData(const std::string& name, Int32& v) const;
-  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
-  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
-  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
 
-  /*const std::string GetTemplateName();
-  const Float64 GetAmplitude();
-  const Float64 GetMeiksinIdx();
-  const Float64 GetDustCoeff();
-  const Float64 GetAmplitudeError();
-  const Float64 GetMerit();
-  const Float64 GetFittingSNR();*/
 
   //Extrema results
-  std::shared_ptr<const CExtremaResult> ExtremaResult;
 
-private:
-
-/*    std::unordered_map<std::string, std::string> m_scope2name = {
-        {"templatefittingsolve",      "TemplateFittingSolve"},
-        {"templatefittinglogsolve",   "TemplateFittingLogSolve"},
-        {"tplcombinationsolve", "TplcombinationSolve"}
-    };*/
-
-    //const EType m_type;
     const std::string m_scope;
     //std::string m_name;
 
@@ -74,37 +51,18 @@ private:
   //Not sure it is necessary here
   Float64   m_fittingSNR = NAN;
 
+
+/*    std::unordered_map<std::string, std::string> m_scope2name = {
+        {"templatefittingsolve",      "TemplateFittingSolve"},
+        {"templatefittinglogsolve",   "TemplateFittingLogSolve"},
+        {"tplcombinationsolve", "TplcombinationSolve"}
+    };*/
+
+    //const EType m_type;
+
+
 };
-/*
-inline
-const std::string CTemplateFittingSolveResult::GetTemplateName(){
-  return m_tplName;
-}
-inline
-const Float64 CTemplateFittingSolveResult::GetAmplitude(){
-  return m_amplitude;
-}
-inline 
-const Float64 CTemplateFittingSolveResult::GetMeiksinIdx(){
-  return m_meiksinIdx;
-}
-inline
-const Float64 CTemplateFittingSolveResult::GetDustCoeff(){
-  return m_EbmvCoeff;
-}
-inline
-const Float64 CTemplateFittingSolveResult::GetAmplitudeError(){
-  return m_amplitudeError;
-}
-inline 
-const Float64 CTemplateFittingSolveResult::GetMerit(){
-  return m_merit;
-}
-inline
-const Float64 CTemplateFittingSolveResult::GetFittingSNR(){
-  return m_fittingSNR;
-}
-*/
+
 }
 
 #endif

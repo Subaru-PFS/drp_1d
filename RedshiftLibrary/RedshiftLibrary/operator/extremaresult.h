@@ -14,52 +14,49 @@ namespace NSEpic
 class CModelSpectrumResult;
 class CModelContinuumFittingResult;
 
-class CExtremaResult : public CPdfCandidateszResult
-{
+#include <RedshiftLibrary/operator/extremaresult.i>
 
-public:
+  template <class T>
+  class CExtremaResult : public CPdfCandidateszResult<T>
+  {
+ 
+ 
+  };
+    
+  template<> class CExtremaResult<TExtremaResult> : public CPdfCandidateszResult<TExtremaResult>
+  {
+  public:
+    std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
+    std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
 
-  CExtremaResult() = default;
-  CExtremaResult(Int32 n);
+    CExtremaResult<TExtremaResult>() = default;
+    CExtremaResult<TExtremaResult>(const TCandidateZbyRank& zCandidates)
+    {
+      this->m_type="ExtremaResult";
+      this->m_ranked_candidates.resize(zCandidates.size());
+      int i=0;
+      for (std::pair<std::string,const TCandidateZ&> cand:zCandidates)
+        {
+          this->m_ranked_candidates[i].first = cand.first;
+          this->m_ranked_candidates[i].second = TExtremaResult(cand.second);
+          i++;
+        }
+      this->m_savedModelContinuumFittingResults.resize(i);
+      this->m_savedModelSpectrumResults.resize(i);
+    }
 
-  virtual ~CExtremaResult() = default;
-  //rule of 5 defaults
-  CExtremaResult(const CExtremaResult & ) = default;
-  CExtremaResult(CExtremaResult && ) = default;
-  CExtremaResult & operator=(const CExtremaResult & ) = default;   
-  CExtremaResult & operator=(CExtremaResult && ) = default;   
+    std::shared_ptr<const COperatorResult> getCandidate(const int& rank,const std::string& dataset) const;
+    
+    const std::string& getCandidateDatasetType(const std::string& dataset) const ;
 
-  virtual void Resize(Int32 size);
+    bool HasCandidateDataset(const std::string& dataset) const;
+    
+   
 
-  virtual void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
+  };
+  
+  typedef CExtremaResult<TExtremaResult> ExtremaResult;
 
-  virtual void getData(const std::string& name, Int32& v) const;
-  virtual void getData(const std::string& name, Float64& v) const;
-  virtual void getData(const std::string& name, std::string& v) const;
-  virtual void getData(const std::string& name, double **data, int *size) const;
-
-  //template continuum
-  TStringList       FittedTplName;    //Name of the best template fitted for continuum
-  TFloat64List      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
-  TFloat64List      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
-  TFloat64List      FittedTplMerit;     //Chisquare for the best template fitted for continuum
-  TFloat64List      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
-  TInt32List        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
-  TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
-  TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
-  TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
-  TFloat64List      FittedTplSNR; 
-
-  std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
-  std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
-
-protected:
-  void SaveJSONbody(std::ostream& stream) const;
-
-};
 
 }
 
