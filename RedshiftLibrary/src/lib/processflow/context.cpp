@@ -99,13 +99,16 @@ void CProcessFlowContext::InitIsmIgm(const std::string & calibrationPath)
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
     igmCorrectionMeiksin->Init(calibrationPath);
 
-    //push in all galaxy templates
-    TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{"galaxy"});
-    for (auto tpl : TplList)
-    {
-        tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    }   
+    //push in all templates
+    for(std::string s : m_TemplateCatalog->GetCategoryList()){ 
+        TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
+        for (auto tpl : TplList)
+        {
+            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+            if(s!="star")//no igm for stars
+                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+        }   
+    }
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()
@@ -141,6 +144,18 @@ const CSpectrum& CProcessFlowContext::GetSpectrum() const
 const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const
 {
     return *m_TemplateCatalog;
+}
+const TStringList&  CProcessFlowContext::GetGalaxyCategoryList() const
+{
+    return m_filteredGalaxyTemplateCategoryList;
+}
+const TStringList&  CProcessFlowContext::GetStarCategoryList() const
+{
+    return m_filteredStarTemplateCategoryList;                                ; 
+}
+const TStringList&  CProcessFlowContext::GetQSOCategoryList() const
+{
+    return m_filteredQSOTemplateCategoryList;
 }
 
 const CRayCatalog& CProcessFlowContext::GetRayCatalog() const

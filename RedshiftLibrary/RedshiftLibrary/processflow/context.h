@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
-
+#include <RedshiftLibrary/linemodel/calibrationconfig.h> 
 #include <RedshiftLibrary/reliability/zclassifierstore.h>
 
 #include <gsl/gsl_errno.h>
@@ -57,6 +57,10 @@ public:
     COperatorResultStore&           GetResultStore();
     CDataStore&                     GetDataStore();
     CClassifierStore&               GetClassifierStore();
+    
+    const TStringList&                    GetStarCategoryList() const;
+    const TStringList&                    GetQSOCategoryList() const;
+    const TStringList&                    GetGalaxyCategoryList() const;
 
 private:
 
@@ -73,6 +77,10 @@ private:
 
     std::shared_ptr<CDataStore>                m_DataStore;
     std::shared_ptr<CClassifierStore>          m_ClassifierStore;
+    
+    TStringList                                m_filteredStarTemplateCategoryList{"star"}; 
+    TStringList                                m_filteredQSOTemplateCategoryList{"qso", "emission"}; //"qso"
+    TStringList                                m_filteredGalaxyTemplateCategoryList{"galaxy"};
 
 };
 

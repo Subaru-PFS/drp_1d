@@ -156,23 +156,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
       throw std::runtime_error("Unable to initialize the z-search grid");
     }
 
-    std::string CategoryFilter="all";
-    // Remove Star category, and filter the list with regard to input variable CategoryFilter
-    TStringList templateCategoryList;
-    ctx.GetParameterStore().Get( "templateCategoryList", templateCategoryList );
-    TStringList filteredTemplateCategoryList;
-    for( UInt32 i=0; i<templateCategoryList.size(); i++ )
-    {
-        std::string category = templateCategoryList[i];
-        if( category == "star" )
-        {
-        }
-        else if(CategoryFilter == "all" || CategoryFilter == category)
-        {
-            filteredTemplateCategoryList.push_back( category );
-        }
-    }
-
     //retrieve the calibration dir path
     std::string calibrationDirPath;
     ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
@@ -235,43 +218,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     if(enableStarFitting=="yes"){
         CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "stellarsolve" );
 
-        std::string calibrationDirPath;
-        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-
-        bfs::path calibrationFolder( calibrationDirPath.c_str() );
-        CCalibrationConfigHelper calibrationConfig;
-        calibrationConfig.Init(calibrationDirPath);
-
-        std::string starTemplates = calibrationConfig.Get_starTemplates_relpath();
-
-        Log.LogInfo( "    Processflow - Loading star templates catalog : %s", starTemplates.c_str());
-        std::string templateDir = (calibrationFolder/starTemplates.c_str()).string();
-
-        TStringList filteredStarTemplateCategoryList;
-        filteredStarTemplateCategoryList.push_back( "star" );
-
-        //temporary star catalog handling through calibration files, should be loaded somewhere else ?
-        std::string medianRemovalMethod="zero";
-        Float64 opt_medianKernelWidth = 150; //not used
-        Int64 opt_nscales=8; //not used
-        std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
-        std::shared_ptr<CTemplateCatalog> starTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-        starTemplateCatalog->Load( templateDir.c_str() );
-        //  push ISM in all galaxy templates 
-        auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-        ismCorrectionCalzetti->Init(calibrationDirPath, 0.0, 0.1, 10);
-        TTemplateRefList  TplList = starTemplateCatalog->GetTemplate(filteredStarTemplateCategoryList);
-        for (auto tpl : TplList)
-        {
-            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-        }
-        for( UInt32 i=0; i<filteredStarTemplateCategoryList.size(); i++ )
-        {
-            std::string category = filteredStarTemplateCategoryList[i];
-            UInt32 ntpl = starTemplateCatalog->GetTemplateCount(category);
-            Log.LogInfo("stellar-solve: Loaded (category=%s) template count = %d", category.c_str(), ntpl);
-        }
-
         Float64 overlapThreshold;
         ctx.GetParameterStore().Get( "stellarsolve.overlapThreshold", overlapThreshold, 1.0);
         TFloat64Range starRedshiftRange;
@@ -298,8 +244,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         //CMethodChisquareLogSolve solve(calibrationDirPath);
         starResult = solve.Compute( ctx.GetDataStore(),
                                     ctx.GetSpectrum(),
-                                    *starTemplateCatalog,
-                                    filteredStarTemplateCategoryList,
+                                    ctx.GetTemplateCatalog(),
+                                    ctx.GetStarCategoryList(),
                                     spcLambdaRange,
                                     stars_redshifts,
                                     overlapThreshold,
@@ -326,36 +272,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
     if(enableQsoFitting=="yes"){
         CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "qsosolve" );
-
-        std::string calibrationDirPath;
-        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-
-        bfs::path calibrationFolder( calibrationDirPath.c_str() );
-        CCalibrationConfigHelper calibrationConfig;
-        calibrationConfig.Init(calibrationDirPath);
-
-        std::string qsoTemplates = calibrationConfig.Get_qsoTemplates_relpath();
-
-        Log.LogInfo( "    Processflow - Loading qso templates catalog : %s", qsoTemplates.c_str());
-        std::string templateDir = (calibrationFolder/qsoTemplates.c_str()).string();
-
-        TStringList filteredQSOTemplateCategoryList;
-        filteredQSOTemplateCategoryList.push_back( "emission" );
-
-        //temporary qso catalog handling through calibration files, should be loaded somewhere else ?
-        std::string medianRemovalMethod="zero";
-        Float64 opt_medianKernelWidth = 150; //not used
-        Int64 opt_nscales=8; //not used
-        std::string dfBinPath="absolute_path_to_df_binaries_here"; //not used
-        std::shared_ptr<CTemplateCatalog> qsoTemplateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-        qsoTemplateCatalog->Load( templateDir.c_str() );
-
-        for( UInt32 i=0; i<filteredQSOTemplateCategoryList.size(); i++ )
-        {
-            std::string category = filteredQSOTemplateCategoryList[i];
-            UInt32 ntpl = qsoTemplateCatalog->GetTemplateCount(category);
-            Log.LogInfo("qso-solve: Loaded (category=%s) template count = %d", category.c_str(), ntpl);
-        }
 
         std::string qso_method;
         ctx.GetParameterStore().Get( "qsosolve.method", qso_method, "templatefittingsolve" );
@@ -390,8 +306,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodTemplateFittingSolve solve;
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       *qsoTemplateCatalog,
-                                       filteredQSOTemplateCategoryList,
+                                       ctx.GetTemplateCatalog(),
+                                       ctx.GetQSOCategoryList(),
                                        spcLambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
@@ -404,8 +320,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodTemplateFittingLogSolve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       *qsoTemplateCatalog,
-                                       filteredQSOTemplateCategoryList,
+                                       ctx.GetTemplateCatalog(),
+                                       ctx.GetQSOCategoryList(),
                                        spcLambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
@@ -420,8 +336,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CMethodTplcombinationSolve solve;
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       *qsoTemplateCatalog,
-                                       filteredQSOTemplateCategoryList,
+                                       ctx.GetTemplateCatalog(),
+                                       ctx.GetQSOCategoryList(),
                                        spcLambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
@@ -434,8 +350,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             CLineModelSolve Solve(calibrationDirPath);
             qsoResult = Solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
-                                       *qsoTemplateCatalog,
-                                       filteredQSOTemplateCategoryList,
+                                       ctx.GetTemplateCatalog(),
+                                       ctx.GetQSOCategoryList(),
                                        ctx.GetRayCatalog(),
                                        spcLambdaRange,
                                        qso_redshifts,
@@ -464,7 +380,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
+                                 ctx.GetGalaxyCategoryList(),
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts,
@@ -477,7 +393,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = Solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
+                                 ctx.GetGalaxyCategoryList(),
                                  ctx.GetRayCatalog(),
                                  spcLambdaRange,
                                  redshifts );
@@ -503,7 +419,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
+                                 ctx.GetGalaxyCategoryList(),
                                  spcLambdaRange,
                                  redshifts,
                                  overlapThreshold,
@@ -532,7 +448,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
+                                 ctx.GetGalaxyCategoryList(),
                                  spcLambdaRange,
                                  redshifts,
                                  overlapThreshold,
@@ -559,7 +475,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
-                                 filteredTemplateCategoryList,
+                                 ctx.GetGalaxyCategoryList(),
                                  spcLambdaRange,
                                  redshifts,
                                  overlapThreshold,
