@@ -396,13 +396,10 @@ Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat6
     wind_high = maxX[i] + (maxX[i] + 1) * m_extrema_separation/ (1 - m_extrema_separation/2); 
     wind_low = maxX[i] - (maxX[i] + 1) * m_extrema_separation/ (1 + m_extrema_separation/2);
     TFloat64Range window(wind_low, wind_high);
-    window.IntersectWith(TFloat64Range(maxX));
-    Int32 i_min, i_max;
+    Int32 i_min = i, i_max = i;
     bool ret = window.getClosedIntervalIndices(maxX, i_min, i_max);    
-    for (Int32 j = i_min; j< i; j++){
-        peakTracking[j] = false;
-    }
-    for (Int32 j = i+1; j<=i_max; j++){
+    for (Int32 j = i_min; j<=i_max; j++){
+        if(j == i) continue;
         peakTracking[j] = false;
     }
   }
