@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   Float64 Array2[10] = {2,4,6,8,10,12,14,16,18,20};
   CSpectrumFluxAxis *object_FluxAxis4 =
-    new CSpectrumFluxAxis(Array1, 10, Array2, 10);
+    new CSpectrumFluxAxis(Array1, 10, Array2);
   Int32 s = object_FluxAxis4->GetSamplesCount();
   BOOST_CHECK(object_FluxAxis4->GetSamplesCount() == 10);
 
@@ -381,8 +381,8 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   Float64 mean = 1.;
   Float64 sdev = 1.;
-  const TFloat64List error{1.};
-  const TFloat64List empty_error;
+  const CSpectrumNoiseAxis error(1);
+  const CSpectrumNoiseAxis empty_error;
 
   Bool resultComputeMeanAndSDev_cas1 =
     object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev, error);

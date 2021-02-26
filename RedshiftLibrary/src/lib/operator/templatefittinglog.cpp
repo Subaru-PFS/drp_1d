@@ -513,7 +513,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
 
     const CSpectrumFluxAxis &spectrumRebinedFluxAxis =
         m_spectrumRebinedLog.GetFluxAxis();
-    const TAxisSampleList & error = spectrumRebinedFluxAxis.GetError();
+    const TAxisSampleList & error = spectrumRebinedFluxAxis.GetError().GetSamplesVector();
     const CSpectrumSpectralAxis &spectrumRebinedSpectralAxis =
         m_spectrumRebinedLog.GetSpectralAxis();
     const CSpectrumFluxAxis &tplRebinedFluxAxis = m_templateRebinedLog.GetFluxAxis();
@@ -1809,7 +1809,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
             // save error rebinned data
             FILE *f = fopen("loglbda_rebinlog_errorlogrebin_dbg.txt", "w+");
             const TAxisSampleList & w = spectrumRebinedSpectralAxis.GetSamplesVector();
-            const TAxisSampleList & err = spectrumRebinedFluxAxis.GetError();
+            const TAxisSampleList & err = spectrumRebinedFluxAxis.GetError().GetSamplesVector();
             for (Int32 t = 0; t < w.size(); t++)
             {
                 fprintf(f, "%f\t%e\n", w[t], err[t]);
@@ -2133,7 +2133,7 @@ Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange)
 {
     const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List &error = spectrum.GetFluxAxis().GetError();
+    const TFloat64List &error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;

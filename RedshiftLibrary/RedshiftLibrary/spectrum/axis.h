@@ -17,7 +17,7 @@ class CSpectrumAxis
 public:
 
     CSpectrumAxis();
-    explicit CSpectrumAxis( UInt32 n );
+    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
     CSpectrumAxis( const Float64* samples, UInt32 n );
     ~CSpectrumAxis();
 
@@ -33,7 +33,8 @@ public:
     UInt32                   GetSamplesCount() const;
     UInt32                   GetSamplesCount();
     virtual void             SetSize( UInt32 s );
-
+    Int32 extract(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx);
+    Bool isEmpty() const ;
 protected:
 
     TAxisSampleList          m_Samples;
@@ -82,6 +83,9 @@ const TAxisSampleList& CSpectrumAxis::GetSamplesVector() const
 {
     return m_Samples;
 }
-
+inline
+Bool CSpectrumAxis::isEmpty() const{
+    return m_Samples.size()==0;
+}
 }
 #endif

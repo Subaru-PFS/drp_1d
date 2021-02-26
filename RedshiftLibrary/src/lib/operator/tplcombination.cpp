@@ -110,7 +110,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    const TFloat64List& spcError = spcFluxAxis.GetError();
+    const CSpectrumNoiseAxis& spcError = spcFluxAxis.GetError();
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
@@ -635,7 +635,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List& error = spectrum.GetFluxAxis().GetError();
+    const TFloat64List& error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;

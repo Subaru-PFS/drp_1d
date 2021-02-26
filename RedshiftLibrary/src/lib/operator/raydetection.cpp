@@ -361,7 +361,8 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
 
     Float64 noise_win= xmad;
     // use noise spectrum
-    const TFloat64List& error = fluxAxis.GetError();
+    const TFloat64List& error = fluxAxis.GetError().GetSamplesVector();
+    //below operations can be moved to CSpectrumNoiseAxis
     if( !error.empty() )
       {
         // check if noise file has been loaded
@@ -369,35 +370,35 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
         for ( Int32 i=left; i<right; i++)
         {
             if( error[i]!=1.0 )
-	      {
+	          {
                 isNoiseOnes = false;
                 break;
-	      }
+	          }
         }
 
         if( !isNoiseOnes )
-	  {
+	      {
             Float64 mean_noise = 0.0;
             Int32 n_mean_noise = 0;
             for ( Int32 i=left; i<right; i++)
-	      {
+	          {
                 if( mask[i]!=0 )
-		  {
+		            {
                     mean_noise += error[i];
                     n_mean_noise ++;
-		  }
-	      }
+		            }
+	          }
             if( n_mean_noise>0 )
-	      {
+	          {
                 mean_noise /= n_mean_noise;
-	      }
+	          }
             // choose between noise mean or xmad
             if( mean_noise>xmad )
-	      {
+	          {
                 noise_win = mean_noise;
-	      }
+	          }
             //noise_win = mean_noise; //debug
-	  }
+	      }
 
       }
     Float64 maxValue_no_continuum = maxValue - med;

@@ -331,20 +331,20 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     //cas où une seule valeur du flux est valide, et l'erreur valide
     BOOST_CHECK(object_CSpectrum7->correctSpectrum(0.7,11.3)==true);
-    std::vector<double> f7 = object_CSpectrum7->GetFluxAxis().GetSamplesVector();
-    std::vector<double> f7c = {1e+2, 1e+2, 1e+2, 1e+2, 1e+2, 1e+3, 1e+2, 1e+2, 1e+2, 1e+2, 1e+2, std::numeric_limits<double>::infinity()};
+    TFloat64List f7 = object_CSpectrum7->GetFluxAxis().GetSamplesVector();
+    TFloat64List f7c = {1e+2, 1e+2, 1e+2, 1e+2, 1e+2, 1e+3, 1e+2, 1e+2, 1e+2, 1e+2, 1e+2, std::numeric_limits<double>::infinity()};
     BOOST_CHECK(f7==f7c);
-    std::vector<double> e7 = object_CSpectrum7->GetFluxAxis().GetError();
-    std::vector<double> e7c = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5};
+    TFloat64List e7 = object_CSpectrum7->GetFluxAxis().GetError().GetSamplesVector();
+    TFloat64List e7c = {1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5};
     BOOST_CHECK(e7==e7c);
 
     //cas où une seule valeur de l'erreur est valide, et le flux valide
     BOOST_CHECK(object_CSpectrum8->correctSpectrum(0.8,11.3)==true);
-    std::vector<double> f8 = object_CSpectrum8->GetFluxAxis().GetSamplesVector();
-    std::vector<double> f8c = {7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+3, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 13.0*1e+3};
+    TFloat64List f8 = object_CSpectrum8->GetFluxAxis().GetSamplesVector();
+    TFloat64List f8c = {7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+3, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 7.0*1e+2, 13.0*1e+3};
     BOOST_CHECK(f8==f8c);
-    std::vector<double> e8 = object_CSpectrum8->GetFluxAxis().GetError();
-    std::vector<double> e8c = {1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-9, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, std::numeric_limits<double>::infinity()};
+    TFloat64List e8 = object_CSpectrum8->GetFluxAxis().GetError().GetSamplesVector();
+    TFloat64List e8c = {1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-9, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, std::numeric_limits<double>::infinity()};
     BOOST_CHECK(e8==e8c);
 
     //cas dans l'intervalle 1 à 5 avec 0.0
