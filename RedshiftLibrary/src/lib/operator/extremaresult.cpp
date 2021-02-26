@@ -3,6 +3,7 @@
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/common/exception.h>
+#include <RedshiftLibrary/common/formatter.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -161,20 +162,20 @@ void CExtremaResult::getCandidateData(const int& rank,const std::string& name, F
     else if (name.compare("FittedTemplateDtm") == 0 || name.compare("FirstpassFittedTemplateDtm") == 0) v = FittedTplDtm[rank];
     else if (name.compare("FittedTemplateMtm") == 0 || name.compare("FirstpassFittedTemplateMtm") == 0) v = FittedTplMtm[rank];
     else if (name.compare("ContinuumAmplitudeError") == 0 || name.compare("FirstpassContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
-    else throw Exception("unknown candidate Float64 data %s",name.c_str());
+    else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "unknown candidate Float64 data " << name);
 }
 
 void CExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
   if (name.compare("ContinuumIgmIndex") == 0 || name.compare("FirstpassContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
-  else throw Exception("unknown candidate integer data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "unknown candidate integer data "<<name);
 }
 
 void CExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0 || name.compare("FirstpassTemplateName") == 0) v = FittedTplName[rank];
   else if (name.compare("ExtremaIds") == 0 || name.compare("FirstpassExtremaIds") == 0 ) v = Candidates[rank].first;
-  else throw Exception("unknown candidate string data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown candidate string data "<<name);
 }
 
 void CExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const {}

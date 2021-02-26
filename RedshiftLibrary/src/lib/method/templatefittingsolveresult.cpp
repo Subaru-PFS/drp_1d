@@ -7,6 +7,8 @@
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/extremum/extremum.h>
+#include <RedshiftLibrary/common/exception.h>
+#include <RedshiftLibrary/common/formatter.h>
 #include <RedshiftLibrary/method/solveresult.h>
 #include <memory>
 
@@ -388,19 +390,19 @@ void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) c
   else if (name.compare("snrOII") == 0)  v = -1;
   else if (name.compare("lfOII") == 0)  v = -1;
   else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
-  else throw Exception("Unknown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 }
 
 void CTemplateFittingSolveResult::getData(const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0) v = m_tplName;
-  else throw Exception("Unknown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 } 
 
 void CTemplateFittingSolveResult::getData(const std::string& name, Int32& v) const
 {
   if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
-  else throw Exception("Unknown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 } 
 
 void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
@@ -408,18 +410,17 @@ void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::st
   if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
   else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
   else if (name.compare("ContinuumAmplitudeError") == 0) v = m_amplitudeError; 
-  else throw Exception("Unknown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 }
 
 void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
 {
   if (name.compare("TemplateName") == 0) v = m_tplName;
-  else throw Exception("Unknown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 } 
 
 void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
 {
   if (name.compare("ContinuumIgmIndex") == 0) v = m_meiksinIdx;
-  else throw Exception("Unknown data %s",name.c_str());
-} 
-
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
+}

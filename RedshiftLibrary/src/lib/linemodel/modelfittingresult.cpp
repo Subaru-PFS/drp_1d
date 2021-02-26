@@ -10,6 +10,7 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/common/exception.h>
+#include <RedshiftLibrary/common/formatter.h>
 
 using namespace NSEpic;
 
@@ -206,7 +207,7 @@ void CModelFittingResult::getData(const std::string& name, int **data, int *size
         }
 	  *data = const_cast<int *>(rayId.data());
     }
-  else throw Exception("unkwown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unkwown data "<<name);
 }
 
 
@@ -229,7 +230,7 @@ void CModelFittingResult::getData(const std::string& name, double **data, int *s
     {
       *data = const_cast<double *>(LineModelSolution.Fluxs.data());
     }
-  else throw Exception("unkwown data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unkwown data"<<name);
 
 }
 

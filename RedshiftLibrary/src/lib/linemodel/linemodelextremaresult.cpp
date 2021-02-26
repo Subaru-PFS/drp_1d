@@ -2,6 +2,7 @@
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/common/exception.h>
+#include <RedshiftLibrary/common/formatter.h>
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -232,7 +233,7 @@ void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string
 	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
 	}
     }
-  else throw Exception("unknown candidate array of double data %s",name.c_str());
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown candidate string data "<<name);
 }
 
 

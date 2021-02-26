@@ -238,7 +238,7 @@ CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
 FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
   GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
   ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
+  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${CMAKE_DL_LIBS})
   ADD_TEST(NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
   SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
 ENDFOREACH(TEST_SOURCE)
@@ -281,13 +281,13 @@ set(PYTHON_BUILD_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
 )
 
-add_custom_target(clean_python_build
-  COMMAND rm -rf ${PYTHON_BUILD_FILES}
-  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Removing existing python build files"
-  VERBATIM
-)
+#add_custom_target(clean_python_build
+#  COMMAND rm -rf ${PYTHON_BUILD_FILES}
+#  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
+#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#  COMMENT "Removing existing python build files"
+#  VERBATIM
+#)
 
 #--------------------------------------------------------
 # Package deployement and config
