@@ -7,9 +7,10 @@ AmzException::AmzException(ErrorCode ec,std::string message):
   _msg(message),
   code(ec)
 {
-  std::ostringstream os;
-  os << boost::stacktrace::stacktrace();
-  stacktrace =  os.str();
+  //std::ostringstream os;
+  //os << boost::stacktrace::stacktrace();
+  //stacktrace =  os.str();
+  stacktrace = "";
 }
 
 AmzException::AmzException(const AmzException& e):

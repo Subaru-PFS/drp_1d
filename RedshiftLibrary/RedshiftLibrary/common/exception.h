@@ -4,7 +4,8 @@
 #include <exception>
 #include <iostream>
 #include <string>
-#include <boost/stacktrace.hpp>
+//#include <boost/stacktrace.hpp>
+
 namespace NSEpic {
   typedef enum ErrorCode
     {
