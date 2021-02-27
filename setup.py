@@ -10,7 +10,7 @@ class CustomBuild(build):
 
 setup(
     name="pylibamazed",
-    version="0.18.0",
+    version="0.20",
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python library."),
