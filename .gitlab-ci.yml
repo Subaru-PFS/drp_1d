@@ -83,7 +83,7 @@ wheel37-osx:
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
-    - source /Users/grunner/venv/amazed36/bin/activate
+    - source /Users/grunner/venv/amazed37/bin/activate
     - pip uninstall -y pylibamazed
   artifacts:
     paths:
@@ -101,13 +101,13 @@ wheel38-osx:
   script:
     - source /Users/grunner/venv/amazed38/bin/activate
     - python setup.py bdist_wheel
-    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp38-cp38m-*.whl
-    - pip install wheel/pylibamazed-*-cp38-cp38m-*.whl
+    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp38-cp38-*.whl
+    - pip install wheel/pylibamazed-*-cp38-cp38-*.whl
     - cd /
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
-    - source /Users/grunner/venv/amazed36/bin/activate
+    - source /Users/grunner/venv/amazed38/bin/activate
     - pip uninstall -y pylibamazed
   artifacts:
     paths:
@@ -123,7 +123,7 @@ push-rc-osx:
     - osx
   when: manual
   script:
-    - conda activate gitlab-ci-amazed-p36
+    - source /Users/grunner/venv/amazed36/bin/activate
     - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/*
   cache:
     key: osx
@@ -139,7 +139,7 @@ auto-push-rc-osx:
       variables:
         - $AUTO_PUSH_RC == "true"
   script:
-    - conda activate gitlab-ci-amazed-p36
+    - source /Users/grunner/venv/amazed36/bin/activate
     - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
   cache:
     key: osx
