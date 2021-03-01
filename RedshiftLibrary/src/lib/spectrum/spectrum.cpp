@@ -44,6 +44,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_LSF(other.m_LSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
+/*
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
     const CSpectrumFluxAxis & otherRawFlux = other.m_RawFluxAxis;
     const CSpectrumFluxAxis & otherContinuumFlux = other.m_ContinuumFluxAxis;
@@ -61,12 +62,47 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     TFloat64List& RawErrorVector = m_RawFluxAxis.GetError().GetSamplesVector();
     TFloat64List& ContinuumErrorVector = m_ContinuumFluxAxis.GetError().GetSamplesVector();
     TFloat64List& WithoutContinuumErrorVector = m_WithoutContinuumFluxAxis.GetError().GetSamplesVector();
+*/
+    const CSpectrumNoiseAxis&   otherRawError = other.m_RawFluxAxis.GetError();
+                                otherContinuumError = other.m_ContinuumFluxAxis.GetError();
+                                otherWithoutContinuumError = other.m_WithoutContinuumFluxAxis.GetError();
 
-    const UInt32 otherSpectralSize = otherSpectral.GetSamplesCount();
-    const UInt32 otherFluxSize = otherRawFlux.GetSamplesCount();
-    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize);
-    minsize = min(minsize, otherFluxSize);
+    CSpectrumNoiseAxis&     RawError = m_RawFluxAxis.GetError(),
+                            ContinuumError = m_ContinuumFluxAxis.GetError(),
+                            WithoutContinuumError = m_WithoutContinuumFluxAxis.GetError();
 
+    /*const UInt32 otherSpectralSize = other.m_SpectralAxis.GetSamplesCount();
+    const UInt32 otherFluxSize = other.m_RawFluxAxis.GetSamplesCount();*/
+    UInt32 minsize = min((UInt32)mask.size(), other.m_SpectralAxis.GetSamplesCount());
+    minsize = min(minsize, other.m_RawFluxAxis.GetSamplesCount());
+
+    //resize vriables
+    m_SpectralAxis.SetSize(minsize);
+    m_RawFluxAxis.SetSize(minsize); //this inlcudes resizing error
+    m_ContinuumFluxAxis.SetSize(minsize);
+    m_WithoutContinuumFluxAxis.SetSize(minsize);
+
+    for(Int32 i=0; i<minsize; i++){
+        if(mask[i] == 0)
+            continue;
+        m_SpectralAxis[i]= other.m_SpectralAxis[i];
+        m_RawFluxAxis[i] = other.m_RawFluxAxis[i];
+
+        if( !otherRawError.isEmpty() ){
+            RawError[i] = otherRawError[i];
+        }
+        if (other.alreadyRemoved){
+            m_ContinuumFluxAxis[i] = other.m_ContinuumFluxAxis[i];
+            if( !otherContinuumError.isEmpty() ){
+                ContinuumError[i] = otherContinuumError[i];
+            }
+            m_WithoutContinuumFluxAxis[i] = other.m_WithoutContinuumFluxAxis[i];
+            if( !otherWithoutContinuumError.isEmpty() ){
+                    WithoutContinuumError[i] = otherWithoutContinuumError[i];
+            }
+        }
+    }
+/*
     for(Int32 i=0; i<minsize; i++){
         if(mask[i] == 0)
             continue;
@@ -87,6 +123,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
             }
         }
     }
+*/
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf) :
