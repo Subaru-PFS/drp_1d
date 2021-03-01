@@ -11,12 +11,6 @@ variables:
   TWINE_PASSWORD: $CI_TWINE_PASSWORD
   PYPI_REPOSITORY_URL: https://pypi.lam.fr
   PYPI_TEST_REPOSITORY_URL: https://pypi.lam.fr
-  MANYLINUX2010_PYTHON35_PATH: /opt/python/cp35-cp35m/bin/
-  MANYLINUX2010_PYTHON36_PATH: /opt/python/cp36-cp36m/bin/
-  MANYLINUX2010_PYTHON37_PATH: /opt/python/cp37-cp37m/bin/
-  MANYLINUX2010_PYTHON38_PATH: /opt/python/cp38-cp38/bin/
-  OSX_PYTHON36_PATH: gitlab-ci-amazed-p36
-  OSX_PYTHON37_PATH: gitlab-ci-amazed-p37
 
 # OSX Stages
 
