@@ -57,7 +57,7 @@ public:
     Float64   m_dzDefault = 1e-3; // default value in case deltaz couldnt be calculted, should be instrument dependant (parameter ?)
 
     TCandidateZbyID m_candidates;
-  
+
 private:
 
     Bool getCandidateSumTrapez(const TRedshiftList &redshifts,
