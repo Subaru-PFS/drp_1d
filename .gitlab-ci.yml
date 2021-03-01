@@ -7,10 +7,9 @@ stages:
   - push-prod
 
 variables:
-  TWINE_USERNAME: amazed
-  TWINE_PASSWORD: $CI_TWINE_PASSWORD
-  PYPI_REPOSITORY_URL: https://pypi.lam.fr
-  PYPI_TEST_REPOSITORY_URL: https://pypi.lam.fr
+  TWINE_USERNAME: gitlab-ci-token
+  TWINE_PASSWORD: $CI_JOB_TOKEN
+  PYPI_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
 
 # OSX Stages
 
@@ -118,7 +117,7 @@ push-rc-osx:
   when: manual
   script:
     - source /Users/grunner/venv/amazed36/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/*
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/*
   cache:
     key: osx
     untracked: true
@@ -134,7 +133,7 @@ auto-push-rc-osx:
         - $AUTO_PUSH_RC == "true"
   script:
     - source /Users/grunner/venv/amazed36/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
   cache:
     key: osx
     untracked: true
@@ -262,7 +261,7 @@ push-rc-36-manylinux2010:
   when: manual
   script:
     - source /venv/p36/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -276,7 +275,7 @@ push-rc-37-manylinux2010:
   when: manual
   script:
     - source /venv/p37/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -290,7 +289,7 @@ push-rc-38-manylinux2010:
   when: manual
   script:
     - source /venv/p38/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -414,7 +413,7 @@ push-rc-36-manylinux2014:
   when: manual
   script:
     - source /venv/p36/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: manylinux2014
     policy: pull
@@ -428,7 +427,7 @@ push-rc-37-manylinux2014:
   when: manual
   script:
     - source /venv/p37/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: manylinux2014
     policy: pull
@@ -442,7 +441,7 @@ push-rc-38-manylinux2014:
   when: manual
   script:
     - source /venv/p38/bin/activate
-    - twine upload --repository-url=$PYPI_TEST_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: manylinux2014
     policy: pull
