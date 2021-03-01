@@ -31,7 +31,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 }
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
-				      const Float64* error) :
+				      const Float64* error,  const UInt32 obsolete) :
     CSpectrumAxis( samples, n ),
     m_StdError( error, n )
 {
