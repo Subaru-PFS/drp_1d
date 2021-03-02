@@ -271,13 +271,13 @@ set(PYTHON_BUILD_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
 )
 
-#add_custom_target(clean_python_build
-#  COMMAND rm -rf ${PYTHON_BUILD_FILES}
-#  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#  COMMENT "Removing existing python build files"
-#  VERBATIM
-#)
+add_custom_target(clean_python_build
+  COMMAND rm -rf ${PYTHON_BUILD_FILES}
+  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Removing existing python build files"
+  VERBATIM
+)
 
 #--------------------------------------------------------
 # Package deployement and config
