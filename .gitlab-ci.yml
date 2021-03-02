@@ -24,6 +24,7 @@ build-osx:
     - make -j 2
   cache:
     key: osx
+    policy: push
     untracked: true
 
 test-osx:
@@ -37,6 +38,7 @@ test-osx:
     - make test
   cache:
     key: osx
+    policy: pull
     untracked: true
 
 wheel36-osx:
@@ -60,6 +62,7 @@ wheel36-osx:
     expire_in: 1 week
   cache:
     key: osx
+    policy: pull
     untracked: true
 
 wheel37-osx:
@@ -84,6 +87,7 @@ wheel37-osx:
     expire_in: 1 week
   cache:
     key: osx
+    policy: pull
     untracked: true
 
 wheel38-osx:
@@ -108,6 +112,7 @@ wheel38-osx:
     expire_in: 1 week
   cache:
     key: osx
+    policy: pull
     untracked: true
   
 push-rc-36-osx:
@@ -122,6 +127,7 @@ push-rc-36-osx:
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: osx
+    policy: pull
     untracked: true
   dependencies:
     - wheel36-osx
@@ -138,6 +144,7 @@ push-rc-37-osx:
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: osx
+    policy: pull
     untracked: true
   dependencies:
     - wheel37-osx
@@ -154,6 +161,7 @@ push-rc-38-osx:
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: osx
+    policy: pull
     untracked: true
   dependencies:
     - wheel38-osx
