@@ -9,7 +9,7 @@ stages:
 variables:
   TWINE_USERNAME: gitlab-ci-token
   TWINE_PASSWORD: $CI_JOB_TOKEN
-  PYPI_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
+  TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
 
 # OSX Stages
 
@@ -119,7 +119,7 @@ push-rc-36-osx:
     - source /Users/grunner/venv/amazed36/bin/activate
     - pip install twine
   script:
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: osx
     untracked: true
@@ -135,7 +135,7 @@ push-rc-37-osx:
     - source /Users/grunner/venv/amazed37/bin/activate
     - pip install twine
   script:
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: osx
     untracked: true
@@ -151,7 +151,7 @@ push-rc-38-osx:
     - source /Users/grunner/venv/amazed38/bin/activate
     - pip install twine
   script:
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: osx
     untracked: true
@@ -279,7 +279,7 @@ push-rc-36-manylinux2010:
   when: manual
   script:
     - source /venv/p36/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -293,7 +293,7 @@ push-rc-37-manylinux2010:
   when: manual
   script:
     - source /venv/p37/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -307,7 +307,7 @@ push-rc-38-manylinux2010:
   when: manual
   script:
     - source /venv/p38/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: manylinux2010
     policy: pull
@@ -431,7 +431,7 @@ push-rc-36-manylinux2014:
   when: manual
   script:
     - source /venv/p36/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: manylinux2014
     policy: pull
@@ -445,7 +445,7 @@ push-rc-37-manylinux2014:
   when: manual
   script:
     - source /venv/p37/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: manylinux2014
     policy: pull
@@ -459,7 +459,7 @@ push-rc-38-manylinux2014:
   when: manual
   script:
     - source /venv/p38/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
   cache:
     key: manylinux2014
     policy: pull
