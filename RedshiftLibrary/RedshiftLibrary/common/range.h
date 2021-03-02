@@ -117,6 +117,22 @@ template <typename T> class CRange
 
         return v;
     }
+
+  //  template<typename T>
+  friend std::ostream& operator<< (std::ostream &out, const CRange<T> &range)
+  {
+    out <<"["<< range.m_Begin<<","<< range.m_End<<"]";
+    return out;
+  }
+
+  friend std::istream& operator>> (std::istream &in, CRange<T> &range)
+  {
+    in >> range.m_Begin;
+    in >> range.m_End;
+    return in;
+ }
+
+  
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
   bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
   {

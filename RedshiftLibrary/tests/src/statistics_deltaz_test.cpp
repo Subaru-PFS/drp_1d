@@ -74,9 +74,10 @@ void DeltazTestCompute( const string& sample, const Float64 redshift, const TFlo
     chi2Result.Load( input );
     BOOST_CHECK_MESSAGE( chi2Result.ChiSquare.size()>0, "Loaded Chisquare result is empty." );
 
-    COperatorResultStore result_store;
-    CParameterStore param_store;
-    CDataStore dummy(result_store, param_store);
+    TScopeStack stack;
+    COperatorResultStore result_store(stack);
+    CParameterStore param_store(stack);
+    //    CDataStore dummy(result_store, param_store);
 
     BOOST_CHECK_NO_THROW( chi2Result.Save(output) );
 

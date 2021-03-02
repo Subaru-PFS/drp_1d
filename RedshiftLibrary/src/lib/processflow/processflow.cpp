@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/processflow/processflow.h>
+#include <RedshiftLibrary/processflow/autoscope.h>
 
 #include <RedshiftLibrary/linemodel/calibrationconfig.h>
 
@@ -42,8 +43,6 @@ CProcessFlow::~CProcessFlow()
 
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
-    std::string spectrumName = ctx.GetSpectrum().GetName();
-    Log.LogInfo("<proc-spc><%s>", spectrumName.c_str());
 
     TFloat64Range lambdaRange;
     TFloat64Range redshiftRange;
@@ -51,26 +50,25 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Float64       maxCount; 
     Float64       redshiftseparation;
 
-    ctx.GetParameterStore().Get( "lambdarange", lambdaRange );
-    ctx.GetParameterStore().Get( "redshiftrange", redshiftRange );
-    ctx.GetParameterStore().Get( "redshiftstep", redshiftStep );
-    ctx.GetParameterStore().Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
+    ctx.GetParameterStore()->Get( "lambdarange", lambdaRange );
+    ctx.GetParameterStore()->Get( "redshiftrange", redshiftRange );
+    ctx.GetParameterStore()->Get( "redshiftstep", redshiftStep );
+    ctx.GetParameterStore()->Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
 
-    TFloat64Range spcLambdaRange;
-    ctx.GetSpectrum().GetSpectralAxis().ClampLambdaRange( lambdaRange, spcLambdaRange );
 
-    Log.LogInfo( "Processing spc:%s (CLambdaRange: %f-%f:%f)", spectrumName.c_str(), spcLambdaRange.GetBegin(),
-                  spcLambdaRange.GetEnd(), ctx.GetSpectrum().GetResolution());
+    //    ctx.GetSpectrum()->GetSpectralAxis().ClampLambdaRange( lambdaRange, ctx.GetInputContext().m_lambdaRange );
+
+    //    Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)", ctx.GetInputContext().m_lambdaRange.GetBegin(), ctx.GetInputContext().m_lambdaRange.GetEnd(), ctx.GetSpectrum()->GetResolution());
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
 
     std::string methodName;
-    ctx.GetParameterStore().Get( "method", methodName );
+    ctx.GetParameterStore()->Get( "method", methodName );
     boost::algorithm::to_lower(methodName);
 
     // Create redshift initial list by spanning redshift across the given range, with the given delta
     std::string redshiftSampling;
-    ctx.GetParameterStore().Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
+    ctx.GetParameterStore()->Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
     TFloat64List raw_redshifts;
     if(redshiftSampling=="log")
     {
@@ -83,36 +81,38 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     //Override z-search grid for line measurement: load the zref values from a tsv catalog file (col0: spc name, col1: zref float value)
     std::string opt_linemeas_catalog_path;
-    ctx.GetParameterStore().Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
-    TFloat64List redshifts;
+    ctx.GetParameterStore()->Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
+    TFloat64List redshifts=raw_redshifts;
     Float64 zref = -1.0;
+    /*
     if(opt_linemeas_catalog_path!="")
     {
         Log.LogInfo( "Override z-search range !");
         Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
-
+    
         Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
         bfs::path refFilePath(opt_linemeas_catalog_path.c_str());
-
+        
         if ( bfs::exists(refFilePath) )
-        {
+          {
             std::string spcSubStringId = spectrumName;
             Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
             getValueFromRefFile( refFilePath.c_str(), spcSubStringId, zref, reverseInclusionForIdMatching);
         }
+        
         if(zref==-1.0)
         {
           throw std::runtime_error("Override z-search: unable to find zref!");
-        }
+    }
 
 
         Float64 stepZ = 1e-5;
         Float64 deltaZrangeHalf = -1;//0.5e-2; //override zrange
-        ctx.GetParameterStore().Get( "linemeas.dzhalf", deltaZrangeHalf, -1);
-        ctx.GetParameterStore().Get( "linemeas.dzstep", stepZ, 1e-5);
+        ctx.GetParameterStore()->Get( "linemeas.dzhalf", deltaZrangeHalf, -1);
+        ctx.GetParameterStore()->Get( "linemeas.dzstep", stepZ, 1e-5);
         bool computeOnZrange=false;
         if(deltaZrangeHalf>0.0)
-        {
+    {
             computeOnZrange=true;
         }
         if(computeOnZrange) //computing only on zref, or on a zrange around zref
@@ -124,21 +124,23 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             {
                 Float64 _z = zref + kz*stepZ;
                 redshifts[nStepsZhalf + kz] = _z;
-            }
+        }
             for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
-            {
+        {
                 Float64 _z = zref - kz*stepZ;
                 redshifts[nStepsZhalf - kz]= _z;
-            }
+        }
             Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
         }else{
             redshifts.push_back(zref);
         }
 
         if(methodName=="linemodel"){
+          
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
             ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", stepZ);
+
             Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", stepZ);
             Log.LogInfo( "Override z-search: Using overriden half zrange around zref: %f", deltaZrangeHalf);
             Log.LogInfo( "Override z-search: Using overriden dzstep: %f", stepZ);
@@ -156,15 +158,15 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
       throw std::runtime_error("Unable to initialize the z-search grid");
     }
 
-    //retrieve the calibration dir path
-    std::string calibrationDirPath;
-    ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
 
+    */
+    //retrieve the calibration dir path
+    std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
 
     //************************************
     Bool enableInputSpcCorrect = true;
     std::string enableInputSpcCorrectStr;
-    ctx.GetParameterStore().Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
+    ctx.GetParameterStore()->Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
     if(enableInputSpcCorrectStr != "yes" || methodName  == "reliability" )
     {
         enableInputSpcCorrect = false;
@@ -172,11 +174,11 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     if(enableInputSpcCorrect)
     {
         //Check if the Spectrum is valid on the lambdarange
-        //correctInputSpectrum(spcLambdaRange);
-        const Float64 lmin = spcLambdaRange.GetBegin();
-        const Float64 lmax = spcLambdaRange.GetEnd();
+        //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+        const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
+        const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
         if( ctx.correctSpectrum( lmin, lmax ) ){
-            Log.LogInfo( "Successfully corrected noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
+            Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
         }
     }
 
@@ -189,76 +191,48 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     if(enableInputSpcCheck)
     {
         //Check if the Spectrum is valid on the lambdarange
-        //checkInputSpectrum(spcLambdaRange);
-        const Float64 lmin = spcLambdaRange.GetBegin();
-        const Float64 lmax = spcLambdaRange.GetEnd();
-	//Check if the flux is valid on the lambdarange
-        if( !ctx.GetSpectrum().IsFluxValid( lmin, lmax ) ){
-            Log.LogError("Failed to validate spectrum flux: %s, on wavelength range (%.1f ; %.1f)",
-                          spectrumName.c_str(), lmin, lmax );
+        //checkInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+        const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
+        const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
+        //Check if the flux is valid on the lambdarange
+        if( !ctx.GetSpectrum()->IsFluxValid( lmin, lmax ) ){
+            Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
+                          lmin, lmax );
             throw std::runtime_error("Failed to validate spectrum flux");
         }else{
-            Log.LogDetail( "Successfully validated spectrum flux: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
+            Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
         }
 	//Check if the noise is valid in the lambdarange
-        if( !ctx.GetSpectrum().IsNoiseValid( lmin, lmax ) ){
-            Log.LogError("Failed to validate noise from spectrum: %s, on wavelength range (%.1f ; %.1f)",
-                          spectrumName.c_str(), lmin, lmax );
+        if( !ctx.GetSpectrum()->IsNoiseValid( lmin, lmax ) ){
+            Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
+                           lmin, lmax );
             throw std::runtime_error("Failed to validate noise from spectrum");
         }else{
-            Log.LogDetail( "Successfully validated noise from spectrum: %s, on wavelength range (%.1f ; %.1f)", spectrumName.c_str(), lmin, lmax );
+            Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
         }
     }
 
     // Stellar method
     std::shared_ptr<CSolveResult> starResult;
     std::string enableStarFitting;
-    ctx.GetParameterStore().Get( "enablestellarsolve", enableStarFitting, "no" );
+    ctx.GetParameterStore()->Get( "enablestellarsolve", enableStarFitting, "no" );
     Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
     if(enableStarFitting=="yes"){
-        CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "stellarsolve" );
+      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
 
-        Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "stellarsolve.overlapThreshold", overlapThreshold, 1.0);
-        TFloat64Range starRedshiftRange;
-        ctx.GetDataStore().GetScopedParam( "starsolve.redshiftrange", starRedshiftRange, TFloat64Range(-1e-3, +1e-3) );
-        Float64 starRedshiftStep;
-        ctx.GetDataStore().GetScopedParam( "starsolve.redshiftstep", starRedshiftStep, 5e-5 );
-        std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "starsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp;
-        ctx.GetDataStore().GetScopedParam( "starsolve.interpolation", opt_interp, "precomputedfinegrid" );
-        const std::string opt_extinction = "no";
-        std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "starsolve.dustfit", opt_dustFit, "yes" );
-
-        // prepare the unused masks
-        std::vector<CMask> maskList;
-        //define the redshift search grid
-        Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
-        TFloat64List stars_redshifts = starRedshiftRange.SpreadOver( starRedshiftStep );
-        DebugAssert( stars_redshifts.size() > 0 );
 
         Log.LogInfo("Processing stellar fitting");
-        CMethodTemplateFittingSolve solve;
+        CMethodTemplateFittingSolve solve("star");
         //CMethodChisquareLogSolve solve(calibrationDirPath);
-        starResult = solve.Compute( ctx.GetDataStore(),
-                                    ctx.GetSpectrum(),
-                                    ctx.GetTemplateCatalog(),
-                                    ctx.GetStarCategoryList(),
-                                    spcLambdaRange,
-                                    stars_redshifts,
-                                    overlapThreshold,
-                                    maskList,
-                                    "stellar_zPDF",
-                                    redshiftseparation,
-                                    opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+        starResult = solve.Compute(ctx.GetInputContext(),
+                                   ctx.GetResultStore(),
+                                   ctx.m_ScopeStack);
 
 
         //finally save the stellar fitting results
         if( starResult ) {
             Log.LogInfo("Saving stellar fitting results");
-            ctx.GetDataStore().StoreScopedGlobalResult( "stellarresult", starResult );
+            ctx.GetResultStore().StoreScopedGlobalResult( "stellarresult", starResult );
         }else{
             Log.LogError( "Unable to store stellar result.");
         }
@@ -268,23 +242,24 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     // Quasar method
     std::shared_ptr<CSolveResult> qsoResult;
     std::string enableQsoFitting;
-    ctx.GetParameterStore().Get( "enableqsosolve", enableQsoFitting, "no" );
+    ctx.GetParameterStore()->Get( "enableqsosolve", enableQsoFitting, "no" );
     Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
+    /*
     if(enableQsoFitting=="yes"){
-        CDataStore::CAutoScope resultScope( ctx.GetDataStore(), "qsosolve" );
+        CDataStore::CAutoScope resultScope( ctx.m_ScopeStack, "qsosolve" );
 
         std::string qso_method;
-        ctx.GetParameterStore().Get( "qsosolve.method", qso_method, "templatefittingsolve" );
+        ctx.GetParameterStore()->Get( "qsosolve.method", qso_method, "templatefittingsolve" );
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "qsosolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore()->Get( "qsosolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "qsosolve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetParameterStore()->GetScopedParam( "qsosolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
-        ctx.GetDataStore().GetScopedParam( "qsosolve.interpolation", opt_interp, "precomputedfinegrid" );
+        ctx.GetParameterStore()->GetScopedParam( "qsosolve.interpolation", opt_interp, "precomputedfinegrid" );
         std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "qsosolve.extinction", opt_extinction, "yes" );
+        ctx.GetParameterStore()->GetScopedParam( "qsosolve.extinction", opt_extinction, "yes" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "qsosolve.dustfit", opt_dustFit, "no" );
+        ctx.GetParameterStore()->GetScopedParam( "qsosolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
@@ -308,7 +283,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetSpectrum(),
                                        ctx.GetTemplateCatalog(),
                                        ctx.GetQSOCategoryList(),
-                                       spcLambdaRange,
+                                       ctx.GetInputContext().m_lambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
                                        maskList,
@@ -322,7 +297,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetSpectrum(),
                                        ctx.GetTemplateCatalog(),
                                        ctx.GetQSOCategoryList(),
-                                       spcLambdaRange,
+                                       ctx.GetInputContext().m_lambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
                                        maskList,
@@ -338,14 +313,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetSpectrum(),
                                        ctx.GetTemplateCatalog(),
                                        ctx.GetQSOCategoryList(),
-                                       spcLambdaRange,
+                                       ctx.GetInputContext().m_lambdaRange,
                                        qso_redshifts,
                                        overlapThreshold,
                                        maskList,
                                        "qso_zPDF",
                                        redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        /*}else if(qso_method=="linemodel"){
+        }else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
             CLineModelSolve Solve(calibrationDirPath);
             qsoResult = Solve.Compute( ctx.GetDataStore(),
@@ -353,10 +328,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        ctx.GetTemplateCatalog(),
                                        ctx.GetQSOCategoryList(),
                                        ctx.GetRayCatalog(),
-                                       spcLambdaRange,
+                                       ctx.GetInputContext().m_lambdaRange,
                                        qso_redshifts,
                                        "qso_zPDF",
-                                       redshiftseparation);*/
+                                       redshiftseparation);
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
@@ -370,22 +345,16 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }
         //qsoResult->preSave(ctx.GetDataStore());
     }
-
+*/
     // Galaxy method
     std::shared_ptr<CSolveResult> mResult;
     std::string galaxy_method_pdf_reldir = "zPDF";
     if(methodName  == "linemodel" ){
 
-        CLineModelSolve Solve(calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 ctx.GetGalaxyCategoryList(),
-                                 ctx.GetRayCatalog(),
-                                 spcLambdaRange,
-                                 redshifts,
-                                 galaxy_method_pdf_reldir,
-                                 redshiftseparation);
+      CLineModelSolve Solve("galaxy",calibrationDirPath);
+        mResult = Solve.Compute( ctx.GetInputContext(),
+                                 ctx.GetResultStore(),
+                                 ctx.m_ScopeStack);
     /*
     }else if(methodName  == "zweimodelsolve" ){
 
@@ -395,94 +364,87 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                  ctx.GetTemplateCatalog(),
                                  ctx.GetGalaxyCategoryList(),
                                  ctx.GetRayCatalog(),
-                                 spcLambdaRange,
+                                 ctx.GetInputContext().m_lambdaRange,
                                  redshifts );
     */
     }else if(methodName  == "templatefittingsolve" ){
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore()->Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp;
-        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
         std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
         //retrieve the calibration dir path
         std::string calibrationDirPath;
-        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
-        CMethodTemplateFittingSolve solve;
-        mResult = solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 ctx.GetGalaxyCategoryList(),
-                                 spcLambdaRange,
-                                 redshifts,
-                                 overlapThreshold,
-                                 maskList,
-                                 galaxy_method_pdf_reldir,
-                                 redshiftseparation,
-                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+        ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
+        CMethodTemplateFittingSolve solve("galaxy");
+        mResult = solve.Compute( ctx.GetInputContext(),
+                                 ctx.GetResultStore(),
+                                 ctx.m_ScopeStack);
 
     }else if(methodName  == "templatefittinglogsolve" ){
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore()->Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp="lin";
         std::string opt_extinction;
-        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;
-        ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
+        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
         //retrieve the calibration dir path
         std::string calibrationDirPath;
-        ctx.GetParameterStore().Get( "calibrationDir", calibrationDirPath );
+        ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
         CMethodTemplateFittingLogSolve solve(calibrationDirPath);
-        mResult = solve.Compute( ctx.GetDataStore(),
+        /* mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
                                  ctx.GetGalaxyCategoryList(),
-                                 spcLambdaRange,
+                                 ctx.GetInputContext().m_lambdaRange,
                                  redshifts,
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
                                  redshiftseparation,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-
+        */
     }else if(methodName  == "tplcombinationsolve" ){
         Float64 overlapThreshold;
-        ctx.GetParameterStore().Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
+        ctx.GetParameterStore()->Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
-        ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
+        ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
         std::string opt_interp="lin";
-        ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
+        ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
         std::string opt_extinction="no";
-        //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
+        //ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit="no";
         //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.dustfit", opt_dustFit, "no" );
 
         // prepare the unused masks
         std::vector<CMask> maskList;
-        CMethodTplcombinationSolve solve;
+        /*CMethodTplcombinationSolve solve;
         mResult = solve.Compute( ctx.GetDataStore(),
                                  ctx.GetSpectrum(),
                                  ctx.GetTemplateCatalog(),
                                  ctx.GetGalaxyCategoryList(),
-                                 spcLambdaRange,
+                                 ctx.GetInputContext().m_lambdaRange,
                                  redshifts,
                                  overlapThreshold,
                                  maskList,
                                  galaxy_method_pdf_reldir,
                                  redshiftseparation,
                                  opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+        */
 
     }
     /*
@@ -558,14 +520,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     //save the classification results
     if( classifier.classifResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "classificationresult", classifier.classifResult );
+        ctx.GetResultStore().StoreScopedGlobalResult( "classificationresult", classifier.classifResult );
     }else{
       throw std::runtime_error("Unable to store method result");
     }
 
     //finally save the method results with (optionally) the zqual label
     if( mResult ) {
-        ctx.GetDataStore().StoreScopedGlobalResult( "redshiftresult", mResult );
+        ctx.GetResultStore().StoreScopedGlobalResult( "redshiftresult", mResult );
     }else{
       throw std::runtime_error("Unable to store method result");
     }
@@ -579,7 +541,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
 {
     std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  ctx.GetDataStore().GetGlobalResult( scope_res.c_str() );
+    auto results_pdf =  ctx.GetResultStore().GetGlobalResult( scope_res.c_str() );
     auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
 
     if(!logzpdf1d)

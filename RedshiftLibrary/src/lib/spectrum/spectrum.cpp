@@ -415,7 +415,7 @@ const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 
 const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
 {
-    Log.LogDebug("    CSpectrum::checkNoise - Found noise value (=%e) at index=%d", error, index);
+  //Log.LogDebug("    CSpectrum::checkNoise - Found noise value (=%e) at index=%d", error, index);
     Bool validValue = true;
     if( error < DBL_MIN ){
         //check if noise is below minimum normalized positive value of double

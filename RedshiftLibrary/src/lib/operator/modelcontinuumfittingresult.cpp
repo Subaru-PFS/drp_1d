@@ -91,10 +91,9 @@ void CModelContinuumFittingResult::getData(const std::string& name, Float64& v) 
 {
   if(name.compare("ModelDustCoeff") == 0)
     v = IsmCoeff;
-  else 
-    if(name.compare("ModelAmplitude") == 0)
-      v = Amp; 
-      else if(name.compare("ModelAmplitudeError") == 0)
-            v = AmpErr;
+  else  if(name.compare("ModelAmplitude") == 0)
+    v = Amp; 
+  else if(name.compare("ModelAmplitudeError") == 0)
+    v = AmpErr;
 }   
 

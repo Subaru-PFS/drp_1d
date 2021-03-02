@@ -3,12 +3,15 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/linemodelsolveresult.h>
+#include <RedshiftLibrary/method/solve.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 #include <RedshiftLibrary/operator/pdfLogresult.h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
 
 namespace NSEpic
 {
@@ -20,19 +23,21 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve
+class CLineModelSolve: public CSolve
 {
 
 public:
 
-    CLineModelSolve(std::string calibrationPath="");
+  CLineModelSolve(std::string objectType,std::string calibrationPath="");
 
-    const std::string GetDescription();
+    const std::string GetDescription() const;
 
-    Bool PopulateParameters( CDataStore& dataStore );
+    Bool PopulateParameters( std::shared_ptr<CParameterStore> parameterStore );
 
-    std::shared_ptr<CLineModelSolveResult> Compute(CDataStore& resultStore,
-                                                   const CSpectrum& spc,
+    std::shared_ptr<CSolveResult> Compute(const CInputContext &inputContext,
+                                          COperatorResultStore &resultStore,
+                                          TScopeStack &scopeCDataStore);
+  /*                                               const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
                                                    const TStringList& tplCategoryList,
                                                    const CRayCatalog& restraycatalog,
@@ -40,12 +45,9 @@ public:
                                                    const TFloat64List& redshifts,
                                                    const string outputPdfRelDir,
                                                    const Float64 radius);
-                                 
-    // Bool ExtractCandidateResults(CDataStore &store, TFloat64List const & zcandidates_unordered_list, Int32 maxCount);
+  */
 
-private:
-
-    Bool Solve(CDataStore& resultStore,
+    Bool Solve(COperatorResultStore& resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
@@ -63,10 +65,10 @@ private:
 
     //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    void storeExtremaResults( CDataStore &dataStore,
+    void storeExtremaResults( COperatorResultStore &dataStore,
                               std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
 
-    void StoreChisquareTplShapeResults(CDataStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
+    void StoreChisquareTplShapeResults(COperatorResultStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
 
 
     COperatorLineModel m_linemodel;

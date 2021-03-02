@@ -177,6 +177,8 @@ class CRange
 };
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
+typedef std::vector<std::string> TScopeStack;
+
 %template(TFloat64Range) CRange<Float64>;
 
 %apply std::string &OUTPUT { std::string& out_str };
@@ -191,7 +193,7 @@ class CParameterStore {
 %rename(Set_String) Set( const std::string& name, const std::string& v);
 
 public:
-  CParameterStore();
+  CParameterStore(const TScopeStack&);
   void Load( const std::string& path );
   void FromString(const std::string & json);
   void Save( const std::string& path ) const;
@@ -229,13 +231,11 @@ public:
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
-  bool Init(std::shared_ptr<CSpectrum> spectrum,
-            std::string processingID,
+  void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<const CTemplateCatalog> templateCatalog,
             std::shared_ptr<const CRayCatalog> rayCatalog,
-            std::shared_ptr<CParameterStore> paramStore,
-            std::shared_ptr<CClassifierStore> zqualStore);
-  CDataStore& GetDataStore();
+            const std::string& paramsJSONString);
+  //CDataStore& GetDataStore();
   COperatorResultStore& GetResultStore();
 };
 
@@ -278,7 +278,7 @@ class COperatorResultStore
 
 
  public:
-  COperatorResultStore();
+  COperatorResultStore(const TScopeStack& scopeStack);
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& out_float) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
@@ -420,7 +420,7 @@ class CLSFConstantGaussian : public CLSF
 class CLineModelSolve
 {
  public:
-  CLineModelSolve(std::string calibrationPath="");
+  CLineModelSolve(std::string objectType,std::string calibrationPath="");
   ~CLineModelSolve();
   const std::string GetDescription();
 };
@@ -436,7 +436,7 @@ class CMethodLineMatchingSolve
 class CMethodTemplateFittingSolve
 {
  public:
-  CMethodTemplateFittingSolve();
+  CMethodTemplateFittingSolve(std::string objectType);
   ~CMethodTemplateFittingSolve();
   const std::string GetDescription();
 };

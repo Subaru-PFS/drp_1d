@@ -21,7 +21,7 @@ class CDataStore
 
 public:
 
-    typedef std::vector<std::string>    TScopeStack;
+
     class CAutoScope {
         public:
             CAutoScope( CDataStore& store, const std::string& name );

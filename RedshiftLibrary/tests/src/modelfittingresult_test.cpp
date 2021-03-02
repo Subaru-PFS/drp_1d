@@ -24,8 +24,9 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CRay ray4 = CRay("Em",5520, 2, CRay::SYM, 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
   CRayCatalog::TRayVector _restRayList = {ray1, ray2, ray3, ray4};
 
-  COperatorResultStore resultStore = COperatorResultStore();
-  CParameterStore parameStore = CParameterStore();
+  TScopeStack scopeStack;
+  COperatorResultStore resultStore = COperatorResultStore(scopeStack);
+  CParameterStore parameStore = CParameterStore(scopeStack);
   CDataStore store(resultStore, parameStore);
 
   boost::filesystem::path temp = boost::filesystem::unique_path();

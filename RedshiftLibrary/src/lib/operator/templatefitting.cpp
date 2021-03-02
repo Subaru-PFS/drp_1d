@@ -189,7 +189,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
-    Log.LogDebug( "  Operator-TemplateFitting: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
+    //Log.LogDebug( "  Operator-TemplateFitting: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
     std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
     std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);

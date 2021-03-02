@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/exception.h>
 #include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/processflow/scopestore.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -19,7 +20,7 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class COperatorResultStore
+class COperatorResultStore : public CScopeStore
 {
 
 public:
@@ -28,7 +29,7 @@ public:
     typedef std::map< std::string, TResultsMap>                                 TPerTemplateResultsMap;
 
 
-    COperatorResultStore();
+    COperatorResultStore(const TScopeStack& scopeStack);
     virtual ~COperatorResultStore();
 
     void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
@@ -52,6 +53,24 @@ public:
     void                    SaveClassificationResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
     void                    SaveClassificationResult( const CDataStore& store, const boost::filesystem::path& dir );
 
+  //From DataStore, above should be removed and integrated into these
+      void                    StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result );
+
+    void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+    void                            ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey );
+    void                            DeleteScopedGlobalResult( const std::string& name );
+  
+    void                            SaveRedshiftResult( const boost::filesystem::path& dir );
+    void                            SaveCandidatesResult( const boost::filesystem::path& dir );
+    void                            SaveReliabilityResult( const boost::filesystem::path& dir );
+    void                            SaveStellarResult( const boost::filesystem::path& dir );
+    void                            SaveQsoResult( const boost::filesystem::path& dir );
+    void                            SaveClassificationResult( const boost::filesystem::path& dir );
+    void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
+
+
+  
     std::string             GetScope( const COperatorResult&  result) const;
 
 

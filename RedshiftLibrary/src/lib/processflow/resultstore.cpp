@@ -20,7 +20,8 @@ using namespace NSEpic;
 namespace bfs = boost::filesystem;
 
 
-COperatorResultStore::COperatorResultStore()
+COperatorResultStore::COperatorResultStore(const TScopeStack& scope):
+  CScopeStore(scope)
 {
 
 }
@@ -789,7 +790,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name,double **data, int *size) const
 {
   std:weak_ptr<const COperatorResult> result;
-  if (object_type.compare("galaxy") == 0) result = GetGlobalResult("zPDF/logposterior.logMargP_Z_data");
+  if (object_type.compare("galaxy") == 0) result = GetGlobalResult("pdf");
   else if (object_type.compare("star") == 0) result = GetGlobalResult("stellar_zPDF/logposterior.logMargP_Z_data");
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object type %s or no double array attributes for this object type "<<object_type);
   result.lock()->getData(name,data,size);
@@ -811,6 +812,70 @@ void COperatorResultStore::test()
   StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
 
   
+}
+
+void  COperatorResultStore::SaveRedshiftResult( const boost::filesystem::path& dir )
+{
+    SaveRedshiftResult(  dir );
+}
+
+void  COperatorResultStore::SaveStellarResult( const boost::filesystem::path& dir )
+{
+    SaveStellarResult(  dir );
+}
+
+void  COperatorResultStore::SaveQsoResult( const boost::filesystem::path& dir )
+{
+    SaveQsoResult(  dir );
+}
+
+void  COperatorResultStore::SaveClassificationResult( const boost::filesystem::path& dir )
+{
+    SaveClassificationResult(  dir );
+}
+
+void  COperatorResultStore::SaveCandidatesResult( const boost::filesystem::path& dir )
+{
+    SaveCandidatesResult(  dir );
+}
+
+
+void COperatorResultStore::SaveReliabilityResult( const boost::filesystem::path& dir )
+{
+	SaveReliabilityResult(  dir );
+}
+
+void  COperatorResultStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
+{
+    SaveAllResults(  dir, opt );
+}
+
+void  COperatorResultStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
+{
+    StorePerTemplateResult( t, GetCurrentScopeName(), name, result );
+}
+
+void COperatorResultStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
+{
+    StoreGlobalResult( GetCurrentScopeName(), name, result );
+}
+
+void COperatorResultStore::DeleteScopedGlobalResult( const std::string& name )
+{
+    DeleteGlobalResult(GetCurrentScopeName(), name);
+    
+}
+void COperatorResultStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )
+{
+    
+    auto  result = GetGlobalResult( oldkey ).lock();
+    StoreScopedGlobalResult(newkey, result);
+    DeleteScopedGlobalResult(oldkey);
+}
+
+void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
+{
+    StoreGlobalResult( "", name, result );
 }
 
 
