@@ -110,35 +110,53 @@ wheel38-osx:
     key: osx
     untracked: true
   
-push-rc-osx:
+push-rc-36-osx:
   stage: push-rc
   tags:
     - osx
   when: manual
-  script:
+  before_script:
     - source /Users/grunner/venv/amazed36/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/*
+    - pip install twine
+  script:
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp36-cp36m-*.whl
   cache:
     key: osx
     untracked: true
   dependencies:
     - wheel36-osx
 
-auto-push-rc-osx:
+push-rc-37-osx:
   stage: push-rc
   tags:
     - osx
-  only:
-      variables:
-        - $AUTO_PUSH_RC == "true"
+  when: manual
+  before_script:
+    - source /Users/grunner/venv/amazed37/bin/activate
+    - pip install twine
   script:
-    - source /Users/grunner/venv/amazed36/bin/activate
-    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --disable-progress-bar wheel/*
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp37-cp37m-*.whl
   cache:
     key: osx
     untracked: true
   dependencies:
-    - wheel36-osx
+    - wheel37-osx
+
+push-rc-38-osx:
+  stage: push-rc
+  tags:
+    - osx
+  when: manual
+  before_script:
+    - source /Users/grunner/venv/amazed38/bin/activate
+    - pip install twine
+  script:
+    - twine upload --repository-url=$PYPI_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp38-cp38-*.whl
+  cache:
+    key: osx
+    untracked: true
+  dependencies:
+    - wheel38-osx
 
 # Manylinux2010 stages
 
