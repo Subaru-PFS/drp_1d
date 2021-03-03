@@ -1,7 +1,5 @@
 #include <RedshiftLibrary/common/mask.h>
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
 
 #include <math.h>
 

@@ -12,13 +12,13 @@
 #include <RedshiftLibrary/ray/regulament.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
 
-#include <RedshiftLibrary/statistics/pdfz.h>
+#include <RedshiftLibrary/operator/pdfz.h>
 
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/linemodel/templatesfitstore.h>
@@ -46,6 +46,7 @@ public:
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
                           const std::string& lineWidthType,
+                          const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
@@ -263,6 +264,8 @@ public:
     TStringList GetModelRulesLog();
 
     Int32 setPassMode(Int32 iPass);
+    Int32 GetPassNumber();
+
     void SetForcedisableTplratioISMfit(bool opt);
 
     CRayCatalogsTplShape m_CatalogTplShape;
@@ -276,6 +279,7 @@ public:
     std::vector<std::vector<Float64>> m_LyaDeltaCoeffTplshape;
     std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
 
+    Int32 m_pass = 1;
     bool m_enableAmplitudeOffsets;
     Float64 m_LambdaOffsetMin = -400.0;
     Float64 m_LambdaOffsetMax = 400.0;
@@ -323,6 +327,7 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
+    void ActivateLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);
@@ -390,7 +395,7 @@ private:
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
     std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
 
-    COperatorChiSquare2 m_chiSquareOperator;
+    COperatorTemplateFitting m_templateFittingOperator;
     Int32 m_secondpass_fitContinuum_dustfit;
     Int32 m_secondpass_fitContinuum_igm;
     Int32 m_secondpass_fitContinuum_outsidelinesmask;

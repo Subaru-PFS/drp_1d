@@ -26,10 +26,6 @@ public:
     void Save( const CDataStore& store, std::ostream& stream ) const;
     void SaveLine( const CDataStore& store, std::ostream& stream ) const;
 
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
 private:
 
     Float64 m_StdSpectrum;

@@ -10,7 +10,6 @@
 #include <RedshiftLibrary/log/log.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
-#include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/debug/assert.h>
 
 #include <cmath>
@@ -42,6 +41,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_nbScales(other.m_nbScales),
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
@@ -87,19 +87,27 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     }
 }
 
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis) :
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf) :
     m_SpectralAxis(spectralAxis),
     m_RawFluxAxis(fluxAxis),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
     m_dfBinPath(""),
-    m_Name("") 
+    m_Name(""),
+    m_LSF(lsf)
 {
 
 }
 
-//copy constructor,
+CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis):
+    CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>())
+{
+
+}
+
+
+//copy constructor
 // copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
 // and const members (m_dLambdaFineGrid &m_method2baseline)
 CSpectrum::CSpectrum(const CSpectrum& other):
@@ -112,6 +120,7 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
     m_WithoutContinuumFluxAxis(other.m_WithoutContinuumFluxAxis),
     m_spcType(other.m_spcType),
+    m_LSF(other.m_LSF),
     m_Name(other.m_Name),
     alreadyRemoved(other.alreadyRemoved)
 {
@@ -132,6 +141,8 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_ContinuumFluxAxis = other.m_ContinuumFluxAxis;
     m_WithoutContinuumFluxAxis = other.m_WithoutContinuumFluxAxis;
     m_spcType = other.m_spcType;
+
+    m_LSF = other.m_LSF;
 
     m_estimationMethod = other.m_estimationMethod;
     m_dfBinPath = other.m_dfBinPath;
@@ -398,6 +409,7 @@ void CSpectrum::SetType(const CSpectrum::EType type) const
     m_spcType = type;
 }
 
+
 const Bool CSpectrum::checkFlux( Float64 flux, Int32 index ) const
 {
     //Log.LogDebug("    CSpectrum::checkFlux - Found flux value (=%e) at index=%d", flux, index);
@@ -663,43 +675,6 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
     m_dfBinPath = binPath;
 }
 
-void CSpectrum::LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath)
-{
-  std::string spcName="";
-  std::string noiseName="";
-
-  CSpectrumIOGenericReader reader;
-
-  if(spectrumFilePath!=NULL)
-      spcName = bfs::path(spectrumFilePath).stem().string() ;
-
-  if(noiseFilePath!=NULL)
-      noiseName = bfs::path(noiseFilePath).stem().string() ;
-
-  SetName(spcName.c_str());
-  SetFullPath(bfs::path( spectrumFilePath ).string().c_str());
-
-  reader.Read(spectrumFilePath, *this);
-  Log.LogInfo("Successfully loaded input spectrum file: (%s), samples : %d",
-	      spcName.c_str(), GetSampleCount() );
-
-  ResetContinuum();
-
-  // add noise if any or add flat noise
-  if( noiseFilePath == NULL )
-    {
-      CNoiseFlat noise;
-      noise.SetStatErrorLevel( 1.0 );
-      noise.AddNoise(*this);
-    }
-  else
-    {
-      CNoiseFromFile noise;
-      noise.SetNoiseFilePath(noiseFilePath, reader);
-      noise.AddNoise(*this);
-      Log.LogInfo("Successfully loaded input noise file:    (%s)", noiseName.c_str() );
-    }
-}
 
 void CSpectrum::InitPrecomputeFineGrid() const
 {

@@ -14,55 +14,75 @@ CClassificationSolve::~CClassificationSolve()
 
 }
 
-void CClassificationSolve::Classify(const CDataStore& store, std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qsoResult)    
+void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qsoResult)    
 {
-    classifResult = std::shared_ptr<CClassificationResult>( new CClassificationResult() );
+    classifResult = std::make_shared<CClassificationResult>();
     
-    Float64 qsoEvidence = 0 ;
-    Float64 stellarEvidence = 0;
-    Float64 galaxyEvidence = 0;
-    Float64 sum = 0; 
+    Float64 qsoLogEvidence = -INFINITY ;
+    Float64 stellarLogEvidence = -INFINITY;
+    Float64 galaxyLogEvidence = -INFINITY;
+    Float64 MaxLogEvidence = -INFINITY;
 
     if(galaxyResult){
-        galaxyResult->GetEvidenceFromPdf(store, galaxyEvidence);
-        Log.LogInfo( "Found galaxy evidence: %e", galaxyEvidence);
-        typeLabel = "G";
-        sum += galaxyEvidence;
+        galaxyLogEvidence = galaxyResult->getEvidence();
+        Log.LogInfo( "Found galaxy LogEvidence: %e", galaxyLogEvidence);
+        if (galaxyLogEvidence > MaxLogEvidence){
+            MaxLogEvidence = galaxyLogEvidence;
+            typeLabel = "G";
+        }
     }
 
     if(m_enableStarFitting=="yes"){
-        Int32 retStellarEv = starResult->GetEvidenceFromPdf(store, stellarEvidence);
-        sum += stellarEvidence;
-        if(retStellarEv==0)
+    stellarLogEvidence = starResult->getEvidence();
+        Log.LogInfo( "Found stellar LogEvidence: %e", stellarLogEvidence);
+        if(stellarLogEvidence > MaxLogEvidence)
         {
-            Log.LogInfo( "Found stellar evidence: %e", stellarEvidence);
-            if(stellarEvidence>galaxyEvidence)
-            {
-                typeLabel = "S";
-            }
-        }
-    }
-    if(m_enableQsoFitting=="yes"){
-        Int32 retQsoEv = qsoResult->GetEvidenceFromPdf(store, qsoEvidence);
-        sum += qsoEvidence;
-        if(retQsoEv==0)
-        {
-            Log.LogInfo( "Found qso evidence: %e", qsoEvidence);
-            if(qsoEvidence>galaxyEvidence && qsoEvidence>stellarEvidence)
-            {
-                typeLabel = "Q";
-            }
+            MaxLogEvidence = stellarLogEvidence;
+            typeLabel = "S";
         }
     }
 
+    if(m_enableQsoFitting=="yes"){
+        qsoLogEvidence = qsoResult->getEvidence();
+        Log.LogInfo( "Found qso LogEvidence: %e", qsoLogEvidence);
+        if(qsoLogEvidence>MaxLogEvidence)
+        {
+            MaxLogEvidence = qsoLogEvidence;
+            typeLabel = "Q";
+        }
+    }
+
+    // compute  proba 
+    Float64 Pgal = 0.;
+    Float64 Pstar = 0.;
+    Float64 Pqso = 0.;
+    Float64 sum = 0.;
+
+    if (galaxyResult){
+        Pgal = exp(galaxyLogEvidence - MaxLogEvidence);
+        sum += Pgal;
+    }
+    if (stellarLogEvidence > -INFINITY){
+         Pstar = exp(stellarLogEvidence - MaxLogEvidence);
+         sum += Pstar;
+    }
+    if (qsoLogEvidence > -INFINITY){
+        Pqso = exp(qsoLogEvidence - MaxLogEvidence);
+        sum += Pqso;
+    }
+    
     if(sum<=0){
-        return;
+        Log.LogError( "%s: Classification G/S/Q, all probabilities undefined.", __func__);
+        throw std::runtime_error("Classification G/S/Q, all probabilities undefined");
     }   
 
+    Pgal /= sum;
+    Pstar /= sum;
+    Pqso /= sum;
     classifResult->SetTypeLabel(typeLabel);
-    classifResult->SetG(galaxyEvidence, galaxyEvidence/sum);
-    classifResult->SetS(stellarEvidence, stellarEvidence/sum);
-    classifResult->SetQ(qsoEvidence, qsoEvidence/sum);
+    classifResult->SetG(galaxyLogEvidence, Pgal);
+    classifResult->SetS(stellarLogEvidence, Pstar);
+    classifResult->SetQ(qsoLogEvidence, Pqso);
 
     return;
 }

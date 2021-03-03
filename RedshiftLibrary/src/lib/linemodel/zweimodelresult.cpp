@@ -33,7 +33,7 @@ CZweiModelResult::~CZweiModelResult()
 
 }
 
-void CZweiModelResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CZweiModelResult::Save(std::ostream& stream ) const
 {
     // first save the s1 redshift values on 1 line
     stream << "#redhifts s1" << std::endl;;
@@ -67,7 +67,7 @@ void CZweiModelResult::Save( const CDataStore& store, std::ostream& stream ) con
 /**
  * \brief Empty method.
  **/
-void CZweiModelResult::SaveLine(const CDataStore &store, std::ostream& stream ) const
+void CZweiModelResult::SaveLine( std::ostream& stream ) const
 {
     stream << "testSaveLine";
 }

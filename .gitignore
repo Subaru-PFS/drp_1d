@@ -62,6 +62,7 @@ dist
 pylibamazed/redshift_wrap.cpp
 pylibamazed/redshift_wrap.h
 pylibamazed/redshift.py
+pylibamazed/python/pylibamazed/resources/
 *.egg*
 wheel
 

@@ -38,8 +38,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelResult linemodelResult = CLineModelResult();
   linemodelResult.Redshifts.push_back(0.6);
   linemodelResult.Redshifts.push_back(0.8);
-  linemodelResult.ExtremaResult.Extrema.push_back(0.8);
-  linemodelResult.ExtremaResult.Extrema.push_back(0.6);
 
   lineModelSolution.ElementId.push_back(0);
   lineModelSolution.ElementId.push_back(1);
@@ -107,7 +105,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CModelFittingResult result = CModelFittingResult(lineModelSolution, 0.5, 1.2,
 						   _restRayList, -1.0, -1.0 );
 
-  result.Save(store, stream);
+  result.Save(stream);
 
   result_loaded.Load(temp.c_str());
 

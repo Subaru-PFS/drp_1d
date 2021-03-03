@@ -46,6 +46,7 @@ public:
     std::string                     GetScope(const COperatorResult& result) const;
 
     // Wrapper functions
+    void                            GetScopedParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range() ) const;
     void                            GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
     void                            GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
     void                            GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
@@ -62,6 +63,7 @@ public:
     void                            SetScopedParam( const std::string& name, Bool v );
     void                            SetScopedParam( const std::string& name, const std::string& v );
 
+    void                            GetParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range() ) const;
     void                            GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
     void                            GetParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
     void                            GetParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
@@ -96,7 +98,8 @@ public:
     void                            SaveClassificationResult( const boost::filesystem::path& dir );
     void                            SaveAllResults(const boost::filesystem::path& dir , const std::string opt) const;
 
-
+  COperatorResultStore&           getResultStore() {return m_ResultStore;}
+  
 protected:
 
     std::string                     GetScopedName( const std::string& name ) const;

@@ -2,11 +2,15 @@
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
 #include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include <RedshiftLibrary/spectrum/LSF.h>
+#include <RedshiftLibrary/spectrum/LSFConstant.h>
 #include <RedshiftLibrary/continuum/continuum.h>
 
 #include <unordered_map>
+#include <stdexcept>
 #include <string>
 
 namespace NSEpic
@@ -36,6 +40,7 @@ public:
     CSpectrum();
     CSpectrum(const CSpectrum& other, TFloat64List mask);
     CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
+    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
     ~CSpectrum();
 
@@ -54,12 +59,15 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
+    std::shared_ptr<const CLSF>     GetLSF() const;
 
     CSpectrumSpectralAxis&          GetSpectralAxis();
     CSpectrumFluxAxis&              GetFluxAxis();
     CSpectrumFluxAxis&              GetRawFluxAxis();
     CSpectrumFluxAxis&              GetContinuumFluxAxis();
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
+    std::shared_ptr<CLSF>           GetLSF();
+    void                            SetLSF(const std::shared_ptr<CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -93,8 +101,6 @@ public:
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
 
-    void                            LoadSpectrum(const char* spectrumFilePath, const char* noiseFilePath);
-
     void                            ScaleFluxAxis(Float64 scale);
 
     void                            InitPrecomputeFineGrid() const;
@@ -106,6 +112,7 @@ public:
 protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
+    std::shared_ptr<CLSF>           m_LSF;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -247,6 +254,24 @@ CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
     return m_WithoutContinuumFluxAxis;
 }
 
+inline
+std::shared_ptr<CLSF> CSpectrum::GetLSF()
+{
+    return m_LSF;
 }
 
+inline
+std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
+{
+    return m_LSF;
+
+}
+
+inline 
+void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
+{
+    m_LSF = lsf;
+}
+
+}
 #endif

@@ -10,7 +10,7 @@
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 
-#include <RedshiftLibrary/operator/chisquare2.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
 #include <RedshiftLibrary/linemodel/element.h>
@@ -37,6 +37,7 @@ public:
                                 const std::string &opt_fittingmethod,
                                 const std::string &opt_continuumcomponent,
                                 const std::string &widthType,
+                                const std::string &opt_enable_LSF,
                                 const Float64 opt_nsigmasupport,
                                 const Float64 resolution,
                                 const Float64 velocityEmission,
@@ -59,6 +60,7 @@ private:
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
                                 const std::string &widthType,
+                                const std::string &opt_enable_LSF,
                                 const Float64 opt_nsigmasupport,
                                 const Float64 resolution,
                                 const Float64 velocityEmission,

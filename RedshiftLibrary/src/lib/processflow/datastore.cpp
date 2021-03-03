@@ -121,8 +121,8 @@ void CDataStore::DeleteScopedGlobalResult( const std::string& name )
 }
 void CDataStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )
 {
-    
-    auto  result = GetGlobalResult( oldkey ).lock();
+    const std::string scoped_oldkey  = GetCurrentScopeName() + "." + oldkey;
+    auto  result = GetGlobalResult( scoped_oldkey ).lock();
     StoreScopedGlobalResult(newkey, result);
     DeleteScopedGlobalResult(oldkey);
 }
@@ -176,6 +176,11 @@ std::string  CDataStore::GetScopedName( const std::string& name ) const {
 
     return scopedName;
 
+}
+
+void CDataStore::GetScopedParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
+{
+    return m_ParameterStore.Get( GetScopedName( name ), v, defaultValue );
 }
 
 void CDataStore::GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
@@ -248,9 +253,10 @@ void CDataStore::SetScopedParam( const std::string& name, const std::string& v )
     return m_ParameterStore.Set( GetScopedName( name ), v );
 }
 
-
-
-
+void CDataStore::GetParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
+{
+    return m_ParameterStore.Get( name, v, defaultValue );
+}
 
 void CDataStore::GetParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
 {
