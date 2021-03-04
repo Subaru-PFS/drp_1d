@@ -21,12 +21,9 @@ public:
     CZweiModelResult();
     virtual ~CZweiModelResult();
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
+    void Save(std::ostream& stream ) const;
+    void SaveLine(std::ostream& stream ) const;
+ 
 
 private:
     std::vector<Float64> m_redshifts_s1;

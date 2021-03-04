@@ -23,7 +23,7 @@ CPdfzFeatureResult::~CPdfzFeatureResult()
 }
 
 
-void CPdfzFeatureResult::Save( const CDataStore& store, std::ostream& stream ) const
+void CPdfzFeatureResult::Save(std::ostream& stream ) const
 {
 	std::setprecision(20);
     stream << "#zPDF_descriptors \tValue" << std::endl;
@@ -42,7 +42,7 @@ void CPdfzFeatureResult::Save( const CDataStore& store, std::ostream& stream ) c
 }
 
 
-void CPdfzFeatureResult::SaveLine( const CDataStore& store, std::ostream& stream ) const
+void CPdfzFeatureResult::SaveLine(std::ostream& stream ) const
 {
 	//stream.precision(20);
 	//stream << "CPdfzFeatureResult" << "\t" << mapzfeatures.size() << std::endl;

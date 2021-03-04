@@ -24,8 +24,8 @@ try:
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
-swig_ext = Extension('pylibamazed/_redshift', sources=['pylibamazed/redshift.i'],
-                     swig_opts=['-c++'],
+swig_ext = Extension('pylibamazed/_redshift', sources=['RedshiftLibrary/RedshiftLibrary/redshift.i'],
+                     swig_opts=['-c++','-outdir','pylibamazed/python/pylibamazed'],
                      extra_compile_args=extra_compile_args,
                      include_dirs=include_dirs + [numpy_include],
                      library_dirs=library_dirs,

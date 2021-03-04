@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     BOOST_CHECK_CLOSE( 1.2, elementfixed.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
     BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., true, CRay::NONE),0.001);
     BOOST_CHECK_CLOSE( 3346.06, elementcombined.GetLineWidth(10000., 1., false, CRay::NONE),0.001);
-    BOOST_CHECK_CLOSE( 0.0333333, elementVD.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
-    BOOST_CHECK_CLOSE( 0.0366667, elementVD.GetLineWidth(10000., 1., false, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 0.0333564, elementVD.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
+    BOOST_CHECK_CLOSE( 0.0366920, elementVD.GetLineWidth(10000., 1., false, CRay::NONE), 0.001);
     BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true, CRay::NONE), 0.001);
     BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1., false, CRay::NONE), 0.001);
     BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false, CRay::EXTINCT), 0.001);

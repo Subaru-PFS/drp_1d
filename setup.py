@@ -10,13 +10,14 @@ class CustomBuild(build):
 
 setup(
     name="pylibamazed",
-    version="0.16.1",
+    version="0.18.0",
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python library."),
     license="GPLv3+",
     url="http://www.lam.fr",
     packages=['pylibamazed'],
+    package_dir = {'':'pylibamazed/python'},
     include_package_data=True,
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.md')).read(),

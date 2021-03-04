@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/operator/tplcombination.h>
+#include <RedshiftLibrary/operator/templatefittingresult.h>
 
 #include <RedshiftLibrary/spectrum/axis.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
@@ -29,7 +30,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
-#include <boost/progress.hpp>
+//#include <boost/progress.hpp>
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN
@@ -370,14 +371,12 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
                                                                   std::vector<CMask> additional_spcMasks,
-                                                                  const Float64 radius,
                                                                   std::string opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting)
 {
     Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", tplList.size());
 
-    m_radius = radius;
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false )
     {
         Log.LogError("  Operator-tplcombination: input spectrum is not in log scale (ignored)");
@@ -422,8 +421,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         sortedIndexes.push_back(vp[i].second);
     }
 
-    Log.LogDebug("  Operator-tplcombination: prepare the results");
-    std::shared_ptr<CChisquareResult> result = std::shared_ptr<CChisquareResult>( new CChisquareResult() );
+    Log.LogDebug("  Operator-tp<lcombination: prepare the results");
+    std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
     Int32 nDustCoeffs=1;
     if(opt_dustFitting)
     {
@@ -557,10 +556,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     //estimate CstLog for PDF estimation
     result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
     
-    result->CallFindExtrema(m_radius);
-
     //store spectrum results
-    Int32 nMaxExtremaSpectraSave = 1;
+/*    Int32 nMaxExtremaSpectraSave = 1;
     for( Int32 ie=0; ie<result->Extrema.size(); ie++ )
     {
         if(ie>=nMaxExtremaSpectraSave)
@@ -622,7 +619,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }else{
             Log.LogError("  Operator-Tplcombination: Unable to find the z index for spectrum result save");
         }
-    }
+    }*/
 
     // Deallocate the rebined template and mask buffers
     m_templatesRebined_bf.clear();
@@ -658,12 +655,13 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
     return cstLog;
 }
 
-void COperatorTplcombination::SaveSpectrumResults(CDataStore &dataStore)
+void COperatorTplcombination::SaveSpectrumResults(COperatorResultStore &resultStore)
 {
     Log.LogDetail("  Operator-Tplcombination: now saving spectrum/model tplcombination results n=%d", m_savedModelSpectrumResults.size());
     for(Int32 ie=0; ie<m_savedModelSpectrumResults.size(); ie++)
     {
         std::string fname_spc = (boost::format("tplcombinationmodel_spc_extrema_%1%") % ie).str();
-        dataStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
+       
+        resultStore.StoreGlobalResult("tplcombinationsolve",fname_spc.c_str(), m_savedModelSpectrumResults[ie] );
     }
 }

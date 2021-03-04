@@ -23,12 +23,9 @@ public:
     CModelSpectrumResult();
     virtual ~CModelSpectrumResult();
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
+    void Save(std::ostream& stream ) const;
+    void SaveLine(std::ostream& stream ) const;
+    
     CSpectrum& GetSpectrum();
 
   void getData(const std::string& name, double **data, int *size) const;

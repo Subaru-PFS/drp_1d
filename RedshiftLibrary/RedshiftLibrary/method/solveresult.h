@@ -7,30 +7,36 @@
 
 namespace NSEpic
 {
+  class CExtremaResult;
 
   class CSolveResult: public COperatorResult
   {
 
   public:
 
-    CSolveResult();
+    CSolveResult(const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+                 const std::string & opt_pdfcombination,
+                 Float64 evidence);
     virtual ~CSolveResult();
 
-    virtual Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) = 0;
     void SetReliabilityLabel( std::string lbl );
     void SetTypeLabel( std::string lbl );
 
-    virtual void preSave(const CDataStore& store) = 0;
-    
+    //virtual void preSave(const CDataStore& store) = 0;
+    Int32 m_bestRedshiftMethod = 2; //0:best chi2 or proba, 2: best marg proba
+
     std::string m_ReliabilityLabel="-1";
     std::string m_TypeLabel="-1";
 
     Float64 getMerit() {return m_merit;}
+    Float64 getEvidence() {return m_evidence;}
+
     void getData(const std::string& name, std::string& v) const;
 
   protected:
     Float64 m_redshift;
     Float64 m_merit;
+    Float64 m_evidence = -INFINITY;
 
   };
 }

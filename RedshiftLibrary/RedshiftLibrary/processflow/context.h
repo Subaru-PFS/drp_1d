@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
-
+#include <RedshiftLibrary/linemodel/calibrationconfig.h> 
 #include <RedshiftLibrary/reliability/zclassifierstore.h>
 
 #include <gsl/gsl_errno.h>
@@ -41,17 +41,11 @@ public:
     ~CProcessFlowContext();
 
     bool Init(std::shared_ptr<CSpectrum> spectrum,
-	      std::string processingID,
-	      const char* templateCatalogPath, const char* rayCatalogPath,
-	      std::shared_ptr<CParameterStore> paramStore,
-	      std::shared_ptr<CClassifierStore> zqualStore);
-
-    bool Init(std::shared_ptr<CSpectrum> spectrum,
-	      std::string processingID,
-	      std::shared_ptr<const CTemplateCatalog> templateCatalog,
-	      std::shared_ptr<const CRayCatalog> rayCatalog,
-	      std::shared_ptr<CParameterStore> paramStore,
-	      std::shared_ptr<CClassifierStore> zqualStore);
+              std::string processingID,
+              std::shared_ptr<const CTemplateCatalog> templateCatalog,
+              std::shared_ptr<const CRayCatalog> rayCatalog,
+              std::shared_ptr<CParameterStore> paramStore,
+              std::shared_ptr<CClassifierStore> zqualStore);
 
     const CSpectrum&                GetSpectrum() const;
     const CTemplateCatalog&         GetTemplateCatalog() const;
@@ -63,6 +57,10 @@ public:
     COperatorResultStore&           GetResultStore();
     CDataStore&                     GetDataStore();
     CClassifierStore&               GetClassifierStore();
+    
+    const TStringList&                    GetStarCategoryList() const;
+    const TStringList&                    GetQSOCategoryList() const;
+    const TStringList&                    GetGalaxyCategoryList() const;
 
 private:
 
@@ -79,6 +77,10 @@ private:
 
     std::shared_ptr<CDataStore>                m_DataStore;
     std::shared_ptr<CClassifierStore>          m_ClassifierStore;
+    
+    TStringList                                m_filteredStarTemplateCategoryList{"star"}; 
+    TStringList                                m_filteredQSOTemplateCategoryList{"qso", "emission"}; //"qso"
+    TStringList                                m_filteredGalaxyTemplateCategoryList{"galaxy"};
 
 };
 

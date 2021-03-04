@@ -25,7 +25,6 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
                         std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, nsigmasupport, resolution, velocityEmission, velocityAbsorption )
 {
     m_ElementType = "CMultiLine";
-    m_c_kms = 300000.0; //to be defined in a better location ?
 
     m_Rays = rs;
 
@@ -438,7 +437,7 @@ Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
  **/
 Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta)
 {
-    Float64 dzOffset = m_Rays[subeIdx].GetOffset()/m_c_kms;
+    Float64 dzOffset = m_Rays[subeIdx].GetOffset()/m_speedOfLightInVacuum;
 
     Float64 mu = m_Rays[subeIdx].GetPosition()*(1+redshift)*(1+dzOffset);
 
@@ -1036,7 +1035,7 @@ Float64 CMultiLine::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 re
         }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = GetObservedPosition(k2, redshift, false);
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 
@@ -1068,7 +1067,7 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
         }
         Float64 A = m_FittedAmplitudes[k2];
         Float64 mu = GetObservedPosition(k2, redshift, false);
-        Float64 dzOffset = m_Rays[k2].GetOffset()/m_c_kms;
+        Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
 

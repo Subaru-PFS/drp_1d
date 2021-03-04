@@ -24,6 +24,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                  const std::string& opt_fittingmethod,
                                  const std::string& opt_continuumcomponent,
                                  const std::string& widthType,
+                                 const std::string& opt_enable_LSF,
                                  const Float64 resolution,
                                  const Float64 velocityEmission,
                                  const Float64 velocityAbsorption,
@@ -76,6 +77,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              opt_fittingmethod,
                                                                                              opt_continuumcomponent,
                                                                                              widthType,
+                                                                                             opt_enable_LSF,
                                                                                              lines_nsigmasupport,
                                                                                              resolution,
                                                                                              velocityEmission,
@@ -806,6 +808,7 @@ void CMultiRollModel::SetVelocityEmission(Float64 vel)
         m_models[km]->SetVelocityEmission(vel);
     }
 }
+
 
 Float64 CMultiRollModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
 {

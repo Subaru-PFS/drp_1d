@@ -337,6 +337,56 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval)
     BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
 
 }
+BOOST_AUTO_TEST_CASE(Closed_interval)
+{
+    Float64 delta = 1.0;
+    std::vector<Float64> myVector(15);
+    for(UInt32 i = 0; i < myVector.size(); i++)
+    {
+        myVector[i] = 1 + delta * i;
+    }
+
+    const Float64 target = 8.;
+    Int32 i_min = -1, i_max = -1;
+    
+    //range borders belong to orderded values
+    TFloat64Range range = TFloat64Range(6.5,10.3);    
+    range.getClosedIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK( myVector[i_min] >= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] <= range.GetEnd());
+    BOOST_CHECK( i_min == 6);
+    BOOST_CHECK( i_max == 9);
+    
+    i_min = -1, i_max = -1;
+    //range borders belong to orderded values
+    range= TFloat64Range(6.,10.);
+    range.getClosedIntervalIndices(myVector,i_min,i_max);     
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( i_min == 5);
+    BOOST_CHECK( i_max == 9);
+
+    //range borders correspond to min/max orderded values
+    i_min = -1, i_max = -1;
+    range= TFloat64Range(1.,15.);
+    range.getClosedIntervalIndices(myVector,i_min,i_max); 
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( i_min == 0);
+    BOOST_CHECK( i_max == 14);
+
+    i_min = -1, i_max = -1;
+    range = TFloat64Range(-2.,17.);    
+    range.getClosedIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK( i_min == 0);
+    BOOST_CHECK( i_max == 14);
+
+    i_min = -1, i_max = -1;
+    range = TFloat64Range(0,1);    
+    range.getClosedIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK( i_min == 0);
+    BOOST_CHECK( i_max == 0);
+}
 
 
 //-----------------------------------------------------------------------------

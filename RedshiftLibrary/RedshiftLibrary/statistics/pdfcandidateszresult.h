@@ -1,78 +1,50 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
+
+//#include <cmath>
+//#include <map>
+#include <ostream>
+#include <string>
 
 namespace NSEpic
 {
-
 
 class CPdfCandidateszResult : public COperatorResult
 {
 
 public:
 
-    CPdfCandidateszResult();
-    virtual ~CPdfCandidateszResult();
+    CPdfCandidateszResult(Int32 optMethod=0): m_optMethod(optMethod) {};
+    ~CPdfCandidateszResult() = default;
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-    inline Int32 GetEvidenceFromPdf(const CDataStore& store, Float64 &evidence) const
-    {
-        return 1;
-    }
+    void Save(std::ostream& stream ) const;
+    void SaveLine(std::ostream& stream ) const;
+   
+    Float64 getDouble(std::string name,Int32 rank) const;
+    std::string getString(std::string name,Int32 rank) const;
+    Int32 getInt(std::string name,Int32 rank) const;
+    Int32 getNbCandidates() const;
 
-    void Resize(Int32 n);
+    void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
+    void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
+    void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
+    void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
 
-    Int32 Compute(TRedshiftList const & zc , TRedshiftList const & Pdfz, TFloat64List const & PdfProbalog,
-                  const TRedshiftList & deltaz = TRedshiftList(), const TStringList & IDs= TStringList());
+    void getData(const std::string& name, Int32& v) const;
+    void getData(const std::string& name, Float64& v) const;
+    void getData(const std::string& name, std::string& v) const;
+    void getData(const std::string& name, double **data, int *size) const;
 
-    void Init(TRedshiftList const & zc, const TRedshiftList & deltaz = TRedshiftList(), const TStringList & IDs= TStringList());
+    Int32                       m_optMethod; //0: direct integration, 1:gaussian fit
 
-    TInt32List SetIntegrationWindows(const TRedshiftList &Pdfz, TFloat64RangeList & ranges);
-
-    Bool GetBestRedshiftsFromPdf(const CDataStore& store, 
-                                TFloat64List Extrema,  
-                                std::vector<TFloat64List> ExtremaExtendedRedshifts, 
-                                TFloat64List& candidates) const;
-  Float64 getDouble(std::string name,Int32 rank) const;
-  std::string getString(std::string name,Int32 rank) const;
-  Int32 getInt(std::string name,Int32 rank) const;
-  Int32 getNbCandidates() const;
-
-  void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
-  void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
-  void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
-  void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
-
-  void getData(const std::string& name, Int32& v) const;
-  void getData(const std::string& name, Float64& v) const;
-  void getData(const std::string& name, std::string& v) const;
-  void getData(const std::string& name, double **data, int *size) const;
-
-  
-    Int32                       optMethod; //0: direct integration, 1:gaussian fit
-    Float64                     dzDefault;
-    std::vector<std::string> ExtremaIDs; //also sort ids
-
-    TFloat64List           		Redshifts;
-    TFloat64List           		ValSumProba;
-    TInt32List                  Rank;
-    TFloat64List                Deltaz;
-    //opt 1: direct integration
-    //
-    //opt 2: gaussian fit
-    TFloat64List           		GaussAmp;
-    TFloat64List           		GaussAmpErr;
-    TFloat64List           		GaussSigma;
-    TFloat64List           		GaussSigmaErr;
-    //TFloat64List           		GaussSkewness; //todo !
+    TCandidateZbyRank m_ranked_candidates;
 
 private:
 
-    void SortByValSumProbaInt(TInt32List& flist);
 };
 
 }

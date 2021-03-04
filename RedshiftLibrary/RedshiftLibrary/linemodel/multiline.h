@@ -96,9 +96,6 @@ private:
 
     TBoolList           m_OutsideLambdaRangeList;
 
-    //constant
-    Float64 m_c_kms;
-
     const bool m_verbose=false;
 };
 

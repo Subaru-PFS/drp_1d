@@ -106,45 +106,31 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         return 300*(1.0+z); //hardcoded, in Angstrom
     }
 
-    Float64 instrumentSigma = 0.0;
-    Float64 velocitySigma = 0.0;
-    Float64 sourcesizeSigma = 0.0;
-
-    const Float64 c = 300000.0;
+    const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
     const Float64 arcsecPix = 0.355; //0.3 is the same as in tipsfast
     const Float64 angstromPix = 13.4;
-    Float64 v;
+    Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
+
+    Float64 instrumentSigma = m_enableLSF ? m_LSF->GetSigma(redshiftedlambda) : redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+    Float64 velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
+    Float64 sourcesizeSigma = 0.0;        
 
     switch (m_LineWidthType) {
     case INSTRUMENTDRIVEN:
-        instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+         velocitySigma = 0.0;
         break;
     case FIXED:
         instrumentSigma = m_NominalWidth;
+        velocitySigma = 0.0;
         break;
     case COMBINED:
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
-        instrumentSigma = redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
         break;
     case VELOCITYDRIVEN:
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
+        instrumentSigma = 0.0;
         break;
     case NISPSIM2016:
         instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;
         break;
     case NISPVSSPSF201707:
         //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50: SpaceSegment.PLM.PLMAsRequired.PLMNISPrEE50rEE80
@@ -159,11 +145,6 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
 
         sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
 
-        v = m_VelocityEmission;
-        if(!isEmission){
-            v = m_VelocityAbsorption;
-        }
-        velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;
         break;
     default:
         Log.LogError("Invalid LineWidthType %d", m_LineWidthType);
@@ -171,7 +152,6 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma + sourcesizeSigma*sourcesizeSigma);
-
 
     return sigma;
 }
@@ -357,7 +337,7 @@ Float64 CLineModelElement::GetLineProfileDerivZ(CRay::TProfile profile, Float64 
 }
 
 Float64 CLineModelElement::GetLineProfileDerivVel(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
-    const Float64 c = 300000.0;
+    const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
     Float64 v, v_to_sigma;
 
@@ -384,7 +364,6 @@ Float64 CLineModelElement::GetLineProfileDerivVel(CRay::TProfile profile, Float6
 Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma)
 {
     Float64 val=0.0;
-    //Float64 cel = 300000.0;
     Float64 xc = x-x0;
     Float64 xsurc, xsurc2, coeff, alpha, alpha2, valsym, valsymd, valasym, arg, valasymd, xcd;
     Float64 muz, sigmaz, delta, gamma1, m0;
@@ -525,6 +504,12 @@ void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
     m_SourceSizeDispersion = sigma;
 }
 
+void CLineModelElement::ActivateLSF(const std::shared_ptr<const CLSF> & lsf)
+{
+    m_enableLSF = true;
+    m_LSF = lsf;
+}
+
 void CLineModelElement::SetVelocityEmission(Float64 vel)
 {
     m_VelocityEmission = vel;
@@ -626,9 +611,8 @@ Float64 CLineModelElement::GetFitAmplitude()
 }
 
 
-
 /**
- * Laod the extinction residue data.
+ * Load the extinction residue data.
  */
 Bool CLineModelElement::LoadDataExtinction()
 {

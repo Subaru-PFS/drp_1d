@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.18.0 (2021-02-26)
+### Added
+* [6120] : Add Line Spread Function	
+* [6167] : Add `redshiftrange` and `redshiftstep` parameters for stellar solver to tune the redshift computationnal grid
+* [6133] : Add precompute continuum fit in the 2nd pass of linemodel method
+* [6290] : Add firstpass data to HDF5 outputs
+
+### Changed
+* [6261] : Rename chisquare2 method into templatefitting
+* [5815] : New design of PDF computation and processing
+* [6039] : New loading method of template catalogs
+* [6163] : New exceptions management 
+
+### Deprecated
+
+### Removed
+* [6146] : Remove deprecated computeContinuumStat parameter
+* [6167] : Remove deprecated CMethods and COperators
+
+### Fixed
+* [6018] : Fix negative evidence values
+* [6328] : Correct bug in star models
+
 ## 0.16.0 (2020-12-15)
 ### Added
 * [5997] : Add model parameters into HDF5 output for chisquare2 method

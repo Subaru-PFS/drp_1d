@@ -49,7 +49,7 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     m_Spectrum = spectrum;
     InitSpectrum();
 
-    // calzetti ISM & Meiksin IGM initialiation
+    // Calzetti ISM & Meiksin IGM initialization
     std::string calibrationPath;
     m_ParameterStore->Get( "calibrationDir", calibrationPath );
     InitIsmIgm(calibrationPath);
@@ -62,46 +62,6 @@ bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
     Log.LogInfo("Processing context is ready");
 
     return true;
-}
-
-bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
-				std::string processingID,
-                                const char* templateCatalogPath, const char* rayCatalogPath,
-                                std::shared_ptr<CParameterStore> paramStore,
-		   	        std::shared_ptr<CClassifierStore> zqualStore )
-{
-
-    std::string medianRemovalMethod;
-    paramStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
-    //override the continuum removal for the templates :
-    //medianRemovalMethod = "noRontinuumRemovalforTemplates";
-    //medianRemovalMethod = "raw";
-
-    Float64 opt_medianKernelWidth;
-    paramStore->Get( "continuumRemoval.medianKernelWidth", opt_medianKernelWidth, 75 );
-    Int64 opt_nscales;
-    paramStore->Get( "continuumRemoval.decompScales", opt_nscales, 8);
-    std::string dfBinPath;
-    paramStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here");
-
-    std::shared_ptr<CTemplateCatalog> templateCatalog = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog( medianRemovalMethod, opt_medianKernelWidth, opt_nscales, dfBinPath) );
-    std::shared_ptr<CRayCatalog> rayCatalog = std::shared_ptr<CRayCatalog>(new CRayCatalog);
-
-    // Load template catalog
-    if( templateCatalogPath )
-    {
-      templateCatalog->Load( templateCatalogPath );
-      Log.LogDebug ( "Template catalog loaded." );
-    }
-
-    // Load line catalog
-    //std::cout << "ctx" << std::endl;
-    if( rayCatalogPath )
-    {
-        rayCatalog->Load( rayCatalogPath );
-    }
-
-    return Init( spectrum, processingID, templateCatalog, rayCatalog, paramStore, zqualStore );
 }
 
 void CProcessFlowContext::InitSpectrum()
@@ -130,7 +90,6 @@ void CProcessFlowContext::InitSpectrum()
     m_Spectrum->SetWaveletsDFBinPath(dfBinPath);
 }
 
-
 void CProcessFlowContext::InitIsmIgm(const std::string & calibrationPath)
 {
     //ISM
@@ -140,13 +99,16 @@ void CProcessFlowContext::InitIsmIgm(const std::string & calibrationPath)
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
     igmCorrectionMeiksin->Init(calibrationPath);
 
-    //push in all galaxy templates
-    TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{"galaxy"});
-    for (auto tpl : TplList)
-    {
-        tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    }   
+    //push in all templates
+    for(std::string s : m_TemplateCatalog->GetCategoryList()){ 
+        TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
+        for (auto tpl : TplList)
+        {
+            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+            if(s!="star")//no igm for stars
+                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+        }   
+    }
 }
 
 CParameterStore& CProcessFlowContext::GetParameterStore()
@@ -182,6 +144,18 @@ const CSpectrum& CProcessFlowContext::GetSpectrum() const
 const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const
 {
     return *m_TemplateCatalog;
+}
+const TStringList&  CProcessFlowContext::GetGalaxyCategoryList() const
+{
+    return m_filteredGalaxyTemplateCategoryList;
+}
+const TStringList&  CProcessFlowContext::GetStarCategoryList() const
+{
+    return m_filteredStarTemplateCategoryList;                                ; 
+}
+const TStringList&  CProcessFlowContext::GetQSOCategoryList() const
+{
+    return m_filteredQSOTemplateCategoryList;
 }
 
 const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
