@@ -10,6 +10,7 @@ variables:
   TWINE_USERNAME: gitlab-ci-token
   TWINE_PASSWORD: $CI_JOB_TOKEN
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
+  IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
 
 # OSX Stages
 
@@ -169,7 +170,7 @@ push-rc-38-osx:
 # Manylinux2010 stages
 
 build-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build
   when: manual
   script:
@@ -184,7 +185,7 @@ build-manylinux2010:
     untracked: true
 
 test-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: test
   when: manual
   allow_failure: true
@@ -198,7 +199,7 @@ test-manylinux2010:
     untracked: true
 
 wheel36-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
   script:
@@ -226,7 +227,7 @@ wheel36-manylinux2010:
     untracked: true
 
 wheel37-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
   script:
@@ -254,7 +255,7 @@ wheel37-manylinux2010:
     untracked: true
 
 wheel38-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
   script:
@@ -282,7 +283,7 @@ wheel38-manylinux2010:
     untracked: true
 
 push-rc-36-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
@@ -296,7 +297,7 @@ push-rc-36-manylinux2010:
     - wheel36-manylinux2010
 
 push-rc-37-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
@@ -310,7 +311,7 @@ push-rc-37-manylinux2010:
     - wheel37-manylinux2010
 
 push-rc-38-manylinux2010:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2010
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: push-rc
   when: manual
   script:
@@ -326,7 +327,7 @@ push-rc-38-manylinux2010:
 # Manylinux2014 stages
 
 build-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build
   script:
     - source /venv/p36/bin/activate
@@ -340,7 +341,7 @@ build-manylinux2014:
     untracked: true
 
 test-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: test
   allow_failure: true
   script:
@@ -353,7 +354,7 @@ test-manylinux2014:
     untracked: true
 
 wheel36-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
   script:
     - cd build
@@ -380,7 +381,7 @@ wheel36-manylinux2014:
     untracked: true
 
 wheel37-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
   script:
     - cd build
@@ -407,7 +408,7 @@ wheel37-manylinux2014:
     untracked: true
 
 wheel38-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
   script:
     - cd build
@@ -434,7 +435,7 @@ wheel38-manylinux2014:
     untracked: true
 
 push-rc-36-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: push-rc
   when: manual
   script:
@@ -448,7 +449,7 @@ push-rc-36-manylinux2014:
     - wheel36-manylinux2014
 
 push-rc-37-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: push-rc
   when: manual
   script:
@@ -462,7 +463,7 @@ push-rc-37-manylinux2014:
     - wheel37-manylinux2014
 
 push-rc-38-manylinux2014:
-  image: gitlab.lam.fr:5050/cpf/docker_builds/amazed-manylinux2014
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: push-rc
   when: manual
   script:
