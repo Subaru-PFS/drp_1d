@@ -220,12 +220,17 @@ bool CTemplate::MeiksinInitFailed() const
 }
 
 //init ism/igm configuration when we change redshift value
-bool CTemplate::InitIsmIgmConfig()
+bool CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                                const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
     m_NoIsmIgmFluxAxis = GetFluxAxis();
+    if(!m_ismCorrectionCalzetti)
+        m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+    if(!m_igmCorrectionMeiksin)
+        m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);

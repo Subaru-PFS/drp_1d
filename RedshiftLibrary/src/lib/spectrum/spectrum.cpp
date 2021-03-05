@@ -406,6 +406,8 @@ const CSpectrum::EType CSpectrum::GetType() const
 
 void CSpectrum::SetType(const CSpectrum::EType type) const
 {
+    if(m_spcType != type)
+        InitPrecomputeFineGrid();
     m_spcType = type;
 }
 

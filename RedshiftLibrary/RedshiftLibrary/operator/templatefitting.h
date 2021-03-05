@@ -55,8 +55,6 @@ public:
 
 private:
 
-    void BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl);
-
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
                   const TFloat64Range& lambdaRange,
