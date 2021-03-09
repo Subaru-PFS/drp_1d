@@ -202,11 +202,12 @@ wheel36-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p36/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp36-cp36m-*.whl -w wheel --plat manylinux2010_x86_64
@@ -230,11 +231,12 @@ wheel37-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p37/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp37-cp37m-*.whl -w wheel --plat manylinux2010_x86_64
@@ -258,11 +260,12 @@ wheel38-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   stage: build-wheel
   when: manual
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p38/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp38-cp38-*.whl -w wheel --plat manylinux2010_x86_64
@@ -356,11 +359,12 @@ test-manylinux2014:
 wheel36-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p36/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp36-cp36m-*.whl -w wheel --plat manylinux2014_x86_64
@@ -383,11 +387,12 @@ wheel36-manylinux2014:
 wheel37-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p37/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp37-cp37m-*.whl -w wheel --plat manylinux2014_x86_64
@@ -410,11 +415,12 @@ wheel37-manylinux2014:
 wheel38-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: build-wheel
-  script:
+  before_script:
     - cd build
     - make install
     - make clean_python_build
     - cd ..
+  script:
     - source /venv/p38/bin/activate
     - python setup.py bdist_wheel
     - auditwheel repair dist/pylibamazed-*-cp38-cp38-*.whl -w wheel --plat manylinux2014_x86_64
