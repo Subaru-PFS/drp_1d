@@ -90,7 +90,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
 {
     Int32 nSamples = origin.GetSamplesCount();
     m_SpectralFlags = 0;
-    DebugAssert( nSamples ==  GetSamplesCount());
+    m_Samples.resize(nSamples);
 
     const Float64* originSamples = origin.GetSamples();
 

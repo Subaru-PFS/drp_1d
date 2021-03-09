@@ -132,7 +132,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
-    if (opt_extinction || apply_ism){                            
+    if (apply_ism || opt_extinction){             
         m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }
 
@@ -567,8 +567,7 @@ Int32  COperatorTemplateFitting::RebinTemplate( const CSpectrum& spectrum,
     TFloat64Range spcLambdaRange_restframe;
     TFloat64Range lambdaRange_restframe( lambdaRange.GetBegin() / onePlusRedshift,
                                          lambdaRange.GetEnd() / onePlusRedshift );
-    m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
-    m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
+
     //redshift in restframe the tgtSpectralAxis, i.e., division by (1+Z)
     m_spcSpectralAxis_restframe.ShiftByWaveLength(spectrum.GetSpectralAxis(), onePlusRedshift, CSpectrumSpectralAxis::nShiftBackward);
     m_spcSpectralAxis_restframe.ClampLambdaRange( lambdaRange_restframe, spcLambdaRange_restframe );
@@ -686,12 +685,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     Int32 nDustCoeffs=1;
     if(opt_dustFitting==-10)
     {
-        nDustCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nDustCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
     }
     Int32 nIGMCoeffs=1;
     if(opt_extinction && !keepigmism)
     { 
-        nIGMCoeffs = m_templateRebined_bf.m_igmCorrectionMeiksin->GetIdxCount();
+        nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
     }
 
     result->Init(sortedRedshifts.size(), nDustCoeffs, nIGMCoeffs);
@@ -1034,8 +1033,9 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
-    if ((DustCoeff>0.) || (meiksinIdx>0))
+    if ((DustCoeff>0.) || (meiksinIdx>0)){
         m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
+    }
 
     if (DustCoeff>0.)
     {
