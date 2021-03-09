@@ -13,12 +13,8 @@ CSpectrumAxis::CSpectrumAxis()
 }
 
 CSpectrumAxis::CSpectrumAxis( UInt32 n, Float64 value) :
-    m_Samples( n )
+    m_Samples( n , value)
 {
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_Samples[i] = value;
-    }
 }
 
 CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
@@ -35,11 +31,11 @@ CSpectrumAxis::~CSpectrumAxis()
 
 }
 
-CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
+/*CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
 {
     m_Samples = other.m_Samples;
     return *this;
-}
+}*/
 
 CSpectrumAxis& CSpectrumAxis::operator*=(const Float64 op)
 {
@@ -59,7 +55,7 @@ UInt32 CSpectrumAxis::GetSamplesCount( )
     return m_Samples.size();
 }
 
-Int32 CSpectrumAxis::extract(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx)
+Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx)
 {
     m_Samples.resize(endIdx-startIdx +1);
     for(Int32 i = startIdx; i < endIdx + 1; i++){

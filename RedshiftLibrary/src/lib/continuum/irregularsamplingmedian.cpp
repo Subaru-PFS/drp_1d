@@ -194,16 +194,7 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     medianSmoothAmplitude = max( meanSmoothAmplitude, medianSmoothAmplitude );
 
-    noContinuumFluxAxis.SetSize( norig );
-    //TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError().GetSamplesVector();
-    const TFloat64List& fluxAxisError = fluxAxis.GetError().GetSamplesVector();
-    for( j=0; j<norig; j++ )
-    {
-        noContinuumFluxAxis[j] = 0;
-        // Also copy error
-        //noContinuumFluxAxisError[j] = fluxAxisError[j]; //here we copy error to nocontinuumFlux
-    }
-	noContinuumFluxAxis.GetError().extract(fluxAxis.GetError(), 0, norig - 1);
+    noContinuumFluxAxis = CSpectrumFluxAxis(CSpectrumFluxAxis(norig, 0.), fluxAxis.GetError());
     // Find the first not null element, and put its index in k0
     k=0;
     for( j=0; j<norig; j++ )

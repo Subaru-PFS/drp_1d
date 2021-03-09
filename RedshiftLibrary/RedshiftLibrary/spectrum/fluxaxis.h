@@ -20,12 +20,14 @@ class CSpectrumFluxAxis : public CSpectrumAxis
 public:
 
     CSpectrumFluxAxis();
-    explicit CSpectrumFluxAxis( UInt32 n );
+    //value =0. is a default value for flux and not for error.
+    explicit CSpectrumFluxAxis( UInt32 n, Float64 value = 0.0);
+    CSpectrumFluxAxis( const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 obsolete = -1);
     ~CSpectrumFluxAxis();
-
-    CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other);
+    CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other);//copy assignement operator
+    //CSpectrumFluxAxis& operator=( CSpectrumFluxAxis&& other)=default;//move assignement operator
 
     const CSpectrumNoiseAxis&      GetError() const;
     CSpectrumNoiseAxis&            GetError();
@@ -36,7 +38,7 @@ public:
     Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
 
 
-    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const CSpectrumNoiseAxis error ) const;
+    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const CSpectrumNoiseAxis error={} ) const;
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();

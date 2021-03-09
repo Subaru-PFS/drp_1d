@@ -238,14 +238,7 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
 
 	free(arrayBIS);
 
-	//TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError().GetSamplesVector();//not needed anymore
-	//const TFloat64List& fluxAxisError = fluxAxis.GetError().GetSamplesVector();
-	 
-	/*for(Int32 j=0;j<nn;j++)
-	{
-			noContinuumFluxAxisError[j] = fluxAxisError[j];
-	}*/
-	noContinuumFluxAxis.GetError().extract(fluxAxis.GetError(), 0, nn - 1);
+	noContinuumFluxAxis.GetError() = fluxAxis.GetError();
 	/* *******************************************************
 	*            REMOVE TEMPORARY PATHS
 	* ****************************************************** */

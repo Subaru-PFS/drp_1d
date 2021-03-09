@@ -6,9 +6,6 @@
 
 namespace NSEpic
 {
-
-class CMask;
-
 /**
  * \ingroup Redshift
  */
@@ -17,13 +14,13 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
 
 public:
 
-     CSpectrumNoiseAxis();
+    CSpectrumNoiseAxis();
     explicit  CSpectrumNoiseAxis( UInt32 n );
-     CSpectrumNoiseAxis( const Float64* samples, UInt32 n );
+    CSpectrumNoiseAxis( const Float64* samples, UInt32 n );
     ~ CSpectrumNoiseAxis();
 
-     CSpectrumNoiseAxis& operator=(const  CSpectrumNoiseAxis& other);
-
+    CSpectrumNoiseAxis& operator=(const CSpectrumNoiseAxis& other);  
+   //CSpectrumNoiseAxis& operator=(const CSpectrumNoiseAxis&& other); 
     void                SetSize( UInt32 s, Float64 valueDef = 1.0);
     Bool                Invert();
 

@@ -16,12 +16,18 @@ CSpectrumFluxAxis::CSpectrumFluxAxis()
 
 }
 
-CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n ) :
-    CSpectrumAxis( n ),
+CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
+    CSpectrumAxis( n, value),
     m_StdError(n)
 {
 
 }
+
+CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError ):
+   CSpectrumAxis(otherFlux),
+   m_StdError(otherError)
+{}
+
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
     CSpectrumAxis( samples, n ),

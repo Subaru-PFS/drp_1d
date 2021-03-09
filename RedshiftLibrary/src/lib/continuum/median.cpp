@@ -187,16 +187,7 @@ Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& n
 
     m_MedianSmoothAmplitude = max( meanSmoothAmplitude,m_MedianSmoothAmplitude );
 
-    noContinuumFluxAxis.SetSize( norig );
-    TFloat64List& noContinuumFluxAxisError = noContinuumFluxAxis.GetError().GetSamplesVector();
-    const TFloat64List& fluxAxisError = fluxAxis.GetError().GetSamplesVector();
-    for( j=0; j<norig; j++)
-    {
-        noContinuumFluxAxis[j] = 0;
-        // Also copy error
-        //noContinuumFluxAxisError[j] = fluxAxisError[j];//replaced with extract
-    }
-	noContinuumFluxAxis.GetError().extract(fluxAxis.GetError(), 0, norig - 1);
+    noContinuumFluxAxis = CSpectrumFluxAxis(CSpectrumFluxAxis(norig, 0.), fluxAxis.GetError());
     // Find the first not null element, and put its index in k0
     k = 0;
     for( j=0; j<norig; j++ )
