@@ -28,8 +28,8 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve(string objectType,string calibrationPath):
-  CSolve(objectType),
+CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string calibrationPath):
+  CSolve(scope,objectType),
   m_calibrationPath(calibrationPath)
 {
 }
@@ -368,11 +368,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::Compute(const CInputContext &inpu
                                                                  const Float64 radius )
 */
 {
-  
+  InitRanges(inputContext);  
   CAutoScope resultScope( scope, "linemodelsolve" );
     //m_outputPdfRelDir = outputPdfRelDir;
   //  m_redshiftSeparation = radius;
-  InitRanges(inputContext);
   const CSpectrum& spc=*(inputContext.m_Spectrum.get());
   const CTemplateCatalog& tplCatalog=*(inputContext.m_TemplateCatalog.get());
   const CRayCatalog& restraycatalog=*(inputContext.m_RayCatalog.get());
@@ -392,7 +391,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::Compute(const CInputContext &inpu
     // 
     //std::string scope = dataStore.GetCurrentScopeName() + ".linemodel";
 
-    auto results = resultStore.GetGlobalResult("linemodelsolve.linemodel");
+    auto results = resultStore.GetScopedGlobalResult("linemodel");
     if(results.expired())
     {
         Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
@@ -439,8 +438,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::Compute(const CInputContext &inpu
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
     //std::string pdfPath = "pdf";//.outputPdfRelDir+"/logposterior.logMargP_Z_data";
-   resultStore.StoreGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-    resultStore.StoreGlobalResult("candidatesresult", candidateResult);
+   resultStore.StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    resultStore.StoreScopedGlobalResult("candidatesresult", candidateResult);
 
     // Get linemodel results at extrema (recompute spectrum model etc.)
     std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =

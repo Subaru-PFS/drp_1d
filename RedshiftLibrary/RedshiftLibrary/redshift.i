@@ -420,7 +420,7 @@ class CLSFConstantGaussian : public CLSF
 class CLineModelSolve
 {
  public:
-  CLineModelSolve(std::string objectType,std::string calibrationPath="");
+  CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
   ~CLineModelSolve();
   const std::string GetDescription();
 };
@@ -436,7 +436,7 @@ class CMethodLineMatchingSolve
 class CMethodTemplateFittingSolve
 {
  public:
-  CMethodTemplateFittingSolve(std::string objectType);
+  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
   ~CMethodTemplateFittingSolve();
   const std::string GetDescription();
 };

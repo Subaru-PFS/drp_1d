@@ -5,6 +5,7 @@
 #include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/processflow/resultstore.h>
 #include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/processflow/autoscope.h>
 
 namespace NSEpic
 {
@@ -19,9 +20,10 @@ namespace NSEpic
     TFloat64Range m_lambdaRange;
     TFloat64List m_redshifts;
     void InitRanges(const CInputContext& inputContext);
+    CAutoScope m_objectTypeScope;
   public:
 
-    CSolve(std::string objectType);
+    CSolve(TScopeStack &scope,std::string objectType);
     ~CSolve();
 
     //Proposition 1 bis

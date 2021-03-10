@@ -38,7 +38,18 @@ public:
     std::weak_ptr<const COperatorResult> GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
     TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>  GetGlobalResult( const std::string& name ) const;
-    void                    DeleteGlobalResult(const std::string& path, const std::string& name);
+    std::weak_ptr<const COperatorResult>  GetScopedGlobalResult( const std::string& name ) const;
+
+  std::weak_ptr<const COperatorResult>  GetGlobalResult(const std::string& objectType,
+                                                        const std::string& method,
+                                                        const std::string& name ) const;
+  std::weak_ptr<const COperatorResult>  GetGlobalResult(const std::string& objectType,
+                                                        const std::string& method,
+                                                        const std::string& name ,
+                                                        const int& rank) const;
+
+  
+  void                    DeleteGlobalResult(const std::string& path, const std::string& name);
 
     void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
     void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );

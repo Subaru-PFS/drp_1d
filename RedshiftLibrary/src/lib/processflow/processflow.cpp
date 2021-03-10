@@ -62,28 +62,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
 
-    std::string methodName;
-    ctx.GetParameterStore()->Get( "method", methodName );
-    boost::algorithm::to_lower(methodName);
 
-    // Create redshift initial list by spanning redshift across the given range, with the given delta
-    std::string redshiftSampling;
-    ctx.GetParameterStore()->Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
-    TFloat64List raw_redshifts;
-    if(redshiftSampling=="log")
-    {
-        raw_redshifts = redshiftRange.SpreadOverLog( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
-    }else
-    {
-        raw_redshifts = redshiftRange.SpreadOver( redshiftStep );
-    }
 
 
     //Override z-search grid for line measurement: load the zref values from a tsv catalog file (col0: spc name, col1: zref float value)
-    std::string opt_linemeas_catalog_path;
-    ctx.GetParameterStore()->Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
-    TFloat64List redshifts=raw_redshifts;
-    Float64 zref = -1.0;
+    // std::string opt_linemeas_catalog_path;
+    //ctx.GetParameterStore()->Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
+    // TFloat64List redshifts=raw_redshifts;
+    //Float64 zref = -1.0;
     /*
     if(opt_linemeas_catalog_path!="")
     {
@@ -164,52 +150,43 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
 
     //************************************
+    const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
+    const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
     Bool enableInputSpcCorrect = true;
     std::string enableInputSpcCorrectStr;
     ctx.GetParameterStore()->Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
-    if(enableInputSpcCorrectStr != "yes" || methodName  == "reliability" )
+    if(enableInputSpcCorrectStr != "yes"  )
     {
         enableInputSpcCorrect = false;
     }
     if(enableInputSpcCorrect)
     {
-        //Check if the Spectrum is valid on the lambdarange
-        //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
-        const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
-        const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
-        if( ctx.correctSpectrum( lmin, lmax ) ){
-            Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
-        }
+    //Check if the Spectrum is valid on the lambdarange
+    //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+
+    if( ctx.correctSpectrum( lmin, lmax ) ){
+      Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
+    }
     }
 
     //************************************
-    Bool enableInputSpcCheck = true;
-    if(methodName  == "reliability" )
-    {
-        enableInputSpcCheck = false;
+    //Check if the Spectrum is valid on the lambdarange
+    //checkInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+    //Check if the flux is valid on the lambdarange
+    if( !ctx.GetSpectrum()->IsFluxValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate spectrum flux");
+    }else{
+      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
-    if(enableInputSpcCheck)
-    {
-        //Check if the Spectrum is valid on the lambdarange
-        //checkInputSpectrum(ctx.GetInputContext().m_lambdaRange);
-        const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
-        const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
-        //Check if the flux is valid on the lambdarange
-        if( !ctx.GetSpectrum()->IsFluxValid( lmin, lmax ) ){
-            Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
-                          lmin, lmax );
-            throw std::runtime_error("Failed to validate spectrum flux");
-        }else{
-            Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
-        }
 	//Check if the noise is valid in the lambdarange
-        if( !ctx.GetSpectrum()->IsNoiseValid( lmin, lmax ) ){
-            Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
-                           lmin, lmax );
-            throw std::runtime_error("Failed to validate noise from spectrum");
-        }else{
-            Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
-        }
+    if( !ctx.GetSpectrum()->IsNoiseValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate noise from spectrum");
+    }else{
+      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
 
     // Stellar method
@@ -218,12 +195,11 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore()->Get( "enablestellarsolve", enableStarFitting, "no" );
     Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
     if(enableStarFitting=="yes"){
-      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
+      //      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
 
 
         Log.LogInfo("Processing stellar fitting");
-        CMethodTemplateFittingSolve solve("star");
-        //CMethodChisquareLogSolve solve(calibrationDirPath);
+        CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         starResult = solve.Compute(ctx.GetInputContext(),
                                    ctx.GetResultStore(),
                                    ctx.m_ScopeStack);
@@ -348,164 +324,153 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 */
     // Galaxy method
     std::shared_ptr<CSolveResult> mResult;
-    std::string galaxy_method_pdf_reldir = "zPDF";
-    if(methodName  == "linemodel" ){
 
-      CLineModelSolve Solve("galaxy",calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetInputContext(),
-                                 ctx.GetResultStore(),
-                                 ctx.m_ScopeStack);
-    /*
-    }else if(methodName  == "zweimodelsolve" ){
+    if(true)
+      {
+        std::string methodName;
+        ctx.GetParameterStore()->Get( "galaxy.method", methodName );
+        boost::algorithm::to_lower(methodName);
 
-        CZweiModelSolve Solve(calibrationDirPath);
-        mResult = Solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 ctx.GetGalaxyCategoryList(),
-                                 ctx.GetRayCatalog(),
-                                 ctx.GetInputContext().m_lambdaRange,
-                                 redshifts );
-    */
-    }else if(methodName  == "templatefittingsolve" ){
-        Float64 overlapThreshold;
-        ctx.GetParameterStore()->Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
-        std::string opt_spcComponent;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
-        std::string opt_extinction;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
-        std::string opt_dustFit;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
+        std::string galaxy_method_pdf_reldir = "zPDF";
+        if(methodName  == "linemodelsolve" ){
 
-        // prepare the unused masks
-        std::vector<CMask> maskList;
-        //retrieve the calibration dir path
-        std::string calibrationDirPath;
-        ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
-        CMethodTemplateFittingSolve solve("galaxy");
-        mResult = solve.Compute( ctx.GetInputContext(),
-                                 ctx.GetResultStore(),
-                                 ctx.m_ScopeStack);
+          CLineModelSolve Solve(ctx.m_ScopeStack,"galaxy",calibrationDirPath);
+          mResult = Solve.Compute( ctx.GetInputContext(),
+                                   ctx.GetResultStore(),
+                                   ctx.m_ScopeStack);
+          /*
+            }else if(methodName  == "zweimodelsolve" ){
 
-    }else if(methodName  == "templatefittinglogsolve" ){
-        Float64 overlapThreshold;
-        ctx.GetParameterStore()->Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
-        std::string opt_spcComponent;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp="lin";
-        std::string opt_extinction;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
-        std::string opt_dustFit;
-        ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
+            CZweiModelSolve Solve(calibrationDirPath);
+            mResult = Solve.Compute( ctx.GetDataStore(),
+            ctx.GetSpectrum(),
+            ctx.GetTemplateCatalog(),
+            ctx.GetGalaxyCategoryList(),
+            ctx.GetRayCatalog(),
+            ctx.GetInputContext().m_lambdaRange,
+            redshifts );
+          */
+        }else if(methodName  == "templatefittingsolve" ){
+          Float64 overlapThreshold;
+          ctx.GetParameterStore()->Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
+          std::string opt_spcComponent;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
+          std::string opt_interp;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
+          std::string opt_extinction;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
+          std::string opt_dustFit;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
 
-        // prepare the unused masks
-        std::vector<CMask> maskList;
-        //retrieve the calibration dir path
-        std::string calibrationDirPath;
-        ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
-        CMethodTemplateFittingLogSolve solve(calibrationDirPath);
-        /* mResult = solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 ctx.GetGalaxyCategoryList(),
-                                 ctx.GetInputContext().m_lambdaRange,
-                                 redshifts,
-                                 overlapThreshold,
-                                 maskList,
-                                 galaxy_method_pdf_reldir,
-                                 redshiftseparation,
-                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        */
-    }else if(methodName  == "tplcombinationsolve" ){
-        Float64 overlapThreshold;
-        ctx.GetParameterStore()->Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
-        std::string opt_spcComponent;
-        ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp="lin";
-        ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
-        std::string opt_extinction="no";
-        //ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
-        std::string opt_dustFit="no";
-        //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.dustfit", opt_dustFit, "no" );
+          // prepare the unused masks
+          std::vector<CMask> maskList;
+          //retrieve the calibration dir path
+          std::string calibrationDirPath;
+          ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
+          CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"galaxy");
+          mResult = solve.Compute( ctx.GetInputContext(),
+                                   ctx.GetResultStore(),
+                                   ctx.m_ScopeStack);
 
-        // prepare the unused masks
-        std::vector<CMask> maskList;
-        /*CMethodTplcombinationSolve solve;
-        mResult = solve.Compute( ctx.GetDataStore(),
-                                 ctx.GetSpectrum(),
-                                 ctx.GetTemplateCatalog(),
-                                 ctx.GetGalaxyCategoryList(),
-                                 ctx.GetInputContext().m_lambdaRange,
-                                 redshifts,
-                                 overlapThreshold,
-                                 maskList,
-                                 galaxy_method_pdf_reldir,
-                                 redshiftseparation,
-                                 opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        */
+        }else if(methodName  == "templatefittinglogsolve" ){
+          Float64 overlapThreshold;
+          ctx.GetParameterStore()->Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
+          std::string opt_spcComponent;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
+          std::string opt_interp="unused";
+          std::string opt_extinction;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
+          std::string opt_dustFit;
+          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
 
-    }
-    /*
-    }else if(methodName  == "linematching" ){
-        COperatorLineMatchingSolve Solve;
-        mResult = Solve.Compute(ctx.GetDataStore(),
-                                ctx.GetSpectrum(),
-                                lambdaRange,
-                                redshiftRange,
-                                redshiftStep,
-                                ctx.GetRayCatalog() );
+          // prepare the unused masks
+          std::vector<CMask> maskList;
+          //retrieve the calibration dir path
+          std::string calibrationDirPath;
+          ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
+          CMethodTemplateFittingLogSolve solve(calibrationDirPath);
+          /* mResult = solve.Compute( ctx.GetDataStore(),
+             ctx.GetSpectrum(),
+             ctx.GetTemplateCatalog(),
+             ctx.GetGalaxyCategoryList(),
+             ctx.GetInputContext().m_lambdaRange,
+             redshifts,
+             overlapThreshold,
+             maskList,
+             galaxy_method_pdf_reldir,
+             redshiftseparation,
+             opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+          */
+        }else if(methodName  == "tplcombinationsolve" ){
+          Float64 overlapThreshold;
+          ctx.GetParameterStore()->Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
+          std::string opt_spcComponent;
+          ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
+          std::string opt_interp="lin";
+          ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
+          std::string opt_extinction="no";
+          //ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
+          std::string opt_dustFit="no";
+          //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.dustfit", opt_dustFit, "no" );
 
-    */
-    /*
-    else if(methodName  == "reliability" ){
-        Log.LogInfo( "Processing RELIABILITY ONLY");
-        //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
+          // prepare the unused masks
+          std::vector<CMask> maskList;
+          /*CMethodTplcombinationSolve solve;
+            mResult = solve.Compute( ctx.GetDataStore(),
+            ctx.GetSpectrum(),
+            ctx.GetTemplateCatalog(),
+            ctx.GetGalaxyCategoryList(),
+            ctx.GetInputContext().m_lambdaRange,
+            redshifts,
+            overlapThreshold,
+            maskList,
+            galaxy_method_pdf_reldir,
+            redshiftseparation,
+            opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+          */
 
-        //loading pdf into datastore
-        boost::filesystem::path perSpectrumDir="";
-        perSpectrumDir = perSpectrumDir/( boost::filesystem::path( ctx.GetDataStore().GetProcessingID() ).string() );
-        boost::filesystem::path inputPdfPath = perSpectrumDir/( boost::filesystem::path( "zPDF/logposterior.logMargP_Z_data.csv" ).string() ) ;
-
-        Log.LogInfo( "Loading PDF from %s", inputPdfPath.string().c_str() );
-        std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-        Int32 retPdfz = postmargZResult->Load(inputPdfPath.string().c_str());
-        Log.LogInfo("Pdfz loaded n values = %d", postmargZResult->Redshifts.size());
-        if(retPdfz<0)
-        {
-            Log.LogError("Pdfz loading failed (ret=%d)", retPdfz);
-        }else{
-            ctx.GetDataStore().StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
         }
-        mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
+        /*
+          }else if(methodName  == "linematching" ){
+          COperatorLineMatchingSolve Solve;
+          mResult = Solve.Compute(ctx.GetDataStore(),
+          ctx.GetSpectrum(),
+          lambdaRange,
+          redshiftRange,
+          redshiftStep,
+          ctx.GetRayCatalog() );
 
-    }*/
-    else{
-        throw std::runtime_error("Problem found while parsing the method parameter");
-    }
+        */
+        /*
+          else if(methodName  == "reliability" ){
+          Log.LogInfo( "Processing RELIABILITY ONLY");
+          //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
 
+          //loading pdf into datastore
+          boost::filesystem::path perSpectrumDir="";
+          perSpectrumDir = perSpectrumDir/( boost::filesystem::path( ctx.GetDataStore().GetProcessingID() ).string() );
+          boost::filesystem::path inputPdfPath = perSpectrumDir/( boost::filesystem::path( "zPDF/logposterior.logMargP_Z_data.csv" ).string() ) ;
+
+          Log.LogInfo( "Loading PDF from %s", inputPdfPath.string().c_str() );
+          std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
+          Int32 retPdfz = postmargZResult->Load(inputPdfPath.string().c_str());
+          Log.LogInfo("Pdfz loaded n values = %d", postmargZResult->Redshifts.size());
+          if(retPdfz<0)
+          {
+          Log.LogError("Pdfz loading failed (ret=%d)", retPdfz);
+          }else{
+          ctx.GetDataStore().StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+          }
+          mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
+
+          }*/
+        else{
+          throw std::runtime_error("Problem found while parsing the method parameter");
+        }
+      }
+    
     //mResult->preSave(ctx.GetDataStore());
-    //Process Reliability estimation
-    if(!mResult){
-        Log.LogWarning( "Reliability skipped - no redshift results found");
-    }else if(!isPdfValid(ctx)){
-        Log.LogWarning( "Reliability skipped - no valid pdf result found");
-    }else if(mResult->m_bestRedshiftMethod!=2){
-        Log.LogWarning( "Reliability skipped - best redshift merit is not integrated on the pdf");
-    }else{
-      Float64 merit = mResult->getMerit();
-      if (std::isnan(merit)) mResult->SetReliabilityLabel("C6");                                       
-        {
-          int reliability = 6 - floor(merit*6);
-          if (reliability == 0) reliability = 1;
-          std::ostringstream os;
-
-          os << "C" << reliability;
-          
-          mResult->SetReliabilityLabel(os.str());
-        } 
-    }
+    
 
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");

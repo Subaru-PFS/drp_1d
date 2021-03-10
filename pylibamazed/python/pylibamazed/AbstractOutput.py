@@ -87,10 +87,7 @@ class AbstractOutput:
             self.load_pdf(object_type)
 
     def get_solve_method(self,object_type):
-        if object_type == "galaxy":
-            return self.parameters["method"]
-        else:
-            return "templatefittingsolve"
+        return self.parameters[object_type]["method"]
 
     def get_candidate_data(self, object_type, rank, data_name):
         self.load_candidates_results(object_type)

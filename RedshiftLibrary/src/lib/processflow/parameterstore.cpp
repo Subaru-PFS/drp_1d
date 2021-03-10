@@ -2,10 +2,12 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-using namespace NSEpic;
+
 
 namespace bpt = boost::property_tree;
 
+namespace NSEpic
+{
 CParameterStore::CParameterStore(const TScopeStack& stack):
   CScopeStore(stack)
 {
@@ -345,4 +347,6 @@ template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& 
 {
   TFloat64List fl = GetList<Float64>(name);
   return TFloat64Range(fl[0],fl[1]);
+}
+
 }

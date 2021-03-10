@@ -28,7 +28,7 @@ class CLineModelSolve: public CSolve
 
 public:
 
-  CLineModelSolve(std::string objectType,std::string calibrationPath="");
+  CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
     const std::string GetDescription() const;
 

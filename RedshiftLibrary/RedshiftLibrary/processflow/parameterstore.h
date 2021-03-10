@@ -49,10 +49,11 @@ public:
     if(!property.is_initialized())
       {
         boost::optional<bpt::ptree &> propertree = m_PropertyTree.get_child_optional( name );
-        if(!property.is_initialized()) return false;
+        if(!propertree.is_initialized()) return false;
       }
     return true;
   }
+  
   template<typename T> T Get(const std::string& name) const
   {
     boost::optional<T> property = m_PropertyTree.get_optional<T>( name );
@@ -62,7 +63,8 @@ public:
   
   template<typename T> T GetScoped(const std::string& name) const
   {
-    return Get<T>(GetScopedName(name));
+    if (Has<T>(GetScopedName(name)))    return Get<T>(GetScopedName(name));    
+    else return Get<T>(name);
   }
 
   
@@ -82,7 +84,8 @@ public:
   
   template<typename T> T GetListScoped(const std::string& name) const
   {
-    return GetList<T>(GetScopedName(name));
+    if (Has<T>(GetScopedName(name)))    return GetList<T>(GetScopedName(name));
+    else return GetList<T>(name);
   }
 
 

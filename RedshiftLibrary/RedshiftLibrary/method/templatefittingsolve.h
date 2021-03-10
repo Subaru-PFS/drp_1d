@@ -36,14 +36,14 @@ class CDataStore;
     };
 
 
-  CMethodTemplateFittingSolve(std::string objectType);
+  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
     ~CMethodTemplateFittingSolve() = default;
 
     const std::string GetDescription() const;
 
       std::shared_ptr<CSolveResult> Compute(const CInputContext &inputContext,
                                           COperatorResultStore &resultStore,
-                                          TScopeStack &scopeCDataStore);
+                                          TScopeStack &scope);
 
   /*
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,

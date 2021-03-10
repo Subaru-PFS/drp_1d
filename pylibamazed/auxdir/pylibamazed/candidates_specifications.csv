@@ -1,39 +1,39 @@
 name	hdf5_type	c_type	method	result_store_name	attribute_name	in_summary	dataset	dimension	object_type
-Rank	i	int	all	candidatesresult		FALSE	model_parameters	mono	star/galaxy
-Redshift	f8	double	all	candidatesresult		TRUE	model_parameters	mono	star/galaxy
-RedshiftError	f8	double	all	candidatesresult		TRUE	model_parameters	mono	star/galaxy
-RedshiftProba	f8	double	all	candidatesresult		TRUE	model_parameters	mono	star/galaxy
-TemplateName	S40	string	linemodel	linemodelsolve.linemodel_extrema	FittedTplName	FALSE	model_parameters	mono	star/galaxy
-LinesRatioName	S60	string	linemodel	linemodelsolve.linemodel_extrema	FittedTplshapeName	TRUE	model_parameters	mono	galaxy
-ContinuumIsmCoeff	f8	double	linemodel	linemodelsolve.linemodel_extrema	FittedTplDustCoeff	FALSE	model_parameters	mono	star/galaxy
-ContinuumIgmIndex	i	int	linemodel	linemodelsolve.linemodel_extrema	FittedTplMeiksinIdx	FALSE	model_parameters	mono	star/galaxy
-ContinuumAmplitude	f8	double	linemodel	linemodelsolve.linemodel_extrema	FittedTplAmplitude	FALSE	model_parameters	mono	star/galaxy
-VelocityEmission	f8	double	linemodel	linemodelsolve.linemodel_extrema	Elv	TRUE	model_parameters	mono	galaxy
-VelocityAbsorption	f8	double	linemodel	linemodelsolve.linemodel_extrema	Alv	TRUE	model_parameters	mono	galaxy
-StrongEmissionLinesSNR	f8	double	linemodel	linemodelsolve.linemodel_extrema	StrongELSNR	FALSE	model_parameters	mono	galaxy
-LinesRatioIsmCoeff	f8	double	linemodel	linemodelsolve.linemodel_extrema	FittedTplshapeIsmCoeff	FALSE	model_parameters	mono	galaxy
-LinesRatioAmplitude	f8	double	linemodel	linemodelsolve.linemodel_extrema	FittedTplshapeAmplitude	FALSE	model_parameters	mono	galaxy
-ContinuumAmplitudeError	f8	double	linemodel	linemodelsolve.linemodel_extrema	FittedTplAmplitudeError	FALSE	model_parameters	mono	star/galaxy
-FirstpassRedshift	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	Extrema	FALSE	model_parameters	mono	galaxy
-ExtremaIds	S40	string	linemodel	linemodelsolve.linemodel_firstpass_extrema	ExtremaIDs	FALSE	model_parameters	mono	galaxy
-FirstpassMerit	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	ExtremaMerit	FALSE	model_parameters	mono	galaxy
-FirstpassTemplateName	S40	string	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTplName	FALSE	model_parameters	mono	galaxy
-FirstpassContinuumIsmCoeff	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTplDustCoeff	FALSE	model_parameters	mono	galaxy
-FirstpassContinuumIgmIndex	i	int	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTplMeiksinIdx	FALSE	model_parameters	mono	galaxy
-FirstpassContinuumAmplitude	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTplAmplitude	FALSE	model_parameters	mono	galaxy
-FirstpassContinuumAmplitudeError	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTplAmplitudeError	FALSE	model_parameters	mono	galaxy
-FirstpassVelocityEmission	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	Elv	TRUE	model_parameters	mono	galaxy
-FirstpassVelocityAbsorption	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	Alv	TRUE	model_parameters	mono	galaxy
-FirstpassFittedTemplateDtm	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTemplateDtm	FALSE	model_parameters	mono	galaxy
-FirstpassFittedTemplateMtm	f8	double	linemodel	linemodelsolve.linemodel_firstpass_extrema	FittedTemplateMtm	FALSE	model_parameters	mono	galaxy
-FittedRaysLambda	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
-FittedRaysLambdaRest	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
-FittedRaysID	i	list[int]	linemodel			FALSE	fitted_rays	multi	galaxy
-FittedRaysFlux	f8	list[double]	linemodel			FALSE	fitted_rays	multi	galaxy
-ModelLambda	f8	list[double]	linemodel/templatefittingsolve			FALSE	model	multi	star/galaxy
-ModelFlux	f8	list[double]	linemodel/templatefittingsolve			FALSE	model	multi	star/galaxy
-BestContinuumLambda	f8	list[double]	linemodel			FALSE	continuum	multi	galaxy
-BestContinuumFlux	f8	list[double]	linemodel			FALSE	continuum	multi	galaxy
+Rank	i	int	linemodelsolve/templatefittingsolve	candidatesresult		FALSE	model_parameters	mono	star/galaxy
+Redshift	f8	double	linemodelsolve/templatefittingsolve	candidatesresult		TRUE	model_parameters	mono	star/galaxy
+RedshiftError	f8	double	linemodelsolve/templatefittingsolve	candidatesresult		TRUE	model_parameters	mono	star/galaxy
+RedshiftProba	f8	double	linemodelsolve/templatefittingsolve	candidatesresult		TRUE	model_parameters	mono	star/galaxy
+TemplateName	S40	string	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplName	FALSE	model_parameters	mono	star/galaxy
+LinesRatioName	S60	string	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplshapeName	TRUE	model_parameters	mono	galaxy
+ContinuumIsmCoeff	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplDustCoeff	FALSE	model_parameters	mono	star/galaxy
+ContinuumIgmIndex	i	int	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplMeiksinIdx	FALSE	model_parameters	mono	star/galaxy
+ContinuumAmplitude	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplAmplitude	FALSE	model_parameters	mono	star/galaxy
+VelocityEmission	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	Elv	TRUE	model_parameters	mono	galaxy
+VelocityAbsorption	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	Alv	TRUE	model_parameters	mono	galaxy
+StrongEmissionLinesSNR	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	StrongELSNR	FALSE	model_parameters	mono	galaxy
+LinesRatioIsmCoeff	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplshapeIsmCoeff	FALSE	model_parameters	mono	galaxy
+LinesRatioAmplitude	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplshapeAmplitude	FALSE	model_parameters	mono	galaxy
+ContinuumAmplitudeError	f8	double	linemodelsolve	linemodelsolve.linemodel_extrema	FittedTplAmplitudeError	FALSE	model_parameters	mono	star/galaxy
+FirstpassRedshift	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	Extrema	FALSE	model_parameters	mono	galaxy
+ExtremaIds	S40	string	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	ExtremaIDs	FALSE	model_parameters	mono	galaxy
+FirstpassMerit	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	ExtremaMerit	FALSE	model_parameters	mono	galaxy
+FirstpassTemplateName	S40	string	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTplName	FALSE	model_parameters	mono	galaxy
+FirstpassContinuumIsmCoeff	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTplDustCoeff	FALSE	model_parameters	mono	galaxy
+FirstpassContinuumIgmIndex	i	int	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTplMeiksinIdx	FALSE	model_parameters	mono	galaxy
+FirstpassContinuumAmplitude	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTplAmplitude	FALSE	model_parameters	mono	galaxy
+FirstpassContinuumAmplitudeError	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTplAmplitudeError	FALSE	model_parameters	mono	galaxy
+FirstpassVelocityEmission	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	Elv	TRUE	model_parameters	mono	galaxy
+FirstpassVelocityAbsorption	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	Alv	TRUE	model_parameters	mono	galaxy
+FirstpassFittedTemplateDtm	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTemplateDtm	FALSE	model_parameters	mono	galaxy
+FirstpassFittedTemplateMtm	f8	double	linemodelsolve	linemodelsolve.linemodel_firstpass_extrema	FittedTemplateMtm	FALSE	model_parameters	mono	galaxy
+FittedRaysLambda	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
+FittedRaysLambdaRest	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
+FittedRaysID	i	list[int]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
+FittedRaysFlux	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
+ModelLambda	f8	list[double]	linemodelsolve/templatefittingsolve			FALSE	model	multi	star/galaxy
+ModelFlux	f8	list[double]	linemodelsolve/templatefittingsolve			FALSE	model	multi	star/galaxy
+BestContinuumLambda	f8	list[double]	linemodelsolve			FALSE	continuum	multi	galaxy
+BestContinuumFlux	f8	list[double]	linemodelsolve			FALSE	continuum	multi	galaxy
 ModelMeiksinIdx	i	int	templatefittingsolve	FALSE	IgmIdx	FALSE	model_parameters	mono	star/galaxy
 ModelTplName	S40	string	templatefittingsolve	FALSE	Name	FALSE	model_parameters	mono	star/galaxy
 ModelDustCoeff	f8	double	templatefittingsolve	FALSE	IsmCoeff	FALSE	model_parameters	mono	star/galaxy

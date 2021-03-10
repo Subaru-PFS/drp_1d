@@ -4,10 +4,11 @@
 
 using namespace NSEpic;
 
-CSolve::CSolve(std::string objectType):
-m_categoryList({objectType})
+CSolve::CSolve(TScopeStack &scope,std::string objectType):
+  m_categoryList({objectType}),
+  m_objectTypeScope(scope,objectType)
 {
-  //  m_categoryList.push_back(objectType);
+
 }
 
 CSolve::~CSolve()
@@ -18,9 +19,9 @@ CSolve::~CSolve()
 void CSolve::InitRanges(const CInputContext& inputContext)
 {
   m_lambdaRange=inputContext.m_lambdaRange;
-  TFloat64Range redshiftRange=inputContext.m_ParameterStore->Get<TFloat64Range>("redshiftrange");
-  std::string redshiftSampling=inputContext.m_ParameterStore->Get<std::string>("redshiftsampling");
-  Float64 redshiftStep = inputContext.m_ParameterStore->Get<Float64>( "redshiftstep" );
+  TFloat64Range redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+  std::string redshiftSampling=inputContext.m_ParameterStore->GetScoped<std::string>("redshiftsampling");
+  Float64 redshiftStep = inputContext.m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
 
   if(redshiftSampling=="log")
     {
@@ -29,7 +30,5 @@ void CSolve::InitRanges(const CInputContext& inputContext)
   else
     {
       m_redshifts = redshiftRange.SpreadOver( redshiftStep );
-    }
-
-  
+    }  
 }
