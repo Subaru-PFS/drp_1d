@@ -7,10 +7,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumNoiseAxis::CSpectrumNoiseAxis()
-{
-
-}
 
 CSpectrumNoiseAxis::CSpectrumNoiseAxis( UInt32 n ) :
     CSpectrumAxis( n, 1.0) 
@@ -24,16 +20,6 @@ CSpectrumNoiseAxis::CSpectrumNoiseAxis( const Float64* samples, UInt32 n ) :
 
 }
 
-CSpectrumNoiseAxis::~CSpectrumNoiseAxis()
-{
-
-}
-
-CSpectrumNoiseAxis& CSpectrumNoiseAxis::operator=(const CSpectrumNoiseAxis& other)
-{
-    CSpectrumAxis::operator=( other );
-    return *this;
-}
 
 
 Bool CSpectrumNoiseAxis::Invert()

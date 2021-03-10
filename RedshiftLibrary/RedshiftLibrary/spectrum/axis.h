@@ -16,12 +16,14 @@ class CSpectrumAxis
 
 public:
 
-    CSpectrumAxis();
+    CSpectrumAxis() = default;
+    CSpectrumAxis(const CSpectrumAxis & other) = default;
+    CSpectrumAxis(CSpectrumAxis && other) = default;
     explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
     CSpectrumAxis( const Float64* samples, UInt32 n );
-    ~CSpectrumAxis();
+    ~CSpectrumAxis() = default;
     CSpectrumAxis& operator=(const CSpectrumAxis& other) = default;
-    //CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;
+    CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;
     CSpectrumAxis& operator*=(const Float64 op);
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );

@@ -7,10 +7,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumAxis::CSpectrumAxis()
-{
-
-}
 
 CSpectrumAxis::CSpectrumAxis( UInt32 n, Float64 value) :
     m_Samples( n , value)
@@ -26,10 +22,6 @@ CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
     }
 }
 
-CSpectrumAxis::~CSpectrumAxis()
-{
-
-}
 
 /*CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
 {

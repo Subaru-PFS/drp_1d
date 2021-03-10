@@ -14,13 +14,16 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
 
 public:
 
-    CSpectrumNoiseAxis();
+    CSpectrumNoiseAxis() = default;
+    CSpectrumNoiseAxis(const CSpectrumNoiseAxis & other) = default; 
+    CSpectrumNoiseAxis(CSpectrumNoiseAxis && other) = default; 
+
     explicit  CSpectrumNoiseAxis( UInt32 n );
     CSpectrumNoiseAxis( const Float64* samples, UInt32 n );
-    ~ CSpectrumNoiseAxis();
+    ~CSpectrumNoiseAxis() = default;
 
-    CSpectrumNoiseAxis& operator=(const CSpectrumNoiseAxis& other);  
-   //CSpectrumNoiseAxis& operator=(const CSpectrumNoiseAxis&& other); 
+    CSpectrumNoiseAxis& operator=(const CSpectrumNoiseAxis& other) = default;  
+    CSpectrumNoiseAxis& operator=(CSpectrumNoiseAxis&& other) = default; 
     void                SetSize( UInt32 s, Float64 valueDef = 1.0);
     Bool                Invert();
 

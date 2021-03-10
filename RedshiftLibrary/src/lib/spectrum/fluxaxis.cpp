@@ -11,10 +11,7 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumFluxAxis::CSpectrumFluxAxis()
-{
 
-}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
     CSpectrumAxis( n, value),
@@ -43,19 +40,6 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
 {
 
 }
-
-CSpectrumFluxAxis::~CSpectrumFluxAxis()
-{
-
-}
-
-CSpectrumFluxAxis& CSpectrumFluxAxis::operator=(const CSpectrumFluxAxis& other)
-{
-    m_StdError = other.m_StdError;
-    CSpectrumAxis::operator=( other );
-    return *this;
-}
-
 
 void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
