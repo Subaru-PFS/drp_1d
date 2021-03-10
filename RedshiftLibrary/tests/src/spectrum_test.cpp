@@ -194,15 +194,14 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_TEST_MESSAGE("index23:"<<object_CSpectrum2.GetFluxAxis()[0]);
     BOOST_TEST_MESSAGE("index23:"<<object_CSpectrum2.GetSpectralAxis()[0]);
 
-    TFloat64List mask;
-    mask.push_back(1);
+    TFloat64List mask(nbmax, 1.);
     BOOST_TEST_MESSAGE("index33:"<<mask.size());
     BOOST_TEST_MESSAGE("index33:"<<mask[0]);
     BOOST_TEST_MESSAGE("index34:"<<mask[0]);
 
     CSpectrum* object_CSpectrum3=new CSpectrum(object_CSpectrum2,mask);
 
-    BOOST_CHECK(object_CSpectrum3->GetSampleCount()==1);
+    BOOST_CHECK(object_CSpectrum3->GetSampleCount()==nbmax);
     BOOST_CHECK_CLOSE(object_CSpectrum3->GetFluxAxis()[0],object_CSpectrum2.GetFluxAxis()[0],1e-12);
     BOOST_CHECK_CLOSE(object_CSpectrum3->GetSpectralAxis()[0],object_CSpectrum2.GetSpectralAxis()[0],1e-12);
 

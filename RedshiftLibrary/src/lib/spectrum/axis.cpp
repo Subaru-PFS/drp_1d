@@ -1,6 +1,5 @@
 #include <RedshiftLibrary/spectrum/axis.h>
-
-#include <RedshiftLibrary/debug/assert.h>
+#include <RedshiftLibrary/log/log.h>
 #include <numeric>
 #include <algorithm>
 
@@ -48,14 +47,21 @@ Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int
     }
     return 0;
 }
-
-Int32 CSpectrumAxis::MaskAxis(const CSpectrumAxis& other, TFloat64List& mask)//mask is 0. or 1.
+/*
+    maskedAxis is the output axis after applying the mask on the current object
+*/
+Int32 CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis)const//mask is 0. or 1.
 {
-    UInt32 sum = std::accumulate(other.m_Samples.begin(), other.m_Samples.end(), 1.);
-    m_Samples.reserve(sum);
-    for(Int32 i = 0; i < other.GetSamplesCount(); i++){
+    if(mask.size()!= GetSamplesCount()){
+        Log.LogError("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
+        throw runtime_error("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
+    }
+    UInt32 sum = UInt32(std::accumulate(m_Samples.begin(), m_Samples.end(), 0));
+    maskedAxis.m_Samples.clear();
+    maskedAxis.m_Samples.reserve(sum);
+    for(Int32 i = 0; i < GetSamplesCount(); i++){
         if(mask[i]==1.)
-            m_Samples.push_back(other.m_Samples[i]);
+            maskedAxis.m_Samples.push_back(m_Samples[i]);
     }
     return 0;
 }

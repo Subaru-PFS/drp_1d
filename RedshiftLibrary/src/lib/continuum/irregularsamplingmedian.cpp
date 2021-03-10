@@ -194,7 +194,8 @@ Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     medianSmoothAmplitude = max( meanSmoothAmplitude, medianSmoothAmplitude );
 
-    noContinuumFluxAxis = CSpectrumFluxAxis(CSpectrumFluxAxis(norig, 0.), fluxAxis.GetError());
+    noContinuumFluxAxis = CSpectrumFluxAxis(norig, 0.);
+    noContinuumFluxAxis.GetError() = fluxAxis.GetError();
     // Find the first not null element, and put its index in k0
     k=0;
     for( j=0; j<norig; j++ )

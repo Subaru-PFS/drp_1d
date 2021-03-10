@@ -28,7 +28,7 @@ public:
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
     
-    Int32 MaskAxis(const CSpectrumAxis& other, TFloat64List& mask);
+    Int32 MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
 
     const Float64*           GetSamples() const;
     Float64*                 GetSamples();
