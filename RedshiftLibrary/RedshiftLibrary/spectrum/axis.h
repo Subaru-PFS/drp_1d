@@ -27,6 +27,8 @@ public:
     CSpectrumAxis& operator*=(const Float64 op);
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
+    
+    Int32 MaskAxis(const CSpectrumAxis& other, TFloat64List& mask);
 
     const Float64*           GetSamples() const;
     Float64*                 GetSamples();
