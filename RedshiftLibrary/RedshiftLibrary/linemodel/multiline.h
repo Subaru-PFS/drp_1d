@@ -6,13 +6,14 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
-
+#include <RedshiftLibrary/ray/lineprofile.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
 namespace NSEpic
 {
-
+class CLineProfileASYM;
+class CLineProfileASYMFIXED;
   /**
    * \ingroup Redshift
    */
@@ -86,7 +87,7 @@ private:
 
     Float64 m_absLinesLimit;
 
-    CRay::TProfileList  m_profile;
+    TProfileList  m_profile;
 
 
     TInt32List          m_StartNoOverlap;

@@ -152,9 +152,10 @@ BOOST_AUTO_TEST_CASE(MatchingTest1)
     Float64 shiftLambda = 1.5;
     CRayCatalog::TRayVector cataloglist = restFrameCatalog.GetList();
     CRayCatalog::TRayVector ::iterator it;
+    std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
     for( it = cataloglist.begin(); it != cataloglist.end(); ++it )
     {
-        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 2, CRay::SYM, 2 ) );
+        detectedCatalog.Add( CRay( (*it).GetName(), (*it).GetPosition()*shiftLambda, 2, profilesym, 2 ) );
     }
 
     CRayMatching rayMatching;
@@ -178,13 +179,13 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
     //load detected lines results
     TFloat64List rayPosList = UtilLoadDetectedRayPositions(DATA_ROOT_DIR "RayTestCase/RayMatchingVVDS/sc_020100776_F02P017_vmM1_red_129_1_atm_clean.fits/detectedRayCatalog.csv");
     BOOST_CHECK( rayPosList.size()>0 );
-
+    std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
     CRayCatalog detectedCatalog;
     for( int i=0; i<rayPosList.size(); i++)
     {
         char buffer [64];
         sprintf(buffer,"loaded_%d",i);
-        detectedCatalog.Add( CRay("", rayPosList[i], 2, CRay::SYM, 2 ) );
+        detectedCatalog.Add( CRay("", rayPosList[i], 2, profilesym, 2 ) );
     }
 
     CRayMatching rayMatching;

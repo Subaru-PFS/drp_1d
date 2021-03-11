@@ -5,7 +5,15 @@
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/log/log.h>
-
+/*
+//not sure all below are required
+#include <RedshiftLibrary/ray/lineprofile.h>
+#include <RedshiftLibrary/ray/lineprofileLOR.h>
+#include <RedshiftLibrary/ray/lineprofileSYM.h>
+#include <RedshiftLibrary/ray/lineprofileASYM.h>//yes
+#include <RedshiftLibrary/ray/lineprofileASYMFIT.h>
+#include <RedshiftLibrary/ray/lineprofileASYMFIXED.h>//yes
+*/
 #include <float.h>
 #include <algorithm>
 
@@ -137,8 +145,8 @@ Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSp
 TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
-    Float64 winsize = GetNSigmaSupport(m_profile[subeIdx])*c;
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    Float64 winsize = m_profile[subeIdx]->GetNSigmaSupport()*c;
 
     TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -428,7 +436,7 @@ TInt32Range CMultiLine::getTheoreticalSupportSubElt(Int32 subeIdx)
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift, false);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
     return c;
 }
 
@@ -444,8 +452,10 @@ Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool do
     // deals with delta of asym profile
     if (doAsymfitdelta)
     {
-        CRay::TProfile profile = m_Rays[subeIdx].GetProfile();
-        if (profile==CRay::ASYMFIT || profile==CRay::ASYMFIXED)
+        std::shared_ptr<CLineProfile> profile = m_Rays[subeIdx].GetProfile();
+
+        //if (profile==CRay::ASYMFIT || profile==CRay::ASYMFIXED)
+        if(profile->GetName()=="ASYMFIT" || profile->GetName()=="ASYMFITXED")
         {
             mu -= m_asymfit_delta;
         }
@@ -459,8 +469,8 @@ Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool do
 Float64 CMultiLine::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift, false); // do not apply Lya asym offset
-    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
-    return GetLineProfile(m_profile[subeIdx], x, mu, sigma);
+    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    return m_profile[subeIdx]->GetLineProfile(x, mu, sigma);
 }
 
 /**
@@ -916,7 +926,7 @@ void CMultiLine::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& modelsp
             Float64 x = spectral[i];
             Float64 A = m_FittedAmplitudes[k];
             Float64 mu = GetObservedPosition(k, redshift, false);
-            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
+            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission());
 
             if(m_SignFactors[k]==-1){
                 flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma, m_Rays[k].GetIsEmission());
@@ -1037,12 +1047,12 @@ Float64 CMultiLine::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 re
         Float64 mu = GetObservedPosition(k2, redshift, false);
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
-        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }
     }
     return Yi;
@@ -1069,13 +1079,13 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
         Float64 mu = GetObservedPosition(k2, redshift, false);
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
-        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
-                  + m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma)
+                  + m_SignFactors[k2] * A * continuumFluxDerivZ * m_profile[k2]->GetLineProfile( x, mu, sigma);
         }
     }
     return Yi;

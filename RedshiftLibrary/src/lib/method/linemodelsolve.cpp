@@ -109,7 +109,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }
     parameterStore->GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
-	parameterStore->GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );    
 	parameterStore->GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     parameterStore->GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
     parameterStore->GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
@@ -174,7 +173,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
-    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
     if(m_opt_lineWidthType=="combined"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
@@ -850,7 +848,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         m_linemodel.m_opt_continuum_neg_amp_threshold = m_opt_continuum_neg_amp_threshold;
     }
 
-    m_linemodel.m_opt_enableLSF=m_opt_enableLSF;
 
     m_linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
     m_linemodel.m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <boost/test/unit_test.hpp>
 #include "test-config.h"
+#include "RedshiftLibrary/spectrum/LSFbyExtrinsicComponents.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -28,7 +29,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   Int32 lineTypeFilter = CRay::nType_Emission;
   Int32 forceFilter = CRay::nForce_Strong;
   string opt_lineWidthType = "velocitydriven";
-  string opt_enable_LSF = "no";
   Float64 opt_nsigmasupport = 8.;
   Float64 opt_resolution = 2350; //unused with velocity driven linewidth
   Float64 initVelocity = 50.0;
@@ -53,6 +53,11 @@ BOOST_AUTO_TEST_CASE(Constructor)
   noise.SetNoiseFilePath(noisePath.c_str(), reader);
   noise.AddNoise(spectrum);
 
+  std::string lsfType="fixed";
+  Float64 opt_nominalWidth = 13.;
+  std::shared_ptr<CLSF> lsf{std::make_shared<CLSFbyExtrinsicComponents>(lsfType, opt_resolution, opt_nominalWidth)};
+  spectrum.SetLSF(lsf);
+
   generate_template_catalog(tplCatalog, 100, 3500., 12500.);
 
   calibrationPath = generate_calibration_dir();
@@ -65,8 +70,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelElementList model_nocontinuum(spectrum,
                                           tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
-					                                "lmfit", "nocontinuum", -INFINITY,
-                                          opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+					                                "lmfit", "nocontinuum",-INFINITY,
+                                          opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
@@ -74,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
                                            tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
 					                                 "lmfit", "fromspectrum", -INFINITY,
-                                           opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+                                           opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                 opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
@@ -85,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
                                      tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
    				                           "lmfit", "tplfit", -5.0,
-                                     opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+                                     opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
    				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*

@@ -520,10 +520,10 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
         {
             continue;
         }
-	CRay::TProfile targetProfile = currentCatalogLineList[kL].GetProfile();
+	std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
     if(forceLyaFitting)
     {
-        targetProfile = CRay::ASYMFIT;
+        targetProfile = std::make_shared<CLineProfileASYMFIT>();   
     }
 
         //find line Lya in the elementList

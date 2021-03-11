@@ -3,7 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/common/range.h>
-
+#include <RedshiftLibrary/ray/lineprofile.h>
 #include <gsl/gsl_const_mksa.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
@@ -20,12 +20,11 @@ class CLineModelElement
 {
   enum TLineWidthType {
     INSTRUMENTDRIVEN,
-    FIXED,
     COMBINED,
-    VELOCITYDRIVEN,
-    NISPSIM2016,
-    NISPVSSPSF201707,
+    VELOCITYDRIVEN
   };
+
+
 
   public:
     CLineModelElement(const std::string &widthType,
@@ -116,7 +115,7 @@ class CLineModelElement
 
     void SetSourcesizeDispersion(Float64 sigma);
 
-    void ActivateLSF(const std::shared_ptr<const CLSF> & lsf);
+    void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitWidthCoeff(Float64 coeff);
     Float64 GetAsymfitWidthCoeff();
@@ -137,18 +136,9 @@ class CLineModelElement
     virtual Int32 FindElementIndex(std::string LineTagStr) = 0;
 
     std::vector<Int32> m_LineCatalogIndexes;
-    Float64 GetLineWidth(Float64 lambda, Float64 z, Bool isEmission,
-                         CRay::TProfile profile);
-    Float64 GetLineProfile(CRay::TProfile profile, Float64 x, Float64 x0,
-                           Float64 c);
-    Float64 GetLineProfileDerivVel(CRay::TProfile profile, Float64 x, Float64 x0,
+    Float64 GetLineWidth(Float64 lambda, Float64 z = 0., Bool isEmission=0);
+    Float64 GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0,
                                    Float64 sigma, Bool isEmission);
-    Float64 GetLineProfileDerivZ(CRay::TProfile profile, Float64 x, Float64 mu0,
-                                 Float64 redshift, Float64 sigma);
-    Float64 GetLineProfileDerivSigma(CRay::TProfile profile, Float64 x, Float64 x0,
-                                     Float64 sigma);
-    Float64 GetNSigmaSupport(CRay::TProfile profile);
-    Float64 GetLineFlux(CRay::TProfile profile, Float64 sigma, Float64 A);
 
     Float64 GetSumCross();
     void SetSumCross(Float64 val);
@@ -168,12 +158,9 @@ class CLineModelElement
     TLineWidthType m_LineWidthType;
     Float64 m_nsigmasupport;
     Float64 m_NominalWidth;
-    Float64 m_Resolution;
+
     Float64 m_VelocityEmission;
     Float64 m_VelocityAbsorption;
-    Float64 m_SourceSizeDispersion; // source size in the dispersion direction
-                                    // (sigma arcsec)
-    Float64 m_instrumentResolutionEmpiricalFactor;
 
     Float64 m_OutsideLambdaRangeOverlapThreshold;
     bool m_OutsideLambdaRange;
@@ -201,7 +188,6 @@ class CLineModelElement
     // Constant
     const Float64 m_speedOfLightInVacuum = GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
 
-    bool m_enableLSF = false;
     std::shared_ptr<const CLSF> m_LSF;
 
   private:

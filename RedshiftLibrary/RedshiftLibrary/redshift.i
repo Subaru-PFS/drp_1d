@@ -15,7 +15,7 @@
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CLSF)
-%shared_ptr(CLSFConstantGaussian)
+%shared_ptr(CLSFConstantGaussianWidth)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -58,7 +58,7 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSFConstant.h"
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
@@ -459,18 +459,18 @@ class CLSF
 {
  public:
   virtual ~CLSF();
-  virtual Float64 GetSigma(Float64 lambda=-1.0) const=0;
-  virtual void SetSigma(const Float64 sigma)=0;
+  virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
+  virtual void SetWidth(const Float64 sigma)=0;
   virtual bool IsValid() const=0;
 };
 
-class CLSFConstantGaussian : public CLSF
+class CLSFConstantGaussianWidth : public CLSF
 {
  public:
-  CLSFConstantGaussian(const Float64 sigma=0.0);
-  ~CLSFConstantGaussian();
-  Float64 GetSigma(Float64 lambda=-1.0) const;
-  void SetSigma(const Float64 sigma);
+  CLSFConstantGaussianWidth(const Float64 sigma=0.0);
+  ~CLSFConstantGaussianWidth();
+  Float64 GetWidth(Float64 lambda=-1.0) const;
+  void SetWidth(const Float64 sigma);
   bool IsValid() const;
 };
 

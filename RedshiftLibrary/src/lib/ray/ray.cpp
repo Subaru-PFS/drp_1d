@@ -12,7 +12,7 @@ CRay::CRay()
 
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
-           CRay::TProfile profile,
+           std::shared_ptr<CLineProfile> profile,
            UInt32 force,
            Float64 amp,
            Float64 width,
@@ -24,44 +24,124 @@ CRay::CRay(const string& name,
            Float64 nominalAmp,
            const string &velGroupName,
            TAsymParams asymParams,
-	   Int32 id)
+	       Int32 id):
+m_Name(name),
+m_Pos(pos),
+m_Type(type),
+m_Force(force),
+m_Amp(amp),
+m_Width(width),
+m_Cut(cut),
+m_Profile(profile),
+m_PosFitErr(posErr),
+m_SigmaFitErr(sigmaErr),
+m_AmpFitErr(ampErr),
+m_GroupName(groupName),
+m_NominalAmplitude(nominalAmp),
+m_VelGroupName(velGroupName),
+m_asymParams(asymParams),
+m_id(id)
 {
-    m_Name = name;
-    m_Pos = pos;
-    m_Type = type;
-    m_Force = force;
-
-    m_Profile = profile;
-
-    m_Amp = amp;
-    m_Width = width;
-    m_Cut = cut;
-
-    m_PosFitErr = posErr;
-    m_SigmaFitErr = sigmaErr;
-    m_AmpFitErr = ampErr;
-
-
-    m_GroupName = groupName;
-    m_NominalAmplitude = nominalAmp;
-
     m_Offset = 0.0;
     m_OffsetFit = false;
 
-    m_VelGroupName = velGroupName;
-
-    m_asymParams = asymParams;
-
-    m_id = id;
 }
 
+CRay::CRay(const CRay& other):
+m_Name(other.m_Name),
+m_Pos(other.m_Pos),
+m_Type(other.m_Type),
+m_Force(other.m_Force),
+m_Amp(other.m_Amp),
+m_Width(other.m_Width),
+m_Cut(other.m_Cut),
+m_Profile(other.m_Profile),
+m_PosFitErr(other.m_PosFitErr),
+m_SigmaFitErr(other.m_SigmaFitErr),
+m_AmpFitErr(other.m_AmpFitErr),
+m_GroupName(other.m_GroupName),
+m_NominalAmplitude(other.m_NominalAmplitude),
+m_VelGroupName(other.m_VelGroupName),
+m_asymParams(other.m_asymParams),
+m_id(other.m_id),
+m_Offset(other.m_Offset),
+m_OffsetFit(other.m_OffsetFit)
+{
+    //m_Profile=other.m_Profile;
+}
 
+CRay::CRay(const CRay&& other):
+m_Name(other.m_Name),
+m_Pos(other.m_Pos),
+m_Type(other.m_Type),
+m_Force(other.m_Force),
+m_Amp(other.m_Amp),
+m_Width(other.m_Width),
+m_Cut(other.m_Cut),
+m_Profile(other.m_Profile),
+m_PosFitErr(other.m_PosFitErr),
+m_SigmaFitErr(other.m_SigmaFitErr),
+m_AmpFitErr(other.m_AmpFitErr),
+m_GroupName(other.m_GroupName),
+m_NominalAmplitude(other.m_NominalAmplitude),
+m_VelGroupName(other.m_VelGroupName),
+m_asymParams(other.m_asymParams),
+m_id(other.m_id),
+m_Offset(other.m_Offset),
+m_OffsetFit(other.m_OffsetFit)
+{
+   //m_Profile=other.m_Profile;
+}
+CRay& CRay::operator=(const CRay& other)
+{
+    m_Name=other.m_Name;
+    m_Pos=other.m_Pos;
+    m_Type=other.m_Type;
+    m_Force=other.m_Force;
+    m_Amp=other.m_Amp;
+    m_Width=other.m_Width;
+    m_Cut=other.m_Cut;
+    m_Profile=other.m_Profile;//not sure this is fine
+    //m_Profile.reset(new <ClineProfile>(*other.m_Profile));
+    m_PosFitErr=other.m_PosFitErr;
+    m_SigmaFitErr=other.m_SigmaFitErr;
+    m_AmpFitErr=other.m_AmpFitErr;
+    m_GroupName=other.m_GroupName;
+    m_NominalAmplitude=other.m_NominalAmplitude;
+    m_VelGroupName=other.m_VelGroupName;
+    m_asymParams=other.m_asymParams;
+    m_id=other.m_id;
+    m_Offset=other.m_Offset;
+    m_OffsetFit=other.m_OffsetFit;
+    return *this;
+}
+CRay& CRay::operator=(const CRay&& other )
+{
+    m_Name=other.m_Name;
+    m_Pos=other.m_Pos;
+    m_Type=other.m_Type;
+    m_Force=other.m_Force;
+    m_Amp=other.m_Amp;
+    m_Width=other.m_Width;
+    m_Cut=other.m_Cut;
+    m_Profile=other.m_Profile;
+    m_PosFitErr=other.m_PosFitErr;
+    m_SigmaFitErr=other.m_SigmaFitErr;
+    m_AmpFitErr=other.m_AmpFitErr;
+    m_GroupName=other.m_GroupName;
+    m_NominalAmplitude=other.m_NominalAmplitude;
+    m_VelGroupName=other.m_VelGroupName;
+    m_asymParams=other.m_asymParams;
+    m_id=other.m_id;
+    m_Offset=other.m_Offset;
+    m_OffsetFit=other.m_OffsetFit;
+    return *this;
+}
+//copy constructor is deleted autom since it contains a non-copiable member, i.e. the pointer
 CRay::~CRay()
 {
-
+    m_Profile.reset();
 }
-
-
 bool CRay::operator < (const CRay& str) const
 {
     if(m_Pos == str.m_Pos){
@@ -95,14 +175,17 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-CRay::TProfile CRay::GetProfile() const
+std::shared_ptr<CLineProfile> CRay::GetProfile() const
 {
+    if(!m_Profile)
+        throw runtime_error("Current Ray does not have a set profile ");
     return m_Profile;
+     
 }
 
-bool CRay::SetProfile(CRay::TProfile profile)
+bool CRay::SetProfile(const std::shared_ptr<CLineProfile>& profile)
 {
-    m_Profile = profile;
+    /*std::unique_ptr<CLineProfile>*/ m_Profile = profile;//std::move(profile);
     return true;
 }
 

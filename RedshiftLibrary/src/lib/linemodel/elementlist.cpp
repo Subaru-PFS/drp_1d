@@ -27,7 +27,15 @@
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
-
+/*
+//not sure all below are required
+//#include <RedshiftLibrary/ray/lineprofile.h>
+#include <RedshiftLibrary/ray/lineprofileLOR.h>
+#include <RedshiftLibrary/ray/lineprofileSYM.h>
+#include <RedshiftLibrary/ray/lineprofileASYM.h>//yes
+#include <RedshiftLibrary/ray/lineprofileASYMFIT.h>
+#include <RedshiftLibrary/ray/lineprofileASYMFIXED.h>//yes
+*/
 #include <stdlib.h>
 #include <stdio.h>
 //#include <gsl/gsl_rng.h>
@@ -37,8 +45,7 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include <numeric>
-
-
+ 
 using namespace NSEpic;
 using namespace std;
 
@@ -57,7 +64,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const std::string& opt_continuumcomponent,
                                              const Float64 opt_continuum_neg_threshold,
                                              const std::string& widthType,
-                                             const std::string & opt_enable_LSF,
                                              const Float64 nsigmasupport,
                                              const Float64 resolution,
                                              const Float64 velocityEmission,
@@ -170,7 +176,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }
     */
 
-    if (opt_enable_LSF=="yes") ActivateLSF();
+    SetLSF(); //lsf is activated under no condition
 
 }
 
@@ -3579,9 +3585,9 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElementsBySupport( UInt
     CRay ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    CRay::TProfile profile = ray.GetProfile();
-    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission(), profile);
-    Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
+    std::shared_ptr<CLineProfile> profile = ray.GetProfile();
+    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
+    Float64 winsize = profile->GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
 
@@ -3684,17 +3690,17 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, co
             for( UInt32 iRayRef=0; iRayRef<raysRef.size(); iRayRef++ )
             {
                 Float64 muRef = raysRef[iRayRef].GetPosition()*(1+m_Redshift);
-                CRay::TProfile profileRef = raysRef[iRayRef].GetProfile();
-                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission(), profileRef);
-                Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport(profileRef)*cRef;
+                std::shared_ptr<CLineProfile> profileRef = raysRef[iRayRef].GetProfile();
+                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission());
+                Float64 winsizeRef = profileRef->GetNSigmaSupport()*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
                 xinf = muRef-winsizeRef/2.0;
                 xsup = muRef+winsizeRef/2.0;
 
                 Float64 muElt = raysElt[iRayElt].GetPosition()*(1+m_Redshift);
-                CRay::TProfile profileElt = raysElt[iRayElt].GetProfile();
-                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission(), profileElt);
-                Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport(profileElt)*cElt;
+                std::shared_ptr<CLineProfile> profileElt = raysElt[iRayElt].GetProfile();
+                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission());
+                Float64 winsizeElt = profileElt->GetNSigmaSupport()*cElt;
                 yinf = muElt-winsizeElt/2.0;
                 ysup = muElt+winsizeElt/2.0;
 
@@ -4331,20 +4337,21 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
     for(Int32 iray=0; iray<nrays; iray++)
     {
         Int32 lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[iray];
-        CRay::TProfile profile = m_RestRayList[lineIndex].GetProfile();
-        bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
-        if( profile==CRay::ASYMFIT && !lineOutsideLambdaRange)
+        std::shared_ptr<CLineProfile> profile = m_RestRayList[lineIndex].GetProfile();
+        bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();;
+
+        if( /*profile==CRay::ASYMFIT*/ profile->GetName()=="ASYMFIT" && !lineOutsideLambdaRange)
         {
             asimfitProfileFound = true;
             break;
-        }else if(profile==CRay::ASYMFIXED)
+        }else if(/*profile==CRay::ASYMFIXED*/profile->GetName()=="ASYMFIXED")
         {
             //use the manual fixed profile parameters from catalog profile string
             asimfixedProfileFound = true;
             TAsymParams asym_params = m_RestRayList[lineIndex].GetAsymParams();
             m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asym_params.width);
             m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asym_params.alpha);
-            m_Elements[idxLyaE]->SetAsymfitDelta(asym_params.delta);
+            m_Elements[idxLyaE]->SetAsymfitDelta(asym_params.delta);       
             break;
         }
     }
@@ -5736,13 +5743,13 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                     {
-                        flux = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, amp);
-                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, ampError);
+                        flux = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, ampError);
                     }else{
                         Float64 _amp = cont*amp;
                         Float64 _ampError = cont*ampError;
-                        flux = -m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _amp);
-                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _ampError);
+                        flux = -m_RestRayList[iRestRay].GetProfile()->GetLineFlux( _amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, _ampError);
                     }
                 }
                 modelSolution.Sigmas.push_back(sigma);
@@ -6175,21 +6182,21 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
     }
 }
 
-void CLineModelElementList::ActivateLSF()
+void CLineModelElementList::SetLSF()
 {
     const std::shared_ptr<const CLSF> & lsf = m_inputSpc.GetLSF();
 
     if (lsf == nullptr){
-        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF spetrum member is not initialized");
+        Log.LogError("CLineModelElementList::%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
+        throw std::runtime_error("CLineModelElementList::Cannot enable LSF, LSF spetrum member is not initialized");
     }else if( ! lsf->IsValid()){
-        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not valid",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF spectrum member is not valid");
+        Log.LogError("CLineModelElementList::%s: Cannot enable LSF, LSF spectrum member is not valid: width is not yet set",__func__);
+        //throw std::runtime_error("CLineModelElementList::Cannot enable LSF, LSF spectrum member is not valid");
     }
 
     for(Int32 j=0; j<m_Elements.size(); j++)
     {
-        m_Elements[j]->ActivateLSF(lsf);
+        m_Elements[j]->SetLSF(lsf); //lsf has now a type to be used for width computations
     }
 }
 

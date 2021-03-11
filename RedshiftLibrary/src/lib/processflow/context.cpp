@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/debug/assert.h"
 
 #include <boost/filesystem.hpp>
 

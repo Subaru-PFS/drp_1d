@@ -19,42 +19,19 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
 {
     if( widthType == "instrumentdriven"){
         m_LineWidthType = INSTRUMENTDRIVEN;
-    } else if( widthType == "fixed"){
-        m_LineWidthType = FIXED;
     } else if( widthType == "combined"){
         m_LineWidthType = COMBINED;
     } else if( widthType == "velocitydriven"){
         m_LineWidthType = VELOCITYDRIVEN;
-    } else if( widthType == "nispsim2016"){
-        m_LineWidthType = NISPSIM2016;
-    } else if( widthType == "nispvsspsf201707"){
-        m_LineWidthType = NISPVSSPSF201707;
-    } else {
+    }else {
         Log.LogError("Unknown LineWidthType %s", widthType.c_str());
         throw std::runtime_error("Unknown LineWidthType");
     }
 
     m_nsigmasupport = nsigmasupport;
 
-    //m_Resolution = 250.0 * (1.0 + 0.0); //dr=+0.5 found empirically on VVDS DEEP 651
-    m_Resolution = resolution;
     m_VelocityEmission = velocityEmission;
     m_VelocityAbsorption= velocityAbsorption;
-    m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35; //derived from (emission line) linemodel-width fit on VUDS ECDFS flags3+4
-
-    m_SourceSizeDispersion = 0.1;
-
-    m_asym_sigma_coeff = 1.0;
-    m_asym_alpha = 4.5;
-
-    m_symxl_sigma_coeff = 5.0;
-
-    m_asym2_sigma_coeff = 2.0;
-    m_asym2_alpha = 2.0;
-
-    m_asymfit_sigma_coeff = 2.0;
-    m_asymfit_alpha = 2.0;
-    m_asymfit_delta = 0.0;
 
     m_dataExtinctionFlux = NULL;
 
@@ -98,415 +75,74 @@ bool CLineModelElement::IsOutsideLambdaRange()
 {
     return m_OutsideLambdaRange;
 }
-
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission, CRay::TProfile profile)
+//redirecting to the lsf method for computing instrument responce
+/**
+ * Get instrumental response (including source response) from LSF
+ * combine quadratically with the instrinsic width of the Line itself. The line width in this case represents to the velocity
+ * */
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission)
 {
-    if(profile==CRay::EXTINCT)
-    {
-        return 300*(1.0+z); //hardcoded, in Angstrom
-    }
-
     const Float64 c = m_speedOfLightInVacuum;
-    const Float64 pfsSimuCompensationFactor = 1.0;
-    const Float64 arcsecPix = 0.355; //0.3 is the same as in tipsfast
-    const Float64 angstromPix = 13.4;
     Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
+    const Float64 pfsSimuCompensationFactor = 1.0;
 
-    Float64 instrumentSigma = m_enableLSF ? m_LSF->GetSigma(redshiftedlambda) : redshiftedlambda/m_Resolution*m_instrumentResolutionEmpiricalFactor;
+    if(!m_LSF)
+        throw std::runtime_error("LSF object is not initailized.");
+    Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
+   
     Float64 velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
-    Float64 sourcesizeSigma = 0.0;        
-
-    switch (m_LineWidthType) {
-    case INSTRUMENTDRIVEN:
-         velocitySigma = 0.0;
-        break;
-    case FIXED:
-        instrumentSigma = m_NominalWidth;
-        velocitySigma = 0.0;
-        break;
-    case COMBINED:
-        break;
-    case VELOCITYDRIVEN:
-        instrumentSigma = 0.0;
-        break;
-    case NISPSIM2016:
-        instrumentSigma = (redshiftedlambda*8.121e-4 + 7.4248)/2.35;
-        break;
-    case NISPVSSPSF201707:
-        //+ considers Instrument PSF=f_linearregression(lambda) from MDB-EE50: SpaceSegment.PLM.PLMAsRequired.PLMNISPrEE50rEE80
-        //      arcsec/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAPSFRefEE50 : (0.355)
-        //      angstrom/pixel from : SpaceSegment.Instrument.NISP.NISPAsRequired.NISPGRAAverageDlambda
-        //      Leads to linear regression: sigma_psf = 3.939e-4*wl_angstrom + 2.191
-        //+ considers source size in the dispersion direction
-        //+ considers velocity
-        instrumentSigma = (redshiftedlambda*3.939e-4 + 2.191); //probably a realistic calib.
-        //instrumentSigma = (redshiftedlambda*4.661e-4 + 2.593); //2017b calib
-        //instrumentSigma = 11.; //(approx. 10 or 11?) for tips-fast current version 201708
-
-        sourcesizeSigma = m_SourceSizeDispersion*angstromPix/arcsecPix;
-
-        break;
-    default:
-        Log.LogError("Invalid LineWidthType %d", m_LineWidthType);
-        throw std::runtime_error("Unknown LineWidthType");
+    switch(m_LineWidthType)
+    {
+        case INSTRUMENTDRIVEN://only instrumental sigma
+            velocitySigma=0.;
+            break;
+        case VELOCITYDRIVEN://only velocity sigma
+            instrumentSigma = 0.;
+            break;
+        case COMBINED://combination of the two
+            break;
+        default:
+            Log.LogError("Invalid LSFType %d", m_LineWidthType);
+            throw std::runtime_error("Unknown mode");
     }
 
-    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma + sourcesizeSigma*sourcesizeSigma);
-
+    Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
     return sigma;
 }
-
-Float64 CLineModelElement::GetLineProfile(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission)
 {
-    Float64 xc = x-x0;
-    Float64 val = 0.0;
-    Float64 xsurc;
-    Float64 coeff;
-    Float64 alpha;
-
-    Float64 sigma_rest, z, dataStartLambda, xcd;
-    Float64 muz, sigmaz, delta, gamma1, m0;
-    Int32 valI;
-
-    switch (profile) {
-    case CRay::SYM:
-        xsurc = xc/sigma;
-        val = exp(-0.5*xsurc*xsurc);
-        break;
-    case CRay::SYMXL:
-        coeff = m_symxl_sigma_coeff;
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        val = exp(-0.5*xsurc*xsurc);
-        break;
-    case CRay::LOR:
-        xsurc = xc/sigma;
-        val = 1.0/(1+xsurc*xsurc);
-        //height of the peak is 2*A/pi/c
-        break;
-    case CRay::ASYM:
-        coeff = m_asym_sigma_coeff;
-
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        alpha = m_asym_alpha;
-        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-        break;
-    case CRay::ASYM2:
-        coeff = m_asym2_sigma_coeff;
-
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        alpha = m_asym2_alpha;
-        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-        break;
-    case CRay::ASYMFIT:
-    case CRay::ASYMFIXED:
-        coeff = m_asymfit_sigma_coeff;
-        sigma = sigma*coeff;
-        alpha = m_asymfit_alpha;
-
-        //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = alpha/std::sqrt(1.+alpha*alpha);
-        muz = delta*sqrt(2./M_PI);
-        xc = xc + sigma*muz;
-
-        /*
-        //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = alpha/std::sqrt(1.+alpha*alpha);
-        muz = delta*sqrt(2./M_PI);
-        sigmaz = std::sqrt(1-muz*muz);
-        gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-        xc = xc + sigma*m0;
-        //*/
-
-        xcd = xc + m_asymfit_delta;
-        xsurc = xcd/sigma;
-        val = exp(-0.5*xsurc*xsurc)*(1.0+erf(alpha/sqrt(2.0)*xsurc));
-        break;
-    case CRay::EXTINCT:
-        sigma_rest = m_dataN*m_dataStepLambda;
-        z = sigma/sigma_rest - 1.0;
-        dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
-        valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
-        return m_dataExtinctionFlux[valI];
-    default:
-        Log.LogError("Invalid ray profile %d", profile);
-        throw std::runtime_error("Invalid profile");
-    }
-
-    //WARNING/TODO/CHECK: this allows multirollmodel to fit the fluxes directly
-    //use sigma normalized profiles
-    //val /= sigma;
-
-    return val;
-}
-
-
-Float64 CLineModelElement::GetLineFlux(CRay::TProfile profile, Float64 sigma, Float64 A)
-{
-    Float64 val=0.0;
-    switch (profile) {
-    case CRay::SYM:
-        val = A*sigma*sqrt(2*M_PI);
-        break;
-    case CRay::LOR:
-        val = A*sigma*M_PI;
-        break;
-    case CRay::ASYM:
-        val = A*sigma*sqrt(2*M_PI);
-        break;
-    case CRay::ASYMFIT:
-    case CRay::ASYMFIXED:
-        val = A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI);
-        break;
-    default:
-        Log.LogError("Invalid ray profile for GetLineFlux : %d", profile);
-        throw std::runtime_error("Invalid profile");
-    }
-    return val;
-}
-
-Float64 CLineModelElement::GetLineProfileDerivZ(CRay::TProfile profile, Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma){
-  Float64 xc = x-lambda0*(1+redshift);
-  Float64 val=0.0;
-  Float64 xsurc, xsurc2, coeff, alpha, alpha2, xcd;
-  Float64 muz, sigmaz, delta, gamma1, m0;
-
-
-  switch (profile) {
-  case CRay::SYM:
-      xsurc = xc/sigma;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
-      break;
-  case CRay::SYMXL:
-      coeff = m_symxl_sigma_coeff;
-      sigma = sigma*coeff;
-      xsurc = xc/sigma;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc*xsurc);
-      break;
-  case CRay::ASYM:
-      coeff = m_asym_sigma_coeff;
-      sigma = sigma*coeff;
-      xsurc = xc/sigma;
-      xsurc2 = xsurc*xsurc;
-      alpha = m_asym_alpha;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc2);
-      break;
-  case CRay::ASYM2:
-      coeff = m_asym2_sigma_coeff;
-      sigma = sigma*coeff;
-      xsurc = xc/sigma;
-      xsurc2 = xsurc*xsurc;
-      alpha = m_asym2_alpha;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha*alpha)/2 * xsurc2);
-      break;
-  case CRay::ASYMFIT:
-  case CRay::ASYMFIXED:
-      coeff = m_asymfit_sigma_coeff;
-      sigma = sigma*coeff;
-      alpha = m_asymfit_alpha;
-      alpha2 = alpha*alpha;
-
-      //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-      delta = alpha/std::sqrt(1.+alpha2);
-      muz = delta*sqrt(2./M_PI);
-      xc = xc + sigma*muz;
-
-      /*
-      //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-      delta = alpha/std::sqrt(1.+alpha2);
-      muz = delta*sqrt(2./M_PI);
-      sigmaz = std::sqrt(1-muz*muz);
-      gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-      m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-      xc = xc + sigma*m0;
-      //*/
-
-      xcd = xc+m_asymfit_delta;
-      xsurc = xcd/sigma;
-      xsurc2 = xsurc*xsurc;
-      val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(alpha/sqrt(2.0)*xsurc)) -alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha2)/2 * xsurc2);
-      break;
-  default:
-      Log.LogError("Deriv for Z not IMPLEMENTED for profile %d", profile);
-      throw std::runtime_error("Invalid profile");
-  }
-  return val;
-}
-
-Float64 CLineModelElement::GetLineProfileDerivVel(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission){
     const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
-    Float64 v, v_to_sigma;
-
+    Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption,
+            v_to_sigma = pfsSimuCompensationFactor/c*x0;
+    
+    //sincs lsf is an instrumental response, then derivative of this latter with respect to velocity is null   
     switch (m_LineWidthType) {
-    case INSTRUMENTDRIVEN:
-    case FIXED:
-        return 0.0;
-    case COMBINED:
-    case NISPSIM2016:
-    case NISPVSSPSF201707: //not supported as of 2017-07
-        v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
-        v_to_sigma = pfsSimuCompensationFactor/c*x0; //velocity sigma = v_to_sigma * v
-        return v_to_sigma * v_to_sigma * v /sigma * GetLineProfileDerivSigma(profile, x, x0, sigma);
-    case VELOCITYDRIVEN:
-        v_to_sigma = pfsSimuCompensationFactor/c*x0;
-        return v_to_sigma * GetLineProfileDerivSigma(profile, x, x0, sigma);
-    default:
-        Log.LogError("Invalid LineWidthType : %d", m_LineWidthType);
-        throw std::runtime_error("Unknown LineWidthType");
+        case INSTRUMENTDRIVEN:
+        //case FIXED:
+            return 0.0;
+        case COMBINED:
+    //    case NISPSIM2016:
+    //    case NISPVSSPSF201707: //not supported as of 2017-07
+            return v_to_sigma * v_to_sigma * v /sigma * profile->GetLineProfileDerivSigma( x, x0, sigma);
+        case VELOCITYDRIVEN:
+            return v_to_sigma * profile->GetLineProfileDerivSigma( x, x0, sigma);
+        default:
+            Log.LogError("Invalid LineWidthType : %d", m_LineWidthType);
+            throw std::runtime_error("Unknown LineWidthType");
     }
     return 0.0;
 }
-
-Float64 CLineModelElement::GetLineProfileDerivSigma(CRay::TProfile profile, Float64 x, Float64 x0, Float64 sigma)
-{
-    Float64 val=0.0;
-    Float64 xc = x-x0;
-    Float64 xsurc, xsurc2, coeff, alpha, alpha2, valsym, valsymd, valasym, arg, valasymd, xcd;
-    Float64 muz, sigmaz, delta, gamma1, m0;
-    Float64 sigma_rest, z, dataStartLambda;
-    Int32 valI;
-
-    switch (profile) {
-    case CRay::SYM:
-        xsurc = xc/sigma;
-        xsurc2 = xsurc*xsurc;
-        val = xsurc2/sigma * exp(-0.5*xsurc2);
-        break;
-    case CRay::SYMXL:
-        coeff = m_symxl_sigma_coeff;
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        xsurc2 = xsurc*xsurc;
-        val = xsurc2/sigma * exp(-0.5*xsurc2);
-        break;
-    case CRay::ASYM:
-        coeff = m_asym_sigma_coeff;
-
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        xsurc2 = xsurc*xsurc;
-        alpha = m_asym_alpha;
-        valsym = exp(-0.5*xsurc2);
-        valsymd = coeff * xsurc2/sigma * exp(-0.5*xsurc2);
-
-        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        valasymd = -coeff*alpha*sqrt(2)/sqrt(M_PI)*xsurc/sigma*exp(-0.5*xsurc2*alpha*alpha);
-        val = valsym*valasymd+valsymd*valasym;
-        break;
-    case CRay::ASYM2:
-        coeff = m_asym2_sigma_coeff;
-
-        sigma = sigma*coeff;
-        xsurc = xc/sigma;
-        xsurc2 = xsurc*xsurc;
-        alpha = m_asym2_alpha;
-        valsym = exp(-0.5*xsurc2);
-        valsymd = coeff*xsurc2/sigma * exp(-0.5*xsurc2);
-
-        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        valasymd = -coeff*alpha*sqrt(2)/sqrt(M_PI)*xsurc/sigma*exp(-0.5*xsurc2*alpha*alpha);
-        val = valsym*valasymd+valsymd*valasym;
-        break;
-    case CRay::ASYMFIT:
-    case CRay::ASYMFIXED:
-        coeff = m_asymfit_sigma_coeff;
-        sigma = sigma*coeff;
-        alpha = m_asymfit_alpha;
-        alpha2 = alpha*alpha;
-
-        //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = alpha/std::sqrt(1.+alpha2);
-        muz = delta*sqrt(2./M_PI);
-        xc = xc + sigma*muz;
-
-        /*
-        //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-        delta = alpha/std::sqrt(1.+alpha2);
-        muz = delta*sqrt(2./M_PI);
-        sigmaz = std::sqrt(1-muz*muz);
-        gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-        xc = xc + sigma*m0;
-        //*/
-
-        xcd = xc + m_asymfit_delta;
-        xsurc = xcd/sigma;
-        xsurc2 = xsurc * xsurc;
-        valsym = exp(-0.5*xsurc2);
-        valsymd = coeff * (xsurc2 /sigma - muz*xsurc/sigma) * exp(-0.5*xsurc2); // for mean centering
-        /* valsymd = coeff * (xsurc2 /sigma - m0*xsurc/sigma) * exp(-0.5*xsurc2); //for mode centering*/
-
-        valasym = (1.0+erf(alpha/sqrt(2.0)*xsurc));
-        valasymd = coeff  * alpha*sqrt(2)/(sigma*sqrt(M_PI))*(muz - xsurc) * exp(-0.5*xsurc2*alpha2); // for mean centering
-        /* valasymd = coeff  * alpha*sqrt(2)/(sigma*sqrt(M_PI))*(m0 - xsurc) * exp(-0.5*xsurc2*alpha2); // for mode centering */
-
-        val = valsym * valasymd + valsymd * valasym;
-        break;
-    case CRay::EXTINCT:
-        //NOT IMPLEMENTED FOR THIS PROFILE, to be done when necessary...
-        sigma_rest = m_dataN*m_dataStepLambda;
-        z = sigma/sigma_rest - 1.0;
-        dataStartLambda = (x0/(1+z)) - sigma_rest/2.0;
-        valI = int( (x/(1.0+z)-dataStartLambda)/m_dataStepLambda );
-        val = m_dataExtinctionFlux[valI];
-        break;
-    case CRay::NONE:
-    case CRay::LOR:
-      Log.LogError("Invalid ray profile %d", profile);
-      throw std::runtime_error("Invalid ray profile");
-      break;
-    }
-    return val;
-}
-
-Float64 CLineModelElement::GetNSigmaSupport(CRay::TProfile profile)
-{
-    Float64 nominal = m_nsigmasupport;
-    Float64 val=nominal;
-
-    switch (profile) {
-    case CRay::SYM:
-        val = nominal;
-        break;
-    case CRay::LOR:
-        val = nominal*2.0;
-        break;
-    case CRay::ASYM:
-        val = nominal*m_asym_sigma_coeff;
-        break;
-    case CRay::ASYM2:
-        val = nominal*m_asym2_sigma_coeff;
-        break;
-    case CRay::SYMXL:
-        val = nominal*m_symxl_sigma_coeff;
-        break;
-    case CRay::ASYMFIT:
-    case CRay::ASYMFIXED:
-        val = nominal*m_asymfit_sigma_coeff*2.5;
-        break;
-    case CRay::EXTINCT:
-        val = 1.0;
-        break;
-    default:
-        Log.LogError("Invalid ray profile for GetNSigmaSupport : %d", profile);
-        throw std::runtime_error("Invalid profile");
-    }
-    return val;
-}
-
-
+//TODO: check if below can be removed
+//this is called from CLineModelElementList: thus the call should be redirected to the new lsf class
 void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
 {
-    m_SourceSizeDispersion = sigma;
+    //m_SourceSizeDispersion = sigma;
+    m_LSF->SetSourcesizeDispersion(sigma);
 }
 
-void CLineModelElement::ActivateLSF(const std::shared_ptr<const CLSF> & lsf)
+void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> & lsf)
 {
-    m_enableLSF = true;
     m_LSF = lsf;
 }
 

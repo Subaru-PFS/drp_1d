@@ -10,6 +10,8 @@
 #include <cmath>
 #include <boost/filesystem.hpp>
 
+#include <RedshiftLibrary/ray/lineprofile.h>
+
 using namespace NSEpic;
 using namespace std;
 using namespace boost;
@@ -256,27 +258,32 @@ void CRayCatalog::Load( const char* filePath )
               }
 
             std::string profileName = "SYM";
-            CRay::TProfile profile;
             TAsymParams asymParams = {NAN, NAN, NAN};
             std::string groupName = "-1";
             Float64 nominalAmplitude = 1.0;
             std::string velGroupName = "-1";
 
+            std::shared_ptr<CLineProfile> profile;
             // Parse profile name
             ++it;
             if( it != tok.end() ){
                 profileName = *it;
-		if (profileName.find("ASYMFIXED") != std::string::npos) {
-                    profile = CRay::ASYMFIXED;
+                if (profileName.find("ASYMFIXED") != std::string::npos) {
+                    profile = std::make_shared<CLineProfileASYMFIXED>();
                     parse_asymfixed(profileName, asymParams);
-		}
-                else if (profileName == "SYM") { profile = CRay::SYM; }
-                else if (profileName == "SYMXL") { profile = CRay::SYMXL; }
-                else if (profileName == "LOR") { profile = CRay::LOR; }
-                else if (profileName == "ASYM") { profile = CRay::ASYM; }
-                else if (profileName == "ASYM2") { profile = CRay::ASYM2; }
-                else if (profileName == "ASYMFIT") { profile = CRay::ASYMFIT; }
-                else if (profileName == "EXTINCT") { profile = CRay::EXTINCT; }
+                }
+                else if (profileName == "SYM") {
+                    profile = std::make_shared<CLineProfileSYM>();
+                }
+                else if (profileName == "LOR") { 
+                    profile = std::make_shared<CLineProfileLOR>();
+                }
+                else if (profileName == "ASYM") { 
+                    profile = std::make_shared<CLineProfileASYM>();
+                }
+                else if (profileName == "ASYMFIT") { 
+                    profile = std::make_shared<CLineProfileASYMFIT>();
+                }
             }
 
             // Parse group name
@@ -370,7 +377,7 @@ Bool CRayCatalog::Save( const char* filePath )
         {
             file << "S" << "\t";
         }
-        file << m_List[i].GetProfile() << "\t";
+        file << m_List[i].GetName() << "\t";
 
         file << m_List[i].GetGroupName() << "\t";
         file << m_List[i].GetNominalAmplitude() << "\t";
