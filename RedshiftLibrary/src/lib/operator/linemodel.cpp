@@ -1645,25 +1645,25 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         Float64 m = m_firstpass_extremaResult->ValProba(i);
 
         m_secondpass_parameters_extremaResult.ExtendedRedshifts[i] = m_firstpass_extremaResult->ExtendedRedshifts[i];
-
-        //inject continuumFitValues of current candidate 
-        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-        else{
-            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult->FittedTplName[i],
-                                            m_firstpass_extremaResult->FittedTplAmplitude[i],
-                                            m_firstpass_extremaResult->FittedTplAmplitudeError[i],
-                                            m_firstpass_extremaResult->FittedTplMerit[i],
-                                            m_firstpass_extremaResult->FittedTplDustCoeff[i],
-                                            m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
-                                            m_firstpass_extremaResult->FittedTplRedshift[i],
-                                            m_firstpass_extremaResult->FittedTplDtm[i],
-                                            m_firstpass_extremaResult->FittedTplMtm[i],
-                                            m_firstpass_extremaResult->FittedTplLogPrior[i],
-                                            m_firstpass_extremaResult->FittedTplpCoeffs[i]);
-            m_model->SetFitContinuum_Option(2);
+        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){   
+            //inject continuumFitValues of current candidate 
+            if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
+                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+            else{
+                m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult->FittedTplName[i],
+                                                m_firstpass_extremaResult->FittedTplAmplitude[i],
+                                                m_firstpass_extremaResult->FittedTplAmplitudeError[i],
+                                                m_firstpass_extremaResult->FittedTplMerit[i],
+                                                m_firstpass_extremaResult->FittedTplDustCoeff[i],
+                                                m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
+                                                m_firstpass_extremaResult->FittedTplRedshift[i],
+                                                m_firstpass_extremaResult->FittedTplDtm[i],
+                                                m_firstpass_extremaResult->FittedTplMtm[i],
+                                                m_firstpass_extremaResult->FittedTplLogPrior[i],
+                                                m_firstpass_extremaResult->FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(2);
+            }
         }
-
         // find the index in the zaxis results
         Int32 idx = -1; idx = m_result->getRedshiftIndex(z); 
 
