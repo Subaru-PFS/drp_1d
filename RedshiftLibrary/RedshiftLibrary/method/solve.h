@@ -29,14 +29,19 @@ namespace NSEpic
     //Proposition 1 bis
     virtual std::shared_ptr<CSolveResult> Compute(const CInputContext &inputContext,
                                                  COperatorResultStore &resultStore,
-                                                 TScopeStack &scope)=0;
-
+                                                  TScopeStack &scope)=0;
+    /*    {
+      beginCompute(inputContext,resultStore,scope);
+      compute(inputContext,resultStore,scope);
+      endCompute(inputContext,resultStore,scope);
+    };
+    */
     virtual void saveToResultStore(){}//=0;
     
     // this method should implement at least populateParameters
 
     virtual void checkOrInit(){}//=0; // here we retrieve parameters for parameterStore to put them directly in local variables or into operators, rayCatalog and/or tplCatalog can also be checked
-    virtual const std::string GetDescription() const =0;
+   
 
     
   };

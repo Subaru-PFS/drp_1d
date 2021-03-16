@@ -15,7 +15,6 @@ namespace NSEpic
 {
 
 class CTemplate;
-class CDataStore;
 
 /**
  * \ingroup Redshift
@@ -49,28 +48,18 @@ public:
                                                         const int& rank) const;
 
   
-  void                    DeleteGlobalResult(const std::string& path, const std::string& name);
 
     void                    SaveRedshiftResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    void                    SaveRedshiftResult( const CDataStore& store, const boost::filesystem::path& dir );
-    void                    SaveCandidatesResult( const CDataStore& store, const boost::filesystem::path& dir );
     void                    SaveCandidatesResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    void                    SaveAllResults(const CDataStore& store, const boost::filesystem::path& dir , const std::string opt) const;
-    void                    SaveReliabilityResult( const CDataStore& store, const boost::filesystem::path& dir );
     void                    SaveStellarResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    void                    SaveStellarResult( const CDataStore& store, const boost::filesystem::path& dir );
     void                    SaveQsoResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    void                    SaveQsoResult( const CDataStore& store, const boost::filesystem::path& dir );
     void                    SaveClassificationResultError( const std::string spcName, const std::string processingID, const boost::filesystem::path& dir );
-    void                    SaveClassificationResult( const CDataStore& store, const boost::filesystem::path& dir );
 
   //From DataStore, above should be removed and integrated into these
       void                    StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result );
 
     void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
     void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
-    void                            ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey );
-    void                            DeleteScopedGlobalResult( const std::string& name );
   
     void                            SaveRedshiftResult( const boost::filesystem::path& dir );
     void                            SaveCandidatesResult( const boost::filesystem::path& dir );

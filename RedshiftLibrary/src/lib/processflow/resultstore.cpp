@@ -51,25 +51,6 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
     map[ scopedName ] = result;
 }
 
-/**
- * /brief Delete a key:value name in the resultstore
-*/
-void COperatorResultStore::DeleteGlobalResult(const std::string& path, const std::string& name )
-{
-    std::string scopedName;
-    if( ! path.empty() ) {
-        scopedName = path;
-        scopedName.append( "." );
-    }
-    scopedName.append( name );
-
-    TResultsMap::const_iterator it = m_GlobalResults.find( scopedName ); 
-    if( it != m_GlobalResults.end() )
-    {
-        m_GlobalResults.erase(scopedName);   
-    }
-    return;
-}
 
 void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
@@ -205,7 +186,7 @@ Int32 COperatorResultStore::CreateResultStorage( std::fstream& stream, const bfs
     return ret;
 }
 
-void COperatorResultStore::SaveRedshiftResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveRedshiftResult( const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
@@ -247,7 +228,7 @@ void COperatorResultStore::SaveRedshiftResultError(  const std::string spcName, 
     }
 }
 
-void COperatorResultStore::SaveStellarResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveStellarResult(const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
@@ -290,7 +271,7 @@ void COperatorResultStore::SaveStellarResultError(  const std::string spcName,  
 }
 
 
-void COperatorResultStore::SaveQsoResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveQsoResult( const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
@@ -332,7 +313,7 @@ void COperatorResultStore::SaveQsoResultError(  const std::string spcName,  cons
 }
 
 
-void COperatorResultStore::SaveClassificationResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveClassificationResult(const bfs::path& dir )
 {
     // Append classif. result line to output file
     {
@@ -374,7 +355,7 @@ void COperatorResultStore::SaveClassificationResultError(  const std::string spc
     }
 }
 
-void COperatorResultStore::SaveCandidatesResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveCandidatesResult(  const bfs::path& dir )
 {
     // Append candidate result line to output candidate file
     {
@@ -415,7 +396,7 @@ void COperatorResultStore::SaveCandidatesResultError( const std::string spcName,
     }
 }
 
-void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const bfs::path& dir )
+void COperatorResultStore::SaveReliabilityResult( const bfs::path& dir )
 {
     // Append best redshift result line to output file
     {
@@ -431,7 +412,7 @@ void COperatorResultStore::SaveReliabilityResult( const CDataStore& store, const
 }
 
 
-void COperatorResultStore::SaveAllResults( const CDataStore& store, const bfs::path& dir, const std::string opt ) const
+void COperatorResultStore::SaveAllResults(const bfs::path& dir, const std::string opt ) const
 {
     std::string opt_lower = opt;
     boost::algorithm::to_lower(opt_lower);
@@ -760,41 +741,6 @@ void COperatorResultStore::test()
   
 }
 
-void  COperatorResultStore::SaveRedshiftResult( const boost::filesystem::path& dir )
-{
-    SaveRedshiftResult(  dir );
-}
-
-void  COperatorResultStore::SaveStellarResult( const boost::filesystem::path& dir )
-{
-    SaveStellarResult(  dir );
-}
-
-void  COperatorResultStore::SaveQsoResult( const boost::filesystem::path& dir )
-{
-    SaveQsoResult(  dir );
-}
-
-void  COperatorResultStore::SaveClassificationResult( const boost::filesystem::path& dir )
-{
-    SaveClassificationResult(  dir );
-}
-
-void  COperatorResultStore::SaveCandidatesResult( const boost::filesystem::path& dir )
-{
-    SaveCandidatesResult(  dir );
-}
-
-
-void COperatorResultStore::SaveReliabilityResult( const boost::filesystem::path& dir )
-{
-	SaveReliabilityResult(  dir );
-}
-
-void  COperatorResultStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
-{
-    SaveAllResults(  dir, opt );
-}
 
 void  COperatorResultStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
@@ -804,19 +750,6 @@ void  COperatorResultStore::StoreScopedPerTemplateResult( const CTemplate& t, co
 void COperatorResultStore::StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     StoreGlobalResult( GetCurrentScopeName(), name, result );
-}
-
-void COperatorResultStore::DeleteScopedGlobalResult( const std::string& name )
-{
-    DeleteGlobalResult(GetCurrentScopeName(), name);
-    
-}
-void COperatorResultStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )
-{
-    
-    auto  result = GetGlobalResult( oldkey ).lock();
-    StoreScopedGlobalResult(newkey, result);
-    DeleteScopedGlobalResult(oldkey);
 }
 
 void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )

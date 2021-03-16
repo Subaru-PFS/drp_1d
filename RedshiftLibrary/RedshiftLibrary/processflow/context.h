@@ -49,15 +49,8 @@ public:
 
     
 
-    bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax);
+  
 
-  /*
-    const CSpectrum&                GetSpectrum() const;
-    const CTemplateCatalog&         GetTemplateCatalog() const;
-    const CRayCatalog&              GetRayCatalog() const;
-    CParameterStore&                GetParameterStore();
-    COperatorResultStore&           GetResultStore();
-  */
     
   std::shared_ptr<const CSpectrum> GetSpectrum(){return m_inputContext->m_Spectrum;}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog(){return m_inputContext->m_TemplateCatalog;}
@@ -66,27 +59,11 @@ public:
   const CInputContext& GetInputContext(){return *(m_inputContext.get());}
   COperatorResultStore& GetResultStore(){return *(m_ResultStore.get());}
 
-  /*
-  const CSpectrum& GetSpectrum(){return *(m_inputContext->m_Spectrum);}
-  const CTemplateCatalog& GetTemplateCatalog(){return *(m_inputContext->m_TemplateCatalog);}
-  const CRayCatalog& GetRayCatalog() {return *(m_inputContext->m_RayCatalog);}
-  const CParameterStore& GetParameterStore(){return *(m_inputContext->m_ParameterStore);}
-  std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
-  */  
-//std::shared_ptr<CDataStore> GetDataStore();
-  //  TScopeStack &getScopeStack(){return m_ScopeStack;}
- TScopeStack                     m_ScopeStack;
+  TScopeStack                     m_ScopeStack;
 private:
 
-    std::shared_ptr<CSpectrum>                 m_Spectrum;
+  std::shared_ptr<COperatorResultStore>      m_ResultStore;
 
-    std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;
-    std::shared_ptr<const CRayCatalog>         m_RayCatalog;
-
-    std::shared_ptr<CParameterStore>           m_ParameterStore;
-    std::shared_ptr<COperatorResultStore>      m_ResultStore;
-
-    std::shared_ptr<CDataStore>                m_DataStore;
   std::shared_ptr<CInputContext>  m_inputContext;
  
 

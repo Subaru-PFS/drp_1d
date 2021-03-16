@@ -20,25 +20,6 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
 {
 }
 
-const std::string CMethodTemplateFittingSolve::GetDescription() const
-{
-    std::string desc;
-
-    desc = "Method templatefittingsolve:\n";
-
-    desc.append("\tparam: templatefittingsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
-    desc.append("\tparam: templatefittingsolve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: templatefittingsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
-    desc.append("\tparam: templatefittingsolve.extinction = {""yes"", ""no""}\n");
-    desc.append("\tparam: templatefittingsolve.dustfit = {""yes"", ""no""}\n");
-    desc.append("\tparam: templatefittingsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
-    desc.append("\tparam: templatefittingsolve.saveintermediateresults = {""yes"", ""no""}\n");
-
-    return desc;
-
-}
-
-
 std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::Compute(const CInputContext &inputContext,
                                                                    COperatorResultStore &resultStore,
                                                                    TScopeStack &scope)

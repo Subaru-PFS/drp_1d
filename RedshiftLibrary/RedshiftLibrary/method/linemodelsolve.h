@@ -30,7 +30,6 @@ public:
 
   CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
-    const std::string GetDescription() const;
 
     Bool PopulateParameters( std::shared_ptr<CParameterStore> parameterStore );
 

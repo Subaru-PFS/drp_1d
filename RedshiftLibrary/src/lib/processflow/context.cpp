@@ -50,56 +50,39 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                m_inputContext->m_lambdaRange.GetBegin(),
                m_inputContext->m_lambdaRange.GetEnd(),
                spectrum->GetResolution());
+
+  //************************************
+  const Float64 lmin = GetInputContext().m_lambdaRange.GetBegin();
+  const Float64 lmax = GetInputContext().m_lambdaRange.GetEnd();
+
+  std::string enableInputSpcCorrectStr = parameterStore->Get<std::string>( "autocorrectinput");
+  Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
+  if(enableInputSpcCorrect)
+    {
+      //Check if the Spectrum is valid on the lambdarange
+      //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+
+      if( spectrum->correctSpectrum( lmin,lmax ))
+        Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
+      }
+
+   if( !spectrum->IsFluxValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate spectrum flux");
+    }else{
+      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    }
+	//Check if the noise is valid in the lambdarange
+    if( !spectrum->IsNoiseValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate noise from spectrum");
+    }else{
+      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    }
+  
 }
 
 
 
-/*
-CParameterStore& CProcessFlowContext::GetParameterStore()
-{
-    return *m_ParameterStore;
-}
-
-COperatorResultStore& CProcessFlowContext::GetResultStore()
-{
-    return *m_ResultStore;
-}
-
-
-CDataStore& CProcessFlowContext::GetDataStore()
-{
-    return *m_DataStore;
-}
-*/
-bool CProcessFlowContext::correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax)
-{
-    return m_Spectrum->correctSpectrum( LambdaMin, LambdaMax );
-}
-/*
-const CSpectrum& CProcessFlowContext::GetSpectrum() const
-{
-    return *m_Spectrum;
-}
-
-const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const
-{
-    return *m_TemplateCatalog;
-}
-const TStringList&  CProcessFlowContext::GetGalaxyCategoryList() const
-{
-    return m_filteredGalaxyTemplateCategoryList;
-}
-const TStringList&  CProcessFlowContext::GetStarCategoryList() const
-{
-    return m_filteredStarTemplateCategoryList;                                ; 
-}
-const TStringList&  CProcessFlowContext::GetQSOCategoryList() const
-{
-    return m_filteredQSOTemplateCategoryList;
-}
-
-const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
-{
-    return *m_RayCatalog;
-}
-*/

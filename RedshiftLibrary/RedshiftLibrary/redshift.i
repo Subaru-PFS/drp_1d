@@ -56,6 +56,7 @@
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/solvedescription.h"
 using namespace NSEpic;
 static PyObject* pParameterException;
 static PyObject* pGlobalException;
@@ -422,7 +423,6 @@ class CLineModelSolve
  public:
   CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
   ~CLineModelSolve();
-  const std::string GetDescription();
 };
  
 class CMethodLineMatchingSolve
@@ -430,7 +430,6 @@ class CMethodLineMatchingSolve
  public:
   CMethodLineMatchingSolve();
   ~CMethodLineMatchingSolve();
-  const std::string GetDescription();
 };
 
 class CMethodTemplateFittingSolve
@@ -438,7 +437,6 @@ class CMethodTemplateFittingSolve
  public:
   CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
   ~CMethodTemplateFittingSolve();
-  const std::string GetDescription();
 };
 
 class CMethodTemplateFittingLogSolve
@@ -446,7 +444,6 @@ class CMethodTemplateFittingLogSolve
  public:
   CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
   ~CMethodTemplateFittingLogSolve();
-  const std::string GetDescription();
 };
 
 class CMethodTplcombinationSolve
@@ -454,7 +451,6 @@ class CMethodTplcombinationSolve
  public:
   CMethodTplcombinationSolve();
   ~CMethodTplcombinationSolve();
-  const std::string GetDescription();
 };
 
   typedef enum ErrorCode
@@ -511,4 +507,13 @@ class ParameterException: public AmzException
   ParameterException(ErrorCode ec,std::string message);
   ParameterException(const ParameterException& e);
   ~ParameterException();  
+};
+
+class CSolveDescription
+{
+ public:
+  CSolveDescription(){}
+  ~CSolveDescription(){}
+    
+  static const std::string GetDescription(const std::string& method);
 };

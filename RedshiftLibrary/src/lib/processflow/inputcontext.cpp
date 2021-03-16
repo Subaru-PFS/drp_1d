@@ -68,3 +68,4 @@ void CInputContext::InitIsmIgm(const std::string & calibrationPath)
         }   
     }
 }
+

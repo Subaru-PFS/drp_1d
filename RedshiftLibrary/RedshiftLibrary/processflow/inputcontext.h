@@ -28,6 +28,7 @@ class CInputContext
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
   TFloat64Range m_lambdaRange;
+
 private:
 
     void                                       InitSpectrum();

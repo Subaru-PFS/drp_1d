@@ -149,45 +149,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
 
-    //************************************
-    const Float64 lmin = ctx.GetInputContext().m_lambdaRange.GetBegin();
-    const Float64 lmax = ctx.GetInputContext().m_lambdaRange.GetEnd();
-    Bool enableInputSpcCorrect = true;
-    std::string enableInputSpcCorrectStr;
-    ctx.GetParameterStore()->Get( "autocorrectinput", enableInputSpcCorrectStr, "no" );
-    if(enableInputSpcCorrectStr != "yes"  )
-    {
-        enableInputSpcCorrect = false;
-    }
-    if(enableInputSpcCorrect)
-    {
-    //Check if the Spectrum is valid on the lambdarange
-    //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
-
-    if( ctx.correctSpectrum( lmin, lmax ) ){
-      Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
-    }
-    }
+    
 
     //************************************
     //Check if the Spectrum is valid on the lambdarange
     //checkInputSpectrum(ctx.GetInputContext().m_lambdaRange);
     //Check if the flux is valid on the lambdarange
-    if( !ctx.GetSpectrum()->IsFluxValid( lmin, lmax ) ){
-      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
-                   lmin, lmax );
-      throw std::runtime_error("Failed to validate spectrum flux");
-    }else{
-      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
-    }
-	//Check if the noise is valid in the lambdarange
-    if( !ctx.GetSpectrum()->IsNoiseValid( lmin, lmax ) ){
-      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
-                   lmin, lmax );
-      throw std::runtime_error("Failed to validate noise from spectrum");
-    }else{
-      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
-    }
+   
 
     // Stellar method
     std::shared_ptr<CSolveResult> starResult;
@@ -351,22 +319,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
             redshifts );
           */
         }else if(methodName  == "templatefittingsolve" ){
-          Float64 overlapThreshold;
-          ctx.GetParameterStore()->Get( "templatefittingsolve.overlapThreshold", overlapThreshold, 1.0);
-          std::string opt_spcComponent;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.spectrum.component", opt_spcComponent, "raw" );
-          std::string opt_interp;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.interpolation", opt_interp, "precomputedfinegrid" );
-          std::string opt_extinction;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.extinction", opt_extinction, "no" );
-          std::string opt_dustFit;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittingsolve.dustfit", opt_dustFit, "no" );
-
-          // prepare the unused masks
-          std::vector<CMask> maskList;
-          //retrieve the calibration dir path
-          std::string calibrationDirPath;
-          ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
           CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"galaxy");
           mResult = solve.Compute( ctx.GetInputContext(),
                                    ctx.GetResultStore(),
