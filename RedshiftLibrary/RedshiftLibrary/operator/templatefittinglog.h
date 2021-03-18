@@ -26,6 +26,9 @@ public:
     COperatorTemplateFittingLog(std::string calibrationPath);
     ~COperatorTemplateFittingLog();
 
+    COperatorTemplateFittingLog(COperatorTemplateFittingLog const& other) = delete;
+    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog const& other) = delete;  
+
     std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                               const CTemplate& tpl,
                                               const TFloat64Range& lambdaRange,
@@ -37,7 +40,7 @@ public:
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
-                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
     void enableSpcLogRebin(Bool enable);

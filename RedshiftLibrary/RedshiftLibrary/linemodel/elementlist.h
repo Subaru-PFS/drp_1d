@@ -81,7 +81,7 @@ public:
                         Float64& fitAmplitude,
                         Float64& fitAmplitudeError,
                         Bool& fitAmplitudeNegative,
-                        Float64 &fitDustCoeff,
+                        Float64 &FitEbmvCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
                         Float64& fitMtM,
@@ -92,7 +92,7 @@ public:
     Float64 getFitContinuum_snr();
     Float64 getFitContinuum_tplMerit();
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
-    Float64 getFitContinuum_tplIsmDustCoeff();
+    Float64 getFitContinuum_tplIsmEbmvCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
@@ -407,8 +407,8 @@ private:
     Float64 m_fitContinuum_tplFitAmplitude = NAN;
     Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
     Float64 m_fitContinuum_tplFitMerit = NAN;
-    Float64 m_fitContinuum_tplFitDustCoeff = NAN;
-    Int32 m_fitContinuum_tplFitMeiksinIdx = -1;
+    Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
+    Int32   m_fitContinuum_tplFitMeiksinIdx = -1;
     Float64 m_fitContinuum_tplFitRedshift = NAN; // only used with m_fitContinuum_option==2 for now
     Float64 m_fitContinuum_tplFitDtM = NAN;
     Float64 m_fitContinuum_tplFitMtM = NAN;

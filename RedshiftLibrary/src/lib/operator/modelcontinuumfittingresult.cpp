@@ -89,7 +89,7 @@ void CModelContinuumFittingResult::getData(const std::string& name, std::string&
 }
 void CModelContinuumFittingResult::getData(const std::string& name, Float64& v) const
 {
-  if(name.compare("ModelDustCoeff") == 0)
+  if(name.compare("ModelDustCoeff") == 0)//shd be changed
     v = IsmCoeff;
   else  if(name.compare("ModelAmplitude") == 0)
     v = Amp; 

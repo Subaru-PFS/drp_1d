@@ -19,7 +19,7 @@ public:
 
     struct SValues{
         std::string tplName;
-        Float64 ismDustCoeff;
+        Float64 ismEbmvCoeff;
         Int32 igmMeiksinIdx;
 
         Float64 merit;
@@ -36,7 +36,7 @@ public:
     ~CTemplatesFitStore();
 
     bool Add(std::string tplName,
-             Float64 ismDustCoeff,
+             Float64 ismEbmvCoeff,
              Int32 igmMeiksinIdx,
              Float64 redshift,
              Float64 merit,

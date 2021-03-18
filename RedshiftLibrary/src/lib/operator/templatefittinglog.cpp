@@ -720,7 +720,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             {
                 bool verbose_priorA = false;
                 Int32 kism_best = -1;
-                if(subresult->FitDustCoeff[isubz]==-1)
+                if(subresult->FitEbmvCoeff[isubz]==-1)
                 {
                     kism_best=0;
                 }else{
@@ -728,7 +728,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                     for (Int32 kISM = 0; kISM < nISM; kISM++)
                     {
                         Float64 ebmv = m_ismCorrectionCalzetti->GetEbmvValue(kISM);
-                        if(ebmv==subresult->FitDustCoeff[isubz])
+                        if(ebmv==subresult->FitEbmvCoeff[isubz])
                         {
                             kism_best = kISM;
                             break;
@@ -809,7 +809,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             }
             result->Overlap[fullResultIdx] = subresult->Overlap[isubz];
             result->LogPrior[fullResultIdx] = logprior;
-            result->FitDustCoeff[fullResultIdx] = subresult->FitDustCoeff[isubz];
+            result->FitEbmvCoeff[fullResultIdx] = subresult->FitEbmvCoeff[isubz];
             result->FitMeiksinIdx[fullResultIdx] = subresult->FitMeiksinIdx[isubz];
             result->Status[fullResultIdx] = subresult->Status[isubz];
 
@@ -1063,14 +1063,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
                 // correct tplRebinedFlux
                 // correct tpl2RebinedFlux
                 Float64 restLambda;
-                Float64 ebmvDustCoeff = 1.0;
+                Float64 dustCoeff = 1.0;//i think here should be dustcoeff
                 for (Int32 j = 0; j < nTpl; j++)
                 {
                     // apply ism dust correction from Calzetti
                     restLambda = tplRebinedLambda[j];
-                    ebmvDustCoeff = m_ismCorrectionCalzetti->getDustCoeff(kDustCalzetti, restLambda);
+                    dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff(kDustCalzetti, restLambda);
 
-                    tplRebinedFlux[j] = tplRebinedFluxIgm[j] * ebmvDustCoeff;
+                    tplRebinedFlux[j] = tplRebinedFluxIgm[j] * dustCoeff;
 
                     tpl2RebinedFlux[j] = tplRebinedFlux[j] * tplRebinedFlux[j];
                 }
@@ -1293,7 +1293,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
         result->FitAmplitudeNegative[iz] = bestFitAmpNeg[k];
         result->FitDtM[iz] = bestFitDtm[k];
         result->FitMtM[iz] = bestFitMtm[k];
-        result->FitDustCoeff[iz] = bestISMCoeff[k];
+        result->FitEbmvCoeff[iz] = bestISMCoeff[k];
         result->FitMeiksinIdx[iz] = bestIGMIdx[k];
         result->Status[iz] = nStatus_OK;
 
@@ -1549,7 +1549,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         Int32 opt_dustFitting,
         CPriorHelper::TPriorZEList logpriorze,
         Bool keepigmism,
-        Float64 FitDustCoeff,
+        Float64 FitEbmvCoeff,
         Float64 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFittingLog: starting computation for template: %s", tpl.GetName().c_str());
@@ -1563,11 +1563,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         Log.LogError("  Operator-TemplateFittingLog: no calzetti calib. file loaded... aborting!");
         return NULL;
     }
-    if( opt_dustFitting>-1 && opt_dustFitting>m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
+    if( opt_dustFitting>-1 && opt_dustFitting>m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
         Log.LogError("  Operator-TemplateFittingLog: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
                      opt_dustFitting,
-                     m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
+                     m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
         return NULL;
     }
 
@@ -2045,7 +2045,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     {
         // Log.LogError("  Operator-TemplateFittingLog: FitAllz opt_dustFitting not
         // validated yet...");
-        Int32 nISMCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        Int32 nISMCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
         ismEbmvCoeffs.resize(nISMCoeffs);
         for (Int32 kism = 0; kism < nISMCoeffs; kism++)
         {

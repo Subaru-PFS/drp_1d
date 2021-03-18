@@ -34,7 +34,7 @@ public:
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
-                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
@@ -57,7 +57,7 @@ private:
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingLogprior,
-                  Float64 &fittingDustCoeff,
+                  Float64 &fittingEbmvCoeff,
                   Float64 &fittingMeiksinIdx,
                   EStatus& status,
                   std::vector<TFloat64List>& ChiSquareInterm,

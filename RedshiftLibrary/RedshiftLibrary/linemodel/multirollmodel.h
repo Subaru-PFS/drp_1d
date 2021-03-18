@@ -72,7 +72,7 @@ public:
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     Float64 getFitContinuum_tplMerit();
-    Float64 getFitContinuum_tplIsmDustCoeff();
+    Float64 getFitContinuum_tplIsmEbmvCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
 
     const CSpectrum& GetModelSpectrum() const;

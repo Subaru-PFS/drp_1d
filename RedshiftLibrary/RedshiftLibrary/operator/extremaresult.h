@@ -50,7 +50,7 @@ public:
   TFloat64List      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
   TFloat64List      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
   TFloat64List      FittedTplMerit;     //Chisquare for the best template fitted for continuum
-  TFloat64List      FittedTplDustCoeff;     //Calzetti dustcoeff for the best template fitted for continuum
+  TFloat64List      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
   TInt32List        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
   TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
   TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum

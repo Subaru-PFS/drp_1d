@@ -29,7 +29,6 @@ public:
 
 
     COperatorResultStore(const TScopeStack& scopeStack);
-    virtual ~COperatorResultStore();
 
     void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
     void                    StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );

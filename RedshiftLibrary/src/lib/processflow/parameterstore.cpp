@@ -14,11 +14,6 @@ CParameterStore::CParameterStore(const TScopeStack& stack):
 
 }
 
-CParameterStore::~CParameterStore()
-{
-
-}
-
 void CParameterStore::Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
 {
   //std::cout << "Get v1" << std::endl;

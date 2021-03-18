@@ -37,6 +37,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath, std::string opt_tp
 
     m_opt_dust_calzetti = enableISMCalzetti;
     //hardcoded fitting values for EBV, should be in the json
+//hook: hardcoded
     Float64 ebmv_start=0.0;
     Float64 ebmv_step=0.1;
     Float64 ebmv_n=10;
@@ -142,17 +143,17 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
 
     //Load the linecatalog-tplshaped in the list
     Int32 successLoadPriors = true;
-    Int32 nDustCoeffs=1;
+    Int32 nEbmvCoeffs=1;
     if(!m_opt_dust_calzetti)
     {
-        nDustCoeffs = 1;
+        nEbmvCoeffs = 1;
     }else{
-        nDustCoeffs = m_ismCorrectionCalzetti.GetNPrecomputedDustCoeffs();
+        nEbmvCoeffs = m_ismCorrectionCalzetti.GetNPrecomputedEbmvCoeffs();
     }
     for(Int32 ktpl=0; ktpl<tplshapeCatalogList.size(); ktpl++)
     {
         //Loop on the EBMV dust coeff
-        for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
+        for(Int32 kEbmv=0; kEbmv<nEbmvCoeffs; kEbmv++)
         {
             CRayCatalog lineCatalog;
             try
@@ -166,7 +167,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             }
 
             m_RayCatalogList.push_back(lineCatalog);
-            m_IsmIndexes.push_back(kDust);
+            m_IsmIndexes.push_back(kEbmv);
 
             fs::path name(tplshapeCatalogList[ktpl].c_str());
             m_RayCatalogNames.push_back(name.filename().c_str());
@@ -228,9 +229,9 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
                     successLoadPriors=false;
                 }else{
                     //make this prior tpl-ratio equiprobable with other EBMV values
-                    if(nDustCoeffs>1)
+                    if(nEbmvCoeffs>1)
                     {
-                        m_Priors[m_Priors.size()-1] /= Float64(nDustCoeffs);
+                        m_Priors[m_Priors.size()-1] /= Float64(nEbmvCoeffs);
                     }
                 }
             }
@@ -242,7 +243,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
         Log.LogDetail("    CatalogsTplShape - Failed to load tplshape prior, USING constant priors instead ! (p=%f)", priorCST);
         for(Int32 k=0; k<m_Priors.size(); k++)
         {
-            for(Int32 kDust=0; kDust<nDustCoeffs; kDust++)
+            for(Int32 kEbmv=0; kEbmv<nEbmvCoeffs; kEbmv++)
             {
                 m_Priors[k] = priorCST;
             }
@@ -399,7 +400,7 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
             {
                 Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
                 Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-                Float64 dustCoeff = m_ismCorrectionCalzetti.getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+                Float64 dustCoeff = m_ismCorrectionCalzetti.GetDustCoeff( m_IsmIndexes[iCatalog], restLambda);
                 nominalAmp*=dustCoeff;
                 //find line in the elementList
                 Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
@@ -484,7 +485,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     {
         Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
         Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-        Float64 dustCoeff = m_ismCorrectionCalzetti.getDustCoeff( m_IsmIndexes[iCatalog], restLambda);
+        Float64 dustCoeff = m_ismCorrectionCalzetti.GetDustCoeff( m_IsmIndexes[iCatalog], restLambda);
         nominalAmp*=dustCoeff;
         //find line in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )

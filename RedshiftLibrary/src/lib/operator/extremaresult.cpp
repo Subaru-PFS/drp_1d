@@ -27,7 +27,7 @@ void CExtremaResult::Resize(Int32 size)
     FittedTplAmplitude.resize(size);
     FittedTplAmplitudeError.resize(size);
     FittedTplMerit.resize(size);
-    FittedTplDustCoeff.resize(size);
+    FittedTplEbmvCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
     FittedTplDtm.resize(size);
     FittedTplMtm.resize(size);
@@ -90,9 +90,9 @@ void CExtremaResult::SaveJSONbody(std::ostream& stream) const
     // save FittedTplMerit, on 1 line
     SaveTFloat64List(stream,"ext_FittedTplMerit",FittedTplMerit);
     stream << "," << std::endl;
-    // save FittedTplDustCoeff, on 1 line
+    // save FittedTplEbmvCoeff, on 1 line
     stream << std::setprecision(3);
-    SaveTFloat64List(stream,"ext_FittedTplDustCoeff",FittedTplDustCoeff); 
+    SaveTFloat64List(stream,"ext_FittedTplEbmvCoeff",FittedTplEbmvCoeff); 
     stream << "," << std::endl; 
 
     // save FittedTplMeiksinIdx, on 1 line
@@ -115,7 +115,7 @@ void CExtremaResult::SaveJSONbody(std::ostream& stream) const
 
 void CExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-    if (name.compare("ContinuumIsmCoeff") == 0 || name.compare("FirstpassContinuumIsmCoeff") == 0) v = FittedTplDustCoeff[rank];
+    if (name.compare("ContinuumIsmCoeff") == 0 || name.compare("FirstpassContinuumIsmCoeff") == 0) v = FittedTplEbmvCoeff[rank];
     else if (name.compare("FirstpassRedshift") == 0) v = m_ranked_candidates[rank].second.Redshift;
     else if (name.compare("FirstpassMerit") == 0) v = m_ranked_candidates[rank].second.ValProba;
     else if (name.compare("ContinuumAmplitude") == 0 || name.compare("FirstpassContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];

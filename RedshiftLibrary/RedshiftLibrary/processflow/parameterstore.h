@@ -22,7 +22,6 @@ class CParameterStore : public CScopeStore
 public:
 
     CParameterStore(const TScopeStack& stack);
-    virtual ~CParameterStore();
 
     void Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
     void Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;

@@ -907,11 +907,11 @@ Float64 CMultiRollModel::getFitContinuum_tplMerit()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiRollModel::getFitContinuum_tplIsmDustCoeff()
+Float64 CMultiRollModel::getFitContinuum_tplIsmEbmvCoeff()
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->getFitContinuum_tplIsmDustCoeff();
+        return m_models[0]->getFitContinuum_tplIsmEbmvCoeff();
     }
     else
     {

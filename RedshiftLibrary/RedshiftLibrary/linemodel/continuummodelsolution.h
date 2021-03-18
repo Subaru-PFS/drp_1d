@@ -20,7 +20,7 @@ struct CContinuumModelSolution
     std::string         tplName;
     Float64             tplAmplitude = NAN;
     Float64             tplAmplitudeError = NAN;
-    Float64             tplDustCoeff = NAN;
+    Float64             tplEbmvCoeff = NAN;
     Int32               tplMeiksinIdx = -1;
     Float64             tplRedshift = NAN;
 

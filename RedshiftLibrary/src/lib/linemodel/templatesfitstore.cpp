@@ -50,7 +50,7 @@ Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const
 /**
  * @brief CTemplatesFitStore::Add
  * @param tplName
- * @param ismDustCoeff
+ * @param ismEbmvCoeff
  * @param igmMeiksinIdx
  * @param redshift
  * @param merit
@@ -66,7 +66,7 @@ Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const
  * @return False if there was a problem.
  */
 bool CTemplatesFitStore::Add(std::string tplName,
-                             Float64 ismDustCoeff,
+                             Float64 ismEbmvCoeff,
                              Int32 igmMeiksinIdx,
                              Float64 redshift,
                              Float64 merit,
@@ -85,7 +85,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
     tmpSValues.fitDtM = fitDtM;
     tmpSValues.fitMtM = fitMtM;
     tmpSValues.logprior = logprior;
-    tmpSValues.ismDustCoeff = ismDustCoeff;
+    tmpSValues.ismEbmvCoeff = ismEbmvCoeff;
     tmpSValues.igmMeiksinIdx = igmMeiksinIdx;
     tmpSValues.tplName = tplName;
 
@@ -117,7 +117,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
                      redshift,
                      m_fitValues[idxz].size(),
                      tmpSValues.merit,
-                     tmpSValues.ismDustCoeff,
+                     tmpSValues.ismEbmvCoeff,
                      tmpSValues.igmMeiksinIdx);
 
         m_fitValues[idxz].push_back(tmpSValues);
@@ -131,7 +131,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
                      redshift,
                      ipos,
                      tmpSValues.merit,
-                     tmpSValues.ismDustCoeff,
+                     tmpSValues.ismEbmvCoeff,
                      tmpSValues.igmMeiksinIdx);
 
         //insert the new SValue and move all the older candidates position according to ipos found
