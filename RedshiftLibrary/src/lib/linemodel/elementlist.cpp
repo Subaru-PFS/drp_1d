@@ -231,7 +231,10 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
     //m_CatalogTplShape = new CRayCatalogsTplShape();
 
-    bool ret = m_CatalogTplShape.Init(m_calibrationPath, opt_tplratioCatRelPath, opt_tplratio_ismFit);
+    bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
+                                      opt_tplratioCatRelPath, 
+                                      opt_tplratio_ismFit, 
+                                      m_tplCatalog.GetTemplate( m_tplCategoryList[0],0).m_ismCorrectionCalzetti);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");

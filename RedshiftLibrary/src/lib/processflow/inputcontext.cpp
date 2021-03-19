@@ -50,9 +50,16 @@ void CInputContext::InitSpectrum()
 
 void CInputContext::InitIsmIgm(const std::string & calibrationPath)
 {
+    
+    Float64 ebmv_start=0.0;
+    Float64 ebmv_step=0.1;
+    UInt32 ebmv_n=10;
+    m_ParameterStore->Get( "ebmv.start", ebmv_start, 0. );
+    m_ParameterStore->Get( "ebmv.step", ebmv_step, 0.1 );
+    m_ParameterStore->Get( "ebmv.count", ebmv_n, 10 );
     //ISM
     auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-    ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
     //IGM
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
     igmCorrectionMeiksin->Init(calibrationPath);
