@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 include(gitrevision)
 
-message("Using git revision : " ${GIT_REVISION})
+message(STATUS "Using git revision : " ${GIT_REVISION})
 
 option(BUILD_TESTING "Build testings" ON)
 
