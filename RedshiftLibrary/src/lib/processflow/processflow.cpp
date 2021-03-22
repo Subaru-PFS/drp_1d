@@ -13,7 +13,7 @@
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
-#include <RedshiftLibrary/processflow/classificationresult.h>
+#include <RedshiftLibrary/method/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
 
@@ -158,33 +158,21 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
    
 
     // Stellar method
-    std::shared_ptr<CSolveResult> starResult;
-    std::string enableStarFitting;
-    ctx.GetParameterStore()->Get( "enablestellarsolve", enableStarFitting, "no" );
-    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
-    if(enableStarFitting=="yes"){
-      //      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
 
+
+    if(ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve")=="yes"){
+      //      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
 
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
-        starResult = solve.Compute(ctx.GetInputContext(),
-                                   ctx.GetResultStore(),
-                                   ctx.m_ScopeStack);
-
-
-        //finally save the stellar fitting results
-        if( starResult ) {
-            Log.LogInfo("Saving stellar fitting results");
-            ctx.GetResultStore().StoreScopedGlobalResult( "stellarresult", starResult );
-        }else{
-            Log.LogError( "Unable to store stellar result.");
-        }
-        //starResult->preSave(ctx.GetDataStore());
+        solve.Compute(ctx.GetInputContext(),
+                      ctx.GetResultStore(),
+                      ctx.m_ScopeStack);
+   
     }
 
     // Quasar method
-    std::shared_ptr<CSolveResult> qsoResult;
+    //    std::shared_ptr<CSolveResult> qsoResult;
     std::string enableQsoFitting;
     ctx.GetParameterStore()->Get( "enableqsosolve", enableQsoFitting, "no" );
     Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
@@ -291,7 +279,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 */
     // Galaxy method
-    std::shared_ptr<CSolveResult> mResult;
+
 
     if(true)
       {
@@ -303,9 +291,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         if(methodName  == "linemodelsolve" ){
 
           CLineModelSolve Solve(ctx.m_ScopeStack,"galaxy",calibrationDirPath);
-          mResult = Solve.Compute( ctx.GetInputContext(),
-                                   ctx.GetResultStore(),
-                                   ctx.m_ScopeStack);
+          Solve.Compute( ctx.GetInputContext(),
+                         ctx.GetResultStore(),
+                         ctx.m_ScopeStack);
           /*
             }else if(methodName  == "zweimodelsolve" ){
 
@@ -320,9 +308,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
           */
         }else if(methodName  == "templatefittingsolve" ){
           CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"galaxy");
-          mResult = solve.Compute( ctx.GetInputContext(),
-                                   ctx.GetResultStore(),
-                                   ctx.m_ScopeStack);
+          solve.Compute( ctx.GetInputContext(),
+                         ctx.GetResultStore(),
+                         ctx.m_ScopeStack);
 
         }else if(methodName  == "templatefittinglogsolve" ){
           Float64 overlapThreshold;
@@ -427,27 +415,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
 
-    CClassificationSolve classifier(enableStarFitting, enableQsoFitting);
-    classifier.Classify(mResult, starResult, qsoResult);
+    CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
+    classifier.Compute(ctx.GetInputContext(),
+                       ctx.GetResultStore(),
+                       ctx.m_ScopeStack);
 
-    if(mResult){
-        Log.LogInfo( "Setting object type: %s", classifier.typeLabel.c_str());
-        mResult->SetTypeLabel(classifier.typeLabel); //maybe this is unecessary since there is a classifresult now
-    }
 
-    //save the classification results
-    if( classifier.classifResult ) {
-        ctx.GetResultStore().StoreScopedGlobalResult( "classificationresult", classifier.classifResult );
-    }else{
-      throw std::runtime_error("Unable to store method result");
-    }
 
-    //finally save the method results with (optionally) the zqual label
-    if( mResult ) {
-        ctx.GetResultStore().StoreScopedGlobalResult( "redshiftresult", mResult );
-    }else{
-      throw std::runtime_error("Unable to store method result");
-    }
 }
 
 

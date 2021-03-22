@@ -244,9 +244,10 @@ void COperatorResultStore::SaveStellarResult(const bfs::path& dir )
         //*/
 
         auto  result = GetGlobalResult( "stellarsolve.stellarresult" ).lock();
-        if(result){
+        if(result)
+          {
             result->SaveLine(outputStream );
-        }//else{
+          }//else{
         //    throw std::runtime_error("Unable to retrieve stellar result for saving");
         //}
     }
@@ -703,8 +704,8 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 {
   std:weak_ptr<const COperatorResult> result;
   if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
-     name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("redshiftresult");
-  else if(object_type=="classification") result = GetGlobalResult("classificationresult");
+     name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("galaxy.result");
+  else if(object_type=="classification") result = GetGlobalResult("classification.result");
   else result = GetGlobalResult(object_type,method,"candidatesresult");
   result.lock()->getData(name,v);
 }
@@ -712,7 +713,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
 {
   std:weak_ptr<const COperatorResult> result;
-  if (object_type.compare("classification") == 0) result = GetGlobalResult("classificationresult");
+  if (object_type.compare("classification") == 0) result = GetGlobalResult("classification.result");
   else result = GetGlobalResult(object_type,method,"candidatesresult");
   result.lock()->getData(name,v);
 }

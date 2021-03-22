@@ -29,8 +29,8 @@ using namespace boost;
  * \brief Empty constructor.
  **/
 CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CSolve(scope,objectType),
-  m_calibrationPath(calibrationPath)
+  CSolve("linemodelsolve",scope,objectType),
+    m_calibrationPath(calibrationPath)
 {
 }
 
@@ -42,7 +42,7 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
  **/
 Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> parameterStore )
 {
-  parameterStore->Get("ExtremaRedshiftSeparation",m_redshiftSeparation,2e-3);
+  parameterStore->Get("extremaredshiftseparation",m_redshiftSeparation,2e-3);
     parameterStore->GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
     parameterStore->GetScopedParam( "linemodel.lineforcefilter", m_opt_lineforcefilter, "no" );
     parameterStore->GetScopedParam( "linemodel.fittingmethod", m_opt_fittingmethod, "hybrid" );
@@ -56,9 +56,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> param
     parameterStore->GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
     parameterStore->GetScopedParam( "linemodel.firstpass.multiplecontinuumfit_disable", m_opt_firstpass_disablemultiplecontinuumfit, "yes" );
 
-    std::string redshiftSampling;
-    parameterStore->Get( "redshiftsampling", redshiftSampling, "lin" ); //TODO: sampling in log cannot be used for now as zqual descriptors assume constant dz.
-    if(redshiftSampling=="log")
+    if(m_redshiftSampling=="log")
     {
         m_opt_firstpass_largegridsampling = "log";
     }else{
@@ -264,12 +262,11 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> param
  * Call Solve.
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
-std::shared_ptr<CSolveResult> CLineModelSolve::Compute(const CInputContext &inputContext,
+std::shared_ptr<CSolveResult> CLineModelSolve::compute(const CInputContext &inputContext,
                                                        COperatorResultStore &resultStore,
                                                        TScopeStack &scope)
 {
-  InitRanges(inputContext);  
-  CAutoScope resultScope( scope, "linemodelsolve" );
+
   const CSpectrum& spc=*(inputContext.m_Spectrum.get());
   const CTemplateCatalog& tplCatalog=*(inputContext.m_TemplateCatalog.get());
   const CRayCatalog& restraycatalog=*(inputContext.m_RayCatalog.get());

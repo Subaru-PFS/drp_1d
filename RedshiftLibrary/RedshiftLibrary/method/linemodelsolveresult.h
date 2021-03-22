@@ -17,7 +17,7 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CLineModelSolveResult : public CSolveResult
+class CLineModelSolveResult : public CPdfSolveResult
 {
 
 public:

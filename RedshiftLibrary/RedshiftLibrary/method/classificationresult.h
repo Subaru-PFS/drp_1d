@@ -2,7 +2,7 @@
 #define _REDSHIFT_PROCESSFLOW_CLASSIFICATIONRESULT_
 
 #include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/processflow/result.h>
+#include <RedshiftLibrary/method/solveresult.h>
 
 #include <vector>
 #include <ostream>
@@ -16,13 +16,12 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CClassificationResult : public COperatorResult
+class CClassificationResult : public CSolveResult
 {
 
 public:
 
     CClassificationResult();
-    ~CClassificationResult();
 
     void Save( std::ostream& stream ) const;
     void SaveLine(std::ostream& stream ) const;

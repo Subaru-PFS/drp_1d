@@ -33,7 +33,7 @@ public:
 
     Bool PopulateParameters( std::shared_ptr<CParameterStore> parameterStore );
 
-    std::shared_ptr<CSolveResult> Compute(const CInputContext &inputContext,
+    std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
                                           COperatorResultStore &resultStore,
                                           TScopeStack &scopeCDataStore);
   /*                                               const CSpectrum& spc,

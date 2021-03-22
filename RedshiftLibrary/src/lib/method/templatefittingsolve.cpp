@@ -16,48 +16,19 @@ using namespace NSEpic;
 using namespace std;
 
 CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,string objectType):
-  CSolve(scope,objectType)
+  CSolve("templatefittingsolve",scope,objectType)
 {
 }
 
-std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::Compute(const CInputContext &inputContext,
+std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputContext &inputContext,
                                                                    COperatorResultStore &resultStore,
                                                                    TScopeStack &scope)
-/*
-
-                                                                   CDataStore& datastore,
-                                                                       const CSpectrum& spc,
-                                                                       const CTemplateCatalog& tplCatalog,
-                                                                       const TStringList& tplCategoryList,
-                                                                       const TFloat64Range& lambdaRange,
-                                                                       const TFloat64List& redshifts,
-                                                                       Float64 overlapThreshold,
-                                                                       std::vector<CMask> maskList,
-                                                                       const std::string outputPdfRelDir,
-                                                                       const Float64 redshiftSeparation,
-                                                                       std::string spcComponent,
-                                                                       std::string opt_interp,
-                                                                       std::string opt_extinction,
-                                                                       std::string opt_dustFit)
-*/
 {
-  InitRanges(inputContext);
-  CAutoScope autoscope(scope,"templatefittingsolve");
   const CSpectrum& spc=*(inputContext.m_Spectrum.get());
   const CTemplateCatalog& tplCatalog=*(inputContext.m_TemplateCatalog.get());
   const CRayCatalog& restraycatalog=*(inputContext.m_RayCatalog.get());
 
   m_redshiftSeparation = inputContext.m_ParameterStore->Get<Float64>( "extremaredshiftseparation");//todo: deci
-  /*
-                                                                       Float64 overlapThreshold,
-                                                                       std::vector<CMask> maskList,
-                                                                       const std::string outputPdfRelDir,
-                                                                       const Float64 redshiftSeparation,
-                                                                       std::string spcComponent,
-                                                                       std::string opt_interp,
-                                                                       std::string opt_extinction,
-                                                                       std::string opt_dustFit
-  */
 
   Bool storeResult = false;
   Float64 overlapThreshold=inputContext.m_ParameterStore->GetScoped<Float64>( "overlapThreshold");

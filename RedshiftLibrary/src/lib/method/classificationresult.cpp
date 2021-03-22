@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/processflow/classificationresult.h>
+#include <RedshiftLibrary/method/classificationresult.h>
 
 #include <RedshiftLibrary/processflow/context.h>
 #include <stdio.h>
@@ -12,17 +12,14 @@ using namespace NSEpic;
 /**
  * \brief Empty constructor.
  **/
-CClassificationResult::CClassificationResult()
+CClassificationResult::CClassificationResult():
+  CSolveResult()
 {
 }
 
 /**
  * \brief Empty destructor.
  **/
-CClassificationResult::~CClassificationResult()
-{
-
-}
 
 void CClassificationResult::SetTypeLabel( std::string lbl )
 {

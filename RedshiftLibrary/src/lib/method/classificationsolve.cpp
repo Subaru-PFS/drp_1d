@@ -1,22 +1,33 @@
+#include <RedshiftLibrary/method/solveresult.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
+#include <RedshiftLibrary/method/classificationresult.h>
 #include <RedshiftLibrary/log/log.h>
+#include <RedshiftLibrary/processflow/parameterstore.h>
 
 using namespace NSEpic;
 
-CClassificationSolve::CClassificationSolve(std::string enableStarFitting, std::string enableQsoFitting)
+CClassificationSolve::CClassificationSolve(TScopeStack &scope,std::string objectType):
+  CSolve("classification",scope,objectType)
 {
-    m_enableStarFitting = enableStarFitting;
-    m_enableQsoFitting = enableQsoFitting;
 }
 
-CClassificationSolve::~CClassificationSolve()
+std::shared_ptr<CSolveResult> CClassificationSolve::compute(const CInputContext &inputContext,
+                                   COperatorResultStore &resultStore,
+                                   TScopeStack &scope)    
 {
 
-}
+  
+  std::shared_ptr<const CPdfSolveResult> galaxyResult=std::shared_ptr<const CPdfSolveResult>(nullptr); //std::make_shared<const CPdfSolveResult>();
+  std::shared_ptr<const CPdfSolveResult> starResult=std::shared_ptr<const CPdfSolveResult>(nullptr);//std::make_shared<const CPdfSolveResult>();
+  std::shared_ptr<const CPdfSolveResult> qsoResult=std::shared_ptr<const CPdfSolveResult>(nullptr);
 
-void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qsoResult)    
-{
-    classifResult = std::make_shared<CClassificationResult>();
+  galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore.GetGlobalResult("galaxy.result").lock());
+  if(inputContext.m_ParameterStore->Get<std::string>("enablestellarsolve") == "yes")
+    starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore.GetGlobalResult("star.result").lock());
+  if(inputContext.m_ParameterStore->Get<std::string>("enableqsosolve") == "yes")
+    qsoResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore.GetGlobalResult("qso.result").lock());
+
+    std::shared_ptr<CClassificationResult> classifResult = std::make_shared<CClassificationResult>();
     
     Float64 qsoLogEvidence = -INFINITY ;
     Float64 stellarLogEvidence = -INFINITY;
@@ -32,7 +43,7 @@ void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, 
         }
     }
 
-    if(m_enableStarFitting=="yes"){
+    if(starResult){
     stellarLogEvidence = starResult->getEvidence();
         Log.LogInfo( "Found stellar LogEvidence: %e", stellarLogEvidence);
         if(stellarLogEvidence > MaxLogEvidence)
@@ -42,7 +53,7 @@ void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, 
         }
     }
 
-    if(m_enableQsoFitting=="yes"){
+    if(qsoResult){
         qsoLogEvidence = qsoResult->getEvidence();
         Log.LogInfo( "Found qso LogEvidence: %e", qsoLogEvidence);
         if(qsoLogEvidence>MaxLogEvidence)
@@ -51,7 +62,7 @@ void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, 
             typeLabel = "Q";
         }
     }
-
+    Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
     // compute  proba 
     Float64 Pgal = 0.;
     Float64 Pstar = 0.;
@@ -84,5 +95,5 @@ void CClassificationSolve::Classify(std::shared_ptr<CSolveResult> galaxyResult, 
     classifResult->SetS(stellarLogEvidence, Pstar);
     classifResult->SetQ(qsoLogEvidence, Pqso);
 
-    return;
+    return classifResult;
 }

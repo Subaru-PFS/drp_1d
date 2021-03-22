@@ -2,29 +2,27 @@
 #define _METHOD_CLASSIFICATION_
 
 #include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/processflow/classificationresult.h>
+#include <RedshiftLibrary/method/solve.h>
+#include <RedshiftLibrary/method/classificationresult.h>
 
 
 namespace NSEpic
 {
 
-  class CClassificationSolve
+  class CClassificationSolve:public CSolve
   {
 
   public:
 
-    CClassificationSolve(std::string enableStarFitting, std::string enableQsoFitting);
-    ~CClassificationSolve();
+    CClassificationSolve(TScopeStack &scope,std::string objectType);
 
-    void Classify(std::shared_ptr<CSolveResult> galaxyResult, std::shared_ptr<CSolveResult> starResult, std::shared_ptr<CSolveResult> qspResult);
+    std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
+                 COperatorResultStore &resultStore,
+                 TScopeStack &scope);
     
     std::string typeLabel = "U";//"G"/"S"/"Q"
-    std::shared_ptr<CClassificationResult> classifResult;
 
-  private:
-  
-    std::string m_enableStarFitting;
-    std::string m_enableQsoFitting;
+
   };
 }
 

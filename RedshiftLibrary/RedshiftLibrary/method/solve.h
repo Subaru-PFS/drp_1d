@@ -21,22 +21,28 @@ namespace NSEpic
     TFloat64List m_redshifts;
     void InitRanges(const CInputContext& inputContext);
     CAutoScope m_objectTypeScope;
+    const std::string m_name;
+    const std::string m_objectType;
+    std::string m_redshiftSampling;
   public:
 
-    CSolve(TScopeStack &scope,std::string objectType);
-    ~CSolve();
+    CSolve(std::string name,TScopeStack &scope,std::string objectType);
+    virtual ~CSolve()=default;
+    CSolve(CSolve const& other) = default;
+    CSolve& operator=(CSolve const& other) = default;
+    CSolve(CSolve&& other) = default;
+    CSolve& operator=(CSolve&& other) = default;
 
-    //Proposition 1 bis
-    virtual std::shared_ptr<CSolveResult> Compute(const CInputContext &inputContext,
-                                                 COperatorResultStore &resultStore,
+
+    void Compute(const CInputContext &inputContext,
+                 COperatorResultStore &resultStore,
+                 TScopeStack &scope);
+
+    virtual std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
+                                                  COperatorResultStore &resultStore,
                                                   TScopeStack &scope)=0;
-    /*    {
-      beginCompute(inputContext,resultStore,scope);
-      compute(inputContext,resultStore,scope);
-      endCompute(inputContext,resultStore,scope);
-    };
-    */
-    virtual void saveToResultStore(){}//=0;
+    
+    virtual void saveToResultStore(std::shared_ptr<CSolveResult>,COperatorResultStore &resultStore);
     
     // this method should implement at least populateParameters
 
