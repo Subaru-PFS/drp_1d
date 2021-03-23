@@ -47,6 +47,11 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
+    void    InitSpectrum(Int64 smoothWidth,
+                        std::string medianRemovalMethod,
+                        Float64 medianKernelWidth,
+                        Float64 nscales,
+                        std::string dfBinPath);
     void SetName(const std::string name);
     void SetType(const EType type) const;
 

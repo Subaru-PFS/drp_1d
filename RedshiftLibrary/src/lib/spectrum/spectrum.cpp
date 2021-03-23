@@ -141,6 +141,21 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     return *this;
 }
 
+//called from context
+void CSpectrum::InitSpectrum(Int64 smoothWidth,
+                            std::string medianRemovalMethod,
+                            Float64 medianKernelWidth,
+                            Float64 nscales,
+                            std::string dfBinPath)
+{
+    if( smoothWidth > 0 )
+        GetFluxAxis().ApplyMeanSmooth(smoothWidth);
+    SetContinuumEstimationMethod(medianRemovalMethod);
+    SetMedianWinsize(medianKernelWidth);
+    SetDecompScales((Int32)nscales);
+    SetWaveletsDFBinPath(dfBinPath);
+}
+
 /**
  * below should be calculated in the case of precomputedfinegrid
  */

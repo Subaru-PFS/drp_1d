@@ -38,6 +38,7 @@ public:
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
     Bool                    AddCategory( CTemplateCatalog& catalog, const std::string scale );
+    void                    InitIsmIgm(const std::string & calibrationPath);
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 

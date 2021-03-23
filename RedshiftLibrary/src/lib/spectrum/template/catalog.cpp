@@ -259,3 +259,23 @@ Bool CTemplateCatalog::LoadCategory( const path& dirPath, const std::string&  ca
     return true;
 }
 
+void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
+{
+    //ISM
+    auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
+    ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    //IGM
+    auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
+    igmCorrectionMeiksin->Init(calibrationPath);
+
+    //push in all templates
+    for(std::string s : GetCategoryList()){ 
+        TTemplateRefList  TplList = GetTemplate(TStringList{s});
+        for (auto tpl : TplList)
+        {
+            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+            if(s!="star")//no igm for stars
+                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+        }   
+    }
+}
