@@ -92,10 +92,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
         for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
         {
-            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
-            const CTemplate& orthotpl = m_orthoTplCatalog.GetTemplate( category, j );
+            std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplate( category, j );
+            std::shared_ptr<const CTemplate> orthotpl = m_orthoTplCatalog.GetTemplate( category, j );
 
-            if(tpl.GetName()!=orthotpl.GetName())
+            if(tpl->GetName()!=orthotpl->GetName())
             {
                 Log.LogError("Failed Init Element Model. Tplcat and orthotplcat are not aligned for category=%s, i=%d", category.c_str(), j);
                 throw runtime_error( "Failed Init Element Model. Tplcat and orthotplcat are not aligned");
@@ -807,7 +807,7 @@ void CLineModelElementList::LogCatalogInfos()
 }
 
 
-void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
+void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, std::shared_ptr<const CTemplate> tpl){
   Float64 merit = DBL_MAX;
 
   Float64 fitContinuumAmplitude = -1.0;
@@ -835,7 +835,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   {
     throw runtime_error("Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
-  Bool ret = SolveContinuum( tpl,
+  Bool ret = SolveContinuum( *tpl,
                              lambdaRange,
                              redshifts,
                              overlapThreshold,
@@ -915,8 +915,8 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     if(!m_fitContinuum_tplName.empty())
     {   
         //Retrieve the best template
-        const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
-        if(tpl.GetName()==m_fitContinuum_tplName)
+        std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+        if(tpl->GetName()==m_fitContinuum_tplName)
         {
                     if(autoSelect)
                     {
@@ -1000,8 +1000,8 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
   m_Redshift = redshift;
 
   if(reinterpolatedContinuum){
-    const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName);
-    if(tpl.GetName()==m_fitContinuum_tplName)
+    std::shared_ptr<const CTemplate>  tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName);
+    if(tpl->GetName()==m_fitContinuum_tplName)
     {
         ApplyContinuumOnGrid(tpl, redshift);
     }
@@ -1013,30 +1013,30 @@ void CLineModelElementList::setRedshift(Float64 redshift, bool reinterpolatedCon
 /**
  * Apply the template continuum by interpolating the grid as define in Init Continuum
  */
-Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum)
+Int32 CLineModelElementList::ApplyContinuumOnGrid(std::shared_ptr<const CTemplate> tpl, Float64 zcontinuum)
 {    
-    m_fitContinuum_tplName = tpl.GetName();
-    Int32 n = tpl.GetSampleCount();
+    m_fitContinuum_tplName = tpl->GetName();
+    Int32 n = tpl->GetSampleCount();
 
     Int32 idxDust = -1;
     if (m_fitContinuum_tplFitEbmvCoeff >0.)
     {
-        if (tpl.CalzettiInitFailed())
+        if (tpl->CalzettiInitFailed())
         {
             Log.LogError("  no calzetti calib. file loaded in template... aborting!");
             throw std::runtime_error("  no calzetti calib. file in template");
         }
-        idxDust = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum_tplFitEbmvCoeff);
+        idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(m_fitContinuum_tplFitEbmvCoeff);
     }
-    const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
+    const CSpectrumSpectralAxis& tplSpectralAxis = tpl->GetSpectralAxis();
     TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
 
     std::shared_ptr<CModelSpectrumResult> spcmodel; 
     std::string inter_opt = "spline";
     Float64 overlapThreshold = 1., amplitude = 1.; 
     //called BasicFit_preallocateBuffers cause we need to initialize  m_spcSpectralAxis_restframe among others
-    m_templateFittingOperator.BasicFit_preallocateBuffers(m_SpectrumModel, tpl);
-    m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
+    m_templateFittingOperator.BasicFit_preallocateBuffers(m_SpectrumModel, *tpl);
+    m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, *tpl, 
                                                  zcontinuum,
                                                  m_fitContinuum_tplFitDustCoeff, 
                                                  m_fitContinuum_tplFitMeiksinIdx, 
@@ -1081,7 +1081,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
     }
 
     // Compute merit function
-    //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(), redshifts[0]);
+    //Log.LogInfo("Solving continuum for %s at z=%.4e", tpl->GetName().c_str(), redshifts[0]);
     //CRef<CChisquareResult>  chisquareResult = (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
     auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( m_inputSpc,
                                                                                                        tpl,
@@ -1819,7 +1819,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                   CLmfitController *controller = controllers[i];
                   //Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
                   if(!controller->isNoContinuum() && !controller->isContinuumLoaded()){
-                    LoadFitContinuumOneTemplate(lambdaRange, *controller->getTemplate());
+                    LoadFitContinuumOneTemplate(lambdaRange, controller->getTemplate());
                   }
                   // adding element base on configuration
                   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
@@ -1858,9 +1858,8 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     if(bestController->isRedshiftFitted()){
                         m_Redshift = bestController->getRedshift();
                     }
-                    const CTemplate* tpl = bestController->getTemplate();
-                    
-                    ApplyContinuumOnGrid(*tpl, m_Redshift);
+                    std::shared_ptr<const CTemplate> tpl = bestController->getTemplate();                 
+                    ApplyContinuumOnGrid(tpl, m_Redshift);
                     std::vector<Float64> polyCoeffs;
                     setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), bestController->getContinuumAmpErr(), polyCoeffs);
                       //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
@@ -1922,7 +1921,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
 
                 //re-interpolate the continuum on the grid
-                const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+                std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
                 ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
                 m_fitContinuum_tplFitAmplitude = 1.0;
@@ -1990,7 +1989,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         //prepare continuum on the observed grid
                         m_fitContinuum_tplFitEbmvCoeff = 0;
                         m_fitContinuum_tplFitMeiksinIdx = 0;
-                        m_fitContinuum_tplName = tpl.GetName();
+                        m_fitContinuum_tplName = tpl->GetName();
                         Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
                         setRedshift(m_Redshift, true);
                         m_fitContinuum_tplFitAmplitude = 1.0;
@@ -2415,10 +2414,10 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
   }else{
     if(m_lmfit_bestTemplate){
       LoadFitContinuum(lambdaRange, -1, 0);
-      const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
-      if(m_fitContinuum_tplName == tpl.GetName()){
+      std::shared_ptr<const CTemplate>  tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+      if(m_fitContinuum_tplName == tpl->GetName()){
         bool continumLoaded = true;
-        useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
+        useLmfitControllers.push_back(new CLmfitController(*tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
         }
     }else{
       for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -2427,9 +2426,9 @@ std::vector<CLmfitController*> CLineModelElementList::createLmfitControllers( co
 
         for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ) ; j++ )
         {
-            const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+            std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplate( category, j );
               bool continumLoaded = false;
-              useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
+              useLmfitControllers.push_back(new CLmfitController(*tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
             }
         }
       }

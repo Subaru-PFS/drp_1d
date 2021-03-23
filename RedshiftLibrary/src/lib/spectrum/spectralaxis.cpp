@@ -31,7 +31,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n, Bool isLogScale ) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
 {
@@ -391,7 +391,7 @@ void CSpectrumSpectralAxis::SetLogScale()
 /**
  * Check if spectralAxis is well rebinned in log
 */
-void CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep) const
+Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep) 
 {
     Float64 relativelogGridStepTol = 1e-1;
     Float64 maxAbsRelativeError = 0.0; 
@@ -411,16 +411,22 @@ void CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep) const
         }
         lbda1 = lbda2;
     }
+    m_regularSamplingChecked = 1;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
-    return;
+    return 1;
 }
 
-void CSpectrumSpectralAxis::CheckLoglambdaSampling() const
+Bool CSpectrumSpectralAxis::IsLogSampled()
 {
-    if(IsInLogScale())
-        return CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
-    else{
-        Log.LogError("CSpectrumSpectralAxis::CheckLoglambdaSampling:: Spectral axis is not in log scale.");
-        throw runtime_error("CSpectrumSpectralAxis::CheckLoglambdaSampling: Spectral axis is not in log scale.");
-    }
+    if(m_regularSamplingChecked)
+        return  m_SpectralFlags & nFLags_LogSampledCheck;
+    
+    if(!IsInLogScale())
+        return 0;
+
+    Bool ret = CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
+    //set second axis flag
+    if(ret) m_SpectralFlags |= nFLags_LogSampledCheck; //adding through a logical OR
+
+    return m_SpectralFlags & nFLags_LogSampledCheck; //we can simply replace it with 1
 }

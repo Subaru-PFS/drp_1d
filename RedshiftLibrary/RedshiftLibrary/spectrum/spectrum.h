@@ -8,14 +8,13 @@
 #include <RedshiftLibrary/spectrum/LSF.h>
 #include <RedshiftLibrary/spectrum/LSFConstant.h>
 #include <RedshiftLibrary/continuum/continuum.h>
-
+#include <RedshiftLibrary/processflow/parameterstore.h>
 #include <unordered_map>
 #include <stdexcept>
 #include <string>
 
 namespace NSEpic
 {
-
 /**
  * \ingroup Redshift
  */
@@ -47,11 +46,7 @@ public:
 
     CSpectrum& operator=(const CSpectrum& other);
 
-    void    InitSpectrum(Int64 smoothWidth,
-                        std::string medianRemovalMethod,
-                        Float64 medianKernelWidth,
-                        Float64 nscales,
-                        std::string dfBinPath);
+    void InitSpectrum(CParameterStore& parameterStore);
     void SetName(const std::string name);
     void SetType(const EType type) const;
 

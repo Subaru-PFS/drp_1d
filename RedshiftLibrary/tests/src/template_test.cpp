@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(Template)
 
 BOOST_AUTO_TEST_CASE(Constructor)
 {
-  Float64 array[] = {0.,2.,3.,6.};
+  TFloat64List array = {0.,2.,3.,6.};
   CSpectrumSpectralAxis spectralAxis(array, 4, false) ;
   CSpectrumFluxAxis fluxAxis(array, 4);
 
@@ -25,8 +25,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
 BOOST_AUTO_TEST_CASE(Save)
 {
-  Float64 array[] = {0.,2.,3.,6.};
-  Float64 flux[] = {0.1,0.2,0.3,0.4};
+  TFloat64List array = {0.,2.,3.,6.};
+  TFloat64List flux = {0.1,0.2,0.3,0.4};
   CSpectrumSpectralAxis spectralAxis(array, 4, false) ;
   CSpectrumSpectralAxis spectralAxisLog(array, 4, true) ;
   CSpectrumFluxAxis fluxAxis(flux, 4);

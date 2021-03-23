@@ -142,12 +142,16 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 }
 
 //called from context
-void CSpectrum::InitSpectrum(Int64 smoothWidth,
-                            std::string medianRemovalMethod,
-                            Float64 medianKernelWidth,
-                            Float64 nscales,
-                            std::string dfBinPath)
+void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 {
+    Int64 smoothWidth;
+    std::string medianRemovalMethod, dfBinPath;
+    Float64 medianKernelWidth,nscales;
+    parameterStore.Get( "smoothWidth", smoothWidth, 0 );
+    parameterStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    parameterStore.Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
+    parameterStore.Get( "continuumRemoval.decompScales", nscales, 6.0 );
+    parameterStore.Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
     if( smoothWidth > 0 )
         GetFluxAxis().ApplyMeanSmooth(smoothWidth);
     SetContinuumEstimationMethod(medianRemovalMethod);

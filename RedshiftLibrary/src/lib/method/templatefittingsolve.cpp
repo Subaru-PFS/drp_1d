@@ -44,15 +44,14 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   
   if(fft_processing)
     {
-        //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
-      //m_opt_spclogrebin = inputContext.m_ParameterStore->GetScoped<std::string>("enablespclogrebin");//removed
+      //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
     }
   else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
 
 
         // prepare the unused masks
-  std::vector<CMask> maskList;
+    std::vector<CMask> maskList;
         //define the redshift search grid
         //        Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
   
@@ -104,9 +103,9 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
-            Solve(resultStore, spc, tpl, m_lambdaRange, m_redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
+            Solve(resultStore, spc, *tpl, m_lambdaRange, m_redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
             storeResult = true;
         }
@@ -457,9 +456,9 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
         ExtremaResult->FittedTplSNR[i] = FitSNR;
 
-        const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_templateFittingOperator->ComputeSpectrumModel(spc, tpl, 
+        m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
                                                         z,
                                                         TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],

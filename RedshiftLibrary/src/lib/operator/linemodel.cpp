@@ -752,11 +752,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
             //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
-            const CTemplate &tpl = tplCatalog.GetTemplate(category, j);
+            std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
             
             //case where we only want to refit using one template:
             if( m_continnuum_fit_option == 3){
-                if(tpl.GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
+                if(tpl->GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
                     continue;   
                 else
                     found= true;          
@@ -764,7 +764,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 
             CPriorHelper::TPriorZEList zePriorData;
             //*
-            bool retGetPrior = m_phelperContinuum->GetTplPriorData(tpl.GetName(), redshiftsTplFit, zePriorData);
+            bool retGetPrior = m_phelperContinuum->GetTplPriorData(tpl->GetName(), redshiftsTplFit, zePriorData);
             if(retGetPrior==false)
             {
                 Log.LogError("  Operator-Linemodel: Failed to get prior for chi2 continuum precomp fit. aborting...");
@@ -778,7 +778,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 std::dynamic_pointer_cast<CTemplateFittingResult>(
                     templateFittingOperator->Compute(
                             spectrum,
-                            tpl,
+                            *tpl,
                             lambdaRange,
                             redshiftsTplFit,
                             overlapThreshold,
@@ -794,11 +794,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             if (!templatefittingResult)
             {
                 Log.LogInfo("  Operator-Linemodel failed to compute chisquare value for tpl=%s",
-                            tpl.GetName().c_str());
+                            tpl->GetName().c_str());
             } else
             {
                 chisquareResultsAllTpl.push_back(templatefittingResult);
-                chisquareResultsTplName.push_back(tpl.GetName());
+                chisquareResultsTplName.push_back(tpl->GetName());
             }
             if(found)
                 break;

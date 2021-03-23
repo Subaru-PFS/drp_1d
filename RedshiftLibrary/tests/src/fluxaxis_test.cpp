@@ -112,10 +112,10 @@ BOOST_AUTO_TEST_CASE(calcul)
                                           log(object_Range4->GetEnd()));
   TFloat64Range currentRange = logIntersectedLambdaRange;
 
-  Float64 Array4[] = {0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,
+  TFloat64List Array4 = {0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,
                       1.2,  1.3,  1.4,  1.45, 1.50, 1.55, 1.60,
                       1.65, 1.70, 1.75, 1.80, 1.85, 1.9};
-  Float64 Array4b[] = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
+  TFloat64List Array4b = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
   CSpectrumSpectralAxis *targetSpectralAxis4 =
     new CSpectrumSpectralAxis(Array4, n + n, true);
   CSpectrumSpectralAxis *sourceSpectralAxis4 =

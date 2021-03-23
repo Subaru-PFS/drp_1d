@@ -19,8 +19,8 @@ public:
     
     void                    SetCurrentScale(std::string scale);
     void                    Add( std::shared_ptr<CTemplate> , std::string scale ="lin");
-    const CTemplate&        GetTemplate( const std::string& category, UInt32 i ) const;
-    const CTemplate&        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
+    std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
+    std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
     TTemplateConstRefList GetTemplate( const TStringList& categoryList ) const;
     TTemplateRefList GetTemplate( const TStringList& categoryList );
@@ -55,7 +55,8 @@ private:
 /**
  * Returns the contents of the i-th entry in the category item of m_List.
  */
-inline const CTemplate& CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
+inline 
+std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
     return *m_List.at( category )[i];
 }
@@ -74,21 +75,7 @@ TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& category
 {
     return const_TTemplateRefList_cast( GetTemplate_(categoryList)); 
 }
-/* //below functions aim at avoid using if..else to access the right categoryList
-inline 
-TTemplateRefList  CTemplateCatalog::GetCategoryList(){
-    if(!m_logscale)
-        return *m_List.at( category )[i];
-    else
-        return m_ListRebinned;       
-}
-inline 
-TTemplateRefList  CTemplateCatalog::GetCategoryList(Bool logscale){
-    if(!logscale)
-        return m_List;
-    else
-        return m_ListRebinned;       
-}
+
 }
 
 #endif

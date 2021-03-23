@@ -58,15 +58,14 @@ TTemplateRefList CTemplateCatalog::GetTemplate_( const TStringList& categoryList
     return list;
 }
 
-
-const CTemplate&  CTemplateCatalog::GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const
+std::shared_ptr<const CTemplate>  CTemplateCatalog::GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const
 {
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         for( UInt32 j=0; j<GetTemplateCount( tplCategoryList[i] ); j++ )
         {
-            const CTemplate& tpl = GetTemplate( tplCategoryList[i], j );
-            if(tpl.GetName() == tplName){
+            std::shared_ptr<const CTemplate> tpl = GetTemplate( tplCategoryList[i], j );
+            if(tpl->GetName() == tplName){
                 return tpl;
             }
         }

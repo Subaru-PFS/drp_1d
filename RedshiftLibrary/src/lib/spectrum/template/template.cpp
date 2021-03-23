@@ -70,14 +70,6 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
 }
 
 /**
- * Destructor, empty.
- */
-CTemplate::~CTemplate()
-{
-
-}
-
-/**
  * Returns the value stored in m_Category.
  */
 const std::string& CTemplate::GetCategory() const

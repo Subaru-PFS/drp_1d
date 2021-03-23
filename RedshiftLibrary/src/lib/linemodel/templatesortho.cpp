@@ -30,8 +30,7 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-
+            std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
             std::string rigidity = opt_rigidity.c_str();
             std::string rules = opt_rules.c_str();
@@ -42,8 +41,8 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                 rules = "no";
             }
 
-            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl.GetName().c_str() );
-            Int32 ret = OrthogonalizeTemplate(tpl,
+            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
+            Int32 ret = OrthogonalizeTemplate(*tpl,
                                   calibrationPath,
                                   restRayList,
                                   opt_fittingmethod,

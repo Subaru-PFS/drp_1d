@@ -24,7 +24,7 @@ public:
 	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     CTemplate(const CTemplate& other);
     CTemplate& operator=(const CTemplate& other); 
-    ~CTemplate();
+    ~CTemplate()=default;
 
     const std::string&  GetCategory() const;
 

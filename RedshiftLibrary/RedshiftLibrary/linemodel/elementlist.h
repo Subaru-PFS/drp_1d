@@ -66,10 +66,10 @@ public:
     void PrepareContinuum();
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
-    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, std::shared_ptr<const CTemplate> tpl);
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum);
+    Int32 ApplyContinuumOnGrid(std::shared_ptr<const CTemplate> tpl, Float64 zcontinuum);
     Bool SolveContinuum(const CTemplate& tpl,
                         const TFloat64Range& lambdaRange,
                         const TFloat64List& redshifts,
