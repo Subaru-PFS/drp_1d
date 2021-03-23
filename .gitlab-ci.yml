@@ -70,7 +70,6 @@ wheel37-osx:
   stage: build-wheel
   tags:
     - osx
-  when: manual
   script:
     - source /Users/grunner/venv/amazed37/bin/activate
     - python setup.py bdist_wheel
@@ -95,7 +94,6 @@ wheel38-osx:
   stage: build-wheel
   tags:
     - osx
-  when: manual
   script:
     - source /Users/grunner/venv/amazed38/bin/activate
     - python setup.py bdist_wheel
