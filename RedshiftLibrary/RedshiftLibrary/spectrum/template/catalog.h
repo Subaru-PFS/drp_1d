@@ -19,10 +19,6 @@ public:
     
     void                    SetCurrentScale(std::string scale);
     void                    Add( std::shared_ptr<CTemplate> , std::string scale ="lin");
-    void                    Add( const char* templatePath, const std::string& category );
-    void                    Load( const char* filePath );
-    Bool                    Save(const char* filePath , Bool saveWithoutContinuum=true);
-
     const CTemplate&        GetTemplate( const std::string& category, UInt32 i ) const;
     const CTemplate&        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
@@ -37,13 +33,12 @@ public:
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
-    Bool                    AddCategory( CTemplateCatalog& catalog, const std::string scale );
     void                    InitIsmIgm(const std::string & calibrationPath);
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 
 
-    Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+    //Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListRebinned;
