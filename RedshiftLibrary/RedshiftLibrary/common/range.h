@@ -108,7 +108,7 @@ template <typename T> class CRange
         Float64 edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while (x <= m_End && count < maxCount)
+        while (x < (m_End + offset) && count < maxCount)
         {
             v.push_back(x - offset);
             count++;

@@ -2,7 +2,8 @@
 
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/common/mask.h>
-
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include <math.h>
 
 using namespace NSEpic;
@@ -406,11 +407,11 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
 
         if (relativeErrAbs > relativelogGridStepTol)
         {
-            Log.LogError("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
-            throw runtime_error("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
+            return 0;
         }
         lbda1 = lbda2;
     }
+    m_SpectralFlags |= nFLags_LogSampledCheck; //adding through a logical OR
     m_regularSamplingChecked = 1;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
     return 1;
@@ -424,9 +425,11 @@ Bool CSpectrumSpectralAxis::IsLogSampled()
     if(!IsInLogScale())
         return 0;
 
-    Bool ret = CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
-    //set second axis flag
-    if(ret) m_SpectralFlags |= nFLags_LogSampledCheck; //adding through a logical OR
+    Bool b = CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
+    if(!b){
+        Log.LogError("   CSpectrumSpectralAxis::IsLogSampled: Log-regular lambda check FAILED");
+        throw GlobalException(BAD_LOGSAMPLEDSPECTRUM, Formatter() <<"Log-regular lambda check FAILED");
+    }
 
     return m_SpectralFlags & nFLags_LogSampledCheck; //we can simply replace it with 1
 }

@@ -17,8 +17,7 @@ CLmfitController::CLmfitController(
           bool emissionVelFit,
           bool absorptionVelFit
       ){
-    //m_tpl = &tpl;
-    m_tpl = std::make_shared<const CTemplate>(tpl);
+    m_tpl = &tpl;
     m_noContinuum = false;
     m_continumLoaded = continumLoaded;
     m_continuumfit = continuumfit;
@@ -347,6 +346,6 @@ Float64 CLmfitController::getMerit(){
   return m_merit;
 }
 
-std::shared_ptr<const CTemplate> CLmfitController::getTemplate(){
+const CTemplate* CLmfitController::getTemplate(){
   return m_tpl;
 }
