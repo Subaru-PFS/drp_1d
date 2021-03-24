@@ -165,12 +165,10 @@ push-rc-38-osx:
   dependencies:
     - wheel38-osx
 
-# Manylinux1 stages
+# Manylinux stages
 
-build-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
+.build-manylinux:
   stage: build
-  when: manual
   script:
     - source /venv/p36/bin/activate
     - mkdir -p build
@@ -178,150 +176,131 @@ build-manylinux1:
     - cmake ..
     - make -j4
   cache:
-    key: manylinux1
     policy: push
     untracked: true
 
-test-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
+.test-manylinux:
   stage: test
-  when: manual
   allow_failure: true
   script:
     - cd build
     - make install
     - make test
   cache:
-    key: manylinux1
     policy: pull
     untracked: true
+
+.wheel-manylinux:
+  stage: build-wheel
+  before_script:
+    - cd build
+    - make install
+    - make clean_python_build
+    - cd ..
+  script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - python setup.py bdist_wheel
+    - auditwheel repair dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl -w wheel --plat $PLATFORM
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
+    - cd /
+    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
+  after_script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip uninstall -y pylibamazed
+  artifacts:
+    paths:
+      - wheel/
+    expire_in: 1 week
+  cache:
+    policy: pull
+    untracked: true
+
+.push-rc-manylinux:
+  stage: push-rc
+  script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+  cache:
+    policy: pull
+    untracked: true
+
+# Manylinux1 stages
+
+build-manylinux1:
+  image: $IMAGE_BUILD_DIR/amazed-manylinux1
+  extends: .build-manylinux
+  when: manual
+  cache:
+    key: manylinux1
+
+test-manylinux1:
+  image: $IMAGE_BUILD_DIR/amazed-manylinux1
+  extends: .test-manylinux
+  when: manual
+  cache:
+    key: manylinux1
 
 wheel36-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "36"
+    PLATFORM: "manylinux1_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p36/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp36-*.whl -w wheel --plat manylinux1_x86_64
-    - pip install wheel/pylibamazed-*-cp36-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p36/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
 
 wheel37-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "37"
+    PLATFORM: "manylinux1_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p37/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp37-*.whl -w wheel --plat manylinux1_x86_64
-    - pip install wheel/pylibamazed-*-cp37-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p37/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
 
 wheel38-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "38"
+    PLATFORM: "manylinux1_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p38/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp38-*.whl -w wheel --plat manylinux1_x86_64
-    - pip install wheel/pylibamazed-*-cp38-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p38/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
 
 push-rc-36-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "36"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p36/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-*.whl
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
   dependencies:
     - wheel36-manylinux1
 
 push-rc-37-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "37"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p37/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-*.whl
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
   dependencies:
     - wheel37-manylinux1
 
 push-rc-38-manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "38"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p38/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-*.whl
   cache:
     key: manylinux1
-    policy: pull
-    untracked: true
   dependencies:
     - wheel38-manylinux1
 
@@ -329,159 +308,78 @@ push-rc-38-manylinux1:
 
 build-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: build
+  extends: .build-manylinux
   when: manual
-  script:
-    - source /venv/p36/bin/activate
-    - mkdir -p build
-    - cd build
-    - cmake ..
-    - make -j4
   cache:
     key: manylinux2010
-    policy: push
-    untracked: true
 
 test-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: test
+  extends: .test-manylinux
   when: manual
-  allow_failure: true
-  script:
-    - cd build
-    - make install
-    - make test
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
 
 wheel36-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "36"
+    PLATFORM: "manylinux2010_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p36/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp36-*.whl -w wheel --plat manylinux2010_x86_64
-    - pip install wheel/pylibamazed-*-cp36-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p36/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
 
 wheel37-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "37"
+    PLATFORM: "manylinux2010_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p37/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp37-*.whl -w wheel --plat manylinux2010_x86_64
-    - pip install wheel/pylibamazed-*-cp37-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p37/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
 
 wheel38-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: build-wheel
+  variables:
+    PYTHON_VERSION: "38"
+    PLATFORM: "manylinux2010_x86_64"
+  extends: .wheel-manylinux
   when: manual
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p38/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp38-*.whl -w wheel --plat manylinux2010_x86_64
-    - pip install wheel/pylibamazed-*-cp38-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p38/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
 
 push-rc-36-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "36"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p36/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-*.whl
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
   dependencies:
     - wheel36-manylinux2010
 
 push-rc-37-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "37"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p37/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-*.whl
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
   dependencies:
     - wheel37-manylinux2010
 
 push-rc-38-manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "38"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p38/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-*.whl
   cache:
     key: manylinux2010
-    policy: pull
-    untracked: true
   dependencies:
     - wheel38-manylinux2010
 
@@ -489,153 +387,77 @@ push-rc-38-manylinux2010:
 
 build-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: build
-  script:
-    - source /venv/p36/bin/activate
-    - mkdir -p build
-    - cd build
-    - cmake ..
-    - make -j4
+  extends: .build-manylinux
+  when: manual
   cache:
     key: manylinux2014
-    policy: push
-    untracked: true
 
 test-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: test
-  allow_failure: true
-  script:
-    - cd build
-    - make install
-    - make test
+  extends: .test-manylinux
+  when: manual
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
 
 wheel36-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: build-wheel
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p36/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp36-*.whl -w wheel --plat manylinux2014_x86_64
-    - pip install wheel/pylibamazed-*-cp36-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p36/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
+  variables:
+    PYTHON_VERSION: "36"
+    PLATFORM: "manylinux2014_x86_64"
+  extends: .wheel-manylinux
+  when: manual
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
 
 wheel37-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: build-wheel
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p37/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp37-*.whl -w wheel --plat manylinux2014_x86_64
-    - pip install wheel/pylibamazed-*-cp37-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p37/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
+  variables:
+    PYTHON_VERSION: "37"
+    PLATFORM: "manylinux2014_x86_64"
+  extends: .wheel-manylinux
+  when: manual
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
 
 wheel38-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: build-wheel
-  before_script:
-    - cd build
-    - make install
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /venv/p38/bin/activate
-    - python setup.py bdist_wheel
-    - auditwheel repair dist/pylibamazed-*-cp38-*.whl -w wheel --plat manylinux2014_x86_64
-    - pip install wheel/pylibamazed-*-cp38-*.whl
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - cd /
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /venv/p38/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
+  variables:
+    PYTHON_VERSION: "38"
+    PLATFORM: "manylinux2014_x86_64"
+  extends: .wheel-manylinux
+  when: manual
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
 
 push-rc-36-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "36"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p36/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp36-*.whl
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
   dependencies:
     - wheel36-manylinux2014
 
 push-rc-37-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "37"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p37/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp37-*.whl
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
   dependencies:
     - wheel37-manylinux2014
 
 push-rc-38-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: push-rc
+  variables:
+    PYTHON_VERSION: "38"
+  extends: .push-rc-manylinux
   when: manual
-  script:
-    - source /venv/p38/bin/activate
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp38-*.whl
   cache:
     key: manylinux2014
-    policy: pull
-    untracked: true
   dependencies:
     - wheel38-manylinux2014
