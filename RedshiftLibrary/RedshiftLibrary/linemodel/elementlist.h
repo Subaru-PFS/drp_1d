@@ -404,15 +404,15 @@ private:
     std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
-    Float64 m_fitContinuum_tplFitAmplitude=-1.0;
-    Float64 m_fitContinuum_tplFitAmplitudeError;
-    Float64 m_fitContinuum_tplFitMerit;
-    Float64 m_fitContinuum_tplFitDustCoeff;
-    Int32 m_fitContinuum_tplFitMeiksinIdx;
-    Float64 m_fitContinuum_tplFitRedshift; // only used with m_fitContinuum_option==2 for now
-    Float64 m_fitContinuum_tplFitDtM;
-    Float64 m_fitContinuum_tplFitMtM;
-    Float64 m_fitContinuum_tplFitLogprior;
+    Float64 m_fitContinuum_tplFitAmplitude = NAN;
+    Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
+    Float64 m_fitContinuum_tplFitMerit = NAN;
+    Float64 m_fitContinuum_tplFitDustCoeff = NAN;
+    Int32 m_fitContinuum_tplFitMeiksinIdx = -1;
+    Float64 m_fitContinuum_tplFitRedshift = NAN; // only used with m_fitContinuum_option==2 for now
+    Float64 m_fitContinuum_tplFitDtM = NAN;
+    Float64 m_fitContinuum_tplFitMtM = NAN;
+    Float64 m_fitContinuum_tplFitLogprior = NAN;
     Float64 m_fitContinuum_tplFitSNRMax=0.0;
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
