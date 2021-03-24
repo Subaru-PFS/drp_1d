@@ -414,7 +414,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
 
     std::shared_ptr<CExtremaResult> ExtremaResult = make_shared<CExtremaResult>(extremumCount);
 
-    ExtremaResult->Candidates = ranked_zCandidates;
+    ExtremaResult->m_ranked_candidates = ranked_zCandidates;
 
     for (Int32 i = 0; i < extremumCount; i++)
     {

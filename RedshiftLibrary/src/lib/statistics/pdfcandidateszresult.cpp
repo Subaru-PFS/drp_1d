@@ -10,6 +10,46 @@ using namespace std;
 #include <iostream>
 #include <numeric>
 
+TStringList CPdfCandidateszResult::GetIDs() const
+{
+    TStringList ids;
+    ids.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) ids.push_back(c.first);
+    return ids;
+}
+
+TFloat64List CPdfCandidateszResult::GetRedshifts() const
+{
+    TFloat64List redshifts;
+    redshifts.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) redshifts.push_back(c.second.Redshift);
+    return redshifts;
+}
+
+TFloat64List CPdfCandidateszResult::GetDeltaZs() const
+{
+    TFloat64List deltaZs;
+    deltaZs.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) deltaZs.push_back(c.second.Deltaz);
+    return deltaZs;
+}
+
+TFloat64List CPdfCandidateszResult::GetMerits() const
+{
+    TFloat64List merits;
+    merits.reserve(m_ranked_candidates.size());
+    for (auto c: m_ranked_candidates) merits.push_back(c.second.ValProba);
+    return merits;
+}
+
+TFloat64List CPdfCandidateszResult::GetValSumProbas() const
+{
+    TFloat64List valSumProbas;
+    valSumProbas.reserve(m_ranked_candidates.size());
+    for  (auto c: m_ranked_candidates) valSumProbas.push_back(c.second.ValSumProba);
+    return valSumProbas;
+}
+
 
 void CPdfCandidateszResult::Save( std::ostream& stream ) const
 {
