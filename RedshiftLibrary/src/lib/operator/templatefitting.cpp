@@ -914,31 +914,5 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
 
 }
 
-/**
- * \brief this function estimates the likelihood_cstLog term withing the wavelength range
- **/
-Float64 COperatorTemplateFitting::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
-{
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List& error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
-
-    Int32 numDevs = 0;
-    Float64 cstLog = 0.0;
-    Float64 sumLogNoise = 0.0;
-
-    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
-    {
-        numDevs++;
-        sumLogNoise += log( error[j] );
-    }
-    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
-
-    cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
-
-    return cstLog;
-}
-
 
 

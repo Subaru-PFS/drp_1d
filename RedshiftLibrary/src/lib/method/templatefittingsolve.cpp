@@ -458,6 +458,8 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
+        //Important TODO: once rebasing on 6204, 
+        //make sure to pass the non rebinned spc/tpl to compute to ComputeSpectrumModel
         m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
                                                         z,
                                                         TplFitResult->FitEbmvCoeff[idx],

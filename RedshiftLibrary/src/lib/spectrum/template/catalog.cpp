@@ -48,10 +48,7 @@ TTemplateRefList CTemplateCatalog::GetTemplate_( const TStringList& categoryList
     {
         for ( Int32 j=0; j<GetTemplateCount( categoryList[i] ); j++ )
         {
-            if(!m_logscale)
-                list.push_back( m_List.at( categoryList[i] )[j] );
-            else
-                list.push_back( m_ListRebinned.at( categoryList[i] )[j] );
+            list.push_back( GetList().at( categoryList[i] )[j] );
         }
     }
 
@@ -80,18 +77,9 @@ std::shared_ptr<const CTemplate>  CTemplateCatalog::GetTemplateByName(const TStr
 TStringList CTemplateCatalog::GetCategoryList() const
 {
     TStringList l;
-    
-    if(!m_logscale)
-        for( auto it = m_List.begin(); it != m_List.end(); it++ ) {
-            l.push_back( it->first );
-        }
-    else
-    {
-        for( auto it = m_ListRebinned.begin(); it != m_List.end(); it++ ) {
-            l.push_back( it->first );
-        }
+    for (auto it : GetList()){
+        l.push_back( it.first );
     }
-
     return l;
 }
 
@@ -101,20 +89,20 @@ TStringList CTemplateCatalog::GetCategoryList() const
 UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {   
     UInt32 l; 
-    if(!m_logscale){
-        if( m_List.find( category ) == m_List.end() )
-            return 0;
-        l = m_List.at( category ).size();
-    }else{
-        if( m_ListRebinned.find( category ) == m_List.end() )
-            return 0;
-        l = m_ListRebinned.at( category ).size();
-    }
+    auto ret = GetList().find( category );
+
+    if( GetList().find( category ) == GetList().end() )
+        return 0;
+    l = GetList().at( category ).size();
+
     return l;
 }
 
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
+ * @scale here is relevant here especially for when rebinning
+ * otherwise we will have to SetScale ("lin") when we want to read the non-log template, and then call SetScale("log")
+ * when we want to add the log tpl
  */
 void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string scale)
 {
@@ -125,7 +113,7 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string scale)
     if(scale == "log")
         m_ListRebinned[r->GetCategory()].push_back( r );
 }
-
+//adapt it to apply to all m_list
 void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
 {
     //ISM
@@ -136,13 +124,21 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
     igmCorrectionMeiksin->Init(calibrationPath);
 
     //push in all templates
-    for(std::string s : GetCategoryList()){ 
-        TTemplateRefList  TplList = GetTemplate(TStringList{s});
-        for (auto tpl : TplList)
-        {
-            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-            if(s!="star")//no igm for stars
-                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-        }   
+    //backup current scale
+    Bool currentScale = m_logscale;
+    for(std::string s : GetCategoryList())
+    { 
+        for(Bool scale : {0, 1}){
+            m_logscale = scale;
+            TTemplateRefList  TplList = GetTemplate(TStringList{s});
+            for (auto tpl : TplList)
+            {
+                tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+                if(s!="star")//no igm for stars
+                    tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+            }   
+        }
     }
+    //put back the initial scale:
+    m_logscale = currentScale;
 }

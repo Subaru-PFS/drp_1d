@@ -25,7 +25,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <sstream>
-
+#include <numeric>
 #include <assert.h>
 
 #define NOT_OVERLAP_VALUE NAN
@@ -558,7 +558,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         }
     }    
     //since dtd is cte, better compute it here
-    const TAxisSampleList & error =  m_spectrumRebinedLog.GetFluxAxis().GetError();
+    const TAxisSampleList & error =  m_spectrumRebinedLog.GetFluxAxis().GetError().GetSamplesVector();;
     const TAxisSampleList & spectrumRebinedFluxRaw = m_spectrumRebinedLog.GetFluxAxis().GetSamplesVector();
     Float64 dtd = 0.0;
     TFloat64List inv_err2(error.size()); 
@@ -578,7 +578,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         if (m_enableIGM && result->Redshifts.size() > 1)
         {
             TFloat64List::const_iterator first = result->Redshifts.begin() + izrangelist[k].GetBegin(),
-                                         last = result->Redshifts.begin() + izrangelist[k].GetEnd()+1;//added +1 to find previous values, but probably shdnt
+                                         last = result->Redshifts.begin() + izrangelist[k].GetEnd()+1;
             TFloat64List subRedshifts(first, last);
             subresult->Init(subRedshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
             subresult->Redshifts = subRedshifts;
@@ -752,7 +752,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
                                              std::vector<Int32> ismEbmvCoeffs,
                                              const Float64& dtd)
 {
-    const TAxisSampleList & error = m_spectrumRebinedLog.GetFluxAxis().GetError();
+    const TAxisSampleList & error = m_spectrumRebinedLog.GetFluxAxis().GetError().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedLambda = m_spectrumRebinedLog.GetSpectralAxis().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedFluxRaw = m_spectrumRebinedLog.GetFluxAxis().GetSamplesVector();
     UInt32 nSpc = spectrumRebinedLambda.size();
@@ -795,13 +795,18 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     }
     InitFFT(m_nPaddedSamples);
 
+    //std::vector<Float64> z_vect = result->Redshifts;
+    //std::reverse(z_vect.begin(), z_vect.end());
     // prepare z array
     std::vector<Float64> z_vect(nshifts, 0.0);
-
     for (Int32 t = 0; t < nshifts; t++)
     {
         z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[t + kstart]) /
                     tplRebinedLambdaGlobal[t + kstart];
+        //compare with z_vect
+        /*if(std::abs(z_vect[t] - z_vect_verif[t])>1E-8){
+            throw runtime_error("z_vect and z_vect_verification do not correspond.");
+        }*/
     }
 
     Int32 nISM = ismEbmvCoeffs.size();
@@ -811,7 +816,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     // wavelength appear
     Int32 enableIGM = m_enableIGM;
     Int32 overrideNIGMTobesaved = -1;
-    //Important: below condition and changes are problematic causing coredump!!
     if (tplRebinedLambdaGlobal[kstart] > 1216. && nIGM > 1)
     {
         overrideNIGMTobesaved = nIGM;
@@ -851,17 +855,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         intermediateChi2.push_back(_ChiSquareISMList);
     }
 
-    /*
-    TFloat64Range range(tplRebinedLambdaGlobal[kstart], tplRebinedLambdaGlobal[kstart + nTpl - 1]);
-    Int32 kStart = -1, kEnd = -1;
-    */
+   //note that there is no need to copy the ism/igm cause they already exist in the rebinned template
     if(enableIGM || m_enableISM)
         m_templateRebinedLog.InitIsmIgmConfig();
-    /*
-    m_templateRebinedLog.SetIsmIgmLambdaRange( range );
-    m_templateRebinedLog.GetIsmIgmRangeIndex(kStart, kEnd);//not sure is relevant here
-    */
-    //note that since we already calculated the currentRange, there is no need to redo the work, thus the addition of a new setter
+
     m_templateRebinedLog.SetIsmIgmLambdaRange(kstart, kend);
 
     TAxisSampleList tpl2RebinedFlux(nTpl);
@@ -1034,7 +1031,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         }
     }
 
-    // interpolating on the initial z grid
+    // reversing all vectors
     std::reverse(z_vect.begin(), z_vect.end());
     std::reverse(bestChi2.begin(), bestChi2.end());
     std::reverse(bestFitAmp.begin(), bestFitAmp.end());
@@ -1044,15 +1041,17 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     std::reverse(bestFitMtm.begin(), bestFitMtm.end());
     std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
     std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
+    TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
+    for (Int32 kism = 0; kism < nISM; kism++)
+        for (Int32 kigm = 0; kigm < nIGMFinal; kigm++)
+            for (Int32 t = 0; t < nshifts; t++)
+                intermChi2BufferReversed_array[t] = intermediateChi2[nshifts - 1 - t][kism][kigm];
 
-
-    Int32 k = 0;
-    Int32 klow = 0;
+    Int32 k = 0, klow=0;
     for (Int32 iz = 0; iz < result->Redshifts.size(); iz++)
     {
         k = gsl_interp_bsearch(&z_vect.at(0), result->Redshifts[iz], klow, nshifts - 1);
         klow = k;
-
         result->Overlap[iz] = 1.0;
         result->FitAmplitude[iz] = bestFitAmp[k];
         result->FitAmplitudeError[iz] = bestFitAmpErr[k];
@@ -1064,7 +1063,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         result->Status[iz] = nStatus_OK;
     }
 
-
     Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
             nshifts,
             z_vect.front(),
@@ -1072,35 +1070,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             result->Redshifts.size(),
             result->Redshifts.front(),
             result->Redshifts.back());
-    //probably no more need to interpolate on initial grid?!
-    InterpolateResult(bestChi2,
-                      z_vect,
-                      result->Redshifts,
-                      result->ChiSquare, DBL_MAX);
 
     // Interpolating intermediate chisquare results
-    TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
     TFloat64List intermChi2BufferRebinned_array(
         result->Redshifts.size(), boost::numeric::bounds<float>::highest());
     for (Int32 kism = 0; kism < nISM; kism++)
-    {
         for (Int32 kigm = 0; kigm < nIGMFinal; kigm++)
-        {
-            for (Int32 t = 0; t < nshifts; t++)
-            {
-                intermChi2BufferReversed_array[t] =
-                    intermediateChi2[nshifts - 1 - t][kism][kigm];
-            }
-            InterpolateResult(intermChi2BufferReversed_array, z_vect,
-                              result->Redshifts,
-                              intermChi2BufferRebinned_array, DBL_MAX);
             for (Int32 t = 0; t < result->Redshifts.size(); t++)
-            {
-                result->ChiSquareIntermediate[t][kism][kigm] =
-                    intermChi2BufferRebinned_array[t];
-            }
-        }
-    }
+                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferRebinned_array[t];
 
     freeFFTPlans();
     return 0;
@@ -1198,62 +1175,45 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const std::vector<Float64>&
 
     return 0;
 }
-//find indexes in templateSpectra for which Z fall into the redshift range +/- margin
+//find indexes in templateSpectra for which Z falls into the redshift range
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range redshiftrange,
                                                                const Float64 redshiftStep)
 {
     const TAxisSampleList & spcLambda = m_spectrumRebinedLog.GetSpectralAxis().GetSamplesVector();
     const TAxisSampleList & tplLambda = m_templateRebinedLog.GetSpectralAxis().GetSamplesVector();
-    
-    Float64 redshiftMargin = 10.0 *redshiftStep; // this redshiftstep margin might be useless now that
-                      // there are spclambdamargin and tpllambdamargin
-    Float64 spcLambdaMargin = abs(spcLambda[1] - spcLambda[0]);
-    Float64 tplLambdaMargin = abs(tplLambda[1] - tplLambda[0]);
 
     const UInt32 nTpl = tplLambda.size(),
                  nSpc = spcLambda.size();
 
+    Float64 margin =  1E-8;
     UInt32 ilbdamin = 0, ilbdamax = nTpl - 1;
-    Float64 _spcLambda = spcLambda[0] - spcLambdaMargin;
+    Float64 z_previous;
     for (UInt32 k = 0; k < nTpl; k++)
     {
-        Float64 _tplLambda = tplLambda[k] + tplLambdaMargin;
-        Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
-
-        if (_z > redshiftrange.GetEnd() + redshiftMargin)
-        {
+        Float64 z = (spcLambda[0] - tplLambda[k]) / tplLambda[k];
+        if (std::abs(z - redshiftrange.GetEnd()) < margin){
             ilbdamin = k;
-        } else
-        {
             break;
         }
+        /*else{
+            ilbdamin = k; //select the current
+            break;
+        }*/
+        z_previous = z;
     }
 
-    _spcLambda = spcLambda[nSpc - 1] + spcLambdaMargin;
     for (UInt32 k = nTpl - 1; k > 0; k--)
     {
-        Float64 _tplLambda = tplLambda[k] - tplLambdaMargin;
-        Float64 _z = (_spcLambda - _tplLambda) / _tplLambda;
-
-        if (_z < redshiftrange.GetBegin() - redshiftMargin)
-        {
+        Float64 z = (spcLambda[nSpc - 1] - tplLambda[k]) / tplLambda[k];
+        if (z>=0 && (std::abs(z - redshiftrange.GetBegin()) < margin)){
             ilbdamax = k;
-        } else
-        {
             break;
         }
+        /*else{
+            break;
+        }*/
     }
 
-    if (ilbdamin < 0 || ilbdamin > nTpl - 1)//non-sense
-    {
-        Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found lbdamin=%d",  ilbdamin);
-        throw runtime_error("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges");
-    }
-    if (ilbdamax < 0 || ilbdamax > nTpl - 1)//non-sense
-    {
-        Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamax=%d", ilbdamax);
-        throw runtime_error("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges");
-    }
     if (ilbdamin > ilbdamax)
     {
         Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
@@ -1262,7 +1222,6 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
 
     return TInt32Range(ilbdamin, ilbdamax);
 }
-
 /**
  * \brief COperatorTemplateFittingLog::Compute
  *
@@ -1317,35 +1276,18 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         Log.LogError("  Operator-TemplateFittingLog: no meiksin calib. file loaded... aborting");
         throw std::runtime_error("  Operator-TemplateFittingLog: no meiksin calib. file in template");
     }
+    //TODO: Avoid copying spc and tpl
+    //For this end, we have to change the signature of ::compute to pass non-const spectra (by ref or ptr)
+    m_spectrumRebinedLog = rebinnedSpectrum;
+    m_templateRebinedLog = rebinnedTpl;
 
-    if (rebinnedSpectrum.GetSpectralAxis().IsInLogScale() == false ||
-        rebinnedTpl.GetSpectralAxis().IsInLogScale() == false)
+    //cant call IsLogSampled on const objects
+    if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled() ||
+        !m_templateRebinedLog.GetSpectralAxis().IsLogSampled())
     {
         Log.LogError("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");
         throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");
     }
-
-    // sort the redshifts and keep track of the indexes
-    TFloat64List sortedRedshifts;
-    TFloat64List sortedIndexes; // used for the correspondence between input redshifts
-                                // (list) and input additionalMasks (list)
-    // This is a vector of {value,index} pairs
-    vector<pair<Float64, Int32>> vp;
-    vp.reserve(redshifts.size());
-    for (Int32 i = 0; i < redshifts.size(); i++)
-    {
-        vp.push_back(make_pair(redshifts[i], i));
-    }
-    std::sort(vp.begin(), vp.end());
-    for (Int32 i = 0; i < vp.size(); i++)
-    {
-        sortedRedshifts.push_back(vp[i].first);
-        sortedIndexes.push_back(vp[i].second);
-    }
-    //it seems important to keep these two as members, otherwise we will have to pass them from ::compute to FitAllz to ::FitRangez
-    m_spectrumRebinedLog = rebinnedSpectrum;
-    m_templateRebinedLog = rebinnedTpl;
-
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
     // Optionally apply some IGM absorption
@@ -1355,10 +1297,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     {
         nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
         igmMeiksinCoeffs.resize(nIGMCoeffs);
-        for (Int32 kigm = 0; kigm < nIGMCoeffs; kigm++)
-        {
-            igmMeiksinCoeffs[kigm] = kigm;
-        }
+        std::iota(igmMeiksinCoeffs.begin(), igmMeiksinCoeffs.end(), 0);
     } else
     {
         igmMeiksinCoeffs.push_back(-1);
@@ -1372,10 +1311,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     {
         nISMCoeffs = rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
         ismEbmvCoeffs.resize(nISMCoeffs);
-        for (Int32 kism = 0; kism < nISMCoeffs; kism++)
-        {
-            ismEbmvCoeffs[kism] = kism;
-        }
+        std::iota(ismEbmvCoeffs.begin(), ismEbmvCoeffs.end(), 0);
     }else if (opt_dustFitting>-1)
     {
         nISMCoeffs = 1;
@@ -1388,8 +1324,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }
 
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
-    result->Init(sortedRedshifts.size(), nISMCoeffs, nIGMCoeffs);
-    result->Redshifts = sortedRedshifts;
+    result->Init(redshifts.size(), nISMCoeffs, nIGMCoeffs);
+    result->Redshifts = redshifts;
 
     // WARNING: no additional masks coded for use as of 2017-06-13
     if (additional_spcMasks.size() != 0)
@@ -1400,9 +1336,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                      "Feature not coded for this log-lambda operator!)");*/
     }
 
-    if(logpriorze.size()>0 && logpriorze.size()!=sortedRedshifts.size())
+    if(logpriorze.size()>0 && logpriorze.size()!=redshifts.size())
     {
-        Log.LogError("  Operator-TemplateFittingLog: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
+        Log.LogError("  Operator-TemplateFittingLog: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), redshifts.size());
         throw std::runtime_error("  Operator-TemplateFittingLog: prior list size didn't match the input redshift-list size");
     }
 
@@ -1418,25 +1354,25 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     // overlap warning
     Float64 overlapValidInfZ = -1;
-    for (Int32 i = 0; i < sortedRedshifts.size(); i++)
+    for (Int32 i = 0; i < redshifts.size(); i++)
     {
         if (result->Overlap[i] >= overlapThreshold && overlapValidInfZ == -1)
         {
-            overlapValidInfZ = sortedRedshifts[i];
+            overlapValidInfZ = redshifts[i];
             break;
         }
     }
     Float64 overlapValidSupZ = -1;
-    for (Int32 i = sortedRedshifts.size() - 1; i >= 0; i--)
+    for (Int32 i = redshifts.size() - 1; i >= 0; i--)
     {
         if (result->Overlap[i] >= overlapThreshold && overlapValidSupZ == -1)
         {
-            overlapValidSupZ = sortedRedshifts[i];
+            overlapValidSupZ = redshifts[i];
             break;
         }
     }
-    if (overlapValidInfZ != sortedRedshifts[0] ||
-        overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1])
+    if (overlapValidInfZ != redshifts[0] ||
+        overlapValidSupZ != redshifts[redshifts.size() - 1])
     {
         Log.LogInfo("  Operator-TemplateFittingLog: overlap warning for %s: minz=%.3f, maxz=%.3f",
                     rebinnedTpl.GetName().c_str(), overlapValidInfZ, overlapValidSupZ);
@@ -1447,35 +1383,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                                             // that value for loglambda//
 
     return result;
-}
-
-/**
- * \brief this function estimates the likelihood_cstLog term withing the
- *wavelength range
- **/
-Float64 COperatorTemplateFittingLog::EstimateLikelihoodCstLog(
-    const CSpectrum &spectrum, const TFloat64Range &lambdaRange)
-{
-    const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List &error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
-
-    Int32 numDevs = 0;
-    Float64 cstLog = 0.0;
-    Float64 sumLogNoise = 0.0;
-
-    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for (UInt32 j = imin; j < imax; j++)
-    {
-        numDevs++;
-        sumLogNoise += log(error[j]);
-    }
-    // Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm
-    // );
-
-    cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
-
-    return cstLog;
 }
 
 void COperatorTemplateFittingLog::enableSpcLogRebin(Bool enable)

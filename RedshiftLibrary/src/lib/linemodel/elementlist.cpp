@@ -1034,8 +1034,6 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     std::shared_ptr<CModelSpectrumResult> spcmodel; 
     std::string inter_opt = "spline";
     Float64 overlapThreshold = 1., amplitude = 1.; 
-    //called BasicFit_preallocateBuffers cause we need to initialize  m_spcSpectralAxis_restframe among others
-    m_templateFittingOperator.BasicFit_preallocateBuffers(m_SpectrumModel, tpl);
     m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
                                                  zcontinuum,
                                                  m_fitContinuum_tplFitDustCoeff, 

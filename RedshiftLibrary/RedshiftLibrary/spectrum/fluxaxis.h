@@ -26,6 +26,7 @@ public:
     explicit CSpectrumFluxAxis( UInt32 n, Float64 value = 0.0);
     CSpectrumFluxAxis( const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
+    CSpectrumFluxAxis( const TFloat64List samples, UInt32 n );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 m);
     ~CSpectrumFluxAxis() = default;
     CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other) = default;//copy assignement operator
@@ -44,7 +45,7 @@ public:
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();
-    Int32               extract(const CSpectrumFluxAxis& other, Int32 startIdx, Int32 endIdx);//this is mainly applied on m_StatError
+    Int32               extractFrom(const CSpectrumFluxAxis& other, Int32 startIdx, Int32 endIdx);//this is mainly applied on m_StdError
 
 private:
 
@@ -68,12 +69,12 @@ const CSpectrumNoiseAxis& CSpectrumFluxAxis::GetError() const
 }
 
 inline
-Int32 CSpectrumFluxAxis::extract(const CSpectrumFluxAxis& other, Int32 startIdx, Int32 endIdx)
+Int32 CSpectrumFluxAxis::extractFrom(const CSpectrumFluxAxis& other, Int32 startIdx, Int32 endIdx)
 {
-    (*this).extract(other, startIdx, endIdx); 
-    m_StatError.resize(endIdx-startIdx +1);
+    (*this).extractFrom(other, startIdx, endIdx); 
+    m_StdError.SetSize(endIdx-startIdx +1);
     for(Int32 i = startIdx; i < endIdx + 1; i++){
-        m_StatError[i - startIdx] = other[i];
+        m_StdError[i - startIdx] = other[i];
     }
     return 0;
 }

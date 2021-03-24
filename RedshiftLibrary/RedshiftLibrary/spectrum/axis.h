@@ -21,6 +21,7 @@ public:
     CSpectrumAxis(CSpectrumAxis && other) = default;
     explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
     CSpectrumAxis( const Float64* samples, UInt32 n );
+    CSpectrumAxis( const TFloat64List samples, UInt32 n );
     ~CSpectrumAxis() = default;
     CSpectrumAxis& operator=(const CSpectrumAxis& other) = default;
     CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;

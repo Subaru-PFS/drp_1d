@@ -4,27 +4,42 @@
 using namespace NSEpic;
 using namespace std;
 
-COperatorTemplateFittingBase::COperatorTemplateFittingBase()
+/**
+ * \brief this function estimates the likelihood_cstLog term withing the
+ * wavelength range
+ **/
+Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog(const CSpectrum &spectrum, 
+                                                              const TFloat64Range &lambdaRange)
 {
+    const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
+    const TFloat64List &error = spectrum.GetFluxAxis().GetError().GetSamplesVector();;
 
+    Int32 numDevs = 0;
+    Float64 cstLog = 0.0;
+    Float64 sumLogNoise = 0.0;
+
+    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
+    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
+    for (UInt32 j = imin; j < imax; j++)
+    {
+        numDevs++;
+        sumLogNoise += log(error[j]);
+    }
+    cstLog = -numDevs * 0.5 * log(2 * M_PI) - sumLogNoise;
+    return cstLog;
 }
 
-COperatorTemplateFittingBase::~COperatorTemplateFittingBase()
-{
-
-}
-
-Int32   COperatorTemplateFittingBase::ComputeSpectrumModel(const CSpectrum& spectrum,
-                                           const CTemplate& tpl,
-                                           Float64 redshift,
-                                           Float64 EbmvCoeff,
-                                           Int32 meiksinIdx,
-                                           Float64 amplitude,
-                                           std::string opt_interp,
-					                       std::string opt_extinction,
-                                           const TFloat64Range& lambdaRange,
-                                           Float64 overlapThreshold,
-                                           std::shared_ptr<CModelSpectrumResult> & spcPtr)
+Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spectrum,
+                                                            const CTemplate& tpl,
+                                                            Float64 redshift,
+                                                            Float64 EbmvCoeff,
+                                                            Int32 meiksinIdx,
+                                                            Float64 amplitude,
+                                                            std::string opt_interp,
+                                                            std::string opt_extinction,
+                                                            const TFloat64Range& lambdaRange,
+                                                            Float64 overlapThreshold,
+                                                            std::shared_ptr<CModelSpectrumResult> & spcPtr)
 {
     Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model templateFitting for candidate Zcand=%f", redshift);
     EStatus status;
@@ -83,14 +98,14 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel(const CSpectrum& spec
 }
 
 Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
-                                const CTemplate& tpl, 
-                                Float64 redshift,
-                                const TFloat64Range& lambdaRange,
-                                std::string opt_interp,
-                                //return variables
-                                TFloat64Range& currentRange,
-                                Float64& overlapRate,
-                                Float64 overlapThreshold)// const
+                                                    const CTemplate& tpl, 
+                                                    Float64 redshift,
+                                                    const TFloat64Range& lambdaRange,
+                                                    std::string opt_interp,
+                                                    //return variables
+                                                    TFloat64Range& currentRange,
+                                                    Float64& overlapRate,
+                                                    Float64 overlapThreshold)// const
 {
     Float64 onePlusRedshift = 1.0 + redshift;
 

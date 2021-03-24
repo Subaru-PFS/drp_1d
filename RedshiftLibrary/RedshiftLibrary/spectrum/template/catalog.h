@@ -17,7 +17,7 @@ public:
 
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool scale = 0 );
     
-    void                    SetCurrentScale(std::string scale);
+    void                    SetScale(std::string scale);
     void                    Add( std::shared_ptr<CTemplate> , std::string scale ="lin");
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
@@ -30,6 +30,7 @@ public:
     UInt32 GetTemplateCount( const std::string& category ) const;
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
+    TTemplatesRefDict       GetList() const;//using set m_scale
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
@@ -58,9 +59,8 @@ private:
 inline 
 std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
-    return *m_List.at( category )[i];
+    return GetList().at( category )[i];   
 }
-
 
 // non const getter returning mutable templates
 inline 
@@ -74,6 +74,17 @@ inline
 TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
 {
     return const_TTemplateRefList_cast( GetTemplate_(categoryList)); 
+}
+
+
+ //below functions aim at avoid using if..else to access the right categoryList
+inline 
+TTemplatesRefDict  CTemplateCatalog::GetList() const
+{
+    if(!m_logscale)
+        return m_List;
+    else
+        return m_ListRebinned;       
 }
 
 }

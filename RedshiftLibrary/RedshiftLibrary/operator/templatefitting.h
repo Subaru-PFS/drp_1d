@@ -74,9 +74,6 @@ private:
 
     Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
 
-    //Likelihood
-    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
-
     // buffers for the interpolated axis (template & spectrum)
 
 

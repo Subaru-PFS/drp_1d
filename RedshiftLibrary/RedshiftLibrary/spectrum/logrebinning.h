@@ -22,36 +22,24 @@ public:
                         const TFloat64Range &lambdaRange, 
                         const Float64 zInputStep,
                         const TFloat64Range zInputRange);
+    //todo: merge these two functions once all is stable:
+    //pass shared_ptr
     std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<CSpectrum> spectrum, 
                                                             const TFloat64Range &lambdaRange, 
                                                             std::string errorRebinMethod="rebinVariance");
-    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(const CTemplate &tpl);
+    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<CTemplate>  tpl);
 
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange,
                                                         UInt32 gridCount);
-    Float64 GetLogGridStep();
-    TFloat64Range GetRedshiftRange();
+    TFloat64Range m_zrange;
+    Float64 m_logGridStep; 
+    TFloat64Range m_lambdaRange_spc, m_lambdaRange_tpl;
 private:
     void InferTemplateRebinningSetup(TFloat64Range lambdaRange);
     const std::string m_rebinMethod = "lin";
 
-    Float64 m_logGridStep; 
-    Float64 m_log_lambda_start; 
-
-    UInt32 m_loglambda_count, m_loglambda_count_ref;
-
-    TFloat64Range m_loglambdaRange, m_loglambdaRange_ref;
-    TFloat64Range m_zrange;
+    UInt32 m_loglambda_count_spc, m_loglambda_count_tpl;
 };
-inline
-Float64 CSpectrumLogRebinning::GetLogGridStep()
-{
-    return m_logGridStep;
-}
-inline
-TFloat64Range CSpectrumLogRebinning::GetRedshiftRange()
-{
-    return m_zrange;
-}
+
 }
 #endif

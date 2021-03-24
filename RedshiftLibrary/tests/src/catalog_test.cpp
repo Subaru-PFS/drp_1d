@@ -18,13 +18,13 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 
     BOOST_REQUIRE(boost::filesystem::create_directories(_path));
 
-    generate_template_catalog(catalog_w, 100, 3500., 12500.);
+    generate_template_catalog(catalog_r, 100, 3500., 12500.);
 
-   /* BOOST_CHECK( catalog_r.GetTemplateCount( "galaxy" ) == 3 );
+    BOOST_CHECK( catalog_r.GetTemplateCount( "galaxy" ) == 3 );
     BOOST_CHECK( catalog_r.GetTemplateCount( "emission" ) == 2 );
     BOOST_CHECK( catalog_r.GetTemplateCount( "qso" ) == 1 );
     BOOST_CHECK( catalog_r.GetTemplateCount( "star" ) == 2 );
-    */
+    
     categories.push_back("galaxy");
     categories.push_back("star");
     TStringList expected={ "galaxy_test_template_2.txt",

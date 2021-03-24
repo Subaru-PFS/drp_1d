@@ -49,6 +49,9 @@ public:
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
                                     const Float64 redshiftStep);
+    //log grid data
+    CTemplate       m_templateRebinedLog;
+    CSpectrum       m_spectrumRebinedLog;
 
 private:
     //hardcoded config: FIT_RANGEZ
@@ -92,9 +95,6 @@ private:
 
     bool m_opt_spcrebin;
 
-    //log grid data
-    CTemplate       m_templateRebinedLog;
-    CSpectrum       m_spectrumRebinedLog;
 
     Bool m_enableISM = 1;
     Bool m_enableIGM = 1; 
@@ -114,8 +114,6 @@ private:
     fftw_complex* precomputedFFT_spcFluxOverErr2;
     fftw_complex* precomputedFFT_spcOneOverErr2;
 
-    //Likelihood
-    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 };
 
 

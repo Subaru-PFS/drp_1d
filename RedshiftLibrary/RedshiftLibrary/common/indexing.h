@@ -17,9 +17,8 @@ template <typename T> class CIndexing
 
     static Int32 getIndex( std::vector<T>& list, T z)
     {
-        typename std::vector<T>::iterator itr = std::lower_bound(list.begin(),list.end(), z);
-
-        if (itr == list.end() || *itr != z)
+        typename std::vector<T>::iterator itr = std::find(list.begin(),list.end(), z); 
+        if (itr == list.end())
         {
             size_t size = snprintf( nullptr, 0, "Could not find index for %f", z) + 1;
             std::unique_ptr<char[]> buf( new char[ size ] );                                                        

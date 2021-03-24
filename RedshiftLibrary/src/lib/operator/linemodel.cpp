@@ -623,6 +623,7 @@ Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
  * thus we can save time  by fitting once-for-all the continuum amplitudes, prior to fitting the rays.
  * @candidateIdx@ is also an indicator of pass mode
  * */
+//Important, after rebase on 6204: TODO: make sure to pass or read the rebinned spectrum/tpl if m_opt_tplfit_method == "templatefittinglog"
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const CTemplateCatalog &tplCatalog,
                                                 const TStringList &tplCategoryList,

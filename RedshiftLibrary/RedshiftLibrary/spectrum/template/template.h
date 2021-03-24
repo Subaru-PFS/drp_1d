@@ -44,7 +44,7 @@ public:
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
     bool InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);
-    
+    bool InitIsmIgmConfig();
     bool CalzettiInitFailed() const;
     bool MeiksinInitFailed() const;
 

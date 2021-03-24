@@ -400,7 +400,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
     for (Int32 t = 1; t < m_Samples.size(); t++)
     {
         Float64 lbda2 =  m_Samples[t];
-        Float64 _logGridStep = log(lbda2) - log(lbda1);
+        Float64 _logGridStep = lbda2 - lbda1;//no need for log here cause axis is aleady in log
 
         Float64 relativeErrAbs = std::abs((_logGridStep - logGridStep) / logGridStep);
         maxAbsRelativeError = max(relativeErrAbs, maxAbsRelativeError);
@@ -417,15 +417,16 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
     return 1;
 }
 
-Bool CSpectrumSpectralAxis::IsLogSampled()
+Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
 {
     if(m_regularSamplingChecked)
         return  m_SpectralFlags & nFLags_LogSampledCheck;
     
     if(!IsInLogScale())
         return 0;
-
-    Bool b = CheckLoglambdaSampling(m_Samples[1] - m_Samples[0]);
+    if(logGridstep == NAN)
+        logGridstep = m_Samples[1] - m_Samples[0];
+    Bool b = CheckLoglambdaSampling(logGridstep);
     if(!b){
         Log.LogError("   CSpectrumSpectralAxis::IsLogSampled: Log-regular lambda check FAILED");
         throw GlobalException(BAD_LOGSAMPLEDSPECTRUM, Formatter() <<"Log-regular lambda check FAILED");

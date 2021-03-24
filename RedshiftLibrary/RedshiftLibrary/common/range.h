@@ -83,7 +83,7 @@ template <typename T> class CRange
             return v;
         }
 
-        Int32 count = GetLength() / delta;
+        Int32 count = (GetLength() + epsilon) / delta;
 
         v.resize(count + 1);
         for (UInt32 i = 0; i < v.size(); i++)
@@ -108,7 +108,7 @@ template <typename T> class CRange
         Float64 edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while (x < (m_End + offset) && count < maxCount)
+        while (x < (m_End + offset + epsilon) && count < maxCount)
         {
             v.push_back(x - offset);
             count++;
@@ -227,6 +227,7 @@ template <typename T> class CRange
   private:
     T m_Begin;
     T m_End;
+    Float64 epsilon = 1E-6;
 };
 
 typedef CRange<Int32> TInt32Range;

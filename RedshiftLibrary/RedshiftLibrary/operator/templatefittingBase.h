@@ -26,10 +26,7 @@ class COperatorTemplateFittingBase : public COperator
 {
 
 public:
-
-    COperatorTemplateFittingBase();
-    virtual ~COperatorTemplateFittingBase()=0;
-
+    //Rule of zero
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                                        const CTemplate& tpl,
                                                       const TFloat64Range& lambdaRange,
@@ -69,6 +66,8 @@ protected:
   CTemplate       m_templateRebined_bf; //buffer
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
   CMask           m_mskRebined_bf; //buffer
+  //Likelihood
+  Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 };
 
 

@@ -67,7 +67,7 @@ public:
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
     void                SetLogScale();
     Bool                CheckLoglambdaSampling(Float64 logGridStep);
-    Bool                IsLogSampled();
+    Bool                IsLogSampled(Float64 logGridstep=NAN);
 private:
 
     UInt32              m_SpectralFlags;
