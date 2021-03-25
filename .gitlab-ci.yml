@@ -218,6 +218,7 @@ push-rc-38-osx:
 
 .push-rc-manylinux:
   stage: push-rc
+  when: manual
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
@@ -227,237 +228,203 @@ push-rc-38-osx:
 
 # Manylinux1 stages
 
-build-manylinux1:
+.manylinux1:
   image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  extends: .build-manylinux
+  variables:
+    PLATFORM: "manylinux1_x86_64"
   when: manual
   cache:
     key: manylinux1
+
+build-manylinux1:
+  extends:
+    - .manylinux1
+    - .build-manylinux
 
 test-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  extends: .test-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .test-manylinux
 
 wheel36-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "36"
-    PLATFORM: "manylinux1_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .wheel-manylinux
 
 wheel37-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "37"
-    PLATFORM: "manylinux1_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .wheel-manylinux
 
 wheel38-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "38"
-    PLATFORM: "manylinux1_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .wheel-manylinux
 
 push-rc-36-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "36"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .push-rc-manylinux
   dependencies:
     - wheel36-manylinux1
 
 push-rc-37-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "37"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .push-rc-manylinux
   dependencies:
     - wheel37-manylinux1
 
 push-rc-38-manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
   variables:
     PYTHON_VERSION: "38"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux1
+  extends:
+    - .manylinux1
+    - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux1
 
 # Manylinux2010 stages
 
-build-manylinux2010:
+.manylinux2010:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  extends: .build-manylinux
+  variables:
+    PLATFORM: "manylinux2010_x86_64"
   when: manual
   cache:
     key: manylinux2010
+
+build-manylinux2010:
+  extends:
+    - .manylinux2010
+    - .build-manylinux
 
 test-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
-  extends: .test-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .test-manylinux
 
 wheel36-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "36"
-    PLATFORM: "manylinux2010_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .wheel-manylinux
 
 wheel37-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "37"
-    PLATFORM: "manylinux2010_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .wheel-manylinux
 
 wheel38-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "38"
-    PLATFORM: "manylinux2010_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .wheel-manylinux
 
 push-rc-36-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "36"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .push-rc-manylinux
   dependencies:
     - wheel36-manylinux2010
 
 push-rc-37-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "37"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .push-rc-manylinux
   dependencies:
     - wheel37-manylinux2010
 
 push-rc-38-manylinux2010:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PYTHON_VERSION: "38"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2010
+  extends:
+    - .manylinux2010
+    - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2010
 
 # Manylinux2014 stages
 
-build-manylinux2014:
+.manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  extends: .build-manylinux
-  when: manual
+  variables:
+    PLATFORM: "manylinux2014_x86_64"
   cache:
     key: manylinux2014
+
+build-manylinux2014:
+  extends:
+    - .manylinux2014
+    - .build-manylinux
 
 test-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  extends: .test-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .test-manylinux
 
 wheel36-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "36"
-    PLATFORM: "manylinux2014_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .wheel-manylinux
 
 wheel37-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "37"
-    PLATFORM: "manylinux2014_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .wheel-manylinux
 
 wheel38-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "38"
-    PLATFORM: "manylinux2014_x86_64"
-  extends: .wheel-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .wheel-manylinux
 
 push-rc-36-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "36"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .push-rc-manylinux
   dependencies:
     - wheel36-manylinux2014
 
 push-rc-37-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "37"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .push-rc-manylinux
   dependencies:
     - wheel37-manylinux2014
 
 push-rc-38-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PYTHON_VERSION: "38"
-  extends: .push-rc-manylinux
-  when: manual
-  cache:
-    key: manylinux2014
+  extends:
+    - .manylinux2014
+    - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2014
