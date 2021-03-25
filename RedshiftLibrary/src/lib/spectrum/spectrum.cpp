@@ -44,46 +44,28 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_LSF(other.m_LSF),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
-    const CSpectrumSpectralAxis & otherSpectral = other.m_SpectralAxis;
-    const CSpectrumFluxAxis & otherRawFlux = other.m_RawFluxAxis;
-    const CSpectrumFluxAxis & otherContinuumFlux = other.m_ContinuumFluxAxis;
-    const CSpectrumFluxAxis & otherWithoutContinuumFlux = other.m_WithoutContinuumFluxAxis;
+    const CSpectrumNoiseAxis    &otherRawError = other.m_RawFluxAxis.GetError(),
+                                &otherContinuumError = other.m_ContinuumFluxAxis.GetError(),
+                                &otherWithoutContinuumError = other.m_WithoutContinuumFluxAxis.GetError();
 
-    const TFloat64List& otherRawError = otherRawFlux.GetError();
-    const TFloat64List& otherContinuumError = otherContinuumFlux.GetError();
-    const TFloat64List& otherWithoutContinuumError = otherWithoutContinuumFlux.GetError();
+    CSpectrumNoiseAxis      &RawError = m_RawFluxAxis.GetError(),
+                            &ContinuumError = m_ContinuumFluxAxis.GetError(),
+                            &WithoutContinuumError = m_WithoutContinuumFluxAxis.GetError();
 
-    TAxisSampleList& SpectralVector = m_SpectralAxis.GetSamplesVector();
-    TAxisSampleList& RawFluxVector = m_RawFluxAxis.GetSamplesVector();
-    TAxisSampleList& ContinuumFluxVector = m_ContinuumFluxAxis.GetSamplesVector();
-    TAxisSampleList& WithoutContinuumFluxVector = m_WithoutContinuumFluxAxis.GetSamplesVector();
+    other.m_SpectralAxis.MaskAxis(mask, m_SpectralAxis);
+    other.m_RawFluxAxis.MaskAxis(mask, m_RawFluxAxis);
+    
+    if( !otherRawError.isEmpty() )
+        otherRawError.MaskAxis(mask, RawError);
 
-    TFloat64List& RawErrorVector = m_RawFluxAxis.GetError();
-    TFloat64List& ContinuumErrorVector = m_ContinuumFluxAxis.GetError();
-    TFloat64List& WithoutContinuumErrorVector = m_WithoutContinuumFluxAxis.GetError();
+    if (other.alreadyRemoved){
+        other.m_ContinuumFluxAxis.MaskAxis(mask, m_ContinuumFluxAxis);
 
-    const UInt32 otherSpectralSize = otherSpectral.GetSamplesCount();
-    const UInt32 otherFluxSize = otherRawFlux.GetSamplesCount();
-    UInt32 minsize = min((UInt32)mask.size(), otherSpectralSize);
-    minsize = min(minsize, otherFluxSize);
-    for(Int32 i=0; i<minsize; i++){
-        if(mask[i]!=0){
-            SpectralVector.push_back(otherSpectral[i]);
-            RawFluxVector.push_back(otherRawFlux[i]);
-            if( !otherRawError.empty() ){
-                RawErrorVector.push_back(otherRawError[i]);
-            }
-            if (other.alreadyRemoved){
-                ContinuumFluxVector.push_back(otherContinuumFlux[i]);
-                if( !otherContinuumError.empty() ){
-                    ContinuumErrorVector.push_back(otherContinuumError[i]);
-                }
-                WithoutContinuumFluxVector.push_back(otherWithoutContinuumFlux[i]);
-                if( !otherWithoutContinuumError.empty() ){
-                     WithoutContinuumErrorVector.push_back(otherWithoutContinuumError[i]);
-                }
-            }
-        }
+        if( !otherContinuumError.isEmpty() )
+            otherContinuumError.MaskAxis(mask, ContinuumError);
+
+        if( !otherWithoutContinuumError.isEmpty() )
+            otherWithoutContinuumError.MaskAxis(mask, WithoutContinuumError);
     }
 }
 
@@ -339,10 +321,10 @@ bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64& mean, F
 
     CMask mask;
     m_SpectralAxis.GetMask( wlRange, mask );
-    const TFloat64List& error = GetFluxAxis().GetError();
+    const CSpectrumNoiseAxis& error = GetFluxAxis().GetError();
     Float64 _Mean = 0.0;
     Float64 _SDev = 0.0;
-    GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev, error);
+    GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev, error);//we can skip passing the error cause belongs to the same class
 
     mean = _Mean;
     std = _SDev;
@@ -361,7 +343,7 @@ bool CSpectrum::GetLinearRegInRange(TFloat64Range wlRange, Float64 &a, Float64 &
         return false;
     }
 
-    const TFloat64List& error = GetFluxAxis().GetError();
+    const CSpectrumNoiseAxis& error = GetFluxAxis().GetError();
 
     TInt32Range iRange = m_SpectralAxis.GetIndexesAtWaveLengthRange(wlRange);
     Int32 n = iRange.GetEnd()-iRange.GetBegin()+1;
@@ -500,7 +482,7 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin, Float64 LambdaMax ) const
     Bool valid = true;
     Int32 nInvalid = 0;
 
-    const TFloat64List& error = GetFluxAxis().GetError();
+    const TFloat64List& error = GetFluxAxis().GetError().GetSamplesVector();
     if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
         return false;
     }
@@ -513,7 +495,7 @@ const Bool CSpectrum::IsNoiseValid( Float64 LambdaMin, Float64 LambdaMax ) const
         //Log.LogDebug("    CSpectrum::IsNoiseValid - debug - iMin=%d and wmin=%f, iMax=%d and wmax=%f", iMin, m_SpectralAxis[iMin], iMax, m_SpectralAxis[iMax]);
         for(Int32 i=iMin; i<iMax; i++){
             //check noise
-            Bool validSample = checkNoise(error[i], i);
+            Bool validSample = checkNoise(error[i], i);//checkNoise can be moved to CSpectrumNoise
 
             if(!validSample){
                 valid = false;
@@ -533,7 +515,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
     Bool corrected = false;
     Int32 nCorrected = 0;
 
-    TFloat64List& error = GetFluxAxis().GetError();
+    TFloat64List& error = GetFluxAxis().GetError().GetSamplesVector();
     Float64 *flux = GetFluxAxis().GetSamples();
 
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
@@ -740,8 +722,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     const TAxisSampleList& Ysrc = GetFluxAxis().GetSamplesVector();
     const TAxisSampleList& Xtgt = targetSpectralAxis.GetSamplesVector();
     TAxisSampleList&       Yrebin = rebinedFluxAxis.GetSamplesVector();
-    const TFloat64List&    Error = GetFluxAxis().GetError();
-    TFloat64List&          ErrorRebin = rebinedFluxAxis.GetError();
+    const TFloat64List&    Error = GetFluxAxis().GetError().GetSamplesVector();
+    TFloat64List&          ErrorRebin = rebinedFluxAxis.GetError().GetSamplesVector();
 
     // Move cursors up to lambda range start
     Int32 j = 0;

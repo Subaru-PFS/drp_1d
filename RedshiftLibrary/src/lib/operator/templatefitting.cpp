@@ -335,7 +335,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             Float64 fit = 0;
             Int32 numDevs = 0;
             Int32 numDevsFull = 0;
-            const TFloat64List& error = spcFluxAxis.GetError();
+            const CSpectrumNoiseAxis& error = spcFluxAxis.GetError();
 
             for(Int32 j=kStart; j<=kEnd; j++)
             {
@@ -976,7 +976,7 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
 Float64 COperatorTemplateFitting::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List& error = spectrum.GetFluxAxis().GetError();
+    const TFloat64List& error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;

@@ -1,24 +1,15 @@
 #include <RedshiftLibrary/spectrum/axis.h>
-
-#include <RedshiftLibrary/debug/assert.h>
-
+#include <RedshiftLibrary/log/log.h>
+#include <numeric>
 #include <algorithm>
 
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumAxis::CSpectrumAxis()
-{
 
-}
-
-CSpectrumAxis::CSpectrumAxis( UInt32 n ) :
-    m_Samples( n )
+CSpectrumAxis::CSpectrumAxis( UInt32 n, Float64 value) :
+    m_Samples( n , value)
 {
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_Samples[i] = 0.0;
-    }
 }
 
 CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
@@ -28,17 +19,6 @@ CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
     {
         m_Samples[i] = samples[i];
     }
-}
-
-CSpectrumAxis::~CSpectrumAxis()
-{
-
-}
-
-CSpectrumAxis& CSpectrumAxis::operator=(const CSpectrumAxis& other)
-{
-    m_Samples = other.m_Samples;
-    return *this;
 }
 
 CSpectrumAxis& CSpectrumAxis::operator*=(const Float64 op)
@@ -59,3 +39,29 @@ UInt32 CSpectrumAxis::GetSamplesCount( )
     return m_Samples.size();
 }
 
+Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx)
+{
+    m_Samples.resize(endIdx-startIdx +1);
+    for(Int32 i = startIdx; i < endIdx + 1; i++){
+        m_Samples[i - startIdx] = other.m_Samples[i];
+    }
+    return 0;
+}
+/*
+    maskedAxis is the output axis after applying the mask on the current object
+*/
+Int32 CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis)const//mask is 0. or 1.
+{
+    if(mask.size()!= GetSamplesCount()){
+        Log.LogError("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
+        throw runtime_error("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
+    }
+    UInt32 sum = UInt32(std::accumulate(m_Samples.begin(), m_Samples.end(), 0));
+    maskedAxis.m_Samples.clear();
+    maskedAxis.m_Samples.reserve(sum);
+    for(Int32 i = 0; i < GetSamplesCount(); i++){
+        if(mask[i]==1.)
+            maskedAxis.m_Samples.push_back(m_Samples[i]);
+    }
+    return 0;
+}

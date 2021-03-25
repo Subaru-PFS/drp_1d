@@ -11,53 +11,40 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumFluxAxis::CSpectrumFluxAxis()
+
+
+CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
+    CSpectrumAxis( n, value),
+    m_StdError(n)
 {
 
 }
 
-CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n ) :
-    CSpectrumAxis( n ),
-    m_StatError( n, 1.0 )
-{
+CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError ):
+   CSpectrumAxis(otherFlux),
+   m_StdError(otherError)
+{}
 
-}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
     CSpectrumAxis( samples, n ),
-    m_StatError( n, 1.0 )
+    m_StdError(n)
 {
 
 }
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
-				      const Float64* error, UInt32 m ) :
+				      const Float64* error,  const UInt32 obsolete) :
     CSpectrumAxis( samples, n ),
-    m_StatError( n )
-{
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_StatError[i] = error[i];
-    }
-}
-
-CSpectrumFluxAxis::~CSpectrumFluxAxis()
+    m_StdError( error, n )
 {
 
 }
-
-CSpectrumFluxAxis& CSpectrumFluxAxis::operator=(const CSpectrumFluxAxis& other)
-{
-    m_StatError = other.m_StatError;
-    CSpectrumAxis::operator=( other );
-    return *this;
-}
-
 
 void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );
-    m_StatError.assign(s, 1.0);
+    m_StdError.SetSize(s);
 }
 
 Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
@@ -112,9 +99,9 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
 }
 
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const TFloat64List error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
 {
-  if( !error.empty() )
+  if( !error.isEmpty() )
     {
         return ComputeMeanAndSDevWithError( mask, mean, sdev, error );
     }
@@ -167,7 +154,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     return true;
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const TFloat64List error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 

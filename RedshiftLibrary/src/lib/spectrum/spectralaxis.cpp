@@ -58,24 +58,6 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origi
 }
 
 /**
- * Destructor.
- */
-CSpectrumSpectralAxis::~CSpectrumSpectralAxis()
-{
-
-}
-
-/**
- * Overloaded assignment operator.
- */
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( const CSpectrumSpectralAxis& other )
-{
-    m_SpectralFlags = other.m_SpectralFlags;
-    CSpectrumAxis::operator=( other );
-    return *this;
-}
-
-/**
  * Shift current axis the input offset in the input direction.
  */
 void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftDirection direction )

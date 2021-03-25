@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
 
 
   range = TInt32Range(0,10);
-  TFloat64List& error = modelfluxAxis.GetError();
+  CSpectrumNoiseAxis& error = modelfluxAxis.GetError();
   error[0] = 0.5;
   error[1] = 0.3;
   error[2] = 0.8;
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   for(Int32 k=0; k<n; k++){
     modelfluxAxis[k]=k*0.0001;
   }
-  TFloat64List& error = modelfluxAxis.GetError();
+  CSpectrumNoiseAxis& error = modelfluxAxis.GetError();
   for(Int32 k=0; k<n; k++){
     error[k]=k*0.0001;
   }
