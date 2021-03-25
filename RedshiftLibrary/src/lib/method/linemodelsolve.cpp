@@ -68,9 +68,10 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> param
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         parameterStore->GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "chisquarelog" );
         m_opt_tplfit_method_secondpass = m_opt_tplfit_method;//for the moment, we use the same method for both passe
-	parameterStore->GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
+	    parameterStore->GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
+        parameterStore->GetScopedParam( "linemodel.continuumfit.negativethreshold", m_opt_continuum_neg_amp_threshold, -5.0 );
         parameterStore->GetScopedParam( "linemodel.continuumfit.ignorelinesupport", m_opt_tplfit_ignoreLinesSupport, "no" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.priors.betaA", m_opt_tplfit_continuumprior_betaA, 1. );
         parameterStore->GetScopedParam( "linemodel.continuumfit.priors.betaTE", m_opt_tplfit_continuumprior_betaTE, 1. );
@@ -851,6 +852,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         m_linemodel.m_opt_tplfit_continuumprior_betaA = m_opt_tplfit_continuumprior_betaA;
         m_linemodel.m_opt_tplfit_continuumprior_betaTE = m_opt_tplfit_continuumprior_betaTE;
         m_linemodel.m_opt_tplfit_continuumprior_betaZ = m_opt_tplfit_continuumprior_betaZ;
+        m_linemodel.m_opt_continuum_neg_amp_threshold = m_opt_continuum_neg_amp_threshold;
     }
 
     m_linemodel.m_opt_enableLSF=m_opt_enableLSF;

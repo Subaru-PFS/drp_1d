@@ -107,6 +107,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     if(enableModelSubtraction){
 
         std::string opt_continuumcomponent = "fromspectrum";
+        Float64 opt_continuum_neg_threshold=-INFINITY; // not relevant in the "fromspectrum" case
         CSpectrum spectrum = inputTemplate;
         std::string saveContinuumEstimationMethod = spectrum.GetContinuumEstimationMethod();
         spectrum.SetContinuumEstimationMethod("zero");
@@ -123,6 +124,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                                      restRayList,
                                      opt_fittingmethod,
                                      opt_continuumcomponent,
+                                     opt_continuum_neg_threshold,
                                      opt_lineWidthType,
                                      opt_enable_LSF,
                                      opt_nsigmasupport,

@@ -45,6 +45,7 @@ public:
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
+                          const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
                           const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
@@ -80,8 +81,8 @@ public:
                         Float64 &merit,
                         Float64& fitAmplitude,
                         Float64& fitAmplitudeError,
-                        Bool& fitAmplitudeNegative,
-                        Float64 &FitEbmvCoeff,
+                        Float64& fitAmplitudeSigma,
+                        Float64 &fitEbmvCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
                         Float64& fitMtM,
@@ -299,6 +300,7 @@ public:
     Float64 m_opt_lya_fit_delta_step=1.;
 
     Int32 m_opt_fitcontinuum_maxCount = 2;
+    Float64 m_opt_fitcontinuum_neg_threshold = - INFINITY;
     bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;
     bool m_opt_firstpass_forcedisableTplratioISMfit=true;
     std::string m_opt_firstpass_fittingmethod = "hybrid";

@@ -25,7 +25,7 @@ public:
         Float64 merit;
         Float64 fitAmplitude;
         Float64 fitAmplitudeError;
-        Bool fitAmplitudeNegative;
+        Float64 fitAmplitudeSigma;
         Float64 fitDtM;
         Float64 fitMtM;
         Float64 logprior;
@@ -42,7 +42,7 @@ public:
              Float64 merit,
              Float64 fitAmplitude,
              Float64 fitAmplitudeError,
-             Bool fitAmplitudeNegative,
+             Float64 fitAmplitudeSigma,
              Float64 fitDtM,
              Float64 fitMtM,
              Float64 logprior);

@@ -710,7 +710,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
             result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
             result->FitAmplitudeError[fullResultIdx] = subresult->FitAmplitudeError[isubz];
-            result->FitAmplitudeNegative[fullResultIdx] = subresult->FitAmplitudeNegative[isubz];
+            result->FitAmplitudeSigma[fullResultIdx] = subresult->FitAmplitudeSigma[isubz];
             result->FitDtM[fullResultIdx] = subresult->FitDtM[isubz];
             result->FitMtM[fullResultIdx] = subresult->FitMtM[isubz];
 
@@ -747,7 +747,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                     //now update the amplitude if there is any constraints from the priors
                     Float64 ampl = result->FitAmplitude[fullResultIdx];
                     Float64 ampl_err = result->FitAmplitudeError[fullResultIdx];
-                    Float64 ampl_neg = result->FitAmplitudeNegative[fullResultIdx];
+                    Float64 ampl_sigma = result->FitAmplitudeSigma[fullResultIdx];
                     if(pTZE.betaA>0.0)
                     {
                         Float64 bss2 = pTZE.betaA/(pTZE.A_sigma*pTZE.A_sigma);
@@ -770,14 +770,14 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                     }
 
                     // check negative amplitude
-                    ampl_neg = ampl < -3*ampl_err ? 1 : 0;
+                    ampl_sigma = ampl/ampl_err; 
                     
                     // force positivity
                     ampl = max(0., ampl);
 
                     result->FitAmplitude[fullResultIdx] = ampl;
                     result->FitAmplitudeError[fullResultIdx] = ampl_err;
-                    result->FitAmplitudeNegative[fullResultIdx] = ampl_neg;
+                    result->FitAmplitudeSigma[fullResultIdx] = ampl_sigma;
                     result->ChiSquare[fullResultIdx] = dtd + result->FitMtM[fullResultIdx]*ampl*ampl - 2.*ampl*result->FitDtM[fullResultIdx];
 
                     Float64 logPa = pTZE.betaA*(ampl-pTZE.A_mean)*(ampl-pTZE.A_mean)/(pTZE.A_sigma*pTZE.A_sigma);
@@ -989,7 +989,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
     TFloat64List bestChi2(nshifts, DBL_MAX);
     TFloat64List bestFitAmp(nshifts, -1.0);
     TFloat64List bestFitAmpErr(nshifts, -1.0);
-    TBoolList    bestFitAmpNeg(nshifts);
+    TFloat64List bestFitAmpSigma(nshifts);
     TFloat64List bestFitDtm(nshifts, -1.0);
     TFloat64List bestFitMtm(nshifts, -1.0);
     TFloat64List bestISMCoeff(nshifts, -1.0);
@@ -1157,7 +1157,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
             //Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
             std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
-            TBoolList amp_neg(dtm_vec_size);
+            TFloat64List amp_sigma(dtm_vec_size);
             std::vector<Float64> amp_err(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
             {
@@ -1165,13 +1165,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
                 {
                     amp[k] = 0.0;
                     amp_err[k] = 0.0;
-                    amp_neg[k] = 0;
+                    amp_sigma[k] = 0.0;
                     chi2[k] = dtd;
                 } else
                 {
                     amp[k] = dtm_vec[k] / mtm_vec[k];
                     amp_err[k] = sqrt(1./mtm_vec[k]);
-                    amp_neg[k] = amp[k] < -3*amp_err[k] ? 1 : 0;
+                    amp_sigma[k] = amp[k]/amp_err[k];
                     amp[k] = max(0.0, amp[k]);
 
                     chi2[k] = dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
@@ -1198,7 +1198,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
                     bestChi2[k] = chi2[k];
                     bestFitAmp[k] = amp[k];
                     bestFitAmpErr[k] = amp_err[k];
-                    bestFitAmpNeg[k] = amp_neg[k];
+                    bestFitAmpSigma[k] = amp_sigma[k];
                     bestFitDtm[k] = dtm_vec[k];
                     bestFitMtm[k] = mtm_vec[k];
                     bestISMCoeff[k] = enableISM ? m_ismCorrectionCalzetti->GetEbmvValue(ismEbmvCoeffs[kISM]) : -1;
@@ -1254,7 +1254,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
     std::reverse(bestChi2.begin(), bestChi2.end());
     std::reverse(bestFitAmp.begin(), bestFitAmp.end());
     std::reverse(bestFitAmpErr.begin(), bestFitAmpErr.end());
-    std::reverse(bestFitAmpNeg.begin(), bestFitAmpNeg.end());
+    std::reverse(bestFitAmpSigma.begin(), bestFitAmpSigma.end());
     std::reverse(bestFitDtm.begin(), bestFitDtm.end());
     std::reverse(bestFitMtm.begin(), bestFitMtm.end());
     std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
@@ -1290,7 +1290,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TAxisSampleList & spectrumReb
         result->Overlap[iz] = 1.0;
         result->FitAmplitude[iz] = bestFitAmp[k];
         result->FitAmplitudeError[iz] = bestFitAmpErr[k];
-        result->FitAmplitudeNegative[iz] = bestFitAmpNeg[k];
+        result->FitAmplitudeSigma[iz] = bestFitAmpSigma[k];
         result->FitDtM[iz] = bestFitDtm[k];
         result->FitMtM[iz] = bestFitMtm[k];
         result->FitEbmvCoeff[iz] = bestISMCoeff[k];

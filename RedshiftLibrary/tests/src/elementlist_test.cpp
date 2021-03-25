@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelElementList model_nocontinuum(spectrum,
                                           tplCatalog, tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
-					                                "lmfit", "nocontinuum",
+					                                "lmfit", "nocontinuum", -INFINITY,
                                           opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelElementList model_fromspectrum(spectrum,
                                            tplCatalog, tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
-					                                 "lmfit", "fromspectrum",
+					                                 "lmfit", "fromspectrum", -INFINITY,
                                            opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                 opt_velocityAbsorption, opt_rules, opt_rigidity);
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CLineModelElementList model_tplfit(spectrum,
                                      tplCatalog, tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
-   				                           "lmfit", "tplfit",
+   				                           "lmfit", "tplfit", -5.0,
                                      opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
    				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
 

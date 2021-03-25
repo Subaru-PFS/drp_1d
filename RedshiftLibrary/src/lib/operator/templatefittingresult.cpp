@@ -15,7 +15,7 @@ void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
     FitAmplitudeError.resize( n );
-    FitAmplitudeNegative.resize( n);
+    FitAmplitudeSigma.resize( n);
     FitEbmvCoeff.resize( n );
     FitMeiksinIdx.resize( n );
     FitDtM.resize( n );
