@@ -316,7 +316,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
         }else if(qso_method=="templatefittinglogsolve"){
-            opt_interp="unused";
+            opt_interp="lin";
             CMethodTemplateFittingLogSolve solve(calibrationDirPath);
             qsoResult = solve.Compute( ctx.GetDataStore(),
                                        ctx.GetSpectrum(),
@@ -433,7 +433,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         ctx.GetParameterStore().Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
         std::string opt_spcComponent;
         ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp="unused";
+        std::string opt_interp="lin";
         std::string opt_extinction;
         ctx.GetDataStore().GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
         std::string opt_dustFit;

@@ -33,21 +33,6 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-void COperatorTemplateFitting::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl)
-{
-    // Pre-Allocate the rebined template and mask with regard to the spectrum size
-    m_templateRebined_bf.GetSpectralAxis().SetSize(spectrum.GetSampleCount());
-    m_templateRebined_bf.GetFluxAxis().SetSize(spectrum.GetSampleCount());
-    m_templateRebined_bf.InitPrecomputeFineGrid();
-
-    m_mskRebined_bf.SetSize(spectrum.GetSampleCount());
-    m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
-
-    m_templateRebined_bf.m_ismCorrectionCalzetti = tpl.m_ismCorrectionCalzetti;
-    m_templateRebined_bf.m_igmCorrectionMeiksin = tpl.m_igmCorrectionMeiksin;
-}
-
-
 /**
  * @brief COperatorTemplateFitting::BasicFit
  * @param spectrum
@@ -124,7 +109,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     status = nStatus_DataError;
 
     const CSpectrumFluxAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
@@ -145,10 +129,11 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                 overlapRate,
                                 overlapThreshold);
     
+    const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
-    if (opt_extinction || apply_ism){                            
-        m_templateRebined_bf.InitIsmIgmConfig();
+    if (apply_ism || opt_extinction){             
+        m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }
 
     if( ret == -1 ){
@@ -681,9 +666,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         //return NULL;
     }
 
-    // Pre-Allocate the rebined template and mask with regard to the spectrum size
-    BasicFit_preallocateBuffers(spectrum, tpl);
-
     //sort the redshift and keep track of the indexes
     TFloat64List sortedRedshifts;
     TFloat64List sortedIndexes;
@@ -703,12 +685,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     Int32 nDustCoeffs=1;
     if(opt_dustFitting==-10)
     {
-        nDustCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nDustCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
     }
     Int32 nIGMCoeffs=1;
     if(opt_extinction && !keepigmism)
     { 
-        nIGMCoeffs = m_templateRebined_bf.m_igmCorrectionMeiksin->GetIdxCount();
+        nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
     }
 
     result->Init(sortedRedshifts.size(), nDustCoeffs, nIGMCoeffs);
@@ -867,11 +849,6 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
         Log.LogError("  Operator-TemplateFitting: input spectrum or template are not in log scale (ignored)");
         //return NULL;
     }
-
-
-    // Pre-Allocate the rebined template and mask with regard to the spectrum size
-    BasicFit_preallocateBuffers(spectrum, tpl);
-    
 
     /*//debug:
     // save templateFine
@@ -1056,8 +1033,9 @@ Int32   COperatorTemplateFitting::ComputeSpectrumModel(const CSpectrum& spectrum
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
-    if ((DustCoeff>0.) || (meiksinIdx>0))
-        m_templateRebined_bf.InitIsmIgmConfig();
+    if ((DustCoeff>0.) || (meiksinIdx>0)){
+        m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
+    }
 
     if (DustCoeff>0.)
     {
