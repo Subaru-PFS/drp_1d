@@ -46,6 +46,10 @@ wheel36-osx:
   stage: build-wheel
   tags:
     - osx
+  before_script:
+    - cd build
+    - make clean_python_build
+    - cd ..
   script:
     - source /Users/grunner/venv/amazed36/bin/activate
     - python setup.py bdist_wheel
@@ -70,6 +74,10 @@ wheel37-osx:
   stage: build-wheel
   tags:
     - osx
+  before_script:
+    - cd build
+    - make clean_python_build
+    - cd ..
   script:
     - source /Users/grunner/venv/amazed37/bin/activate
     - python setup.py bdist_wheel
@@ -94,6 +102,10 @@ wheel38-osx:
   stage: build-wheel
   tags:
     - osx
+  before_script:
+    - cd build
+    - make clean_python_build
+    - cd ..
   script:
     - source /Users/grunner/venv/amazed38/bin/activate
     - python setup.py bdist_wheel
