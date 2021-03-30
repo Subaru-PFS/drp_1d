@@ -54,7 +54,6 @@
 #include "RedshiftLibrary/method/linemodelsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittinglogsolve.h"
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 using namespace NSEpic;
@@ -439,12 +438,6 @@ class CMethodTemplateFittingSolve
   ~CMethodTemplateFittingSolve();
 };
 
-class CMethodTemplateFittingLogSolve
-{
- public:
-  CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
-  ~CMethodTemplateFittingLogSolve();
-};
 
 class CMethodTplcombinationSolve
 {

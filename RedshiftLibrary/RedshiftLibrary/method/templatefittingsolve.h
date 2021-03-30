@@ -8,7 +8,7 @@
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
+#include <RedshiftLibrary/operator/templatefittingBase.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
@@ -92,13 +92,15 @@ private:
 
     void StoreExtremaResults(COperatorResultStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
-    COperatorTemplateFitting m_templateFittingOperator;
+  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
+  std::string m_opt_spclogrebin;
+
 };
 
 

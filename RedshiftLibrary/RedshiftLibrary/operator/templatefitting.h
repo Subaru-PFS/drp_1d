@@ -41,17 +41,6 @@ public:
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
 
-    Int32        ComputeSpectrumModel(const CSpectrum& spectrum,
-                        	          const CTemplate& tpl,
-                                      Float64 redshift,
-                                      Float64 IdxDustCoeff,
-                                      Int32 meiksinIdx,
-                                      Float64 amplitude,
-                                      std::string opt_interp,
-				                      std::string opt_extinction,
-                                      const TFloat64Range& lambdaRange,
-                                      Float64 overlapThreshold,
-                                      std::shared_ptr<CModelSpectrumResult> & spc);
 
 private:
 
@@ -82,14 +71,6 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   bool keepigmism=false);
 
-    Int32  RebinTemplate( const CSpectrum& spectrum,
-                          const CTemplate& tpl, 
-                          Float64 redshift,
-                          const TFloat64Range& lambdaRange,
-                          std::string opt_interp,
-                          TFloat64Range& currentRange,
-                          Float64& overlaprate,
-                          Float64 overlapThreshold);// const;
 
     Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
 
@@ -97,9 +78,9 @@ private:
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 
     // buffers for the interpolated axis (template & spectrum)
-    CTemplate       m_templateRebined_bf; //buffer
-    CMask           m_mskRebined_bf; //buffer
-    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+
+
+
 
 };
 
