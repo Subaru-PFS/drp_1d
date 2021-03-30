@@ -18,7 +18,7 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CTemplateFittingSolveResult : public CSolveResult
+class CTemplateFittingSolveResult : public CPdfSolveResult
 {
 
 public:

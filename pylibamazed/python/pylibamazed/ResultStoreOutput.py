@@ -16,8 +16,12 @@ class ResultStoreOutput(AbstractOutput):
 
     def load_pdf(self, object_type):
         if object_type not in self.pdf.keys():
-            pdf_proba = self.result_store.Get_Float64ArrayData(object_type, "all", "pdf_probaLog")
-            pdf_zgrid = self.result_store.Get_Float64ArrayData(object_type, "all", "pdf_zgrid")
+            pdf_proba = self.result_store.Get_Float64ArrayData(object_type,
+                                                               self.get_solve_method(object_type),
+                                                               "pdf_probaLog")
+            pdf_zgrid = self.result_store.Get_Float64ArrayData(object_type,
+                                                               self.get_solve_method(object_type),
+                                                               "pdf_zgrid")
             self.pdf[object_type] = pd.DataFrame()
             self.pdf[object_type]["probaLog"] = pdf_proba
             self.pdf[object_type]["zGrid"] = pdf_zgrid
@@ -86,13 +90,10 @@ class ResultStoreOutput(AbstractOutput):
     @abc.abstractmethod
     def load_nb_candidates(self,object_type):
         if object_type not in self.nb_candidates:
-            self.nb_candidates[object_type] = self.result_store.Get_Int32Data(object_type, "all", "NbCandidates")
+            self.nb_candidates[object_type] = self.result_store.Get_Int32Data(object_type, self.get_solve_method(object_type), "NbCandidates")
 
     def get_attribute(self,spec_row, object_type, rank):
-        if spec_row["method"] == "all":
-            method = "all"
-        else:
-            method = self.get_solve_method(object_type)
+        method = self.get_solve_method(object_type)
         if spec_row["c_type"] == 'int':
             return self.result_store.Get_Int32CandidateData(object_type, method, rank, spec_row["name"])
         elif spec_row["c_type"] == 'string':
@@ -108,8 +109,7 @@ class ResultStoreOutput(AbstractOutput):
         
     def load_candidates_dataset(self,dataset, object_type):
         solve_method = self.get_solve_method(object_type)
-        cand_specs = candidate_specifications[(candidate_specifications["method"] == "all") |
-                                              (candidate_specifications["method"].str.contains(solve_method))]
+        cand_specs = candidate_specifications[(candidate_specifications["method"].str.contains(solve_method))]
         cand_specs = cand_specs[cand_specs["dataset"] == dataset]
 
         comp_type = []
@@ -230,8 +230,7 @@ class ResultStoreOutput(AbstractOutput):
                 cand_specs = candidate_specifications[candidate_specifications["object_type"].str.contains(object_type)]
                 # TODO solve method retrieval should be reviewed after parameters.json restructuration
                 solve_method = self.get_solve_method(object_type)
-                cand_specs = cand_specs[
-                    (cand_specs["method"] == "all") | (cand_specs["method"].str.contains(solve_method))]
+                cand_specs = cand_specs[cand_specs["method"].str.contains(solve_method)]
                 datasets = list(cand_specs["dataset"].unique())
                 mono_specs = []
                 multi_specs = []
@@ -269,7 +268,7 @@ class ResultStoreOutput(AbstractOutput):
                                               cand_multi_types["model"],
                                               data=model)
 
-                    if solve_method == "linemodel":
+                    if solve_method == "linemodelsolve":
                         best_continuum = self.best_continuum[object_type][rank]
                         candidate.create_dataset("continuum",
                                                  (best_continuum.index.size,),

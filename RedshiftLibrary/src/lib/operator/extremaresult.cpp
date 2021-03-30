@@ -162,6 +162,9 @@ void CExtremaResult::getCandidateData(const int& rank,const std::string& name, F
     else if (name.compare("FittedTemplateDtm") == 0 || name.compare("FirstpassFittedTemplateDtm") == 0) v = FittedTplDtm[rank];
     else if (name.compare("FittedTemplateMtm") == 0 || name.compare("FirstpassFittedTemplateMtm") == 0) v = FittedTplMtm[rank];
     else if (name.compare("ContinuumAmplitudeError") == 0 || name.compare("FirstpassContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
+    else if (name == "Redshift") v = Redshift(rank);
+    else if (name == "RedshiftProba") v = ValSumProba(rank);
+    else if (name == "RedshiftError") v = DeltaZ(rank);
     else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "unknown candidate Float64 data " << name);
 }
 

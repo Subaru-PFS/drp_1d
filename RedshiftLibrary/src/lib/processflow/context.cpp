@@ -1,4 +1,5 @@
 #include <RedshiftLibrary/processflow/context.h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
@@ -28,137 +29,60 @@ CProcessFlowContext::~CProcessFlowContext()
 {
 
 }
-
-bool CProcessFlowContext::Init( std::shared_ptr<CSpectrum> spectrum,
-                                const std::string processingID,
-                                std::shared_ptr<const CTemplateCatalog> templateCatalog,
-                                std::shared_ptr<const CRayCatalog> rayCatalog,
-                                std::shared_ptr<CParameterStore> paramStore,
-                                std::shared_ptr<CClassifierStore> zqualStore )
+void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
+                               std::shared_ptr<const CTemplateCatalog> templateCatalog,
+                               std::shared_ptr<const CRayCatalog> rayCatalog,
+                               const std::string& paramsJSONString)
 {
-    Log.LogInfo("Processing context initialization");
+  Log.LogInfo("Processing context initialization");
 
-    m_ClassifierStore = zqualStore;
+  std::shared_ptr<CParameterStore> parameterStore = std::shared_ptr<CParameterStore>(new CParameterStore(m_ScopeStack));
+  parameterStore->FromString(paramsJSONString);
 
-    m_TemplateCatalog = templateCatalog;
-    m_RayCatalog = rayCatalog;
-    m_ParameterStore = paramStore;
-    m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore );
+//  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
+  m_inputContext = std::shared_ptr<CInputContext>(new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore));
 
-    // Spectrum initialization
-    m_Spectrum = spectrum;
-    InitSpectrum();
+  m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore(m_ScopeStack) );
 
-    // Calzetti ISM & Meiksin IGM initialization
-    std::string calibrationPath;
-    m_ParameterStore->Get( "calibrationDir", calibrationPath );
-    InitIsmIgm(calibrationPath);
+  TFloat64Range lambdaRange = parameterStore->Get<TFloat64Range>("lambdarange");
+  spectrum->GetSpectralAxis().ClampLambdaRange( lambdaRange, m_inputContext->m_lambdaRange );
+  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
+               m_inputContext->m_lambdaRange.GetBegin(),
+               m_inputContext->m_lambdaRange.GetEnd(),
+               spectrum->GetResolution());
 
-    // DataStore initialization
-    m_DataStore = std::shared_ptr<CDataStore>( new CDataStore( *m_ResultStore, *m_ParameterStore ) );
-    m_DataStore->SetSpectrumName( m_Spectrum->GetName() );
-    m_DataStore->SetProcessingID( processingID );
+  //************************************
+  const Float64 lmin = GetInputContext().m_lambdaRange.GetBegin();
+  const Float64 lmax = GetInputContext().m_lambdaRange.GetEnd();
 
-    Log.LogInfo("Processing context is ready");
+  std::string enableInputSpcCorrectStr = parameterStore->Get<std::string>( "autocorrectinput");
+  Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
+  if(enableInputSpcCorrect)
+    {
+      //Check if the Spectrum is valid on the lambdarange
+      //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
 
-    return true;
-}
+      if( spectrum->correctSpectrum( lmin,lmax ))
+        Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
+      }
 
-void CProcessFlowContext::InitSpectrum()
-{
-    // Smooth flux
-    Int64 smoothWidth;
-    m_ParameterStore->Get( "smoothWidth", smoothWidth, 0 );
-    if( smoothWidth > 0 )
-        m_Spectrum->GetFluxAxis().ApplyMeanSmooth(smoothWidth);
-
-    // Continuum removal params
-    std::string medianRemovalMethod;
-    m_ParameterStore->Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
-    m_Spectrum->SetContinuumEstimationMethod(medianRemovalMethod);
-
-    Float64 medianKernelWidth;
-    m_ParameterStore->Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
-    m_Spectrum->SetMedianWinsize(medianKernelWidth);
-
-    Float64 nscales;
-    m_ParameterStore->Get( "continuumRemoval.decompScales", nscales, 6.0 );
-    m_Spectrum->SetDecompScales((Int32)nscales);
-
-    std::string dfBinPath;
-    m_ParameterStore->Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
-    m_Spectrum->SetWaveletsDFBinPath(dfBinPath);
-}
-
-void CProcessFlowContext::InitIsmIgm(const std::string & calibrationPath)
-{
-    //ISM
-    auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-    ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
-    //IGM
-    auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
-    igmCorrectionMeiksin->Init(calibrationPath);
-
-    //push in all templates
-    for(std::string s : m_TemplateCatalog->GetCategoryList()){ 
-        TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
-        for (auto tpl : TplList)
-        {
-            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-            if(s!="star")//no igm for stars
-                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-        }   
+   if( !spectrum->IsFluxValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate spectrum flux");
+    }else{
+      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
+	//Check if the noise is valid in the lambdarange
+    if( !spectrum->IsNoiseValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate noise from spectrum");
+    }else{
+      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    }
+  
 }
 
-CParameterStore& CProcessFlowContext::GetParameterStore()
-{
-    return *m_ParameterStore;
-}
 
-COperatorResultStore& CProcessFlowContext::GetResultStore()
-{
-    return *m_ResultStore;
-}
 
-CClassifierStore& CProcessFlowContext::GetClassifierStore()
-{
-    return *m_ClassifierStore;
-}
-
-CDataStore& CProcessFlowContext::GetDataStore()
-{
-    return *m_DataStore;
-}
-
-bool CProcessFlowContext::correctSpectrum(Float64 LambdaMin,  Float64 LambdaMax)
-{
-    return m_Spectrum->correctSpectrum( LambdaMin, LambdaMax );
-}
-
-const CSpectrum& CProcessFlowContext::GetSpectrum() const
-{
-    return *m_Spectrum;
-}
-
-const CTemplateCatalog& CProcessFlowContext::GetTemplateCatalog() const
-{
-    return *m_TemplateCatalog;
-}
-const TStringList&  CProcessFlowContext::GetGalaxyCategoryList() const
-{
-    return m_filteredGalaxyTemplateCategoryList;
-}
-const TStringList&  CProcessFlowContext::GetStarCategoryList() const
-{
-    return m_filteredStarTemplateCategoryList;                                ; 
-}
-const TStringList&  CProcessFlowContext::GetQSOCategoryList() const
-{
-    return m_filteredQSOTemplateCategoryList;
-}
-
-const CRayCatalog& CProcessFlowContext::GetRayCatalog() const
-{
-    return *m_RayCatalog;
-}

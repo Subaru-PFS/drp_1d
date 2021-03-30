@@ -18,7 +18,7 @@ using namespace NSEpic;
 CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<const CLineModelExtremaResult> & ExtremaResult,
                                              const std::string & opt_pdfcombination,
                                              Float64 evidence):
-    CSolveResult( ExtremaResult, opt_pdfcombination, evidence),
+    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
     ExtremaResult(ExtremaResult),
     tplratioName(ExtremaResult->FittedTplratioName[0]),
     tplcontinuumName(ExtremaResult->FittedTplName[0]),

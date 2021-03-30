@@ -2,6 +2,9 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/solve.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
@@ -19,7 +22,7 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CMethodTemplateFittingSolve
+  class CMethodTemplateFittingSolve : public CSolve
 {
 
  public:
@@ -33,11 +36,15 @@ class CMethodTemplateFittingSolve
     };
 
 
-    CMethodTemplateFittingSolve() = default;
-    ~CMethodTemplateFittingSolve() = default;
+  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
-    const std::string GetDescription() const;
 
+
+  std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
+                                        COperatorResultStore &resultStore,
+                                        TScopeStack &scope);
+
+  /*
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
@@ -52,12 +59,12 @@ class CMethodTemplateFittingSolve
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
-
+  */
     
 
 private:
 
-    Bool Solve(CDataStore& resultStore,
+    Bool Solve(COperatorResultStore& resultStore,
                const CSpectrum& spc,
                const CTemplate& tpl,
                const TFloat64Range& lambdaRange,
@@ -69,9 +76,10 @@ private:
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
-    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
+    ChisquareArray BuildChisquareArray(const COperatorResultStore& store, const std::string & scopeStr) const;
 
-    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const CDataStore& store, const std::string & scopeStr,
+    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const COperatorResultStore& store,
+                                                                const std::string & scopeStr,
                                                                 const TCandidateZbyRank & ranked_zCandidates,
                                                                 const CSpectrum& spc,
                                                                 const CTemplateCatalog& tplCatalog,
@@ -82,7 +90,7 @@ private:
                                                                 std::string opt_extinction
                                                                 );
 
-    void StoreExtremaResults(CDataStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
+    void StoreExtremaResults(COperatorResultStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
     COperatorTemplateFitting m_templateFittingOperator;
 

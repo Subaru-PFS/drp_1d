@@ -70,38 +70,38 @@ void CDataStore::SetProcessingID( const std::string& valStr )
 
 void  CDataStore::SaveRedshiftResult( const boost::filesystem::path& dir )
 {
-    m_ResultStore.SaveRedshiftResult( *this, dir );
+  //    m_ResultStore.SaveRedshiftResult( *this, dir );
 }
 
 void  CDataStore::SaveStellarResult( const boost::filesystem::path& dir )
 {
-    m_ResultStore.SaveStellarResult( *this, dir );
+  // m_ResultStore.SaveStellarResult( *this, dir );
 }
 
 void  CDataStore::SaveQsoResult( const boost::filesystem::path& dir )
 {
-    m_ResultStore.SaveQsoResult( *this, dir );
+  // m_ResultStore.SaveQsoResult( *this, dir );
 }
 
 void  CDataStore::SaveClassificationResult( const boost::filesystem::path& dir )
 {
-    m_ResultStore.SaveClassificationResult( *this, dir );
+  //  m_ResultStore.SaveClassificationResult( *this, dir );
 }
 
 void  CDataStore::SaveCandidatesResult( const boost::filesystem::path& dir )
 {
-    m_ResultStore.SaveCandidatesResult( *this, dir );
+  //   m_ResultStore.SaveCandidatesResult( *this, dir );
 }
 
 
 void CDataStore::SaveReliabilityResult( const boost::filesystem::path& dir )
 {
-	m_ResultStore.SaveReliabilityResult( *this, dir );
+  //	m_ResultStore.SaveReliabilityResult( *this, dir );
 }
 
 void  CDataStore::SaveAllResults( const boost::filesystem::path& dir, const std::string opt ) const
 {
-    m_ResultStore.SaveAllResults( *this, dir, opt );
+  // m_ResultStore.SaveAllResults( *this, dir, opt );
 }
 
 void  CDataStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
@@ -116,7 +116,7 @@ void CDataStore::StoreScopedGlobalResult( const std::string& name, std::shared_p
 
 void CDataStore::DeleteScopedGlobalResult( const std::string& name )
 {
-    m_ResultStore.DeleteGlobalResult(GetCurrentScopeName(), name);
+  //    m_ResultStore.DeleteGlobalResult(GetCurrentScopeName(), name);
     
 }
 void CDataStore::ChangeScopedGlobalResult( const std::string& oldkey, const std::string& newkey )

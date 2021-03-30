@@ -2,11 +2,14 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-using namespace NSEpic;
+
 
 namespace bpt = boost::property_tree;
 
-CParameterStore::CParameterStore()
+namespace NSEpic
+{
+CParameterStore::CParameterStore(const TScopeStack& stack):
+  CScopeStore(stack)
 {
 
 }
@@ -297,4 +300,53 @@ void CParameterStore::FromString(const std::string& json)
 {
     std::istringstream jsonstream(json);
     bpt::json_parser::read_json(jsonstream, m_PropertyTree);
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, Float64& v, Float64 defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, Int64& v, Int64 defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, Bool& v, Bool defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+void CParameterStore::GetScopedParam( const std::string& name, std::string& v, std::string defaultValue ) const
+{
+    return Get( GetScopedName( name ), v, defaultValue );
+}
+
+
+template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& name) const
+{
+  TFloat64List fl = GetList<Float64>(name);
+  return TFloat64Range(fl[0],fl[1]);
+}
+
 }

@@ -18,7 +18,7 @@ CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & sco
                                                          const std::shared_ptr<const CExtremaResult> & ExtremaResult,
                                                          const std::string & opt_pdfcombination,
                                                          Float64 evidence ):
-    CSolveResult( ExtremaResult, opt_pdfcombination, evidence),
+    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
     m_scope(scope),
     ExtremaResult(ExtremaResult),
     m_tplName(ExtremaResult->FittedTplName[0]),
