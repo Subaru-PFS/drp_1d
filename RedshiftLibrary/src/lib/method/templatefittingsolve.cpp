@@ -11,6 +11,8 @@
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/statistics/zprior.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
+#include <RedshiftLibrary/operator/templatefittinglog.h>
 
 using namespace NSEpic;
 using namespace std;
@@ -37,6 +39,15 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputC
   const std::string opt_extinction = "no";
   std::string opt_dustFit = inputContext.m_ParameterStore->GetScoped<std::string>("dustfit");
 
+  std::string calibration_dir = inputContext.m_ParameterStore->Get<std::string>("calibrationDir");
+  bool fft_processing = inputContext.m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
+  
+  if(fft_processing)
+    {
+      m_opt_spclogrebin = inputContext.m_ParameterStore->GetScoped<std::string>("enablespclogrebin");
+      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(calibration_dir));
+    }
+  else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
 
 
         // prepare the unused masks
@@ -207,15 +218,9 @@ Bool CMethodTemplateFittingSolve::Solve(COperatorResultStore& resultStore,
 
         // Compute merit function
         //CRef<CTemplateFittingResult>  templateFittingResult = (CTemplateFittingResult*)templatefitting.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute( spc,
-                                                                                                           tpl,
-                                                                                                           lambdaRange,
-                                                                                                           redshifts,
-                                                                                                           overlapThreshold,
-                                                                                                           maskList,
-                                                                                                           opt_interp,
-                                                                                                           enable_extinction,
-                                                                                                           option_dustFitting ) );
+        auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator->Compute( spc, tpl,lambdaRange,redshifts,
+                                                                                                                             overlapThreshold, maskList, opt_interp,
+                                                                                                                             enable_extinction, option_dustFitting ) );
         
         if( !templateFittingResult )
         {
@@ -452,7 +457,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
 
         const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_templateFittingOperator.ComputeSpectrumModel(spc, tpl, 
+        m_templateFittingOperator->ComputeSpectrumModel(spc, tpl, 
                                                         z,
                                                         TplFitResult->FitDustCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],

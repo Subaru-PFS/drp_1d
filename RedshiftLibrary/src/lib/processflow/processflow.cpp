@@ -8,7 +8,6 @@
 
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/method/templatefittingsolve.h>
-#include <RedshiftLibrary/method/templatefittinglogsolve.h>
 #include <RedshiftLibrary/method/linematchingsolve.h>
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
@@ -222,20 +221,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        "qso_zPDF",
                                        redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        }else if(qso_method=="templatefittinglogsolve"){
-            opt_interp="lin";
-            CMethodTemplateFittingLogSolve solve(calibrationDirPath);
-            qsoResult = solve.Compute( ctx.GetDataStore(),
-                                       ctx.GetSpectrum(),
-                                       ctx.GetTemplateCatalog(),
-                                       ctx.GetQSOCategoryList(),
-                                       ctx.GetInputContext().m_lambdaRange,
-                                       qso_redshifts,
-                                       overlapThreshold,
-                                       maskList,
-                                       "qso_zPDF",
-                                       redshiftseparation,
-                                       opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
+        
         }else if(qso_method=="tplcombinationsolve"){
             opt_interp="lin";
             opt_extinction="no";
@@ -312,35 +298,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                          ctx.GetResultStore(),
                          ctx.m_ScopeStack);
 
-        }else if(methodName  == "templatefittinglogsolve" ){
-          Float64 overlapThreshold;
-          ctx.GetParameterStore()->Get( "templatefittinglogsolve.overlapThreshold", overlapThreshold, 1.0);
-          std::string opt_spcComponent;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.spectrum.component", opt_spcComponent, "raw" );
-          std::string opt_interp="unused";
-          std::string opt_extinction;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.extinction", opt_extinction, "no" );
-          std::string opt_dustFit;
-          ctx.GetParameterStore()->GetScopedParam( "templatefittinglogsolve.dustfit", opt_dustFit, "no" );
-
-          // prepare the unused masks
-          std::vector<CMask> maskList;
-          //retrieve the calibration dir path
-          std::string calibrationDirPath;
-          ctx.GetParameterStore()->Get( "calibrationDir", calibrationDirPath );
-          CMethodTemplateFittingLogSolve solve(calibrationDirPath);
-          /* mResult = solve.Compute( ctx.GetDataStore(),
-             ctx.GetSpectrum(),
-             ctx.GetTemplateCatalog(),
-             ctx.GetGalaxyCategoryList(),
-             ctx.GetInputContext().m_lambdaRange,
-             redshifts,
-             overlapThreshold,
-             maskList,
-             galaxy_method_pdf_reldir,
-             redshiftseparation,
-             opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-          */
         }else if(methodName  == "tplcombinationsolve" ){
           Float64 overlapThreshold;
           ctx.GetParameterStore()->Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
