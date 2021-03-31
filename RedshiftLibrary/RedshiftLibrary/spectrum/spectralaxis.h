@@ -38,6 +38,7 @@ public:
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
     CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n, Bool isLogScale  );
     CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) ;
+    CSpectrumSpectralAxis( const Float64* samples, UInt32 n);
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;
 
@@ -68,10 +69,10 @@ public:
     void                SetLogScale();
     Bool                CheckLoglambdaSampling(Float64 logGridStep);
     Bool                IsLogSampled(Float64 logGridstep=NAN);
+    Bool                m_regularSamplingChecked=false;
 private:
 
     UInt32              m_SpectralFlags;
-    Bool                m_regularSamplingChecked=false;
 };
 
 }

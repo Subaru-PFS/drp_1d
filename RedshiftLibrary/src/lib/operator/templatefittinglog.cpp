@@ -37,7 +37,6 @@ using namespace std;
 
 COperatorTemplateFittingLog::COperatorTemplateFittingLog()
 {
-    m_opt_spcrebin = true;
     m_nPaddedSamples = 0;
     inSpc = 0;
     outSpc = 0;
@@ -795,20 +794,22 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     }
     InitFFT(m_nPaddedSamples);
 
-    //std::vector<Float64> z_vect = result->Redshifts;
-    //std::reverse(z_vect.begin(), z_vect.end());
+    std::vector<Float64> z_vect = result->Redshifts;
+    std::reverse(z_vect.begin(), z_vect.end());
     // prepare z array
-    std::vector<Float64> z_vect(nshifts, 0.0);
+    std::vector<Float64> z_vect_verif(nshifts, 0.0);
     for (Int32 t = 0; t < nshifts; t++)
     {
-        z_vect[t] = (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[t + kstart]) /
+        z_vect_verif[t] = (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[t + kstart]) /
                     tplRebinedLambdaGlobal[t + kstart];
         //compare with z_vect
-        /*if(std::abs(z_vect[t] - z_vect_verif[t])>1E-8){
+        if(std::abs(z_vect[t] - z_vect_verif[t])>1E-8){
             throw runtime_error("z_vect and z_vect_verification do not correspond.");
-        }*/
+        }
     }
-
+    //check borders
+    if(std::abs(z_vect.back()-z_vect_verif.back()) >1E-8)
+        throw runtime_error("z_vect and z_vect_verification do not start at the same value.");
     Int32 nISM = ismEbmvCoeffs.size();
     Int32 nIGM = igmMeiksinCoeffs.size();
 
@@ -1047,20 +1048,17 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             for (Int32 t = 0; t < nshifts; t++)
                 intermChi2BufferReversed_array[t] = intermediateChi2[nshifts - 1 - t][kism][kigm];
 
-    Int32 k = 0, klow=0;
-    for (Int32 iz = 0; iz < result->Redshifts.size(); iz++)
+    for (Int32 k = 0; k < result->Redshifts.size(); k++)
     {
-        k = gsl_interp_bsearch(&z_vect.at(0), result->Redshifts[iz], klow, nshifts - 1);
-        klow = k;
-        result->Overlap[iz] = 1.0;
-        result->FitAmplitude[iz] = bestFitAmp[k];
-        result->FitAmplitudeError[iz] = bestFitAmpErr[k];
-        result->FitAmplitudeSigma[iz] = bestFitAmpSigma[k];
-        result->FitDtM[iz] = bestFitDtm[k];
-        result->FitMtM[iz] = bestFitMtm[k];
-        result->FitEbmvCoeff[iz] = bestISMCoeff[k];
-        result->FitMeiksinIdx[iz] = bestIGMIdx[k];
-        result->Status[iz] = nStatus_OK;
+        result->Overlap[k] = 1.0;
+        result->FitAmplitude[k] = bestFitAmp[k];
+        result->FitAmplitudeError[k] = bestFitAmpErr[k];
+        result->FitAmplitudeNegative[k] = bestFitAmpNeg[k];
+        result->FitDtM[k] = bestFitDtm[k];
+        result->FitMtM[k] = bestFitMtm[k];
+        result->FitEbmvCoeff[k] = bestISMCoeff[k];
+        result->FitMeiksinIdx[k] = bestIGMIdx[k];
+        result->Status[k] = nStatus_OK;
     }
 
     Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
@@ -1077,7 +1075,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     for (Int32 kism = 0; kism < nISM; kism++)
         for (Int32 kigm = 0; kigm < nIGMFinal; kigm++)
             for (Int32 t = 0; t < result->Redshifts.size(); t++)
-                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferRebinned_array[t];
+                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferReversed_array[t];
 
     freeFFTPlans();
     return 0;
@@ -1195,23 +1193,16 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
             ilbdamin = k;
             break;
         }
-        /*else{
-            ilbdamin = k; //select the current
-            break;
-        }*/
         z_previous = z;
     }
 
     for (UInt32 k = nTpl - 1; k > 0; k--)
     {
         Float64 z = (spcLambda[nSpc - 1] - tplLambda[k]) / tplLambda[k];
-        if (z>=0 && (std::abs(z - redshiftrange.GetBegin()) < margin)){
+        if (/*z>=0 &&*/ std::abs(z - redshiftrange.GetBegin()) < margin){
             ilbdamax = k;
             break;
         }
-        /*else{
-            break;
-        }*/
     }
 
     if (ilbdamin > ilbdamax)
@@ -1383,11 +1374,5 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                                             // that value for loglambda//
 
     return result;
-}
-
-void COperatorTemplateFittingLog::enableSpcLogRebin(Bool enable)
-{
-    m_opt_spcrebin = enable;
-    Log.LogDetail("  Operator-TemplateFittingLog: Spectrum REBIN-LOG enabled=%d", m_opt_spcrebin);
 }
 

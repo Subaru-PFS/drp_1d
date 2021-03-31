@@ -1,3 +1,6 @@
+#ifndef _REDSHIFT_FORMATTER_
+#define _REDSHIFT_FORMATTER_
+
 #include <sstream>
 
 class Formatter
@@ -28,3 +31,4 @@ private:
     Formatter(const Formatter &);
     Formatter & operator = (Formatter &);
 };
+#endif

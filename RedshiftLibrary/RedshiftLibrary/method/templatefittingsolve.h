@@ -92,14 +92,13 @@ private:
 
     void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
-  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
-  std::string m_opt_spclogrebin;
 
 };
 

@@ -44,8 +44,6 @@ public:
                                               Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
-    void enableSpcLogRebin(Bool enable);
-
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
                                     const Float64 redshiftStep);
@@ -92,9 +90,6 @@ private:
 
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
-
-    bool m_opt_spcrebin;
-
 
     Bool m_enableISM = 1;
     Bool m_enableIGM = 1; 

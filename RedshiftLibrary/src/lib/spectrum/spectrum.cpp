@@ -705,7 +705,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     
     if( m_SpectralAxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount() )
     {
-        Log.LogError("Problem samplecountsize betwees spectral axis and flux axis");
+        Log.LogError("Problem samplecount do not match between spectral axis and flux axis");
         return false;
     }
     
@@ -724,7 +724,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
     TFloat64Range currentRange = logIntersectedLambdaRange;
     if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
-        Log.LogError("Problem spectral axis and target spectral axis are not in same scale\n");
+        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
         return false;
 
     }
@@ -764,7 +764,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         //Default linear interp.
         Int32 k = 0;
         // For each sample in the valid lambda range interval.
-        while( k<m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+        while( k<=m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
         {           
             // For each sample in the target spectrum that are in between two continous source sample
             while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )

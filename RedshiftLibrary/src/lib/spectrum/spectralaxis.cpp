@@ -48,6 +48,12 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32
     m_SpectralFlags( 0 )
 {
 }
+//only used by client
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
+    CSpectrumAxis( samples, n ),
+    m_SpectralFlags( 0 )
+{
+}
 
 /**
  * Constructor, shifts origin along direction an offset distance.
@@ -400,7 +406,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
     for (Int32 t = 1; t < m_Samples.size(); t++)
     {
         Float64 lbda2 =  m_Samples[t];
-        Float64 _logGridStep = lbda2 - lbda1;//no need for log here cause axis is aleady in log
+        Float64 _logGridStep = log(lbda2) - log(lbda1);
 
         Float64 relativeErrAbs = std::abs((_logGridStep - logGridStep) / logGridStep);
         maxAbsRelativeError = max(relativeErrAbs, maxAbsRelativeError);
@@ -424,7 +430,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
     
     if(!IsInLogScale())
         return 0;
-    if(logGridstep == NAN)
+    if(isnan(logGridstep))
         logGridstep = m_Samples[1] - m_Samples[0];
     Bool b = CheckLoglambdaSampling(logGridstep);
     if(!b){

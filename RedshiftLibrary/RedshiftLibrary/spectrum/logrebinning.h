@@ -31,6 +31,7 @@ public:
 
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange,
                                                         UInt32 gridCount);
+    Bool verifyLogRebinningResults(const CSpectrumSpectralAxis& spcAxis, const CSpectrumSpectralAxis& tplAxis);
     TFloat64Range m_zrange;
     Float64 m_logGridStep; 
     TFloat64Range m_lambdaRange_spc, m_lambdaRange_tpl;

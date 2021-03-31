@@ -83,7 +83,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
             m_templateRebined_bf.ApplyDustCoeff(idxEbmv);
     }
 
-    if(opt_extinction == "yes")
+    if(opt_extinction == "yes" && meiksinIdx>-1)
     {
         if (m_templateRebined_bf.MeiksinInitFailed())
         {

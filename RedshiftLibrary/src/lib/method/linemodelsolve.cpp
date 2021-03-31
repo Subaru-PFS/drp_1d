@@ -268,12 +268,13 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
-  PopulateParameters( inputContext->GetParameterStore() );
+  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
+  const CSpectrum& rebinnedSpc=*(inputContext->m_rebinnedSpectrum.get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
+  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
+  PopulateParameters( inputContext->m_ParameterStore );
   bool retSolve = Solve( resultStore,
-                         spc,
+                         spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
                          restraycatalog,
@@ -805,6 +806,7 @@ Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64&
 
 Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
+                             const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
                              const CRayCatalog& restraycatalog,
@@ -889,6 +891,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //FIRST PASS
     //**************************************************
     Int32 retFirstPass = m_linemodel.ComputeFirstPass(spc,
+                                                    rebinnedSpc,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
@@ -979,6 +982,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         //FIRST PASS B
         //**************************************************
         Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(spc,
+                                                            rebinnedSpc,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
@@ -1045,6 +1049,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     if(!skipSecondPass)
     {
         Int32 retSecondPass = m_linemodel.ComputeSecondPass(spc,
+                                                          rebinnedSpc,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,

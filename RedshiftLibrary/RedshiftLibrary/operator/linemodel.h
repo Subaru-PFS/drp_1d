@@ -52,6 +52,7 @@ public:
                                 Int32 candidateIdx = -1);
 
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
+                           const CSpectrum& rebinnedSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
@@ -79,6 +80,7 @@ public:
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
+                            const CSpectrum &rebinnedSpectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,

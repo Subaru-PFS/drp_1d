@@ -16,17 +16,22 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_RayCatalog(std::move(rayCatalog)),
   m_ParameterStore(std::move(paramStore))
 {
-    m_Spectrum.InitSpectrum();
-    std::string qsomethod, lmContinuumMethod, lmfft;
-    m_ParameterStore->Get( "qsosolve.method", qsomethod, "templatefittingsolve" );  //check if it has changed
-
-    bool fft_processing = m_ParameterStore->Get<std::string>("templatefittingsolve.fftprocessing") == "yes";
+    m_Spectrum->InitSpectrum(*m_ParameterStore);
     
-    m_ParameterStore->Get("linemodelsolve.linemodel.continuumfit.method", lmContinuumMethod, "templatefittinglog");//this hasnt changed yet
-    //NEW
-    m_ParameterStore->Get("linemodelsolve.linemodel.fft", lmfft, "no");//new param to decide if we should use fft for linemodel 
-    if( fft_processing|| qsomethod.compare("templatefittinglogsolve") || 
-        lmContinuumMethod.compare("templatefittinglogsolve") ||lmfft.compare("yes"))
+    /*//todo use ::has prior to reading
+    bool fft_processing_qso = fm_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
+    bool fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
+    bool fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
+    bool fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
+    if( fft_processing || fft_processing_qso || fft_processinglmContinuum ||fft_processinglm)
+        RebinInputs();
+    */
+    std::string fft_processing, fft_processing_qso, fft_processinglmContinuum, fft_processinglm;
+    m_ParameterStore->Get("qsosolve.templatefittingsolve.fftprocessing", fft_processing_qso, "yes" );  //check if it has changed
+    m_ParameterStore->Get("galaxy.templatefittingsolve.fftprocessing", fft_processing, "no");
+    m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing", fft_processinglmContinuum, "yes");//this hasnt changed yet
+    m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.fftprocessing", fft_processinglm, "no");//new param to decide if we should use fft for linemodel 
+    if( fft_processing=="yes" || fft_processing_qso=="yes" || fft_processinglmContinuum=="yes" ||fft_processinglm=="yes")
         RebinInputs();
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
@@ -102,12 +107,15 @@ void CInputContext::RebinInputs()
             if (!overlapFull)
             {
                 Log.LogError("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
-                throw runtime_error("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
+                throw std::runtime_error("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
             }
-            m_TemplateCatalog->Add(logReb.LoglambdaRebinTemplate(tpl), "log");
+            std::shared_ptr<CTemplate> rebinnedTpl = logReb.LoglambdaRebinTemplate(tpl);
+            m_TemplateCatalog->Add(rebinnedTpl, "log");
+            logReb.verifyLogRebinningResults(m_rebinnedSpectrum->GetSpectralAxis(), rebinnedTpl->GetSpectralAxis());
         } 
     }  
     m_TemplateCatalog->SetScale("log"); 
+    m_LogRebinningCompleted = 1;
 }
 
 

@@ -65,15 +65,7 @@ private:
     TFloat64Range m_redshiftRange;
     TFloat64List  m_redshifts;
     std::string   m_redshiftSampling;
-
-    std::shared_ptr<const CSpectrum>           m_rebinnedSpectrum;
 };
-inline
-std::shared_ptr<const CSpectrum> CProcessFlowContext::GetRebinnedSpectrum() const
-{
-    return m_rebinnedSpectrum;
-}
-
 
 }
 

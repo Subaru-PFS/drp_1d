@@ -35,9 +35,11 @@ class CInputContext
   TFloat64Range   m_lambdaRange;
   TFloat64Range   m_zrange;
   Float64         m_logGridStep;
+  Bool            m_LogRebinningCompleted = 0;
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;
+  std::shared_ptr<const CSpectrum> m_rebinnedSpectrum;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::shared_ptr<CRayCatalog> m_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;

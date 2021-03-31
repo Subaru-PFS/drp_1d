@@ -36,18 +36,10 @@ public:
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
                                           TScopeStack &scopeCDataStore);
-  /*                                               const CSpectrum& spc,
-                                                   const CTemplateCatalog& tplCatalog,
-                                                   const TStringList& tplCategoryList,
-                                                   const CRayCatalog& restraycatalog,
-                                                   const TFloat64Range& lambdaRange,
-                                                   const TFloat64List& redshifts,
-                                                   const string outputPdfRelDir,
-                                                   const Float64 radius);
-  */
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
+               const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
                const CRayCatalog& restraycatalog,

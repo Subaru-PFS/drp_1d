@@ -15,7 +15,7 @@ template <typename T> class CIndexing
 
   public:
 
-    static Int32 getIndex( std::vector<T>& list, T z)
+    static Int32 getIndex(std::vector<T>& list, T z)
     {
         typename std::vector<T>::iterator itr = std::find(list.begin(),list.end(), z); 
         if (itr == list.end())
@@ -28,7 +28,19 @@ template <typename T> class CIndexing
         }
         return (itr - list.begin()); 
     }
-
+    static Int32 getIndexwithEpsilon(const std::vector<T>& list, T z)
+    {
+        typename std::vector<T>::const_iterator itr = std::find(list.begin(),list.end(), z); 
+        if (itr == list.end())
+        {
+            size_t size = snprintf( nullptr, 0, "Could not find index for %f", z) + 1;
+            std::unique_ptr<char[]> buf( new char[ size ] );                                                        
+            snprintf( buf.get(), size, "Could not find index for %f", z);                          
+            std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
+            throw std::runtime_error(_msg.c_str());
+        }
+        return (itr - list.begin()); 
+    }
     //getIndex in orded_values corresponding to value:
     //value[index] can be equal or smaller than Z
     static bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) 
@@ -44,6 +56,23 @@ template <typename T> class CIndexing
       i_min = it_min - ordered_values.begin();
       return true;
     }
+    //the closet at left or right, at epsilon
+    static Int32 getCloserIndex(const std::vector<T>& ordered_values, const T& value) 
+    {
+      Float64 epsilon = 1E-8;
+      if (value - ordered_values.front() < epsilon || value - ordered_values.back()> epsilon)
+        {
+          Log.LogError("%.5f does not belong to [%.5f,%.5f]",value,ordered_values.front(),ordered_values.back());
+          return false;
+        }
+      typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
+
+      if(std::abs(*it - ordered_values.front()<epsilon)) it = it -1;
+
+      Int32 i_min = it - ordered_values.begin();
+      return i_min;
+    }
+
 };
 typedef CIndexing<Int32> TInt32Index;
 typedef CIndexing<Float64> TFloat64Index;

@@ -60,6 +60,7 @@ COperatorLineModel::~COperatorLineModel() {}
  * @return 0=no errors, -1=error
  */
 Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
+                                           const CSpectrum& rebinnedSpectrum,//this is temporary
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
@@ -383,7 +384,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto") )
     {
-        PrecomputeContinuumFit(spectrum,
+        Bool b = m_opt_tplfit_method == "templatefittinglog";//this was supposed to change to fftprocessing
+        PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
                                *m_orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
@@ -661,7 +663,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
-
+    Bool currentScale = tplCatalog.m_logscale; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
                 m_opt_tplfit_method.c_str());
@@ -679,7 +681,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
             std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
                 std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
-            templateFittingLogOperator->enableSpcLogRebin(enableLogRebin);
+            tplCatalog.m_logscale = 1;
         } else if (m_opt_tplfit_method == "templatefitting" && m_opt_tplfit_method_secondpass == "templatefitting")
         {
             templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
@@ -864,6 +866,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
     
     m_model->SetFitContinuum_FitStore(tplfitStore);
+    tplCatalog.m_logscale = currentScale; 
 
     boost::chrono::thread_clock::time_point stop_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -1060,6 +1063,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
 }
 
 Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
+                                            const CSpectrum &rebinnedSpectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
@@ -1119,7 +1123,8 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
-                PrecomputeContinuumFit(spectrum,
+                Bool b = m_opt_tplfit_method == "templatefittinglog";//to change name
+                PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
                                 *m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
