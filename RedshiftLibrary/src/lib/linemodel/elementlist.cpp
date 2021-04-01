@@ -202,7 +202,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     if (opt_enable_LSF=="yes") ActivateLSF();
 
-    //TODO [ml] m_dTransposeDLambdaRange, m_forceDisableLyaFitting must be initialized in contructor
 }
 
 /**
