@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/processflow/result.h>
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/statistics/pdfcandidatesz.h>
+#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 
 #include <vector>
 #include <memory>
@@ -13,7 +14,7 @@ namespace NSEpic
 class CModelSpectrumResult;
 class CModelContinuumFittingResult;
 
-class CExtremaResult : public COperatorResult
+class CExtremaResult : public CPdfCandidateszResult
 {
 
 public:
@@ -22,15 +23,13 @@ public:
   CExtremaResult(Int32 n);
 
   virtual ~CExtremaResult() = default;
+  //rule of 5 defaults
+  CExtremaResult(const CExtremaResult & ) = default;
+  CExtremaResult(CExtremaResult && ) = default;
+  CExtremaResult & operator=(const CExtremaResult & ) = default;   
+  CExtremaResult & operator=(CExtremaResult && ) = default;   
 
   virtual void Resize(Int32 size);
-  Int32 size() const;
-
-  TStringList GetIDs() const;
-  TFloat64List GetRedshifts() const;
-  TFloat64List GetDeltaZs() const;
-  TFloat64List GetMerits() const;
-  TFloat64List GetValSumProbas() const;
 
   void SaveLine(std::ostream& stream ) const {};
   void Save(std::ostream& stream ) const {};
@@ -45,15 +44,6 @@ public:
   virtual void getData(const std::string& name, Float64& v) const;
   virtual void getData(const std::string& name, std::string& v) const;
   virtual void getData(const std::string& name, double **data, int *size) const;
-
-  std::string ID(Int32 i) const;
-  Float64 Redshift(Int32 i) const;
-  Float64 ValProba(Int32 i) const;
-  Float64 ValSumProba(Int32 i) const;
-  Float64 DeltaZ(Int32 i) const;
-
-  // Extrema results from PDF
-  TCandidateZbyRank Candidates;
 
   //template continuum
   TStringList       FittedTplName;    //Name of the best template fitted for continuum
@@ -74,18 +64,6 @@ protected:
   void SaveJSONbody(std::ostream& stream) const;
 
 };
-
-inline Int32 CExtremaResult::size() const
-{
-    return Candidates.size();
-}
-
-// for compatibility
-inline std::string CExtremaResult::ID(Int32 i) const {return Candidates[i].first;}
-inline Float64 CExtremaResult::Redshift(Int32 i) const { return Candidates[i].second.Redshift;}
-inline Float64 CExtremaResult::ValProba(Int32 i) const { return Candidates[i].second.ValProba;}
-inline Float64 CExtremaResult::ValSumProba(Int32 i) const { return Candidates[i].second.ValSumProba;}
-inline Float64 CExtremaResult::DeltaZ(Int32 i) const { return Candidates[i].second.Deltaz;}
 
 }
 

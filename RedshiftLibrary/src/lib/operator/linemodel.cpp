@@ -923,7 +923,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
 {
     m_firstpass_extremaResult = std::make_shared<CLineModelExtremaResult>(candidatesz.size());
 
-    m_firstpass_extremaResult->Candidates = candidatesz;
+    m_firstpass_extremaResult->m_ranked_candidates = candidatesz;
 
     // extend z around the extrema
     for (Int32 j = 0; j < candidatesz.size(); j++)
@@ -940,7 +940,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
     }
 
     //now preparing the candidates extrema results
-    for (Int32 i = 0; i < m_firstpass_extremaResult->Candidates.size(); i++)
+    for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         // find the index in the zaxis results
         Int32 idx = m_result->getRedshiftIndex(candidatesz[i].second.Redshift);
@@ -998,7 +998,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
         }
 
         //append the candidate to m_firstpass_extremaResult
-        m_firstpass_extremaResult->Candidates[startIdx + keb] = firstpass_results_b->Candidates[keb];
+        m_firstpass_extremaResult->m_ranked_candidates[startIdx + keb] = firstpass_results_b->m_ranked_candidates[keb];
             
         // extend z around the extrema
         m_firstpass_extremaResult->ExtendedRedshifts[startIdx + keb] = SpanRedshiftWindow(z_fpb);
@@ -1457,7 +1457,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
             savedModels++;
         }
         
-        ExtremaResult->Candidates = zCandidates;
+        ExtremaResult->m_ranked_candidates = zCandidates;
 
         ExtremaResult->Elv[i] = m_model->GetVelocityEmission();
         ExtremaResult->Alv[i] = m_model->GetVelocityAbsorption();
@@ -1629,7 +1629,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     }
 
     //std::cout << "Second Pass" << std::endl;
-    m_secondpass_parameters_extremaResult.Candidates = m_firstpass_extremaResult->Candidates;
+    m_secondpass_parameters_extremaResult.m_ranked_candidates = m_firstpass_extremaResult->m_ranked_candidates;
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         Log.LogInfo("");
