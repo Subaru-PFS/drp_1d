@@ -7,6 +7,7 @@
 
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/continuum/indexes.h>
+#include <cmath>
 
 namespace NSEpic
 {
@@ -17,16 +18,16 @@ struct CContinuumModelSolution
 
     //template continuum
     std::string         tplName;
-    Float64             tplAmplitude;
-    Float64             tplAmplitudeError;
-    Float64             tplDustCoeff;
-    Int32               tplMeiksinIdx;
-    Float64             tplRedshift;
+    Float64             tplAmplitude = NAN;
+    Float64             tplAmplitudeError = NAN;
+    Float64             tplDustCoeff = NAN;
+    Int32               tplMeiksinIdx = -1;
+    Float64             tplRedshift = NAN;
 
-    Float64             tplMerit;
-    Float64             tplDtm;
-    Float64             tplMtm;
-    Float64             tplLogPrior;
+    Float64             tplMerit = NAN;
+    Float64             tplDtm = NAN;
+    Float64             tplMtm = NAN;
+    Float64             tplLogPrior = NAN;
 
     //polynom
     TFloat64List    pCoeffs;

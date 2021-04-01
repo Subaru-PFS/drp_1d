@@ -126,6 +126,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
 
     if( m_ContinuumComponent == "nocontinuum" )
     {
+        m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
         //the continuum is set to zero and the observed spectrum is the spectrum without continuum
         m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
         m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
@@ -133,6 +134,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }
     if( m_ContinuumComponent == "fromspectrum" )
     {
+        m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
         //the continuum is set to the spectrum continuum and the observed spectrum is the raw spectrum
         m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
         m_SpcFluxAxis = spectrum.GetRawFluxAxis();

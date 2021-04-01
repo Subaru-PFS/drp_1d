@@ -962,12 +962,6 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->FittedTplLogPrior[i] = m_result->ContinuumModelSolutions[idx].tplLogPrior;
         m_firstpass_extremaResult->FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
 
-        if(m_result->ContinuumModelSolutions[idx].tplName=="")
-        {
-            Log.LogError(" Saving first pass extremum w. ContinuumModelSolutions tplname=%s", m_result->ContinuumModelSolutions[idx].tplName.c_str());
-            Log.LogError(" Saving first pass extremum w. result idx=%d, w. m_result->Redshifts[idx]=%f", idx, m_result->Redshifts[idx]);
-        }
-
         //... TODO: more first pass results can be saved here if needed
     }
 
