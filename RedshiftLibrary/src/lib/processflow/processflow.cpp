@@ -157,57 +157,19 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Quasar method
     //    std::shared_ptr<CSolveResult> qsoResult;
-    std::string enableQsoFitting;
-    ctx.GetParameterStore()->Get( "enableqsosolve", enableQsoFitting, "no" );
+    std::string enableQsoFitting = ctx.GetParameterStore()->Get<std::string>( "enableqsosolve");
     Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
-    /*
+
     if(enableQsoFitting=="yes"){
-        CDataStore::CAutoScope resultScope( ctx.m_ScopeStack, "qsosolve" );
-
-        std::string qso_method;
-        ctx.GetParameterStore()->Get( "qsosolve.method", qso_method, "templatefittingsolve" );
-        Float64 overlapThreshold;
-        ctx.GetParameterStore()->Get( "qsosolve.overlapThreshold", overlapThreshold, 1.0);
-        std::string opt_spcComponent;
-        ctx.GetParameterStore()->GetScopedParam( "qsosolve.spectrum.component", opt_spcComponent, "raw" );
-        std::string opt_interp;
-        ctx.GetParameterStore()->GetScopedParam( "qsosolve.interpolation", opt_interp, "precomputedfinegrid" );
-        std::string opt_extinction;
-        ctx.GetParameterStore()->GetScopedParam( "qsosolve.extinction", opt_extinction, "yes" );
-        std::string opt_dustFit;
-        ctx.GetParameterStore()->GetScopedParam( "qsosolve.dustfit", opt_dustFit, "no" );
-
-        // prepare the unused masks
-        std::vector<CMask> maskList;
-        //define the redshift search grid
-        TFloat64Range qsoRedshiftRange=TFloat64Range(0.0, 6.0);
-        Float64 qsoRedshiftStep = 5e-4;
-        Log.LogInfo("QSO fitting redshift range = [%.5f, %.5f], step=%.6f", qsoRedshiftRange.GetBegin(), qsoRedshiftRange.GetEnd(), qsoRedshiftStep);
-        TFloat64List qso_redshifts;
-        if(redshiftSampling=="log")
-        {
-            qso_redshifts = qsoRedshiftRange.SpreadOverLog( qsoRedshiftStep );
-        }else{
-            qso_redshifts = qsoRedshiftRange.SpreadOver( qsoRedshiftStep );
-        }
-        DebugAssert( qso_redshifts.size() > 0 );
-
         Log.LogInfo("Processing QSO fitting");
+        std::string qso_method = ctx.GetParameterStore()->Get<std::string>( "qso.method");
+        boost::algorithm::to_lower(qso_method);
         if(qso_method=="templatefittingsolve"){
-            CMethodTemplateFittingSolve solve;
-            qsoResult = solve.Compute( ctx.GetDataStore(),
-                                       ctx.GetSpectrum(),
-                                       ctx.GetTemplateCatalog(),
-                                       ctx.GetQSOCategoryList(),
-                                       ctx.GetInputContext().m_lambdaRange,
-                                       qso_redshifts,
-                                       overlapThreshold,
-                                       maskList,
-                                       "qso_zPDF",
-                                       redshiftseparation,
-                                       opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        
-        }else if(qso_method=="tplcombinationsolve"){
+          CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"qso");
+          solve.Compute( ctx.GetInputContext(),
+                         ctx.GetResultStore(),
+                         ctx.m_ScopeStack);
+        }/*else if(qso_method=="tplcombinationsolve"){
             opt_interp="lin";
             opt_extinction="no";
             opt_dustFit="no";
@@ -223,32 +185,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                                        "qso_zPDF",
                                        redshiftseparation,
                                        opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-        }else if(qso_method=="linemodel"){
+                                       }*/
+        else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
-            CLineModelSolve Solve(calibrationDirPath);
-            qsoResult = Solve.Compute( ctx.GetDataStore(),
-                                       ctx.GetSpectrum(),
-                                       ctx.GetTemplateCatalog(),
-                                       ctx.GetQSOCategoryList(),
-                                       ctx.GetRayCatalog(),
-                                       ctx.GetInputContext().m_lambdaRange,
-                                       qso_redshifts,
-                                       "qso_zPDF",
-                                       redshiftseparation);
+            CLineModelSolve Solve(ctx.m_ScopeStack,"qso",calibrationDirPath);
+            Solve.Compute( ctx.GetInputContext(),
+                           ctx.GetResultStore(),
+                           ctx.m_ScopeStack);
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
-
-        //finally save the qso fitting results
-        if( qsoResult ) {
-            Log.LogInfo("Saving qso fitting results");
-            ctx.GetDataStore().StoreScopedGlobalResult( "qsoresult", qsoResult );
-        }else{
-            Log.LogError( "Unable to store qso result.");
         }
-        //qsoResult->preSave(ctx.GetDataStore());
-    }
-*/
+
     // Galaxy method
 
 
