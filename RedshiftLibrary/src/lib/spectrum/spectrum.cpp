@@ -42,6 +42,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
+    alreadyRemoved(other.alreadyRemoved),
     m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumNoiseAxis    &otherRawError = other.m_RawFluxAxis.GetError(),
@@ -60,6 +61,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
 
     if (other.alreadyRemoved){
         other.m_ContinuumFluxAxis.MaskAxis(mask, m_ContinuumFluxAxis);
+        other.m_WithoutContinuumFluxAxis.MaskAxis(mask, m_WithoutContinuumFluxAxis);
 
         if( !otherContinuumError.isEmpty() )
             otherContinuumError.MaskAxis(mask, ContinuumError);
