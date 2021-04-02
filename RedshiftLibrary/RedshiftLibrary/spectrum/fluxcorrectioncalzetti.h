@@ -27,17 +27,18 @@ public:
 
     Float64 GetLambdaMin() const;
     Float64 GetLambdaMax() const;
-    Int32 GetNPrecomputedDustCoeffs() const;
+    Int32 GetNPrecomputedEbmvCoeffs() const;
 
     Float64 GetEbmvValue(Int32 k) const;
 
-    Float64 getDustCoeff(Int32 kDust, Float64 restLambda ) const;
+    Float64 GetDustCoeff(Int32 kDust, Float64 restLambda ) const;
+    Int32 GetEbmvIndex(Float64 value) const;
 
     std::vector<Float64> m_dataCalzetti;
 
-    Int32 m_nDustCoeff = 0;
-    Float64 m_dustCoeffStep;
-    Float64 m_dustCoeffStart;
+    Int32 m_nEbmvCoeff = 0;
+    Float64 m_EbmvCoeffStep;
+    Float64 m_EbmvCoeffStart;
     std::vector<Float64> m_dataDustCoeff;
     bool calzettiInitFailed = false;
 

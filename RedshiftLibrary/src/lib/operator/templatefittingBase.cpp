@@ -17,7 +17,7 @@ COperatorTemplateFittingBase::~COperatorTemplateFittingBase()
 Int32   COperatorTemplateFittingBase::ComputeSpectrumModel(const CSpectrum& spectrum,
                                            const CTemplate& tpl,
                                            Float64 redshift,
-                                           Float64 DustCoeff,
+                                           Float64 EbmvCoeff,
                                            Int32 meiksinIdx,
                                            Float64 amplitude,
                                            std::string opt_interp,
@@ -50,30 +50,22 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel(const CSpectrum& spec
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
-    if ((DustCoeff>0.) || (meiksinIdx>0)){
+    if ((EbmvCoeff>0.) || (meiksinIdx>-1)){
         m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }
 
-    if (DustCoeff>0.)
+    if (EbmvCoeff>0.)
     {
         if (m_templateRebined_bf.CalzettiInitFailed())
         {
             Log.LogError("  Operator-TemplateFitting: asked model with Dust extinction with no calzetti calib. file loaded in template" );
             return -1;
         }
-        Int32 idxDust = -1;
-        for(Int32 kDust=0; m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs(); kDust++)
-        {
-            Float64 kDustCoeff= m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
-            if(DustCoeff==kDustCoeff)
-            {
-                idxDust = kDust;
-                break;
-            }
-        }
+        Int32 idxEbmv = -1;
+        idxEbmv = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff); 
 
-        if (idxDust!=-1)
-            m_templateRebined_bf.ApplyDustCoeff(idxDust);
+        if (idxEbmv!=-1)
+            m_templateRebined_bf.ApplyDustCoeff(idxEbmv);
     }
 
     if(opt_extinction == "yes")

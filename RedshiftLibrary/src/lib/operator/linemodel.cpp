@@ -303,15 +303,15 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
     m_model->m_opt_secondpass_fittingmethod = opt_fittingmethod;
 
-    Int32 opt_tplfit_integer_chi2_dustfit = -1;
+    Int32 opt_tplfit_integer_chi2_ebmv = -1;
     if(m_opt_tplfit_dustFit)
     {
-        opt_tplfit_integer_chi2_dustfit=-10;
+        opt_tplfit_integer_chi2_ebmv=-10;
     }
     //should be replaced with option passed in param.json?
     Int32 observedFrame = 0;
     //passing the ignorelinesSupport option to the secondpass; //before it was hardcoded to 0
-    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
+    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_ebmv, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
 
     m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
     m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
@@ -717,13 +717,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     duration_tplfitmaskprep_seconds);
     }
 
-    Int32 opt_tplfit_integer_chi2_dustfit = -1;
+    Int32 opt_tplfit_integer_chi2_ebmv = -1;
     if(m_opt_tplfit_dustFit)
     {
-        opt_tplfit_integer_chi2_dustfit=-10;
+        opt_tplfit_integer_chi2_ebmv=-10;
     }
 
-    Float64 meiksinIdx = -1, dustCoeff = -1;
+    Float64 meiksinIdx = -1, EbmvCoeff = -1;
     Bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
@@ -735,8 +735,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
             keepismigm = true;//telling that we want to keep the ism and igm indexes
             meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
-            dustCoeff =  m_firstpass_extremaResult->FittedTplDustCoeff[candidateIdx];
-            opt_tplfit_integer_chi2_dustfit = Int32(dustCoeff*10);
+            EbmvCoeff =  m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
+            //access any template and retrieve the ismcorrection object
+            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(tplCategoryList[0], 0).m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+
         }
     }          
 
@@ -781,10 +783,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                             maskList,
                             opt_interp,
                             m_opt_tplfit_extinction,
-                            opt_tplfit_integer_chi2_dustfit,
+                            opt_tplfit_integer_chi2_ebmv,
                             zePriorData,
                             keepismigm,
-                            dustCoeff,
+                            EbmvCoeff,
                             meiksinIdx));
 
             if (!templatefittingResult)
@@ -816,7 +818,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     chisquareResultsAllTpl[j]);
 
             bool retAdd = tplfitStore->Add(chisquareResultsTplName[j],
-                             chisquareResult->FitDustCoeff[i],
+                             chisquareResult->FitEbmvCoeff[i],
                              chisquareResult->FitMeiksinIdx[i],
                              redshift,
                              chisquareResult->ChiSquare[i],
@@ -953,7 +955,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
         m_firstpass_extremaResult->FittedTplAmplitudeError[i] = m_result->ContinuumModelSolutions[idx].tplAmplitudeError;
         m_firstpass_extremaResult->FittedTplMerit[i] = m_result->ContinuumModelSolutions[idx].tplMerit;
-        m_firstpass_extremaResult->FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
+        m_firstpass_extremaResult->FittedTplEbmvCoeff[i] = m_result->ContinuumModelSolutions[idx].tplEbmvCoeff;
         m_firstpass_extremaResult->FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
         m_firstpass_extremaResult->FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
         m_firstpass_extremaResult->FittedTplDtm[i] = m_result->ContinuumModelSolutions[idx].tplDtm;
@@ -1013,7 +1015,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
             m_firstpass_extremaResult->FittedTplAmplitude.push_back(firstpass_results_b->FittedTplAmplitude[keb]);
             m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(firstpass_results_b->FittedTplAmplitudeError[keb]);
             m_firstpass_extremaResult->FittedTplMerit.push_back(firstpass_results_b->FittedTplMerit[keb]);
-            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(firstpass_results_b->FittedTplDustCoeff[keb]);
+            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(firstpass_results_b->FittedTplEbmvCoeff[keb]);
             m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(firstpass_results_b->FittedTplMeiksinIdx[keb]);
             m_firstpass_extremaResult->FittedTplRedshift.push_back(firstpass_results_b->FittedTplRedshift[keb]);
             m_firstpass_extremaResult->FittedTplDtm.push_back(firstpass_results_b->FittedTplDtm[keb]);
@@ -1030,7 +1032,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
             m_firstpass_extremaResult->FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
             m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitudeError);
             m_firstpass_extremaResult->FittedTplMerit.push_back(m_result->ContinuumModelSolutions[idx].tplMerit);
-            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplDustCoeff);
+            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplEbmvCoeff);
             m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(m_result->ContinuumModelSolutions[idx].tplMeiksinIdx);
             m_firstpass_extremaResult->FittedTplRedshift.push_back(m_result->ContinuumModelSolutions[idx].tplRedshift);
             m_firstpass_extremaResult->FittedTplDtm.push_back(m_result->ContinuumModelSolutions[idx].tplDtm);
@@ -1141,7 +1143,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult->FittedTplAmplitude[i];
             m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i] = m_firstpass_extremaResult->FittedTplAmplitudeError[i];
             m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult->FittedTplMerit[i];
-            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult->FittedTplDustCoeff[i];
+            m_secondpass_parameters_extremaResult.FittedTplEbmvCoeff[i] = m_firstpass_extremaResult->FittedTplEbmvCoeff[i];
             m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult->FittedTplMeiksinIdx[i];
             m_secondpass_parameters_extremaResult.FittedTplDtm[i] = m_firstpass_extremaResult->FittedTplDtm[i];
             m_secondpass_parameters_extremaResult.FittedTplMtm[i] = m_firstpass_extremaResult->FittedTplMtm[i];
@@ -1263,7 +1265,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
                                            m_result->ContinuumModelSolutions[idx].tplAmplitude,
                                            m_result->ContinuumModelSolutions[idx].tplAmplitudeError,
                                            m_result->ContinuumModelSolutions[idx].tplMerit,   
-                                           m_result->ContinuumModelSolutions[idx].tplDustCoeff,
+                                           m_result->ContinuumModelSolutions[idx].tplEbmvCoeff,
                                            m_result->ContinuumModelSolutions[idx].tplMeiksinIdx,
                                            m_result->ContinuumModelSolutions[idx].tplRedshift,
                                            m_result->ContinuumModelSolutions[idx].tplDtm,
@@ -1420,7 +1422,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
                                 m_model->getFitContinuum_tplMerit(),
                                 m_model->getFitContinuum_tplAmplitude(),
                                 m_model->getFitContinuum_tplAmplitudeError(),
-                                m_model->getFitContinuum_tplIsmDustCoeff(),
+                                m_model->getFitContinuum_tplIsmEbmvCoeff(),
                                 m_model->getFitContinuum_tplIgmMeiksinIdx(),
                                 m_model->getFitContinuum_snr());
                 ExtremaResult->m_savedModelContinuumFittingResults[i] = resultfitcontinuummodel;
@@ -1545,7 +1547,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
         ExtremaResult->FittedTplAmplitude[i] = m_model->getFitContinuum_tplAmplitude();
         ExtremaResult->FittedTplAmplitudeError[i] = m_model->getFitContinuum_tplAmplitudeError();
         ExtremaResult->FittedTplMerit[i] = m_model->getFitContinuum_tplMerit();
-        ExtremaResult->FittedTplDustCoeff[i] = m_model->getFitContinuum_tplIsmDustCoeff();
+        ExtremaResult->FittedTplEbmvCoeff[i] = m_model->getFitContinuum_tplIsmEbmvCoeff();
         ExtremaResult->FittedTplMeiksinIdx[i] = m_model->getFitContinuum_tplIgmMeiksinIdx();
 
         CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
@@ -1647,7 +1649,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                                 m_firstpass_extremaResult->FittedTplAmplitude[i],
                                                 m_firstpass_extremaResult->FittedTplAmplitudeError[i],
                                                 m_firstpass_extremaResult->FittedTplMerit[i],
-                                                m_firstpass_extremaResult->FittedTplDustCoeff[i],
+                                                m_firstpass_extremaResult->FittedTplEbmvCoeff[i],
                                                 m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
                                                 m_firstpass_extremaResult->FittedTplRedshift[i],
                                                 m_firstpass_extremaResult->FittedTplDtm[i],
@@ -2046,7 +2048,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                                                 extremaResult.FittedTplAmplitude[i],
                                                 extremaResult.FittedTplAmplitudeError[i],
                                                 extremaResult.FittedTplMerit[i],
-                                                extremaResult.FittedTplDustCoeff[i],
+                                                extremaResult.FittedTplEbmvCoeff[i],
                                                 extremaResult.FittedTplMeiksinIdx[i],
                                                 extremaResult.FittedTplRedshift[i],
                                                 extremaResult.FittedTplDtm[i],

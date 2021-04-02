@@ -26,7 +26,6 @@ public:
     virtual void Save(std::ostream& stream) const = 0;
     virtual void SaveLine(std::ostream& stream ) const = 0;
     virtual void SaveJSON(std::ostream& stream) const;
-    //virtual void Load( std::istream& stream ) = 0;
 
     void SaveFloat64(std::ostream& stream,Float64 data) const;
     void SaveTFloat64List(std::ostream& stream,std::string name,TFloat64List data) const;

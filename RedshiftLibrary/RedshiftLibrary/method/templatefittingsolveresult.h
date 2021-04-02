@@ -70,7 +70,7 @@ private:
   std::string m_tplName = "-1";
   Float64 m_amplitude = 0.0;
   Float64 m_amplitudeError = -1.0;
-  Float64 m_dustCoeff = -1.0;
+  Float64 m_EbmvCoeff = -1.0;
   Int32   m_meiksinIdx = -1.0;
 
   //Not sure it is necessary here
@@ -92,7 +92,7 @@ const Float64 CTemplateFittingSolveResult::GetMeiksinIdx(){
 }
 inline
 const Float64 CTemplateFittingSolveResult::GetDustCoeff(){
-  return m_dustCoeff;
+  return m_EbmvCoeff;
 }
 inline
 const Float64 CTemplateFittingSolveResult::GetAmplitudeError(){

@@ -139,7 +139,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
         if(m_kDust > -1)
-            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->getDustCoeff( kDust, m_SpectralAxis[k]); 
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->GetDustCoeff( kDust, m_SpectralAxis[k]); 
         else
             m_computedDustCoeff[k] = 1; 
         

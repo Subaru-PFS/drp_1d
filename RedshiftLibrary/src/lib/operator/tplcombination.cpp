@@ -41,15 +41,6 @@ using namespace NSEpic;
 using namespace std;
 
 
-COperatorTplcombination::COperatorTplcombination()
-{
-}
-
-COperatorTplcombination::~COperatorTplcombination()
-{
-}
-
-
 void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const std::vector<CTemplate>& tplList)
 {
 
@@ -423,12 +414,12 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
     Log.LogDebug("  Operator-tp<lcombination: prepare the results");
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
-    Int32 nDustCoeffs=1;
+    Int32 nEbmvCoeffs=1;
     if(opt_dustFitting)
     {
-        nDustCoeffs = tplList.front().m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nEbmvCoeffs = tplList.front().m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
-    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nDustCoeffs);
+    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nEbmvCoeffs);
     Int32 nIGMCoeffs=1;
     if(opt_extinction)
     {
@@ -436,7 +427,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
     Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
 
-    result->Init(sortedRedshifts.size(), nDustCoeffs, nIGMCoeffs);
+    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());

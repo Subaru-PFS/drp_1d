@@ -26,11 +26,6 @@ COperatorResultStore::COperatorResultStore(const TScopeStack& scope):
 
 }
 
-COperatorResultStore::~COperatorResultStore()
-{
-
-}
-
 void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& path, const std::string& name,
                                         std::shared_ptr<const COperatorResult> result )
 {

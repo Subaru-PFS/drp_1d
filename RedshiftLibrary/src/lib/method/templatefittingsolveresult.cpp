@@ -24,7 +24,7 @@ CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & sco
     m_tplName(ExtremaResult->FittedTplName[0]),
     m_amplitude(ExtremaResult->FittedTplAmplitude[0]),
     m_amplitudeError(ExtremaResult->FittedTplAmplitudeError[0]),
-    m_dustCoeff(ExtremaResult->FittedTplDustCoeff[0]),
+    m_EbmvCoeff(ExtremaResult->FittedTplEbmvCoeff[0]),
     m_meiksinIdx(ExtremaResult->FittedTplMeiksinIdx[0]),
     m_fittingSNR(ExtremaResult->FittedTplSNR[0])
 {}
@@ -54,14 +54,14 @@ void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
 {
 
   
-    stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tdustcoeff\tmeiksinidx"<< std::endl;
+    stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tebmvcoeff\tmeiksinidx"<< std::endl;
 
     stream << m_redshift << "\t"
                 << m_merit << "\t"
                 << m_tplName << "\t"
                 << m_amplitude << "\t"
                 << m_amplitudeError << "\t"
-                << std::setprecision(4) << m_dustCoeff << "\t"
+                << std::setprecision(4) << m_EbmvCoeff << "\t"
                 << m_meiksinIdx << std::endl;
 
     stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
@@ -212,7 +212,7 @@ Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store)
         m_tplName = tmpTplName;
         m_amplitude = tmpAmplitude;
         m_amplitudeError = tmpAmplitudeError;
-        m_dustCoeff = tmpDustCoeff;
+        m_EbmvCoeff = tmpDustCoeff;
         m_meiksinIdx = tmpMeiksinIdx;          
         return true;
     }
@@ -373,7 +373,7 @@ Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64
         m_merit = tmpMerit;
         m_tplName = tmpTplName;
         m_meiksinIdx = tmpMeiksinIdx;
-        m_dustCoeff = tmpDustCoeff;
+        m_EbmvCoeff = tmpDustCoeff;
         m_amplitude = tmpAmplitude;
         m_amplitudeError = tmpAmplitudeError;
     }else{
@@ -389,7 +389,7 @@ void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) c
   else if (name.compare("lfHa") == 0)  v = -1;
   else if (name.compare("snrOII") == 0)  v = -1;
   else if (name.compare("lfOII") == 0)  v = -1;
-  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
+  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 }
 
@@ -407,7 +407,7 @@ void CTemplateFittingSolveResult::getData(const std::string& name, Int32& v) con
 
 void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
+  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
   else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
   else if (name.compare("ContinuumAmplitudeError") == 0) v = m_amplitudeError; 
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);

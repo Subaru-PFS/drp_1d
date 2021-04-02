@@ -10,23 +10,13 @@
 
 using namespace NSEpic;
 
-CTemplateFittingResult::CTemplateFittingResult()
-{
-
-}
-
-CTemplateFittingResult::~CTemplateFittingResult()
-{
-
-}
-
 void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
 {
     ChiSquare.resize( n );
     FitAmplitude.resize( n );
     FitAmplitudeError.resize( n );
     FitAmplitudeNegative.resize( n);
-    FitDustCoeff.resize( n );
+    FitEbmvCoeff.resize( n );
     FitMeiksinIdx.resize( n );
     FitDtM.resize( n );
     FitMtM.resize( n );
@@ -36,12 +26,12 @@ void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     Status.resize( n );
 
     ChiSquareIntermediate.clear();
-    IsmDustCoeffIntermediate.clear();
+    IsmEbmvCoeffIntermediate.clear();
     IgmMeiksinIdxIntermediate.clear();
     for(Int32 k=0; k<n; k++)
     {
         std::vector<TFloat64List> _ChiSquareISMList;
-        std::vector<TFloat64List> _IsmDustCoeffISMList;
+        std::vector<TFloat64List> _IsmEbmvCoeffISMList;
         std::vector<TInt32List> _IgmMeiksinIdxISMList;
         for(Int32 kism=0; kism<nISM; kism++)
         {
@@ -49,15 +39,15 @@ void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
             TFloat64List _chi2IGMList(nIGM, DBL_MAX);
             _ChiSquareISMList.push_back(_chi2IGMList);
 
-            TFloat64List _dustCoeffIGMList(nIGM, -1.0);
-            _IsmDustCoeffISMList.push_back(_dustCoeffIGMList);
+            TFloat64List _EbmvCoeffIGMList(nIGM, -1.0);
+            _IsmEbmvCoeffISMList.push_back(_EbmvCoeffIGMList);
 
             TInt32List _meiksinIdxIGMList(nIGM, -1);
             _IgmMeiksinIdxISMList.push_back(_meiksinIdxIGMList);
 
         }
         ChiSquareIntermediate.push_back(_ChiSquareISMList);
-        IsmDustCoeffIntermediate.push_back(_IsmDustCoeffISMList);
+        IsmEbmvCoeffIntermediate.push_back(_IsmEbmvCoeffISMList);
         IgmMeiksinIdxIntermediate.push_back(_IgmMeiksinIdxISMList);
     }
 }

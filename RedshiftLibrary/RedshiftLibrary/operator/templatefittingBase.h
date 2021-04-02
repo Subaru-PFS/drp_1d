@@ -41,13 +41,13 @@ public:
                                                        Int32 opt_dustFitting,
                                                        CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
                                                        Bool keepigmism = false,
-                                                       Float64 FitDustCoeff=-1,
+                                                       Float64 FitEbmvCoeff=-1,
                                                        Float64 FitMeiksinIdx=-1) = 0;
 
   Int32  ComputeSpectrumModel(const CSpectrum& spectrum,
                               const CTemplate& tpl,
                               Float64 redshift,
-                              Float64 IdxDustCoeff,
+                              Float64 EbmvCoeff,
                               Int32 meiksinIdx,
                               Float64 amplitude,
                               std::string opt_interp,
@@ -67,8 +67,8 @@ protected:
                           Float64 overlapThreshold);// const;
 
   CTemplate       m_templateRebined_bf; //buffer
-    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
-      CMask           m_mskRebined_bf; //buffer
+  CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+  CMask           m_mskRebined_bf; //buffer
 };
 
 

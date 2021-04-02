@@ -443,7 +443,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
         ExtremaResult->FittedTplMerit[i] = ChiSquare;
         ExtremaResult->FittedTplName[i] = tplName;
         ExtremaResult->FittedTplMeiksinIdx[i] = TplFitResult->FitMeiksinIdx[idx];
-        ExtremaResult->FittedTplDustCoeff[i] = TplFitResult->FitDustCoeff[idx];
+        ExtremaResult->FittedTplEbmvCoeff[i] = TplFitResult->FitEbmvCoeff[idx];
         ExtremaResult->FittedTplAmplitude[i] = TplFitResult->FitAmplitude[idx];
         ExtremaResult->FittedTplAmplitudeError[i] = TplFitResult->FitAmplitudeError[idx];
         ExtremaResult->FittedTplDtm[i] = TplFitResult->FitDtM[idx];
@@ -459,7 +459,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
         m_templateFittingOperator->ComputeSpectrumModel(spc, tpl, 
                                                         z,
-                                                        TplFitResult->FitDustCoeff[idx],
+                                                        TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],
                                                         TplFitResult->FitAmplitude[idx],
                                                         opt_interp, opt_extinction, lambdaRange, 
@@ -472,7 +472,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
                                                                         ChiSquare,
                                                                         TplFitResult->FitAmplitude[idx],
                                                                         TplFitResult->FitAmplitudeError[idx],
-                                                                        TplFitResult->FitDustCoeff[idx],
+                                                                        TplFitResult->FitEbmvCoeff[idx],
                                                                         TplFitResult->FitMeiksinIdx[idx],
                                                                         FitSNR );          
     }

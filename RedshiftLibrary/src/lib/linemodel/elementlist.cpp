@@ -837,7 +837,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
   Float64 fitContinuumAmplitude = -1.0;
   Float64 fitContinuumAmplitudeError = -1.0;
   Bool fitContinuumAmplitudeNegative = false;
-  Float64 fitDustCoeff = -1.0;
+  Float64 FitEbmvCoeff = -1.0;
   Int32 fitMeiksinIdx = -1;
   Float64 fitDtM = -1.0;
   Float64 fitMtM = -1.0;
@@ -871,7 +871,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
                              fitContinuumAmplitude,
                              fitContinuumAmplitudeError,
                              fitContinuumAmplitudeNegative,
-                             fitDustCoeff,
+                             FitEbmvCoeff,
                              fitMeiksinIdx,
                              fitDtM,
                              fitMtM,
@@ -911,7 +911,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
     Float64 bestFitAmplitude = -1.0;
     Float64 bestFitAmplitudeError = -1.0;
     Bool bestFitAmplitudeNegative = false;
-    Float64 bestFitDustCoeff = -1.0;
+    Float64 bestFitEbmvCoeff = -1.0;
     Int32 bestFitMeiksinIdx = -1;
     Float64 bestFitRedshift = m_Redshift;
     Float64 bestFitDtM = -1.0;
@@ -930,7 +930,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestFitAmplitude = fitValues.fitAmplitude;
         bestFitAmplitudeError = fitValues.fitAmplitudeError;
         bestFitAmplitudeNegative = fitValues.fitAmplitudeNegative;
-        bestFitDustCoeff = fitValues.ismDustCoeff;
+        bestFitEbmvCoeff = fitValues.ismEbmvCoeff;
         bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
         bestFitDtM = fitValues.fitDtM;
         bestFitMtM = fitValues.fitMtM;
@@ -945,7 +945,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         bestMerit = m_fitContinuum_tplFitMerit;
         bestFitAmplitude = m_fitContinuum_tplFitAmplitude;
         bestFitAmplitudeError = m_fitContinuum_tplFitAmplitudeError;
-        bestFitDustCoeff = m_fitContinuum_tplFitDustCoeff;
+        bestFitEbmvCoeff = m_fitContinuum_tplFitEbmvCoeff;
         bestFitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
         bestFitDtM = m_fitContinuum_tplFitDtM;
         bestFitMtM = m_fitContinuum_tplFitMtM;
@@ -973,7 +973,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
                     m_fitContinuum_tplFitAmplitudeError = bestFitAmplitudeError;
                     m_fitContinuum_tplFitMerit = bestMerit;
-                    m_fitContinuum_tplFitDustCoeff = bestFitDustCoeff;
+                    m_fitContinuum_tplFitEbmvCoeff = bestFitEbmvCoeff;
                     m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
                     m_fitContinuum_tplFitRedshift = bestFitRedshift;
                     m_fitContinuum_tplFitDtM = bestFitDtM;
@@ -1000,7 +1000,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", bestFitAmplitudeError);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with a %s amplitude", bestFitAmplitudeNegative ? "negative" : "positive");
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with DustCoeff=%e", bestFitDustCoeff);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with DustCoeff=%e", bestFitEbmvCoeff);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with MeiksinIdx=%d", bestFitMeiksinIdx);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
@@ -1081,17 +1081,17 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
 
     //apply dust attenuation
     Int32 idxDust = -1;
-    if (m_fitContinuum_tplFitDustCoeff >0.)
+    if (m_fitContinuum_tplFitEbmvCoeff >0.)
     {
         if (tpl.CalzettiInitFailed())
         {
             Log.LogError("  no calzetti calib. file loaded in template... aborting!");
             throw std::runtime_error("  no calzetti calib. file in template");
         }
-        for(Int32 kDust=0; kDust<tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs(); kDust++)
+        for(Int32 kDust=0; kDust<tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs(); kDust++)
         {
             Float64 coeffEBMV = tpl.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
-            if(m_fitContinuum_tplFitDustCoeff==coeffEBMV)
+            if(m_fitContinuum_tplFitEbmvCoeff==coeffEBMV)
             {
                 idxDust = kDust;
                 break;
@@ -1104,7 +1104,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
         for(Int32 ktpl=0; ktpl<n; ktpl++)
         {
             lambda = Xsrc[ktpl];
-            Ysrc[ktpl]*=tpl.m_ismCorrectionCalzetti->getDustCoeff(idxDust, Int32(lambda)); //dust coeff is rounded at the nearest 1 angstrom value
+            Ysrc[ktpl]*=tpl.m_ismCorrectionCalzetti->GetDustCoeff(idxDust, Int32(lambda)); //dust coeff is rounded at the nearest 1 angstrom value
         }
     }
 
@@ -1191,7 +1191,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
                                            Float64& fitAmplitude,
                                            Float64& fitAmplitudeError,
                                            Bool& fitAmplitudeNegative,
-                                           Float64& fitDustCoeff,
+                                           Float64& FitEbmvCoeff,
                                            Int32& fitMeiksinIdx,
                                            Float64& fitDtM,
                                            Float64& fitMtM,
@@ -1205,7 +1205,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
         throw runtime_error("    model: Failed to get prior for chi2 solvecontinuum.");
     }
     bool keepigmism = false;
-    if(fitDustCoeff+fitMeiksinIdx != -2){
+    if(FitEbmvCoeff+fitMeiksinIdx != -2){
         keepigmism = true;
     }
 
@@ -1223,7 +1223,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
                                                                                                        opt_dustFit,
                                                                                                        zePriorData, 
                                                                                                        keepigmism,
-                                                                                                       fitDustCoeff,
+                                                                                                       FitEbmvCoeff,
                                                                                                        fitMeiksinIdx) );
 
     if( !templateFittingResult )
@@ -1237,7 +1237,7 @@ Bool CLineModelElementList::SolveContinuum(const CTemplate& tpl,
         fitAmplitude = templateFittingResult->FitAmplitude[0];
         fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
         fitAmplitudeNegative = templateFittingResult->FitAmplitudeNegative[0];
-        fitDustCoeff = templateFittingResult->FitDustCoeff[0];
+        FitEbmvCoeff = templateFittingResult->FitEbmvCoeff[0];
         fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
         fitDtM = templateFittingResult->FitDtM[0];
         fitMtM = templateFittingResult->FitMtM[0];
@@ -1396,9 +1396,9 @@ Float64 CLineModelElementList::getFitContinuum_tplMerit()
     return m_fitContinuum_tplFitMerit;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplIsmDustCoeff()
+Float64 CLineModelElementList::getFitContinuum_tplIsmEbmvCoeff()
 {
-    return m_fitContinuum_tplFitDustCoeff;
+    return m_fitContinuum_tplFitEbmvCoeff;
 }
 
 Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
@@ -1456,7 +1456,7 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
     m_fitContinuum_tplFitAmplitude = tplfit_amp;
     m_fitContinuum_tplFitAmplitudeError = tplfit_amperr;
     m_fitContinuum_tplFitMerit = tplfit_chi2;
-    m_fitContinuum_tplFitDustCoeff = tplfit_ebmv;
+    m_fitContinuum_tplFitEbmvCoeff = tplfit_ebmv;
     m_fitContinuum_tplFitMeiksinIdx = tplfit_meiksinidx;
     m_fitContinuum_tplFitRedshift = tplfit_continuumredshift;
 
@@ -2105,7 +2105,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
 
                         //prepare continuum on the observed grid
-                        m_fitContinuum_tplFitDustCoeff = 0;
+                        m_fitContinuum_tplFitEbmvCoeff = 0;
                         m_fitContinuum_tplFitMeiksinIdx = 0;
                         m_fitContinuum_tplName = tpl.GetName();
                         Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s", m_fitContinuum_tplName.c_str());
@@ -2135,7 +2135,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 Log.LogDebug( "    model: fitting svdlc, amp found=%e", m_fitContinuum_tplFitAmplitude);
                                 Log.LogDebug( "    model: fitting svdlc, chi2 found=%e", chi2_cl);
                                 m_fitContinuum_tplFitMerit = -1;
-                                //m_fitContinuum_tplFitDustCoeff = -1;
+                                //m_fitContinuum_tplFitEbmvCoeff = -1;
                                 //m_fitContinuum_tplFitMeiksinIdx = -1;
                                 m_fitContinuum_tplFitDtM = -1;
                                 m_fitContinuum_tplFitMtM = -1;
@@ -2481,7 +2481,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             Log.LogDetail( "    model - Linemodel: fitcontinuum = %d (%s, with ebmv=%.3f), and A=%e",
                          savedIdxContinuumFitted,
                          m_fitContinuum_tplName.c_str(),
-                         m_fitContinuum_tplFitDustCoeff,
+                         m_fitContinuum_tplFitEbmvCoeff,
                          m_fitContinuum_tplFitAmplitude);
         }
 
@@ -6023,7 +6023,7 @@ CContinuumModelSolution CLineModelElementList::GetContinuumModelSolution()
     CContinuumModelSolution continuumModelSolution;
 
     continuumModelSolution.tplName = m_fitContinuum_tplName;
-    continuumModelSolution.tplDustCoeff = m_fitContinuum_tplFitDustCoeff;
+    continuumModelSolution.tplEbmvCoeff = m_fitContinuum_tplFitEbmvCoeff;
     continuumModelSolution.tplMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
     continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
     continuumModelSolution.tplAmplitudeError = m_fitContinuum_tplFitAmplitudeError;

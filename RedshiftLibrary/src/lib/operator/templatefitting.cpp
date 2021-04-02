@@ -50,7 +50,7 @@ using namespace std;
  * @param fittingAmplitudeNegative
  * @param fittingDtM
  * @param fittingMtM
- * @param fittingDustCoeff
+ * @param fittingEbmvCoeff
  * @param fittingMeiksinIdx
  * @param status
  * @param ChiSquareInterm
@@ -76,7 +76,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
-                                   Float64 &fittingDustCoeff,
+                                   Float64 &fittingEbmvCoeff,
                                    Float64 &fittingMeiksinIdx,
                                    EStatus& status,
                                    std::vector<TFloat64List>& ChiSquareInterm,
@@ -148,26 +148,26 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
 
     // Optionally Apply some Calzetti Extinction for DUST
-    Int32 nDustCoeffs=1;
-    Int32 iDustCoeffMin = 0;
-    Int32 iDustCoeffMax = iDustCoeffMin+1;
+    Int32 nEbmvCoeffs=1;
+    Int32 iEbmvCoeffMin = 0;
+    Int32 iEbmvCoeffMax = iEbmvCoeffMin+1;
     if(apply_ism)
     {
         if(opt_dustFitting>0)
         {
-            nDustCoeffs = 1;
-            iDustCoeffMin = opt_dustFitting;
-            iDustCoeffMax = iDustCoeffMin;
+            nEbmvCoeffs = 1;
+            iEbmvCoeffMin = opt_dustFitting;
+            iEbmvCoeffMax = iEbmvCoeffMin;
         }else if(opt_dustFitting==-10)
         {
-            nDustCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
-            iDustCoeffMin = 0;
-            iDustCoeffMax = iDustCoeffMin+nDustCoeffs-1;
+            nEbmvCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+            iEbmvCoeffMin = 0;
+            iEbmvCoeffMax = iEbmvCoeffMin+nEbmvCoeffs-1;
         }
     }else{
-        nDustCoeffs = 1;
-        iDustCoeffMin = -1;
-        iDustCoeffMax = iDustCoeffMin;
+        nEbmvCoeffs = 1;
+        iEbmvCoeffMin = -1;
+        iEbmvCoeffMax = iEbmvCoeffMin;
     }
 
     //Optionally apply some IGM absorption
@@ -192,9 +192,9 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
     //Log.LogDebug( "  Operator-TemplateFitting: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
-    std::vector<Float64> sumCross_outsideIGM(nDustCoeffs, 0.0);
-    std::vector<Float64>  sumT_outsideIGM(nDustCoeffs, 0.0);
-    std::vector<Float64>  sumS_outsideIGM(nDustCoeffs, 0.0);
+    std::vector<Float64> sumCross_outsideIGM(nEbmvCoeffs, 0.0);
+    std::vector<Float64>  sumT_outsideIGM(nEbmvCoeffs, 0.0);
+    std::vector<Float64>  sumS_outsideIGM(nEbmvCoeffs, 0.0);
     
     Float64 lbda_max, lbdaMax_IGM;
     if (opt_extinction)
@@ -245,19 +245,19 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 igmLoopUseless_WavelengthRange = true; 
         }
         //Loop on the EBMV dust coeff
-        for(Int32 kDust=iDustCoeffMin; kDust<=iDustCoeffMax; kDust++)
+        for(Int32 kEbmv=iEbmvCoeffMin; kEbmv<=iEbmvCoeffMax; kEbmv++)
         {
-            Int32 kDust_ = kDust - iDustCoeffMin; //index used to fill some arrays
+            Int32 kEbmv_ = kEbmv - iEbmvCoeffMin; //index used to fill some arrays
             Float64 coeffEBMV = -1.; //no ism by default (ie DustCoeff=1.)
 
             if (apply_ism)
             {
-                coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kDust);
+                coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
                 //check that we got the same coeff:
-                /*if(keepigmism && (coeffEBMV - fittingDustCoeff)< DBL_EPSILON){//comparing floats
-                    Log.LogDebug("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingDustCoeff);
+                /*if(keepigmism && (coeffEBMV - fittingEbmvCoeff)< DBL_EPSILON){//comparing floats
+                    Log.LogDebug("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingEbmvCoeff);
                 }*/
-                m_templateRebined_bf.ApplyDustCoeff(kDust);
+                m_templateRebined_bf.ApplyDustCoeff(kEbmv);
             }
             //*/
             /*//debug:
@@ -403,15 +403,15 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             }
             if(option_igmFastProcessing && meiksinIdx==0 && sumsIgmSaved==1)
             {
-                sumCross_outsideIGM[kDust_] = sumCross-sumCross_IGM;
-                sumT_outsideIGM[kDust_] = sumT-sumT_IGM;
-                sumS_outsideIGM[kDust_] = sumS-sumS_IGM;
+                sumCross_outsideIGM[kEbmv_] = sumCross-sumCross_IGM;
+                sumT_outsideIGM[kEbmv_] = sumT-sumT_IGM;
+                sumS_outsideIGM[kEbmv_] = sumS-sumS_IGM;
             }
             if(option_igmFastProcessing && meiksinIdx>0)
             {
-                sumCross += sumCross_outsideIGM[kDust_];
-                sumT += sumT_outsideIGM[kDust_];
-                sumS += sumS_outsideIGM[kDust_];
+                sumCross += sumCross_outsideIGM[kEbmv_];
+                sumT += sumT_outsideIGM[kEbmv_];
+                sumS += sumS_outsideIGM[kEbmv_];
             }
 
             if ( numDevs==0 )
@@ -426,9 +426,9 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             bool apply_priore = false;
             if(!logpriore.empty() && !m_templateRebined_bf.CalzettiInitFailed())
             { 
-                if(logpriore.size()==m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs())
+                if(logpriore.size()==m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs())
                 {
-                    if(logpriore[kDust].A_sigma>0.0 && logpriore[kDust].betaA>0.0)
+                    if(logpriore[kEbmv].A_sigma>0.0 && logpriore[kEbmv].betaA>0.0)
                         apply_priore = true;
                 }
             }
@@ -448,11 +448,11 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 
                 if (apply_priore)
                 {
-                    Float64 bss2 = logpriore[kDust].betaA/(logpriore[kDust].A_sigma*logpriore[kDust].A_sigma);
-                    ampl = (sumCross+logpriore[kDust].A_mean*bss2)/(sumT+bss2);
+                    Float64 bss2 = logpriore[kEbmv].betaA/(logpriore[kEbmv].A_sigma*logpriore[kEbmv].A_sigma);
+                    ampl = (sumCross+logpriore[kEbmv].A_mean*bss2)/(sumT+bss2);
                     ampl_err = sqrt(sumT)/(sumT+bss2); 
                     /*
-                    Log.LogInfo("  Operator-TemplateFitting: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kDust].betaA, s2b, sumT);
+                    Log.LogInfo("  Operator-TemplateFitting: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kEbmv].betaA, s2b, sumT);
                     //*/
                 }
 
@@ -493,12 +493,12 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             Float64 logprior = 0.;
             if (apply_priore)
             {
-                logprior += -2.*logpriore[kDust].betaTE*logpriore[kDust].logprior_precompTE;
-                logprior += -2.*logpriore[kDust].betaA*logpriore[kDust].logprior_precompA;
-                logprior += -2.*logpriore[kDust].betaZ*logpriore[kDust].logprior_precompZ;
-                if(logpriore[kDust].A_sigma>0.0)
+                logprior += -2.*logpriore[kEbmv].betaTE*logpriore[kEbmv].logprior_precompTE;
+                logprior += -2.*logpriore[kEbmv].betaA*logpriore[kEbmv].logprior_precompA;
+                logprior += -2.*logpriore[kEbmv].betaZ*logpriore[kEbmv].logprior_precompZ;
+                if(logpriore[kEbmv].A_sigma>0.0)
                 {
-                    Float64 logPa = logpriore[kDust].betaA*(ampl-logpriore[kDust].A_mean)*(ampl-logpriore[kDust].A_mean)/(logpriore[kDust].A_sigma*logpriore[kDust].A_sigma);
+                    Float64 logPa = logpriore[kEbmv].betaA*(ampl-logpriore[kEbmv].A_mean)*(ampl-logpriore[kEbmv].A_mean)/(logpriore[kEbmv].A_sigma*logpriore[kEbmv].A_sigma);
                     logprior += logPa;
                 }
                 fit += logprior;
@@ -524,14 +524,14 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             fit *= overlapCorrection;
             //*/
             //Note: to avoid coresegmentation errors
-            ChiSquareInterm[kDust_][kM] = fit;
-            IsmCalzettiCoeffInterm[kDust_][kM] = coeffEBMV;
-            IgmMeiksinIdxInterm[kDust_][kM] = meiksinIdx;
+            ChiSquareInterm[kEbmv_][kM] = fit;
+            IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
+            IgmMeiksinIdxInterm[kEbmv_][kM] = meiksinIdx;
 
             if(fit<chiSquare)
             {
                 chiSquare = fit;
-                fittingDustCoeff = coeffEBMV;
+                fittingEbmvCoeff = coeffEBMV;
                 fittingMeiksinIdx = meiksinIdx;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
@@ -572,7 +572,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                                                               Int32 opt_dustFitting,
                                                               CPriorHelper::TPriorZEList logpriorze,
                                                               Bool keepigmism,
-                                                              Float64 FitDustCoeff,
+                                                              Float64 FitEbmvCoeff,
                                                               Float64 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFitting: starting computation for template: %s", tpl.GetName().c_str());
@@ -594,11 +594,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting!");
         throw std::runtime_error("  Operator-TemplateFitting: no calzetti calib. file in template");
     }
-    if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs()-1)
+    if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
-        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting!",
+        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting!",
                      opt_dustFitting,
-                     tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs());
+                     tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
         throw std::runtime_error("  Operator-TemplateFitting: calzetti index overflow");
     }
 
@@ -630,10 +630,10 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
 
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
-    Int32 nDustCoeffs=1;
+    Int32 nEbmvCoeffs=1;
     if(opt_dustFitting==-10)
     {
-        nDustCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedDustCoeffs();
+        nEbmvCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
     Int32 nIGMCoeffs=1;
     if(opt_extinction && !keepigmism)
@@ -641,7 +641,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
     }
 
-    result->Init(sortedRedshifts.size(), nDustCoeffs, nIGMCoeffs);
+    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -684,7 +684,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
         Float64 redshift = result->Redshifts[i];
         if( keepigmism /*&& opt_extinction && opt_dustFitting>-1 */){
-            result->FitDustCoeff[i] = FitDustCoeff;
+            result->FitEbmvCoeff[i] = FitEbmvCoeff;
             result->FitMeiksinIdx[i] = FitMeiksinIdx;
         }
         //TODO: reinitialize m_fluxAxisIsmIgm prior to calling BasicFit
@@ -701,11 +701,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                   result->FitDtM[i],
                   result->FitMtM[i],
                   result->LogPrior[i],
-                  result->FitDustCoeff[i],
+                  result->FitEbmvCoeff[i],
                   result->FitMeiksinIdx[i],
                   result->Status[i],
                   result->ChiSquareIntermediate[i],
-                  result->IsmDustCoeffIntermediate[i],
+                  result->IsmEbmvCoeffIntermediate[i],
                   result->IgmMeiksinIdxIntermediate[i],
                   opt_interp,
                   -1,
@@ -858,7 +858,7 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
     result->FitAmplitudeNegative.resize( sortedRedshifts.size() );
     result->FitDtM.resize( sortedRedshifts.size() );
     result->FitMtM.resize( sortedRedshifts.size() );
-    result->FitDustCoeff.resize( sortedRedshifts.size() );
+    result->FitEbmvCoeff.resize( sortedRedshifts.size() );
     result->FitMeiksinIdx.resize( sortedRedshifts.size() );
     result->Redshifts.resize( sortedRedshifts.size() );
     result->Overlap.resize( sortedRedshifts.size() );
@@ -896,11 +896,11 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
                       result->FitDtM[i],
                       result->FitMtM[i],
                       result->LogPrior[i],
-                      result->FitDustCoeff[i],
+                      result->FitEbmvCoeff[i],
                       result->FitMeiksinIdx[i],
                       result->Status[i],
                       result->ChiSquareIntermediate[i],
-                      result->IsmDustCoeffIntermediate[i],
+                      result->IsmEbmvCoeffIntermediate[i],
                       result->IgmMeiksinIdxIntermediate[i],
                       "lin",
                       ampl );
@@ -943,8 +943,6 @@ Float64 COperatorTemplateFitting::EstimateLikelihoodCstLog(const CSpectrum& spec
 
     return cstLog;
 }
-
-
 
 
 
