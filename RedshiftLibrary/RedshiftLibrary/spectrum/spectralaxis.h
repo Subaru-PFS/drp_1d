@@ -36,8 +36,8 @@ public:
     CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other) = default;
     CSpectrumSpectralAxis(CSpectrumSpectralAxis && other) = default;
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
-    CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n, Bool isLogScale  );
-    CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) ;
+    CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale  );
+    CSpectrumSpectralAxis( const TFloat64List samples) ;
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n);
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;

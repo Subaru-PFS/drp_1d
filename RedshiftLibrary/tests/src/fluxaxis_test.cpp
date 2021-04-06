@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(calcul)
                       1.65, 1.70, 1.75, 1.80, 1.85, 1.9};
   TFloat64List Array4b = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
   CSpectrumSpectralAxis *targetSpectralAxis4 =
-    new CSpectrumSpectralAxis(Array4, n + n, true);
+    new CSpectrumSpectralAxis(Array4, true);
   CSpectrumSpectralAxis *sourceSpectralAxis4 =
-    new CSpectrumSpectralAxis(Array4b, n, true);
+    new CSpectrumSpectralAxis(Array4b, true);
   CMask *rebinedMask2 = new CMask();
 
   std::shared_ptr<CSpectrum> object_CSpectrum4;
@@ -184,9 +184,9 @@ BOOST_AUTO_TEST_CASE(calcul)
                       1.65, 1.70, 1.75, 1.80, 1.85, 1.9};
   TFloat64List Array5 = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
   CSpectrumSpectralAxis *targetSpectralAxis5 =
-    new CSpectrumSpectralAxis(Array5, n, true);
+    new CSpectrumSpectralAxis(Array5, true);
   CSpectrumSpectralAxis *sourceSpectralAxis5 =
-    new CSpectrumSpectralAxis(Array5b, n+n, true);
+    new CSpectrumSpectralAxis(Array5b, true);
   CSpectrumFluxAxis *sourceFluxAxis5 = new CSpectrumFluxAxis(Array1, n+n);
 
   std::shared_ptr<CSpectrum> object_CSpectrum8;
@@ -417,10 +417,10 @@ BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
   TFloat64List lambdas = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
   CSpectrumFluxAxis sourceFluxAxis(10);
   TFloat64List Array = {1000, 2500, 2900, 3890, 4690, 5500, 6800, 7001, 8033, 10000};
-  CSpectrumSpectralAxis sourceSpectralAxis(Array, 10, false);
+  CSpectrumSpectralAxis sourceSpectralAxis(Array, false);
   CSpectrumSpectralAxis bogus_sourceSpectralAxis(4, false);
  
-  CSpectrumSpectralAxis targetSpectralAxis(lambdas, 10);
+  CSpectrumSpectralAxis targetSpectralAxis(lambdas);
   TFloat64Range currentRange = targetSpectralAxis.GetLambdaRange();
   
   const std::string opt_interp = "lin";

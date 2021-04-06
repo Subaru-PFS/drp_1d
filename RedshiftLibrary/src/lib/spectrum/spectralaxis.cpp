@@ -32,8 +32,8 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n, Bool isLogScale ) :
-    CSpectrumAxis( samples, n ),
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale ) :
+    CSpectrumAxis( samples),
     m_SpectralFlags( 0 )
 {
     if( isLogScale )
@@ -43,8 +43,8 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32
 /**
  * Constructor.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, UInt32 n) :
-    CSpectrumAxis( samples, n ),
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples) :
+    CSpectrumAxis( samples),
     m_SpectralFlags( 0 )
 {
 }

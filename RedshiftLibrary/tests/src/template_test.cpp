@@ -15,8 +15,8 @@ BOOST_AUTO_TEST_SUITE(Template)
 BOOST_AUTO_TEST_CASE(Constructor)
 {
   TFloat64List array = {0.,2.,3.,6.};
-  CSpectrumSpectralAxis spectralAxis(array, 4, false) ;
-  CSpectrumFluxAxis fluxAxis(array, 4);
+  CSpectrumSpectralAxis spectralAxis(array,false) ;
+  CSpectrumFluxAxis fluxAxis(array);
 
   BOOST_CHECK_NO_THROW(CTemplate tmpl("name", "category"));
   BOOST_CHECK_NO_THROW(CTemplate tmpl2("name", "category", spectralAxis, fluxAxis));
@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(Save)
 {
   TFloat64List array = {0.,2.,3.,6.};
   TFloat64List flux = {0.1,0.2,0.3,0.4};
-  CSpectrumSpectralAxis spectralAxis(array, 4, false) ;
-  CSpectrumSpectralAxis spectralAxisLog(array, 4, true) ;
-  CSpectrumFluxAxis fluxAxis(flux, 4);
+  CSpectrumSpectralAxis spectralAxis(array, false) ;
+  CSpectrumSpectralAxis spectralAxisLog(array, true) ;
+  CSpectrumFluxAxis fluxAxis(flux);
   CTemplate tmpl("name", "category", spectralAxis, fluxAxis);
   CTemplate tmplLog("name", "category", spectralAxisLog, fluxAxis);
 

@@ -17,25 +17,25 @@ BOOST_AUTO_TEST_CASE(SpectrumCombination)
 {
   CSpectrumCombination combinator;
   TFloat64List lambdas = {1000,2000,3000};
-  CSpectrumSpectralAxis spectral_axis(lambdas, 3);
+  CSpectrumSpectralAxis spectral_axis(lambdas);
 
   TFloat64List lambdas_bad_1 = {1001, 2000, 3000};
-  CSpectrumSpectralAxis spectral_axis_bad_1(lambdas_bad_1, 3);
+  CSpectrumSpectralAxis spectral_axis_bad_1(lambdas_bad_1);
 
   TFloat64List lambdas_bad_2 = {1000, 2000, 3000, 4000};
-  CSpectrumSpectralAxis spectral_axis_bad_2(lambdas_bad_2, 4);
+  CSpectrumSpectralAxis spectral_axis_bad_2(lambdas_bad_2);
 
   TFloat64List flux_bad_1 = {1.2, 2.3, 3.4};
-  CSpectrumFluxAxis fluxaxis_bad_1(flux_bad_1, 3);
+  CSpectrumFluxAxis fluxaxis_bad_1(flux_bad_1);
 
   TFloat64List flux_bad_2 = {1.2, 2.3, 3.4, 4.5};
-  CSpectrumFluxAxis fluxaxis_bad_2(flux_bad_2, 4);
+  CSpectrumFluxAxis fluxaxis_bad_2(flux_bad_2);
 
   TFloat64List flux_a = {1.2, 2.3, 3.4};
-  CSpectrumFluxAxis fluxaxis_a(flux_a, 3);
+  CSpectrumFluxAxis fluxaxis_a(flux_a);
 
   TFloat64List flux_b = {2, 3, 4};
-  CSpectrumFluxAxis fluxaxis_b(flux_b, 3);
+  CSpectrumFluxAxis fluxaxis_b(flux_b);
 
   CSpectrum spectrum_out(spectral_axis, fluxaxis_a);
 

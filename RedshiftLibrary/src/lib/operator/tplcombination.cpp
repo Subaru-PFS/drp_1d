@@ -266,7 +266,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }  
     fittingResults.modelSpectrum = modelSpec;
     */
-    fittingResults.modelSpectrum = /*CModelSpectrumResult(*/CSpectrum(CSpectrumSpectralAxis(spc_extract, n), CSpectrumFluxAxis(modelFlux, n));
+    fittingResults.modelSpectrum = CSpectrum(CSpectrumSpectralAxis(spc_extract), CSpectrumFluxAxis(modelFlux));
     fittingResults.igmIdx = bestidxMeiksin;
     fittingResults.ebmvCoeff = bestkDust;
     fittingResults.snr = -1.0;

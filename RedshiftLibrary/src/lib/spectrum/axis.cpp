@@ -20,14 +20,9 @@ CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
         m_Samples[i] = samples[i];
     }
 }
-CSpectrumAxis::CSpectrumAxis( const TFloat64List samples, UInt32 n ) :
-    m_Samples( n )
-{
-    for( UInt32 i=0; i<n; i++ )
-    {
-        m_Samples[i] = samples[i];
-    }
-}
+CSpectrumAxis::CSpectrumAxis(const TFloat64List samples) :
+    m_Samples(std::move(samples))
+{}
 
 CSpectrumAxis& CSpectrumAxis::operator*=(const Float64 op)
 {

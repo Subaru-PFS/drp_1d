@@ -236,6 +236,6 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(TFloat
     TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
     if(axis.size()!= count)
         Log.LogError("porbably exp/log prob");
-    CSpectrumSpectralAxis targetSpectralAxis(axis, axis.size());
+    CSpectrumSpectralAxis targetSpectralAxis(std::move(axis));
     return targetSpectralAxis;
 }

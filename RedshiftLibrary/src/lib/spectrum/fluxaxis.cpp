@@ -27,14 +27,14 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpe
 
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
-    CSpectrumAxis( samples, n ),
+    CSpectrumAxis(samples, n ),
     m_StdError(n)
 {
 
 }
-CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples, UInt32 n ) :
-    CSpectrumAxis( samples, n ),
-    m_StdError( n)//default to 1
+CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples) :
+    CSpectrumAxis(samples),
+    m_StdError(samples.size())//default to 1
 {
 
 }
