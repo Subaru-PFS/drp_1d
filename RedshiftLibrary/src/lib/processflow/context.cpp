@@ -46,9 +46,13 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
 
   m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
 
+  TFloat64Range lambdaRange;
+  //clamp locally and the check the spectrum validity on lambdaRange. 
+  //todo: shouldnt we also check the rebinned spectrum? 
+  spectrum->GetSpectralAxis().ClampLambdaRange(m_inputContext->m_lambdaRange, lambdaRange);
   Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
-               m_inputContext->m_lambdaRange.GetBegin(),
-               m_inputContext->m_lambdaRange.GetEnd(),
+               lambdaRange.GetBegin(),
+               lambdaRange.GetEnd(),
                spectrum->GetResolution());
 
   //************************************

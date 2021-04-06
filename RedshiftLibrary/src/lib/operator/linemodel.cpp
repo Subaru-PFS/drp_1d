@@ -385,11 +385,17 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     if (enableFitContinuumPrecomputed && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto") )
     {
         Bool b = m_opt_tplfit_method == "templatefittinglog";//this was supposed to change to fftprocessing
+        TFloat64Range clampedlambdaRange;
+        if(b){
+            rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        }else{
+            spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        }
         PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
                                *m_orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
-                               lambdaRange,
+                               clampedlambdaRange,
                                largeGridRedshifts,
                                m_opt_tplfit_ignoreLinesSupport);
     }else{
@@ -427,10 +433,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    baselineResult); return NULL;
     //    // end of hack
     //    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    m_result->nSpcSamples = m_model->getSpcNSamples(lambdaRange);
-    m_result->dTransposeD = m_model->getDTransposeD(lambdaRange);
-    m_result->cstLog = m_model->getLikelihood_cstLog(lambdaRange);
+    m_result->nSpcSamples = m_model->getSpcNSamples(clampedlambdaRange);
+    m_result->dTransposeD = m_model->getDTransposeD(clampedlambdaRange);
+    m_result->cstLog = m_model->getLikelihood_cstLog(clampedlambdaRange);
 
     Int32 contreest_iterations = 0;
     if (opt_continuumreest == "always")
@@ -485,7 +493,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         if (m_enableFastFitLargeGrid == 0 || m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             m_result->ChiSquare[i] = m_model->fit(m_result->Redshifts[i],
-                                                  lambdaRange,
+                                                  clampedlambdaRange,
                                                   m_result->LineModelSolutions[i],
                                                   m_result->ContinuumModelSolutions[i],
                                                   contreest_iterations,
@@ -507,7 +515,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                        m_model->getLeastSquareContinuumMerit(lambdaRange);
+                        m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -540,7 +548,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                    m_model->getLeastSquareContinuumMerit(lambdaRange);
+                    m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -1124,11 +1132,17 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
                 Bool b = m_opt_tplfit_method == "templatefittinglog";//to change name
+                TFloat64Range clampedlambdaRange;
+                if(b){
+                    rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+                }else{
+                    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+                }
                 PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
                                 *m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
-                                lambdaRange,
+                                clampedlambdaRange,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 m_opt_tplfit_ignoreLinesSupport,
                                 i);
@@ -1164,11 +1178,12 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult->FittedTplpCoeffs[i];
         }
     } 
-
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
     //now that we recomputed what should be recomputed, we define once for all the secondpass 
     // estimate second pass parameters (mainly elv, alv...)
     EstimateSecondPassParameters(spectrum,
-                                 lambdaRange,
+                                 clampedlambdaRange,
                                  opt_continuumreest,
                                  opt_fittingmethod,
                                  opt_rigidity,
@@ -1181,7 +1196,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                  opt_absvelocityfitstep);
 
     // recompute the fine grid results around the extrema
-    Int32 ret = RecomputeAroundCandidates(lambdaRange,
+    Int32 ret = RecomputeAroundCandidates(clampedlambdaRange,
                                           opt_continuumreest,
                                           m_continnuum_fit_option); //0: retry all cont. templates at this stage
 
@@ -1200,14 +1215,14 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             }
         }
         m_model->SetFittingMethod(m_opt_secondpasslcfittingmethod);
-        RecomputeAroundCandidates(lambdaRange,
+        RecomputeAroundCandidates(clampedlambdaRange,
                                   opt_continuumreest,
                                   2,
                                   true);
         m_model->SetFittingMethod(opt_fittingmethod);
 
         Log.LogInfo("  Operator-Linemodel: now re-computing the final chi2 for each candidate");
-        RecomputeAroundCandidates(lambdaRange,
+        RecomputeAroundCandidates(clampedlambdaRange,
                                   opt_continuumreest,
                                   2);
     }

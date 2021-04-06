@@ -391,6 +391,7 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
  * \brief
  *
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
+ * @lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectrum& spectrum,
                                                                   const std::vector<CTemplate> & tplList,
@@ -488,6 +489,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
     }
 
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -505,7 +509,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         
         BasicFit( spectrum,
                   tplList,
-                  lambdaRange,
+                  clampedlambdaRange,
                   redshift,
                   overlapThreshold,
                   fittingResults,
@@ -583,7 +587,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     //estimate CstLog for PDF estimation
-    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
+    result->CstLog = EstimateLikelihoodCstLog(spectrum, clampedlambdaRange);
     
     //store spectrum results
 /*    Int32 nMaxExtremaSpectraSave = 1, n = min(int(result->Extrema.size()), nMaxExtremaSpectraSave);

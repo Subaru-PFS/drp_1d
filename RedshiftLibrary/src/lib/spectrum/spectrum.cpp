@@ -708,7 +708,15 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         Log.LogError("Problem samplecount do not match between spectral axis and flux axis");
         return false;
     }
-    
+    UInt32 s = targetSpectralAxis.GetSamplesCount();
+
+    if( targetSpectralAxis[0]<m_SpectralAxis[0] || 
+        targetSpectralAxis[s-1]>m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1])
+    {
+        Log.LogError("Problem: TargetSpectralAxis is not included in the current spectral axis" );
+        throw runtime_error("Cannot rebin spectrum: target spectral axis is not included in the current spectral axis");
+    }
+
     if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )
     {
         RebinFineGrid();
@@ -731,7 +739,6 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     if(m_SpectralAxis.IsInLinearScale()){
         currentRange = range;
     }
-    UInt32 s = targetSpectralAxis.GetSamplesCount();
 
     rebinedSpectrum.ResetContinuum();
 

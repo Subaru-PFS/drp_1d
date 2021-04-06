@@ -40,8 +40,8 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   const std::string opt_extinction = inputContext->m_ParameterStore->GetScoped<std::string>("extinction");
   std::string opt_dustFit = inputContext->m_ParameterStore->GetScoped<std::string>("dustfit");
 
-  std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
+  //std::string calibration_dir = inputContext->m_ParameterStore->Get<std::string>("calibrationDir");
+  bool fft_processing = inputContext->m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
   
   if(fft_processing)
     {
@@ -128,13 +128,16 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
         //for each extrema, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
+        //using clamped lambdaRange:
+        TFloat64Range clampedLbdaRange;
+        spc.GetSpectralAxis().ClampLambdaRange( m_lambdaRange, clampedLbdaRange );
         std::shared_ptr<const CExtremaResult> ExtremaResult = 
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
                                                spc,
                                                tplCatalog,
                                                m_categoryList,
-                                               m_lambdaRange,
+                                               clampedLbdaRange,
                                                overlapThreshold,
                                                opt_interp,
                                                opt_extinction );

@@ -17,22 +17,33 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_ParameterStore(std::move(paramStore))
 {
     m_Spectrum->InitSpectrum(*m_ParameterStore);
+
+    bool fft_processing, fft_processing_qso, fft_processinglmContinuum, fft_processinglm;
+    if(m_ParameterStore->Has<std::string>( "qso.templatefittingsolve.fftprocessing"))
+        fft_processing_qso = m_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
+    if(m_ParameterStore->Has<std::string>("galaxy.templatefittingsolve.fftprocessing"))
+        fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
+    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing"))
+        fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
+    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing"))
+        fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
+    m_use_LogLambaSpectrum = fft_processing || fft_processing_qso || fft_processinglmContinuum ||fft_processinglm;
     
-    /*//todo use ::has prior to reading
-    bool fft_processing_qso = fm_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
-    bool fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
-    bool fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
-    bool fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
-    if( fft_processing || fft_processing_qso || fft_processinglmContinuum ||fft_processinglm)
-        RebinInputs();
-    */
+    /*
     std::string fft_processing, fft_processing_qso, fft_processinglmContinuum, fft_processinglm;
     m_ParameterStore->Get("qsosolve.templatefittingsolve.fftprocessing", fft_processing_qso, "yes" );  //check if it has changed
     m_ParameterStore->Get("galaxy.templatefittingsolve.fftprocessing", fft_processing, "no");
     m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing", fft_processinglmContinuum, "yes");//this hasnt changed yet
     m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.fftprocessing", fft_processinglm, "no");//new param to decide if we should use fft for linemodel 
-    if( fft_processing=="yes" || fft_processing_qso=="yes" || fft_processinglmContinuum=="yes" ||fft_processinglm=="yes")
+    m_use_LogLambaSpectrum = fft_processing=="yes" || fft_processing_qso=="yes" || fft_processinglmContinuum=="yes" ||fft_processinglm=="yes" ;
+    */
+    m_redshiftRange = m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+    m_redshiftStep = m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+    if(m_use_LogLambaSpectrum)
         RebinInputs();
+
+    //non clamped lambdaRange: to be clamped depending on used spectra
+    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");  
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
@@ -68,24 +79,20 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 
 void CInputContext::RebinInputs() 
 {
-    TFloat64Range lambdaRange, spclambdaRange, redshiftRange;
-    Float64       redshiftStep;
-    m_ParameterStore->Get( "lambdarange", lambdaRange );
-    m_ParameterStore->Get( "redshiftrange", redshiftRange );
     // we have a probem here, cause only considering redshift range of galaxies
     //if we want to rebin stars we should call again computlogstep with stars redshiftrange!! same for qso
-    m_ParameterStore->Get( "redshiftstep", redshiftStep );
- 
     CSpectrumLogRebinning logReb;
     std::string errorRebinMethod = "rebinVariance";//rebin error axis as well
-    m_Spectrum->GetSpectralAxis().ClampLambdaRange( lambdaRange, spclambdaRange );
 
     m_Spectrum->GetSpectralAxis().IsLogSampled();
-    logReb.Computelogstep(*m_Spectrum, lambdaRange, redshiftStep, redshiftRange);
+    logReb.Computelogstep(*m_Spectrum, m_lambdaRange, m_redshiftStep, m_redshiftRange);
+    
+    TFloat64Range spclambdaRange;
+    m_Spectrum->GetSpectralAxis().ClampLambdaRange( m_lambdaRange, spclambdaRange );
     m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, spclambdaRange, errorRebinMethod);        
-
-    m_zrange = logReb.m_zrange;
-    m_logGridStep = logReb.m_logGridStep;
+    
+    m_redshiftRange = logReb.m_zrange;
+    m_redshiftStep = logReb.m_logGridStep;
     //rebin templates using previously identified parameters,
     //TODO: rebin only if parameters to use are different from previously used params
     Float64 margin = 1E-8;
@@ -100,9 +107,9 @@ void CInputContext::RebinInputs()
             }
             
             Bool overlapFull = true;
-            if (spclambdaRange.GetBegin() < tpl->GetSpectralAxis()[0] * (1. + m_zrange.GetEnd()))
+            if (spclambdaRange.GetBegin() < tpl->GetSpectralAxis()[0] * (1. + m_redshiftRange.GetEnd()))
                 overlapFull = false;
-            if (spclambdaRange.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1] * (1. + m_zrange.GetBegin()))
+            if (spclambdaRange.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1] * (1. + m_redshiftRange.GetBegin()))
                 overlapFull = false;
             if (!overlapFull)
             {
@@ -111,7 +118,6 @@ void CInputContext::RebinInputs()
             }
             std::shared_ptr<CTemplate> rebinnedTpl = logReb.LoglambdaRebinTemplate(tpl);
             m_TemplateCatalog->Add(rebinnedTpl, "log");
-            logReb.verifyLogRebinningResults(m_rebinnedSpectrum->GetSpectralAxis(), rebinnedTpl->GetSpectralAxis());
         } 
     }  
     m_TemplateCatalog->SetScale("log"); 

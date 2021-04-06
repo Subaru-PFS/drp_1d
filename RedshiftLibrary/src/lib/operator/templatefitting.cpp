@@ -556,6 +556,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
+ * @lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectrum& spectrum,
                                                               const CTemplate& tpl,
@@ -661,7 +662,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         Log.LogError("  Operator-TemplateFitting: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
         throw std::runtime_error("  Operator-TemplateFitting: prior list size didn't match the input redshift-list size");
     }
-
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -686,7 +688,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         //TODO: reinitialize m_fluxAxisIsmIgm prior to calling BasicFit
         BasicFit( spectrum,
                   tpl,
-                  lambdaRange,
+                  clampedlambdaRange,
                   redshift,
                   overlapThreshold,
                   result->Overlap[i],
@@ -775,7 +777,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
 
     //estimate CstLog for PDF estimation
-    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
+    result->CstLog = EstimateLikelihoodCstLog(spectrum, clampedlambdaRange);
 
     return result;
 

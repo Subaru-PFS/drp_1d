@@ -17,18 +17,11 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   if (m_objectType == "star" || m_objectType=="qso" || m_objectType=="galaxy")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
-      m_lambdaRange=inputContext.m_lambdaRange;
+      m_lambdaRange=inputContext.m_lambdaRange;//non-clamped
       m_redshiftSampling=inputContext.m_ParameterStore->GetScoped<std::string>("redshiftsampling");
       
-      TFloat64Range redshiftRange;
-      Float64 redshiftStep;
-      if(inputContext.m_LogRebinningCompleted) {
-        redshiftRange = inputContext.m_zrange;
-        redshiftStep = inputContext.m_logGridStep;
-      }else{
-        redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-        redshiftStep = inputContext.m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
-      }
+      TFloat64Range redshiftRange = inputContext.m_redshiftRange;
+      Float64 redshiftStep = inputContext.m_redshiftStep;
 
       if(m_redshiftSampling=="log")
           m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step

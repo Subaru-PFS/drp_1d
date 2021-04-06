@@ -53,8 +53,12 @@ void CSpectrumLogRebinning::Computelogstep( CSpectrum &spectrum,
 //base the calculation on the end value of template which doesnt change
         Float64 loglambda_end = loglambda_end_tpl - ceil((log(spclambdaRange.GetEnd()) - loglambda_end_tpl )/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
         m_loglambda_count_spc =  Int32( floor(( loglambda_end-log(spclambdaRange.GetBegin()))/m_logGridStep) ); // we should sample inside available samples hence floor
-        Float64 loglambda_start = std::max(loglambda_end - m_loglambda_count_spc*m_logGridStep, 0.);
-//        
+        Float64 loglambda_start = loglambda_end - m_loglambda_count_spc*m_logGridStep;
+//      
+//std::cout<<"spc lambda range: Begin: "<<spclambdaRange_.GetBegin()<<" ; End: "<< spclambdaRange_.GetEnd()<<"\n";
+std::cout<<"using clamped spc lambda range: Begin: "<<spclambdaRange.GetBegin()<<" ; End: "<< spclambdaRange.GetEnd()<<"\n";
+std::cout<<"start: "<<exp(loglambda_start)<<" ;end: "<<exp(loglambda_end)<<"; count: "<<m_loglambda_count_spc<<"\n";
+
         m_lambdaRange_spc = TLambdaRange(exp(loglambda_start), exp(loglambda_end)); //to be passed to computeTargetLogSpectralAxis in LogLambdaRebinSpectrum
         if(m_loglambda_count_spc<2){
             Log.LogError("   Operator-TemplateFittingLog: logGridCount = %d <2", m_loglambda_count_spc);
@@ -141,7 +145,15 @@ void CSpectrumLogRebinning::InferTemplateRebinningSetup(TFloat64Range lambdaRang
 {
     Float64 loglbdamin = log( lambdaRange.GetBegin()/(1.0 + m_zrange.GetEnd()));
     Float64 loglbdamax = log( lambdaRange.GetEnd()/(1.0 + m_zrange.GetBegin()));
-    m_loglambda_count_tpl = Int32(ceil((loglbdamax - loglbdamin)/m_logGridStep)) + 1;
+    UInt32 _round = std::round((loglbdamax - loglbdamin)/m_logGridStep)+1;
+    UInt32 _ceil = UInt32(ceil((loglbdamax - loglbdamin)/m_logGridStep))+1;
+    Float64 _neat = (loglbdamax - loglbdamin)/m_logGridStep + 1;//we expect to get an int value with no need to any rounding
+    if( _round != _ceil || std::abs(_round - _neat)>1E-8)
+    {
+        Log.LogError("Problem in logrebinning setup");
+        throw runtime_error("Problem in logrebinning setup!");
+    }
+    m_loglambda_count_tpl = std::round((loglbdamax - loglbdamin)/m_logGridStep) + 1;
 
     Float64 tgt_loglbdamax = loglbdamax;
     Float64 tgt_loglbdamin = loglbdamax - (m_loglambda_count_tpl-1)* m_logGridStep;
@@ -226,38 +238,4 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(TFloat
         Log.LogError("porbably exp/log prob");
     CSpectrumSpectralAxis targetSpectralAxis(axis, axis.size());
     return targetSpectralAxis;
-}
-/*
-    end_spectra = end_tpl at zmin
-    begin_spectra = begin_tpl at zmax 
-    zstep (log(z+1)) = log lambda step
-    n template = n spectra + n z - 1
-*/
-Bool CSpectrumLogRebinning::verifyLogRebinningResults(const CSpectrumSpectralAxis& spcAxis, 
-                                                      const CSpectrumSpectralAxis& tplAxis)
-{
-    Float64 epsilon = 1E-8;
-    UInt32 nSpc = spcAxis.GetSamplesCount();
-    UInt32 nTpl = tplAxis.GetSamplesCount();
-
-    Float64 lambdaTpl_zmin = spcAxis[0]/(1+m_zrange.GetEnd());
-    Float64 lambdaTpl_zmax = spcAxis[nSpc-1]/(1+m_zrange.GetBegin());
-
-    Int32 i_min = TFloat64Index::getCloserIndex(tplAxis.GetSamplesVector(), lambdaTpl_zmin);
-    Int32 i_max = TFloat64Index::getCloserIndex(tplAxis.GetSamplesVector(), lambdaTpl_zmax);
-
-    std::cout << tplAxis[i_min] <<" "<< tplAxis[i_max]<<"\n";
-    //get index in tplAxis of lambdaTpl_zmin  and lambdaTpl_zmax
-    if( std::abs(spcAxis[0] - tplAxis[i_min]) > epsilon ||
-        std::abs(spcAxis[nSpc-1] - tplAxis[i_max]) > epsilon )
-    {
-        Log.LogError("LogRebinning-borders do not match: spcAxis[0]: %f - tplAxis at Zmax: %f; spcAxis[nSpc-1]: %f - tplAxis at Zmin:%f ", 
-            spcAxis[0],  tplAxis[i_min], 
-            spcAxis[nSpc-1], tplAxis[i_max]);
-        throw std::runtime_error("log rebinning failed cause borders do not match!");
-    }   
-    if( Int32((spcAxis[nSpc-1] - spcAxis[0])/m_logGridStep)!= m_loglambda_count_spc ||
-        Int32((tplAxis[nTpl-1] - tplAxis[0])/m_logGridStep)!= m_loglambda_count_tpl)
-        throw std::runtime_error("log rebinning failed cause count do not match!");   
-    return 1;    
 }

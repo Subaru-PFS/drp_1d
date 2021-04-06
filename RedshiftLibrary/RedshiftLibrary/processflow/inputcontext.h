@@ -33,9 +33,11 @@ class CInputContext
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 
   TFloat64Range   m_lambdaRange;
-  TFloat64Range   m_zrange;
-  Float64         m_logGridStep;
+  TFloat64Range   m_redshiftRange;//read from param 
+  Float64         m_redshiftStep; 
   Bool            m_LogRebinningCompleted = 0;
+  Bool            m_use_LogLambaSpectrum = 0;
+
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;

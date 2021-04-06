@@ -1227,6 +1227,7 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
  *will be used, otherwise its size should match the redshifts list size
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor
+ * lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpectrum &rebinnedSpectrum,
                                                                     const CTemplate &rebinnedTpl,
@@ -1333,7 +1334,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         throw std::runtime_error("  Operator-TemplateFittingLog: prior list size didn't match the input redshift-list size");
     }
 
-    Int32 retFit = FitAllz(lambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs, CMask(), logpriorze);
+    TFloat64Range clampedlambdaRange;
+    m_spectrumRebinedLog.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+    Int32 retFit = FitAllz(clampedlambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs, CMask(), logpriorze);
     
     if (retFit != 0)
     {
@@ -1370,7 +1373,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }
 
     // estimate CstLog for PDF estimation
-    result->CstLog = EstimateLikelihoodCstLog(m_spectrumRebinedLog, lambdaRange); // 0.0;//Todo: check how to estimate
+    result->CstLog = EstimateLikelihoodCstLog(m_spectrumRebinedLog, clampedlambdaRange); // 0.0;//Todo: check how to estimate
                                             // that value for loglambda//
 
     return result;
