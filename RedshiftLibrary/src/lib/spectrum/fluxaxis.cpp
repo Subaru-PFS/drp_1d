@@ -34,11 +34,14 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 }
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
-				      const Float64* error,  const UInt32 obsolete) :
+				      const Float64* error,  const UInt32 m) :
     CSpectrumAxis( samples, n ),
-    m_StdError( error, n )
+    m_StdError( error, m )
 {
-
+    if(m!=n){
+        Log.LogError("FluxAxis and NoiseAxis do not have equal size.");
+        throw runtime_error("FluxAxis and NoiseAxis do not have equal size.");
+    }
 }
 
 void CSpectrumFluxAxis::SetSize( UInt32 s )

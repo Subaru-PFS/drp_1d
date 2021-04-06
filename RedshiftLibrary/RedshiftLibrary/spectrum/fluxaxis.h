@@ -26,7 +26,7 @@ public:
     explicit CSpectrumFluxAxis( UInt32 n, Float64 value = 0.0);
     CSpectrumFluxAxis( const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-    CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 obsolete = -1);
+    CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 m);
     ~CSpectrumFluxAxis() = default;
     CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other) = default;//copy assignement operator
     CSpectrumFluxAxis& operator=( CSpectrumFluxAxis&& other)=default;//move assignement operator
