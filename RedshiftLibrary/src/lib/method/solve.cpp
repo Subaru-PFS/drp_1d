@@ -13,14 +13,14 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 
 }
 
-void CSolve::InitRanges(const CInputContext& inputContext)
+void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   if (m_objectType != "classification")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
-      m_lambdaRange=inputContext.m_lambdaRange;
-      TFloat64Range redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-      m_redshiftSampling=inputContext.m_ParameterStore->GetScoped<std::string>("redshiftsampling");
-      Float64 redshiftStep = inputContext.m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+      m_lambdaRange=inputContext->m_lambdaRange;
+      TFloat64Range redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+      m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
+      Float64 redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
 
       if(m_redshiftSampling=="log")
         {
@@ -34,9 +34,9 @@ void CSolve::InitRanges(const CInputContext& inputContext)
 }
 
 
-void CSolve::Compute(const CInputContext &inputContext,
-                             COperatorResultStore &resultStore,
-                             TScopeStack &scope)
+void CSolve::Compute(std::shared_ptr<const CInputContext> inputContext,
+                     std::shared_ptr<COperatorResultStore> resultStore,
+                     TScopeStack &scope)
 {
   //      beginCompute(inputContext,resultStore,scope);
   InitRanges(inputContext);
@@ -49,7 +49,7 @@ void CSolve::Compute(const CInputContext &inputContext,
   //endCompute(inputContext,resultStore,scope);
 }
 
-void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,COperatorResultStore &resultStore)
+void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,std::shared_ptr<COperatorResultStore> resultStore)
 {
-  resultStore.StoreScopedGlobalResult("result",result); 
+  resultStore->StoreScopedGlobalResult("result",result); 
 }

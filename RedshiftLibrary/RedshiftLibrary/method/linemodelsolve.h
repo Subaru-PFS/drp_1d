@@ -33,8 +33,8 @@ public:
 
     Bool PopulateParameters( std::shared_ptr<CParameterStore> parameterStore );
 
-    std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
-                                          COperatorResultStore &resultStore,
+    std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                          std::shared_ptr<COperatorResultStore> resultStore,
                                           TScopeStack &scopeCDataStore);
   /*                                               const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
@@ -46,7 +46,7 @@ public:
                                                    const Float64 radius);
   */
 
-    Bool Solve(COperatorResultStore& resultStore,
+  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
@@ -64,10 +64,10 @@ public:
 
     //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    void storeExtremaResults( COperatorResultStore &dataStore,
+    void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
                               std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
 
-    void StoreChisquareTplShapeResults(COperatorResultStore & dataStore, std::shared_ptr<const CLineModelResult> result) const;
+    void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
 
 
     COperatorLineModel m_linemodel;

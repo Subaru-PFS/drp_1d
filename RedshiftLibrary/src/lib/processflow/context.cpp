@@ -52,15 +52,15 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                spectrum->GetResolution());
 
   //************************************
-  const Float64 lmin = GetInputContext().m_lambdaRange.GetBegin();
-  const Float64 lmax = GetInputContext().m_lambdaRange.GetEnd();
+  const Float64 lmin = GetInputContext()->m_lambdaRange.GetBegin();
+  const Float64 lmax = GetInputContext()->m_lambdaRange.GetEnd();
 
   std::string enableInputSpcCorrectStr = parameterStore->Get<std::string>( "autocorrectinput");
   Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
   if(enableInputSpcCorrect)
     {
       //Check if the Spectrum is valid on the lambdarange
-      //correctInputSpectrum(ctx.GetInputContext().m_lambdaRange);
+      //correctInputSpectrum(ctx.GetInputContext()->m_lambdaRange);
 
       if( spectrum->correctSpectrum( lmin,lmax ))
         Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );

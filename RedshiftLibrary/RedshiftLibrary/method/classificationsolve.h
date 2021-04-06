@@ -16,8 +16,8 @@ namespace NSEpic
 
     CClassificationSolve(TScopeStack &scope,std::string objectType);
 
-    std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
-                 COperatorResultStore &resultStore,
+    std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                          std::shared_ptr<COperatorResultStore> resultStore,
                  TScopeStack &scope);
     
     std::string typeLabel = "U";//"G"/"S"/"Q"

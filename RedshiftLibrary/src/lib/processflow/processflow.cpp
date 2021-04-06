@@ -55,14 +55,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     ctx.GetParameterStore()->Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
 
 
-    //    ctx.GetSpectrum()->GetSpectralAxis().ClampLambdaRange( lambdaRange, ctx.GetInputContext().m_lambdaRange );
-
-    //    Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)", ctx.GetInputContext().m_lambdaRange.GetBegin(), ctx.GetInputContext().m_lambdaRange.GetEnd(), ctx.GetSpectrum()->GetResolution());
-
-    //std::cout << "Processing spectrum " << ctx.GetSpectrum().GetName() << std::endl;
-
-
-
 
     //Override z-search grid for line measurement: load the zref values from a tsv catalog file (col0: spc name, col1: zref float value)
     // std::string opt_linemeas_catalog_path;
@@ -148,14 +140,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
 
-    
-
     //************************************
-    //Check if the Spectrum is valid on the lambdarange
-    //checkInputSpectrum(ctx.GetInputContext().m_lambdaRange);
-    //Check if the flux is valid on the lambdarange
-   
-
     // Stellar method
 
 
@@ -389,7 +374,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
 {
     std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  ctx.GetResultStore().GetGlobalResult( scope_res.c_str() );
+    auto results_pdf =  ctx.GetResultStore()->GetGlobalResult( scope_res.c_str() );
     auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
 
     if(!logzpdf1d)

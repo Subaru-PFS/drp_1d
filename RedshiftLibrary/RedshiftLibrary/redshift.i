@@ -11,6 +11,7 @@
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
 %shared_ptr(CParameterStore)
+%shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CSingleton<CLog>)
 %shared_ptr(CLSF)
@@ -236,7 +237,7 @@ public:
             std::shared_ptr<const CRayCatalog> rayCatalog,
             const std::string& paramsJSONString);
   //CDataStore& GetDataStore();
-  COperatorResultStore& GetResultStore();
+  std::shared_ptr<COperatorResultStore> GetResultStore();
 };
 
 

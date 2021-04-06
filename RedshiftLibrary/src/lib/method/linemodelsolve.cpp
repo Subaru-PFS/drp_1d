@@ -262,15 +262,15 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> param
  * Call Solve.
  * Return a pointer to an empty CLineModelSolveResult. (The results for Linemodel will reside in the linemodel.linemodel result).
  **/
-std::shared_ptr<CSolveResult> CLineModelSolve::compute(const CInputContext &inputContext,
-                                                       COperatorResultStore &resultStore,
+std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+                                                       std::shared_ptr<COperatorResultStore> resultStore,
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& spc=*(inputContext.m_Spectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext.m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext.m_RayCatalog.get());
-  PopulateParameters( inputContext.m_ParameterStore );
+  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
+  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
+  PopulateParameters( inputContext->m_ParameterStore );
   bool retSolve = Solve( resultStore,
                          spc,
                          tplCatalog,
@@ -283,7 +283,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(const CInputContext &inpu
         return NULL;
     }
 
-    auto results = resultStore.GetScopedGlobalResult("linemodel");
+    auto results = resultStore->GetScopedGlobalResult("linemodel");
     if(results.expired())
     {
         Log.LogError("linemodelsolve: Unable to retrieve linemodel results");
@@ -309,7 +309,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(const CInputContext &inpu
     /*
     Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
 
-    resultStore.StoreScopedGlobalResult( "priorpdf", zpriorResult); //TODO review name if uncommented
+    resultStore->StoreScopedGlobalResult( "priorpdf", zpriorResult); //TODO review name if uncommented
     */
 
     /* ------------------------  COMPUTE POSTERIOR PDF  --------------------------  */
@@ -330,8 +330,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(const CInputContext &inpu
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
 
-   resultStore.StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-    resultStore.StoreScopedGlobalResult("candidatesresult", candidateResult);
+   resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
 
     // Get linemodel results at extrema (recompute spectrum model etc.)
     std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =
@@ -614,12 +614,12 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
 ///
-void CLineModelSolve::storeExtremaResults( COperatorResultStore &resultStore,
+void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore> resultStore,
                                            std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const 
 {
     std::string extremaResultsStr = "linemodel_extrema";
     Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
-    resultStore.StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResult );
+    resultStore->StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResult );
 
     Int32 nResults = ExtremaResult->size();
 
@@ -627,33 +627,33 @@ void CLineModelSolve::storeExtremaResults( COperatorResultStore &resultStore,
     {
         std::string fname_spc =
             (boost::format("linemodel_spc_extrema_%1%") % k).str();
-        resultStore.StoreScopedGlobalResult(fname_spc.c_str(),
+        resultStore->StoreScopedGlobalResult(fname_spc.c_str(),
                                           ExtremaResult->m_savedModelSpectrumResults[k]);
 
         std::string fname_fit =
             (boost::format("linemodel_fit_extrema_%1%") % k).str();
-        resultStore.StoreScopedGlobalResult(fname_fit.c_str(),
+        resultStore->StoreScopedGlobalResult(fname_fit.c_str(),
                                           ExtremaResult->m_savedModelFittingResults[k]);
 
         std::string fname_fitcontinuum =
             (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
-        resultStore.StoreScopedGlobalResult(fname_fitcontinuum.c_str(), 
+        resultStore->StoreScopedGlobalResult(fname_fitcontinuum.c_str(), 
                                           ExtremaResult->m_savedModelContinuumFittingResults[k]);
 
         std::string fname_rules =
             (boost::format("linemodel_rules_extrema_%1%") % k).str();
-        resultStore.StoreScopedGlobalResult(fname_rules.c_str(),
+        resultStore->StoreScopedGlobalResult(fname_rules.c_str(),
                                           ExtremaResult->m_savedModelRulesResults[k]);
 
         std::string nameBaselineStr =
             (boost::format("linemodel_continuum_extrema_%1%") % k).str();
-        resultStore.StoreScopedGlobalResult(nameBaselineStr.c_str(), 
+        resultStore->StoreScopedGlobalResult(nameBaselineStr.c_str(), 
                                          ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
     }
 }
 
 
-void CLineModelSolve::StoreChisquareTplShapeResults(COperatorResultStore & resultStore, std::shared_ptr<const CLineModelResult> result) const
+void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  resultStore, std::shared_ptr<const CLineModelResult> result) const
 {
     for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
@@ -665,7 +665,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(COperatorResultStore & resul
         }
 
         std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") % km).str();
-        resultStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+        resultStore->StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
     }
 
 
@@ -680,7 +680,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(COperatorResultStore & resul
         }
 
         std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") % km).str();
-        resultStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+        resultStore->StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
     }
 
     //Save PriorLinesTplshapes results
@@ -694,7 +694,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(COperatorResultStore & resul
         }
 
         std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_priorlinestplshape_%d") % km).str();
-        resultStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+        resultStore->StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
     }
 
     //Save PriorContinuumTplshapes results
@@ -706,7 +706,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(COperatorResultStore & resul
     }
 
     std::string resname = (boost::format("linemodel_chisquaretplshape/linemodel_priorcontinuumtplshape")).str();
-    resultStore.StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
+    resultStore->StoreScopedGlobalResult( resname.c_str(), result_chisquaretplshape );
 
 }
 
@@ -802,7 +802,7 @@ Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64&
  * If that returned true, store results.
  **/
 
-Bool CLineModelSolve::Solve( COperatorResultStore& resultStore,
+Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
@@ -1086,7 +1086,7 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore,
         throw runtime_error("Failed to get linemodel result");
     }else{
         //save linemodel chisquare results
-        resultStore.StoreScopedGlobalResult( scopeStr.c_str(), result );
+        resultStore->StoreScopedGlobalResult( scopeStr.c_str(), result );
 
         //don't save linemodel extrema results, since will change with pdf computation
 
@@ -1094,7 +1094,7 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore,
         std::string firstpassExtremaResultsStr=scopeStr.c_str();
         firstpassExtremaResultsStr.append("_firstpass_extrema");
         //Log.LogError("Linemodel, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
-        resultStore.StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
+        resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
 
         //save linemodel firstpass extrema B results
         if(enableFirstpass_B)
@@ -1102,7 +1102,7 @@ Bool CLineModelSolve::Solve( COperatorResultStore& resultStore,
             std::string firstpassbExtremaResultsStr=scopeStr.c_str();
             firstpassbExtremaResultsStr.append("_firstpassb_extrema");
             //Log.LogError("Linemodel, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
-            resultStore.StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
+            resultStore->StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
         }
 
     }

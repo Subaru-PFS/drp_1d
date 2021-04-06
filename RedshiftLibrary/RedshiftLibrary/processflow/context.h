@@ -56,8 +56,8 @@ public:
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog(){return m_inputContext->m_TemplateCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog(){return m_inputContext->m_RayCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore(){return m_inputContext->m_ParameterStore;}
-  const CInputContext& GetInputContext(){return *(m_inputContext.get());}
-  COperatorResultStore& GetResultStore(){return *(m_ResultStore.get());}
+  std::shared_ptr<const CInputContext> GetInputContext(){return m_inputContext;}
+  std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
 
   TScopeStack                     m_ScopeStack;
 private:
