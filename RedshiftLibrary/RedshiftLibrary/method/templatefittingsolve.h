@@ -59,9 +59,8 @@ class CDataStore;
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
-  */
-    
-
+  */ 
+  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep);
 private:
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,

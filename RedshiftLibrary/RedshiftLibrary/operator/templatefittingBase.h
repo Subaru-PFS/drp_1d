@@ -26,7 +26,14 @@ class COperatorTemplateFittingBase : public COperator
 {
 
 public:
-    //Rule of zero
+    //Rule of 5 defaults
+    COperatorTemplateFittingBase() = default;
+    COperatorTemplateFittingBase(COperatorTemplateFittingBase const& other) = default;
+    COperatorTemplateFittingBase(COperatorTemplateFittingBase&& other) = default;
+    COperatorTemplateFittingBase& operator=(COperatorTemplateFittingBase const& other) = default;
+    COperatorTemplateFittingBase& operator=(COperatorTemplateFittingBase&& other) = default;
+    virtual ~COperatorTemplateFittingBase()=default;
+
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                                        const CTemplate& tpl,
                                                       const TFloat64Range& lambdaRange,

@@ -24,13 +24,9 @@ public:
 
     TTemplateConstRefList GetTemplate( const TStringList& categoryList ) const;
     TTemplateRefList GetTemplate( const TStringList& categoryList );
-
-    TStringList GetCategoryList() const;
-
-    UInt32 GetTemplateCount( const std::string& category ) const;
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
-    TTemplatesRefDict       GetList() const;//using set m_scale
+    const TTemplatesRefDict &    GetList() const;//using set m_scale
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
@@ -78,7 +74,7 @@ TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& category
 
  //below functions aim at avoid using if..else to access the right categoryList
 inline 
-TTemplatesRefDict  CTemplateCatalog::GetList() const
+const TTemplatesRefDict & CTemplateCatalog::GetList() const
 {
     if(!m_logscale)
         return m_List;

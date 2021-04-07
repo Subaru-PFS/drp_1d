@@ -23,7 +23,7 @@ public:
     enum EFlags
     {
         nFLags_LogScale = 1 << 0,
-        nFLags_LogSampledCheck = 1 << 1 //using second bit(shifting once): 0000 0010
+        nFLags_LogSampled = 1 << 1 //using second bit(shifting once): 0000 0010
     };
 
     enum EShiftDirection
@@ -68,13 +68,26 @@ public:
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
     void                SetLogScale();
     Bool                CheckLoglambdaSampling(Float64 logGridStep);
-    Bool                IsLogSampled(Float64 logGridstep=NAN);
+    Bool                CheckLoglambdaSampling();
+    Bool                IsLogSampled(Float64 logGridstep);
+    Bool                IsLogSampled();
+    Float64             GetlogGridStep();
     Bool                m_regularSamplingChecked=false;
+    Float64             m_regularZSamplingStep = NAN; //sampling zgrid step with which sampling was validated in CheckLoglambdaSampling 
 private:
 
     UInt32              m_SpectralFlags;
-};
 
+};
+inline
+Float64 CSpectrumSpectralAxis::GetlogGridStep()
+{   //m_regularZSamplingStep is set simultenously with m_regularSamplingChecked=true
+    if(m_regularSamplingChecked && m_SpectralFlags & nFLags_LogSampled) 
+        return m_regularZSamplingStep;
+    
+    Log.LogDebug("LogGrid step is not available for this axis.");
+    return -1.;
+}
 }
 
 #endif

@@ -21,7 +21,19 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
   CSolve("templatefittingsolve",scope,objectType)
 {
 }
-
+void CMethodTemplateFittingSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+{
+    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
+    {
+       redshiftRange = inputContext->m_redshiftRangeFFT;
+       redshiftStep = inputContext->m_redshiftStepFFT;
+    }else
+    {
+        //default is to read from the scoped paramStore
+        redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+        redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+    }
+}
 std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
@@ -47,8 +59,12 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     {
       //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
+      tplCatalog.m_logscale = 1; 
     }
-  else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
+  else{
+       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
+       tplCatalog.m_logscale = 0;
+  }
 
 
         // prepare the unused masks

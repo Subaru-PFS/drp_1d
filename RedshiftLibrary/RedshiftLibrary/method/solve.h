@@ -32,7 +32,7 @@ namespace NSEpic
     CSolve& operator=(CSolve const& other) = default;
     CSolve(CSolve&& other) = default;
     CSolve& operator=(CSolve&& other) = default;
-
+    virtual void GetRedshiftSampling(std::shared_ptr<const CInputContext>, TFloat64Range& redshiftRange, Float64& redshiftStep);
 
     void Compute(std::shared_ptr<const CInputContext> inputContext,
                  std::shared_ptr<COperatorResultStore> resultStore,

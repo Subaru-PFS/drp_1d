@@ -28,9 +28,9 @@ class CLineModelSolve: public CSolve
 
 public:
 
-  CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
+    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
-
+    void GetRedshiftSampling(std::shared_ptr<const CInputContext> , TFloat64Range& redshiftRange, Float64& redshiftStep);
     Bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
@@ -73,8 +73,8 @@ public:
     std::string m_opt_skipsecondpass="no";
     std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
-    std::string m_opt_tplfit_method="templatefittinglog";
-    std::string m_opt_tplfit_method_secondpass="templatefittinglog";
+    bool m_opt_tplfit_fftprocessing=true;//default to using fft
+    bool m_opt_tplfit_fftprocessing_secondpass=true;
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;

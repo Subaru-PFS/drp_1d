@@ -34,7 +34,18 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
 {
 }
 
-
+void CLineModelSolve::GetRedshiftSampling(const CInputContext& inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+{
+    if(m_objectType == "galaxy" && inputContext.m_use_LogLambaSpectrum)
+    {
+       redshiftRange = inputContext.m_redshiftRangeFFT;
+       redshiftStep = inputContext.m_redshiftStepFFT;
+    }else{
+        //default is to read from the scoped paramStore
+        redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+        redshiftStep = inputContext.m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+    }
+}
 /**
  * \brief
  * Populates the method parameters from the dataStore into the class members
@@ -66,8 +77,11 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
 
     parameterStore->GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
-        parameterStore->GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "chisquarelog" );
-        m_opt_tplfit_method_secondpass = m_opt_tplfit_method;//for the moment, we use the same method for both passe
+        //m_opt_tplfit_fftprocessing = parameterStore->GetScopedParam<std::string>("linemodel.continuumfit.fftprocessing")=="yes";
+        std::string fftprocessing_value;
+        parameterStore->GetScopedParam("linemodel.continuumfit.fftprocessing", fftprocessing_value, "yes");
+        m_opt_tplfit_fftprocessing = fftprocessing_value=="yes";
+        m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
 	    parameterStore->GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
@@ -215,7 +229,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
-        Log.LogInfo( "      -tplfit_method: %s", m_opt_tplfit_method.c_str());
+        Log.LogInfo( "      -tplfit_fftprocessing: %d", m_opt_tplfit_fftprocessing);
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
@@ -844,8 +858,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     m_linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
-        m_linemodel.m_opt_tplfit_method = m_opt_tplfit_method;
-        m_linemodel.m_opt_tplfit_method_secondpass = m_opt_tplfit_method_secondpass;
+        m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
+        m_linemodel.m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing_secondpass;
         m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         m_linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         m_linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;

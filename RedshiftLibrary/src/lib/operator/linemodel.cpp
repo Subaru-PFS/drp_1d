@@ -384,14 +384,13 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     bool enableFitContinuumPrecomputed = true;
     if (enableFitContinuumPrecomputed && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto") )
     {
-        Bool b = m_opt_tplfit_method == "templatefittinglog";//this was supposed to change to fftprocessing
         TFloat64Range clampedlambdaRange;
-        if(b){
+        if(m_opt_tplfit_fftprocessing){
             rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
         }else{
             spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
         }
-        PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
+        PrecomputeContinuumFit(m_opt_tplfit_fftprocessing?rebinnedSpectrum:spectrum,
                                *m_orthoTplCatalog,
                                tplCategoryList,
                                opt_calibrationPath,
@@ -633,7 +632,6 @@ Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
  * thus we can save time  by fitting once-for-all the continuum amplitudes, prior to fitting the rays.
  * @candidateIdx@ is also an indicator of pass mode
  * */
-//Important, after rebase on 6204: TODO: make sure to pass or read the rebinned spectrum/tpl if m_opt_tplfit_method == "templatefittinglog"
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const CTemplateCatalog &tplCatalog,
                                                 const TStringList &tplCategoryList,
@@ -662,19 +660,19 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
 
-    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "templatefitting")
+    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_fftprocessing )
         // warning arbitrary number of redshifts threshold
         // to consider templateFitting faster than chisquarelog
     {
-        m_opt_tplfit_method = "templatefitting";
-        m_opt_tplfit_method_secondpass = "templatefitting";
+        m_opt_tplfit_fftprocessing = false;
+        m_opt_tplfit_fftprocessing_secondpass = false;
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
     Bool currentScale = tplCatalog.m_logscale; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
-    Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
-                m_opt_tplfit_method.c_str());
+    Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
+                m_opt_tplfit_fftprocessing);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
                 m_opt_tplfit_dustFit);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_igm = %d",
@@ -683,14 +681,14 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                 opt_interp.c_str());
     //reuse the shared pointer for secondpass
     if(templateFittingOperator == nullptr) {
-        if (m_opt_tplfit_method == "templatefittinglog" && m_opt_tplfit_method_secondpass == "templatefittinglog")
+        if (m_opt_tplfit_fftprocessing  && m_opt_tplfit_fftprocessing_secondpass)
         {
             bool enableLogRebin = true;
             templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
             std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
                 std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
             tplCatalog.m_logscale = 1;
-        } else if (m_opt_tplfit_method == "templatefitting" && m_opt_tplfit_method_secondpass == "templatefitting")
+        } else if (!m_opt_tplfit_fftprocessing && !m_opt_tplfit_fftprocessing_secondpass)
         {
             templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
         } else
@@ -702,7 +700,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
    
 
     Float64 overlapThreshold = 1.0;
-    if (m_opt_tplfit_method != "templatefitting" && ignoreLinesSupport==true)
+    if (m_opt_tplfit_fftprocessing && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
@@ -1131,14 +1129,13 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
-                Bool b = m_opt_tplfit_method == "templatefittinglog";//to change name
                 TFloat64Range clampedlambdaRange;
-                if(b){
+                if(m_opt_tplfit_fftprocessing){
                     rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
                 }else{
                     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
                 }
-                PrecomputeContinuumFit(b?rebinnedSpectrum:spectrum,
+                PrecomputeContinuumFit(m_opt_tplfit_fftprocessing?rebinnedSpectrum:spectrum,
                                 *m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,

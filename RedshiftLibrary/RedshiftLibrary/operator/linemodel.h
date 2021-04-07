@@ -147,8 +147,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
-    std::string m_opt_tplfit_method = "templatefittinglog"; //only for firstpass
-    std::string m_opt_tplfit_method_secondpass = "templatefittinglog"; 
+    bool m_opt_tplfit_fftprocessing = true;//only for firstpass
+    bool m_opt_tplfit_fftprocessing_secondpass = true;
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;

@@ -1185,7 +1185,6 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
 
     Float64 margin =  1E-8;
     UInt32 ilbdamin = 0, ilbdamax = nTpl - 1;
-    Float64 z_previous;
     for (UInt32 k = 0; k < nTpl; k++)
     {
         Float64 z = (spcLambda[0] - tplLambda[k]) / tplLambda[k];
@@ -1193,18 +1192,24 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
             ilbdamin = k;
             break;
         }
-        z_previous = z;
     }
 
     for (UInt32 k = nTpl - 1; k > 0; k--)
     {
         Float64 z = (spcLambda[nSpc - 1] - tplLambda[k]) / tplLambda[k];
-        if (/*z>=0 &&*/ std::abs(z - redshiftrange.GetBegin()) < margin){
+        if (std::abs(z - redshiftrange.GetBegin()) < margin){
             ilbdamax = k;
             break;
         }
     }
-
+    /*//below code doesnt work completely
+    Float64 zmax = (spcLambda[0] - tplLambda[0]) / tplLambda[0];
+    //extract a vector centered around zmax and then 
+    UInt32 ilbdamin_ = round(log((zmax+1)/(redshiftrange.GetEnd()+1))/redshiftStep); //check integer at numerical precision before round
+    Float64 zmin = (spcLambda.back() - tplLambda.back()) / tplLambda.back();
+    //le problem est que par e.g., zmin soit 
+    UInt32 ilbdamax_ = round(log((redshiftrange.GetBegin()+1)/(zmin+1))/redshiftStep);
+    */
     if (ilbdamin > ilbdamax)
     {
         Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
@@ -1274,8 +1279,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     m_templateRebinedLog = rebinnedTpl;
 
     //cant call IsLogSampled on const objects
-    if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled() ||
-        !m_templateRebinedLog.GetSpectralAxis().IsLogSampled())
+    if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled(m_spectrumRebinedLog.GetSpectralAxis().GetlogGridStep()) ||
+        !m_templateRebinedLog.GetSpectralAxis().IsLogSampled(m_templateRebinedLog.GetSpectralAxis().GetlogGridStep()))
     {
         Log.LogError("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");
         throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in log scale");

@@ -5,7 +5,6 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include <math.h>
-
 using namespace NSEpic;
 using namespace std;
 
@@ -33,7 +32,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
  * Constructor, flags log scale when set.
  */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale ) :
-    CSpectrumAxis( samples),
+    CSpectrumAxis(std::move(samples)),
     m_SpectralFlags( 0 )
 {
     if( isLogScale )
@@ -44,7 +43,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, Bool i
  * Constructor.
  */
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples) :
-    CSpectrumAxis( samples),
+    CSpectrumAxis(std::move(samples)),
     m_SpectralFlags( 0 )
 {
 }
@@ -406,37 +405,61 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
     for (Int32 t = 1; t < m_Samples.size(); t++)
     {
         Float64 lbda2 =  m_Samples[t];
-        Float64 _logGridStep = log(lbda2) - log(lbda1);
+        Float64 _logGridStep;
+        if(IsInLogScale())
+            _logGridStep = lbda2 - lbda1;
+        else
+            _logGridStep = log(lbda2/lbda1);
 
         Float64 relativeErrAbs = std::abs((_logGridStep - logGridStep) / logGridStep);
         maxAbsRelativeError = max(relativeErrAbs, maxAbsRelativeError);
 
         if (relativeErrAbs > relativelogGridStepTol)
-        {
+        {//return without setting anything
             return 0;
         }
         lbda1 = lbda2;
     }
-    m_SpectralFlags |= nFLags_LogSampledCheck; //adding through a logical OR
+    //save step in a member variable
+    m_regularZSamplingStep = logGridStep; 
+    m_SpectralFlags |= nFLags_LogSampled; //adding through a logical OR
     m_regularSamplingChecked = 1;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
     return 1;
 }
-
-Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
+Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() 
 {
-    if(m_regularSamplingChecked)
-        return  m_SpectralFlags & nFLags_LogSampledCheck;
-    
-    if(!IsInLogScale())
-        return 0;
-    if(isnan(logGridstep))
+    Float64 logGridstep;
+    if(IsInLogScale())
         logGridstep = m_Samples[1] - m_Samples[0];
+    else
+        logGridstep = log(m_Samples[1]) - log(m_Samples[0]);
+    return CheckLoglambdaSampling(logGridstep);
+}
+/**
+ * Brief:
+ * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
+ * 
+*/
+Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
+{   //if we already checked that axis is sampled with the passed zgridstep
+    if(m_regularSamplingChecked && std::abs(m_regularZSamplingStep - logGridstep)<1E-8)
+        return  m_SpectralFlags & nFLags_LogSampled;
+
     Bool b = CheckLoglambdaSampling(logGridstep);
     if(!b){
         Log.LogError("   CSpectrumSpectralAxis::IsLogSampled: Log-regular lambda check FAILED");
-        throw GlobalException(BAD_LOGSAMPLEDSPECTRUM, Formatter() <<"Log-regular lambda check FAILED");
+        //throw GlobalException(BAD_LOGSAMPLEDSPECTRUM, Formatter() <<"Log-regular lambda check FAILED");
     }
+    return m_SpectralFlags & nFLags_LogSampled; //we can simply replace it with 1
+}
+Bool CSpectrumSpectralAxis::IsLogSampled()
+{
+    Float64 logGridstep;
+    if(IsInLogScale())
+        logGridstep = m_Samples[1] - m_Samples[0];
+    else
+        logGridstep = log(m_Samples[1]) - log(m_Samples[0]);
 
-    return m_SpectralFlags & nFLags_LogSampledCheck; //we can simply replace it with 1
+    return IsLogSampled(logGridstep);
 }

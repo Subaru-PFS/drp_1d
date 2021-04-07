@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
+#include <RedshiftLibrary/processflow/inputContext->h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 
 using namespace NSEpic;
@@ -12,17 +12,24 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 {
 
 }
-
+void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext>, TFloat64Range& redshiftRange, Float64& redshiftStep)
+{
+    //default is to read from the scoped paramStore
+    redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+    redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+    return;
+}
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   if (m_objectType == "star" || m_objectType=="qso" || m_objectType=="galaxy")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
-      m_lambdaRange=inputContext.m_lambdaRange;//non-clamped
-      m_redshiftSampling=inputContext.m_ParameterStore->GetScoped<std::string>("redshiftsampling");
-      
-      TFloat64Range redshiftRange = inputContext.m_redshiftRange;
-      Float64 redshiftStep = inputContext.m_redshiftStep;
+      m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
+      m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
 
+      TFloat64Range redshiftRange;
+      Float64 redshiftStep;
+      GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+      
       if(m_redshiftSampling=="log")
           m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
       else  

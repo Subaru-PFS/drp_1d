@@ -33,7 +33,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 
 }
 CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples) :
-    CSpectrumAxis(samples),
+    CSpectrumAxis(std::move(samples)),
     m_StdError(samples.size())//default to 1
 {
 

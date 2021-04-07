@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
-#include <cmath>
 #include <gsl/gsl_fit.h>
 #include <boost/filesystem.hpp>
 
@@ -23,7 +22,7 @@ using namespace std;
  * Note : If we want the log step to be log(1.0+redshiftstep) then spreadOverlog should 
   be modified to use 1+redshiftstep for the common ratio (or construct the grid using arithmetic log progression).
 */
-void CSpectrumLogRebinning::Computelogstep( CSpectrum &spectrum,
+void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
                                             const TFloat64Range &lambdaRange, 
                                             const Float64 zInputStep,
                                             const TFloat64Range zInputRange)
@@ -31,9 +30,9 @@ void CSpectrumLogRebinning::Computelogstep( CSpectrum &spectrum,
  
     if(spectrum.GetSpectralAxis().IsLogSampled() )
     { 
-        m_lambdaRange_spc = TLambdaRange(spectrum.GetSpectralAxis().GetSamplesVector());
+        spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange,m_lambdaRange_spc);
         m_lambdaRange_tpl = m_lambdaRange_spc;
-        m_logGridStep = spectrum.GetSpectralAxis()[1] - spectrum.GetSpectralAxis()[0];  
+        m_logGridStep = spectrum.GetSpectralAxis().GetlogGridStep();
     }else{
         m_logGridStep = zInputStep;
 
@@ -44,22 +43,24 @@ void CSpectrumLogRebinning::Computelogstep( CSpectrum &spectrum,
         loglambda_end_tpl = loglambda_start_tpl + m_loglambda_count_tpl*m_logGridStep;
         m_lambdaRange_tpl = TFloat64Range(exp(loglambda_start_tpl), exp(loglambda_end_tpl));// this is the effective lambda range, to be used in InferTemplateRebinningSetup
 
-        // compute rebinned spectrum lambda range 
-        const TLambdaRange spclambdaRange = spectrum.GetSpectralAxis().GetLambdaRange();
-        /*Float64 loglambda_start = loglambda_start_tpl + ceil((log(spclambdaRange.GetBegin()) - loglambda_start_tpl )/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
-        m_loglambda_count_spc =  Int32( floor(( log(spclambdaRange.GetEnd()) - loglambda_start)/m_logGridStep) ); // we should sample inside available samples hence floor
-        Float64 loglambda_end = loglambda_start + m_loglambda_count_spc*m_logGridStep;
-        */
-//base the calculation on the end value of template which doesnt change
-        Float64 loglambda_end = loglambda_end_tpl - ceil((log(spclambdaRange.GetEnd()) - loglambda_end_tpl )/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
-        m_loglambda_count_spc =  Int32( floor(( loglambda_end-log(spclambdaRange.GetBegin()))/m_logGridStep) ); // we should sample inside available samples hence floor
-        Float64 loglambda_start = loglambda_end - m_loglambda_count_spc*m_logGridStep;
-//      
-//std::cout<<"spc lambda range: Begin: "<<spclambdaRange_.GetBegin()<<" ; End: "<< spclambdaRange_.GetEnd()<<"\n";
-std::cout<<"using clamped spc lambda range: Begin: "<<spclambdaRange.GetBegin()<<" ; End: "<< spclambdaRange.GetEnd()<<"\n";
-std::cout<<"start: "<<exp(loglambda_start)<<" ;end: "<<exp(loglambda_end)<<"; count: "<<m_loglambda_count_spc<<"\n";
+        // compute rebinned spectrum lambda range (ie clamp on reference grid)
+        // to be passed to computeTargetLogSpectralAxis in LogLambdaRebinSpectrum
+        spectrum.GetSpectralAxis().ClampLambdaRange(m_lambdaRange_tpl, m_lambdaRange_spc);
+        Float64 loglambda_start_spc = log(m_lambdaRange_spc.GetBegin());
+        Float64 loglambda_end_spc = log(m_lambdaRange_spc.GetEnd());
+        if (m_lambdaRange_spc.GetBegin() > m_lambdaRange_tpl.GetBegin()) 
+        {
+            loglambda_start_spc = loglambda_start_tpl + ceil((loglambda_start_spc - loglambda_start_tpl)/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
+            m_lambdaRange_spc.SetBegin(exp(loglambda_start_spc));
+        }
+        if (m_lambdaRange_spc.GetEnd() < m_lambdaRange_tpl.GetEnd())
+        {
+            loglambda_end_spc = loglambda_end_tpl - ceil((loglambda_end_tpl - loglambda_end_spc)/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
+            m_lambdaRange_spc.SetEnd(exp(loglambda_end_spc));
+        }
+        Float64 count_ = (loglambda_end_spc - loglambda_start_spc)/m_logGridStep; // should integer at numerical precision...
+        m_loglambda_count_spc = round(count_); 
 
-        m_lambdaRange_spc = TLambdaRange(exp(loglambda_start), exp(loglambda_end)); //to be passed to computeTargetLogSpectralAxis in LogLambdaRebinSpectrum
         if(m_loglambda_count_spc<2){
             Log.LogError("   Operator-TemplateFittingLog: logGridCount = %d <2", m_loglambda_count_spc);
             throw runtime_error("   Operator-TemplateFittingLog: logGridCount <2. Abort");
@@ -80,7 +81,7 @@ std::cout<<"start: "<<exp(loglambda_start)<<" ;end: "<<exp(loglambda_end)<<"; co
     }
     m_zrange = TFloat64Range(zmin_new, zmax_new); //updating zrange based on the new logstep 
 
-    InferTemplateRebinningSetup(m_lambdaRange_tpl);
+    InferTemplateRebinningSetup();
 
     return;
 }
@@ -91,13 +92,9 @@ std::cout<<"start: "<<exp(loglambda_start)<<" ;end: "<<exp(loglambda_end)<<"; co
 *  step2: do the rebin
 */
 std::shared_ptr<const CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<CSpectrum> spectrum, 
-                                                                                const TFloat64Range& lambdaRange, 
                                                                                 std::string errorRebinMethod)
-{    
-    if(spectrum->GetSpectralAxis().IsLogSampled()){
-        return spectrum;
-    }
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
+{ 
+    Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
 
     //prepare return rebinned vector  
     auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum->GetName());
@@ -117,10 +114,9 @@ std::shared_ptr<const CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( 
     if(!ret){
         throw runtime_error("Cant rebin spectrum");
     }
-    spectrumRebinedLog->GetSpectralAxis().SetLogScale(); //doesnt work before ::Rebin, cause we targetSpectralAxis into
+    //spectrumRebinedLog->GetSpectralAxis().SetLogScale(); //we need to do a convertScale before setting scale
     spectrumRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);//double make sure that sampling is well done
-    //or automatically set the regularsampling was checked
-    //spectrumRebinedLog->GetSpectralAxis().m_regularSamplingChecked = 1;//here we are sure that the sampling is well done
+
     //the rebinned spectrum and we change logscale
     Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling FINISHED");
     bool verbose = true;  
@@ -141,10 +137,10 @@ std::shared_ptr<const CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( 
 /*
     Aims at computing the template lambda range once for all template catalog
 */
-void CSpectrumLogRebinning::InferTemplateRebinningSetup(TFloat64Range lambdaRange)
+void CSpectrumLogRebinning::InferTemplateRebinningSetup()
 {
-    Float64 loglbdamin = log( lambdaRange.GetBegin()/(1.0 + m_zrange.GetEnd()));
-    Float64 loglbdamax = log( lambdaRange.GetEnd()/(1.0 + m_zrange.GetBegin()));
+    Float64 loglbdamin = log( m_lambdaRange_tpl.GetBegin()/(1.0 + m_zrange.GetEnd()));
+    Float64 loglbdamax = log( m_lambdaRange_tpl.GetEnd()/(1.0 + m_zrange.GetBegin()));
     UInt32 _round = std::round((loglbdamax - loglbdamin)/m_logGridStep)+1;
     UInt32 _ceil = UInt32(ceil((loglbdamax - loglbdamin)/m_logGridStep))+1;
     Float64 _neat = (loglbdamax - loglbdamin)/m_logGridStep + 1;//we expect to get an int value with no need to any rounding
@@ -209,7 +205,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
     if(!ret){
         throw runtime_error("Cant rebin template");
     }
-    templateRebinedLog->GetSpectralAxis().SetLogScale();
+
     templateRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);
 //to remove
 if(tpl->GetName() == "ssp_5Gyr_z008.dat"){

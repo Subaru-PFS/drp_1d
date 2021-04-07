@@ -3,8 +3,6 @@
 
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/debug/assert.h>
-#include <string>
-#include <RedshiftLibrary/method/templatefittinglogsolve.h>
 
 #include <boost/filesystem.hpp>
 

@@ -27,8 +27,10 @@ public:
     COperatorTemplateFittingLog();
     ~COperatorTemplateFittingLog();
 
-    COperatorTemplateFittingLog(COperatorTemplateFittingLog const& other) = delete;
-    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog const& other) = delete;  
+    COperatorTemplateFittingLog(const COperatorTemplateFittingLog & other) = delete; 
+    COperatorTemplateFittingLog(COperatorTemplateFittingLog && other) = delete; 
+    COperatorTemplateFittingLog& operator=(const COperatorTemplateFittingLog& other) = delete;  
+    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog&& other) = delete; 
 
     std::shared_ptr<COperatorResult> Compute( const CSpectrum& rebinnedSpectrum,
                                               const CTemplate& rebinnedTpl,
