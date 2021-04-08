@@ -94,6 +94,10 @@ class ResultStoreOutput(AbstractOutput):
         if object_type not in self.nb_candidates:
             self.nb_candidates[object_type] = self.result_store.Get_Int32Data(object_type, self.get_solve_method(object_type), "NbCandidates")
 
+    def load_reliability(self,object_type):
+        if "Label" not in self.reliability[object_type]:
+            self.reliability[object_type]["Label"] = self.result_store.Get_StringData("reliability","all","Label")
+            
     def get_attribute(self,spec_row, object_type, rank):
         method = self.get_solve_method(object_type)
         if spec_row["c_type"] == 'int':
@@ -215,6 +219,7 @@ class ResultStoreOutput(AbstractOutput):
                                 self.classification["QSOEvidence"]
                                 )]
 
+
         rays_infos = obs.create_dataset('rays_info', (1,), np.dtype([('snrHa', 'f8'), ('lfHa', 'f8'),
                                                                      ('snrOII', 'f8'), ('lfOII', 'f8')]))
         rays_infos[...] = self.rays_infos
@@ -222,6 +227,11 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
                 # zlog.LogDebug("Writing " + object_type + " results")
                 object_result = obs.create_group(object_type)
+                
+                if object_type == "galaxy":
+                    reliability = object_result.create_group("reliability")
+                    reliability.attrs["label"]=self.reliability[object_type]["Label"]
+
                 pdf = self.pdf[object_type].to_records()
                 grid_size = self.pdf[object_type].index.size
                 object_result.create_dataset("pdf",

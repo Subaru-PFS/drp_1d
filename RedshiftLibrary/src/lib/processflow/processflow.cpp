@@ -12,6 +12,7 @@
 #include <RedshiftLibrary/method/tplcombinationsolve.h>
 #include <RedshiftLibrary/method/linemodelsolve.h>
 #include <RedshiftLibrary/method/classificationsolve.h>
+#include <RedshiftLibrary/method/reliabilitysolve.h>
 #include <RedshiftLibrary/method/classificationresult.h>
 #include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
 #include <RedshiftLibrary/reliability/zqual.h>
@@ -272,13 +273,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
 
-    CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
-    classifier.Compute(ctx.GetInputContext(),
-                       ctx.GetResultStore(),
-                       ctx.m_ScopeStack);
-
-
-
+    {
+      CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
+      classifier.Compute(ctx.GetInputContext(),
+                         ctx.GetResultStore(),
+                         ctx.m_ScopeStack);
+    }
+    {
+      CReliabilitySolve reliability(ctx.m_ScopeStack,"reliability");
+      reliability.Compute(ctx.GetInputContext(),
+                          ctx.GetResultStore(),
+                          ctx.m_ScopeStack);
+    }
 }
 
 
