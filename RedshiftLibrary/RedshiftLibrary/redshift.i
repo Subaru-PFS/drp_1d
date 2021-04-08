@@ -239,7 +239,6 @@ public:
   COperatorResultStore& GetResultStore();
 };
 
-%catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
 
 class CProcessFlow {
 public:
