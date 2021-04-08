@@ -55,7 +55,7 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
         }
         if (m_lambdaRange_spc.GetEnd() < m_lambdaRange_tpl.GetEnd())
         {
-            loglambda_end_spc = loglambda_end_tpl - ceil((loglambda_end_tpl - loglambda_end_spc)/m_logGridStep)*m_logGridStep; // ceil to be bigger or equal the first sample
+            loglambda_end_spc = loglambda_end_tpl - ceil((loglambda_end_tpl - loglambda_end_spc)/m_logGridStep)*m_logGridStep; // ceil to be less or equal the last sample
             m_lambdaRange_spc.SetEnd(exp(loglambda_end_spc));
         }
         Float64 count_ = (loglambda_end_spc - loglambda_start_spc)/m_logGridStep; // should integer at numerical precision...
@@ -91,7 +91,7 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
 *  step1: construct the spectralAxis
 *  step2: do the rebin
 */
-std::shared_ptr<const CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<CSpectrum> spectrum, 
+std::shared_ptr<const CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<const CSpectrum> spectrum, 
                                                                                 std::string errorRebinMethod)
 { 
     Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
@@ -142,9 +142,8 @@ void CSpectrumLogRebinning::InferTemplateRebinningSetup()
     Float64 loglbdamin = log( m_lambdaRange_tpl.GetBegin()/(1.0 + m_zrange.GetEnd()));
     Float64 loglbdamax = log( m_lambdaRange_tpl.GetEnd()/(1.0 + m_zrange.GetBegin()));
     UInt32 _round = std::round((loglbdamax - loglbdamin)/m_logGridStep)+1;
-    UInt32 _ceil = UInt32(ceil((loglbdamax - loglbdamin)/m_logGridStep))+1;
     Float64 _neat = (loglbdamax - loglbdamin)/m_logGridStep + 1;//we expect to get an int value with no need to any rounding
-    if( _round != _ceil || std::abs(_round - _neat)>1E-8)
+    if( std::abs(_round - _neat)>1E-8)
     {
         Log.LogError("Problem in logrebinning setup");
         throw runtime_error("Problem in logrebinning setup!");
@@ -168,32 +167,35 @@ void CSpectrumLogRebinning::InferTemplateRebinningSetup()
  * Step3: construct target loglambda axis for the template and check borders
  * Step4: rebin the template --> rebinned flux is saved in templateRebinedLog
 **/
-std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<CTemplate> tpl)
+std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl)
 {
-    auto templateRebinedLog = make_shared<CTemplate>(tpl->GetName(), tpl->GetCategory());
+    // check template coverage is enough for zrange and spectrum coverage
+    Bool overlapFull = true;
+    if (m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
+        overlapFull = false;
+    if (m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
+        overlapFull = false;
+    if (!overlapFull)
+    {
+        Log.LogError(" CSpectrumLogRebinning::LoglambdaRebinTemplate: overlap found to be lower than 1.0 for the template %s", tpl->GetName());
+        throw std::runtime_error("CInputContext::RebinInputs: overlap found to be lower than 1.0");
+    }
 
     CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(m_lambdaRange_tpl,
                                                                             m_loglambda_count_tpl);
 
-    m_loglambda_count_tpl = targetSpectralAxis.GetSamplesCount();
     if(targetSpectralAxis[m_loglambda_count_tpl-1]< targetSpectralAxis[0])
         throw runtime_error(" Last elements of the target spectral axis are not valid. Template count is not well computed due to exp/conversions");
+
+
+    m_loglambda_count_tpl = targetSpectralAxis.GetSamplesCount();
+
+    auto templateRebinedLog = make_shared<CTemplate>(tpl->GetName(), tpl->GetCategory());
 
     templateRebinedLog->GetSpectralAxis().SetSize(m_loglambda_count_tpl);
     templateRebinedLog->GetFluxAxis().SetSize(m_loglambda_count_tpl);
 
     CMask mskRebinedLog(m_loglambda_count_tpl);
-	// Recheck the template coverage is larger,
-	//  by construction only the min has to be re-checked,
-	//  since the max is aligned to the max of the rebined spectrum at zmin which is
-	// smaller to the max input lamdba range at min already checked 
-	if (exp(m_lambdaRange_tpl.GetBegin()) < tpl->GetSpectralAxis()[0] )
-	{
-	    Log.LogError("  Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range");
-        Log.LogError("  Operator-TemplateFittingLog: for zmax=%f, tpl->lbdamin is %f (should be <%f)",
-			        m_zrange.GetEnd(), tpl->GetSpectralAxis()[0], m_lambdaRange_tpl.GetBegin());
-	    throw std::runtime_error("  Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range");
-	}
     
     TFloat64Range tplLbdaRange(targetSpectralAxis[0] - 0.5 * m_logGridStep,
                         targetSpectralAxis[m_loglambda_count_tpl-1] + 0.5 * m_logGridStep);   
@@ -223,10 +225,7 @@ if(tpl->GetName() == "ssp_5Gyr_z008.dat"){
 
     return templateRebinedLog;
 }
-/**
- * the target log spectral axis should contain the log(m_loglambdaRange_tpl)
- * Thus the construction of the new axis should be based on including this value
-*/
+
 CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(TFloat64Range lambdarange, UInt32 count)
 {//spreadoverlog expects m_Begin to be non-log value
     TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);

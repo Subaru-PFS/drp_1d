@@ -107,32 +107,42 @@ void CInputContext::RebinInputs()
     m_redshiftStepFFT = logReb.m_logGridStep;
     //rebin templates using previously identified parameters,
     //TODO: rebin only if parameters to use are different from previously used params
-    Float64 margin = 1E-8;
-    for(std::string s : m_TemplateCatalog->GetCategoryList()) //should retstrct to galaxy templates for now... (else depends on the fftprocessing by object type)
+    for(std::string s : m_TemplateCatalog->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
     { 
+        // check existence of already  & correctly logsampled templates
+        m_TemplateCatalog->m_logsampling = true;
         TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
+        m_TemplateCatalog->m_logsampling = false;
+        if (!TplList.empty())
+        {            
+            for (auto tpl : TplList)
+            {   
+                Bool needrebinning = false;
+                if( tpl->GetSpectralAxis().IsLogSampled(logReb.m_logGridStep) )
+                    needrebinning = true;
+                if (logReb.m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
+                    needrebinning = true;
+                if (logReb.m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
+                    needrebinning = true;
+                
+                if (needrebinning)
+                {
+                    Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName());
+                    std::shared_ptr<const CTemplate> input_tpl = m_TemplateCatalog->GetTemplateByName(TStringList{s}, tpl->GetName());  
+                    tpl = logReb.LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
+                }
+            } 
+            break; // next category
+        }
+
+        // no rebined templates in the category: rebin all templates
+        TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
         for (auto tpl : TplList)
         {   
-            if( tpl->GetSpectralAxis().IsLogSampled(logReb.m_logGridStep) )
-            {
-                break;
-            } 
-            Bool overlapFull = true;
-            if (logReb.m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
-                overlapFull = false;
-            if (logReb.m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
-                overlapFull = false;
-            if (!overlapFull)
-            {
-                Log.LogError("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
-                throw std::runtime_error("Operator-TemplateFittingLog: overlap found to be lower than 1.0 for this redshift range.");
-            }
             std::shared_ptr<CTemplate> rebinnedTpl = logReb.LoglambdaRebinTemplate(tpl);
             m_TemplateCatalog->Add(rebinnedTpl, "log");
         } 
     }  
-    m_TemplateCatalog->SetScale("log"); // this is wrong , should probably be done later.
-    m_LogRebinningCompleted = 1;
 }
 
 

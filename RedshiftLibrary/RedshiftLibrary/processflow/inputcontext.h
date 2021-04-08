@@ -36,7 +36,6 @@ class CInputContext
     
   TFloat64Range   m_redshiftRangeFFT;//computed with logRebinning 
   Float64         m_redshiftStepFFT; 
-  Bool            m_LogRebinningCompleted = 0;
   Bool            m_use_LogLambaSpectrum = 0;
 
 private:

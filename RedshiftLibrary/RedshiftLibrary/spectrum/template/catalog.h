@@ -15,10 +15,9 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool scale = 0 );
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool sampling = 0 );
     
-    void                    SetScale(std::string scale);
-    void                    Add( std::shared_ptr<CTemplate> tpl, std::string scale ="lin");
+    void                    Add( std::shared_ptr<CTemplate> tpl, std::string sampling ="nolog");
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
@@ -31,12 +30,15 @@ public:
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
     void                    InitIsmIgm(const std::string & calibrationPath);
-    mutable Bool            m_logscale = 0;//non-log by default
+    mutable Bool            m_logsampling = 0;//non-log by default
+
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 
 
     //Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+    const TTemplatesRefDict &    GetList() const;//using m_sampling
+
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListRebinned;
@@ -76,7 +78,7 @@ TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& category
 inline 
 const TTemplatesRefDict & CTemplateCatalog::GetList() const
 {
-    if(!m_logscale)
+    if(!m_logsampling)
         return m_List;
     else
         return m_ListRebinned;       

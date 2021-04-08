@@ -23,9 +23,9 @@ public:
                         const Float64 zInputStep,
                         const TFloat64Range zInputRange);
     //todo: merge these two functions once all is stable:
-    std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<CSpectrum> spectrum,
+    std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
                                                             std::string errorRebinMethod="rebinVariance");
-    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<CTemplate> tpl);
+    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
 
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange,
                                                         UInt32 gridCount);

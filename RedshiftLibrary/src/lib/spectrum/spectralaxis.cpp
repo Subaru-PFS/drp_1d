@@ -397,8 +397,14 @@ void CSpectrumSpectralAxis::SetLogScale()
 /**
  * Check if spectralAxis is well rebinned in log
 */
-Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep) 
+Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() 
 {
+    Float64 logGridStep;
+    if(IsInLogScale())
+        logGridStep = m_Samples[1] - m_Samples[0];
+    else
+        logGridStep = log(m_Samples[1]/m_Samples[0]);
+
     Float64 relativelogGridStepTol = 1e-1;
     Float64 maxAbsRelativeError = 0.0; 
     Float64 lbda1 = m_Samples[0];
@@ -416,50 +422,49 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling(Float64 logGridStep)
 
         if (relativeErrAbs > relativelogGridStepTol)
         {//return without setting anything
-            return 0;
+            m_SpectralFlags &= ~ nFLags_LogSampled; // unsetting
+            Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
+
+            return false;
         }
         lbda1 = lbda2;
     }
     //save step in a member variable
-    m_regularZSamplingStep = logGridStep; 
-    m_SpectralFlags |= nFLags_LogSampled; //adding through a logical OR
-    m_regularSamplingChecked = 1;
+    m_regularLogSamplingStep = logGridStep; 
+    m_SpectralFlags |= nFLags_LogSampled; //setting through a logical OR
+    m_regularLogSamplingChecked = true;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
-    return 1;
+
+    return true;
 }
-Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() 
-{
-    Float64 logGridstep;
-    if(IsInLogScale())
-        logGridstep = m_Samples[1] - m_Samples[0];
-    else
-        logGridstep = log(m_Samples[1]) - log(m_Samples[0]);
-    return CheckLoglambdaSampling(logGridstep);
-}
+
 /**
  * Brief:
  * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
  * 
 */
 Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
-{   //if we already checked that axis is sampled with the passed zgridstep
-    if(m_regularSamplingChecked && std::abs(m_regularZSamplingStep - logGridstep)<1E-8)
-        return  m_SpectralFlags & nFLags_LogSampled;
+{   
+    if(!m_regularLogSamplingChecked) 
+        CheckLoglambdaSampling();
 
-    Bool b = CheckLoglambdaSampling(logGridstep);
-    if(!b){
-        Log.LogError("   CSpectrumSpectralAxis::IsLogSampled: Log-regular lambda check FAILED");
-        //throw GlobalException(BAD_LOGSAMPLEDSPECTRUM, Formatter() <<"Log-regular lambda check FAILED");
+    Bool LogSampled = m_SpectralFlags & nFLags_LogSampled;
+    if (LogSampled && std::abs(m_regularLogSamplingStep - logGridstep)>1E-8)
+    {
+        Log.LogDetail("   CSpectrumSpectralAxis::IsLogSampled: Log-regular sampling with bad step");
+        return false;
     }
-    return m_SpectralFlags & nFLags_LogSampled; //we can simply replace it with 1
+    
+    return LogSampled;
 }
+
 Bool CSpectrumSpectralAxis::IsLogSampled()
 {
     Float64 logGridstep;
     if(IsInLogScale())
         logGridstep = m_Samples[1] - m_Samples[0];
     else
-        logGridstep = log(m_Samples[1]) - log(m_Samples[0]);
+        logGridstep = log(m_Samples[1]/m_Samples[0]);
 
     return IsLogSampled(logGridstep);
 }

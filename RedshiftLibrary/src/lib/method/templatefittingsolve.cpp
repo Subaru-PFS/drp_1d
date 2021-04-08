@@ -59,11 +59,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     {
       //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
-      tplCatalog.m_logscale = 1; 
+      tplCatalog.m_logsampling = true; 
     }
   else{
        m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
-       tplCatalog.m_logscale = 0;
+       tplCatalog.m_logsampling = false;
   }
 
 
@@ -476,8 +476,8 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
         ExtremaResult->FittedTplSNR[i] = FitSNR;
         //make sure tpl is non-rebinned
-        Bool currentScale = tplCatalog.m_logscale;
-        tplCatalog.m_logscale=0;
+        Bool currentSampling = tplCatalog.m_logsampling;
+        tplCatalog.m_logsampling=false;
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
         m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
@@ -487,7 +487,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                         TplFitResult->FitAmplitude[idx],
                                                         opt_interp, opt_extinction, lambdaRange, 
                                                         overlapThreshold, spcmodelPtr);
-        tplCatalog.m_logscale = currentScale;                                                
+        tplCatalog.m_logsampling = currentSampling;                                                
         ExtremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
         ExtremaResult->m_savedModelContinuumFittingResults[i] = 

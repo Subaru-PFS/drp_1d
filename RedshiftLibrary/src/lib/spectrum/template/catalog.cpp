@@ -19,13 +19,13 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath, Bool scale )
+CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath, Bool sampling )
 {
     m_continuumRemovalMethod = cremovalmethod;
     m_continuumRemovalMedianKernelWidth = mediankernelsize;
     m_continuumRemovalWaveletsNScales = waveletsScales;
     m_continuumRemovalWaveletsBinPath = waveletsDFBinPath;
-    m_logscale = scale;
+    m_logsampling = sampling;
 }
 
 
@@ -100,17 +100,17 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
- * @scale here is relevant here especially for when rebinning
- * otherwise we will have to SetScale ("lin") when we want to read the non-log template, and then call SetScale("log")
+ * @sampling here is relevant here especially for when rebinning
+ * otherwise we will have to SetSampling ("lin") when we want to read the non-log template, and then call SetSampling("log")
  * when we want to add the log tpl
  */
-void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string scale)
+void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string sampling)
 {
     if( r->GetCategory().empty() )
       throw runtime_error("Template has no category");
-    if(scale == "lin")
+    if(sampling != "log")
         m_List[r->GetCategory()].push_back( r );
-    if(scale == "log")
+    if(sampling == "log")
         m_ListRebinned[r->GetCategory()].push_back( r );
 }
 //adapt it to apply to all m_list
@@ -124,12 +124,12 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
     igmCorrectionMeiksin->Init(calibrationPath);
 
     //push in all templates
-    //backup current scale
-    Bool currentScale = m_logscale;
+    //backup current sampling
+    Bool currentsampling = m_logsampling;
     for(std::string s : GetCategoryList())
     { 
-        for(Bool scale : {0, 1}){
-            m_logscale = scale;
+        for(Bool sampling : {0, 1}){
+            m_logsampling = sampling;
             TTemplateRefList  TplList = GetTemplate(TStringList{s});
             for (auto tpl : TplList)
             {
@@ -139,6 +139,6 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
             }   
         }
     }
-    //put back the initial scale:
-    m_logscale = currentScale;
+    //put back the initial sampling:
+    m_logsampling = currentsampling;
 }

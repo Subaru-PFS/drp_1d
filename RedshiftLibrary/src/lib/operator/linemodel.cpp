@@ -669,7 +669,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
                     " (faster when only few redshifts calc. points)");
     }
-    Bool currentScale = tplCatalog.m_logscale; 
+    Bool currentSampling = tplCatalog.m_logsampling; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
                 m_opt_tplfit_fftprocessing);
@@ -685,12 +685,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         {
             bool enableLogRebin = true;
             templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
-            std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
-                std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
-            tplCatalog.m_logscale = 1;
+            tplCatalog.m_logsampling = true;
         } else if (!m_opt_tplfit_fftprocessing && !m_opt_tplfit_fftprocessing_secondpass)
         {
             templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
+            tplCatalog.m_logsampling = false;
         } else
         {
             Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
@@ -872,7 +871,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
     
     m_model->SetFitContinuum_FitStore(tplfitStore);
-    tplCatalog.m_logscale = currentScale; 
+    tplCatalog.m_logsampling = currentSampling; 
 
     boost::chrono::thread_clock::time_point stop_tplfitprecompute =
         boost::chrono::thread_clock::now();
