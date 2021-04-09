@@ -13,6 +13,8 @@ class ResultStoreOutput(AbstractOutput):
         self.object_types = ["galaxy"]
         if self.parameters["enablestellarsolve"] == "yes":
             self.object_types.append("star")
+        if self.parameters["enableqsosolve"] == "yes":
+            self.object_types.append("qso")
 
     def load_pdf(self, object_type):
         if object_type not in self.pdf.keys():
