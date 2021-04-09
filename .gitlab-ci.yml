@@ -42,7 +42,7 @@ test-osx:
     policy: pull
     untracked: true
 
-wheel36-osx:
+.wheel-osx:
   stage: build-wheel
   tags:
     - osx
@@ -51,15 +51,15 @@ wheel36-osx:
     - make clean_python_build
     - cd ..
   script:
-    - source /Users/grunner/venv/amazed36/bin/activate
+    - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
-    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp36-*.whl
-    - pip install wheel/pylibamazed-*-cp36-*.whl
+    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
     - cd /
     - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
     - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
   after_script:
-    - source /Users/grunner/venv/amazed36/bin/activate
+    - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
     - pip uninstall -y pylibamazed
   artifacts:
     paths:
@@ -69,111 +69,61 @@ wheel36-osx:
     key: osx
     policy: pull
     untracked: true
+
+wheel36-osx:
+  variables:
+    PYTHON_VERSION: "36"
+  extends:
+    - .wheel-osx
 
 wheel37-osx:
-  stage: build-wheel
-  tags:
-    - osx
-  before_script:
-    - cd build
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /Users/grunner/venv/amazed37/bin/activate
-    - python setup.py bdist_wheel
-    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp37-*.whl
-    - pip install wheel/pylibamazed-*-cp37-*.whl
-    - cd /
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /Users/grunner/venv/amazed37/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
-  cache:
-    key: osx
-    policy: pull
-    untracked: true
+  variables:
+    PYTHON_VERSION: "37"
+  extends:
+    - .wheel-osx
 
 wheel38-osx:
-  stage: build-wheel
-  tags:
-    - osx
-  before_script:
-    - cd build
-    - make clean_python_build
-    - cd ..
-  script:
-    - source /Users/grunner/venv/amazed38/bin/activate
-    - python setup.py bdist_wheel
-    - delocate-wheel -w wheel/ dist/pylibamazed-*-cp38-*.whl
-    - pip install wheel/pylibamazed-*-cp38-*.whl
-    - cd /
-    - python -c "import pylibamazed; import pkg_resources; print(pkg_resources.get_distribution('pylibamazed').version)"
-    - python -c "from pylibamazed.redshift import get_version ; print(get_version())"
-  after_script:
-    - source /Users/grunner/venv/amazed38/bin/activate
-    - pip uninstall -y pylibamazed
-  artifacts:
-    paths:
-      - wheel/
-    expire_in: 1 week
-  cache:
-    key: osx
-    policy: pull
-    untracked: true
-  
-push-rc-36-osx:
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .wheel-osx
+
+.push-rc-osx:
   stage: push-rc
   tags:
     - osx
   when: manual
   before_script:
-    - source /Users/grunner/venv/amazed36/bin/activate
+    - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
     - pip install twine
   script:
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp36-*.whl
+    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
   cache:
     key: osx
     policy: pull
     untracked: true
+
+push-rc-36-osx:
+  variables:
+    PYTHON_VERSION: "36"
+  extends:
+    - .push-rc-osx
   dependencies:
     - wheel36-osx
 
 push-rc-37-osx:
-  stage: push-rc
-  tags:
-    - osx
-  when: manual
-  before_script:
-    - source /Users/grunner/venv/amazed37/bin/activate
-    - pip install twine
-  script:
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp37-*.whl
-  cache:
-    key: osx
-    policy: pull
-    untracked: true
+  variables:
+    PYTHON_VERSION: "37"
+  extends:
+    - .push-rc-osx
   dependencies:
     - wheel37-osx
 
 push-rc-38-osx:
-  stage: push-rc
-  tags:
-    - osx
-  when: manual
-  before_script:
-    - source /Users/grunner/venv/amazed38/bin/activate
-    - pip install twine
-  script:
-    - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp38-*.whl
-  cache:
-    key: osx
-    policy: pull
-    untracked: true
+  variables:
+    PYTHON_VERSION: "38"
+  extends:
+    - .push-rc-osx
   dependencies:
     - wheel38-osx
 
