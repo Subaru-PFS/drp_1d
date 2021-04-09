@@ -40,8 +40,8 @@ class CDataStore;
 
 
 
-  std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
-                                        COperatorResultStore &resultStore,
+  std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                        std::shared_ptr<COperatorResultStore> resultStore,
                                         TScopeStack &scope);
 
   /*
@@ -64,7 +64,7 @@ class CDataStore;
 
 private:
 
-    Bool Solve(COperatorResultStore& resultStore,
+  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplate& tpl,
                const TFloat64Range& lambdaRange,
@@ -76,9 +76,9 @@ private:
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
-    ChisquareArray BuildChisquareArray(const COperatorResultStore& store, const std::string & scopeStr) const;
+  ChisquareArray BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const;
 
-    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const COperatorResultStore& store,
+    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   shared_ptr<const COperatorResultStore> store,
                                                                 const std::string & scopeStr,
                                                                 const TCandidateZbyRank & ranked_zCandidates,
                                                                 const CSpectrum& spc,
@@ -90,7 +90,7 @@ private:
                                                                 std::string opt_extinction
                                                                 );
 
-    void StoreExtremaResults(COperatorResultStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
+    void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 

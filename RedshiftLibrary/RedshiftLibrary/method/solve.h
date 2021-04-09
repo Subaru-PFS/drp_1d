@@ -19,7 +19,7 @@ namespace NSEpic
     //std::vector<ParameterDescriptor> parameters; pd={name,type,constraint(union type)}
     TFloat64Range m_lambdaRange;
     TFloat64List m_redshifts;
-    void InitRanges(const CInputContext& inputContext);
+    void InitRanges(std::shared_ptr<const CInputContext> inputContext);
     CAutoScope m_objectTypeScope;
     const std::string m_name;
     const std::string m_objectType;
@@ -34,15 +34,15 @@ namespace NSEpic
     CSolve& operator=(CSolve&& other) = default;
 
 
-    void Compute(const CInputContext &inputContext,
-                 COperatorResultStore &resultStore,
+    void Compute(std::shared_ptr<const CInputContext> inputContext,
+                 std::shared_ptr<COperatorResultStore> resultStore,
                  TScopeStack &scope);
 
-    virtual std::shared_ptr<CSolveResult> compute(const CInputContext &inputContext,
-                                                  COperatorResultStore &resultStore,
+    virtual std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                                  std::shared_ptr<COperatorResultStore> resultStore,
                                                   TScopeStack &scope)=0;
     
-    virtual void saveToResultStore(std::shared_ptr<CSolveResult>,COperatorResultStore &resultStore);
+    virtual void saveToResultStore(std::shared_ptr<CSolveResult>,std::shared_ptr<COperatorResultStore> resultStore);
     
     // this method should implement at least populateParameters
 

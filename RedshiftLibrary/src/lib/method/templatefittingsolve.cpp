@@ -22,29 +22,29 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
 {
 }
 
-std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputContext &inputContext,
-                                                                   COperatorResultStore &resultStore,
+std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+                                                                   std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
-  const CSpectrum& spc=*(inputContext.m_Spectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext.m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext.m_RayCatalog.get());
+  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
+  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
 
-  m_redshiftSeparation = inputContext.m_ParameterStore->Get<Float64>( "extremaredshiftseparation");//todo: deci
+  m_redshiftSeparation = inputContext->m_ParameterStore->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
   Bool storeResult = false;
-  Float64 overlapThreshold=inputContext.m_ParameterStore->GetScoped<Float64>( "overlapThreshold");
-  std::string opt_spcComponent = inputContext.m_ParameterStore->GetScoped<std::string>( "spectrum.component");
-  std::string opt_interp = inputContext.m_ParameterStore->GetScoped<std::string>( "interpolation");
+  Float64 overlapThreshold=inputContext->m_ParameterStore->GetScoped<Float64>( "overlapThreshold");
+  std::string opt_spcComponent = inputContext->m_ParameterStore->GetScoped<std::string>( "spectrum.component");
+  std::string opt_interp = inputContext->m_ParameterStore->GetScoped<std::string>( "interpolation");
   const std::string opt_extinction = "no";
-  std::string opt_dustFit = inputContext.m_ParameterStore->GetScoped<std::string>("dustfit");
+  std::string opt_dustFit = inputContext->m_ParameterStore->GetScoped<std::string>("dustfit");
 
-  std::string calibration_dir = inputContext.m_ParameterStore->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext.m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
+  std::string calibration_dir = inputContext->m_ParameterStore->Get<std::string>("calibrationDir");
+  bool fft_processing = inputContext->m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
   
   if(fft_processing)
     {
-      m_opt_spclogrebin = inputContext.m_ParameterStore->GetScoped<std::string>("enablespclogrebin");
+      m_opt_spclogrebin = inputContext->m_ParameterStore->GetScoped<std::string>("enablespclogrebin");
       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(calibration_dir));
     }
   else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
@@ -71,10 +71,10 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputC
         _type = nType_all;
     }
 
-    m_opt_maxCandidate = inputContext.m_ParameterStore->GetScoped<int>( "extremacount");
-    m_opt_pdfcombination=inputContext.m_ParameterStore->GetScoped<std::string>( "pdfcombination");
+    m_opt_maxCandidate = inputContext->m_ParameterStore->GetScoped<int>( "extremacount");
+    m_opt_pdfcombination=inputContext->m_ParameterStore->GetScoped<std::string>( "pdfcombination");
     /*
-    m_opt_saveintermediateresults = inputContext.m_ParameterStore->GetScoped<std::string>( "saveintermediateresults");
+    m_opt_saveintermediateresults = inputContext->m_ParameterStore->GetScoped<std::string>( "saveintermediateresults");
     if(m_opt_saveintermediateresults=="yes")
     {
         m_opt_enableSaveIntermediateTemplateFittingResults = true;
@@ -119,10 +119,10 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputC
 
         // save in resultstore pdf results
         //        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-        resultStore.StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF (deprecated comment, must be removed)
+        resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF (deprecated comment, must be removed)
         
         // save in resultstore candidates results
-        resultStore.StoreScopedGlobalResult( "candidatesresult", candidateResult );
+        resultStore->StoreScopedGlobalResult( "candidatesresult", candidateResult );
 
 
         //for each extrema, get best model by reading from datastore and selecting best fit
@@ -142,7 +142,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputC
         StoreExtremaResults(resultStore, ExtremaResult);
 
         std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = 
-                        std::make_shared<CTemplateFittingSolveResult>(resultStore.GetCurrentScopeName(),
+                        std::make_shared<CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
                                                                       ExtremaResult,
                                                                       m_opt_pdfcombination,
                                                                       pdfz.m_postmargZResult->valEvidenceLog);
@@ -154,7 +154,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(const CInputC
 }
 
 
-Bool CMethodTemplateFittingSolve::Solve(COperatorResultStore& resultStore,
+Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                    const CSpectrum& spc,
                                    const CTemplate& tpl,
                                    const TFloat64Range& lambdaRange,
@@ -228,7 +228,7 @@ Bool CMethodTemplateFittingSolve::Solve(COperatorResultStore& resultStore,
             return false;
         }else{
             // Store results
-            resultStore.StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), templateFittingResult );
+            resultStore->StoreScopedPerTemplateResult( tpl, scopeStr.c_str(), templateFittingResult );
 
             //Save intermediate templatefitting results
             if(m_opt_enableSaveIntermediateTemplateFittingResults && templateFittingResult->ChiSquareIntermediate.size()>0 && templateFittingResult->ChiSquareIntermediate.size()==templateFittingResult->Redshifts.size())
@@ -251,7 +251,7 @@ Bool CMethodTemplateFittingSolve::Solve(COperatorResultStore& resultStore,
                             }
 
                             std::string resname = (boost::format("%s_intermediate_ism%d_igm%d") % scopeStr.c_str() % kism % kigm).str();
-                            resultStore.StoreScopedPerTemplateResult( tpl, resname.c_str(), result_chisquare_intermediate );
+                            resultStore->StoreScopedPerTemplateResult( tpl, resname.c_str(), result_chisquare_intermediate );
                         }
                     }
                 }
@@ -265,17 +265,17 @@ Bool CMethodTemplateFittingSolve::Solve(COperatorResultStore& resultStore,
     return true;
 }
 
-ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(const COperatorResultStore& store, const std::string & scopeStr) const
+ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
 
     Log.LogDetail("templatefittingsolve: building chisquare array");
-    std::string scope = store.GetCurrentScopeName() + ".";
+    std::string scope = store->GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
     Log.LogDetail("    templatefittingsolve: using results in scope: %s", scope.c_str());
 
-    TOperatorResultMap meritResults = store.GetPerTemplateResult(scope.c_str());
+    TOperatorResultMap meritResults = store->GetPerTemplateResult(scope.c_str());
 
     chisquarearray.cstLog = -1;
 
@@ -348,7 +348,8 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(const COperatorR
 
 
 std::shared_ptr<const CExtremaResult> 
-CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store, const std::string & scopeStr,
+CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+                                               const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
@@ -361,12 +362,12 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
 {
 
     Log.LogDetail("CMethodTemplateFittingSolve::SaveExtremaResult: building chisquare array");
-    std::string scope = store.GetCurrentScopeName() + ".";
+    std::string scope = store->GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
     Log.LogDetail("    templatefittingsolve: using results in scope: %s", scope.c_str());
 
-    TOperatorResultMap results = store.GetPerTemplateResult(scope.c_str());
+    TOperatorResultMap results = store->GetPerTemplateResult(scope.c_str());
 
     //Bool foundRedshiftAtLeastOnce = false;
 
@@ -481,7 +482,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(const COperatorResultStore& store
 }
 
 
-void CMethodTemplateFittingSolve::StoreExtremaResults( COperatorResultStore &resultStore, 
+void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
                                                        std::shared_ptr<const CExtremaResult> & ExtremaResult) const
 {
     Int32 nResults = ExtremaResult->size();
@@ -498,10 +499,10 @@ void CMethodTemplateFittingSolve::StoreExtremaResults( COperatorResultStore &res
     for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
     {
         std::string fname_spc = (boost::format("templatefitting_spc_extrema_%1%") % i).str();
-        resultStore.StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
+        resultStore->StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
 
         fname_spc = (boost::format("templatefitting_fitcontinuum_extrema_%1%") % i).str();
-        resultStore.StoreScopedGlobalResult( fname_spc.c_str(),  m_savedModelContinuumFittingResults[i] );
+        resultStore->StoreScopedGlobalResult( fname_spc.c_str(),  m_savedModelContinuumFittingResults[i] );
     }
     return;
 }
