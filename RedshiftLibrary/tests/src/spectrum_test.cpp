@@ -192,21 +192,50 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     BOOST_TEST_MESSAGE("index22:"<<object_CSpectrum2.GetSampleCount());
     BOOST_TEST_MESSAGE("index23:"<<object_CSpectrum2.GetFluxAxis()[0]);
-    BOOST_TEST_MESSAGE("index23:"<<object_CSpectrum2.GetSpectralAxis()[0]);
+    BOOST_TEST_MESSAGE("index24:"<<object_CSpectrum2.GetSpectralAxis()[0]);
 
     TFloat64List mask(nbmax, 1.);
-    BOOST_TEST_MESSAGE("index33:"<<mask.size());
-    BOOST_TEST_MESSAGE("index33:"<<mask[0]);
-    BOOST_TEST_MESSAGE("index34:"<<mask[0]);
+    BOOST_TEST_MESSAGE("index31:"<<mask.size());
+    BOOST_TEST_MESSAGE("index32:"<<mask[0]);
+    BOOST_TEST_MESSAGE("index33:"<<mask[nbmax-1]);
 
-    CSpectrum* object_CSpectrum3=new CSpectrum(object_CSpectrum2,mask);
+    CSpectrum* object_CSpectrum3 = new CSpectrum(object_CSpectrum2,mask);
 
     BOOST_CHECK(object_CSpectrum3->GetSampleCount()==nbmax);
-    BOOST_CHECK_CLOSE(object_CSpectrum3->GetFluxAxis()[0],object_CSpectrum2.GetFluxAxis()[0],1e-12);
-    BOOST_CHECK_CLOSE(object_CSpectrum3->GetSpectralAxis()[0],object_CSpectrum2.GetSpectralAxis()[0],1e-12);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[0]==(*_FluxAxis)[0]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[0]==(*_FluxAxis).GetError()[0]);
+    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[0]==(*_SpectralAxis)[0]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[nbmax-1]==(*_FluxAxis)[nbmax-1]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[nbmax-1]==(*_FluxAxis).GetError()[nbmax-1]);
+    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[nbmax-1]==(*_SpectralAxis)[nbmax-1]);
 
-
+    BOOST_TEST_MESSAGE("index42:"<<object_CSpectrum3->GetSampleCount());
     BOOST_TEST_MESSAGE("index43:"<<object_CSpectrum3->GetFluxAxis()[0]);
+    BOOST_TEST_MESSAGE("index44:"<<object_CSpectrum3->GetSpectralAxis()[0]);
+
+    TFloat64List mask0(nbmax, 0.);
+    CSpectrum object_CSpectrum3_bis = CSpectrum(object_CSpectrum2,mask0);
+    BOOST_CHECK(object_CSpectrum3_bis.GetSampleCount()==0);
+    BOOST_CHECK(object_CSpectrum3_bis.GetFluxAxis().isEmpty()==true);
+    BOOST_CHECK(object_CSpectrum3_bis.GetFluxAxis().GetError().isEmpty()==true);
+    BOOST_CHECK(object_CSpectrum3_bis.GetSpectralAxis().isEmpty()==true);
+
+    TFloat64List mask_even;
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        if (i%2==0)
+            mask_even.push_back(1.);
+        else
+            mask_even.push_back(0.);
+    }
+    CSpectrum object_CSpectrum3_ter = CSpectrum(object_CSpectrum2,mask_even);
+    BOOST_CHECK(object_CSpectrum3_ter.GetSampleCount()==nbmax/2);
+    for (int i=nbmin; i<nbmax/2;++i)
+    {
+        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis()[i]==(*_FluxAxis)[2*i]);
+        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[2*i]);
+        BOOST_CHECK(object_CSpectrum3_ter.GetSpectralAxis()[i]==(*_SpectralAxis)[2*i]);
+    }
 
     BOOST_TEST_MESSAGE("test constructeur OK");
 

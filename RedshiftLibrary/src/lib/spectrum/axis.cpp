@@ -56,7 +56,7 @@ Int32 CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis)cons
         Log.LogError("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
         throw runtime_error("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
     }
-    UInt32 sum = UInt32(std::accumulate(m_Samples.begin(), m_Samples.end(), 0));
+    UInt32 sum = UInt32(std::count(mask.begin(), mask.end(), 1));
     maskedAxis.m_Samples.clear();
     maskedAxis.m_Samples.reserve(sum);
     for(Int32 i = 0; i < GetSamplesCount(); i++){
