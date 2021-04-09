@@ -9,16 +9,19 @@ using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                             std::shared_ptr<const CRayCatalog> rayCatalog,
+                             std::shared_ptr<CRayCatalog> rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
-  m_Spectrum(spc),
-  m_TemplateCatalog(tmplCatalog),
-  m_RayCatalog(rayCatalog),
-  m_ParameterStore(paramStore)
+  m_Spectrum(std::move(spc)),
+  m_TemplateCatalog(std::move(tmplCatalog)),
+  m_RayCatalog(std::move(rayCatalog)),
+  m_ParameterStore(std::move(paramStore))
 {
   InitSpectrum();
   std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
   InitIsmIgm(calibrationPath);
+
+  TFloat64Range lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+  m_Spectrum->GetSpectralAxis().ClampLambdaRange( lambdaRange, m_lambdaRange );
 }
 
 

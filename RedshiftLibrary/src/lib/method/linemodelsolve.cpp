@@ -40,7 +40,7 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
  * Populates the method parameters from the dataStore into the class members
  * Returns true if successful, false otherwise
  **/
-Bool CLineModelSolve::PopulateParameters( std::shared_ptr<CParameterStore> parameterStore )
+Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore )
 {
   parameterStore->Get("extremaredshiftseparation",m_redshiftSeparation,2e-3);
     parameterStore->GetScopedParam( "linemodel.linetypefilter", m_opt_linetypefilter, "no" );
@@ -268,10 +268,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
-  PopulateParameters( inputContext->m_ParameterStore );
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  PopulateParameters( inputContext->GetParameterStore() );
   bool retSolve = Solve( resultStore,
                          spc,
                          tplCatalog,

@@ -31,21 +31,19 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CTemplateCatalog> templateCatalog,
-                               std::shared_ptr<const CRayCatalog> rayCatalog,
+                               std::shared_ptr<CRayCatalog> rayCatalog,
                                const std::string& paramsJSONString)
 {
   Log.LogInfo("Processing context initialization");
 
-  std::shared_ptr<CParameterStore> parameterStore = std::shared_ptr<CParameterStore>(new CParameterStore(m_ScopeStack));
+  std::shared_ptr<CParameterStore> parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
   parameterStore->FromString(paramsJSONString);
 
 //  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
-  m_inputContext = std::shared_ptr<CInputContext>(new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore));
+  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,rayCatalog,parameterStore);
 
-  m_ResultStore = std::shared_ptr<COperatorResultStore>( new COperatorResultStore(m_ScopeStack) );
+  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
 
-  TFloat64Range lambdaRange = parameterStore->Get<TFloat64Range>("lambdarange");
-  spectrum->GetSpectralAxis().ClampLambdaRange( lambdaRange, m_inputContext->m_lambdaRange );
   Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
                m_inputContext->m_lambdaRange.GetBegin(),
                m_inputContext->m_lambdaRange.GetEnd(),
