@@ -1,5 +1,5 @@
 #include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/processflow/inputContext->h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 
 using namespace NSEpic;
@@ -12,7 +12,7 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 {
 
 }
-void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext>, TFloat64Range& redshiftRange, Float64& redshiftStep)
+void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
 {
     //default is to read from the scoped paramStore
     redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");

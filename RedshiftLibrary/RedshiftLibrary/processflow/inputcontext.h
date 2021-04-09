@@ -32,8 +32,7 @@ class CInputContext
   std::shared_ptr<CRayCatalog>  GetRayCatalog() {return m_RayCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 
-  TFloat64Range   m_lambdaRange;
-    
+  TFloat64Range   m_lambdaRange;    
   TFloat64Range   m_redshiftRangeFFT;//computed with logRebinning 
   Float64         m_redshiftStepFFT; 
   Bool            m_use_LogLambaSpectrum = 0;
@@ -46,6 +45,7 @@ private:
   std::shared_ptr<CRayCatalog> m_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
+  void RebinInputWrapper();
 };
 
 } 

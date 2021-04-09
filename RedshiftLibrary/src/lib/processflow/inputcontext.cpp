@@ -17,42 +17,8 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_ParameterStore(std::move(paramStore))
 {
     m_Spectrum->InitSpectrum(*m_ParameterStore);
-    
-    //non clamped lambdaRange: to be clamped depending on used spectra
-    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");  
-    
-    //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
-    //The drawback of the below code is that we are violating object and method scopes by trying to read "deep" info
-    //Another option could be to move fftprocessing to the object scope (vs object.method scope)
-    bool fft_processing = false, fft_processing_qso = false, fft_processing_star = false, fft_processinglmContinuum = false;
-    if(m_ParameterStore->Has<std::string>( "qso.templatefittingsolve.fftprocessing"))
-        fft_processing_qso = m_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>( "star.templatefittingsolve.fftprocessing"))
-        fft_processing_star = m_ParameterStore->Get<std::string>( "star.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.templatefittingsolve.fftprocessing"))
-        fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing"))
-        fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
-    /*if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing"))
-        fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
-    */
-    if(fft_processing_qso || fft_processing_star)
-    {
-        Log.LogError("FFT processing is not yet supported for stars or qso");
-        throw std::runtime_error("FFT processing is not yet supported for star or qso");
-    }
-    m_use_LogLambaSpectrum = fft_processing || fft_processing_qso || fft_processing_star || fft_processinglmContinuum;
-    
-    /*
-    std::string fft_processing, fft_processing_qso, fft_processinglmContinuum, fft_processinglm;
-    m_ParameterStore->Get("qsosolve.templatefittingsolve.fftprocessing", fft_processing_qso, "yes" );  //check if it has changed
-    m_ParameterStore->Get("galaxy.templatefittingsolve.fftprocessing", fft_processing, "no");
-    m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing", fft_processinglmContinuum, "yes");//this hasnt changed yet
-    m_ParameterStore->Get("galaxy.linemodelsolve.linemodel.fftprocessing", fft_processinglm, "no");//new param to decide if we should use fft for linemodel 
-    m_use_LogLambaSpectrum = fft_processing=="yes" || fft_processing_qso=="yes" || fft_processinglmContinuum=="yes" ||fft_processinglm=="yes" ;
-    */
-    if(m_use_LogLambaSpectrum)
-        RebinInputs();
+
+    RebinInputWrapper(); 
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
@@ -85,64 +51,38 @@ Template rebinning:
 
 Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus the client has the responsibility to add these info to each spectrum
 */
-
-void CInputContext::RebinInputs() 
+void CInputContext::RebinInputWrapper() 
 {
+    //non clamped lambdaRange: to be clamped depending on used spectra
+    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+    //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
+    //The drawback of the below code is that we are violating object and method scopes by trying to read "deep" info
+    //Another option could be to move fftprocessing to the object scope (vs object.method scope)
+    bool fft_processing = false, fft_processing_qso = false, fft_processing_star = false, fft_processinglmContinuum = false;
+    if(m_ParameterStore->Has<std::string>( "qso.templatefittingsolve.fftprocessing"))
+        fft_processing_qso = m_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
+    if(m_ParameterStore->Has<std::string>( "star.templatefittingsolve.fftprocessing"))
+        fft_processing_star = m_ParameterStore->Get<std::string>( "star.templatefittingsolve.fftprocessing") == "yes";
+    if(m_ParameterStore->Has<std::string>("galaxy.templatefittingsolve.fftprocessing"))
+        fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
+    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing"))
+        fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
+    /*if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing"))
+        fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
+    */
+    if(fft_processing_qso || fft_processing_star)
+    {
+        Log.LogError("FFT processing is not yet supported for stars or qso");
+        throw std::runtime_error("FFT processing is not yet supported for star or qso");
+    }
+    m_use_LogLambaSpectrum = fft_processing || fft_processing_qso || fft_processing_star || fft_processinglmContinuum;
 
-    TFloat64Range   m_redshiftRange = m_ParameterStore->Get<TFloat64Range>("redshiftrange");
-    Float64         m_redshiftStep = m_ParameterStore->Get<Float64>( "redshiftstep" );
-   
-    // we have a probem here, cause only considering redshift range of galaxies
-    //if we want to rebin stars we should call again computlogstep with stars redshiftrange!! same for qso
+    if(!m_use_LogLambaSpectrum) return;
+
     CSpectrumLogRebinning logReb;
-    std::string errorRebinMethod = "rebinVariance";//rebin error axis as well
+    logReb.RebinInputs(*this);
 
-    logReb.SetupRebinning(*m_Spectrum, m_lambdaRange, m_redshiftStep, m_redshiftRange);
-    if(m_Spectrum->GetSpectralAxis().IsLogSampled()){
-        m_rebinnedSpectrum = m_Spectrum;
-    }else
-        m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);        
-    
-    m_redshiftRangeFFT = logReb.m_zrange;
-    m_redshiftStepFFT = logReb.m_logGridStep;
-    //rebin templates using previously identified parameters,
-    //TODO: rebin only if parameters to use are different from previously used params
-    for(std::string s : m_TemplateCatalog->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
-    { 
-        // check existence of already  & correctly logsampled templates
-        m_TemplateCatalog->m_logsampling = true;
-        TTemplateRefList  TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
-        m_TemplateCatalog->m_logsampling = false;
-        if (!TplList.empty())
-        {            
-            for (auto tpl : TplList)
-            {   
-                Bool needrebinning = false;
-                if( tpl->GetSpectralAxis().IsLogSampled(logReb.m_logGridStep) )
-                    needrebinning = true;
-                if (logReb.m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
-                    needrebinning = true;
-                if (logReb.m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
-                    needrebinning = true;
-                
-                if (needrebinning)
-                {
-                    Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName());
-                    std::shared_ptr<const CTemplate> input_tpl = m_TemplateCatalog->GetTemplateByName(TStringList{s}, tpl->GetName());  
-                    tpl = logReb.LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
-                }
-            } 
-            break; // next category
-        }
-
-        // no rebined templates in the category: rebin all templates
-        TplList = m_TemplateCatalog->GetTemplate(TStringList{s});
-        for (auto tpl : TplList)
-        {   
-            std::shared_ptr<CTemplate> rebinnedTpl = logReb.LoglambdaRebinTemplate(tpl);
-            m_TemplateCatalog->Add(rebinnedTpl, "log");
-        } 
-    }  
+    return;
 }
 
 

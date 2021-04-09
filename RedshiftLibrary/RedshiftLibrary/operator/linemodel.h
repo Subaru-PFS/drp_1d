@@ -147,8 +147,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
-    bool m_opt_tplfit_fftprocessing = true;//only for firstpass
-    bool m_opt_tplfit_fftprocessing_secondpass = true;
+    bool m_opt_tplfit_fftprocessing = false; //we cant set it as the default since not taken into account when deiding on rebinning
+    bool m_opt_tplfit_fftprocessing_secondpass = false;//true;
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;

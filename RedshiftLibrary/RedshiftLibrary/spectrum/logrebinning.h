@@ -6,9 +6,9 @@
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/common/indexing.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
+#include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-
-
+#include <RedshiftLibrary/processflow/inputcontext.h>
 
 namespace NSEpic
 {
@@ -18,21 +18,20 @@ class CSpectrumLogRebinning
 
 public:
     //applying Rule of zero
-    void  SetupRebinning( CSpectrum &spectrum,
-                        const TFloat64Range &lambdaRange, 
-                        const Float64 zInputStep,
-                        const TFloat64Range zInputRange);
-    //todo: merge these two functions once all is stable:
-    std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
-                                                            std::string errorRebinMethod="rebinVariance");
-    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
-
-    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange,
-                                                        UInt32 gridCount);
+    void  RebinInputs(CInputContext& inputContext); 
     TFloat64Range m_zrange;
     Float64 m_logGridStep; 
     TFloat64Range m_lambdaRange_spc, m_lambdaRange_tpl;
 private:
+    void  SetupRebinning( CSpectrum &spectrum,
+                        const TFloat64Range &lambdaRange, 
+                        const Float64 zInputStep,
+                        const TFloat64Range zInputRange);
+    std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
+                                                            std::string errorRebinMethod="rebinVariance");
+    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
+
+    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange, UInt32 gridCount);
     void InferTemplateRebinningSetup();
     const std::string m_rebinMethod = "lin";
 

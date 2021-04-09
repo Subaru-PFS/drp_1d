@@ -747,7 +747,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
             EbmvCoeff =  m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
             //access any template and retrieve the ismcorrection object
-            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(tplCategoryList[0], 0).m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(tplCategoryList[0], 0)->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
 
         }
     }          

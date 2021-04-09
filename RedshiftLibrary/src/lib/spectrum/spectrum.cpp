@@ -45,9 +45,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
     alreadyRemoved(other.alreadyRemoved),
-    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale()),
-    m_LogrebinZStep(other.m_LogrebinZStep),
-    m_LogrebinRefLambda(other.m_LogrebinRefLambda)
+    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumNoiseAxis    &otherRawError = other.m_RawFluxAxis.GetError(),
                                 &otherContinuumError = other.m_ContinuumFluxAxis.GetError(),

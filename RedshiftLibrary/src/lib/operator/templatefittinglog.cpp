@@ -1174,6 +1174,12 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const std::vector<Float64>&
     return 0;
 }
 //find indexes in templateSpectra for which Z falls into the redshift range
+/**
+ * Method logic: 
+ * 1. count the number of steps (Integer) between start/end borders of redshiftRange and 
+ * the min/max Z values corresponding to the templateSpectralAxis min/max borders
+ * 2. these number of zsteps correspond exactly to the right/left offsets on the spectralAxis in log
+*/
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range redshiftrange,
                                                                const Float64 redshiftStep)
 {
@@ -1186,7 +1192,9 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Ran
     Float64 zmin = (spcLambda.back() - tplLambda.back()) / tplLambda.back(); // get minimum reachable z with given template & spectra
     Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/redshiftStep;
     UInt32 ilbdamax = tplLambda.size() - 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
-    
+ 
+ Log.LogInfo("FindTplSpectralIndex: idbdamax: %d with zmin %f; ilbmamin: %d with zmax: %f", ilbdamax, zmin, ilbdamin, zmax);   
+ 
     if(ilbdamax>tplLambda.size())
         throw runtime_error("FindTplSpectralIndex failed to find indexes");
 

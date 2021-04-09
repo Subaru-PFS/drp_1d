@@ -186,7 +186,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             }
         }
     }else{//at least have one element
-        MeiksinList.push_nIsmEbmvCoeffsback(-1);
+        MeiksinList.push_back(-1);
     }
 
     Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration

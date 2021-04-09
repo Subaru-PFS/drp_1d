@@ -14,6 +14,67 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
+
+void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
+{
+    // we have a probem here, cause only considering redshift range of galaxies
+    //if we want to rebin stars we should call again computlogstep with stars redshiftrange!! same for qso
+    std::string errorRebinMethod = "rebinVariance";//rebin error axis as well
+
+    TFloat64Range   redshiftRange = inputContext.m_ParameterStore->Get<TFloat64Range>("redshiftrange");
+    Float64         redshiftStep = inputContext.m_ParameterStore->Get<Float64>( "redshiftstep" );
+
+    SetupRebinning(*inputContext.m_Spectrum, 
+                   inputContext.m_lambdaRange, 
+                   redshiftStep, 
+                   redshiftRange);
+    if(inputContext.m_Spectrum->GetSpectralAxis().IsLogSampled()){
+        inputContext.m_rebinnedSpectrum = inputContext.m_Spectrum;
+    }else
+        inputContext.m_rebinnedSpectrum = LoglambdaRebinSpectrum(inputContext.m_Spectrum, errorRebinMethod);        
+    
+    inputContext.m_redshiftRangeFFT = m_zrange;
+    inputContext.m_redshiftStepFFT = m_logGridStep;
+    //rebin templates using previously identified parameters,
+    //TODO: rebin only if parameters to use are different from previously used params
+    for(std::string s : inputContext.m_TemplateCatalog->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
+    { 
+        // check existence of already  & correctly logsampled templates
+        inputContext.m_TemplateCatalog->m_logsampling = true;
+        TTemplateRefList  TplList = inputContext.m_TemplateCatalog->GetTemplate(TStringList{s});
+        inputContext.m_TemplateCatalog->m_logsampling = false;
+        if (!TplList.empty())
+        {            
+            for (auto tpl : TplList)
+            {   
+                Bool needrebinning = false;
+                if( tpl->GetSpectralAxis().IsLogSampled(m_logGridStep) )
+                    needrebinning = true;
+                if (m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
+                    needrebinning = true;
+                if (m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
+                    needrebinning = true;
+                
+                if (needrebinning)
+                {
+                    Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName().c_str());
+                    std::shared_ptr<const CTemplate> input_tpl = inputContext.m_TemplateCatalog->GetTemplateByName(TStringList{s}, tpl->GetName());  
+                    tpl = LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
+                }
+            } 
+            break; // next category
+        }
+
+        // no rebined templates in the category: rebin all templates
+        TplList = inputContext.m_TemplateCatalog->GetTemplate(TStringList{s});
+        for (auto tpl : TplList)
+        {   
+            std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
+            inputContext.m_TemplateCatalog->Add(rebinnedTpl, "log");
+        } 
+    }  
+}
+
 /**
  * Brief: Get loglambdastep and update the zrange accordingly
  * Below code relies on the fact that both loglambda grid and the log(Redshift+1) grid follows the same arithmetic progession with a common step
@@ -177,7 +238,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
         overlapFull = false;
     if (!overlapFull)
     {
-        Log.LogError(" CSpectrumLogRebinning::LoglambdaRebinTemplate: overlap found to be lower than 1.0 for the template %s", tpl->GetName());
+        Log.LogError(" CSpectrumLogRebinning::LoglambdaRebinTemplate: overlap found to be lower than 1.0 for the template %s", tpl->GetName().c_str());
         throw std::runtime_error("CInputContext::RebinInputs: overlap found to be lower than 1.0");
     }
 

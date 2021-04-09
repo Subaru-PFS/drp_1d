@@ -1036,7 +1036,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     Float64 overlapThreshold = 1., amplitude = 1.; 
     m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
                                                  zcontinuum,
-                                                 m_fitContinuum_tplFitDustCoeff, 
+                                                 m_fitContinuum_tplFitEbmvCoeff, 
                                                  m_fitContinuum_tplFitMeiksinIdx, 
                                                  amplitude,
                                                  inter_opt, m_fitContinuum_tplFitMeiksinIdx==-1?"no":"yes", range, 
