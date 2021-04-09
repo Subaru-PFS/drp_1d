@@ -35,10 +35,18 @@ CTemplateCatalog::~CTemplateCatalog()
 
 }
 
+TTemplateConstRefList CTemplateCatalog::const_TTemplateRefList_cast(const TTemplateRefList & list)
+{
+    TTemplateConstRefList const_list;
+    for (auto tpl : list) const_list.push_back(tpl);
+
+    return const_list;
+}
+
 /**
  * Returns a list containing all templates as enumerated in the categoryList input.
  */
-TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
+TTemplateRefList CTemplateCatalog::GetTemplate_( const TStringList& categoryList ) const
 {
     TTemplateRefList list;
 
@@ -52,6 +60,7 @@ TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList 
 
     return list;
 }
+
 
 const CTemplate&  CTemplateCatalog::GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const
 {

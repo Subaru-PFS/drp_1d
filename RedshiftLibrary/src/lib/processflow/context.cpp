@@ -30,7 +30,7 @@ CProcessFlowContext::~CProcessFlowContext()
 
 }
 void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
-                               std::shared_ptr<const CTemplateCatalog> templateCatalog,
+                               std::shared_ptr<CTemplateCatalog> templateCatalog,
                                std::shared_ptr<const CRayCatalog> rayCatalog,
                                const std::string& paramsJSONString)
 {

@@ -8,7 +8,7 @@
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
-                             std::shared_ptr<const CTemplateCatalog> tmplCatalog,
+                             std::shared_ptr<CTemplateCatalog> tmplCatalog,
                              std::shared_ptr<const CRayCatalog> rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
   m_Spectrum(spc),

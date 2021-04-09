@@ -15,14 +15,14 @@ class CInputContext
 {
  public:
   CInputContext(std::shared_ptr<CSpectrum> spc,
-                std::shared_ptr<const CTemplateCatalog> tmplCatalog,
+                std::shared_ptr<CTemplateCatalog> tmplCatalog,
                 std::shared_ptr<const CRayCatalog> rayCatalog,
                 std::shared_ptr<CParameterStore> paramStore);
   ~CInputContext(){}
 
   std::shared_ptr<CSpectrum> m_Spectrum;
 
-  std::shared_ptr<const CTemplateCatalog> m_TemplateCatalog;
+  std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::shared_ptr<const CRayCatalog> m_RayCatalog;
 
   std::shared_ptr<CParameterStore> m_ParameterStore;
