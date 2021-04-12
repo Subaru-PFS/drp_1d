@@ -119,7 +119,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,
                                      tplCatalogUnused,
-                                     tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,
                                      restRayList,

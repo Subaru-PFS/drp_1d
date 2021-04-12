@@ -49,6 +49,21 @@ CTemplate::CTemplate( const CTemplate& other):
         m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
 }
 
+CTemplate::CTemplate( const CTemplate& other, TFloat64List mask): 
+    CSpectrum(other, mask),
+    m_kDust(other.m_kDust),
+    m_meiksinIdx(other.m_meiksinIdx),
+    m_Category( other.m_Category),
+    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
+    m_IsmIgm_kend(other.m_IsmIgm_kend),
+    m_computedDustCoeff(other.m_computedDustCoeff), 
+    m_computedMeiksingCoeff(other.m_computedDustCoeff),
+    m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
+    m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
+{
+        if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+            m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
+}
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);

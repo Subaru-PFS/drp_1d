@@ -4,7 +4,7 @@
 #include <RedshiftLibrary/common/mask.h>
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include <math.h>
+#include <cmath>
 using namespace NSEpic;
 using namespace std;
 
@@ -54,6 +54,35 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) 
 {
 }
 
+CSpectrumSpectralAxis::CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other):
+    CSpectrumAxis(other),
+    m_SpectralFlags(other.m_SpectralFlags),
+    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
+    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
+{}
+CSpectrumSpectralAxis::CSpectrumSpectralAxis(CSpectrumSpectralAxis && other):
+    CSpectrumAxis(other),
+    m_SpectralFlags(other.m_SpectralFlags),
+    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
+    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
+{}
+
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
+{
+    m_Samples = other.m_Samples;
+    m_SpectralFlags  = other.m_SpectralFlags;
+    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
+    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
+    return *this;
+}
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( CSpectrumSpectralAxis&& other)
+{
+    m_Samples = other.m_Samples;
+    m_SpectralFlags  = other.m_SpectralFlags;
+    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
+    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
+    return *this;
+}
 /**
  * Constructor, shifts origin along direction an offset distance.
  */
@@ -397,7 +426,7 @@ void CSpectrumSpectralAxis::SetLogScale()
 /**
  * Check if spectralAxis is well rebinned in log
 */
-Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() 
+Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
 {
     Float64 logGridStep;
     if(IsInLogScale())
@@ -443,7 +472,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling()
  * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
  * 
 */
-Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
+Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)const
 {   
     if(!m_regularLogSamplingChecked) 
         CheckLoglambdaSampling();
@@ -458,7 +487,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)
     return LogSampled;
 }
 
-Bool CSpectrumSpectralAxis::IsLogSampled()
+Bool CSpectrumSpectralAxis::IsLogSampled()const
 {
     Float64 logGridstep;
     if(IsInLogScale())
@@ -467,4 +496,41 @@ Bool CSpectrumSpectralAxis::IsLogSampled()
         logGridstep = log(m_Samples[1]/m_Samples[0]);
 
     return IsLogSampled(logGridstep);
+}
+
+//still TODO: check end-to-end redshift coverage
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
+{
+    return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
+}
+/*@ssratio stands for sub-samplingRatio*/
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const
+{
+    //if(std::isnan(m_regularLogSamplingStep))
+    if(!IsLogSampled())
+    {
+        throw runtime_error("Cannot subsample spectrum!");
+    }
+    UInt32 s = GetSamplesCount();
+    if(ssratio==1) return TFloat64List(s, 1.);
+    TFloat64List mask(s, 0.); 
+    //for(Int32 i = ilbda.GetBegin(); i>=ilbda.GetEnd(); i+=multi){ //here no need to reverse
+    for(Int32 i=ilbda.GetEnd(); i>=ilbda.GetBegin();i-=ssratio){//ensure that z[0] remains the same
+        mask[i]=1;
+    }
+    return mask;
+}
+/**
+ * Brief: static method
+ * check that division of two floating values gives an int, and return modulo value
+ *  Int32 logstep_int = Int32(logstep*1E12);
+    Int32 rebinlogstep_int = Int32(rebinlogstep*1E12);
+    auto lambda_redshift_modulo = logstep_int %rebinlogstep_int;
+    auto modulo_2 = logstep_int - trunc(logstep_int/rebinlogstep_int)*rebinlogstep_int;
+*/
+UInt32 CSpectrumSpectralAxis::GetIntegerRatio(Float64 hvalue, Float64 lvalue, Float64& modulo) 
+{
+    UInt32 ratio = std::round(hvalue/lvalue);
+    modulo = hvalue - ratio*lvalue;
+    return ratio;
 }

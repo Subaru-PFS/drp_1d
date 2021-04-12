@@ -583,8 +583,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             subresult->Redshifts = subRedshifts;
             // slice the template
             redshiftStep = log((subRedshifts[1]+1.)/(subRedshifts[0]+1.));          
-        } else{
-            //ilbda = TInt32Range(0, m_templateRebinedLog.GetSampleCount() - 1);
+        } else{       
             redshiftStep = log((result->Redshifts[1]+1.)/(result->Redshifts[0]+1.));
             subresult->Init(result->Redshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
             subresult->Redshifts = result->Redshifts;
@@ -808,8 +807,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         }
     }
     //check borders
-    if(std::abs(z_vect.back()-z_vect_verif.back()) >1E-8)
-        throw runtime_error("z_vect and z_vect_verification do not start at the same value.");
+    if(z_vect.size()!=z_vect_verif.size())
+        throw runtime_error("z_vect size and z_vect_verification size do not match.");
     Int32 nISM = ismEbmvCoeffs.size();
     Int32 nIGM = igmMeiksinCoeffs.size();
 
@@ -1183,13 +1182,22 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const std::vector<Float64>&
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range redshiftrange,
                                                                const Float64 redshiftStep)
 {
-    const TAxisSampleList & spcLambda = m_spectrumRebinedLog.GetSpectralAxis().GetSamplesVector();
-    const TAxisSampleList & tplLambda = m_templateRebinedLog.GetSpectralAxis().GetSamplesVector();
+    return FindTplSpectralIndex(m_spectrumRebinedLog, m_templateRebinedLog, redshiftrange, redshiftStep);
+}
+
+TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrum& spc, 
+                                                               const CTemplate& tpl,
+                                                               const TFloat64Range redshiftrange,
+                                                               const Float64 redshiftStep)
+{
+    const TAxisSampleList & spcLambda = spc.GetSpectralAxis().GetSamplesVector();
+    const TAxisSampleList & tplLambda = tpl.GetSpectralAxis().GetSamplesVector();
 
     Float64 zmax = (spcLambda[0] - tplLambda[0]) / tplLambda[0]; //get maximum z reachable with given template & spectra
     Float64 offset_left =  log((zmax+1)/(redshiftrange.GetEnd()+1))/redshiftStep;  //  should be integer at numerical precision before round
     UInt32 ilbdamin = round(offset_left); // deduce min lambda from max reachable z and max z in current range.
     Float64 zmin = (spcLambda.back() - tplLambda.back()) / tplLambda.back(); // get minimum reachable z with given template & spectra
+
     Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/redshiftStep;
     UInt32 ilbdamax = tplLambda.size() - 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
@@ -1263,16 +1271,52 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }
     //TODO: Avoid copying spc and tpl
     //For this end, we have to change the signature of ::compute to pass non-const spectra (by ref or ptr)
-    m_spectrumRebinedLog = rebinnedSpectrum;
-    m_templateRebinedLog = rebinnedTpl;
-
-    //cant call IsLogSampled on const objects
-    Float64 logstep = log((redshifts[1]+1)/(redshifts[0]+1));
-    if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled(logstep) ||
-        !m_templateRebinedLog.GetSpectralAxis().IsLogSampled(logstep))
+    if (!rebinnedSpectrum.GetSpectralAxis().IsLogSampled() ||
+        !rebinnedTpl.GetSpectralAxis().IsLogSampled())
     {
         Log.LogError("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale with the redshift step");
         throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale");
+    }
+
+    //check is spc/tpl steps are multiple of the redshift step:
+    //spc and tpl have same step
+    //check if spc step is a multiple of stepratio_spc
+    if(std::abs(rebinnedSpectrum.GetSpectralAxis().GetlogGridStep() - rebinnedTpl.GetSpectralAxis().GetlogGridStep())>1E-12)
+        throw runtime_error("TFLogOperator: tpl and spc are not rebinned with the same step");
+    //computing as integers
+    /*auto lambda_redshift_modulo = std::round(std::fmod(logstep*1E8, rebinlogstep*1E8));
+    auto modulo_2 = std::round(logstep*1E8 - trunc(logstep*1E8/rebinlogstep*1E8)*rebinlogstep*1E8);*/
+    Float64 logstep = log((redshifts[1]+1)/(redshifts[0]+1));
+    Float64 rebinlogstep = rebinnedSpectrum.GetSpectralAxis().GetlogGridStep();
+    Float64 modulo;
+    UInt32 ssRatio = rebinnedSpectrum.GetSpectralAxis().GetIntegerRatio(logstep, rebinlogstep, modulo);
+ 
+    if(std::abs(modulo)>1E-12)
+        throw runtime_error("TFLogOperator: spc and tpl do not have a lambdastep multiple of redshift step");
+
+    //subsample spectrum if necessary
+
+    if(ssRatio==1){//no required subsampling
+        m_spectrumRebinedLog = rebinnedSpectrum;
+        m_templateRebinedLog = rebinnedTpl;
+    }else{
+        TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
+        m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
+        //TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog, rebinnedTpl, TFloat64Range(redshifts), logstep);
+        TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio);//, ilbda);
+
+        m_templateRebinedLog = CTemplate(rebinnedTpl, mask_tpl);
+        //double make sure that subsampled spectrum are well rebinned
+        if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled() ||
+            !m_templateRebinedLog.GetSpectralAxis().IsLogSampled())
+        {
+            Log.LogError("  Operator-TemplateFittingLog: subsampled spectrum or template are not in expected log scale with the redshift step");
+            throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale");
+        }
+        Float64 loglambdaStep_spc = log(m_spectrumRebinedLog.GetSpectralAxis()[1]/m_spectrumRebinedLog.GetSpectralAxis()[0]);
+        Float64 loglambdaStep_tpl = log(m_templateRebinedLog.GetSpectralAxis()[1]/m_templateRebinedLog.GetSpectralAxis()[0]);
+        Float64 precision_spc = std::abs(logstep-loglambdaStep_spc)<1E-12;
+        Float64 precision_tpl = std::abs(logstep-loglambdaStep_tpl)<1E-12;
     }
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
@@ -1372,4 +1416,3 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     return result;
 }
-

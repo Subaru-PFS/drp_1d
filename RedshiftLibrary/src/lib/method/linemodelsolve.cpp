@@ -40,6 +40,10 @@ void CLineModelSolve::GetRedshiftSampling(const CInputContext& inputContext, TFl
     {
        redshiftRange = inputContext.m_redshiftRangeFFT;
        redshiftStep = inputContext.m_redshiftStepFFT;
+       if(m_redshiftSampling=="lin"){
+            m_redshiftSampling = "log";
+            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
+       }
     }else{
         //default is to read from the scoped paramStore
         redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
@@ -63,16 +67,11 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     parameterStore->GetScopedParam( "linemodel.secondpass.halfwindowsize", m_opt_secondpass_halfwindowsize, 0.005 );
     
     parameterStore->GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
-    parameterStore->GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
+    parameterStore->GetScopedParam( "linemodel.firstpass.largegridstepratio", m_opt_firstpass_largegridstepRatio, 10 );
     parameterStore->GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
     parameterStore->GetScopedParam( "linemodel.firstpass.multiplecontinuumfit_disable", m_opt_firstpass_disablemultiplecontinuumfit, "yes" );
-
-    if(m_redshiftSampling=="log")
-    {
-        m_opt_firstpass_largegridsampling = "log";
-    }else{
-        m_opt_firstpass_largegridsampling = "lin";
-    }
+    
+    m_opt_firstpass_largegridsampling = m_redshiftSampling;
     Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     parameterStore->GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
@@ -245,7 +244,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -extremacount-firstpass B: %.0f", m_opt_extremacountB);
     Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
-    Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
+    Log.LogInfo( "      -largegridstepratio: %d", m_opt_firstpass_largegridstepRatio);
     Log.LogInfo( "      -fittingmethod: %s", m_opt_firstpass_fittingmethod.c_str());
     Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
     Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
@@ -901,6 +900,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     {
         m_linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
     }
+    //logstep from redshift
 
     //**************************************************
     //FIRST PASS
@@ -922,7 +922,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     m_opt_continuumreest,
                                                     m_opt_rules,
                                                     m_opt_velocityfit,
-                                                    m_opt_firstpass_largegridstep,
+                                                    m_opt_firstpass_largegridstepRatio,
                                                     m_opt_firstpass_largegridsampling,
                                                     m_opt_rigidity,
                                                     m_opt_tplratio_reldirpath,
@@ -1013,7 +1013,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             m_opt_continuumreest,
                                                             m_opt_rules,
                                                             m_opt_velocityfit,
-                                                            m_opt_firstpass_largegridstep,
+                                                            m_opt_firstpass_largegridstepRatio,
                                                             m_opt_firstpass_largegridsampling,
                                                             m_opt_rigidity,
                                                             m_opt_tplratio_reldirpath,

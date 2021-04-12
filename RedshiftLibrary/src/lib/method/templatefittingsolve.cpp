@@ -27,6 +27,10 @@ void CMethodTemplateFittingSolve::GetRedshiftSampling(std::shared_ptr<const CInp
     {
        redshiftRange = inputContext->m_redshiftRangeFFT;
        redshiftStep = inputContext->m_redshiftStepFFT;
+       if(m_redshiftSampling=="lin"){
+            m_redshiftSampling = "log";
+            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
+       }
     }else
     {
         //default is to read from the scoped paramStore

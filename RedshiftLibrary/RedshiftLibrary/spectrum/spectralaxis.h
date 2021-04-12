@@ -33,8 +33,8 @@ public:
     };
 
     CSpectrumSpectralAxis();
-    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other) = default;
-    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other) = default;
+    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other);
+    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other);
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
     CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale  );
     CSpectrumSpectralAxis( const TFloat64List samples) ;
@@ -42,8 +42,8 @@ public:
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;
 
-    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other) = default;
-    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other)=default;
+    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other);
+    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other);
 
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
     Float64             GetMeanResolution() const;
@@ -67,11 +67,13 @@ public:
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
     void                SetLogScale();
-    Bool                CheckLoglambdaSampling();
-    Bool                IsLogSampled(Float64 logGridstep);
-    Bool                IsLogSampled();
-    Float64             GetlogGridStep();
-    
+    Bool                CheckLoglambdaSampling()const;
+    Bool                IsLogSampled(Float64 logGridstep)const;
+    Bool                IsLogSampled()const;
+    Float64             GetlogGridStep() const;
+    TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;
+    TFloat64List        GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const;
+    static UInt32       GetIntegerRatio(Float64 hvalue, Float64 lvalue, Float64& modulo);
 private:
 
     mutable UInt32      m_SpectralFlags;
@@ -80,7 +82,7 @@ private:
 
 };
 inline
-Float64 CSpectrumSpectralAxis::GetlogGridStep()
+Float64 CSpectrumSpectralAxis::GetlogGridStep() const
 {   
     const Bool LogSampled = m_SpectralFlags & nFLags_LogSampled;
     if(m_regularLogSamplingChecked && LogSampled) 

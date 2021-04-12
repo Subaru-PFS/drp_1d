@@ -24,6 +24,7 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
   if (m_objectType == "star" || m_objectType=="qso" || m_objectType=="galaxy")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
       m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
+      //m_redshiftSampling could be overwritten iif fftprocessing is activated
       m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
 
       TFloat64Range redshiftRange;

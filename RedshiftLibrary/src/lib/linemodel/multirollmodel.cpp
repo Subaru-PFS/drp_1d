@@ -71,7 +71,6 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         Float64 lines_nsigmasupport = 6.0;
         m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
                                                                                              tplCatalog,
-                                                                                             tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,
                                                                                              restRayList,

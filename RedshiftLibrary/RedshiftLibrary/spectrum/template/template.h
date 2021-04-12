@@ -23,6 +23,7 @@ public:
     CTemplate( const std::string& name, const std::string& category,
 	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     CTemplate(const CTemplate& other);
+    CTemplate(const CTemplate& other, TFloat64List mask);
     CTemplate& operator=(const CTemplate& other); 
     ~CTemplate()=default;
 

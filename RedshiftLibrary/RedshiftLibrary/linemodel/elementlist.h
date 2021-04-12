@@ -39,7 +39,6 @@ public:
 
     CLineModelElementList(const CSpectrum& spectrum,
                           const CTemplateCatalog& tplCatalog,
-                          const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
@@ -387,7 +386,6 @@ private:
     bool m_forcedisableTplratioISMfit=false;
 
     CTemplateCatalog m_tplCatalog;
-    CTemplateCatalog m_orthoTplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;

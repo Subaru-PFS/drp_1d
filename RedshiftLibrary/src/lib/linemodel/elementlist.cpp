@@ -50,7 +50,6 @@ using namespace std;
  **/
 CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const CTemplateCatalog& tplCatalog,
-                                             const CTemplateCatalog& orthoTplCatalog,
                                              const TStringList& tplCategoryList,
                                              const std::string calibrationPath,
                                              const CRayCatalog::TRayVector& restRayList,
@@ -67,7 +66,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const std::string& opt_rigidity):
     m_inputSpc(spectrum),
     m_tplCatalog(tplCatalog),
-    m_orthoTplCatalog(orthoTplCatalog),
     m_tplCategoryList(tplCategoryList),
     m_calibrationPath(calibrationPath),
     m_RestRayList(restRayList),
@@ -86,7 +84,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
 {
     //check if tplcat and orthoTplCat are aligned
-    for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+    /*for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
     {
         std::string category = m_tplCategoryList[i];
 
@@ -101,7 +99,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                 throw runtime_error( "Failed Init Element Model. Tplcat and orthotplcat are not aligned");
             }
         }
-    }
+    }*/
 
     //m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
     m_nominalWidthDefaultEmission = 13.4;// euclid 1 px

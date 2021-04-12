@@ -49,6 +49,14 @@ public:
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
                                     const Float64 redshiftStep);
+    TInt32Range FindTplSpectralIndex( const CSpectrum& spc, 
+                                    const CTemplate& tpl,
+                                    const TFloat64Range redshiftrange,
+                                    const Float64 redshiftStep);
+    TInt32Range FindTplSpectralIndex_old( const CSpectrum& spc, 
+                                        const CTemplate& tpl,
+                                        const TFloat64Range redshiftrange,
+                                        const Float64 redshiftStep);
     //log grid data
     CTemplate       m_templateRebinedLog;
     CSpectrum       m_spectrumRebinedLog;
@@ -85,7 +93,7 @@ private:
     Int32 EstimateXtYSlow(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts,
                           std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts, std::vector<Float64>& XtY);
-
+void howtocomplexifylife( TFloat64List redshifts, CTemplate rebinnedTemplate);
 
     Int32 InterpolateResult(const std::vector<Float64>& in, std::vector<Float64>& inGrid,
                             const std::vector<Float64>& tgtGrid, std::vector<Float64>& out, Float64 defaultValue);
