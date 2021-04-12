@@ -104,14 +104,14 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
  * otherwise we will have to SetSampling ("lin") when we want to read the non-log template, and then call SetSampling("log")
  * when we want to add the log tpl
  */
-void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r, std::string sampling)
+void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r)
 {
     if( r->GetCategory().empty() )
       throw runtime_error("Template has no category");
-    if(sampling != "log")
-        m_List[r->GetCategory()].push_back( r );
-    if(sampling == "log")
+    if(m_logsampling)
         m_ListRebinned[r->GetCategory()].push_back( r );
+    else
+        m_List[r->GetCategory()].push_back( r );     
 }
 //adapt it to apply to all m_list
 void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)

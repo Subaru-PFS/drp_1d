@@ -205,7 +205,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
                                       opt_tplratioCatRelPath, 
                                       opt_tplratio_ismFit, 
-                                      m_tplCatalog.GetTemplate( m_tplCategoryList[0],0).m_ismCorrectionCalzetti);
+                                      m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");

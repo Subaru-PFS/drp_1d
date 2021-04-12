@@ -17,7 +17,9 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_ParameterStore(std::move(paramStore))
 {
     m_Spectrum->InitSpectrum(*m_ParameterStore);
-
+    //non clamped lambdaRange: to be clamped depending on used spectra
+    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+    
     RebinInputWrapper(); 
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
@@ -53,8 +55,6 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputWrapper() 
 {
-    //non clamped lambdaRange: to be clamped depending on used spectra
-    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
     //The drawback of the below code is that we are violating object and method scopes by trying to read "deep" info
     //Another option could be to move fftprocessing to the object scope (vs object.method scope)

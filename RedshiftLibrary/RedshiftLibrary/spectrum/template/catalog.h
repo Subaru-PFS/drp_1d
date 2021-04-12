@@ -17,7 +17,7 @@ public:
 
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool sampling = 0 );
     
-    void                    Add( std::shared_ptr<CTemplate> tpl, std::string sampling ="nolog");
+    void                    Add( std::shared_ptr<CTemplate> tpl);
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
@@ -25,7 +25,6 @@ public:
     TTemplateRefList GetTemplate( const TStringList& categoryList );
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
-    const TTemplatesRefDict &    GetList() const;//using set m_scale
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;

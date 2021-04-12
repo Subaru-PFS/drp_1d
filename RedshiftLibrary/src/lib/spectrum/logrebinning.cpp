@@ -21,8 +21,8 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     //if we want to rebin stars we should call again computlogstep with stars redshiftrange!! same for qso
     std::string errorRebinMethod = "rebinVariance";//rebin error axis as well
 
-    TFloat64Range   redshiftRange = inputContext.m_ParameterStore->Get<TFloat64Range>("redshiftrange");
-    Float64         redshiftStep = inputContext.m_ParameterStore->Get<Float64>( "redshiftstep" );
+    TFloat64Range   redshiftRange = inputContext.m_ParameterStore->Get<TFloat64Range>("galaxy.redshiftrange");
+    Float64         redshiftStep = inputContext.m_ParameterStore->Get<Float64>( "galaxy.redshiftstep" );
 
     SetupRebinning(*inputContext.m_Spectrum, 
                    inputContext.m_lambdaRange, 
@@ -67,11 +67,13 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
 
         // no rebined templates in the category: rebin all templates
         TplList = inputContext.m_TemplateCatalog->GetTemplate(TStringList{s});
+        inputContext.m_TemplateCatalog->m_logsampling = true;
         for (auto tpl : TplList)
         {   
             std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
-            inputContext.m_TemplateCatalog->Add(rebinnedTpl, "log");
-        } 
+            inputContext.m_TemplateCatalog->Add(rebinnedTpl);
+        }
+        inputContext.m_TemplateCatalog->m_logsampling = false;
     }  
 }
 

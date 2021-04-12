@@ -573,7 +573,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         std::shared_ptr<CTemplateFittingResult> subresult = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
         TFloat64Range zrange = TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                                              result->Redshifts[izrangelist[k].GetEnd()]);
-        TInt32Range ilbda;
+        Float64 redshiftStep;   
         if (m_enableIGM && result->Redshifts.size() > 1)
         {
             TFloat64List::const_iterator first = result->Redshifts.begin() + izrangelist[k].GetBegin(),
@@ -582,14 +582,14 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             subresult->Init(subRedshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
             subresult->Redshifts = subRedshifts;
             // slice the template
-            Float64 redshiftStep = log((subRedshifts[1]+1.)/(subRedshifts[0]+1.));
-            ilbda = FindTplSpectralIndex(zrange, redshiftStep);
+            redshiftStep = log((subRedshifts[1]+1.)/(subRedshifts[0]+1.));          
         } else{
-            ilbda = TInt32Range(0, m_templateRebinedLog.GetSampleCount() - 1);
+            //ilbda = TInt32Range(0, m_templateRebinedLog.GetSampleCount() - 1);
+            redshiftStep = log((result->Redshifts[1]+1.)/(result->Redshifts[0]+1.));
             subresult->Init(result->Redshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
             subresult->Redshifts = result->Redshifts;
         }
-
+        TInt32Range ilbda = FindTplSpectralIndex(zrange, redshiftStep);
         if (verboseLogFitAllz)
         {
             Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: zrange min=%f, max=%f",
