@@ -5,8 +5,10 @@
 `pylibamazed` has the following strict requirements (base environment):
 * [gcc](https://gcc.gnu.org/)
 * [python](https://www.python.org/) >=3.6
-* [cmake](https://cmake.org/) >=3.6
+* [cmake](https://cmake.org/) >=3.12
 * [swig](http://www.swig.org/) >=2.0
+
+## Dependencies
 
 `pylibamazed` depends on following third parties:
 * [boost](https://www.boost.org/) >=1.57
@@ -15,8 +17,11 @@
 * [fftw](http://www.fftw.org/) >=3.3.8
 
 `pylibamazed` also depends on following python packages
-* [numpy](http://www.numpy.org/) >=1.16.0
-* [astropy](http://www.astropy.org/) >=3.1.1
+* [numpy](https://www.numpy.org/) >=1.16.0
+* [astropy](https://www.astropy.org/) >=3.1.1
+* [cython](https://cython.org/) >=0.17.0
+* [pandas](https://pandas.pydata.org/) >=1.0.0
+* [h5py](https://www.h5py.org/) >=2.9
 
 
 ## Install
