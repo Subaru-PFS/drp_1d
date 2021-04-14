@@ -14,64 +14,53 @@ using namespace NSEpic;
 using namespace std;
 
 
-const std::string CMethodTplcombinationSolve::GetDescription() const
+CMethodTplcombinationSolve::CMethodTplcombinationSolve(TScopeStack &scope,string objectType):
+  CSolve("tplcombinationsolve",scope,objectType)
 {
-    std::string desc;
-
-    desc = "Method tplcombinationsolve:\n";
-
-    desc.append("\tparam: tplcombinationsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
-    desc.append("\tparam: tplcombinationsolve.overlapThreshold = <float value>\n");
-    desc.append("\tparam: tplcombinationsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
-    //desc.append("\tparam: tplcombinationsolve.extinction = {""yes"", ""no""}\n");
-    //desc.append("\tparam: tplcombinationsolve.dustfit = {""yes"", ""no""}\n");
-    //desc.append("\tparam: tplcombinationsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
-    desc.append("\tparam: tplcombinationsolve.saveintermediateresults = {""yes"", ""no""}\n");
-
-
-    return desc;
-
 }
 
 
-std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute(CDataStore& resultStore,
-                                                                           const CSpectrum& spc,
-                                                                           const CTemplateCatalog& tplCatalog,
-                                                                           const TStringList& tplCategoryList,
-                                                                           const TFloat64Range& lambdaRange,
-                                                                           const TFloat64List& redshifts,
-                                                                           Float64 overlapThreshold,
-                                                                           std::vector<CMask> maskList,
-                                                                           const std::string outputPdfRelDir,
-                                                                           const Float64 redshiftSeparation,
-                                                                           std::string spcComponent,
-                                                                           std::string opt_interp,
-                                                                           std::string opt_extinction,
-                                                                           std::string opt_dustFit)
+
+std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+                                                                                 std::shared_ptr<COperatorResultStore> resultStore,
+                                                                                 TScopeStack &scope)
+
+
 {
+
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+
     Bool storeResult = false;
-    m_redshiftSeparation = redshiftSeparation;
-//    std::string _name = "Tplcombination";
-    CDataStore::CAutoScope resultScope( resultStore, "tplcombinationsolve" );
-//    std::string _scope = "tplcombination";
+    m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");
+    m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
+    m_opt_pdfcombination = inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
+    std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
+  std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
+  Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
+  std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
+ 
+    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
+    std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
+
+    std::vector<CMask> maskList;    
+
     std::string scopeStr = "templatefitting";
 
     EType _type;
-    if(spcComponent=="raw"){
-       _type = nType_raw;
-    }else if(spcComponent=="nocontinuum"){
-       _type = nType_noContinuum;
-       scopeStr = "templatefitting_nocontinuum";
-    }else if(spcComponent=="continuum"){
-        _type = nType_continuumOnly;
-        scopeStr = "templatefitting_continuum";
-    }else if(spcComponent=="all"){
-        _type = nType_all;
+    if(opt_spcComponent=="raw"){
+      _type = nType_raw;
+    }else if(opt_spcComponent=="nocontinuum"){
+      _type = nType_noContinuum;
+      scopeStr = "templatefitting_nocontinuum";
+    }else if(opt_spcComponent=="continuum"){
+      _type = nType_continuumOnly;
+      scopeStr = "templatefitting_continuum";
+    }else if(opt_spcComponent=="all"){
+      _type = nType_all;
     }
 
-    resultStore.GetScopedParam( "extremacount", m_opt_maxCandidate, 5);
-    resultStore.GetScopedParam( "pdfcombination", m_opt_pdfcombination, "marg");
-    resultStore.GetScopedParam( "saveintermediateresults", m_opt_saveintermediateresults, "no");
     if(m_opt_saveintermediateresults=="yes")
     {
         m_opt_enableSaveIntermediateChisquareResults = true;
@@ -89,51 +78,78 @@ std::shared_ptr<CTemplateFittingSolveResult> CMethodTplcombinationSolve::Compute
     Log.LogInfo( "Method parameters:");
     Log.LogInfo( "    -interpolation: %s", opt_interp.c_str());
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
-    Log.LogInfo( "    -component: %s", spcComponent.c_str());
+    Log.LogInfo( "    -component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
     Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
     //Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
-    Solve(resultStore, spc, tplCatalog, tplCategoryList, lambdaRange, redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
-    storeResult = true;
 
-    if( storeResult )
-    {
+    
+    Solve(resultStore,
+          spc,
+          tplCatalog,
+          m_categoryList,
+          m_lambdaRange,
+          m_redshifts,
+          overlapThreshold,
+          maskList,
+          _type,
+          opt_interp,
+          opt_extinction,
+          opt_dustFit);
 
-        COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);
 
-        std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-        // save in resultstore pdf results
-        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
-        resultStore.StoreGlobalResult( pdfPath.c_str(), pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);
 
-        // save in resultstore candidates results
-        {
-            std::string name;
-            if(resultStore.GetCurrentScopeName()=="templatefittingsolve")
-                name = "candidatesresult";
-            else  
-                name = resultStore.GetCurrentScopeName() + "." +"candidatesresult";
-            resultStore.StoreGlobalResult( name, candidateResult );
-        }
+    std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
-        //for each candidate, get best model by reading from datastore and selecting best fit
-        /////////////////////////////////////////////////////////////////////////////////////
-        //std::shared_ptr< CTemplateFittingSolveResult> solveResult = std::make_shared< CTemplateFittingSolveResult>(_type, resultStore.GetCurrentScopeName());
+    // save in resultstore pdf results
 
-        // TBD
+    resultStore->StoreGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
 
-        return NULL;
-    }
+    // save in resultstore candidates results
+    resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult );
 
-    return NULL;
+
+    //for each candidate, get best model by reading from datastore and selecting best fit
+    /////////////////////////////////////////////////////////////////////////////////////
+
+    
+    std::shared_ptr<const CExtremaResult> ExtremaResult = std::make_shared<CExtremaResult>();
+    //TODO this is taken from templatefittingsolve, make it work here ?
+    // common base class for templatefitting and tplcombination 
+      /*                    SaveExtremaResult( resultStore, scopeStr,
+                                               candidateResult->m_ranked_candidates,
+                                               spc,
+                                               tplCatalog,
+                                               m_categoryList,
+                                               m_lambdaRange,
+                                               overlapThreshold,
+                                               opt_interp,
+                                               opt_extinction );
+    // store extrema results
+        StoreExtremaResults(resultStore, ExtremaResult);
+    */
+
+
+    
+    std::shared_ptr< CTemplateFittingSolveResult> solveResult =
+      std::make_shared< CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
+                                                     ExtremaResult,
+                                                     m_opt_pdfcombination,
+                                                     pdfz.m_postmargZResult->valEvidenceLog);
+
+    // TBD
+
+    return solveResult;
+
 }
 
-Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
+Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                        const CSpectrum& spc,
                                        const CTemplateCatalog& tplCatalog,
                                        const TStringList& tplCategoryList,
@@ -232,10 +248,10 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
         }else{
             // Store results
             Log.LogDetail("tplcombinationsolve: Save tplcombination results");
-            resultStore.StoreScopedGlobalResult(scopeStr.c_str(), result );
+            resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result );
             // Store spectrum results
             Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
-            m_tplcombinationOperator.SaveSpectrumResults(resultStore.getResultStore());
+            m_tplcombinationOperator.SaveSpectrumResults(resultStore);
         }
     }
 
@@ -251,17 +267,18 @@ Bool CMethodTplcombinationSolve::Solve(CDataStore& resultStore,
     return true;
 }
 
-ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const
+ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
+                                                               const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
 
     Log.LogDetail("tplcombinationsolve: build chisquare array");
-    std::string scope = store.GetCurrentScopeName() + ".";
+    std::string scope = store->GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
     Log.LogDetail("    tplcombinationsolve: using results in scope: %s", scope.c_str());
 
-    auto results = store.GetGlobalResult( scope.c_str() );
+    auto results = store->GetGlobalResult( scope.c_str() );
     if(results.expired())
     {
         throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");

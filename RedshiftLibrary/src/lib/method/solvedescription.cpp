@@ -100,6 +100,18 @@ const std::string CSolveDescription::GetDescription(const std::string& method)
         desc.append("\tparam: templatefittingsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
         desc.append("\tparam: templatefittingsolve.saveintermediateresults = {""yes"", ""no""}\n");
       }
+    else if(method=="tplcombinationsolve")
+      {
+        desc = "Method tplcombinationsolve:\n";
+
+        desc.append("\tparam: tplcombinationsolve.spectrum.component = {""raw"", ""nocontinuum"", ""continuum"", ""all""}\n");
+        desc.append("\tparam: tplcombinationsolve.overlapThreshold = <float value>\n");
+        desc.append("\tparam: tplcombinationsolve.interpolation = {""precomputedfinegrid"", ""lin""}\n");
+        //desc.append("\tparam: tplcombinationsolve.extinction = {""yes"", ""no""}\n");
+        //desc.append("\tparam: tplcombinationsolve.dustfit = {""yes"", ""no""}\n");
+        //desc.append("\tparam: tplcombinationsolve.pdfcombination = {""marg"", ""bestchi2""}\n");
+        desc.append("\tparam: tplcombinationsolve.saveintermediateresults = {""yes"", ""no""}\n");
+      }
     return desc;
 
 }

@@ -31,7 +31,7 @@ public:
                                              Int32 opt_extinction=0, 
                                              Int32 opt_dustFitting=0);
 
-    void SaveSpectrumResults(COperatorResultStore &resultStore);
+  void SaveSpectrumResults(std::shared_ptr<COperatorResultStore> resultStore);
 
 private:
 
