@@ -53,7 +53,7 @@ private:
                   Float64& chiSquare,
                   Float64 &fittingAmplitude,
                   Float64& fittingAmplitudeError,
-                  Bool& fittingAmplitudeNegative,
+                  Float64& fittingAmplitudeSigma,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingLogprior,

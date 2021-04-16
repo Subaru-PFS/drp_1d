@@ -166,6 +166,7 @@ public:
     Float64 m_opt_tplratio_prior_betaZ=1.0;
     std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_continuumcomponent;
+    Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
     std::string m_opt_enableLSF;
 
     std::string m_opt_lya_forcefit;

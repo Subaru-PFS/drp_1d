@@ -194,6 +194,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                          restRayList,
                                                          opt_fittingmethod,
                                                          m_opt_continuumcomponent,
+                                                         m_opt_continuum_neg_amp_threshold,
                                                          opt_lineWidthType,
                                                          m_opt_enableLSF,
                                                          m_linesmodel_nsigmasupport,
@@ -824,7 +825,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                              chisquareResult->ChiSquare[i],
                              chisquareResult->FitAmplitude[i],
                              chisquareResult->FitAmplitudeError[i],
-                             chisquareResult->FitAmplitudeNegative[i],
+                             chisquareResult->FitAmplitudeSigma[i],
                              chisquareResult->FitDtM[i],
                              chisquareResult->FitMtM[i],
                              chisquareResult->LogPrior[i]);
@@ -879,9 +880,9 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     {
         Float64 redshift = redshiftsTplFit[i];
         CTemplatesFitStore::TemplateFitValues fitValues = tplfitStore->GetFitValues(redshift, icontinuum);
-        bool bestIsNegative = fitValues.fitAmplitudeNegative;
+        bool bestIsNegative = fitValues.fitAmplitudeSigma < m_opt_continuum_neg_amp_threshold;
         if(bestIsNegative) {
-            Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude = %e & error = %e", redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
+            Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", redshift, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
             throw runtime_error("  Operator-Linemodel: Failed to compute continuum fit. Negative amplitude detected! aborting...");
         }
     }

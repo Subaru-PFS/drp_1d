@@ -47,7 +47,7 @@ using namespace std;
  * @param chiSquare
  * @param fittingAmplitude
  * @param fittingAmplitudeError
- * @param fittingAmplitudeNegative
+ * @param fittingAmplitudeSigma
  * @param fittingDtM
  * @param fittingMtM
  * @param fittingEbmvCoeff
@@ -72,7 +72,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    Float64& chiSquare,
                                    Float64& fittingAmplitude,
                                    Float64& fittingAmplitudeError,
-                                   Bool& fittingAmplitudeNegative,
+                                   Float64& fittingAmplitudeSigma,
                                    Float64& fittingDtM,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
@@ -106,7 +106,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
     fittingAmplitude = -1.0;
     fittingAmplitudeError = -1.0;
-    fittingAmplitudeNegative = 0;
+    fittingAmplitudeSigma = 0.;
     overlapRate = 0.0;
     status = nStatus_DataError;
 
@@ -422,7 +422,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
             Float64 ampl = 0.0;
             Float64 ampl_err = 0.0;
-            Bool ampl_neg = 0;
+            Float64 ampl_sigma = 0.0;
             bool apply_priore = false;
             if(!logpriore.empty() && !m_templateRebined_bf.CalzettiInitFailed())
             { 
@@ -438,7 +438,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 ampl = 0.0;
                 ampl_err = 0.0;
                 fit = sumS;
-                ampl_neg = 0;
+                ampl_sigma = 0.0;
                 //status = nStatus_DataError;
                 //return;
             }else{
@@ -461,10 +461,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                     ampl_err = 0.;
                 }
 
-                if (ampl < -3*ampl_err)
-                {
-                    ampl_neg = 1;
-                }
+                ampl_sigma = ampl/ampl_err;
 
                 if(amplForcePositive)
                 {
@@ -535,7 +532,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 fittingMeiksinIdx = meiksinIdx;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
-                fittingAmplitudeNegative = ampl_neg;
+                fittingAmplitudeSigma = ampl_sigma;
                 fittingDtM = sumCross;
                 fittingMtM = sumT;
                 fittingLogprior = logprior;
@@ -697,7 +694,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                   result->ChiSquare[i],
                   result->FitAmplitude[i],
                   result->FitAmplitudeError[i],
-                  result->FitAmplitudeNegative[i],
+                  result->FitAmplitudeSigma[i],
                   result->FitDtM[i],
                   result->FitMtM[i],
                   result->LogPrior[i],
@@ -855,7 +852,7 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
     result->ChiSquare.resize( sortedRedshifts.size() );
     result->FitAmplitude.resize( sortedRedshifts.size() );
     result->FitAmplitudeError.resize( sortedRedshifts.size() );
-    result->FitAmplitudeNegative.resize( sortedRedshifts.size() );
+    result->FitAmplitudeSigma.resize( sortedRedshifts.size() );
     result->FitDtM.resize( sortedRedshifts.size() );
     result->FitMtM.resize( sortedRedshifts.size() );
     result->FitEbmvCoeff.resize( sortedRedshifts.size() );
@@ -892,7 +889,7 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
                       result->ChiSquare[i],
                       result->FitAmplitude[i],
                       result->FitAmplitudeError[i],
-                      result->FitAmplitudeNegative[i],
+                      result->FitAmplitudeSigma[i],
                       result->FitDtM[i],
                       result->FitMtM[i],
                       result->LogPrior[i],
