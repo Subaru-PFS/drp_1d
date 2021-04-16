@@ -60,14 +60,10 @@ class AbstractOutput:
         pass
 
     def load_all_fitted_rays(self,object_type):
-        if object_type == "star":
-            return
         for rank in range(self.nb_candidates[object_type]):
             self.load_fitted_rays(object_type,rank)
 
     def load_all_best_continuum(self,object_type):
-        if object_type == "star":
-            return
         for rank in range(self.nb_candidates[object_type]):
             self.load_fitted_continuum_by_rank(object_type,rank)
 
@@ -82,9 +78,11 @@ class AbstractOutput:
             self.load_nb_candidates(object_type)
             self.load_candidates_results(object_type)
             self.load_all_models(object_type)
-            self.load_all_best_continuum(object_type)
-            self.load_all_fitted_rays(object_type)
             self.load_pdf(object_type)
+            if self.get_solve_method(object_type) == "linemodelsolve":
+                self.load_all_best_continuum(object_type)
+                self.load_all_fitted_rays(object_type)
+
 
     def get_solve_method(self,object_type):
         return self.parameters[object_type]["method"]
