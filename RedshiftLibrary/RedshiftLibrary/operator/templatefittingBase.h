@@ -60,6 +60,8 @@ public:
                               Float64 overlapThreshold,
                               std::shared_ptr<CModelSpectrumResult> & spc);
 
+  inline virtual bool IsFFTProcessing() {return false;}; 
+
 protected:
   Int32  RebinTemplate( const CSpectrum& spectrum,
                           const CTemplate& tpl, 
@@ -75,6 +77,7 @@ protected:
   CMask           m_mskRebined_bf; //buffer
   //Likelihood
   Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+
 };
 
 

@@ -369,8 +369,20 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
     m_phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
     m_model->SetFitContinuum_PriorHelper(m_phelperContinuum);
-    // fit continuum
 
+
+    Log.LogInfo("  Operator-Linemodel: start processing");
+
+    // Set model parameters to FIRST-PASS
+    m_model->setPassMode(1);
+    Log.LogInfo(
+        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+    Log.LogInfo("  Operator-Linemodel: now computing first-pass");
+    Log.LogInfo(
+        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+
+    // fit continuum
+    ////////////////////
     if (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
     {
         PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
@@ -445,15 +457,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 "0 means disabled)",
                 m_estimateLeastSquareFast);
 
-    Log.LogInfo("  Operator-Linemodel: start processing");
-
-    // Set model parameters to FIRST-PASS
-    m_model->setPassMode(1);
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
-    Log.LogInfo("  Operator-Linemodel: now computing first-pass");
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
     //
     TBoolList allAmplitudesZero;
@@ -644,52 +647,46 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
     std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
-    bool deactivatefftprocessing = false;
-    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_fftprocessing )
-        // warning arbitrary number of redshifts threshold
-        // to consider templateFitting faster than chisquarelog
+
+    bool fftprocessing = m_model->GetPassNumber()==1 ? m_opt_tplfit_fftprocessing : m_opt_tplfit_fftprocessing_secondpass;
+    const Int32 fftprocessing_min_sample_nb = 100; // warning arbitrary number of redshift samples threshold below which 
+                                             // fftprocessing is considered slower
+                                             // TB revised
+    if ((redshiftsTplFit.size() < fftprocessing_min_sample_nb) && fftprocessing )
     {
-        m_opt_tplfit_fftprocessing = false;
-        m_opt_tplfit_fftprocessing_secondpass = false;
-        Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
+        fftprocessing = false;
+        Log.LogInfo("  Operator-Linemodel: precomputing- auto deselect fft processing"
                     " (faster when only few redshifts calc. points)");
-        deactivatefftprocessing = true;
     }
 
     Bool currentSampling = tplCatalog.m_logsampling; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
-                m_opt_tplfit_fftprocessing);
+                fftprocessing);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
                 m_opt_tplfit_dustFit);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_igm = %d",
                 m_opt_tplfit_extinction);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum opt_interp = %s",
                 opt_interp.c_str());
+
     TFloat64Range clampedlambdaRange;
-    //reuse the shared pointer for secondpass
-    if(templateFittingOperator == nullptr || deactivatefftprocessing) {
-        if (m_opt_tplfit_fftprocessing  && m_opt_tplfit_fftprocessing_secondpass)
-        {
-            bool enableLogRebin = true;
+    if (fftprocessing)  
+    {
+        if(templateFittingOperator == nullptr || !templateFittingOperator->IsFFTProcessing()) //else reuse the shared pointer for secondpass
             templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
-            rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
-            tplCatalog.m_logsampling = true;
-        } else if (!m_opt_tplfit_fftprocessing && !m_opt_tplfit_fftprocessing_secondpass)
-        {
+        rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        tplCatalog.m_logsampling = true;
+    } else 
+    {
+        if(templateFittingOperator == nullptr || templateFittingOperator->IsFFTProcessing()) //else reuse the shared pointer for secondpass
             templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
-            spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
-            tplCatalog.m_logsampling = false;
-        } else
-        {
-            Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
-            throw std::runtime_error("  Operator-Linemodel: unable to parse templatefitting continuum fit operator. use templatefitting or templatefittinglog");
-        }
+        spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        tplCatalog.m_logsampling = false;
     }
-   
 
     Float64 overlapThreshold = 1.0;
-    if (m_opt_tplfit_fftprocessing && ignoreLinesSupport==true)
+    if (fftprocessing && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
@@ -703,7 +700,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         maskList.resize(redshiftsTplFit.size());
         for(UInt32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
         {
-            m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, m_opt_tplfit_fftprocessing?rebinnedSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
+            m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, fftprocessing?rebinnedSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
             maskList[kztplfit]=m_model->getOutsideLinesMask();
         }
 
@@ -775,7 +772,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             auto templatefittingResult =
                 std::dynamic_pointer_cast<CTemplateFittingResult>(
                     templateFittingOperator->Compute(
-                            m_opt_tplfit_fftprocessing?rebinnedSpectrum:spectrum,
+                            fftprocessing?rebinnedSpectrum:spectrum,
                             *tpl,
                             clampedlambdaRange,
                             redshiftsTplFit,

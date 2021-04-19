@@ -46,6 +46,8 @@ public:
                                               Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
+    inline  bool IsFFTProcessing() {return true;}; 
+
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
                                     const Float64 redshiftStep);
