@@ -18,9 +18,9 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
   if (m_objectType != "classification")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
       m_lambdaRange=inputContext->m_lambdaRange;
-      TFloat64Range redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-      m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
-      Float64 redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+      TFloat64Range redshiftRange=inputContext->GetParameterStore()->GetScoped<TFloat64Range>("redshiftrange");
+      m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
+      Float64 redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
 
       if(m_redshiftSampling=="log")
         {

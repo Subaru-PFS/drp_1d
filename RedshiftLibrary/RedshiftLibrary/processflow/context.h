@@ -42,21 +42,16 @@ public:
     ~CProcessFlowContext();
 
   void Init(std::shared_ptr<CSpectrum> spectrum,
-            std::shared_ptr<const CTemplateCatalog> templateCatalog,
-            std::shared_ptr<const CRayCatalog> rayCatalog,
+            std::shared_ptr<CTemplateCatalog> templateCatalog,
+            std::shared_ptr<CRayCatalog> rayCatalog,
             const std::string& paramsJSONString
             );
-
     
-
-  
-
-    
-  std::shared_ptr<const CSpectrum> GetSpectrum(){return m_inputContext->m_Spectrum;}
-  std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog(){return m_inputContext->m_TemplateCatalog;}
-  std::shared_ptr<const CRayCatalog> GetRayCatalog(){return m_inputContext->m_RayCatalog;}
-  std::shared_ptr<CParameterStore> GetParameterStore(){return m_inputContext->m_ParameterStore;}
-  std::shared_ptr<const CInputContext> GetInputContext(){return m_inputContext;}
+  std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
+  std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
+  std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_inputContext->GetRayCatalog();}
+  std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_inputContext->GetParameterStore();}
+  std::shared_ptr<const CInputContext> GetInputContext() const {return m_inputContext;}
   std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
 
   TScopeStack                     m_ScopeStack;
@@ -64,7 +59,7 @@ private:
 
   std::shared_ptr<COperatorResultStore>      m_ResultStore;
 
-  std::shared_ptr<CInputContext>  m_inputContext;
+  std::shared_ptr<const CInputContext>  m_inputContext;
  
 
 

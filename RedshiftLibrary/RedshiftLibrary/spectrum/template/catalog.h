@@ -26,13 +26,18 @@ public:
     const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
     const CTemplate& GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
-    TTemplateRefList GetTemplate( const TStringList& categoryList ) const;
+    TTemplateConstRefList GetTemplate( const TStringList& categoryList ) const;
+    TTemplateRefList GetTemplate( const TStringList& categoryList );
 
     TStringList GetCategoryList() const;
 
     UInt32 GetTemplateCount( const std::string& category ) const;
+    
+    static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
 
 private:
+    // this const version must stay private, since it returns non const templates.
+    TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 
 
     Bool                     LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
 
@@ -53,6 +58,19 @@ inline const CTemplate& CTemplateCatalog::GetTemplate( const std::string& catego
     return *m_List.at( category )[i];
 }
 
+// non const getter returning mutable templates
+inline 
+TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList )
+{
+    return GetTemplate_(categoryList);
+}
+
+//  const getter returning const templates
+inline
+TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
+{
+    return const_TTemplateRefList_cast( GetTemplate_(categoryList)); 
+}
 
 }
 

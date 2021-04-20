@@ -26,25 +26,25 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
-  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
 
-  m_redshiftSeparation = inputContext->m_ParameterStore->Get<Float64>( "extremaredshiftseparation");//todo: deci
+  m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
   Bool storeResult = false;
-  Float64 overlapThreshold=inputContext->m_ParameterStore->GetScoped<Float64>( "overlapThreshold");
-  std::string opt_spcComponent = inputContext->m_ParameterStore->GetScoped<std::string>( "spectrum.component");
-  std::string opt_interp = inputContext->m_ParameterStore->GetScoped<std::string>( "interpolation");
+  Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
+  std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
+  std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
   const std::string opt_extinction = "no";
-  std::string opt_dustFit = inputContext->m_ParameterStore->GetScoped<std::string>("dustfit");
+  std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
 
-  std::string calibration_dir = inputContext->m_ParameterStore->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext->m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
+  std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
+  bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
   
   if(fft_processing)
     {
-      m_opt_spclogrebin = inputContext->m_ParameterStore->GetScoped<std::string>("enablespclogrebin");
+      m_opt_spclogrebin = inputContext->GetParameterStore()->GetScoped<std::string>("enablespclogrebin");
       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(calibration_dir));
     }
   else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
@@ -71,10 +71,10 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         _type = nType_all;
     }
 
-    m_opt_maxCandidate = inputContext->m_ParameterStore->GetScoped<int>( "extremacount");
-    m_opt_pdfcombination=inputContext->m_ParameterStore->GetScoped<std::string>( "pdfcombination");
+    m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
+    m_opt_pdfcombination=inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
     /*
-    m_opt_saveintermediateresults = inputContext->m_ParameterStore->GetScoped<std::string>( "saveintermediateresults");
+    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
     if(m_opt_saveintermediateresults=="yes")
     {
         m_opt_enableSaveIntermediateTemplateFittingResults = true;
