@@ -845,6 +845,9 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
             j++;
         }
+        gsl_spline_free(spline);
+        gsl_interp_accel_free(accelerator);
+
     }else if(opt_interp=="ngp"){
         //nearest sample, lookup
         Int32 k = 0; 
