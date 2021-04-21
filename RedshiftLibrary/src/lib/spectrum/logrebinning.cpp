@@ -23,11 +23,13 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
 
     TFloat64Range   redshiftRange = inputContext.m_ParameterStore->Get<TFloat64Range>("galaxy.redshiftrange");
     Float64         redshiftStep = inputContext.m_ParameterStore->Get<Float64>( "galaxy.redshiftstep" );
+    UInt32          SSratio = inputContext.m_ParameterStore->Get<UInt32>("galaxy.linemodelsolve.linemodel.firstpass.largegridstepratio");
 
     SetupRebinning(*inputContext.m_Spectrum, 
                    inputContext.m_lambdaRange, 
                    redshiftStep, 
-                   redshiftRange);
+                   redshiftRange,
+                   SSratio);
     if(inputContext.m_Spectrum->GetSpectralAxis().IsLogSampled()){
         inputContext.m_rebinnedSpectrum = inputContext.m_Spectrum;
     }else
@@ -87,8 +89,9 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
 */
 void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
                                             const TFloat64Range &lambdaRange, 
-                                            const Float64 zInputStep,
-                                            const TFloat64Range zInputRange)
+                                            Float64 zInputStep,
+                                            const TFloat64Range & zInputRange,
+                                            UInt32 SubSamplingRatio)
 {   
  
     if(spectrum.GetSpectralAxis().IsLogSampled() )
@@ -139,8 +142,8 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
     {
         Float64 log_zmin_new_p1 = log(zmin_new + 1.);
         Float64 log_zmax_new_p1 = log(zmax_new + 1.);
-        Int32 nb_z = Int32( ceil((log_zmax_new_p1 - log_zmin_new_p1)/m_logGridStep) );
-        zmax_new = exp(log_zmin_new_p1 + nb_z*m_logGridStep) - 1.;
+        Int32 nb_z = Int32( ceil((log_zmax_new_p1 - log_zmin_new_p1)/m_logGridStep/SubSamplingRatio) );
+        zmax_new = exp(log_zmin_new_p1 + nb_z*m_logGridStep*SubSamplingRatio) - 1.;
     }
     m_zrange = TFloat64Range(zmin_new, zmax_new); //updating zrange based on the new logstep 
 
