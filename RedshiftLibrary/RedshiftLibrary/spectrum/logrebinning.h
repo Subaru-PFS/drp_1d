@@ -27,7 +27,7 @@ private:
                         const TFloat64Range &lambdaRange, 
                         const Float64 zInputStep,
                         const TFloat64Range zInputRange);
-    std::shared_ptr<const CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
+    std::shared_ptr<CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
                                                             std::string errorRebinMethod="rebinVariance");
     std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
 

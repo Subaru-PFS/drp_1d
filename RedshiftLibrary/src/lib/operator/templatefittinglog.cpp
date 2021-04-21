@@ -1201,6 +1201,7 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrum& 
     Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/redshiftStep;
     UInt32 ilbdamax = tplLambda.size() - 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
+ // to be clean (LogDetail) once validated
  Log.LogInfo("FindTplSpectralIndex: idbdamax: %d with zmin %f; ilbmamin: %d with zmax: %f", ilbdamax, zmin, ilbdamin, zmax);   
  
     if(ilbdamax>tplLambda.size())
@@ -1289,7 +1290,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     Float64 logstep = log((redshifts[1]+1)/(redshifts[0]+1));
     Float64 rebinlogstep = rebinnedSpectrum.GetSpectralAxis().GetlogGridStep();
     Float64 modulo;
-    UInt32 ssRatio = rebinnedSpectrum.GetSpectralAxis().GetIntegerRatio(logstep, rebinlogstep, modulo);
+    UInt32 ssRatio = rebinnedSpectrum.GetSpectralAxis().GetLogSamplingIntegerRatio(logstep, modulo);
  
     if(std::abs(modulo)>1E-12)
         throw runtime_error("TFLogOperator: spc and tpl do not have a lambdastep multiple of redshift step");
@@ -1302,8 +1303,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }else{
         TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
-        //TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog, rebinnedTpl, TFloat64Range(redshifts), logstep);
-        TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio);//, ilbda);
+        TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog, rebinnedTpl, TFloat64Range(redshifts), logstep);
+        TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio, ilbda);
 
         m_templateRebinedLog = CTemplate(rebinnedTpl, mask_tpl);
         //double make sure that subsampled spectrum are well rebinned

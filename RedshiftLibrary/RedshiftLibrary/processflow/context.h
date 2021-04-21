@@ -55,7 +55,9 @@ public:
 
   TScopeStack                     m_ScopeStack;
 private:
-
+  void       validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
+                              TFloat64Range lambdaRange, 
+                              Bool enableInputSpcCorrect);
     std::shared_ptr<COperatorResultStore>  m_ResultStore;
 
   std::shared_ptr<const CInputContext>  m_inputContext;

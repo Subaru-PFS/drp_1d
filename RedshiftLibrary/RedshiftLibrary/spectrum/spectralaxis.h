@@ -73,7 +73,7 @@ public:
     Float64             GetlogGridStep() const;
     TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const;
-    static UInt32       GetIntegerRatio(Float64 hvalue, Float64 lvalue, Float64& modulo);
+    UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
 private:
 
     mutable UInt32      m_SpectralFlags;

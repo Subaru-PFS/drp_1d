@@ -44,29 +44,38 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
 
   m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
 
-  TFloat64Range lambdaRange;
-  //clamp locally and the check the spectrum validity on lambdaRange. 
-  //todo: shouldnt we also check the rebinned spectrum? 
-  spectrum->GetSpectralAxis().ClampLambdaRange(m_inputContext->m_lambdaRange, lambdaRange);
-  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
-               lambdaRange.GetBegin(),
-               lambdaRange.GetEnd(),
-               spectrum->GetResolution());
-
-  //************************************
-  const Float64 lmin = /*GetInputContext()->m_lambdaRange*/lambdaRange.GetBegin();
-  const Float64 lmax = /*GetInputContext()->m_lambdaRange*/lambdaRange.GetEnd();
-
   std::string enableInputSpcCorrectStr = parameterStore->Get<std::string>( "autocorrectinput");
   Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
+  validateSpectrum(spectrum, m_inputContext->m_lambdaRange, enableInputSpcCorrect);
+  if(m_inputContext->m_use_LogLambaSpectrum)
+  {
+    validateSpectrum(m_inputContext->m_rebinnedSpectrum, m_inputContext->m_lambdaRange, enableInputSpcCorrect);
+  }
+
+}
+
+void CProcessFlowContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
+                                                TFloat64Range lambdaRange, 
+                                                Bool enableInputSpcCorrect)
+{
+  TFloat64Range clampedlambdaRange;
+  spectrum->GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
+  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
+               clampedlambdaRange.GetBegin(),
+               clampedlambdaRange.GetEnd(),
+               spectrum->GetResolution());
+
+  Float64 lmin = clampedlambdaRange.GetBegin();
+  Float64 lmax = clampedlambdaRange.GetEnd();
+
   if(enableInputSpcCorrect)
-    {
+  {
       //Check if the Spectrum is valid on the lambdarange
       //correctInputSpectrum(ctx.GetInputContext()->m_lambdaRange);
 
       if( spectrum->correctSpectrum( lmin,lmax ))
         Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
-    }
+  }
 
    if( !spectrum->IsFluxValid( lmin, lmax ) ){
       Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
@@ -75,7 +84,7 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
     }else{
       Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
-	//Check if the noise is valid in the lambdarange
+	//Check if the noise is valid in the clampedlambdaRange
     if( !spectrum->IsNoiseValid( lmin, lmax ) ){
       Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
                    lmin, lmax );
@@ -83,5 +92,4 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
     }else{
       Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
-  
 }

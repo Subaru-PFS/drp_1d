@@ -521,16 +521,21 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Ran
     return mask;
 }
 /**
- * Brief: static method
+ * Brief: 
  * check that division of two floating values gives an int, and return modulo value
  *  Int32 logstep_int = Int32(logstep*1E12);
     Int32 rebinlogstep_int = Int32(rebinlogstep*1E12);
     auto lambda_redshift_modulo = logstep_int %rebinlogstep_int;
     auto modulo_2 = logstep_int - trunc(logstep_int/rebinlogstep_int)*rebinlogstep_int;
 */
-UInt32 CSpectrumSpectralAxis::GetIntegerRatio(Float64 hvalue, Float64 lvalue, Float64& modulo) 
+UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const
 {
-    UInt32 ratio = std::round(hvalue/lvalue);
-    modulo = hvalue - ratio*lvalue;
+    if(!IsLogSampled())
+    {
+        throw runtime_error("  CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio ");
+    }
+
+    UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
+    modulo = logstep - ratio*m_regularLogSamplingStep;
     return ratio;
 }
