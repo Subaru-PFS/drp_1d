@@ -61,8 +61,9 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
 {
-        if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
-            m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
+    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+        other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+            
 }
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
@@ -259,5 +260,6 @@ bool CTemplate::InitIsmIgmConfig()
 void CTemplate::ScaleFluxAxis(Float64 amplitude){
 
     CSpectrum::ScaleFluxAxis(amplitude);
-    m_NoIsmIgmFluxAxis *= amplitude;
+    if (!m_NoIsmIgmFluxAxis.isEmpty())
+        m_NoIsmIgmFluxAxis *= amplitude;
 }

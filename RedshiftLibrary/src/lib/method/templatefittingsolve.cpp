@@ -43,22 +43,23 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
-  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
-  const CSpectrum& rebinnedSpc=*(inputContext->m_rebinnedSpectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
+
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
 
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
   Bool storeResult = false;
-  Float64 overlapThreshold=inputContext->m_ParameterStore->GetScoped<Float64>( "overlapThreshold");
-  std::string opt_spcComponent = inputContext->m_ParameterStore->GetScoped<std::string>( "spectrum.component");
-  std::string opt_interp = inputContext->m_ParameterStore->GetScoped<std::string>( "interpolation");
-  const std::string opt_extinction = inputContext->m_ParameterStore->GetScoped<std::string>("extinction");
-  std::string opt_dustFit = inputContext->m_ParameterStore->GetScoped<std::string>("dustfit");
+  Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
+  std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
+  std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
+  const std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
+  std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
 
-  //std::string calibration_dir = inputContext->m_ParameterStore->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext->m_ParameterStore->GetScoped<std::string>("fftprocessing") == "yes";
+  //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
+  bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
   
   if(fft_processing)
     {

@@ -46,8 +46,8 @@ void CLineModelSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext>  
        }
     }else{
         //default is to read from the scoped paramStore
-        redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-        redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+        redshiftRange=inputContext->GetParameterStore()->GetScoped<TFloat64Range>("redshiftrange");
+        redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
     }
 }
 /**
@@ -281,11 +281,12 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& spc=*(inputContext->m_Spectrum.get());
-  const CSpectrum& rebinnedSpc=*(inputContext->m_rebinnedSpectrum.get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->m_TemplateCatalog.get());
-  const CRayCatalog& restraycatalog=*(inputContext->m_RayCatalog.get());
-  PopulateParameters( inputContext->m_ParameterStore );
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  PopulateParameters( inputContext->GetParameterStore() );
+
   bool retSolve = Solve( resultStore,
                          spc, rebinnedSpc,
                          tplCatalog,

@@ -26,6 +26,15 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
     m_TemplateCatalog->InitIsmIgm(calibrationPath);
 
+    std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
+    Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
+    //we should replace spectrum with m_inputContext->
+    validateSpectrum(m_Spectrum, m_lambdaRange, enableInputSpcCorrect);
+    if(m_use_LogLambaSpectrum)
+    {
+        validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
+    }
+
 }
 /*
 Two cases exist:
@@ -86,3 +95,42 @@ void CInputContext::RebinInputWrapper()
 }
 
 
+void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
+                                                TFloat64Range lambdaRange, 
+                                                Bool enableInputSpcCorrect)
+{
+  TFloat64Range clampedlambdaRange;
+  spectrum->GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
+  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
+               clampedlambdaRange.GetBegin(),
+               clampedlambdaRange.GetEnd(),
+               spectrum->GetResolution());
+
+  Float64 lmin = clampedlambdaRange.GetBegin();
+  Float64 lmax = clampedlambdaRange.GetEnd();
+
+  if(enableInputSpcCorrect)
+  {
+      //Check if the Spectrum is valid on the lambdarange
+      //correctInputSpectrum(ctx.GetInputContext()->m_lambdaRange);
+
+      if( spectrum->correctSpectrum( lmin,lmax ))
+        Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
+  }
+
+   if( !spectrum->IsFluxValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate spectrum flux");
+    }else{
+      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    }
+	//Check if the noise is valid in the clampedlambdaRange
+    if( !spectrum->IsNoiseValid( lmin, lmax ) ){
+      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
+                   lmin, lmax );
+      throw std::runtime_error("Failed to validate noise from spectrum");
+    }else{
+      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    }
+}

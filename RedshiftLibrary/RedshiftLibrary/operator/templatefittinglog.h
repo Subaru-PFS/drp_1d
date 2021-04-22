@@ -49,16 +49,10 @@ public:
     inline  bool IsFFTProcessing() {return true;}; 
 
     //made public for unit-testing
-    TInt32Range FindTplSpectralIndex(const TFloat64Range redshiftrange,
-                                    const Float64 redshiftStep);
-    TInt32Range FindTplSpectralIndex( const CSpectrum& spc, 
-                                    const CTemplate& tpl,
-                                    const TFloat64Range redshiftrange,
-                                    const Float64 redshiftStep);
-    TInt32Range FindTplSpectralIndex_old( const CSpectrum& spc, 
-                                        const CTemplate& tpl,
-                                        const TFloat64Range redshiftrange,
-                                        const Float64 redshiftStep);
+    TInt32Range FindTplSpectralIndex(const TFloat64Range & redshiftrange) const;
+    TInt32Range FindTplSpectralIndex( const CSpectrumSpectralAxis & spcSpectrailAxis, 
+                                      const CSpectrumSpectralAxis& tplSpectralAxis,
+                                      const TFloat64Range & redshiftrange) const;
     //log grid data
     CTemplate       m_templateRebinedLog;
     CSpectrum       m_spectrumRebinedLog;

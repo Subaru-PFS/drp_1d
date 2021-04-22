@@ -15,8 +15,8 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) 
 {
     //default is to read from the scoped paramStore
-    redshiftRange = inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-    redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+    redshiftRange = inputContext->GetParameterStore()->GetScoped<TFloat64Range>("redshiftrange");
+    redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
     return;
 }
 
@@ -27,7 +27,7 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
       m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 
       //m_redshiftSampling could be overwritten if fftprocessing is activated
-      m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
+      m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
 
       TFloat64Range redshiftRange;
       Float64 redshiftStep;

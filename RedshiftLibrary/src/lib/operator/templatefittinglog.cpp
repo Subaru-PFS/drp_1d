@@ -588,7 +588,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             subresult->Init(result->Redshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
             subresult->Redshifts = result->Redshifts;
         }
-        TInt32Range ilbda = FindTplSpectralIndex(zrange, redshiftStep);
+        TInt32Range ilbda = FindTplSpectralIndex(zrange);
         if (verboseLogFitAllz)
         {
             Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: zrange min=%f, max=%f",
@@ -861,7 +861,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
     m_templateRebinedLog.SetIsmIgmLambdaRange(kstart, kend);
 
-    TAxisSampleList tpl2RebinedFlux(nTpl);
     for (Int32 kIGM = 0; kIGM < nIGM; kIGM++)
     {
         if (verboseLogFitFitRangez && enableIGM)
@@ -893,6 +892,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             TFloat64List::const_iterator first = tplRebinedFluxcorr.begin() + kstart,
                                 last = tplRebinedFluxcorr.begin() + kend+1;
             const TAxisSampleList tplRebinedFluxcorr_cropped(first, last);
+            TAxisSampleList tpl2RebinedFlux(nTpl);
+
             if(tplRebinedFluxcorr_cropped.size()!=nTpl){
                 throw runtime_error("prob with retrieved vector size");
             }
@@ -1052,7 +1053,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         result->Overlap[k] = 1.0;
         result->FitAmplitude[k] = bestFitAmp[k];
         result->FitAmplitudeError[k] = bestFitAmpErr[k];
-        result->FitAmplitudeNegative[k] = bestFitAmpNeg[k];
+        result->FitAmplitudeSigma[k] = bestFitAmpSigma[k];
         result->FitDtM[k] = bestFitDtm[k];
         result->FitMtM[k] = bestFitMtm[k];
         result->FitEbmvCoeff[k] = bestISMCoeff[k];
@@ -1179,34 +1180,34 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const std::vector<Float64>&
  * the min/max Z values corresponding to the templateSpectralAxis min/max borders
  * 2. these number of zsteps correspond exactly to the right/left offsets on the spectralAxis in log
 */
-TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range redshiftrange,
-                                                               const Float64 redshiftStep)
+TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range & redshiftrange) const
 {
-    return FindTplSpectralIndex(m_spectrumRebinedLog, m_templateRebinedLog, redshiftrange, redshiftStep);
+    return FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), m_templateRebinedLog.GetSpectralAxis(), redshiftrange);
 }
 
-TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrum& spc, 
-                                                               const CTemplate& tpl,
-                                                               const TFloat64Range redshiftrange,
-                                                               const Float64 redshiftStep)
+TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSpectralAxis& spcSpectralAxis, //spcRange,
+                                                               const CSpectrumSpectralAxis& tplSpectralAxis,
+                                                               const TFloat64Range & redshiftrange) const
 {
-    const TAxisSampleList & spcLambda = spc.GetSpectralAxis().GetSamplesVector();
-    const TAxisSampleList & tplLambda = tpl.GetSpectralAxis().GetSamplesVector();
+    const TFloat64Range spcRange = spcSpectralAxis.GetLambdaRange();
+    const TFloat64Range tplRange = tplSpectralAxis.GetLambdaRange();
+    const UInt32 tplsize = tplSpectralAxis.GetSamplesCount();
+    const Float64 logstep = tplSpectralAxis.GetlogGridStep();
 
-    Float64 zmax = (spcLambda[0] - tplLambda[0]) / tplLambda[0]; //get maximum z reachable with given template & spectra
-    Float64 offset_left =  log((zmax+1)/(redshiftrange.GetEnd()+1))/redshiftStep;  //  should be integer at numerical precision before round
+    Float64 zmax = (spcRange.GetBegin() - tplRange.GetBegin()) / tplRange.GetBegin(); //get maximum z reachable with given template & spectra
+    Float64 offset_left =  log((zmax+1)/(redshiftrange.GetEnd()+1))/logstep;  //  should be integer at numerical precision before round
     UInt32 ilbdamin = round(offset_left); // deduce min lambda from max reachable z and max z in current range.
-    Float64 zmin = (spcLambda.back() - tplLambda.back()) / tplLambda.back(); // get minimum reachable z with given template & spectra
+    Float64 zmin = (spcRange.GetEnd() - tplRange.GetEnd()) / tplRange.GetEnd(); // get minimum reachable z with given template & spectra
 
-    Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/redshiftStep;
-    UInt32 ilbdamax = tplLambda.size() - 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
+    Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/logstep;
+    UInt32 ilbdamax = tplsize- 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
- // to be clean (LogDetail) once validated
+ // to be cleaned (LogDetail) once validated
  Log.LogInfo("FindTplSpectralIndex: idbdamax: %d with zmin %f; ilbmamin: %d with zmax: %f", ilbdamax, zmin, ilbdamin, zmax);   
  
-    if(ilbdamax>tplLambda.size())
+    if( ilbdamax>=tplsize || ilbdamin < 0)
         throw runtime_error("FindTplSpectralIndex failed to find indexes");
-
+    
     if (ilbdamin > ilbdamax)
     {
         Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
@@ -1303,7 +1304,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }else{
         TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
-        TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog, rebinnedTpl, TFloat64Range(redshifts), logstep);
+        TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), rebinnedTpl.GetSpectralAxis(), TFloat64Range(redshifts));
         TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio, ilbda);
 
         m_templateRebinedLog = CTemplate(rebinnedTpl, mask_tpl);

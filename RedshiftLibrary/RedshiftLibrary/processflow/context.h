@@ -45,7 +45,7 @@ public:
             std::shared_ptr<CRayCatalog> rayCatalog,
             const std::string& paramsJSONString
             );
-    
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
   std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_inputContext->GetRayCatalog();}
@@ -55,12 +55,10 @@ public:
 
   TScopeStack                     m_ScopeStack;
 private:
-  void       validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
-                              TFloat64Range lambdaRange, 
-                              Bool enableInputSpcCorrect);
+
     std::shared_ptr<COperatorResultStore>  m_ResultStore;
 
-  std::shared_ptr<const CInputContext>  m_inputContext;
+    std::shared_ptr<const CInputContext>  m_inputContext;
  
     //added below variables - to discuss if we only define them here (and no more in processflow)
     TFloat64Range m_spclambdaRange;

@@ -472,37 +472,46 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
  * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
  * 
 */
-Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep)const
-{   
-    if(!m_regularLogSamplingChecked) 
-        CheckLoglambdaSampling();
+Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
+{       
+    if (!IsLogSampled() )
+        return false;
 
-    Bool LogSampled = m_SpectralFlags & nFLags_LogSampled;
-    if (LogSampled && std::abs(m_regularLogSamplingStep - logGridstep)>1E-8)
+    if (std::abs(m_regularLogSamplingStep - logGridstep)>1E-8)
     {
         Log.LogDetail("   CSpectrumSpectralAxis::IsLogSampled: Log-regular sampling with bad step");
         return false;
     }
     
-    return LogSampled;
+    return true;
 }
 
-Bool CSpectrumSpectralAxis::IsLogSampled()const
+Bool CSpectrumSpectralAxis::IsLogSampled() const
 {
-    Float64 logGridstep;
-    if(IsInLogScale())
-        logGridstep = m_Samples[1] - m_Samples[0];
-    else
-        logGridstep = log(m_Samples[1]/m_Samples[0]);
+    if(!m_regularLogSamplingChecked) 
+        CheckLoglambdaSampling();
 
-    return IsLogSampled(logGridstep);
+    return m_SpectralFlags & nFLags_LogSampled;
 }
+
+
+Float64 CSpectrumSpectralAxis::GetlogGridStep() const
+{   
+    if (!IsLogSampled())
+    {
+        Log.LogError("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
+        throw runtime_error("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
+    }
+
+    return m_regularLogSamplingStep;
+ }
 
 //still TODO: check end-to-end redshift coverage
 TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
 {
     return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
 }
+
 /*@ssratio stands for sub-samplingRatio*/
 TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const
 {
@@ -520,6 +529,7 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Ran
     }
     return mask;
 }
+
 /**
  * Brief: 
  * check that division of two floating values gives an int, and return modulo value

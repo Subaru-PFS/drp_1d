@@ -81,16 +81,7 @@ private:
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
 
 };
-inline
-Float64 CSpectrumSpectralAxis::GetlogGridStep() const
-{   
-    const Bool LogSampled = m_SpectralFlags & nFLags_LogSampled;
-    if(m_regularLogSamplingChecked && LogSampled) 
-        return m_regularLogSamplingStep;
-    
-    Log.LogDebug("LogGrid step is not available for this axis.");
-    return -1.;
-}
+
 }
 
 #endif
