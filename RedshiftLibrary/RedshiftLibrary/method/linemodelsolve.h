@@ -25,19 +25,17 @@ class CDataStore;
  */
 class CLineModelSolve: public CSolve
 {
-
 public:
 
     CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
-    void GetRedshiftSampling(std::shared_ptr<const CInputContext> , TFloat64Range& redshiftRange, Float64& redshiftStep);
     Bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
-                                          TScopeStack &scopeCDataStore);
+                                          TScopeStack &scopeCDataStore) override;
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+    Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
@@ -45,6 +43,9 @@ public:
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
+private:
+
+    void GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
     ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
                                         std::string opt_rigidity,

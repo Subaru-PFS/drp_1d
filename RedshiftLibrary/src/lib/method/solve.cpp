@@ -12,19 +12,21 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 {
 
 }
-void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) 
 {
     //default is to read from the scoped paramStore
-    redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+    redshiftRange = inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
     redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
     return;
 }
+
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   if (m_objectType == "star" || m_objectType=="qso" || m_objectType=="galaxy")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
       m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
-      //m_redshiftSampling could be overwritten iif fftprocessing is activated
+
+      //m_redshiftSampling could be overwritten if fftprocessing is activated
       m_redshiftSampling=inputContext->m_ParameterStore->GetScoped<std::string>("redshiftsampling");
 
       TFloat64Range redshiftRange;
@@ -54,7 +56,7 @@ void CSolve::Compute(std::shared_ptr<const CInputContext> inputContext,
   //endCompute(inputContext,resultStore,scope);
 }
 
-void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,std::shared_ptr<COperatorResultStore> resultStore)
+void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,std::shared_ptr<COperatorResultStore> resultStore) const
 {
   resultStore->StoreScopedGlobalResult("result",result); 
 }

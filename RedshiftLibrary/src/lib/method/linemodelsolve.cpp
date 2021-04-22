@@ -34,20 +34,20 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
 {
 }
 
-void CLineModelSolve::GetRedshiftSampling(const CInputContext& inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+void CLineModelSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
 {
-    if(m_objectType == "galaxy" && inputContext.m_use_LogLambaSpectrum)
+    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
     {
-       redshiftRange = inputContext.m_redshiftRangeFFT;
-       redshiftStep = inputContext.m_redshiftStepFFT;
+       redshiftRange = inputContext->m_redshiftRangeFFT;
+       redshiftStep = inputContext->m_redshiftStepFFT;
        if(m_redshiftSampling=="lin"){
             m_redshiftSampling = "log";
             Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
        }
     }else{
         //default is to read from the scoped paramStore
-        redshiftRange=inputContext.m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
-        redshiftStep = inputContext.m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
+        redshiftRange=inputContext->m_ParameterStore->GetScoped<TFloat64Range>("redshiftrange");
+        redshiftStep = inputContext->m_ParameterStore->GetScoped<Float64>( "redshiftstep" );
     }
 }
 /**
