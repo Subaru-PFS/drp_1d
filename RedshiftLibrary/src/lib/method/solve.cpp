@@ -15,7 +15,7 @@ CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
 
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
-  if (m_objectType != "classification")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
+  if (m_objectType == "star" || m_objectType=="qso" || m_objectType=="galaxy")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
     {
       m_lambdaRange=inputContext->m_lambdaRange;
       TFloat64Range redshiftRange=inputContext->GetParameterStore()->GetScoped<TFloat64Range>("redshiftrange");

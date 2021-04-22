@@ -151,3 +151,6 @@ class Hdf5Output(AbstractOutput):
     def load_nb_candidates(self,object_type):
         self.nb_candidates[object_type] = len(self.hdf5_group.get(object_type + "/candidates"))
 
+    def load_reliability(self,object_type):
+        if "reliability" in list(self.hdf5_group.get("galaxy").keys()):
+            self.reliability[object_type]["Label"]=self.hdf5_group.get("galaxy/reliability").attrs["label"]

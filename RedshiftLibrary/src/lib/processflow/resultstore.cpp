@@ -709,6 +709,7 @@ void COperatorResultStore::getData(const std::string& object_type,const std::str
 {
   std:weak_ptr<const COperatorResult> result;
   if (object_type.compare("classification") == 0) result = GetGlobalResult("classification.result");
+  else if (object_type == "reliability") result = GetGlobalResult("reliability.result");
   else result = GetGlobalResult(object_type,method,"candidatesresult");
   result.lock()->getData(name,v);
 }
