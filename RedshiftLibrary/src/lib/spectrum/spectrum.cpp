@@ -760,7 +760,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
-        if (opt_error_interp == "rebin")
+        if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance" )
             ErrorRebin[j] = INFINITY;
         j++;
     }
@@ -890,7 +890,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
-        if (opt_error_interp == "rebin" )
+        if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance" )
             ErrorRebin[j] = INFINITY;
         j++;
     }
