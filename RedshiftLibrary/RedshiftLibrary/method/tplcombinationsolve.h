@@ -3,6 +3,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
+#include <RedshiftLibrary/method/solve.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/tplcombination.h>
@@ -14,12 +15,12 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
+class CResultStore;
 
 /**
  * \ingroup Redshift
  */
-class CMethodTplcombinationSolve
+  class CMethodTplcombinationSolve : public CSolve
 {
 
  public:
@@ -32,29 +33,17 @@ class CMethodTplcombinationSolve
              nType_all = 4,
     };
 
-    CMethodTplcombinationSolve() = default;
-    ~CMethodTplcombinationSolve() = default;
+  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
 
     const std::string GetDescription() const;
 
-    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
-                                                   const CSpectrum& spc,
-                                                   const CTemplateCatalog& tplCatalog,
-                                                   const TStringList& tplCategoryList,
-                                                   const TFloat64Range& lambdaRange,
-                                                   const TFloat64List& redshifts,
-                                                   Float64 overlapThreshold,
-                                                   std::vector<CMask> maskList,
-                                                   const std::string outputPdfRelDir,
-                                                   const Float64 redshiftSeparation,
-                                                   std::string spcComponent="raw" ,
-                                                   std::string opt_interp="lin",
-                                                   std::string opt_extinction="no",
-                                                   std::string opt_dustFit="no");
+    std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                        std::shared_ptr<COperatorResultStore> resultStore,
+                                        TScopeStack &scope);
 
 private:
 
-    Bool Solve(CDataStore& resultStore,
+  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
@@ -67,7 +56,7 @@ private:
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
     
-    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
+    ChisquareArray BuildChisquareArray(std::shared_ptr<COperatorResultStore> store, const std::string & scopeStr) const;
 
     COperatorTplcombination m_tplcombinationOperator;
 

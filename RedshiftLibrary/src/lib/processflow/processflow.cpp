@@ -169,23 +169,13 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
           solve.Compute( ctx.GetInputContext(),
                          ctx.GetResultStore(),
                          ctx.m_ScopeStack);
-        }/*else if(qso_method=="tplcombinationsolve"){
-            opt_interp="lin";
-            opt_extinction="no";
-            opt_dustFit="no";
-            CMethodTplcombinationSolve solve;
-            qsoResult = solve.Compute( ctx.GetDataStore(),
-                                       ctx.GetSpectrum(),
-                                       ctx.GetTemplateCatalog(),
-                                       ctx.GetQSOCategoryList(),
-                                       ctx.GetInputContext().m_lambdaRange,
-                                       qso_redshifts,
-                                       overlapThreshold,
-                                       maskList,
-                                       "qso_zPDF",
-                                       redshiftseparation,
-                                       opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-                                       }*/
+        }else if(qso_method=="tplcombinationsolve"){
+            CMethodTplcombinationSolve solve(ctx.m_ScopeStack,"qso");
+            solve.Compute(ctx.GetInputContext(),
+                          ctx.GetResultStore(),
+                          ctx.m_ScopeStack);
+                                      }
+        
         else if(qso_method=="linemodel"){
             Log.LogInfo("Linemodel qso fitting...");
             CLineModelSolve Solve(ctx.m_ScopeStack,"qso",calibrationDirPath);
@@ -232,33 +222,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                          ctx.m_ScopeStack);
 
         }else if(methodName  == "tplcombinationsolve" ){
-          Float64 overlapThreshold;
-          ctx.GetParameterStore()->Get( "tplcombinationsolve.overlapThreshold", overlapThreshold, 1.0);
-          std::string opt_spcComponent;
-          ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.spectrum.component", opt_spcComponent, "raw" );
-          std::string opt_interp="lin";
-          ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.interpolation", opt_interp, "lin" );
-          std::string opt_extinction="no";
-          //ctx.GetParameterStore()->GetScopedParam( "tplcombinationsolve.extinction", opt_extinction, "no" );
-          std::string opt_dustFit="no";
-          //ctx.GetDataStore().GetScopedParam( "tplcombinationsolve.dustfit", opt_dustFit, "no" );
-
-          // prepare the unused masks
-          std::vector<CMask> maskList;
-          /*CMethodTplcombinationSolve solve;
-            mResult = solve.Compute( ctx.GetDataStore(),
-            ctx.GetSpectrum(),
-            ctx.GetTemplateCatalog(),
-            ctx.GetGalaxyCategoryList(),
-            ctx.GetInputContext().m_lambdaRange,
-            redshifts,
-            overlapThreshold,
-            maskList,
-            galaxy_method_pdf_reldir,
-            redshiftseparation,
-            opt_spcComponent, opt_interp, opt_extinction, opt_dustFit);
-          */
-
+         CMethodTplcombinationSolve solve(ctx.m_ScopeStack,"galaxy");
+          solve.Compute( ctx.GetInputContext(),
+                         ctx.GetResultStore(),
+                         ctx.m_ScopeStack);
         }
         /*
           }else if(methodName  == "linematching" ){

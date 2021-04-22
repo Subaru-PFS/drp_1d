@@ -442,7 +442,7 @@ class CMethodTemplateFittingSolve
 class CMethodTplcombinationSolve
 {
  public:
-  CMethodTplcombinationSolve();
+  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
   ~CMethodTplcombinationSolve();
 };
 
