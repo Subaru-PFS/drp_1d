@@ -23,19 +23,6 @@ CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
 
 }
 
-
-void CPdfMargZLogResult::Save(std::ostream& stream ) const
-{
-    stream << "#z_tested \tLog P( z | priors )" <<std::endl;
-    stream << "#EvidenceLog=" << valEvidenceLog << std::endl;
-    for ( Int32 i=0; i<Redshifts.size(); i++)
-    {
-            stream.precision(10);
-        stream <<  Redshifts[i] << "\t" << valProbaLog[i] << std::endl;
-    }
-}
-
-
 Int32 CPdfMargZLogResult::Load( std::string filePath )
 {
     // Clear current list
@@ -103,12 +90,6 @@ Int32 CPdfMargZLogResult::Load( std::string filePath )
         }
     }
     return 0;
-}
-
-void CPdfMargZLogResult::SaveLine(std::ostream& stream ) const
-{
-	stream.precision(20);
-    stream << "CPdfMargZLogResult" << "\t" << Redshifts.size() << std::endl;
 }
 
 Int32 CPdfMargZLogResult::getIndex( Float64 z ) const

@@ -308,42 +308,6 @@ void CLineModelResult::Load( std::istream& stream )
     }
 }
 
-/**
- * \brief Prints the results currently in the argument store, in the argument stream.
- * Using the argument stream to print values from the argument store:
- * Print a header as a comment.
- * Print each redshift and chisquare values.
- * Print each Extrema as a comment.
- * Print each BIC as a comment.
- * Print each SigmaZ as a comment.
- * Print each LogArea as a comment.
- **/
-void CLineModelResult::Save( std::ostream& stream ) const
-{
-    stream <<  "#Redshifts\tChiSquare"<< std::endl;
-    for ( int i=0; i<Redshifts.size(); i++)
-    {
-        stream <<  Redshifts[i] << std::setprecision(32) << "\t" << std::scientific << ChiSquare[i] << std::fixed << std::endl;
-    }
-
-    //ExtremaResult.Save(stream); //todo: move these into their own file. aview should be adapted.
-
-    // save dTransposeD, on 1 line
-    if(true){
-        stream <<  "#dTransposeD = {";
-        stream <<  dTransposeD << "\t";
-        stream << "}" << std::endl;
-    }
-
-}
-
-/**
- * \brief Prints the argument store's number of redshift results in the argument stream.
- **/
-void CLineModelResult::SaveLine(  std::ostream& stream ) const
-{
-    stream << "LineModelResult" << "\t" << Redshifts.size() << std::endl;
-}
 
 Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const
 {

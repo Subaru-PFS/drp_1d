@@ -32,9 +32,6 @@ public:
     CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-
     void getData(const std::string& name, Int32& v) const;
     void getData(const std::string& name, std::string& v) const;
     void getData(const std::string& name, Float64& v) const;

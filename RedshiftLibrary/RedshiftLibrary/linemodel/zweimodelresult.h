@@ -21,9 +21,6 @@ public:
     CZweiModelResult();
     virtual ~CZweiModelResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
- 
 
 private:
     std::vector<Float64> m_redshifts_s1;

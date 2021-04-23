@@ -20,9 +20,6 @@ public:
 
     CSpectraFluxResult ( UInt32 optio );
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-    
   void getData(const std::string& name, double **data, int *size) const;
 
     TFloat64List   fluxes;

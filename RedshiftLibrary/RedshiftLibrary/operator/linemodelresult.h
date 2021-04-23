@@ -27,9 +27,6 @@ public:
                CRayCatalog::TRayVector restRays,
                Int32 nTplshapes,
                std::vector<Float64> tplshapesPriors);
-
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
    
     void Load( std::istream& stream );
 

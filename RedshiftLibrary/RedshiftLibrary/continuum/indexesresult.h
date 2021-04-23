@@ -23,9 +23,6 @@ public:
 
     void SetValues(Float64 stdSpc, Float64 std_continuum);
 
-    void Save( const CDataStore& store, std::ostream& stream ) const;
-    void SaveLine( const CDataStore& store, std::ostream& stream ) const;
-
 private:
 
     Float64 m_StdSpectrum;

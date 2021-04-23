@@ -57,87 +57,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
 
 
-    //Override z-search grid for line measurement: load the zref values from a tsv catalog file (col0: spc name, col1: zref float value)
-    // std::string opt_linemeas_catalog_path;
-    //ctx.GetParameterStore()->Get( "linemeascatalog", opt_linemeas_catalog_path, "" );
-    // TFloat64List redshifts=raw_redshifts;
-    //Float64 zref = -1.0;
-    /*
-    if(opt_linemeas_catalog_path!="")
-    {
-        Log.LogInfo( "Override z-search range !");
-        Int32 reverseInclusionForIdMatching = 0; //0: because the names must match exactly, but: linemeas catalog includes the extension (.fits) and spc.GetName doesn't.
-    
-        Int32 colId = 2;//starts at 1, so that (for the linemeas_catalog) id_column=1, zref_column=2
-        bfs::path refFilePath(opt_linemeas_catalog_path.c_str());
-        
-        if ( bfs::exists(refFilePath) )
-          {
-            std::string spcSubStringId = spectrumName;
-            Log.LogInfo( "Override z-search: using spc-string: %s", spcSubStringId.c_str());
-            getValueFromRefFile( refFilePath.c_str(), spcSubStringId, zref, reverseInclusionForIdMatching);
-        }
-        
-        if(zref==-1.0)
-        {
-          throw std::runtime_error("Override z-search: unable to find zref!");
-    }
-
-
-        Float64 stepZ = 1e-5;
-        Float64 deltaZrangeHalf = -1;//0.5e-2; //override zrange
-        ctx.GetParameterStore()->Get( "linemeas.dzhalf", deltaZrangeHalf, -1);
-        ctx.GetParameterStore()->Get( "linemeas.dzstep", stepZ, 1e-5);
-        bool computeOnZrange=false;
-        if(deltaZrangeHalf>0.0)
-    {
-            computeOnZrange=true;
-        }
-        if(computeOnZrange) //computing only on zref, or on a zrange around zref
-        {
-            //make sure to include zref in redshift vector
-            Float64 nStepsZhalf = std::ceil(deltaZrangeHalf/stepZ);
-            redshifts.resize(nStepsZhalf*2 + 1); 
-            for(Int32 kz= 0; kz<nStepsZhalf +1 ; kz++)
-            {
-                Float64 _z = zref + kz*stepZ;
-                redshifts[nStepsZhalf + kz] = _z;
-        }
-            for(Int32 kz= 1; kz<nStepsZhalf + 1; kz++)
-        {
-                Float64 _z = zref - kz*stepZ;
-                redshifts[nStepsZhalf - kz]= _z;
-        }
-            Log.LogInfo( "Override z-search: zmin=%.5f, zmax=%.5f, zstep=%.5f", redshifts[0], redshifts[redshifts.size()-1], stepZ);
-        }else{
-            redshifts.push_back(zref);
-        }
-
-        if(methodName=="linemodel"){
-          
-            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.extremacount", 1.0);
-            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.extremacount: %f", 1.0);
-            ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.firstpass.largegridstep", stepZ);
-
-            Log.LogInfo( "Override z-search: Using overriden linemodelsolve.linemodel.firstpass.largegridstep: %f", stepZ);
-            Log.LogInfo( "Override z-search: Using overriden half zrange around zref: %f", deltaZrangeHalf);
-            Log.LogInfo( "Override z-search: Using overriden dzstep: %f", stepZ);
-        }
-
-        Log.LogInfo( "Override z-search: Using overriden zref for spc %s : zref=%f", spectrumName.c_str(), zref);
-    }else{
-        redshifts = raw_redshifts;
-    }
-    ctx.GetDataStore().SetScopedParam( "linemodelsolve.linemodel.zref", zref);
-
-    if(redshifts.size() < 1)
-    {
-      Log.LogError("Unable to initialize the z-search grid (size=%d)", redshifts.size());
-      throw std::runtime_error("Unable to initialize the z-search grid");
-    }
-
-
-    */
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
 
@@ -146,8 +65,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
 
     if(ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve")=="yes"){
-      //      CAutoScope resultScope( ctx.m_ScopeStack, "stellarsolve" );
-
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         solve.Compute(ctx.GetInputContext(),
@@ -186,7 +103,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
         }else{
             throw std::runtime_error("Problem found while parsing the qso method parameter");
         }
-        }
+    }
 
     // Galaxy method
 
@@ -239,37 +156,12 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
           ctx.GetRayCatalog() );
 
         */
-        /*
-          else if(methodName  == "reliability" ){
-          Log.LogInfo( "Processing RELIABILITY ONLY");
-          //using an input pdf (ie. bypass redshift estimation method) from <intermSpcDir>/zPDF/logposterior.logMargP_Z_data.csv
-
-          //loading pdf into datastore
-          boost::filesystem::path perSpectrumDir="";
-          perSpectrumDir = perSpectrumDir/( boost::filesystem::path( ctx.GetDataStore().GetProcessingID() ).string() );
-          boost::filesystem::path inputPdfPath = perSpectrumDir/( boost::filesystem::path( "zPDF/logposterior.logMargP_Z_data.csv" ).string() ) ;
-
-          Log.LogInfo( "Loading PDF from %s", inputPdfPath.string().c_str() );
-          std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-          Int32 retPdfz = postmargZResult->Load(inputPdfPath.string().c_str());
-          Log.LogInfo("Pdfz loaded n values = %d", postmargZResult->Redshifts.size());
-          if(retPdfz<0)
-          {
-          Log.LogError("Pdfz loading failed (ret=%d)", retPdfz);
-          }else{
-          ctx.GetDataStore().StoreGlobalResult( "zPDF/logposterior.logMargP_Z_data", postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-          }
-          mResult = std::shared_ptr<CLineModelSolveResult>(new CLineModelSolveResult());
-
-          }*/
         else{
           throw std::runtime_error("Problem found while parsing the method parameter");
         }
       }
     
-    //mResult->preSave(ctx.GetDataStore());
     
-
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
 

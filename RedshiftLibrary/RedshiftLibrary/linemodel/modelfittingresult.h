@@ -25,8 +25,6 @@ public:
     CModelFittingResult();
     virtual ~CModelFittingResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
   void Load( const char* filePath );
 
     const CLineModelSolution& GetLineModelSolution() const;

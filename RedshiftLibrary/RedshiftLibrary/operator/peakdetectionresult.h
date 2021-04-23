@@ -21,10 +21,6 @@ public:
     CPeakDetectionResult();
     virtual ~CPeakDetectionResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-    
-
     TInt32RangeList PeakList;
     TInt32RangeList EnlargedPeakList;
 

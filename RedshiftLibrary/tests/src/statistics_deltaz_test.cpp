@@ -79,8 +79,6 @@ void DeltazTestCompute( const string& sample, const Float64 redshift, const TFlo
     CParameterStore param_store(stack);
     //    CDataStore dummy(result_store, param_store);
 
-    BOOST_CHECK_NO_THROW( chi2Result.Save(output) );
-
     boost::filesystem::remove(temp);
 
     CDeltaz deltaz;

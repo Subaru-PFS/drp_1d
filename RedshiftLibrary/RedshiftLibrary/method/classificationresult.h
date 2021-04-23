@@ -23,9 +23,6 @@ public:
 
     CClassificationResult();
 
-    void Save( std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-
     void SetTypeLabel( std::string lbl );
     void SetG(Float64 evidence, Float64 prob);
     void SetS(Float64 evidence, Float64 prob);

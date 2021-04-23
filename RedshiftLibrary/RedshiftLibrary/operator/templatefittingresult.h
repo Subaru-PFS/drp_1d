@@ -15,9 +15,6 @@ public:
 
     void Init( UInt32 n, Int32 nISM, Int32 nIGM);
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-    
     void Load( std::istream& stream );
 
     TFloat64List            Redshifts;

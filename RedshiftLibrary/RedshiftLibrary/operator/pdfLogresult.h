@@ -16,9 +16,6 @@ public:
     CPdfLogResult();
     virtual ~CPdfLogResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-   
     void Load( std::istream& stream );
 
     void SetSize( UInt32 n );

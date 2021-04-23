@@ -38,8 +38,6 @@
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
-#include "RedshiftLibrary/reliability/zclassifierstore.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
@@ -52,10 +50,6 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstant.h"
-#include "RedshiftLibrary/method/linemodelsolve.h"
-#include "RedshiftLibrary/method/linematchingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -187,29 +181,6 @@ typedef std::vector<std::string> TScopeStack;
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 
-class CParameterStore {
-%rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
-%rename(Get_Int64) Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0);
-%rename(Get_Float64) Get( const std::string& name, Float64& out_float, Float64 defaultValue = 0);
-%rename(Set_String) Set( const std::string& name, const std::string& v);
-
-public:
-  CParameterStore(const TScopeStack&);
-  void Load( const std::string& path );
-  void FromString(const std::string & json);
-  void Save( const std::string& path ) const;
-  void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
-  void Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0 );
-  void Set( const std::string& name, const std::string& v );
-
-};
-
-class CClassifierStore {
-public:
-  CClassifierStore();
-  bool Load ( const char* dirPath );
-};
 
 class CRayCatalog
 {
@@ -236,7 +207,6 @@ public:
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> rayCatalog,
             const std::string& paramsJSONString);
-  //CDataStore& GetDataStore();
   std::shared_ptr<COperatorResultStore> GetResultStore();
 };
 
@@ -246,20 +216,6 @@ public:
   CProcessFlow();
   void Process( CProcessFlowContext& ctx );
 };
-
-class CDataStore
-{
-public:
-  CDataStore(COperatorResultStore& resultStore, CParameterStore& parameStore);
-  void SaveRedshiftResult(const std::string& dir);
-  void SaveCandidatesResult(const std::string& dir);
-  void SaveReliabilityResult(const std::string& dir);
-  void SaveStellarResult(const std::string& dir);
-  void SaveQsoResult(const std::string& dir);
-  void SaveClassificationResult(const std::string& dir);
-  void SaveAllResults(const std::string& dir, const std::string opt) const;
-};
-
 
 
 class COperatorResultStore
@@ -290,10 +246,6 @@ class COperatorResultStore
   void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
 
-  
-
-  void test();
-  
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;
@@ -415,35 +367,6 @@ class CLSFConstantGaussian : public CLSF
   Float64 GetSigma(Float64 lambda=-1.0) const;
   void SetSigma(const Float64 sigma);
   bool IsValid() const;
-};
-
-class CLineModelSolve
-{
- public:
-  CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
-  ~CLineModelSolve();
-};
- 
-class CMethodLineMatchingSolve
-{
- public:
-  CMethodLineMatchingSolve();
-  ~CMethodLineMatchingSolve();
-};
-
-class CMethodTemplateFittingSolve
-{
- public:
-  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
-  ~CMethodTemplateFittingSolve();
-};
-
-
-class CMethodTplcombinationSolve
-{
- public:
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
-  ~CMethodTplcombinationSolve();
 };
 
   typedef enum ErrorCode

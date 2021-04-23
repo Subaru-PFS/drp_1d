@@ -29,60 +29,7 @@ CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & sco
     m_fittingSNR(ExtremaResult->FittedTplSNR[0])
 {}
 
-/*
-void CTemplateFittingSolveResult::preSave(const CDataStore& store)
-{
-    if(m_bestRedshiftMethod==0)//bestXi2
-        GetBestRedshift(store);
-    if(m_bestRedshiftMethod==2)//bestPDF
-    {
-        GetBestRedshiftFromPdf(store);
-        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), m_redshift);
-        Int32 b = GetBestModel(store, m_redshift);
-        if(b==-1){
-            Log.LogError(" CTemplateFittingSolveResult::preSave: Couldn't find index of %f", m_redshift);
-            throw runtime_error("CTemplateFittingSolveResult::preSave: Couldn't find redshift index. Aborting!");
-        }
-        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), m_tplName.c_str());
-
-    }
-    if(m_tplName=="")
-        m_tplName = "Undefined";
-}*/
-
-void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
-{
-
-  
-    stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tebmvcoeff\tmeiksinidx"<< std::endl;
-
-    stream << m_redshift << "\t"
-                << m_merit << "\t"
-                << m_tplName << "\t"
-                << m_amplitude << "\t"
-                << m_amplitudeError << "\t"
-                << std::setprecision(4) << m_EbmvCoeff << "\t"
-                << m_meiksinIdx << std::endl;
-
-    stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
-    if(m_bestRedshiftMethod==2)
-    {
-        stream << m_redshift << "\t"
-               << m_merit << "\t"
-               << m_evidence << "\t"
-               << m_tplName << std::endl;
-    }else{
-        stream <<  "-1\t-1\t-1"<< std::endl;
-    }
-
-    stream << std::endl;
-    stream << std::endl;
-    std::string detailStr;
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    //    GetBestRedshiftPerTemplateString( store, detailStr);
-    //stream << detailStr.c_str();
-}
-
+// TODO DV erase this ?
 /*
 Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
@@ -133,34 +80,6 @@ Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataS
 
 }*/
 
-//called for saving redshift.csv for Xi2
-void CTemplateFittingSolveResult::SaveLine(std::ostream& stream ) const
-{
-    char tmpChar[256];
-    Float64 dtreepathnum;
-    
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    /*
-    store.GetParam( "dtreepathnum", dtreepathnum );
-    sprintf(tmpChar, "%.2f", dtreepathnum);
-
-    //preSave(store);
-
-    stream << store.GetSpectrumName() << "\t"
-           << store.GetProcessingID() << "\t"
-                << m_redshift << "\t"
-                << m_merit << "\t"
-                << m_tplName << "\t"
-                << m_name + "_" << tmpChar << "\t"
-                << "-1" << "\t" //deltaz
-                << m_ReliabilityLabel << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << m_TypeLabel << std::endl; //reliability label
-    */
-}
 
 /*
 Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store) 

@@ -18,8 +18,6 @@ class CPdfMargZLogResult : public COperatorResult
     ~CPdfMargZLogResult() = default;
     CPdfMargZLogResult(const TFloat64List & redshifts);
     
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
    
     Int32 Load( std::string filePath );
 

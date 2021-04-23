@@ -135,19 +135,3 @@ void CTemplateFittingResult::Load( std::istream& stream )
     }
 }
 
-void CTemplateFittingResult::Save(std::ostream& stream ) const
-{
-    stream <<  "#Redshifts\tChiSquare\tOverlap"<< std::endl;
-    for ( int i=0; i<Redshifts.size(); i++)
-    {
-        stream <<  Redshifts[i] << std::setprecision(16) << "\t" << std::scientific << ChiSquare[i] << std::fixed << "\t" << Overlap[i] << std::endl;
-    }
-
-
-}
-
-void CTemplateFittingResult::SaveLine(std::ostream& stream ) const
-{
-    stream << "ChisquareResult" << "\t" << Redshifts.size() << std::endl;
-}
-

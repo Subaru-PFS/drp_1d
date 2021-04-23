@@ -30,9 +30,6 @@ public:
   
     Int32 size() const;
  
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-   
     Float64 getDouble(std::string name,Int32 rank) const;
     std::string getString(std::string name,Int32 rank) const;
     Int32 getInt(std::string name,Int32 rank) const;

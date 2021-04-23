@@ -106,24 +106,3 @@ void CPdfLogResult::Load( std::istream& stream )
     }
 }
 
-void CPdfLogResult::Save(std::ostream& stream ) const
-{
-    stream <<  "#Redshifts\tPdfLog\tOverlap"<< std::endl;
-    for ( Int32 i=0; i<Redshifts.size(); i++)
-    {
-        stream.precision(10);
-        stream
-			<<  Redshifts[i] << "\t"
-        		<< std::scientific << valProbaLog[i] ;
-        stream.precision(5);
-        stream
-			 << "\t" << Overlap[i]  // << std::fixed << "\t" << Overlap[i]
-			<< std::endl;
-    }
-}
-
-void CPdfLogResult::SaveLine(std::ostream& stream ) const
-{
-	stream.precision(20);
-    stream << "CPdfLogResult" << "\t" << Redshifts.size() << std::endl;
-}
