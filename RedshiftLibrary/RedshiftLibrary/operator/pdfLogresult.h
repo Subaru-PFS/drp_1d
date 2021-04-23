@@ -16,8 +16,6 @@ public:
     CPdfLogResult();
     virtual ~CPdfLogResult();
 
-    void Load( std::istream& stream );
-
     void SetSize( UInt32 n );
 
     TFloat64List           		Redshifts;

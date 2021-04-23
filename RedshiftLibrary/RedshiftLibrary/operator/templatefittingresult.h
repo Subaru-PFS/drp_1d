@@ -15,8 +15,6 @@ public:
 
     void Init( UInt32 n, Int32 nISM, Int32 nIGM);
 
-    void Load( std::istream& stream );
-
     TFloat64List            Redshifts;
 
     //best fit results

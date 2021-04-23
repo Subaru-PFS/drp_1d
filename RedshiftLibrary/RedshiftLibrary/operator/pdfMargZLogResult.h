@@ -17,9 +17,6 @@ class CPdfMargZLogResult : public COperatorResult
     CPdfMargZLogResult() = default;
     ~CPdfMargZLogResult() = default;
     CPdfMargZLogResult(const TFloat64List & redshifts);
-    
-   
-    Int32 Load( std::string filePath );
 
     Int32 getIndex( Float64 z ) const;
 

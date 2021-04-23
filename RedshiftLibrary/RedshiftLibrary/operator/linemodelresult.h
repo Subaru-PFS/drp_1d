@@ -28,8 +28,6 @@ public:
                Int32 nTplshapes,
                std::vector<Float64> tplshapesPriors);
    
-    void Load( std::istream& stream );
-
     Int32 GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const;
     TBoolList GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const;
     TBoolList GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const;
