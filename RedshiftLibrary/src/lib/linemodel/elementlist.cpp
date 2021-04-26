@@ -1037,7 +1037,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
                                                  m_fitContinuum_tplFitEbmvCoeff, 
                                                  m_fitContinuum_tplFitMeiksinIdx, 
                                                  amplitude,
-                                                 inter_opt, m_fitContinuum_tplFitMeiksinIdx==-1?"no":"yes", range, 
+                                                 inter_opt, range, 
                                                  overlapThreshold, spcmodel);
 
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList

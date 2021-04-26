@@ -749,13 +749,11 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
                                              std::vector<Int32> ismEbmvCoeffs,
                                              const Float64& dtd)
 {
-    const TAxisSampleList & error = m_spectrumRebinedLog.GetFluxAxis().GetError().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedLambda = m_spectrumRebinedLog.GetSpectralAxis().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedFluxRaw = m_spectrumRebinedLog.GetFluxAxis().GetSamplesVector();
     UInt32 nSpc = spectrumRebinedLambda.size();
 
     const TAxisSampleList & tplRebinedLambdaGlobal = m_templateRebinedLog.GetSpectralAxis().GetSamplesVector();
-    const TAxisSampleList & tplRebinedFluxRawGlobal = m_templateRebinedLog.GetFluxAxis().GetSamplesVector();
 
     Int32 kstart, kend;
     kstart = currentRange.GetBegin(); kend = currentRange.GetEnd();

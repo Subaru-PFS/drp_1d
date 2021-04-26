@@ -36,7 +36,7 @@ public:
     CSpectrumNoiseAxis&            GetError();
 
     void                SetSize( UInt32 s );
-
+    void                clear();
     Bool                ApplyMeanSmooth( UInt32 kernelHalfWidth );
     Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
 

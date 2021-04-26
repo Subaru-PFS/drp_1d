@@ -39,6 +39,7 @@ public:
     UInt32                   GetSamplesCount() const;
     UInt32                   GetSamplesCount();
     virtual void             SetSize( UInt32 s );
+    void                     clear();
     Int32 extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx);
     Bool isEmpty() const ;
 protected:

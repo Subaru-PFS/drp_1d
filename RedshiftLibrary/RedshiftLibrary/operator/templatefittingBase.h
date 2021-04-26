@@ -55,7 +55,6 @@ public:
                               Int32 meiksinIdx,
                               Float64 amplitude,
                               std::string opt_interp,
-                              std::string opt_extinction,
                               const TFloat64Range& lambdaRange,
                               Float64 overlapThreshold,
                               std::shared_ptr<CModelSpectrumResult> & spc);

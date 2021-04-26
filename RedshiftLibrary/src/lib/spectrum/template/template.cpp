@@ -5,6 +5,8 @@
 #include <RedshiftLibrary/spectrum/template/catalog.h>
 #include <fstream>
 #include <iostream>
+
+#include <numeric>
 using namespace NSEpic;
 using namespace std;
 
@@ -55,16 +57,28 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
     m_meiksinIdx(other.m_meiksinIdx),
     m_redshiftMeiksin(other.m_redshiftMeiksin),
     m_Category( other.m_Category),
-    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
-    m_IsmIgm_kend(other.m_IsmIgm_kend),
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
 {
-    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
+    if(other.CheckIsmIgmEnabled()){
         other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+        //find in mask the first 1 that falls in the rangeIsmIgm
+        TFloat64List::iterator it = std::find(mask.begin()+other.m_IsmIgm_kstart, mask.end()+other.m_IsmIgm_kend, 1);
+        UInt32 i_min = it - mask.begin();
+        //m_IsmIgm_kstart = std::count(mask[0], mask[i_min], 1.) - 1;
+        m_IsmIgm_kstart = 0;
+        for(Int32 i =0; i<=i_min; i++)
+            m_IsmIgm_kstart+=mask[i];
+        
+        //looking for last
+        TFloat64List v1={1};
+        TFloat64List::iterator ip = std::find_end(it, mask.end()+other.m_IsmIgm_kend, v1.begin(), v1.end());
+        UInt32 i_max = ip - mask.begin();
+        //m_IsmIgm_kend = std::count(mask[0], mask[i_max], 1.) - 1;
+        m_IsmIgm_kend=m_IsmIgm_kstart;
+        for(Int32 i = i_min+1; i<=i_max; i++)
+            m_IsmIgm_kend+=mask[i];
 
-    //mask the other axis
-    if(m_computedDustCoeff.size()){
         CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
         CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
     }
@@ -99,11 +113,13 @@ const std::string& CTemplate::GetCategory() const
 
 void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
 {
+    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
 }
 
 void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
 {
+    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     m_IsmIgm_kstart = kstart; m_IsmIgm_kend = kend;
 }
 /**
@@ -174,10 +190,11 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 
     if(m_meiksinIdx == meiksinIdx && m_redshiftMeiksin == redshift)
         return true;
-        
-    Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+
     m_meiksinIdx = meiksinIdx;
     m_redshiftMeiksin = redshift;
+        
+    Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(m_redshiftMeiksin); //index for IGM Meiksin redshift range
     Bool igmCorrectionAppliedOnce = false;
 
     CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
@@ -194,7 +211,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
                 {
                     kLbdaMeiksin = 0;
                 }
-                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
+                m_computedMeiksingCoeff[k] = m_igmCorrectionMeiksin->m_corrections[redshiftIdx].fluxcorr[m_meiksinIdx][kLbdaMeiksin];
             }
             else 
                 m_computedMeiksingCoeff[k] = 1;
@@ -238,20 +255,17 @@ bool CTemplate::MeiksinInitFailed() const
 }
 
 Bool CTemplate::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                       CTemplate& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
+                       CTemplate& rebinedTemplate, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
 {
-    rebinedSpectrum.ResetNoIsmIgmFlux();//reset
-    CSpectrum::Rebin(range, targetSpectralAxis, rebinedSpectrum, rebinedMask, opt_interp, opt_error_interp);
-    return 1;
+    rebinedTemplate.DisableIsmIgm();
+    return CSpectrum::Rebin(range, targetSpectralAxis, rebinedTemplate, rebinedMask, opt_interp, opt_error_interp);
 }
 //init ism/igm configuration when we change redshift value
 void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
-    if(!m_ismCorrectionCalzetti)
-        m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-    if(!m_igmCorrectionMeiksin)
-        m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+    m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+    m_igmCorrectionMeiksin = igmCorrectionMeiksin;
     
     InitIsmIgmConfig();
 }

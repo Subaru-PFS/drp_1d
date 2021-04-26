@@ -161,8 +161,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                                                m_categoryList,
                                                clampedLbdaRange,
                                                overlapThreshold,
-                                               opt_interp,
-                                               opt_extinction );
+                                               opt_interp);
 
         // store extrema results
         StoreExtremaResults(resultStore, ExtremaResult);
@@ -382,9 +381,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
-                                               std::string opt_interp,
-                                               std::string opt_extinction
-                                               )
+                                               std::string opt_interp)
 {
 
     Log.LogDetail("CMethodTemplateFittingSolve::SaveExtremaResult: building chisquare array");
@@ -491,7 +488,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                         TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],
                                                         TplFitResult->FitAmplitude[idx],
-                                                        opt_interp, opt_extinction, lambdaRange, 
+                                                        opt_interp, lambdaRange, 
                                                         overlapThreshold, spcmodelPtr);
         tplCatalog.m_logsampling = currentSampling;                                                
         ExtremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);

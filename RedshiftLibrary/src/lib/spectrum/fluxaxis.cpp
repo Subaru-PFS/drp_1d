@@ -55,6 +55,11 @@ void CSpectrumFluxAxis::SetSize( UInt32 s )
     CSpectrumAxis::SetSize( s );
     m_StdError.SetSize(s);
 }
+void CSpectrumFluxAxis::clear()
+{
+    CSpectrumAxis::clear();
+    m_StdError.clear();
+}
 
 Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
 {

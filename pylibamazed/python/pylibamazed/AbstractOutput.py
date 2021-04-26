@@ -237,4 +237,5 @@ class AbstractOutput:
         equal = equal and self.compare_classification(other,quiet)
         return equal
 
+    
 

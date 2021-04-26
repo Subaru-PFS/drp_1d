@@ -84,9 +84,7 @@ private:
                                                                 const TStringList& tplCategoryList,
                                                                 const TFloat64Range& lambdaRange,
                                                                 Float64 overlapThreshold,
-                                                                std::string opt_interp,
-                                                                std::string opt_extinction
-                                                                );
+                                                                std::string opt_interp);
 
     void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     

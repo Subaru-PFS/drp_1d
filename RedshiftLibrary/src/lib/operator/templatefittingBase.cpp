@@ -36,7 +36,6 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
                                                             Int32 meiksinIdx,
                                                             Float64 amplitude,
                                                             std::string opt_interp,
-                                                            std::string opt_extinction,
                                                             const TFloat64Range& lambdaRange,
                                                             Float64 overlapThreshold,
                                                             std::shared_ptr<CModelSpectrumResult> & spcPtr)
@@ -84,7 +83,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
             m_templateRebined_bf.ApplyDustCoeff(idxEbmv);
     }
 
-    if(opt_extinction == "yes" && meiksinIdx>-1)
+    if(meiksinIdx>-1)
     {
         if (m_templateRebined_bf.MeiksinInitFailed())
         {
