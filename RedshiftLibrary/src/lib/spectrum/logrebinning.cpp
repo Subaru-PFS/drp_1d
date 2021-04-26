@@ -33,9 +33,9 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                    redshiftRange,
                    SSratio);
     if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
-        inputContext.GetRebinnedSpectrum() = inputContext.GetSpectrum();
+        inputContext.SetRebinnedSpectrum(inputContext.GetSpectrum());
     }else
-        inputContext.GetRebinnedSpectrum() = LoglambdaRebinSpectrum(inputContext.GetSpectrum(), errorRebinMethod);        
+        inputContext.SetRebinnedSpectrum(LoglambdaRebinSpectrum(inputContext.GetSpectrum(), errorRebinMethod));        
     
     inputContext.m_redshiftRangeFFT = m_zrange;
     inputContext.m_redshiftStepFFT = m_logGridStep;

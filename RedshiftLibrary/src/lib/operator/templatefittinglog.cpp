@@ -608,7 +608,6 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                          tplRebinedLambdaGlobal[ilbda.GetEnd()] * (1.0 + zrange.GetBegin()));*/
         }
 
-        Float64 dtd = 0.0;
         FitRangez(inv_err2, ilbda, subresult, igmMeiksinCoeffs, ismEbmvCoeffs, dtd);
 
         // copy subresults into global results
@@ -1043,11 +1042,14 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     std::reverse(bestISMCoeff.begin(), bestISMCoeff.end());
     std::reverse(bestIGMIdx.begin(), bestIGMIdx.end());
     TFloat64List intermChi2BufferReversed_array(intermediateChi2.size());
-    for (Int32 kism = 0; kism < nISM; kism++)
-        for (Int32 kigm = 0; kigm < nIGMFinal; kigm++)
+    for (Int32 kism = 0; kism < nISM; kism++){
+        for (Int32 kigm = 0; kigm < nIGMFinal; kigm++){
             for (Int32 t = 0; t < nshifts; t++)
                 intermChi2BufferReversed_array[t] = intermediateChi2[nshifts - 1 - t][kism][kigm];
-
+            for (Int32 t = 0; t < nshifts; t++)
+                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferReversed_array[t];
+        }
+    }
     for (Int32 k = 0; k < result->Redshifts.size(); k++)
     {
         result->Overlap[k] = 1.0;
@@ -1068,14 +1070,6 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             result->Redshifts.size(),
             result->Redshifts.front(),
             result->Redshifts.back());
-
-    // Interpolating intermediate chisquare results
-    TFloat64List intermChi2BufferRebinned_array(
-        result->Redshifts.size(), boost::numeric::bounds<float>::highest());
-    for (Int32 kism = 0; kism < nISM; kism++)
-        for (Int32 kigm = 0; kigm < nIGMFinal; kigm++)
-            for (Int32 t = 0; t < result->Redshifts.size(); t++)
-                result->ChiSquareIntermediate[t][kism][kigm] = intermChi2BufferReversed_array[t];
 
     freeFFTPlans();
     return 0;

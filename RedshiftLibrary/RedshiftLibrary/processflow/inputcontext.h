@@ -34,6 +34,7 @@ class CInputContext
   std::shared_ptr<CRayCatalog>  GetRayCatalog() {return m_RayCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 
+  void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc){m_rebinnedSpectrum = rebinnedSpc;}
   TFloat64Range   m_lambdaRange;    
   TFloat64Range   m_redshiftRangeFFT;//computed with logRebinning 
   Float64         m_redshiftStepFFT; 
