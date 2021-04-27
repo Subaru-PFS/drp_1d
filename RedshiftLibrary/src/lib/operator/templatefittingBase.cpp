@@ -63,11 +63,12 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
         return -1;
     }
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
-    m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
     if ((EbmvCoeff>0.) || (meiksinIdx>-1)){
         m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }
+    
+    m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
 
     if (EbmvCoeff>0.)
     {

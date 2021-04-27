@@ -142,6 +142,7 @@ Bool CTemplate::Save( const char* filePath ) const
  */
 bool CTemplate::ApplyDustCoeff(Int32 kDust)
 {
+    if (!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     if(m_kDust == kDust)
         return true; 
     m_kDust = kDust;
@@ -165,6 +166,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
  */
 bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
 {
+    if (!CheckIsmIgmEnabled()) InitIsmIgmConfig();
 
     if(m_meiksinIdx == meiksinIdx && m_redshiftMeiksin == redshift)
         return true;
@@ -232,34 +234,46 @@ bool CTemplate::MeiksinInitFailed() const
 }
 
 //init ism/igm configuration when we change redshift value
-bool CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
     if(!m_ismCorrectionCalzetti)
         m_ismCorrectionCalzetti = ismCorrectionCalzetti;
     if(!m_igmCorrectionMeiksin)
         m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    return InitIsmIgmConfig();
+    
+    InitIsmIgmConfig();
 }
 
-bool CTemplate::InitIsmIgmConfig()
+void CTemplate::InitIsmIgmConfig()
 {
+
+    if (MeiksinInitFailed() || CalzettiInitFailed() ) {
+        Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
+        throw runtime_error("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
+    }
+    
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
-    m_NoIsmIgmFluxAxis = GetFluxAxis();
 
+    if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
+        m_NoIsmIgmFluxAxis = GetFluxAxis();
+    else // reset the fluxAxis
+        GetFluxAxis() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
+    
+    SetIsmIgmLambdaRange(0, GetSampleCount()-1);
+    
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
     
     m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
-    return true;
 }
 
 void CTemplate::ScaleFluxAxis(Float64 amplitude){
 
     CSpectrum::ScaleFluxAxis(amplitude);
-    if (!m_NoIsmIgmFluxAxis.isEmpty())
+    if (CheckIsmIgmEnabled()) 
         m_NoIsmIgmFluxAxis *= amplitude;
 }

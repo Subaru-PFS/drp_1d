@@ -43,9 +43,10 @@ public:
     void SetIsmIgmLambdaRange(TFloat64Range& lbdaRange);
     void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend);
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
-    bool InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+    void InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);
-    bool InitIsmIgmConfig();
+    void InitIsmIgmConfig();
+    bool CheckIsmIgmEnabled() const {return !m_NoIsmIgmFluxAxis.isEmpty();};
     bool CalzettiInitFailed() const;
     bool MeiksinInitFailed() const;
 
@@ -67,17 +68,6 @@ private:
 };
 
 
-inline
-const CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm() const
-{
-    return m_NoIsmIgmFluxAxis;
-   
-}
-inline
-CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm()
-{
-    return m_NoIsmIgmFluxAxis;
-}
 inline
 Int32 CTemplate::GetIsmCoeff() const
 {
