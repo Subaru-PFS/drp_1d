@@ -33,8 +33,6 @@ endif()
 message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
 SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
-SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
-SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 FIND_PACKAGE(Python3 COMPONENTS Interpreter)
 IF (NOT Python3_Interpreter_FOUND)
@@ -246,6 +244,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candid
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
