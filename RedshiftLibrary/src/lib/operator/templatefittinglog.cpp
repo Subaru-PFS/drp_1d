@@ -1298,6 +1298,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     }else{
         TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
+        // scale the variance by ssratio
+        m_spectrumRebinedLog.GetFluxAxis().GetError() *= 1./sqrt(ssRatio); 
+
         TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), rebinnedTpl.GetSpectralAxis(), TFloat64Range(redshifts));
         TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio, ilbda);
 
