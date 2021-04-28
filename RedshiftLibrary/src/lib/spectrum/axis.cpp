@@ -53,18 +53,25 @@ Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */
-Int32 CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis)const//mask is 0. or 1.
+void CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const//const//mask is 0. or 1.
 {
-    if(mask.size()!= GetSamplesCount()){
-        Log.LogError("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
-        throw runtime_error("CSpectrumAxis::MaskAxis: mask and axis sizes are not equal. Abort");
+    return maskVector(mask, m_Samples, maskedAxis.m_Samples);
+}
+
+
+void CSpectrumAxis::maskVector(TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector)
+{
+    if(mask.size()!=inputVector.size()){
+        Log.LogError("CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
+        throw runtime_error("CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
     }
     UInt32 sum = UInt32(std::count(mask.begin(), mask.end(), 1));
-    maskedAxis.m_Samples.clear();
-    maskedAxis.m_Samples.reserve(sum);
-    for(Int32 i = 0; i < GetSamplesCount(); i++){
+    outputVector.clear();
+    outputVector.reserve(sum);
+    for(Int32 i=0; i<mask.size(); i++)
+    {
         if(mask[i]==1.)
-            maskedAxis.m_Samples.push_back(m_Samples[i]);
+            outputVector.push_back(inputVector[i]);
     }
-    return 0;
+    return;
 }

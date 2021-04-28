@@ -37,11 +37,12 @@ CTemplate::CTemplate( const CTemplate& other):
     CSpectrum(other),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
+    m_redshiftMeiksin(other.m_redshiftMeiksin),
     m_Category( other.m_Category),
     m_IsmIgm_kstart(other.m_IsmIgm_kstart),
     m_IsmIgm_kend(other.m_IsmIgm_kend),
     m_computedDustCoeff(other.m_computedDustCoeff), 
-    m_computedMeiksingCoeff(other.m_computedDustCoeff),
+    m_computedMeiksingCoeff(other.m_computedMeiksingCoeff),
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
     m_NoIsmIgmFluxAxis(other.m_NoIsmIgmFluxAxis)
@@ -52,18 +53,22 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
     CSpectrum(other, mask),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
+    m_redshiftMeiksin(other.m_redshiftMeiksin),
     m_Category( other.m_Category),
     m_IsmIgm_kstart(other.m_IsmIgm_kstart),
     m_IsmIgm_kend(other.m_IsmIgm_kend),
-    m_computedDustCoeff(other.m_computedDustCoeff), 
-    m_computedMeiksingCoeff(other.m_computedDustCoeff),
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
-{          
+{
     if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
         other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
-    if(m_kDust==-1 && m_meiksinIdx==-1)
-        m_NoIsmIgmFluxAxis = CSpectrumFluxAxis();//empty the axis 
+
+    //mask the other axis
+    if(m_computedDustCoeff.size()){
+        CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
+        CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
+    }
+
 }
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
@@ -73,8 +78,9 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
+    m_redshiftMeiksin = other.m_redshiftMeiksin;
     m_computedDustCoeff = other.m_computedDustCoeff; 
-    m_computedMeiksingCoeff = other.m_computedDustCoeff;
+    m_computedMeiksingCoeff = other.m_computedMeiksingCoeff;
     m_Category = other.m_Category;
     m_IsmIgm_kstart = other.m_IsmIgm_kstart;
     m_IsmIgm_kend = other.m_IsmIgm_kend;
