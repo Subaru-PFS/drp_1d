@@ -174,6 +174,32 @@ Int32 CTemplatesFitStore::GetContinuumCount() const
     return n_continuum_candidates;
 }
 
+
+CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const
+{
+    if(continuumCandidateRank>n_continuum_candidates-1)
+    {
+        Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) >= n_continuum_candidates (%d)",
+                     continuumCandidateRank,
+                     n_continuum_candidates);
+        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+    }else if(continuumCandidateRank<0)
+    {
+        Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) <0",
+                     continuumCandidateRank);
+        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+    }
+
+    if ( (idxz<0) || (idxz > redshiftgrid.size()-1))
+    {
+        Log.LogError("CTemplatesFitStore::GetFitValues - redshift idx %d is outside range", idxz);        
+        throw runtime_error("CTemplatesFitStore::GetFitValues - redshift idx is outside range");
+    }
+ 
+    return m_fitValues[idxz][continuumCandidateRank];
+}
+
+
 CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const
 {
     if(continuumCandidateRank>n_continuum_candidates-1)
@@ -181,10 +207,13 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) >= n_continuum_candidates (%d)",
                      continuumCandidateRank,
                      n_continuum_candidates);
+        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+
     }else if(continuumCandidateRank<0)
     {
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) <0",
                      continuumCandidateRank);
+        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
     }
 
     if(redshiftVal<redshiftgrid[0])
@@ -192,18 +221,14 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
         Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but lt redshiftgrid[0]=%f",
                      redshiftVal,
                      redshiftgrid[0]);
-        SValues sval;
-        sval.tplName="";
-        return sval;
+        throw runtime_error("CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
     }
     if(redshiftVal>redshiftgrid[redshiftgrid.size()-1])
     {
         Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but ht redshiftgrid[redshiftgrid.size()-1]=%f",
                      redshiftVal,
                      redshiftgrid[redshiftgrid.size()-1]);
-        SValues sval;
-        sval.tplName="";
-        return sval;
+        throw runtime_error("CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
     }
 
 
@@ -223,12 +248,33 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
 
         for(Int32 k=0; k<10; k++)
         {
-            Log.LogError("CTemplatesFitStore::GetFitValues - redshiftVal=%e, lt m_fitValues[%d].redshift=%e",
+            Log.LogDebug("CTemplatesFitStore::GetFitValues - redshiftVal=%e, lt m_fitValues[%d].redshift=%e",
                          redshiftVal,
                          k,
                          redshiftgrid[k]);
         }
-
+        
+        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find redshiftVal");
     }
+    
     return m_fitValues[idxz][continuumCandidateRank];
+}
+
+Float64 CTemplatesFitStore::FindMaxAmplitudeSigma(Float64 & z, TemplateFitValues & fitValues)
+{
+    Int32 icontinuum = 0;
+    m_fitContinuum_fitAmplitudeSigmaMAX = -INFINITY;
+    //TemplateFitValues fitValues;
+    for (Int32 i = 0; i < redshiftgrid.size(); i++)
+    {
+        const TemplateFitValues &  thisfitValues = m_fitValues[i][icontinuum];
+        if (thisfitValues.fitAmplitudeSigma > m_fitContinuum_fitAmplitudeSigmaMAX){
+            m_fitContinuum_fitAmplitudeSigmaMAX = thisfitValues.fitAmplitudeSigma;
+            z = redshiftgrid[i];
+            fitValues = thisfitValues;
+        }
+    }
+
+    return m_fitContinuum_fitAmplitudeSigmaMAX;
+
 }

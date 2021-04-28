@@ -912,106 +912,77 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
       throw runtime_error("Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux");
     }
 
-    Float64 bestMerit = DBL_MAX;
-    Float64 bestFitAmplitude = -1.0;
-    Float64 bestFitAmplitudeError = -1.0;
-    Float64 bestFitAmplitudeSigma = 0.0;
-    Float64 bestFitEbmvCoeff = -1.0;
-    Int32 bestFitMeiksinIdx = -1;
-    Float64 bestFitRedshift = m_Redshift;
-    Float64 bestFitDtM = -1.0;
-    Float64 bestFitMtM = -1.0;
-    Float64 bestFitLogprior = 0.0;
-    std::string bestTplName="";
-    std::vector<Float64> bestFitPolyCoeffs;
-
     if(m_fitContinuum_option==1){//using precomputed fit store, i.e., fitValues
         CTemplatesFitStore::TemplateFitValues fitValues = m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
         if(fitValues.tplName.empty())
         {
             throw runtime_error("Empty template name");
         }
-        bestMerit = fitValues.merit;
-        bestFitAmplitude = fitValues.fitAmplitude;
-        bestFitAmplitudeError = fitValues.fitAmplitudeError;
-        bestFitAmplitudeSigma = fitValues.fitAmplitudeSigma;
-        bestFitEbmvCoeff = fitValues.ismEbmvCoeff;
-        bestFitMeiksinIdx = fitValues.igmMeiksinIdx;
-        bestFitDtM = fitValues.fitDtM;
-        bestFitMtM = fitValues.fitMtM;
-        bestFitLogprior = fitValues.logprior;
-        bestTplName = fitValues.tplName;
 
+        m_fitContinuum_tplName = fitValues.tplName;
+        m_fitContinuum_tplFitAmplitude = fitValues.fitAmplitude;
+        m_fitContinuum_tplFitAmplitudeError = fitValues.fitAmplitudeError;
+        m_fitContinuum_tplFitMerit = fitValues.merit;
+        m_fitContinuum_tplFitEbmvCoeff = fitValues.ismEbmvCoeff;
+        m_fitContinuum_tplFitMeiksinIdx = fitValues.igmMeiksinIdx;
+        m_fitContinuum_tplFitRedshift = m_Redshift;
+        m_fitContinuum_tplFitDtM = fitValues.fitDtM;;
+        m_fitContinuum_tplFitMtM = fitValues.fitMtM;
+        m_fitContinuum_tplFitLogprior = fitValues.logprior;
+        m_fitContinuum_tplFitPolyCoeffs = {};
+
+        m_fitContinuum_tplFitAmplitudeSigmaMAX = m_fitContinuum_tplfitStore->m_fitContinuum_fitAmplitudeSigmaMAX;
         m_fitContinuum_tplFitSNRMax = m_fitContinuum_tplfitStore->m_fitContinuum_tplFitSNRMax;
         m_opt_fitcontinuum_maxCount = m_fitContinuum_tplfitStore->m_opt_fitcontinuum_maxCount;
+
     }else if(m_fitContinuum_option==2){
-        //values unmodified
-        bestTplName = m_fitContinuum_tplName;
-        bestMerit = m_fitContinuum_tplFitMerit;
-        bestFitAmplitude = m_fitContinuum_tplFitAmplitude;
-        bestFitAmplitudeError = m_fitContinuum_tplFitAmplitudeError;
-        bestFitEbmvCoeff = m_fitContinuum_tplFitEbmvCoeff;
-        bestFitMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
-        bestFitDtM = m_fitContinuum_tplFitDtM;
-        bestFitMtM = m_fitContinuum_tplFitMtM;
-        bestFitLogprior = m_fitContinuum_tplFitLogprior;
-        bestFitRedshift = m_fitContinuum_tplFitRedshift;
-        bestFitPolyCoeffs = m_fitContinuum_tplFitPolyCoeffs;
+        //values unmodified nothing to do
     }else{
         throw runtime_error("Elementlist, cannot parse fitContinuum_option");
     }
 
-    if(!bestTplName.empty())
+    if(!m_fitContinuum_tplName.empty())
     {   
         //Retrieve the best template
-        const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, bestTplName); 
-        if(tpl.GetName()==bestTplName)
+        const CTemplate& tpl = m_tplCatalog.GetTemplateByName(m_tplCategoryList, m_fitContinuum_tplName); 
+        if(tpl.GetName()==m_fitContinuum_tplName)
         {
-                    m_fitContinuum_tplFitAmplitude = bestFitAmplitude;
-                    m_fitContinuum_tplFitAmplitudeError = bestFitAmplitudeError;
-                    m_fitContinuum_tplFitMerit = bestMerit;
-                    m_fitContinuum_tplFitEbmvCoeff = bestFitEbmvCoeff;
-                    m_fitContinuum_tplFitMeiksinIdx = bestFitMeiksinIdx;
-                    m_fitContinuum_tplFitRedshift = bestFitRedshift;
-                    m_fitContinuum_tplFitDtM = bestFitDtM;
-                    m_fitContinuum_tplFitMtM = bestFitMtM;
-                    m_fitContinuum_tplFitLogprior = bestFitLogprior;
-
                     if(autoSelect)
                     {
                         //Float64 contsnr = getFitContinuum_snr();
-                        Float64 contsnr = m_fitContinuum_tplFitSNRMax;
+                        /*Float64 contsnr = m_fitContinuum_tplFitSNRMax;
                         m_fitContinuum_tplFitAlpha = 1.0;
                         if(contsnr>50.)
                         {
                             m_fitContinuum_tplFitAlpha=0.0;
-                        }
+                        }*/
+                        m_fitContinuum_tplFitAlpha=0.0;
+                        if (m_fitContinuum_tplFitAmplitudeSigmaMAX < m_opt_fitcontinuum_neg_threshold)
+                            m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
                     }
 
                     ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
-                    m_fitContinuum_tplFitPolyCoeffs = bestFitPolyCoeffs;
-                    setFitContinuum_tplAmplitude(bestFitAmplitude, bestFitAmplitudeError, bestFitPolyCoeffs);
+                    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, m_fitContinuum_tplFitPolyCoeffs);
 
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", bestTplName.c_str());
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", bestFitAmplitude);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", bestFitAmplitudeError);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A/A_Arror=%e", bestFitAmplitudeSigma);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with DustCoeff=%e", bestFitEbmvCoeff);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with MeiksinIdx=%d", bestFitMeiksinIdx);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", bestFitDtM);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", bestFitMtM);
-                    Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", bestFitLogprior);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded: %s", m_fitContinuum_tplName.c_str());
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A=%e", m_fitContinuum_tplFitAmplitude);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with A_error=%e", m_fitContinuum_tplFitAmplitudeError);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with DustCoeff=%e", m_fitContinuum_tplFitEbmvCoeff);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with MeiksinIdx=%d", m_fitContinuum_tplFitMeiksinIdx);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", m_fitContinuum_tplFitDtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", m_fitContinuum_tplFitMtM);
+                    Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", m_fitContinuum_tplFitLogprior);
                     Float64 tplfitsnr = -1;
-                    if(bestFitMtM>0.0)
+                    if(m_fitContinuum_tplFitMtM>0.0)
                     {
-                        tplfitsnr=bestFitDtM/std::sqrt(bestFitMtM);
+                        tplfitsnr=m_fitContinuum_tplFitDtM/std::sqrt(m_fitContinuum_tplFitMtM);
                     }
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with snr=%e", tplfitsnr);
         }
         else
         {
-            Log.LogError("Failed to load-fit continuum. Failed to find best template=%s", bestTplName.c_str());
+            Log.LogError("Failed to load-fit continuum. Failed to find best template=%s", m_fitContinuum_tplName.c_str());
             throw runtime_error( "Failed to load and fit continuum. Failed to find best template by name");
         }
     }else{
@@ -1029,15 +1000,21 @@ void CLineModelElementList::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64
     m_fitContinuum_tplFitAmplitudeError = tplAmpErr;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
     for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
-        m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp;
+        if (alpha == 1.0)
+            m_ContinuumFluxAxis[k] = 0.;
+        else
+            m_ContinuumFluxAxis[k] = (1.-alpha)*m_observeGridContinuumFlux[k]*tplAmp;
         if  (alpha!=0.0){
             m_ContinuumFluxAxis[k] += alpha*m_inputSpc.GetContinuumFluxAxis()[k];
         }
-        Float64 lbdaTerm=1.0;
-        for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
+        if (alpha != 1)
         {
-            m_ContinuumFluxAxis[k] += (1.-alpha)*polyCoeffs[kCoeff]*lbdaTerm;
-            lbdaTerm *= spcSpectralAxis[k];
+            Float64 lbdaTerm=1.0;
+            for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
+            {
+                m_ContinuumFluxAxis[k] += (1.-alpha)*polyCoeffs[kCoeff]*lbdaTerm;
+                lbdaTerm *= spcSpectralAxis[k];
+            }
         }
         m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
     }

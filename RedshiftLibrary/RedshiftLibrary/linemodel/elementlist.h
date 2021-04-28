@@ -408,6 +408,7 @@ private:
     std::string m_fitContinuum_tplName;
     Float64 m_fitContinuum_tplFitAmplitude = NAN;
     Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
+    Float64 m_fitContinuum_tplFitAmplitudeSigmaMAX = NAN;
     Float64 m_fitContinuum_tplFitMerit = NAN;
     Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
     Int32   m_fitContinuum_tplFitMeiksinIdx = -1;

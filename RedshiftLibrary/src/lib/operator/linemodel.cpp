@@ -874,18 +874,20 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Log.LogDetail("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
 
 
-    // Check if best continuum amplitudes are negative fitted amplitudes
-    Int32 icontinuum = 0;
-    for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
-    {
-        Float64 redshift = redshiftsTplFit[i];
-        CTemplatesFitStore::TemplateFitValues fitValues = tplfitStore->GetFitValues(redshift, icontinuum);
-        bool bestIsNegative = fitValues.fitAmplitudeSigma < m_opt_continuum_neg_amp_threshold;
-        if(bestIsNegative) {
-            Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", redshift, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
+    // Check if best continuum amplitudes are negative fitted amplitudes at all z
+    CTemplatesFitStore::TemplateFitValues fitValues;
+    Float64 max_fitamplitudeSigma_z=NAN;
+    Float64 max_fitamplitudeSigma=tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
+    if(max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
+        if (m_opt_continuumcomponent != "tplfitauto")
+        {
+            Log.LogError("  Operator-Linemodel: Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
             throw runtime_error("  Operator-Linemodel: Failed to compute continuum fit. Negative amplitude detected! aborting...");
-        }
+        }else{
+            Log.LogWarning(" Operator-Linemodel: Switching to spectrum continuum since Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
     }
+}
+
 }
 
 /**
