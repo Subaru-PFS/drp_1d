@@ -22,9 +22,6 @@ public:
     CModelRulesResult();
     virtual ~CModelRulesResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-   
 
 private:
 

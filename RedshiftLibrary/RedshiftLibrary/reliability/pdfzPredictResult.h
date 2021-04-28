@@ -22,9 +22,6 @@ public:
 	CPdfzPredictResult();
 	virtual ~CPdfzPredictResult();
 
-	void Save(std::ostream& stream ) const;
-	void SaveLine( std::ostream& stream ) const;
-   
 
 	TStringList m_Labels;
 

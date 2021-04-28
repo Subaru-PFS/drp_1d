@@ -51,61 +51,6 @@ TFloat64List CPdfCandidateszResult::GetValSumProbas() const
 }
 
 
-void CPdfCandidateszResult::Save( std::ostream& stream ) const
-{
-    stream  << "#fullwidth = " << "6* Deltaz" << std::endl;
-    stream  << "#method = " << m_optMethod << std::endl;
-    stream  << std::endl;
-
-    //    stream  << "#" << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
-    stream  << std::endl;
-
-    stream  << "#" << "rank" << "\t"  << "IDs" << "\t"<< "redshift" << "\t" << "intgProba"<< "\t" << "\t" <<"Deltaz";
-    if(m_optMethod==1)
-    {
-        stream << "\t" << "gaussAmp" << "\t" << "gaussAmpErr" << "\t" << "gaussSigma" << "\t" << "gaussSigmaErr";
-    }else{
-        stream << "\t" << "gaussAmp_unused" << "\t" << "gaussAmpErr_unused" << "\t" << "gaussSigma_unused" << "\t" << "gaussSigmaErr_unused";
-    }
-    stream  << "\n";
-    for(Int32 i=0; i< m_ranked_candidates.size(); ++i)
-    {
-        const TCandidateZ & cand = m_ranked_candidates[i].second;
-        const std::string & Id = m_ranked_candidates[i].first;
-        stream << i << "\t"; 
-        stream << Id << "\t";
-        stream << cand.Redshift << "\t";
-        stream << cand.ValSumProba << "\t";
-        stream << cand.Deltaz << "\t";
-        //only for method 1, but leave columns with -1 value ste in compute()
-        stream << cand.GaussAmp << "\t";
-        stream << cand.GaussAmpErr << "\t";
-        stream << cand.GaussSigma << "\t";
-        stream << cand.GaussSigmaErr << "\t";
-
-        stream << "\n";
-    }
-    stream << std::endl;
-}
-
-void CPdfCandidateszResult::SaveLine( std::ostream& stream ) const
-{
-  //    stream  << store.GetSpectrumName() << "\t" << store.GetProcessingID() << "\t";
-    for(Int32 i=0; i< m_ranked_candidates.size(); ++i)
-    {
-        const TCandidateZ & cand = m_ranked_candidates[i].second;
-        const std::string & Id = m_ranked_candidates[i].first;
-        stream << i << "\t";
-        stream << Id << "\t";
-        stream << cand.Redshift << "\t";
-        stream << cand.ValSumProba << "\t";
-        stream << cand.Deltaz << "\t";
-        stream << cand.GaussAmp << "\t";
-        stream << cand.GaussSigma << "\t"; 
-    }
-    stream << std::endl;
-}
-
 
   void CPdfCandidateszResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
   {

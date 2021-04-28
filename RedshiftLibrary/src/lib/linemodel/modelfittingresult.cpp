@@ -48,69 +48,6 @@ CModelFittingResult::~CModelFittingResult()
 {
 }
 
-/**
- * \brief Prints the results of the Linemodel in the argument store, using the argument stream as output.
- **/
-void CModelFittingResult::Save(std::ostream& stream ) const
-{
-    // save linemodel solution
-    if(true){
-        for ( UInt32 i=0; i<1; i++)
-        {
-            stream <<  "#linemodel solution " << i << " for z = " <<  std::fixed <<  Redshift;
-            stream << ", velocityEmission = " <<  VelocityEmission;
-            stream << ", velocityAbsorption = " <<  VelocityAbsorption;
-            stream << ", merit = " <<  Merit << "{" <<  std::endl;
-            stream << "#type\t#force\t#Name_____________\t#elt_ID\t#lambda_rest_beforeOffset\t#lambda_obs\t#amp_____\t#err_____\t#err_fit_____\t#fit_group_____\t#velocity_____\t#offset_____\t#sigma_____\t#flux_____\t#flux_err_____\t#flux_di_____\t#center_cont_flux_____\t#cont_err_____\n";
-            for ( UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
-            {
-                std::string typeStr="";
-                if(restRayList[j].GetType() == CRay::nType_Absorption){
-                    typeStr = "A";
-                }else{
-                    typeStr = "E";
-                }
-                stream <<  typeStr << "\t";
-                std::string forceStr="";
-                if(restRayList[j].GetForce() == CRay::nForce_Strong){
-                    forceStr = "S";
-                }else{
-                    forceStr = "W";
-                }
-                stream <<  forceStr << "\t";
-                std::string name = restRayList[j].GetName();
-                Int32 nstr = name.size();
-                for(int jstr=0; jstr<18-nstr; jstr++){
-                    name = name.append(" ");
-                }
-                stream <<  std::fixed << name << "\t";
-                stream <<  std::fixed << std::setprecision(0) << LineModelSolution.ElementId[j] << "\t";
-                stream <<  std::fixed << std::setprecision(3) << restRayList[j].GetPosition() << "\t";
-                stream <<  std::fixed << std::setprecision(3) << LineModelSolution.LambdaObs[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Amplitudes[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Errors[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.FittingError[j] << "\t";
-                stream << std::fixed << std::setprecision(1) <<  LineModelSolution.fittingGroupInfo[j] << "\t";
-                stream << std::fixed << std::setprecision(1) <<  LineModelSolution.Velocity[j] << "\t";
-                stream << std::fixed << std::setprecision(1) <<  LineModelSolution.Offset[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Sigmas[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.Fluxs[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.FluxErrors[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.FluxDirectIntegration[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.CenterContinuumFlux[j] << "\t";
-                stream << std::scientific << std::setprecision(5) <<  LineModelSolution.ContinuumError[j] << std::endl;
-            }
-            stream << "#}" << std::endl;
-
-            stream <<  "#lya asymfit params = { ";
-            stream << "widthCoeff= " <<  LineModelSolution.LyaWidthCoeff << ", ";
-            stream << "alpha= " <<  LineModelSolution.LyaAlpha << ", ";
-            stream << "delta= " <<  LineModelSolution.LyaDelta << " ";
-            stream << "}" << std::endl;
-        }
-    }
-
-}
 
 //Load the linemodel fit results from a csv file;
 //WARNING: read only the amplitudes fitted so far, as of 2016-03-10
@@ -184,14 +121,6 @@ void CModelFittingResult::Load( const char* filePath )
     file.close();
 }
 
-
-/**
- * \brief Empty method.
- **/
-void CModelFittingResult::SaveLine( std::ostream& stream ) const
-{
-
-}
 
 
 void CModelFittingResult::getData(const std::string& name, int **data, int *size) const

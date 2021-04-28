@@ -31,10 +31,6 @@ public:
 
   void Resize(Int32 size);
   
-  void Save(std::ostream& stream ) const {}; 
-  void SaveJSON( std::ostream& stream ) const;
-
-  void SaveLine(std::ostream& stream ) const {};
    
   void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
   void getCandidateData(const int& rank,const std::string& name, Int32& v) const;

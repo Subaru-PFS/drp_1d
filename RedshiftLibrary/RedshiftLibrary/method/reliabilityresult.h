@@ -24,8 +24,6 @@ public:
   CReliabilityResult();
 
   void getData(const std::string& name, std::string& v) const;
-  virtual void Save(std::ostream& stream) const {};
-  virtual void SaveLine(std::ostream& stream ) const {};
 
   std::string m_ReliabilityLabel="C6";
 

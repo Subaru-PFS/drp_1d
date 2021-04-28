@@ -44,39 +44,6 @@ void CClassificationResult::SetQ(Float64 evidence, Float64 prob)
     m_prob_qso = prob;
 }
 
-/**
- * \brief
- **/
-void CClassificationResult::Save( std::ostream& stream ) const
-{
-    stream <<  "#Type\tLogEvidenceG\tLogEvidenceS\tLogEvidenceQ\tProbaG\tProbaS\tProbaQ"<< std::endl;
-    stream << m_TypeLabel << "\t"
-       << m_evidence_galaxy << "\t"
-       << m_evidence_star << "\t"
-       << m_evidence_qso << "\t"
-
-       << m_prob_galaxy << "\t"
-       << m_prob_star << "\t"
-       << m_prob_qso << "\t"
-       << std::endl;
-}
-
-/**
- * \brief
- **/
-void CClassificationResult::SaveLine(std::ostream& stream ) const
-{
-  //stream  << store.GetSpectrumName() << "\t"
-  //          << store.GetProcessingID() << "\t"
-    stream  << m_TypeLabel << "\t"
-            << m_evidence_galaxy << "\t"
-            << m_evidence_star << "\t"
-            << m_evidence_qso << "\t"
-            << m_prob_galaxy << "\t"
-            << m_prob_star << "\t"
-            << m_prob_qso << "\t"
-            << std::endl;
-}
 
 void CClassificationResult::getData(const std::string& name, std::string& v) const
 {
