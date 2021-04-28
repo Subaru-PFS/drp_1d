@@ -43,10 +43,9 @@ CTemplate::CTemplate( const CTemplate& other):
     m_computedDustCoeff(other.m_computedDustCoeff), 
     m_computedMeiksingCoeff(other.m_computedDustCoeff),
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
-    m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
+    m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin),
+    m_NoIsmIgmFluxAxis(other.m_NoIsmIgmFluxAxis)
 {
-        if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
-        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
 }
 
 CTemplate::CTemplate( const CTemplate& other, TFloat64List mask): 
@@ -60,19 +59,18 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
     m_computedMeiksingCoeff(other.m_computedDustCoeff),
     m_ismCorrectionCalzetti(other.m_ismCorrectionCalzetti),
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
-{
+{          
     if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
         other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
-            
+    if(m_kDust==-1 && m_meiksinIdx==-1)
+        m_NoIsmIgmFluxAxis = CSpectrumFluxAxis();//empty the axis 
 }
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
     CSpectrum::operator =(other);
     m_Name = other.m_Name;
 
-    if(other.m_NoIsmIgmFluxAxis.GetSamplesCount())
-        m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
-        
+    m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
     m_kDust = other.m_kDust;
     m_meiksinIdx = other.m_meiksinIdx;
     m_computedDustCoeff = other.m_computedDustCoeff; 
