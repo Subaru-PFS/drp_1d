@@ -351,7 +351,7 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
         // find lambda range intersection common to all templates
         intersectedAllLambdaRange.IntersectWith(intersectedLambdaRange);
 
-        CSpectrum & itplTplSpectrum = m_templatesRebined_bf[ktpl];
+        CTemplate & itplTplSpectrum = m_templatesRebined_bf[ktpl];
         CMask & itplMask = m_masksRebined_bf[ktpl];
 
         tplList[ktpl].Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );

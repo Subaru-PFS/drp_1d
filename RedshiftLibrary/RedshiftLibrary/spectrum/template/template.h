@@ -34,6 +34,9 @@ public:
     
     Bool Save(const char *filePath ) const;
 
+    Bool    Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+            CTemplate& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
+            const std::string opt_error_interp="no" ) const;
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
     void ScaleFluxAxis(Float64 amplitude);
@@ -49,7 +52,7 @@ public:
     bool CheckIsmIgmEnabled() const {return !m_NoIsmIgmFluxAxis.isEmpty();};
     bool CalzettiInitFailed() const;
     bool MeiksinInitFailed() const;
-
+    void ResetNoIsmIgmFlux();
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
 private:
@@ -66,7 +69,11 @@ private:
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
 };
-
+inline
+void CTemplate::ResetNoIsmIgmFlux() 
+{
+    m_NoIsmIgmFluxAxis.SetSize(0);
+}
 
 inline
 Int32 CTemplate::GetIsmCoeff() const

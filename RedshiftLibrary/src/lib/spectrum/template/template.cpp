@@ -237,6 +237,13 @@ bool CTemplate::MeiksinInitFailed() const
     return failed;
 }
 
+Bool CTemplate::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+                       CTemplate& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
+{
+    rebinedSpectrum.ResetNoIsmIgmFlux();//reset
+    CSpectrum::Rebin(range, targetSpectralAxis, rebinedSpectrum, rebinedMask, opt_interp, opt_error_interp);
+    return 1;
+}
 //init ism/igm configuration when we change redshift value
 void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
                                 const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)

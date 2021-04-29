@@ -126,7 +126,7 @@ Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
     // Compute the intersected range
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
-
+    //m_templateRebined_bf.ResetNoIsmIgmFlux();//reset 
     tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, m_templateRebined_bf, m_mskRebined_bf, opt_interp);   
 
     //overlapRate
