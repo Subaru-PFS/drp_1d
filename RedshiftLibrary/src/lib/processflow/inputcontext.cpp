@@ -22,11 +22,11 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     
-    RebinInputWrapper(); 
+    RebinInputWrapper();
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
-    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore);
+    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore, m_Spectrum->GetLSF());
 
     std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
     Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";

@@ -18,7 +18,7 @@ namespace NSEpic
             Float64 GetLineFlux( Float64 A, const Float64 sigma) override;
             Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, const Float64 sigma) override;
             Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) override;
-            Float64 GetNSigmaSupport() override;
+            Float64 GetNSigmaSupport() const override;
     };
 }
 #endif

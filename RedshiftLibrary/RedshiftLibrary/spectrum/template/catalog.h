@@ -28,7 +28,9 @@ public:
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
-    void                    InitIsmIgm(const std::string & calibrationPath, std::shared_ptr<const CParameterStore> parameterStore);
+    void                    InitIsmIgm(const std::string & calibrationPath, 
+                                       std::shared_ptr<const CParameterStore> parameterStore,
+                                       const std::shared_ptr<const CLSF>& lsf);
     mutable Bool            m_logsampling = 0;//non-log by default
 
 private:

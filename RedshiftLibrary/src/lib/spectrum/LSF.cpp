@@ -16,6 +16,15 @@ CLSF::CLSF(TLSFType name):m_name(name){} //To be deleted once child classes are 
 
 }
 
-Float64 CLSF::GetLineProfile (Float64 lambda, Float64 lambda0){
-    return m_profile->GetLineProfile(lambda, lambda0, GetWidth());
+Float64 CLSF::GetLineProfile (Float64 lambda, Float64 lambda0) const
+{
+    return m_profile->GetLineProfile(lambda, lambda0, GetWidth(lambda0));
+}
+Float64 CLSF::GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const
+{
+    return m_profile->GetLineProfile(lambda, lambda0, sigma0);
+}
+ std::shared_ptr<const CLineProfile> CLSF::GetProfile() const
+{
+    return m_profile;
 }

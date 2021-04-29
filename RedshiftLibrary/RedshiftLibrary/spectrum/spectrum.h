@@ -71,7 +71,7 @@ public:
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
     const CSpectrumNoiseAxis&       GetErrorAxis() const;
-    std::shared_ptr<const CLSF>     GetLSF() const;
+    const std::shared_ptr<const CLSF>     GetLSF() const;
 
     virtual void                    SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis);
     virtual void                    SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
@@ -289,7 +289,7 @@ void CSpectrum::SetErrorAxis(CSpectrumNoiseAxis && erroraxis)
 }
 
 inline
-std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
+const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
 {
     return m_LSF;
 }

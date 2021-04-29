@@ -36,7 +36,7 @@ namespace NSEpic
             virtual Float64 GetLineFlux( Float64 A, Float64 sigma)=0;
             virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)=0;
             virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)=0;
-            virtual Float64 GetNSigmaSupport();
+            virtual Float64 GetNSigmaSupport() const;
 
             const TProfile& GetName();
             virtual const TAsymParams GetAsymParams(){return {NAN,NAN,NAN};};
@@ -78,7 +78,7 @@ namespace NSEpic
     {}
 
     inline
-    Float64 CLineProfile::GetNSigmaSupport(){
+    Float64 CLineProfile::GetNSigmaSupport()const{
         return m_nsigmasupport;
     }
     inline

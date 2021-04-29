@@ -34,12 +34,13 @@ public:
     CLSF(CLSF && other) = default; 
     CLSF& operator=(const CLSF& other) = default;  
     CLSF& operator=(CLSF&& other) = default; 
-
+    //GetWidth requires observed wavelength, not restframe
     virtual Float64             GetWidth(Float64 lambda=-1.0) const=0;
     virtual bool                IsValid() const = 0;
-    Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.);
+    Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
+    Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;
     void                        SetSourcesizeDispersion(Float64 sigma) const{};//empty default implementation
-                        
+    std::shared_ptr<const CLineProfile>   GetProfile() const;                      
     const TLSFType  m_name;
     
 protected:
