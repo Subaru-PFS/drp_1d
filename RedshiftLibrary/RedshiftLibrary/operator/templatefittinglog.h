@@ -46,7 +46,7 @@ public:
                                               Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
-    inline  bool IsFFTProcessing() {return true;}; 
+    inline  bool IsFFTProcessing() override{return true;}; 
 
     //made public for unit-testing
     TInt32Range FindTplSpectralIndex(const TFloat64Range & redshiftrange) const;
@@ -89,7 +89,6 @@ private:
     Int32 EstimateXtYSlow(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts,
                           std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts, std::vector<Float64>& XtY);
-void howtocomplexifylife( TFloat64List redshifts, CTemplate rebinnedTemplate);
 
     Int32 InterpolateResult(const std::vector<Float64>& in, std::vector<Float64>& inGrid,
                             const std::vector<Float64>& tgtGrid, std::vector<Float64>& out, Float64 defaultValue);

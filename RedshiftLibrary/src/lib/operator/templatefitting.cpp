@@ -134,10 +134,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
-    if (apply_ism || opt_extinction){             
-        m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-    }
-
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return;
@@ -160,7 +156,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             iEbmvCoeffMax = iEbmvCoeffMin;
         }else if(opt_dustFitting==-10)
         {
-            nEbmvCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+            nEbmvCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
             iEbmvCoeffMin = 0;
             iEbmvCoeffMax = iEbmvCoeffMin+nEbmvCoeffs-1;
         }
@@ -180,7 +176,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             MeiksinList.push_back(fittingMeiksinIdx);//fill it with only the index passed as argument   
         }
         else{
-            nIGMCoeffs = m_templateRebined_bf.m_igmCorrectionMeiksin->GetIdxCount();
+            nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
             for(Int32 mk = 0; mk<nIGMCoeffs; mk++){
                 MeiksinList.push_back(mk);
             }
@@ -199,7 +195,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     Float64 lbda_max, lbdaMax_IGM;
     if (opt_extinction)
     {
-        lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
+        lbdaMax_IGM = tpl.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
     }
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
@@ -227,8 +223,15 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
         TFloat64Range range(currentRange.GetBegin(), lbda_max);
         Int32 kStart = -1, kEnd = -1;
-        m_templateRebined_bf.SetIsmIgmLambdaRange( range );
-        m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+            
+        if (apply_ism || opt_extinction){          
+            m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
+            m_templateRebined_bf.SetIsmIgmLambdaRange( range );
+            m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+        }else{
+            kStart = range.GetBegin();
+            kEnd = range.GetEnd();
+        }
 
         if(kStart==-1 || kEnd==-1)
         {

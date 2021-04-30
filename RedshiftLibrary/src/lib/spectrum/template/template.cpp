@@ -61,26 +61,17 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
     m_igmCorrectionMeiksin(other.m_igmCorrectionMeiksin)
 {
     if(other.CheckIsmIgmEnabled()){
-        other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
-        //find in mask the first 1 that falls in the rangeIsmIgm
-        TFloat64List::iterator it = std::find(mask.begin()+other.m_IsmIgm_kstart, mask.end()+other.m_IsmIgm_kend, 1);
-        UInt32 i_min = it - mask.begin();
-        //m_IsmIgm_kstart = std::count(mask[0], mask[i_min], 1.) - 1;
-        m_IsmIgm_kstart = 0;
-        for(Int32 i =0; i<=i_min; i++)
-            m_IsmIgm_kstart+=mask[i];
-        
-        //looking for last
-        TFloat64List v1={1};
-        TFloat64List::iterator ip = std::find_end(it, mask.end()+other.m_IsmIgm_kend, v1.begin(), v1.end());
-        UInt32 i_max = ip - mask.begin();
-        //m_IsmIgm_kend = std::count(mask[0], mask[i_max], 1.) - 1;
-        m_IsmIgm_kend=m_IsmIgm_kstart;
-        for(Int32 i = i_min+1; i<=i_max; i++)
-            m_IsmIgm_kend+=mask[i];
-
-        CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
-        CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
+        TFloat64Range otherRange(other.m_SpectralAxis[other.m_IsmIgm_kstart], other.m_SpectralAxis[other.m_IsmIgm_kend]);
+        bool ret = otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
+        if(!ret)//complete range is masked
+        {
+            m_IsmIgm_kstart = -1; m_IsmIgm_kend = -1;//not necessary but for security
+            DisableIsmIgm();
+        }else{
+            other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+            CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
+            CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
+        }
     }
 
 }
@@ -273,7 +264,7 @@ void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionC
 void CTemplate::InitIsmIgmConfig()
 {
 
-    if (MeiksinInitFailed() || CalzettiInitFailed() ) {
+    if (MeiksinInitFailed() && CalzettiInitFailed() ) {
         Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
         throw runtime_error("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
     }
