@@ -52,7 +52,7 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
             for (auto tpl : TplList)
             {   
                 Bool needrebinning = false;
-                if( tpl->GetSpectralAxis().IsLogSampled(m_logGridStep) )
+                if( !tpl->GetSpectralAxis().IsLogSampled(m_logGridStep) )
                     needrebinning = true;
                 if (m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
                     needrebinning = true;
@@ -66,7 +66,7 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                     tpl = LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
                 }
             } 
-            break; // next category
+            continue; // next category
         }
 
         // no rebined templates in the category: rebin all templates
@@ -185,18 +185,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
 
     //the rebinned spectrum and we change logscale
     Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling FINISHED");
-    bool verbose = true;  
-    if(verbose){
-        // save rebinned data
-        FILE *f = fopen("loglbda_rebinlog_spclogrebin_dbg.txt", "w+");
-        const CSpectrumSpectralAxis & w = spectrumRebinedLog->GetSpectralAxis();
-        const CSpectrumFluxAxis & F = spectrumRebinedLog->GetFluxAxis();
-        for (Int32 t = 0; t < spectrumRebinedLog->GetSampleCount(); t++)
-        {
-            fprintf(f, "%f\t%f\n", w[t], F[t]*1e16);
-        }
-        fclose(f);
-    }
+
     return spectrumRebinedLog;  
 }
 
@@ -235,6 +224,7 @@ void CSpectrumLogRebinning::InferTemplateRebinningSetup()
 **/
 std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl)
 {
+    Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START for template %s", tpl->GetName().c_str());
     // check template coverage is enough for zrange and spectrum coverage
     Bool overlapFull = true;
     if (m_lambdaRange_tpl.GetBegin() < tpl->GetSpectralAxis()[0])
@@ -272,19 +262,6 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
     }
 
     templateRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);
-//to remove
-if(tpl->GetName() == "ssp_5Gyr_z008.dat"){
-        // save rebinned data
-        FILE *f = fopen("loglbda_rebinlog_templatelogrebin_dbg6004.txt", "w+");
-        const CSpectrumSpectralAxis & w = templateRebinedLog->GetSpectralAxis();
-        const CSpectrumFluxAxis & F = templateRebinedLog->GetFluxAxis();
-        for (Int32 t = 0; t < templateRebinedLog->GetSampleCount(); t++)
-        {
-            fprintf(f, "%f\t%e\n", w[t], F[t]);
-        }
-        fclose(f);
-
-}
 
     return templateRebinedLog;
 }

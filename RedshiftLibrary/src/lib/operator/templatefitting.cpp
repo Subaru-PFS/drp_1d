@@ -229,8 +229,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             m_templateRebined_bf.SetIsmIgmLambdaRange( range );
             m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
         }else{
-            kStart = range.GetBegin();
-            kEnd = range.GetEnd();
+            currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
         }
 
         if(kStart==-1 || kEnd==-1)

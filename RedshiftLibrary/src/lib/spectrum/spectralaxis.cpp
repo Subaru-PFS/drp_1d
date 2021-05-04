@@ -452,7 +452,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
         if (relativeErrAbs > relativelogGridStepTol)
         {//return without setting anything
             m_SpectralFlags &= ~ nFLags_LogSampled; // unsetting
-            Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
+            Log.LogDebug("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
 
             return false;
         }

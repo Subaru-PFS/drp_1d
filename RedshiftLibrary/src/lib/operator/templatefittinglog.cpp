@@ -1193,9 +1193,6 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
     Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/logstep;
     UInt32 ilbdamax = tplsize- 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
- // to be cleaned (LogDetail) once validated
- Log.LogInfo("FindTplSpectralIndex: idbdamax: %d with zmin %f; ilbmamin: %d with zmax: %f", ilbdamax, zmin, ilbdamin, zmax);   
- 
     if( ilbdamax>=tplsize || ilbdamin < 0)
         throw runtime_error("FindTplSpectralIndex failed to find indexes");
     
