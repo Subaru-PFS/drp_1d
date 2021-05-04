@@ -631,7 +631,6 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                 {
                     kism_best=0;
                 }else{
-                    //
                     kism_best = m_templateRebinedLog.m_ismCorrectionCalzetti->GetEbmvIndex(subresult->FitEbmvCoeff[isubz]);
                 }
 
@@ -1050,23 +1049,16 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     for (Int32 k = 0; k < result->Redshifts.size(); k++)
     {
         result->Overlap[k] = 1.0;
-        result->FitAmplitude[k] = bestFitAmp[k];
-        result->FitAmplitudeError[k] = bestFitAmpErr[k];
-        result->FitAmplitudeSigma[k] = bestFitAmpSigma[k];
-        result->FitDtM[k] = bestFitDtm[k];
-        result->FitMtM[k] = bestFitMtm[k];
-        result->FitEbmvCoeff[k] = bestISMCoeff[k];
-        result->FitMeiksinIdx[k] = bestIGMIdx[k];
         result->Status[k] = nStatus_OK;
     }
-
-    Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: interpolating (lin) z result from n=%d (min=%f, max=%f) to n=%d (min=%f, max=%f)",
-            nshifts,
-            z_vect.front(),
-            z_vect.back(),
-            result->Redshifts.size(),
-            result->Redshifts.front(),
-            result->Redshifts.back());
+    result->ChiSquare = bestChi2;
+    result->FitAmplitude = bestFitAmp;
+    result->FitAmplitudeError = bestFitAmpErr;
+    result->FitAmplitudeSigma  = bestFitAmpSigma;
+    result->FitDtM = bestFitDtm;
+    result->FitMtM = bestFitMtm;
+    result->FitEbmvCoeff = bestISMCoeff;
+    result->FitMeiksinIdx = bestIGMIdx;
 
     freeFFTPlans();
     return 0;
