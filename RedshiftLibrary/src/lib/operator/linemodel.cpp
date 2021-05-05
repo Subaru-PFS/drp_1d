@@ -163,13 +163,13 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
 
     // prepare continuum templates catalog
+    std::string opt_fittingmethod_ortho="hybrid";
     CTemplatesOrthogonalization tplOrtho(
                 tplCatalog,
                 tplCategoryList,
                 opt_calibrationPath,
                 restRayList,
-                opt_fittingmethod,
-                m_opt_continuumcomponent,
+                opt_fittingmethod_ortho,
                 opt_lineWidthType,
                 m_opt_enableLSF,
                 m_linesmodel_nsigmasupport,
@@ -885,6 +885,8 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             throw runtime_error("  Operator-Linemodel: Failed to compute continuum fit. Negative amplitude detected! aborting...");
         }else{
             Log.LogWarning(" Operator-Linemodel: Switching to spectrum continuum since Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
+            m_opt_continuumcomponent = "fromspectrum";
+            m_model->SetContinuumComponent("fromspectrum"); 
     }
 }
 

@@ -35,7 +35,6 @@ public:
                                 const std::string calibrationPath,
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
-                                const std::string &opt_continuumcomponent,
                                 const std::string &widthType,
                                 const std::string &opt_enable_LSF,
                                 const Float64 opt_nsigmasupport,

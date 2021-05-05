@@ -72,7 +72,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_calibrationPath(calibrationPath),
     m_RestRayList(restRayList),
     m_fittingmethod(opt_fittingmethod),
-    m_ContinuumComponent(opt_continuumcomponent),
     m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
     m_LineWidthType(widthType),
     m_NSigmaSupport(nsigmasupport),
@@ -126,38 +125,10 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_spcFluxAxisNoContinuum.SetSize( spectrumSampleCount );
     m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
 
-    if( m_ContinuumComponent == "nocontinuum" )
-    {
-        m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
-        //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-        m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
-        m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
-        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
-    }
-    if( m_ContinuumComponent == "fromspectrum" )
-    {
-        m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
-        //the continuum is set to the spectrum continuum and the observed spectrum is the raw spectrum
-        m_spcFluxAxisNoContinuum = spectrum.GetWithoutContinuumFluxAxis();
-        m_SpcFluxAxis = spectrum.GetRawFluxAxis();
-        m_ContinuumFluxAxis = spectrum.GetContinuumFluxAxis();
-        modelFluxAxis = m_ContinuumFluxAxis;
-    }
-    if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
-    {
-        //the continuum is set to zero and the observed spectrum is the raw spectrum
-        m_SpcFluxAxis = spectrum.GetRawFluxAxis();
-        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
-    }
-
+    SetContinuumComponent(opt_continuumcomponent);
+    
     //NB: fitContinuum_option: this is the initialization (default value), eventually overriden in SetFitContinuum_FitStore() when a fitStore gets available
     m_fitContinuum_option = 0; //0=interactive fitting, 1=use precomputed fit store, 2=use fixed values (typical use for second pass recompute)
-
-    if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || opt_fittingmethod == "lmfit" )
-    {
-        m_templateFittingOperator = COperatorTemplateFitting();
-        m_observeGridContinuumFlux.resize(modelFluxAxis.GetSamplesCount());
-    }
 
     if(opt_fittingmethod=="lmfit"){
       m_lmfit_noContinuumTemplate = (m_ContinuumComponent == "fromspectrum");
@@ -1383,6 +1354,33 @@ Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
 void CLineModelElementList::SetContinuumComponent(std::string component)
 {
     m_ContinuumComponent = component;
+
+    CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel.GetFluxAxis();
+    const UInt32 spectrumSampleCount = m_inputSpc.GetSampleCount();
+    
+    if( m_ContinuumComponent == "nocontinuum" )
+    {
+        m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
+        //the continuum is set to zero and the observed spectrum is the spectrum without continuum
+        m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
+        m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
+        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
+    }
+    if( m_ContinuumComponent == "fromspectrum" )
+    {
+        m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
+        //the continuum is set to the spectrum continuum and the observed spectrum is the raw spectrum
+        m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
+        m_SpcFluxAxis = m_inputSpc.GetRawFluxAxis();
+        m_ContinuumFluxAxis = m_inputSpc.GetContinuumFluxAxis();
+        modelFluxAxis = m_ContinuumFluxAxis;
+    }
+    if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
+    {
+        //the continuum is set to zero and the observed spectrum is the raw spectrum
+        m_SpcFluxAxis = m_inputSpc.GetRawFluxAxis();
+        modelFluxAxis = CSpectrumFluxAxis(spectrumSampleCount);
+    }
 }
 
 Int32 CLineModelElementList::SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore)
@@ -1450,19 +1448,17 @@ void CLineModelElementList::PrepareContinuum()
     const CSpectrumSpectralAxis& targetSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
 
-    if(m_observeGridContinuumFlux.empty()){
+    if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || m_fittingmethod == "lmfit" )
+    {
+        m_templateFittingOperator = COperatorTemplateFitting();
+        m_observeGridContinuumFlux.resize(m_SpectrumModel.GetSampleCount());
+    }else{
         UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
         for ( UInt32 i = 0; i<nSamples; i++)
         {
             Yrebin[i] = m_inputSpc.GetContinuumFluxAxis()[i];
         }
-        return;
     }
-
-
-    std::vector<Float64> polyCoeffs=m_fitContinuum_tplFitPolyCoeffs;
-    setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs);
-    return;
 }
 
 const std::string & CLineModelElementList::getTplshape_bestTplName()
@@ -1694,6 +1690,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
     std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
+        if(m_ContinuumComponent != "nocontinuum"){
+            PrepareContinuum();
+        }
         if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
         {
             Int32 autoselect = 0;
@@ -1706,10 +1705,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             }
             LoadFitContinuum(lambdaRange, icontfitting, autoselect);
         }
-        if(m_ContinuumComponent != "nocontinuum"){
-            PrepareContinuum();
-        }
-
         if(m_ContinuumComponent != "nocontinuum")
         {
             for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
