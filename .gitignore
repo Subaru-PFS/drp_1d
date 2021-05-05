@@ -4,6 +4,8 @@
 build/
 build-debug/
 RedshiftLibrary/RedshiftLibrary/version.h
+RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp
+RedshiftLibrary/RedshiftLibrary/redshift_wrap.h
 
 cmake/cpf-redshift-config-version.cmake
 cmake/cpf-redshift-config.cmake
@@ -59,9 +61,7 @@ Thumbs.db
 *.pyc
 *__pycache__
 dist
-pylibamazed/redshift_wrap.cpp
-pylibamazed/redshift_wrap.h
-pylibamazed/redshift.py
+pylibamazed/python/pylibamazed/redshift.py
 pylibamazed/python/pylibamazed/resources/
 *.egg*
 wheel
