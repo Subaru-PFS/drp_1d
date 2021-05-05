@@ -1,4 +1,5 @@
 stages:
+  - build-coverage
   - build
   - test
   - build-wheel
@@ -388,3 +389,20 @@ push-rc-38-manylinux2014:
     - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2014
+
+coverage-manylinux2014:
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
+  stage: build-coverage
+  script:
+    - source /venv/p36/bin/activate
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
+    - make -j4
+    - make test
+    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root .
+  coverage: /^\s*lines:\s*\d+.\d+\%/
+  artifacts:
+    paths:
+      - build/coverage.xml
+    expire_in: 1 week
