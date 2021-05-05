@@ -117,13 +117,13 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         largeGridRedshifts = m_sortedRedshifts;
     }
     // save larggrid data
-    FILE* f = fopen( "largegrid_6004.txt", "w+" );
+    /*FILE* f = fopen( "largegrid.txt", "w+" );
     for( Float64 v :largeGridRedshifts)
     {
         fprintf( f, "%f\n", v);
     }
     fclose( f );
-    //
+    */
 
     Int32 typeFilter = -1;
     if (opt_lineTypeFilter == "A")

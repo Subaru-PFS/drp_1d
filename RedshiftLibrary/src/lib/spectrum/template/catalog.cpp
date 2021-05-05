@@ -114,11 +114,17 @@ void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r)
         m_List[r->GetCategory()].push_back( r );     
 }
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath)
+void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath, std::shared_ptr<const CParameterStore> parameterStore)
 {
+    Float64 ebmv_start=0.0;
+    Float64 ebmv_step=0.1;
+    UInt32 ebmv_n=10;
+    parameterStore->Get( "ebmv.start", ebmv_start, 0. );
+    parameterStore->Get( "ebmv.step", ebmv_step, 0.1 );
+    parameterStore->Get( "ebmv.count", ebmv_n, 10 );
     //ISM
     auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-    ismCorrectionCalzetti->Init(calibrationPath, 0.0, 0.1, 10);
+    ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
     //IGM
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
     igmCorrectionMeiksin->Init(calibrationPath);

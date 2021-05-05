@@ -24,7 +24,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
-    m_TemplateCatalog->InitIsmIgm(calibrationPath);
+    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore);
 
     std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
     Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";

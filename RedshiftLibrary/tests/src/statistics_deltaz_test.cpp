@@ -25,8 +25,7 @@ BOOST_AUTO_TEST_SUITE(Statistics_deltaz)
 
 TFloat64Range redshiftRange = TFloat64Range( 0, 5);
 Float64       redshiftStep = 1E-4;
-<<<<<<< HEAD
-TRedshiftList pdfz = redshiftRange.SpreadOverLog( redshiftStep );
+TRedshiftList pdfz = redshiftRange.SpreadOverLogZplusOne( redshiftStep );
 TFloat64List Redshifts = {
 0	,
 0.00010000000000000000479217360239	,
@@ -112,11 +111,6 @@ TFloat64List ChiSquares = {
 //  TFloat64Range(0,0.01).SpreadOverLog(redshiftStep);
 
 void DeltazTestCompute( const Float64 redshift, const TFloat64Range range )
-=======
-TRedshiftList pdfz = redshiftRange.SpreadOverLogZplusOne( redshiftStep );
-
-void DeltazTestCompute( const string& sample, const Float64 redshift, const TFloat64Range range )
->>>>>>>  Rebin spectrum and templates in the context
 {
 
    
