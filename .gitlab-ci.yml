@@ -1,5 +1,6 @@
 stages:
   - build-coverage
+  - sonar
   - build
   - test
   - build-wheel
@@ -12,6 +13,8 @@ variables:
   TWINE_PASSWORD: $CI_JOB_TOKEN
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
+  SONARQUBE_URL: https://sonarqube.lam.fr
+  VERSION: "0.22"
 
 # OSX Stages
 
@@ -406,3 +409,23 @@ coverage-manylinux2014:
     paths:
       - build/coverage.xml
     expire_in: 1 week
+
+sonar-scanner-manylinux2014:
+  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
+  stage: sonar
+  allow_failure: true
+  script:
+    - sonar-scanner
+        -Dsonar.projectKey=${CI_PROJECT_NAME}
+        -Dsonar.language=c++
+        -Dsonar.cxx.file.suffixes=.cpp,.h
+        -Dsonar.sources=RedshiftLibrary/src/lib
+        -Dsonar.cxx.includeDirectories=RedshiftLibrary/RedshiftLibrary
+        -Dsonar.cxx.forceIncludes=RedshiftLibrary/RedshiftLibrary
+        -Dsonar.projectVersion=$VERSION
+        -Dsonar.host.url=$SONARQUBE_URL
+        -Dsonar.login=$SONAR_TOKEN
+        -Dsonar.exclusions=*.xml
+        -Dsonar.cxx.coverage.reportPath=build/coverage.xml
+  dependencies:
+    - coverage-manylinux2014
