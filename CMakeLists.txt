@@ -70,6 +70,8 @@ IF(NOT find_fftw GREATER -1)
 ENDIF()
 
 IF(NOT find_openblas GREATER -1)
+  # Add specific PREFIX PATH for users on Appel osx managed by brew
+  SET(CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
   SET(BLA_VENDOR OpenBLAS)
   SET(BLA_STATIC OFF)
   SET(BLA_F95 OFF)
@@ -124,17 +126,20 @@ ELSE()
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
 ENDIF()
 
-IF (NOT BLAS_FOUND)
+IF (BLAS_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
+ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "openblas")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS openblas)
 ENDIF()
 
 IF (GSL_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl openblas)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
   LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl openblas)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
 ENDIF()
 
 # use ccache if any

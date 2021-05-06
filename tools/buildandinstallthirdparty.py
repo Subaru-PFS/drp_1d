@@ -74,7 +74,8 @@ def DownloadHTTPFile(fileUrl, localFilePath):
 
 def _check_lib(name, prefix, options):
     _os = platform(terse=True).lower()
-    if _os == 'macos' or _os.startswith('darwin'):
+    print("Working on platform : {}".format(_os))
+    if 'macos' in _os or _os.startswith('darwin'):
         ext = '.dylib' if options.shared else '.a'
     elif _os == 'windows':
         ext = '.dll' if options.shared else '.a'
@@ -82,10 +83,11 @@ def _check_lib(name, prefix, options):
         ext = '.so' if options.shared else '.a'
     filename = libDict[name]['check_file']
     fpath = os.path.join(prefix, 'lib', filename + ext)
+    print("Looking for {}".format(fpath))
     fexists = os.path.exists(fpath)
     if fexists:
         print("Thirdparty detected : {}".format(fpath))
-        print("No build for thirdparty {}".format(name))
+        print("No build needed for thirdparty {}".format(name))
     return fexists
 
 
