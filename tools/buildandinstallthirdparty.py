@@ -81,10 +81,16 @@ def _check_lib(name, prefix, options):
     else:
         ext = '.so' if options.shared else '.a'
     filename = libDict[name]['check_file']
-    return os.path.exists(os.path.join(prefix, 'lib', filename + ext))
+    fpath = os.path.join(prefix, 'lib', filename + ext)
+    fexists = os.path.exists(fpath)
+    if fexists:
+        print("Thirdparty detected : {}".format(fpath))
+        print("No build for thirdparty {}".format(name))
+    return fexists
 
 
 def _standard_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
               "make -j{parallel} all; make install".format(
                   path=path, prefix=prefix,
@@ -94,6 +100,7 @@ def _standard_build(path, prefix, options, extra_flags=''):
 
 
 def _boost_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path}; ./bootstrap.sh "
               "--with-libraries=system,filesystem,program_options,thread,"
               "timer,chrono,test --prefix={prefix};"
@@ -104,6 +111,7 @@ def _boost_build(path, prefix, options, extra_flags=''):
 
 
 def _cfitsio_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
               "--enable-sse2 --enable-ssse3 ;"
               "make -j{parallel} {shared}; make install; cd ../".format(
@@ -173,6 +181,8 @@ def Main(argv):
     parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
                         nargs='*', help="Modules to build.")
     args = parser.parse_args()
+
+    print("Starting thirparties build...")
 
     for module in args.modules:
         libPath = os.path.join(build_dir, libDict[module]["path"])
