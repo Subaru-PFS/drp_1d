@@ -11,7 +11,6 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                                          const std::string calibrationPath,
                                                          const CRayCatalog::TRayVector& restRayList,
                                                          const std::string& opt_fittingmethod,
-                                                         const std::string& opt_continuumcomponent,
                                                          const std::string& widthType,
                                                          const std::string &opt_enable_LSF,
                                                          const Float64 opt_nsigmasupport,
@@ -42,13 +41,12 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                 rigidity = "rules";
                 rules = "no";
             }
-            std::string opt_fittingmethod2 = "hybrid";
 
             Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl.GetName().c_str() );
             Int32 ret = OrthogonalizeTemplate(tpl,
                                   calibrationPath,
                                   restRayList,
-                                  opt_fittingmethod2,
+                                  opt_fittingmethod,
                                   widthType,
                                   opt_enable_LSF,
                                   opt_nsigmasupport,
