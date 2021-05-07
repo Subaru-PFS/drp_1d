@@ -221,7 +221,7 @@ template <typename T> class CRange
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if(i_min>i_max){
-        Log.LogError("min index is higher that max index",i_min, i_max);
+        Log.LogError("There is no sample inside range (min,max indices=[%d,%d]",i_min, i_max);
         return false;
     }
     return true;
