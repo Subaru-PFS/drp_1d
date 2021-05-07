@@ -71,6 +71,7 @@ public:
     Bool                IsLogSampled(Float64 logGridstep)const;
     Bool                IsLogSampled()const;
     Float64             GetlogGridStep() const;
+    void                RecomputePreciseLoglambda();
     TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const;
     UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
