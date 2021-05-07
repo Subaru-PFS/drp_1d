@@ -92,6 +92,8 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
+    //shift the spectralaxis to synch with the spectrum lambdaAxis
+    m_templateRebined_bf.GetSpectralAxis().ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
     spcPtr = std::make_shared<CModelSpectrumResult>(m_templateRebined_bf);
     return 0;
 }
