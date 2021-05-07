@@ -33,6 +33,11 @@ endif()
 message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
 SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/RedshiftLibrary)
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+MESSAGE(STATUS "cpf-redshift_INCLUDE_DIR=" "${cpf-redshift_INCLUDE_DIR}")
+MESSAGE(STATUS "cpf-redshift_LINK_DIR=" "${cpf-redshift_LINK_DIR}")
 
 FIND_PACKAGE(Python3 COMPONENTS Interpreter)
 IF (NOT Python3_Interpreter_FOUND)
@@ -155,7 +160,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -g")
 # Preprocessor and linker path
 #--------------------------------------------------------
 
-INCLUDE_DIRECTORIES( ${ROOT_DIR}/RedshiftLibrary ${cpf-redshift_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
 LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
 
 #--------------------------------------------------------
@@ -236,16 +241,14 @@ ENDIF()
 # Install directive
 #--------------------------------------------------------
 
-INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake DESTINATION share/cmake )
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake DESTINATION share/cmake )
+#INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
+#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config.cmake DESTINATION share/cmake )
+#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config-version.cmake DESTINATION share/cmake )
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candidates_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv COPYONLY)
 
 #--------------------------------------------------------
 # Build python wrapper
 #--------------------------------------------------------
-LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
-LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
