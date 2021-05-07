@@ -25,34 +25,27 @@ class CDataStore;
  */
 class CLineModelSolve: public CSolve
 {
-
 public:
 
-  CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
-
+    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
     Bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
-                                          TScopeStack &scopeCDataStore);
-  /*                                               const CSpectrum& spc,
-                                                   const CTemplateCatalog& tplCatalog,
-                                                   const TStringList& tplCategoryList,
-                                                   const CRayCatalog& restraycatalog,
-                                                   const TFloat64Range& lambdaRange,
-                                                   const TFloat64List& redshifts,
-                                                   const string outputPdfRelDir,
-                                                   const Float64 radius);
-  */
+                                          TScopeStack &scopeCDataStore) override;
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+    Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
+               const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
+private:
+
+    void GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
     ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
                                         std::string opt_rigidity,
@@ -81,8 +74,8 @@ public:
     std::string m_opt_skipsecondpass="no";
     std::string m_opt_secondpass_continuumfit="fromfirstpass";
 
-    std::string m_opt_tplfit_method="templatefittinglog";
-    std::string m_opt_tplfit_method_secondpass="templatefittinglog";
+    bool m_opt_tplfit_fftprocessing=true;//default to using fft
+    bool m_opt_tplfit_fftprocessing_secondpass=true;
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
     Float64 m_opt_continuumfitcount;
@@ -136,7 +129,7 @@ public:
     Int64 m_opt_extremacountB;
 
     Float64 m_opt_candidatesLogprobaCutThreshold;
-    Float64 m_opt_firstpass_largegridstep;
+    UInt32 m_opt_firstpass_largegridstepRatio;
     std::string m_opt_firstpass_largegridsampling;
     std::string m_opt_firstpass_tplratio_ismfit;
     std::string m_opt_firstpass_disablemultiplecontinuumfit;

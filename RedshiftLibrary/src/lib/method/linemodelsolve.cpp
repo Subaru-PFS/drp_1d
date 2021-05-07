@@ -34,7 +34,22 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
 {
 }
 
-
+void CLineModelSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+{
+    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
+    {
+       redshiftRange = inputContext->m_redshiftRangeFFT;
+       redshiftStep = inputContext->m_redshiftStepFFT;
+       if(m_redshiftSampling=="lin"){
+            m_redshiftSampling = "log";
+            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
+       }
+    }else{
+        //default is to read from the scoped paramStore
+        redshiftRange=inputContext->GetParameterStore()->GetScoped<TFloat64Range>("redshiftrange");
+        redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
+    }
+}
 /**
  * \brief
  * Populates the method parameters from the dataStore into the class members
@@ -52,22 +67,20 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     parameterStore->GetScopedParam( "linemodel.secondpass.halfwindowsize", m_opt_secondpass_halfwindowsize, 0.005 );
     
     parameterStore->GetScopedParam( "linemodel.firstpass.fittingmethod", m_opt_firstpass_fittingmethod, "hybrid" );
-    parameterStore->GetScopedParam( "linemodel.firstpass.largegridstep", m_opt_firstpass_largegridstep, 0.001 );
+    parameterStore->GetScopedParam( "linemodel.firstpass.largegridstepratio", m_opt_firstpass_largegridstepRatio, 10 );
     parameterStore->GetScopedParam( "linemodel.firstpass.tplratio_ismfit", m_opt_firstpass_tplratio_ismfit, "no" );
     parameterStore->GetScopedParam( "linemodel.firstpass.multiplecontinuumfit_disable", m_opt_firstpass_disablemultiplecontinuumfit, "yes" );
-
-    if(m_redshiftSampling=="log")
-    {
-        m_opt_firstpass_largegridsampling = "log";
-    }else{
-        m_opt_firstpass_largegridsampling = "lin";
-    }
+    
+    m_opt_firstpass_largegridsampling = m_redshiftSampling;
     Log.LogDetail( "    firstpass - largegridsampling (auto set from redshiftsampling param.): %s", m_opt_firstpass_largegridsampling.c_str());
 
     parameterStore->GetScopedParam( "linemodel.continuumcomponent", m_opt_continuumcomponent, "fromspectrum" );
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
-        parameterStore->GetScopedParam( "linemodel.continuumfit.method", m_opt_tplfit_method, "chisquarelog" );
-        m_opt_tplfit_method_secondpass = m_opt_tplfit_method;//for the moment, we use the same method for both passe
+        //m_opt_tplfit_fftprocessing = parameterStore->GetScopedParam<std::string>("linemodel.continuumfit.fftprocessing")=="yes";
+        std::string fftprocessing_value;
+        parameterStore->GetScopedParam("linemodel.continuumfit.fftprocessing", fftprocessing_value, "yes");
+        m_opt_tplfit_fftprocessing = fftprocessing_value=="yes";
+        m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
 	    parameterStore->GetScopedParam( "linemodel.continuumfit.ismfit", m_opt_tplfit_dustfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.igmfit", m_opt_tplfit_igmfit, "yes" );
         parameterStore->GetScopedParam( "linemodel.continuumfit.count", m_opt_continuumfitcount, 1 );
@@ -215,7 +228,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
-        Log.LogInfo( "      -tplfit_method: %s", m_opt_tplfit_method.c_str());
+        Log.LogInfo( "      -tplfit_fftprocessing: %d", m_opt_tplfit_fftprocessing);
         Log.LogInfo( "      -tplfit_ismfit: %s", m_opt_tplfit_dustfit.c_str());
         Log.LogInfo( "      -tplfit_igmfit: %s", m_opt_tplfit_igmfit.c_str());
         Log.LogInfo( "      -continuum fit count:  %.0f", m_opt_continuumfitcount);
@@ -231,7 +244,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -extremacount-firstpass B: %.0f", m_opt_extremacountB);
     Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
-    Log.LogInfo( "      -largegridstep: %.6f", m_opt_firstpass_largegridstep);
+    Log.LogInfo( "      -largegridstepratio: %d", m_opt_firstpass_largegridstepRatio);
     Log.LogInfo( "      -fittingmethod: %s", m_opt_firstpass_fittingmethod.c_str());
     Log.LogInfo( "      -tplratio_ismfit: %s", m_opt_firstpass_tplratio_ismfit.c_str());
     Log.LogInfo( "      -multiplecontinuumfit_disable: %s", m_opt_firstpass_disablemultiplecontinuumfit.c_str());
@@ -268,12 +281,14 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
   PopulateParameters( inputContext->GetParameterStore() );
+
   bool retSolve = Solve( resultStore,
-                         spc,
+                         spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
                          restraycatalog,
@@ -331,12 +346,13 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
 
-   resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
     resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
-
+    TFloat64Range clampedlambdaRange; 
+    spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange );
     // Get linemodel results at extrema (recompute spectrum model etc.)
     std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =
-        m_linemodel.SaveExtremaResults( spc, m_lambdaRange, candidateResult->m_ranked_candidates, 
+        m_linemodel.SaveExtremaResults( spc, clampedlambdaRange, candidateResult->m_ranked_candidates, 
                                         m_opt_continuumreest);
 
     // store extrema results
@@ -805,6 +821,7 @@ Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64&
 
 Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
+                             const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
                              const CRayCatalog& restraycatalog,
@@ -841,8 +858,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     m_linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
-        m_linemodel.m_opt_tplfit_method = m_opt_tplfit_method;
-        m_linemodel.m_opt_tplfit_method_secondpass = m_opt_tplfit_method_secondpass;
+        m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
+        m_linemodel.m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing_secondpass;
         m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
         m_linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
         m_linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
@@ -884,11 +901,13 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     {
         m_linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
     }
+    //logstep from redshift
 
     //**************************************************
     //FIRST PASS
     //**************************************************
     Int32 retFirstPass = m_linemodel.ComputeFirstPass(spc,
+                                                    rebinnedSpc,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
@@ -904,7 +923,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     m_opt_continuumreest,
                                                     m_opt_rules,
                                                     m_opt_velocityfit,
-                                                    m_opt_firstpass_largegridstep,
+                                                    m_opt_firstpass_largegridstepRatio,
                                                     m_opt_firstpass_largegridsampling,
                                                     m_opt_rigidity,
                                                     m_opt_tplratio_reldirpath,
@@ -979,6 +998,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         //FIRST PASS B
         //**************************************************
         Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(spc,
+                                                            rebinnedSpc,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
@@ -994,7 +1014,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             m_opt_continuumreest,
                                                             m_opt_rules,
                                                             m_opt_velocityfit,
-                                                            m_opt_firstpass_largegridstep,
+                                                            m_opt_firstpass_largegridstepRatio,
                                                             m_opt_firstpass_largegridsampling,
                                                             m_opt_rigidity,
                                                             m_opt_tplratio_reldirpath,
@@ -1045,6 +1065,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     if(!skipSecondPass)
     {
         Int32 retSecondPass = m_linemodel.ComputeSecondPass(spc,
+                                                          rebinnedSpc,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,

@@ -32,7 +32,7 @@ public:
     Float64 GetEbmvValue(Int32 k) const;
 
     Float64 GetDustCoeff(Int32 kDust, Float64 restLambda ) const;
-    Int32 GetEbmvIndex(Float64 value) const;
+    Int32 GetEbmvIndex(Float64 ebmv) const;
 
     std::vector<Float64> m_dataCalzetti;
 
@@ -50,7 +50,6 @@ private:
 
 
 };
-
 
 }
 

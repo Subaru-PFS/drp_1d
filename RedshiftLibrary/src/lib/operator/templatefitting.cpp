@@ -115,7 +115,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
     if(spcMaskAdditional.GetMasksCount()!=spcFluxAxis.GetSamplesCount())
     {
-        Log.LogInfo("  Operator-TemplateFitting: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting!", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
+        Log.LogInfo("  Operator-TemplateFitting: spcMaskAdditional does not have the same size as the spectrum flux vector... (%d vs %d), aborting", spcMaskAdditional.GetMasksCount(),  spectrum.GetFluxAxis().GetSamplesCount());
         status = nStatus_DataError;
         return ;
     }
@@ -134,10 +134,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
-    if (apply_ism || opt_extinction){             
-        m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-    }
-
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return;
@@ -160,7 +156,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             iEbmvCoeffMax = iEbmvCoeffMin;
         }else if(opt_dustFitting==-10)
         {
-            nEbmvCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+            nEbmvCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
             iEbmvCoeffMin = 0;
             iEbmvCoeffMax = iEbmvCoeffMin+nEbmvCoeffs-1;
         }
@@ -180,7 +176,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             MeiksinList.push_back(fittingMeiksinIdx);//fill it with only the index passed as argument   
         }
         else{
-            nIGMCoeffs = m_templateRebined_bf.m_igmCorrectionMeiksin->GetIdxCount();
+            nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
             for(Int32 mk = 0; mk<nIGMCoeffs; mk++){
                 MeiksinList.push_back(mk);
             }
@@ -189,7 +185,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         MeiksinList.push_back(-1);
     }
 
-    Bool option_igmFastProcessing = true; //todo: find a way to unit-test this acceleration
+    Bool option_igmFastProcessing = false; //true; //todo: find a way to unit-test this acceleration
     //Prepare the wavelengthRange Limits
     //Log.LogDebug( "  Operator-TemplateFitting: currentRange_lbda_min=%f, currentRange_lbda_max=%f", currentRange.GetBegin(), currentRange.GetEnd());
     std::vector<Float64> sumCross_outsideIGM(nEbmvCoeffs, 0.0);
@@ -199,7 +195,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     Float64 lbda_max, lbdaMax_IGM;
     if (opt_extinction)
     {
-        lbdaMax_IGM = m_templateRebined_bf.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
+        lbdaMax_IGM = tpl.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
     }
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
@@ -227,8 +223,14 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 
         TFloat64Range range(currentRange.GetBegin(), lbda_max);
         Int32 kStart = -1, kEnd = -1;
-        m_templateRebined_bf.SetIsmIgmLambdaRange( range );
-        m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+            
+        if (apply_ism || opt_extinction){          
+            m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
+            m_templateRebined_bf.SetIsmIgmLambdaRange( range );
+            m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+        }else{
+            currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
+        }
 
         if(kStart==-1 || kEnd==-1)
         {
@@ -550,13 +552,13 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
 }
 
-
 /**
  * \brief
  *
  * input: if additional_spcMasks size is 0, no additional mask will be used, otherwise its size should match the redshifts list size
  *
  * opt_dustFitting: -1 = disabled, -10 = fit over all available indexes, positive integer 0, 1 or ... will be used as ism-calzetti index as initialized in constructor.
+ * @lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectrum& spectrum,
                                                               const CTemplate& tpl,
@@ -588,12 +590,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
     if( (opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting!");
+        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting");
         throw std::runtime_error("  Operator-TemplateFitting: no calzetti calib. file in template");
     }
     if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
-        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting!",
+        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting",
                      opt_dustFitting,
                      tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
         throw std::runtime_error("  Operator-TemplateFitting: calzetti index overflow");
@@ -601,7 +603,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
     if( opt_extinction && tpl.MeiksinInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting!");
+        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting");
         throw std::runtime_error("  Operator-TemplateFitting: no meiksin calib. file in template");
     }
 
@@ -662,7 +664,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         Log.LogError("  Operator-TemplateFitting: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
         throw std::runtime_error("  Operator-TemplateFitting: prior list size didn't match the input redshift-list size");
     }
-
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -687,7 +690,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         //TODO: reinitialize m_fluxAxisIsmIgm prior to calling BasicFit
         BasicFit( spectrum,
                   tpl,
-                  lambdaRange,
+                  clampedlambdaRange,
                   redshift,
                   overlapThreshold,
                   result->Overlap[i],
@@ -772,11 +775,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    templateFitting-operator: Loop Error - chisquare values not set even once");
+        Log.LogWarning("    Operator-TemplateFitting: Loop Error - chisquare values not set even once");
     }
 
     //estimate CstLog for PDF estimation
-    result->CstLog = EstimateLikelihoodCstLog(spectrum, lambdaRange);
+    result->CstLog = EstimateLikelihoodCstLog(spectrum, clampedlambdaRange);
 
     return result;
 
@@ -913,32 +916,6 @@ const COperatorResult* COperatorTemplateFitting::ExportChi2versusAZ(const CSpect
 
     return result;
 
-}
-
-/**
- * \brief this function estimates the likelihood_cstLog term withing the wavelength range
- **/
-Float64 COperatorTemplateFitting::EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange)
-{
-    const CSpectrumSpectralAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-    const TFloat64List& error = spectrum.GetFluxAxis().GetError().GetSamplesVector();
-
-    Int32 numDevs = 0;
-    Float64 cstLog = 0.0;
-    Float64 sumLogNoise = 0.0;
-
-    Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
-    Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
-    {
-        numDevs++;
-        sumLogNoise += log( error[j] );
-    }
-    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
-
-    cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
-
-    return cstLog;
 }
 
 

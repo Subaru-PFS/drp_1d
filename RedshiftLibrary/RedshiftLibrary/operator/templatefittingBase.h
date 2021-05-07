@@ -26,9 +26,13 @@ class COperatorTemplateFittingBase : public COperator
 {
 
 public:
-
-    COperatorTemplateFittingBase();
-    virtual ~COperatorTemplateFittingBase()=0;
+    //Rule of 5 defaults
+    COperatorTemplateFittingBase() = default;
+    COperatorTemplateFittingBase(COperatorTemplateFittingBase const& other) = default;
+    COperatorTemplateFittingBase(COperatorTemplateFittingBase&& other) = default;
+    COperatorTemplateFittingBase& operator=(COperatorTemplateFittingBase const& other) = default;
+    COperatorTemplateFittingBase& operator=(COperatorTemplateFittingBase&& other) = default;
+    virtual ~COperatorTemplateFittingBase()=default;
 
     virtual  std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
                                                        const CTemplate& tpl,
@@ -51,10 +55,11 @@ public:
                               Int32 meiksinIdx,
                               Float64 amplitude,
                               std::string opt_interp,
-                              std::string opt_extinction,
                               const TFloat64Range& lambdaRange,
                               Float64 overlapThreshold,
                               std::shared_ptr<CModelSpectrumResult> & spc);
+
+  inline virtual bool IsFFTProcessing() {return false;}; 
 
 protected:
   Int32  RebinTemplate( const CSpectrum& spectrum,
@@ -69,6 +74,9 @@ protected:
   CTemplate       m_templateRebined_bf; //buffer
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
   CMask           m_mskRebined_bf; //buffer
+  //Likelihood
+  Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+
 };
 
 

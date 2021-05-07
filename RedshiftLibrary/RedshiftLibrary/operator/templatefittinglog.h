@@ -12,6 +12,8 @@
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
 #include <RedshiftLibrary/statistics/priorhelper.h>
+#include <RedshiftLibrary/operator/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 
 #include <fftw3.h>
 
@@ -22,15 +24,16 @@ class COperatorTemplateFittingLog : public COperatorTemplateFittingBase
 {
 
 public:
-    COperatorTemplateFittingLog() = delete;
-    COperatorTemplateFittingLog(std::string calibrationPath);
+    COperatorTemplateFittingLog();
     ~COperatorTemplateFittingLog();
 
-    COperatorTemplateFittingLog(COperatorTemplateFittingLog const& other) = delete;
-    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog const& other) = delete;  
+    COperatorTemplateFittingLog(const COperatorTemplateFittingLog & other) = delete; 
+    COperatorTemplateFittingLog(COperatorTemplateFittingLog && other) = delete; 
+    COperatorTemplateFittingLog& operator=(const COperatorTemplateFittingLog& other) = delete;  
+    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog&& other) = delete; 
 
-    std::shared_ptr<COperatorResult> Compute( const CSpectrum& spectrum,
-                                              const CTemplate& tpl,
+    std::shared_ptr<COperatorResult> Compute( const CSpectrum& rebinnedSpectrum,
+                                              const CTemplate& rebinnedTpl,
                                               const TFloat64Range& lambdaRange,
                                               const TFloat64List& redshifts,
                                               Float64 overlapThreshold,
@@ -43,15 +46,18 @@ public:
                                               Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
-    void enableSpcLogRebin(Bool enable);
+    inline  bool IsFFTProcessing() override{return true;}; 
+
+    //made public for unit-testing
+    TInt32Range FindTplSpectralIndex(const TFloat64Range & redshiftrange) const;
+    TInt32Range FindTplSpectralIndex( const CSpectrumSpectralAxis & spcSpectrailAxis, 
+                                      const CSpectrumSpectralAxis& tplSpectralAxis,
+                                      const TFloat64Range & redshiftrange) const;
+    //log grid data
+    CTemplate       m_templateRebinedLog;
+    CSpectrum       m_spectrumRebinedLog;
 
 private:
-
-    //hardcoded config: REBIN
-    Bool verboseLogRebin = 0;
-    Bool verboseExportLogRebin = 0;
-    const std::string rebinMethod = "lin";
-
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
     bool verboseExportFitRangez = false;
@@ -70,14 +76,12 @@ private:
                   CMask spcMaskAdditional=CMask(),
                   CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
 
-    Int32 FitRangez(const TAxisSampleList &  spectrumRebinedLambda,
-                    const TAxisSampleList &  spectrumRebinedFluxRaw,
-                    const TAxisSampleList &  error,
-                    const TAxisSampleList &  tplRebinedLambda,
-                    const TAxisSampleList &  tplRebinedFluxRaw,
+    Int32 FitRangez(const TFloat64List & inv_err2,
+                    TInt32Range& range,
                     std::shared_ptr<CTemplateFittingResult> result,
                     std::vector<Int32> igmMeiksinCoeffs,
-                    std::vector<Int32> ismEbmvCoeffs);
+                    std::vector<Int32> ismEbmvCoeffs,
+                    const Float64& dtd);
 
     Int32 EstimateXtY(const std::vector<Float64>& X, const std::vector<Float64>& Y,
                       UInt32 nshifts, std::vector<Float64>& XtY, Int32 precomputedFFT=-1);
@@ -86,22 +90,14 @@ private:
                           std::vector<Float64>& XtY);
     Int32 EstimateMtMFast(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts, std::vector<Float64>& XtY);
 
-    TInt32Range FindTplSpectralIndex(const TAxisSampleList & spcLambda,
-                                     const TAxisSampleList & tplLambda,
-                                     TFloat64Range redshiftrange, Float64 redshiftStep);
-
     Int32 InterpolateResult(const std::vector<Float64>& in, std::vector<Float64>& inGrid,
                             const std::vector<Float64>& tgtGrid, std::vector<Float64>& out, Float64 defaultValue);
 
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
 
-    bool m_opt_spcrebin;
-
-    //log grid data
-    CTemplate       m_templateRebinedLog;
-    CMask           m_mskRebinedLog;
-    CSpectrum       m_spectrumRebinedLog;
+    Bool m_enableISM = 1;
+    Bool m_enableIGM = 1; 
 
     //buffers for fft computation
     Int32 m_nPaddedSamples;
@@ -118,15 +114,6 @@ private:
     fftw_complex* precomputedFFT_spcFluxOverErr2;
     fftw_complex* precomputedFFT_spcOneOverErr2;
 
-
-    //ISM Calzetti
-    std::unique_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
-
-    //IGM meiksin
-    std::unique_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-
-    //Likelihood
-    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 };
 
 

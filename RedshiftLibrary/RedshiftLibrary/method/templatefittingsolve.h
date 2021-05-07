@@ -38,11 +38,11 @@ class CDataStore;
 
   CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
-
+private:
 
   std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                         std::shared_ptr<COperatorResultStore> resultStore,
-                                        TScopeStack &scope);
+                                        TScopeStack &scope) override;
 
   /*
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
@@ -59,10 +59,8 @@ class CDataStore;
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
-  */
-    
-
-private:
+  */ 
+  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
@@ -86,20 +84,17 @@ private:
                                                                 const TStringList& tplCategoryList,
                                                                 const TFloat64Range& lambdaRange,
                                                                 Float64 overlapThreshold,
-                                                                std::string opt_interp,
-                                                                std::string opt_extinction
-                                                                );
+                                                                std::string opt_interp);
 
     void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
-  std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
-  std::string m_opt_spclogrebin;
 
 };
 

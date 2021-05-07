@@ -34,6 +34,8 @@ CSpectrum::CSpectrum():
 
 }
 
+CSpectrum::CSpectrum(const std::string& name):m_Name(name){};
+
 CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     m_estimationMethod(other.m_estimationMethod),
     m_dfBinPath(other.m_dfBinPath),
@@ -117,7 +119,7 @@ CSpectrum::~CSpectrum()
 }
 
 //copy assignment operator
-// same logic than copy constructor
+// same logic as copy constructor
 CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 {
     m_SpectralAxis = other.m_SpectralAxis;
@@ -134,8 +136,26 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_nbScales = other.m_nbScales;
     m_Name = other.m_Name;
     alreadyRemoved = other.alreadyRemoved;
-
     return *this;
+}
+
+//called from context
+void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
+{
+    Int64 smoothWidth;
+    std::string medianRemovalMethod, dfBinPath;
+    Float64 medianKernelWidth,nscales;
+    parameterStore.Get( "smoothWidth", smoothWidth, 0 );
+    parameterStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
+    parameterStore.Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
+    parameterStore.Get( "continuumRemoval.decompScales", nscales, 6.0 );
+    parameterStore.Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
+    if( smoothWidth > 0 )
+        GetFluxAxis().ApplyMeanSmooth(smoothWidth);
+    SetContinuumEstimationMethod(medianRemovalMethod);
+    SetMedianWinsize(medianKernelWidth);
+    SetDecompScales((Int32)nscales);
+    SetWaveletsDFBinPath(dfBinPath);
 }
 
 /**
@@ -378,7 +398,7 @@ const std::string & CSpectrum::GetName() const
     return m_Name;
 }
 
-void CSpectrum::SetName(const char* name)
+void CSpectrum::SetName(std::string name)
 {
     m_Name = name;
 }
@@ -422,19 +442,19 @@ const Bool CSpectrum::checkNoise( Float64 error, Int32 index ) const
     if( error < DBL_MIN ){
         //check if noise is below minimum normalized positive value of double
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found subnormal noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found subnormal noise value (=%e) at index=%d", error, index);
     }
     if( std::isnan(error) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found nan noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found nan noise value (=%e) at index=%d", error, index);
     }
     if( std::isinf(error) ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found inf noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found inf noise value (=%e) at index=%d", error, index);
     }
     if( error != error ){
         validValue = false;
-        Log.LogDebug("    CSpectrum::checkNoise - Found invalid noise value (=%e) at index=%d", error, index);
+        //Log.LogDebug("    CSpectrum::checkNoise - Found invalid noise value (=%e) at index=%d", error, index);
     }
     return validValue;
 }
@@ -683,10 +703,18 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     
     if( m_SpectralAxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount() )
     {
-        Log.LogError("Problem samplecountsize betwees spectral axis and flux axis");
+        Log.LogError("Problem samplecount do not match between spectral axis and flux axis");
         return false;
     }
-    
+    UInt32 s = targetSpectralAxis.GetSamplesCount();
+
+    if( targetSpectralAxis[0]<m_SpectralAxis[0] || 
+        targetSpectralAxis[s-1]>m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1])
+    {
+        Log.LogError("Problem: TargetSpectralAxis is not included in the current spectral axis" );
+        throw runtime_error("Cannot rebin spectrum: target spectral axis is not included in the current spectral axis");
+    }
+
     if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )
     {
         RebinFineGrid();
@@ -702,14 +730,13 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
     TFloat64Range currentRange = logIntersectedLambdaRange;
     if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
-        Log.LogError("Problem spectral axis and target spectral axis are not in same scale\n");
+        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
         return false;
 
     }
     if(m_SpectralAxis.IsInLinearScale()){
         currentRange = range;
     }
-    UInt32 s = targetSpectralAxis.GetSamplesCount();
 
     rebinedSpectrum.ResetContinuum();
 
@@ -733,7 +760,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
-        if (opt_error_interp == "rebin")
+        if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance" )
             ErrorRebin[j] = INFINITY;
         j++;
     }
@@ -742,7 +769,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         //Default linear interp.
         Int32 k = 0;
         // For each sample in the valid lambda range interval.
-        while( k<m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
+        while( k<=m_SpectralAxis.GetSamplesCount()-1 && Xsrc[k] <= currentRange.GetEnd() )
         {           
             // For each sample in the target spectrum that are in between two continous source sample
             while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= Xsrc[k+1] )
@@ -818,6 +845,9 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
             j++;
         }
+        gsl_spline_free(spline);
+        gsl_interp_accel_free(accelerator);
+
     }else if(opt_interp=="ngp"){
         //nearest sample, lookup
         Int32 k = 0; 
@@ -860,7 +890,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     {
         rebinedMask[j] = 0;
         Yrebin[j] = 0.0;
-        if (opt_error_interp == "rebin" )
+        if (opt_error_interp == "rebin" || opt_error_interp == "rebinVariance" )
             ErrorRebin[j] = INFINITY;
         j++;
     }

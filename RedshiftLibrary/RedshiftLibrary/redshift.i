@@ -196,8 +196,7 @@ class CTemplateCatalog
 {
 public:
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
-    void Load( const char* filePath );
-    void Add( std::shared_ptr<CTemplate> r );
+    void Add( std::shared_ptr<CTemplate> r);
 };
 
 class CProcessFlowContext {
@@ -314,6 +313,7 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
   CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
 };
 %clear (const Float64* samples, UInt32 n);
+
 
 
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};

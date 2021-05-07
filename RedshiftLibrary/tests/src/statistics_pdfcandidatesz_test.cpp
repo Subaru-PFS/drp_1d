@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Statistics_pdfcandidatesz)
 
 TFloat64Range redshiftRange = TFloat64Range( 0, 5);
 Float64       redshiftStep = 1E-4;
-TRedshiftList pdfz = redshiftRange.SpreadOverLog( redshiftStep );
+TRedshiftList pdfz = redshiftRange.SpreadOverLogZplusOne( redshiftStep );
 
 
 

@@ -43,6 +43,7 @@ public:
     std::shared_ptr<COperatorResult> getResult();
 
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
+                                const CSpectrum &rebinnedSpectrum,
                                 const CTemplateCatalog &tplCatalog,
                                 const TStringList &tplCategoryList,
                                 const std::string opt_calibrationPath,
@@ -52,6 +53,7 @@ public:
                                 Int32 candidateIdx = -1);
 
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
+                           const CSpectrum& rebinnedSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
@@ -67,18 +69,19 @@ public:
                            const std::string &opt_continuumreest="no",
                            const std::string &opt_rules="all",
                            const std::string &opt_velocityFitting="no",
-                           const Float64 &opt_twosteplargegridstep=0.001,
+                           const UInt32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
                            const std::string &opt_rigidity="rules",
                            const string &opt_tplratioCatRelPath="",
                            const string &opt_offsetCatRelPath="");
-
+    void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
     Int32 Combine_firstpass_candidates(std::shared_ptr<const CLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
+                            const CSpectrum &rebinnedSpectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,
@@ -145,8 +148,8 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
     std::shared_ptr<CModelSpectrumResult> m_savedContaminantSpectrumResult;
 
-    std::string m_opt_tplfit_method = "templatefittinglog"; //only for firstpass
-    std::string m_opt_tplfit_method_secondpass = "templatefittinglog"; 
+    bool m_opt_tplfit_fftprocessing = false; //we cant set it as the default since not taken into account when deiding on rebinning
+    bool m_opt_tplfit_fftprocessing_secondpass = false;//true;
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;

@@ -186,8 +186,8 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
 
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
-            tplList.push_back(tpl);
+            std::shared_ptr<const CTemplate>  tpl = tplCatalog.GetTemplate( category, j );
+            tplList.push_back(*tpl);
         }
     }
 

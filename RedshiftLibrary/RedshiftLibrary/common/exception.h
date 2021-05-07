@@ -1,5 +1,5 @@
-#ifndef _EXCEPTION_
-#define _EXCEPTION_
+#ifndef _REDSHIFT_EXCEPTION_
+#define _REDSHIFT_EXCEPTION_
 
 #include <exception>
 #include <iostream>
@@ -20,7 +20,8 @@ namespace NSEpic {
       UNKNOWN_PARAMETER  ,
       BAD_PARAMETER_VALUE,
       UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG
+      BAD_LINECATALOG,
+      BAD_LOGSAMPLEDSPECTRUM
     } ErrorCode;
 
   class AmzException : public std::exception 

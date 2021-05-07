@@ -29,17 +29,17 @@ CModelContinuumFittingResult::CModelContinuumFittingResult(Float64 _redshift,
                                                             Float64 _amp_err, 
                                                             Float64 _ismCoeff,
                                                             Int32 _igmIndex,
-                                                            Float64 _fitting_snr)
-{
-    Redshift = _redshift;
-    Merit    = _merit;
-    Amp      = _amp;
-    AmpErr   = _amp_err;
-    Name     = _name;
-    IsmCoeff = _ismCoeff;
-    IgmIndex = _igmIndex;
+                                                            Float64 _fitting_snr):
+    Redshift( _redshift),
+    Merit   ( _merit),
+    Amp     ( _amp),
+    AmpErr  ( _amp_err),
+    Name    ( _name),
+    IsmCoeff( _ismCoeff),
+    IgmIndex( _igmIndex),
 
-    Fitting_snr = _fitting_snr;
+    Fitting_snr( _fitting_snr)
+{
 
 }
 
@@ -69,4 +69,3 @@ void CModelContinuumFittingResult::getData(const std::string& name, Float64& v) 
   else if(name.compare("ModelAmplitudeError") == 0)
     v = AmpErr;
 }   
-

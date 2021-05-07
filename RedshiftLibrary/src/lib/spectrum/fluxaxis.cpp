@@ -27,8 +27,14 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpe
 
 
 CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
-    CSpectrumAxis( samples, n ),
+    CSpectrumAxis(samples, n ),
     m_StdError(n)
+{
+
+}
+CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples) :
+    CSpectrumAxis(std::move(samples)),
+    m_StdError(samples.size())//default to 1
 {
 
 }
@@ -48,6 +54,11 @@ void CSpectrumFluxAxis::SetSize( UInt32 s )
 {
     CSpectrumAxis::SetSize( s );
     m_StdError.SetSize(s);
+}
+void CSpectrumFluxAxis::clear()
+{
+    CSpectrumAxis::clear();
+    m_StdError.clear();
 }
 
 Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )

@@ -44,18 +44,10 @@ CProcessFlow::~CProcessFlow()
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
 
-    TFloat64Range lambdaRange;
-    TFloat64Range redshiftRange;
-    Float64       redshiftStep;
     Float64       maxCount; 
     Float64       redshiftseparation;
 
-    ctx.GetParameterStore()->Get( "lambdarange", lambdaRange );
-    ctx.GetParameterStore()->Get( "redshiftrange", redshiftRange );
-    ctx.GetParameterStore()->Get( "redshiftstep", redshiftStep );
     ctx.GetParameterStore()->Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
-
-
 
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");

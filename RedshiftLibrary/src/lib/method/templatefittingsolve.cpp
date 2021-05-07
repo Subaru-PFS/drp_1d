@@ -22,11 +22,30 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
 {
 }
 
+void CMethodTemplateFittingSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
+{
+    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
+    {
+       redshiftRange = inputContext->m_redshiftRangeFFT;
+       redshiftStep = inputContext->m_redshiftStepFFT;
+       if(m_redshiftSampling=="lin"){
+            m_redshiftSampling = "log";
+            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
+       }
+    }else
+    {        
+        //default is to read from the scoped paramStore
+        CSolve::GetRedshiftSampling(inputContext, redshiftRange, redshiftStep );
+    }
+}
+
 std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
+
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
 
@@ -36,22 +55,26 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
-  const std::string opt_extinction = "no";
+  const std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
   std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
 
-  std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
+  //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
   bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
   
   if(fft_processing)
     {
-      m_opt_spclogrebin = inputContext->GetParameterStore()->GetScoped<std::string>("enablespclogrebin");
-      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(calibration_dir));
+      //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
+      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
+      tplCatalog.m_logsampling = true; 
     }
-  else   m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
+  else{
+       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
+       tplCatalog.m_logsampling = false;
+  }
 
 
         // prepare the unused masks
-  std::vector<CMask> maskList;
+    std::vector<CMask> maskList;
         //define the redshift search grid
         //        Log.LogInfo("Stellar fitting redshift range = [%.5f, %.5f], step=%.6f", starRedshiftRange.GetBegin(), starRedshiftRange.GetEnd(), starRedshiftStep);
   
@@ -103,9 +126,9 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
         for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
-            Solve(resultStore, spc, tpl, m_lambdaRange, m_redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
+            Solve(resultStore, fft_processing?rebinnedSpc:spc, *tpl, m_lambdaRange, m_redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
             storeResult = true;
         }
@@ -127,16 +150,18 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
         //for each extrema, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
+        //using clamped lambdaRange:
+        TFloat64Range clampedLbdaRange;
+        spc.GetSpectralAxis().ClampLambdaRange( m_lambdaRange, clampedLbdaRange );
         std::shared_ptr<const CExtremaResult> ExtremaResult = 
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
                                                spc,
                                                tplCatalog,
                                                m_categoryList,
-                                               m_lambdaRange,
+                                               clampedLbdaRange,
                                                overlapThreshold,
-                                               opt_interp,
-                                               opt_extinction );
+                                               opt_interp);
 
         // store extrema results
         StoreExtremaResults(resultStore, ExtremaResult);
@@ -356,9 +381,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
-                                               std::string opt_interp,
-                                               std::string opt_extinction
-                                               )
+                                               std::string opt_interp)
 {
 
     Log.LogDetail("CMethodTemplateFittingSolve::SaveExtremaResult: building chisquare array");
@@ -455,16 +478,19 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         if (TplFitResult->FitMtM[idx] != 0.)
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
         ExtremaResult->FittedTplSNR[i] = FitSNR;
-
-        const CTemplate& tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+        //make sure tpl is non-rebinned
+        Bool currentSampling = tplCatalog.m_logsampling;
+        tplCatalog.m_logsampling=false;
+        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_templateFittingOperator->ComputeSpectrumModel(spc, tpl, 
+        m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
                                                         z,
                                                         TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],
                                                         TplFitResult->FitAmplitude[idx],
-                                                        opt_interp, opt_extinction, lambdaRange, 
+                                                        opt_interp, lambdaRange, 
                                                         overlapThreshold, spcmodelPtr);
+        tplCatalog.m_logsampling = currentSampling;                                                
         ExtremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
         ExtremaResult->m_savedModelContinuumFittingResults[i] = 

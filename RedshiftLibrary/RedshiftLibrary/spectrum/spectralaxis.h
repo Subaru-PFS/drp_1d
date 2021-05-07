@@ -22,7 +22,8 @@ public:
 
     enum EFlags
     {
-        nFLags_LogScale = 1 << 0
+        nFLags_LogScale = 1 << 0,
+        nFLags_LogSampled = 1 << 1 //using second bit(shifting once): 0000 0010
     };
 
     enum EShiftDirection
@@ -32,16 +33,17 @@ public:
     };
 
     CSpectrumSpectralAxis();
-    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other) = default;
-    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other) = default;
+    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other);
+    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other);
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
-    CSpectrumSpectralAxis( const Float64* samples, UInt32 n, Bool isLogScale  );
+    CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale  );
+    CSpectrumSpectralAxis( const TFloat64List samples) ;
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n);
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;
 
-    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other) = default;
-    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other)=default;
+    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other);
+    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other);
 
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
     Float64             GetMeanResolution() const;
@@ -64,10 +66,20 @@ public:
     Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
-
+    void                SetLogScale();
+    Bool                CheckLoglambdaSampling()const;
+    Bool                IsLogSampled(Float64 logGridstep)const;
+    Bool                IsLogSampled()const;
+    Float64             GetlogGridStep() const;
+    TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;
+    TFloat64List        GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const;
+    UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
 private:
 
-    UInt32              m_SpectralFlags;
+    mutable UInt32      m_SpectralFlags;
+    mutable Bool        m_regularLogSamplingChecked=false;
+    mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
+
 };
 
 }
