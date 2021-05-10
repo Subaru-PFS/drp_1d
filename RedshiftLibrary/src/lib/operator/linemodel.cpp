@@ -1831,9 +1831,13 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
                         Float64 z_vOptim = -1.0;
-                        const Int32 half_nb_zsteps =6;
-                        Int32 lowerzIdx = std::max(0, idx - half_nb_zsteps);
-                        Int32 higherzIdx = std::min( idx + half_nb_zsteps, Int32(m_result->Redshifts.size()-1) );
+                        const Int32 half_nb_zsteps = 6;
+                        Float64 z_front =  m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].front();
+                        Float64 z_back = m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].back();
+                        Int32 idx_begin = CIndexing<Float64>::getIndex(m_result->Redshifts, z_front);  
+                        Int32 idx_end = CIndexing<Float64>::getIndex(m_result->Redshifts, z_back); 
+                        Int32 lowerzIdx = std::max(idx_begin, idx - half_nb_zsteps);
+                        Int32 higherzIdx = std::min(idx_end, idx + half_nb_zsteps);
                         for(Int32 idzTest=lowerzIdx; idzTest<=higherzIdx; ++idzTest)
                         {
                             for (Int32 kv = 0; kv < nVelSteps; kv++)
