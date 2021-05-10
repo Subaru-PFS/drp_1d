@@ -512,8 +512,15 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
     return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
 }
 
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
+{
+    Int32 imin, imax;
+    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
+    return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
+}
+
 /*@ssratio stands for sub-samplingRatio*/
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const
 {
     if(!IsLogSampled())
     {

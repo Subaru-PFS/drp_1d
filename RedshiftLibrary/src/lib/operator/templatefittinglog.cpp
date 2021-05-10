@@ -1281,7 +1281,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         m_spectrumRebinedLog = rebinnedSpectrum;
         m_templateRebinedLog = rebinnedTpl;
     }else{
-        TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
+        TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio, lambdaRange);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
         // scale the variance by ssratio
         m_spectrumRebinedLog.GetFluxAxis().GetError() *= 1./sqrt(ssRatio); 
