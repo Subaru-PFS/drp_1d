@@ -898,18 +898,13 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
 {
     TFloat64List extendedList;
 
-    const TFloat64Range redshiftsRange(m_result->Redshifts);    
-    Float64 left_border =
-        max(redshiftsRange.GetBegin(), z - m_secondPass_halfwindowsize*(1.+z));
-    Float64 right_border =
-        min(redshiftsRange.GetEnd(), z + m_secondPass_halfwindowsize*(1.+z));
-    for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
+    const Float64 halfwindowsize_z = m_secondPass_halfwindowsize*(1.+z);
+    TFloat64Range secondpass_window = {z - halfwindowsize_z, z + halfwindowsize_z};
+    Int32 i_min, i_max;
+    secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
+    for (Int32 i=i_min; i<=i_max; ++i)
     {
-        if (m_result->Redshifts[i] >= left_border &&
-            m_result->Redshifts[i] <= right_border)
-        {
-            extendedList.push_back( m_result->Redshifts[i]);
-        }
+        extendedList.push_back( m_result->Redshifts[i]);
     }
 
     return extendedList;
