@@ -55,7 +55,8 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
-  const std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
+  //disable extinction for stars
+  const std::string opt_extinction = (m_objectType == "star")? "no":inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
   std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
 
   //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
