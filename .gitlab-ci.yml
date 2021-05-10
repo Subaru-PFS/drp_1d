@@ -48,7 +48,6 @@ test-osx:
     - osx
   before_script:
     - cd build
-    - make clean_python_build
     - cd ..
   script:
     - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
@@ -157,7 +156,6 @@ push-rc-38-osx:
   before_script:
     - cd build
     - make install
-    - make clean_python_build
     - cd ..
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
