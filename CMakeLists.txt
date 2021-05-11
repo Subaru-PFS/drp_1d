@@ -49,6 +49,7 @@ LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
 LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
 LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
+LIST(FIND MISSING_THIRDPARTIES "openblas" find_openblas)
 
 FIND_PACKAGE(PkgConfig)
 
@@ -66,6 +67,15 @@ ENDIF()
 
 IF(NOT find_fftw GREATER -1)
   pkg_check_modules(FFTW fftw3>=3.3.8)
+ENDIF()
+
+IF(NOT find_openblas GREATER -1)
+  # Add specific PREFIX PATH for users on Appel osx managed by brew
+  SET(CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
+  SET(BLA_VENDOR OpenBLAS)
+  SET(BLA_STATIC OFF)
+  SET(BLA_F95 OFF)
+  FIND_PACKAGE(BLAS)
 ENDIF()
 
 #--------------------------------------------------------
@@ -116,13 +126,20 @@ ELSE()
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
 ENDIF()
 
+IF (BLAS_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "openblas")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS openblas)
+ENDIF()
+
 IF (GSL_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
   LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
 ENDIF()
 
 # use ccache if any
@@ -148,7 +165,7 @@ endif()
 #--------------------------------------------------------
 
 FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "Version used: ${PROJECT_VERSION}" )
+MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
 
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
 IF(BUILD_SHARED_LIBS)
