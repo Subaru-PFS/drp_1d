@@ -898,18 +898,13 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
 {
     TFloat64List extendedList;
 
-    const TFloat64Range redshiftsRange(m_result->Redshifts);    
-    Float64 left_border =
-        max(redshiftsRange.GetBegin(), z - m_secondPass_halfwindowsize*(1.+z));
-    Float64 right_border =
-        min(redshiftsRange.GetEnd(), z + m_secondPass_halfwindowsize*(1.+z));
-    for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
+    const Float64 halfwindowsize_z = m_secondPass_halfwindowsize*(1.+z);
+    TFloat64Range secondpass_window = {z - halfwindowsize_z, z + halfwindowsize_z};
+    Int32 i_min, i_max;
+    secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
+    for (Int32 i=i_min; i<=i_max; ++i)
     {
-        if (m_result->Redshifts[i] >= left_border &&
-            m_result->Redshifts[i] <= right_border)
-        {
-            extendedList.push_back( m_result->Redshifts[i]);
-        }
+        extendedList.push_back( m_result->Redshifts[i]);
     }
 
     return extendedList;
@@ -1836,9 +1831,13 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
                         Float64 z_vOptim = -1.0;
-                        const Int32 half_nb_zsteps =6;
-                        Int32 lowerzIdx = std::max(0, idx - half_nb_zsteps);
-                        Int32 higherzIdx = std::min( idx + half_nb_zsteps, Int32(m_result->Redshifts.size()-1) );
+                        const Int32 half_nb_zsteps = 6;
+                        Float64 z_front =  m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].front();
+                        Float64 z_back = m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].back();
+                        Int32 idx_begin = CIndexing<Float64>::getIndex(m_result->Redshifts, z_front);  
+                        Int32 idx_end = CIndexing<Float64>::getIndex(m_result->Redshifts, z_back); 
+                        Int32 lowerzIdx = std::max(idx_begin, idx - half_nb_zsteps);
+                        Int32 higherzIdx = std::min(idx_end, idx + half_nb_zsteps);
                         for(Int32 idzTest=lowerzIdx; idzTest<=higherzIdx; ++idzTest)
                         {
                             for (Int32 kv = 0; kv < nVelSteps; kv++)

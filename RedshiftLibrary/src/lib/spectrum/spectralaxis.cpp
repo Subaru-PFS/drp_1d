@@ -434,7 +434,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
     else
         logGridStep = log(m_Samples[1]/m_Samples[0]);
 
-    Float64 relativelogGridStepTol = 1e-1;
+    Float64 relativelogGridStepTol = 1e-1; // only 10% precision (not better to keep input spectra with truncatd decimals)
     Float64 maxAbsRelativeError = 0.0; 
     Float64 lbda1 = m_Samples[0];
     for (Int32 t = 1; t < m_Samples.size(); t++)
@@ -458,8 +458,8 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
         }
         lbda1 = lbda2;
     }
-    //save step in a member variable
-    m_regularLogSamplingStep = logGridStep; 
+    //  recompute log step with more precision:
+    m_regularLogSamplingStep = log(m_Samples.back()/m_Samples.front())/(GetSamplesCount()-1); 
     m_SpectralFlags |= nFLags_LogSampled; //setting through a logical OR
     m_regularLogSamplingChecked = true;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
@@ -512,10 +512,16 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
     return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
 }
 
-/*@ssratio stands for sub-samplingRatio*/
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Range ilbda) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
 {
-    //if(std::isnan(m_regularLogSamplingStep))
+    Int32 imin, imax;
+    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
+    return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
+}
+
+/*@ssratio stands for sub-samplingRatio*/
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const
+{
     if(!IsLogSampled())
     {
         throw runtime_error("Cannot subsample spectrum!");
@@ -523,7 +529,6 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TInt32Ran
     UInt32 s = GetSamplesCount();
     if(ssratio==1) return TFloat64List(s, 1.);
     TFloat64List mask(s, 0.); 
-    //for(Int32 i = ilbda.GetBegin(); i>=ilbda.GetEnd(); i+=multi){ //here no need to reverse
     for(Int32 i=ilbda.GetEnd(); i>=ilbda.GetBegin();i-=ssratio){//ensure that z[0] remains the same
         mask[i]=1;
     }
@@ -542,10 +547,23 @@ UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float6
 {
     if(!IsLogSampled())
     {
-        throw runtime_error("  CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio ");
+        Log.LogError("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
+        throw runtime_error("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
     }
 
     UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
     modulo = logstep - ratio*m_regularLogSamplingStep;
     return ratio;
+}
+
+void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
+{
+    if (!IsLogSampled())
+    {
+        Log.LogError("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
+        throw runtime_error("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
+    }
+
+    TFloat64Range lrange = GetLambdaRange();
+    m_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
 }

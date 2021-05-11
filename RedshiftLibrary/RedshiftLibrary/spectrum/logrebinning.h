@@ -33,7 +33,7 @@ private:
     std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
 
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange, UInt32 gridCount);
-    void InferTemplateRebinningSetup();
+    void InferTemplateRebinningSetup(const TFloat64Range & lambdaRange_Ref);
     const std::string m_rebinMethod = "lin";
 
     UInt32 m_loglambda_count_spc, m_loglambda_count_tpl;

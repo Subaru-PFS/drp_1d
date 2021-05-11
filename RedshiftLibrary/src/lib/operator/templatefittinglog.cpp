@@ -1263,11 +1263,10 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     //check is spc/tpl steps are multiple of the redshift step:
     //spc and tpl have same step
     //check if spc step is a multiple of stepratio_spc
-    if(std::abs(rebinnedSpectrum.GetSpectralAxis().GetlogGridStep() - rebinnedTpl.GetSpectralAxis().GetlogGridStep())>1E-12)
+    const Float64 epsilon = 1E-8;
+    if(std::abs(rebinnedSpectrum.GetSpectralAxis().GetlogGridStep() - rebinnedTpl.GetSpectralAxis().GetlogGridStep())>epsilon)
         throw runtime_error("TFLogOperator: tpl and spc are not rebinned with the same step");
     //computing as integers
-    /*auto lambda_redshift_modulo = std::round(std::fmod(logstep*1E8, rebinlogstep*1E8));
-    auto modulo_2 = std::round(logstep*1E8 - trunc(logstep*1E8/rebinlogstep*1E8)*rebinlogstep*1E8);*/
     Float64 logstep = log((redshifts[1]+1)/(redshifts[0]+1));
     Float64 rebinlogstep = rebinnedSpectrum.GetSpectralAxis().GetlogGridStep();
     Float64 modulo;
@@ -1282,7 +1281,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         m_spectrumRebinedLog = rebinnedSpectrum;
         m_templateRebinedLog = rebinnedTpl;
     }else{
-        TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio);
+        TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio, lambdaRange);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
         // scale the variance by ssratio
         m_spectrumRebinedLog.GetFluxAxis().GetError() *= 1./sqrt(ssRatio); 
