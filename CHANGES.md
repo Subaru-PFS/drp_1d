@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.20.0 (2021-05-07)
+### Added
+* [6061] : Add QSO section in HDF5 output 			
+* [6400] : Add new parameter: `linemodel.continuumfit.negativethreshold`, referring to the maximal acceptable fitted amplitude of the continuum (unit: sigma of fitted amplitude, put the minus sign for a negative threshold)
+* [5989] : Adapt the library to take log-sampled spectra as inputs for all methods (`linemodelsolve`, `templatefittingsolve`, `tplcombinationsolve`). Replace parameter `linemodelsolve.linemodel.firstpass.largegridstep` with `linemodelsolve.linemodel.firstpass.largegridstepratio`
+* [6426] : Add new parameters ebmv.start, ebmv.step and ebmv.count to set the sampling of dust extinction
+### Changed
+* [6204] : Change CProcessFlowContext method definition
+* [6382] : Change version number strategy
+* [6425] : Change parameter name from `linemodelsolve.linemodel.continuumfit.method` to `linemodelsolve.linemodel.continuumfit.fftprocessing` (`yes`/`no`)
+* [6265] : Merge templatefittinglogsolve method into templatefittingsolve method with a new parameter: `fftprocessing` (`yes`/`no`)
+* [6387] : Create dedicated method for computing reliability
+* [5933] : Change `gslcBlas` third party dependency to `openBlas` third party dependency
+### Deprecated
+* None
+### Removed
+* [6433] : Remove csv ouput file writing
+### Fixed
+* [6356] : Fix critical bug in templateFittingLog method
+* [6392] : Fix bad logger level when storing 1st pass results
+* [6434] : Restore TemplateCombination Method
+* [6474] : Fix spectral axis of output spectrum-model (templatefittingsolve only): shifting axis from restframe to selected redshift
+
+## 0.18.1 (2021-03-19)
+### Fixed
+* [6361] : Fix bug with linemodelsolve.linemodel.continuumcomponent=fromspectrum parameter
+
 ## 0.18.0 (2021-02-26)
 ### Added
 * [6120] : Add Line Spread Function	
