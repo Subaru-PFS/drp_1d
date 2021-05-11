@@ -46,5 +46,26 @@ BOOST_AUTO_TEST_CASE(LowestIndex)
     CIndexing<Float64>::getClosestLowerIndex(myVector,target,i_min);
     BOOST_CHECK( myVector[i_min] <= target);
 }
+
+BOOST_AUTO_TEST_CASE(LowerIndex)
+{
+    TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
+    const Float64 target = 2.019999999;
+    Int32 i_min = -1;
+   
+    i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
+
+    BOOST_CHECK( i_min == 1);
+}
+BOOST_AUTO_TEST_CASE(LowerIndex2)
+{
+    TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
+    const Float64 target = 2.419999999;
+    Int32 i_min = -1;
+   
+    i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
+
+    BOOST_CHECK( i_min == 2);
+}
 /////
 }

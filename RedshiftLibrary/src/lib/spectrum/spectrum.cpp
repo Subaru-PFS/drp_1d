@@ -6,7 +6,7 @@
 #include <RedshiftLibrary/continuum/waveletsdf.h>
 #include <RedshiftLibrary/continuum/median.h>
 #include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
-
+#include <RedshiftLibrary/common/indexing.h>
 #include <RedshiftLibrary/log/log.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
@@ -855,7 +855,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         Int32 n = m_SpectralAxis.GetSamplesCount();
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
-            k = gsl_interp_bsearch (Xsrc.data(), Xtgt[j], kprev, n);
+            //k = gsl_interp_bsearch (Xsrc.data(), Xtgt[j], kprev, n);
+            k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[j]);
             kprev = k;
             // closest value
             Yrebin[j] = Ysrc[k];

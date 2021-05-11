@@ -3,7 +3,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/log/log.h>
 #include <vector>
-
+#include<iostream>
 namespace NSEpic {
 
 /**
@@ -28,19 +28,7 @@ template <typename T> class CIndexing
         }
         return (itr - list.begin()); 
     }
-    static Int32 getIndexwithEpsilon(const std::vector<T>& list, T z)
-    {
-        typename std::vector<T>::const_iterator itr = std::find(list.begin(),list.end(), z); 
-        if (itr == list.end())
-        {
-            size_t size = snprintf( nullptr, 0, "Could not find index for %f", z) + 1;
-            std::unique_ptr<char[]> buf( new char[ size ] );                                                        
-            snprintf( buf.get(), size, "Could not find index for %f", z);                          
-            std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-            throw std::runtime_error(_msg.c_str());
-        }
-        return (itr - list.begin()); 
-    }
+    
     //getIndex in orded_values corresponding to value:
     //value[index] can be equal or smaller than Z
     static bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) 
@@ -68,6 +56,9 @@ template <typename T> class CIndexing
       typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
 
       if(std::abs(*it - ordered_values.front()<epsilon)) it = it -1;
+
+      if(std::abs(*it - value) > std::abs( ordered_values[it-1 - ordered_values.begin()] - value)) 
+        it = it -1;
 
       Int32 i_min = it - ordered_values.begin();
       return i_min;
