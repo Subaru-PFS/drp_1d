@@ -387,8 +387,34 @@ BOOST_AUTO_TEST_CASE(Closed_interval)
     BOOST_CHECK( i_min == 0);
     BOOST_CHECK( i_max == 0);
 }
-
-
+BOOST_AUTO_TEST_CASE(maskedRange)
+{
+    TFloat64Range range(3,5);
+    TFloat64List otherVector= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    TFloat64List mask       = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1}; //mask deactivating the range from 2 to 7
+    
+    TFloat64List ssVector={0, 1, 8, 9};//subsampled vector following mask
+    
+    TFloat64Range otherRange(otherVector[range.GetBegin()], otherVector[range.GetEnd()]);
+    Int32 kstart = -1, kend = -1;
+    bool ret = otherRange.getClosedIntervalIndices(ssVector, kstart, kend);
+    BOOST_CHECK( ret == false);
+}
+BOOST_AUTO_TEST_CASE(maskedRange_oneCommon)
+{
+    TFloat64Range range(1,5);
+    TFloat64List otherVector= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    TFloat64List mask       = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1}; //mask deactivating the range from 2 to 7
+    
+    TFloat64List ssVector={0, 1, 8, 9};//subsampled vector following mask
+    
+    TFloat64Range otherRange(otherVector[range.GetBegin()], otherVector[range.GetEnd()]);
+    Int32 kstart = -1, kend = -1;
+    Int32 ret = otherRange.getClosedIntervalIndices(ssVector, kstart, kend);
+    BOOST_CHECK( ret == true);
+    BOOST_CHECK( kstart == 1);
+    BOOST_CHECK( kend == 1);
+}
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END ()

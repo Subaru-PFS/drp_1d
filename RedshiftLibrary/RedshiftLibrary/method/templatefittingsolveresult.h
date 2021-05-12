@@ -18,7 +18,7 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CTemplateFittingSolveResult : public CSolveResult
+class CTemplateFittingSolveResult : public CPdfSolveResult
 {
 
 public:
@@ -28,8 +28,6 @@ public:
                                 Float64 evidence );
     //CTemplateFittingSolveResult(const EType type=nType_raw, const std::string scope="templatefittingsolve");
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
 /*    Bool GetBestRedshift(const CDataStore& store);
     Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
     Bool GetBestRedshiftFromPdf(const CDataStore& store);
@@ -70,7 +68,7 @@ private:
   std::string m_tplName = "-1";
   Float64 m_amplitude = 0.0;
   Float64 m_amplitudeError = -1.0;
-  Float64 m_dustCoeff = -1.0;
+  Float64 m_EbmvCoeff = -1.0;
   Int32   m_meiksinIdx = -1.0;
 
   //Not sure it is necessary here
@@ -92,7 +90,7 @@ const Float64 CTemplateFittingSolveResult::GetMeiksinIdx(){
 }
 inline
 const Float64 CTemplateFittingSolveResult::GetDustCoeff(){
-  return m_dustCoeff;
+  return m_EbmvCoeff;
 }
 inline
 const Float64 CTemplateFittingSolveResult::GetAmplitudeError(){

@@ -34,28 +34,15 @@ public:
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
-                                              Float64 FitDustCoeff=-1,
+                                              Float64 FitEbmvCoeff=-1,
                                               Float64 FitMeiksinIdx=-1);
 
     const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
                                     const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
                                     Float64 overlapThreshold );
 
-    Int32        ComputeSpectrumModel(const CSpectrum& spectrum,
-                        	          const CTemplate& tpl,
-                                      Float64 redshift,
-                                      Float64 IdxDustCoeff,
-                                      Int32 meiksinIdx,
-                                      Float64 amplitude,
-                                      std::string opt_interp,
-				                      std::string opt_extinction,
-                                      const TFloat64Range& lambdaRange,
-                                      Float64 overlapThreshold,
-                                      std::shared_ptr<CModelSpectrumResult> & spc);
 
 private:
-
-    void BasicFit_preallocateBuffers(const CSpectrum& spectrum, const CTemplate & tpl);
 
     void BasicFit(const CSpectrum& spectrum,
                   const CTemplate& tpl,
@@ -66,11 +53,11 @@ private:
                   Float64& chiSquare,
                   Float64 &fittingAmplitude,
                   Float64& fittingAmplitudeError,
-                  Bool& fittingAmplitudeNegative,
+                  Float64& fittingAmplitudeSigma,
                   Float64& fittingDtM,
                   Float64& fittingMtM,
                   Float64 &fittingLogprior,
-                  Float64 &fittingDustCoeff,
+                  Float64 &fittingEbmvCoeff,
                   Float64 &fittingMeiksinIdx,
                   EStatus& status,
                   std::vector<TFloat64List>& ChiSquareInterm,
@@ -84,24 +71,13 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   bool keepigmism=false);
 
-    Int32  RebinTemplate( const CSpectrum& spectrum,
-                          const CTemplate& tpl, 
-                          Float64 redshift,
-                          const TFloat64Range& lambdaRange,
-                          std::string opt_interp,
-                          TFloat64Range& currentRange,
-                          Float64& overlaprate,
-                          Float64 overlapThreshold);// const;
 
     Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
 
-    //Likelihood
-    Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
-
     // buffers for the interpolated axis (template & spectrum)
-    CTemplate       m_templateRebined_bf; //buffer
-    CMask           m_mskRebined_bf; //buffer
-    CSpectrumSpectralAxis m_spcSpectralAxis_restframe; //buffer
+
+
+
 
 };
 

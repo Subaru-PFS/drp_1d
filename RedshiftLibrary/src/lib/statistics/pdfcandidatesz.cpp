@@ -60,12 +60,12 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
         ranges[Id].IntersectWith(PdfZRange);
     };
 
-    // sort candidates keys (Ids) by decreasing redshifts
+    // sort candidate keys (Ids) by decreasing redshifts
     std::vector<std::string> Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
-    TCandidateZbyID & c = m_candidates;     
+    TCandidateZbyID & c = m_candidates;    
     std::sort(Ids.rbegin(), Ids.rend(),
         [&c](std::string Id1, std::string Id2) {return c[Id1].Redshift < c[Id2].Redshift;});
 
@@ -173,8 +173,8 @@ void CPdfCandidatesZ::SortByValSumProbaInt(TCandidateZbyRank & ranked_candidates
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
-    const TCandidateZbyID & c = m_candidates;     
-    std::sort(Ids.rbegin(), Ids.rend(),
+    const TCandidateZbyID & c = m_candidates; 
+    std::stable_sort(Ids.rbegin(), Ids.rend(),
         [&c](std::string Id1, std::string Id2) {return c.at(Id1).ValSumProba < c.at(Id2).ValSumProba;});
     
     ranked_candidates.clear();

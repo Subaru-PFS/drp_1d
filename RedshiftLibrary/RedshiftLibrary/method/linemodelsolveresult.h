@@ -17,7 +17,7 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CLineModelSolveResult : public CSolveResult
+class CLineModelSolveResult : public CPdfSolveResult
 {
 
 public:
@@ -28,8 +28,6 @@ public:
 
     virtual ~CLineModelSolveResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
 /*    Bool GetBestRedshift(Float64& redshift,
                          Float64& merit ,
                          Float64 &sigma,

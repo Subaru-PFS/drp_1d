@@ -32,6 +32,7 @@ public:
                     const CRayCatalog::TRayVector& restRayList,
                     const std::string& opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
+                    const Float64 opt_continuum_neg_threshold,
                     const std::string& lineWidthType,
                     const std::string& opt_enable_LSF,
                     const Float64 resolution,
@@ -72,7 +73,7 @@ public:
     std::string getFitContinuum_tplName();
     Float64 getFitContinuum_tplAmplitude();
     Float64 getFitContinuum_tplMerit();
-    Float64 getFitContinuum_tplIsmDustCoeff();
+    Float64 getFitContinuum_tplIsmEbmvCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
 
     const CSpectrum& GetModelSpectrum() const;

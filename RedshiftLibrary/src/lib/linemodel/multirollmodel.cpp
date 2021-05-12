@@ -23,6 +23,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                  const CRayCatalog::TRayVector& restRayList,
                                  const std::string& opt_fittingmethod,
                                  const std::string& opt_continuumcomponent,
+                                 const Float64 opt_continuum_neg_threshold,
                                  const std::string& widthType,
                                  const std::string& opt_enable_LSF,
                                  const Float64 resolution,
@@ -70,12 +71,12 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         Float64 lines_nsigmasupport = 6.0;
         m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
                                                                                              tplCatalog,
-                                                                                             tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,
                                                                                              restRayList,
                                                                                              opt_fittingmethod,
                                                                                              opt_continuumcomponent,
+                                                                                             opt_continuum_neg_threshold,
                                                                                              widthType,
                                                                                              opt_enable_LSF,
                                                                                              lines_nsigmasupport,
@@ -907,11 +908,11 @@ Float64 CMultiRollModel::getFitContinuum_tplMerit()
 }
 
 //todo: tbd: which one should be returned in this multimodel case ?
-Float64 CMultiRollModel::getFitContinuum_tplIsmDustCoeff()
+Float64 CMultiRollModel::getFitContinuum_tplIsmEbmvCoeff()
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->getFitContinuum_tplIsmDustCoeff();
+        return m_models[0]->getFitContinuum_tplIsmEbmvCoeff();
     }
     else
     {

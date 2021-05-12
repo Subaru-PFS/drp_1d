@@ -23,6 +23,8 @@ class AbstractOutput:
         self.best_continuum["qso"] = dict()
         self.best_continuum["star"] = dict()
         self.classification = dict()
+        self.reliability = dict()
+        self.reliability["galaxy"] = dict()
         self.nb_candidates = dict()
         self.reference_redshift = None # TODO should be a map or np array with all attributes presents in the ref file
         self.manual_redshift = None
@@ -59,15 +61,15 @@ class AbstractOutput:
     def load_nb_candidates(self,object_type):
         pass
 
+    @abc.abstractmethod
+    def load_reliability(self,object_type):
+        pass
+
     def load_all_fitted_rays(self,object_type):
-        if object_type == "star":
-            return
         for rank in range(self.nb_candidates[object_type]):
             self.load_fitted_rays(object_type,rank)
 
     def load_all_best_continuum(self,object_type):
-        if object_type == "star":
-            return
         for rank in range(self.nb_candidates[object_type]):
             self.load_fitted_continuum_by_rank(object_type,rank)
 
@@ -82,15 +84,15 @@ class AbstractOutput:
             self.load_nb_candidates(object_type)
             self.load_candidates_results(object_type)
             self.load_all_models(object_type)
-            self.load_all_best_continuum(object_type)
-            self.load_all_fitted_rays(object_type)
             self.load_pdf(object_type)
+            if self.get_solve_method(object_type) == "linemodelsolve":
+                self.load_all_best_continuum(object_type)
+                self.load_all_fitted_rays(object_type)
+            if object_type == "galaxy":
+                self.load_reliability(object_type)
 
     def get_solve_method(self,object_type):
-        if object_type == "galaxy":
-            return self.parameters["method"]
-        else:
-            return "templatefittingsolve"
+        return self.parameters[object_type]["method"]
 
     def get_candidate_data(self, object_type, rank, data_name):
         self.load_candidates_results(object_type)
@@ -151,6 +153,10 @@ class AbstractOutput:
     def set_manual_redshift_value(self,val):
         self.manual_redshift=val
 
+    def get_reliability(self,object_type):
+        self.load_reliability(object_type)
+        return self.reliability[object_type]
+    
     def compare_candidates_results(self,other,object_type,quiet):
         if not self.candidates_results[object_type].equals(other.candidates_results[object_type]):
             if not quiet:
@@ -232,3 +238,4 @@ class AbstractOutput:
         return equal
 
     
+

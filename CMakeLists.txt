@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.6)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.12)
 PROJECT( cpf-redshift )
 
 # extra path for modules
@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(SetupVar)
 include(gitrevision)
 
-message("Using git revision : " ${GIT_REVISION})
+message(STATUS "Using git revision : " ${GIT_REVISION})
 
 option(BUILD_TESTING "Build testings" ON)
 
@@ -33,29 +33,23 @@ endif()
 message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
 SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
-SET( cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include )
-SET( cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/RedshiftLibrary)
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
+LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+MESSAGE(STATUS "cpf-redshift_INCLUDE_DIR=" "${cpf-redshift_INCLUDE_DIR}")
+MESSAGE(STATUS "cpf-redshift_LINK_DIR=" "${cpf-redshift_LINK_DIR}")
 
-set(Python_ADDITIONAL_VERSIONS 3.8 3.7 3.6 3.5 3.4 2.7)
-
-FIND_PACKAGE(PythonInterp)
-IF (NOT PYTHONINTERP_FOUND)
-  MESSAGE(FATAL_ERROR "Can't find Python interpreter")
+FIND_PACKAGE(Python3 COMPONENTS Interpreter)
+IF (NOT Python3_Interpreter_FOUND)
+  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
 ENDIF()
-
-# PythonInterp is deprecated since version 3.12
-# Use Python3 in future version of pylibamazed
-#
-#FIND_PACKAGE(Python3 COMPONENTS Interpreter)
-#IF (NOT Python3_Interpreter_FOUND)
-#  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
-#ENDIF()
-#set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
 LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
 LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
 LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
+LIST(FIND MISSING_THIRDPARTIES "openblas" find_openblas)
 
 FIND_PACKAGE(PkgConfig)
 
@@ -73,6 +67,15 @@ ENDIF()
 
 IF(NOT find_fftw GREATER -1)
   pkg_check_modules(FFTW fftw3>=3.3.8)
+ENDIF()
+
+IF(NOT find_openblas GREATER -1)
+  # Add specific PREFIX PATH for users on Appel osx managed by brew
+  SET(CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
+  SET(BLA_VENDOR OpenBLAS)
+  SET(BLA_STATIC OFF)
+  SET(BLA_F95 OFF)
+  FIND_PACKAGE(BLAS)
 ENDIF()
 
 #--------------------------------------------------------
@@ -123,13 +126,20 @@ ELSE()
   LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
 ENDIF()
 
+IF (BLAS_FOUND)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
+ELSE()
+  LIST(APPEND MISSING_THIRDPARTIES "openblas")
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS openblas)
+ENDIF()
+
 IF (GSL_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${GSL_LIBRARIES})
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
   LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
   LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
 ELSE()
   LIST(APPEND MISSING_THIRDPARTIES "gsl")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl gslcblas)
+  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
 ENDIF()
 
 # use ccache if any
@@ -155,7 +165,7 @@ endif()
 #--------------------------------------------------------
 
 FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "Version used: ${PROJECT_VERSION}" )
+MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
 
 #SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
 IF(BUILD_SHARED_LIBS)
@@ -167,7 +177,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -g")
 # Preprocessor and linker path
 #--------------------------------------------------------
 
-INCLUDE_DIRECTORIES( ${ROOT_DIR}/RedshiftLibrary ${cpf-redshift_INCLUDE_DIR} )
+INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
 LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
 
 #--------------------------------------------------------
@@ -248,9 +258,9 @@ ENDIF()
 # Install directive
 #--------------------------------------------------------
 
-INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake DESTINATION share/cmake )
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake DESTINATION share/cmake )
+#INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
+#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config.cmake DESTINATION share/cmake )
+#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config-version.cmake DESTINATION share/cmake )
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candidates_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv COPYONLY)
 
 #--------------------------------------------------------
@@ -281,13 +291,13 @@ set(PYTHON_BUILD_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
 )
 
-#add_custom_target(clean_python_build
-#  COMMAND rm -rf ${PYTHON_BUILD_FILES}
-#  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#  COMMENT "Removing existing python build files"
-#  VERBATIM
-#)
+add_custom_target(clean_python_build
+  COMMAND rm -rf ${PYTHON_BUILD_FILES}
+  COMMAND ${PYTHON_EXECUTABLE} setup.py clean --all
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Removing existing python build files"
+  VERBATIM
+)
 
 #--------------------------------------------------------
 # Package deployement and config

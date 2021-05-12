@@ -29,11 +29,9 @@ public:
                                  Float64 _ismCoeff,
                                  Int32 _igmIndex,
                                  Float64 _fitting_snr);
+
     CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
-
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
 
     void getData(const std::string& name, Int32& v) const;
     void getData(const std::string& name, std::string& v) const;

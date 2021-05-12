@@ -25,7 +25,7 @@ public:
 
 private:
 
-    CSpectrum     m_NoiseSpectrum;
+    CSpectrum     m_NoiseSpectrum;//a weird spectra with no real flux, only error but considered as a flux!
     Bool m_initialized;
 };
 

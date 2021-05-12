@@ -6,6 +6,7 @@
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/operator/templatefittingresult.h>
 #include <RedshiftLibrary/operator/modelspectrumresult.h>
+#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 #include <RedshiftLibrary/common/mask.h>
 #include <RedshiftLibrary/processflow/resultstore.h>
 
@@ -21,9 +22,6 @@ class COperatorTplcombination
 {
 public:
 
-    COperatorTplcombination();
-    ~COperatorTplcombination();
-
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
                                              const std::vector<CTemplate> &tplList,
                                              const TFloat64Range& lambdaRange,
@@ -34,7 +32,7 @@ public:
                                              Int32 opt_extinction=0, 
                                              Int32 opt_dustFitting=0);
 
-    void SaveSpectrumResults(COperatorResultStore &resultStore);
+  void SaveSpectrumResults(std::shared_ptr<COperatorResultStore> resultStore);
 
 private:
 
@@ -43,14 +41,18 @@ private:
         COperator::EStatus status;
         Float64     overlapRate;
         Float64     chisquare;
-        CSpectrum   modelSpectrum;
-        std::vector<Float64>    fittingAmplitudes;
-        std::vector<Float64>    fittingErrors;
+        CSpectrum/*CModelSpectrumResult*/   modelSpectrum;
+        TFloat64List    fittingAmplitudes;
+        TFloat64List    fittingErrors;
         std::vector<TFloat64List> ChiSquareInterm;
+        std::vector<std::string> tplNames; //cause combination of templates
+        Int32 igmIdx;
+        Float64 ebmvCoeff;
+        Float64 snr;
     };
 
     std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
-
+    std::vector<std::shared_ptr<CModelContinuumFittingResult> > m_savedModelContinuumFittingResults;
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum,
                                      const std::vector<CTemplate>& tplList);
 
@@ -61,7 +63,14 @@ private:
                   Float64 overlapThreshold,
                   STplcombination_basicfitresult& fittingResults,
                   std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
-
+    Int32 RebinTemplate(const CSpectrum& spectrum,
+                        const std::vector<CTemplate>& tplList,
+                        Float64 redshift,
+                        const TFloat64Range& lambdaRange,
+                        std::string opt_interp,
+                        TFloat64Range& currentRange,
+                        Float64& overlapRate,
+                        Float64 overlapThreshold);
     // buffers for the interpolated axis (templates & spectrum)
     std::vector<CTemplate>   m_templatesRebined_bf; //vector of buffer
     std::vector<CMask>       m_masksRebined_bf; //vector of buffer

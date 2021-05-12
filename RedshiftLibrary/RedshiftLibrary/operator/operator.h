@@ -34,7 +34,6 @@ public:
     COperator();
     virtual ~COperator()=0;
 
-
 protected:
 
 };

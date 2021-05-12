@@ -12,6 +12,8 @@ namespace NSEpic {
 #define NULL (0)
 #endif
 
+typedef std::vector<std::string> TScopeStack;
+  
 typedef int Int32;
 typedef short Int16;
 typedef signed char Int8;

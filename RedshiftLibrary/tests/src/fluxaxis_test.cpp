@@ -20,6 +20,11 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Spectrum)
 
+bool correctMessage(const std::runtime_error& ex)
+{
+    BOOST_CHECK_EQUAL(ex.what(), std::string("Cannot rebin spectrum: target spectral axis is not included in the current spectral axis"));
+    return true;
+}
 BOOST_AUTO_TEST_CASE(calcul)
 {
 
@@ -112,25 +117,23 @@ BOOST_AUTO_TEST_CASE(calcul)
                                           log(object_Range4->GetEnd()));
   TFloat64Range currentRange = logIntersectedLambdaRange;
 
-  Float64 Array4[] = {0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,
+  TFloat64List Array4 = {0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,
                       1.2,  1.3,  1.4,  1.45, 1.50, 1.55, 1.60,
                       1.65, 1.70, 1.75, 1.80, 1.85, 1.9};
-  Float64 Array4b[] = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
+  TFloat64List Array4b = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
   CSpectrumSpectralAxis *targetSpectralAxis4 =
-    new CSpectrumSpectralAxis(Array4, n + n, true);
+    new CSpectrumSpectralAxis(Array4, true);
   CSpectrumSpectralAxis *sourceSpectralAxis4 =
-    new CSpectrumSpectralAxis(Array4b, n, true);
+    new CSpectrumSpectralAxis(Array4b, true);
   CMask *rebinedMask2 = new CMask();
 
   std::shared_ptr<CSpectrum> object_CSpectrum4;
   object_CSpectrum4 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
   CSpectrum rebinnedSpectrum4;
-  bool resultcas4 = object_CSpectrum4->Rebin((*object_Range4),
-						    (*targetSpectralAxis4),
-						    rebinnedSpectrum4,
-						    (*rebinedMask2));
-  BOOST_CHECK(resultcas4 == true);
-  BOOST_TEST_MESSAGE("cas4:" << resultcas4);
+  BOOST_CHECK_EXCEPTION( object_CSpectrum4->Rebin((*object_Range4),(*targetSpectralAxis4),rebinnedSpectrum4,(*rebinedMask2)),
+                        std::runtime_error, correctMessage);
+  //BOOST_CHECK(resultcas4 == false);//we cannot interpolate outside spectrum range
+  //BOOST_TEST_MESSAGE("cas4:" << resultcas4);
 
   //----------//
   // test rbin2
@@ -176,12 +179,22 @@ BOOST_AUTO_TEST_CASE(calcul)
   BOOST_TEST_MESSAGE("Rebin cas3:" << resultRebincas3);
 
   // cas 4
+    TFloat64List Array5b = {0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,
+                      1.2,  1.3,  1.4,  1.45, 1.50, 1.55, 1.60,
+                      1.65, 1.70, 1.75, 1.80, 1.85, 1.9};
+  TFloat64List Array5 = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
+  CSpectrumSpectralAxis *targetSpectralAxis5 =
+    new CSpectrumSpectralAxis(Array5, true);
+  CSpectrumSpectralAxis *sourceSpectralAxis5 =
+    new CSpectrumSpectralAxis(Array5b, true);
+  CSpectrumFluxAxis *sourceFluxAxis5 = new CSpectrumFluxAxis(Array1, n+n);
+
   std::shared_ptr<CSpectrum> object_CSpectrum8;
-  object_CSpectrum8 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
+  object_CSpectrum8 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis5), (*sourceFluxAxis5)));
   CMask *rebinedMask6 = new CMask();
   CSpectrum rebinnedSpectrum8;
   bool resultRebincas4 = object_CSpectrum8->Rebin(
-							   (*object_Range4), (*targetSpectralAxis4), 
+							   (*object_Range4), (*targetSpectralAxis5), 
                  rebinnedSpectrum8, (*rebinedMask6), opt_interp);
   BOOST_CHECK(resultRebincas4 == true);
   BOOST_TEST_MESSAGE("Rebin cas4:" << resultRebincas4);
@@ -190,19 +203,19 @@ BOOST_AUTO_TEST_CASE(calcul)
   const std::string opt_interp2 = "precomputedfinegrid";
   
   std::shared_ptr<CSpectrum> object_CSpectrum9;
-  object_CSpectrum9 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
+  object_CSpectrum9 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis5), (*sourceFluxAxis5)));
   
   CMask *rebinedMask7 = new CMask();
   CSpectrum rebinnedSpectrum9;
   bool resultRebincas5 = object_CSpectrum9->Rebin(
-							   (*object_Range4), (*targetSpectralAxis4), 
+							   (*object_Range4), (*targetSpectralAxis5), 
                  rebinnedSpectrum9, (*rebinedMask7), opt_interp2 );
   BOOST_CHECK(resultRebincas5 == true);
   BOOST_TEST_MESSAGE("Rebin cas5:" << resultRebincas5);
 
   CMask *rebinedMask8 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum10;
-  object_CSpectrum10 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
+  object_CSpectrum10 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis5), (*sourceFluxAxis5)));
   std::shared_ptr<CSpectrum> object_CSpectrum_null = std::shared_ptr<CSpectrum>( new CSpectrum());
   CSpectrum rebinnedSpectrum10;
   bool resultRebincas5bis = object_CSpectrum10->Rebin(
@@ -215,7 +228,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   CMask *rebinedMask9 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum11;
-  object_CSpectrum11 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
+  object_CSpectrum11 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis5), (*sourceFluxAxis5)));
   CSpectrum rebinnedSpectrum11;
   bool resultRebincas6 = object_CSpectrum11->Rebin(
 							   (*object_Range4), (*targetSpectralAxis4), 
@@ -227,7 +240,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   const std::string opt_interp4 = "ngp";
   CMask *rebinedMask10 = new CMask();
   std::shared_ptr<CSpectrum> object_CSpectrum12;
-  object_CSpectrum12 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis4), (*sourceFluxAxis)));
+  object_CSpectrum12 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis5), (*sourceFluxAxis5)));
   CSpectrum rebinnedSpectrum12;
   bool resultRebincas7 = object_CSpectrum12->Rebin(
 							   (*object_Range4), (*targetSpectralAxis4), 
@@ -381,8 +394,8 @@ BOOST_AUTO_TEST_CASE(calcul)
 
   Float64 mean = 1.;
   Float64 sdev = 1.;
-  const TFloat64List error{1.};
-  const TFloat64List empty_error;
+  const CSpectrumNoiseAxis error(1);
+  const CSpectrumNoiseAxis empty_error;
 
   Bool resultComputeMeanAndSDev_cas1 =
     object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev, error);
@@ -401,12 +414,13 @@ BOOST_AUTO_TEST_CASE(calcul)
 BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
 {
   // test RebinVarianceWeighted
-  Float64 lambdas[] = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
+  TFloat64List lambdas = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
   CSpectrumFluxAxis sourceFluxAxis(10);
-  CSpectrumSpectralAxis sourceSpectralAxis(10, false);
+  TFloat64List Array = {1000, 2500, 2900, 3890, 4690, 5500, 6800, 7001, 8033, 10000};
+  CSpectrumSpectralAxis sourceSpectralAxis(Array, false);
   CSpectrumSpectralAxis bogus_sourceSpectralAxis(4, false);
  
-  CSpectrumSpectralAxis targetSpectralAxis(lambdas, 10);
+  CSpectrumSpectralAxis targetSpectralAxis(lambdas);
   TFloat64Range currentRange = targetSpectralAxis.GetLambdaRange();
   
   const std::string opt_interp = "lin";

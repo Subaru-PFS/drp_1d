@@ -46,7 +46,14 @@ public:
     void LogInfo( const char* format, ... );
     void LogDetail( const char* format, ... );
     void LogDebug( const char* format, ... );
-
+  
+    void LogError( const std::string& s);
+    void LogWarning( const std::string& s);
+    void LogInfo(const std::string& s);
+    void LogDetail(const std::string& s);
+    void LogDebug( const std::string& s);
+  
+    void log(const std::string& s,CLog::ELevel l);
     CMutex& GetSynchMutex();
 
     void Indent();

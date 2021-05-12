@@ -74,17 +74,25 @@ def DownloadHTTPFile(fileUrl, localFilePath):
 
 def _check_lib(name, prefix, options):
     _os = platform(terse=True).lower()
-    if _os == 'macos' or _os.startswith('darwin'):
+    print("Working on platform : {}".format(_os))
+    if 'macos' in _os or _os.startswith('darwin'):
         ext = '.dylib' if options.shared else '.a'
     elif _os == 'windows':
         ext = '.dll' if options.shared else '.a'
     else:
         ext = '.so' if options.shared else '.a'
     filename = libDict[name]['check_file']
-    return os.path.exists(os.path.join(prefix, 'lib', filename + ext))
+    fpath = os.path.join(prefix, 'lib', filename + ext)
+    print("Looking for {}".format(fpath))
+    fexists = os.path.exists(fpath)
+    if fexists:
+        print("Thirdparty detected : {}".format(fpath))
+        print("No build needed for thirdparty {}".format(name))
+    return fexists
 
 
 def _standard_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path} ; ./configure --prefix={prefix} {shared} {extra_flags};"
               "make -j{parallel} all; make install".format(
                   path=path, prefix=prefix,
@@ -94,6 +102,7 @@ def _standard_build(path, prefix, options, extra_flags=''):
 
 
 def _boost_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path}; ./bootstrap.sh "
               "--with-libraries=system,filesystem,program_options,thread,"
               "timer,chrono,test --prefix={prefix};"
@@ -104,12 +113,20 @@ def _boost_build(path, prefix, options, extra_flags=''):
 
 
 def _cfitsio_build(path, prefix, options, extra_flags=''):
+    print("Starting build for : " + path)
     os.system("cd {path}; ./configure --enable-reentrant --prefix={prefix} "
               "--enable-sse2 --enable-ssse3 ;"
               "make -j{parallel} {shared}; make install; cd ../".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   shared='shared' if options.shared else 'all-nofitsio'))
+
+def _openblas_build(path, prefix, options, extra_flags=''):
+    os.system("cd {path} ;"
+              "make -j{parallel} ; make install PREFIX={prefix}".format(
+                  path=path, prefix=prefix,
+                  parallel=options.parallel,
+                  extra_flags=extra_flags))
 
 
 libDict = {
@@ -142,7 +159,16 @@ libDict = {
         "check_file": "libcfitsio",
         "build": _cfitsio_build,
         "extra_flags": ''
+    },
+    "openblas": {
+        "path": "openblas-0.3.7",
+        "src": "https://github.com/xianyi/OpenBLAS/archive/"
+        "v0.3.7.tar.gz",
+        "check_file": "libopenblas",
+        "build": _openblas_build,
+        "extra_flags": ''
     }
+
 }
 
 
@@ -173,6 +199,8 @@ def Main(argv):
     parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
                         nargs='*', help="Modules to build.")
     args = parser.parse_args()
+
+    print("Starting thirparties build...")
 
     for module in args.modules:
         libPath = os.path.join(build_dir, libDict[module]["path"])

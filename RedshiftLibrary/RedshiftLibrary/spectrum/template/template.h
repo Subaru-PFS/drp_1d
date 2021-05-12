@@ -23,26 +23,33 @@ public:
     CTemplate( const std::string& name, const std::string& category,
 	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
     CTemplate(const CTemplate& other);
+    CTemplate(const CTemplate& other, TFloat64List mask);
     CTemplate& operator=(const CTemplate& other); 
-    ~CTemplate();
+    ~CTemplate()=default;
 
     const std::string&  GetCategory() const;
 
     const CSpectrumFluxAxis&    GetFluxAxisWithoutIsmIgm() const;
     CSpectrumFluxAxis&          GetFluxAxisWithoutIsmIgm();
-
+    
     Bool Save(const char *filePath ) const;
 
+    Bool    Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+            CTemplate& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
+            const std::string opt_error_interp="no" ) const;
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
     void ScaleFluxAxis(Float64 amplitude);
-    Int32 GetIsmCoeff() const;
-    Int32 GetIgmCoeff() const;
+    Int32 GetIsmCoeff();
+    Int32 GetIgmCoeff();
 
     void SetIsmIgmLambdaRange(TFloat64Range& lbdaRange);
+    void SetIsmIgmLambdaRange(Int32 kstart, Int32 kend);
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
-    bool InitIsmIgmConfig();
-    
+    void InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);
+    void InitIsmIgmConfig();
+    bool CheckIsmIgmEnabled() const {return !m_NoIsmIgmFluxAxis.isEmpty();};
     bool CalzettiInitFailed() const;
     bool MeiksinInitFailed() const;
 
@@ -58,35 +65,34 @@ private:
 
     Int32 m_IsmIgm_kstart = -1, m_IsmIgm_kend = -1;
     CSpectrumFluxAxis   m_NoIsmIgmFluxAxis;
+    void DisableIsmIgm();
+
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
     TFloat64List m_computedDustCoeff; //vector of spectrum size containing computed dust coeff at m_kDust and this for all lambdas in the spectrum
     TFloat64List m_computedMeiksingCoeff; //vector of spectrum size containing computed igm coeff at a specific Z at m_meiksin and this for all lambdas in the spectrum
 };
-
-
 inline
-const CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm() const
+void CTemplate::DisableIsmIgm() 
 {
-    return m_NoIsmIgmFluxAxis;
-   
+    m_NoIsmIgmFluxAxis.clear();
 }
+
 inline
-CSpectrumFluxAxis& CTemplate::GetFluxAxisWithoutIsmIgm()
+Int32 CTemplate::GetIsmCoeff()
 {
-    return m_NoIsmIgmFluxAxis;
-}
-inline
-Int32 CTemplate::GetIsmCoeff() const
-{
+    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     return m_kDust;
 }
 inline
-Int32 CTemplate::GetIgmCoeff() const
+Int32 CTemplate::GetIgmCoeff() 
 {
+    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     return m_meiksinIdx;
 }
 inline
-void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& end){
+void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& end)
+{
+    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
     begin = m_IsmIgm_kstart;
     end   = m_IsmIgm_kend;
 }

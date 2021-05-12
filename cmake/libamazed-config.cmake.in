@@ -1,0 +1,10 @@
+set(libamazed_VERSION @PROJECT_VERSION@)
+@PACKAGE_INIT@
+
+set ( libamazed_INCLUDE_DIR "@PACKAGE_libamazed_INCLUDE_DIR@")
+set ( libamazed_LINK_DIR "@PACKAGE_libamazed_LINK_DIR@")
+
+set ( libamazed_LIB "libamazed;@libamazed_THIRDPARTY_LIBS@" )
+set ( libamazed_STATIC_LIB "libamazed.a;@libamazed_THIRDPARTY_LIBS@" )
+
+set ( libamazed_REVISION "@GIT_REVISION@" )

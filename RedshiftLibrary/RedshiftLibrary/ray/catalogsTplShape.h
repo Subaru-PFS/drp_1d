@@ -24,7 +24,10 @@ class CRayCatalogsTplShape
 
 public:
 
-    Bool Init(std::string calibrationPath, std::string opt_tplratioCatRelPath, Int32 enableISMCalzetti);
+    Bool Init(std::string calibrationPath, 
+              std::string opt_tplratioCatRelPath, 
+              Int32 enableISMCalzetti,
+              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti);
 
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
@@ -58,7 +61,7 @@ private:
     std::vector<Float64> m_Priors;
     std::vector<Int32> m_IsmIndexes;
 
-    CSpectrumFluxCorrectionCalzetti m_ismCorrectionCalzetti;
+    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;
 };
 

@@ -50,8 +50,6 @@ namespace NSEpic
     CRayMatchingResult();
     virtual ~CRayMatchingResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
     
     void SaveSolutionSetToStream( std::ostream& stream, TSolutionSetList selectedResults, Int32 type) const;
 

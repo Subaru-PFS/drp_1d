@@ -18,7 +18,7 @@ using namespace NSEpic;
 CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<const CLineModelExtremaResult> & ExtremaResult,
                                              const std::string & opt_pdfcombination,
                                              Float64 evidence):
-    CSolveResult( ExtremaResult, opt_pdfcombination, evidence),
+    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
     ExtremaResult(ExtremaResult),
     tplratioName(ExtremaResult->FittedTplratioName[0]),
     tplcontinuumName(ExtremaResult->FittedTplName[0]),
@@ -61,67 +61,6 @@ void CLineModelSolveResult::preSave(const CDataStore& store)
     }
 
 }*/
-
-/**
- * \brief Outputs to the output stream the values for redshift and merit and template name of the best redshift obtained.
- **/
-void CLineModelSolveResult::Save(std::ostream& stream ) const
-{
-    stream <<  "#Redshifts\tMerit\tTemplateRatio\tTemplateContinuum\tmethod\tsigma"<< std::endl;
-    stream << m_redshift << "\t"
-       << m_merit << "\t"
-       << tplratioName << "\t"
-       << tplcontinuumName << "\t"
-       << "LineModelSolve" << "\t"
-       << sigma << std::endl;
-}
-
-/**
- * \brief Prints into the output stream the redshift, merit and template name for the best redshift obtained.
- **/
-void CLineModelSolveResult::SaveLine( std::ostream& stream ) const
-{/*
-    Float64 redshift;
-    Float64 merit;
-    std::string tplratioName="-1";
-    std::string tplcontinuumName="-1";
-    Float64 sigma;
-    Float64 snrHa;
-    Float64 lfHa=-1;
-    Float64 snrOII;
-    Float64 lfOII=-1;
-
-
-    //GetBestRedshiftWithStrongELSnrPrior( store, redshift, merit );
-    if(m_bestRedshiftMethod==0)
-    {
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-        //        GetBestRedshift( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII );
-        //Log.LogInfo( "Linemodelsolve-result: extracting best redshift from chi2 extrema: z=%f", redshift);;
-    }else if(m_bestRedshiftMethod==2)
-    {
-          //TODO review this (commented after removing DataStore from Save and SaveLine)
-      //        GetBestRedshiftFromPdf( store, redshift, merit, sigma, snrHa, lfHa, snrOII, lfOII, tplratioName, tplcontinuumName);
-        Log.LogInfo( "Linemodelsolve-result: extracting best redshift from PDF: z=%f", redshift);
-    }else{
-        //Log.LogError( "Linemodelsolve-result: can't parse best redshift estimation method");
-    }
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    stream  << store.GetSpectrumName() << "\t"
-        << store.GetProcessingID() << "\t"
-	    << m_redshift << "\t"
-	    << m_merit << "\t"
-        << tplratioName << "\t"
-        << "LineModelSolve" << "\t"
-        << sigma << "\t"
-        << m_ReliabilityLabel << "\t"
-        << snrHa << "\t"
-        << lfHa << "\t"
-        << snrOII << "\t"
-        << lfOII << "\t"
-        << m_TypeLabel << std::endl;
-    */
-}
 
 
 /**

@@ -23,9 +23,6 @@ public:
     CLineMatchingSolveResult();
     virtual ~CLineMatchingSolveResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-
     Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
 
 };

@@ -23,32 +23,6 @@ CSpectraFluxResult::~CSpectraFluxResult()
 	//m_optio = 1;
 }
 
-void CSpectraFluxResult::Save(std::ostream& stream ) const
-{
-	UInt32 p = 13;
-	std::string tx;
-	if      (m_optio ==0) { tx="# Wavelength \tFlux"; }
-	else if (m_optio ==1) { tx="# Wavelength \tFilteredFlux";   }
-	else if (m_optio ==2) { tx="# Wavelength \tErrorFiltered";  }
-
-	stream << tx<< std::endl;
-	for ( Int32 i=0; i<fluxes.size(); i++)
-	{
-		stream.precision(10);
-		stream  <<  wavel[i] << "\t" ;
-
-		stream.precision(p);
-		stream<< fluxes[i] << std::endl;
-	}
-}
-
-void CSpectraFluxResult::SaveLine(std::ostream& stream ) const
-{
-    stream.precision(10);
-    stream << "CSpectraFluxResult" << "\t" << fluxes.size() << std::endl;
-}
-
-
 void CSpectraFluxResult::getData(const std::string& name, double **data, int *size) const
 {
   *size = wavel.size();
