@@ -12,6 +12,10 @@ option(BUILD_STATIC_LIBS OFF)
 option(BUILD_TESTING "Build testings" ON)
 option(CODE_COVERAGE "Test code coverage" OFF)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+  set(CODE_COVERAGE ON)
+endif()
+
 if(BUILD_STATIC_LIBS)
   set(BUILD_SHARED_LIBS OFF)
   set(BUILD_TESTING OFF)
@@ -24,6 +28,7 @@ message(STATUS "BUILD_TESTING = " ${BUILD_TESTING})
 message(STATUS "CODE_COVERAGE = " ${CODE_COVERAGE})
 
 if(BUILD_SHARED_LIBS)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
   set(Boost_USE_STATIC_LIBS OFF)
 else()
   set(Boost_USE_STATIC_LIBS ON)
@@ -169,12 +174,6 @@ endif()
 
 FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
 MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
-
-#SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
-IF(BUILD_SHARED_LIBS)
-  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-ENDIF()
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 #--------------------------------------------------------
 # Preprocessor and linker path
