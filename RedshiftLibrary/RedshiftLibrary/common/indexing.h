@@ -15,9 +15,9 @@ template <typename T> class CIndexing
 
   public:
 
-    static Int32 getIndex(std::vector<T>& list, T z)
+    static Int32 getIndex(const std::vector<T>& list, const T z)
     {
-        typename std::vector<T>::iterator itr = std::find(list.begin(),list.end(), z); 
+        typename std::vector<T>::const_iterator itr = std::find(list.begin(),list.end(), z); 
         if (itr == list.end())
         {
             size_t size = snprintf( nullptr, 0, "Could not find index for %f", z) + 1;
@@ -31,34 +31,41 @@ template <typename T> class CIndexing
     
     //getIndex in orded_values corresponding to value:
     //value[index] can be equal or smaller than Z
-    static bool getClosestLowerIndex(std::vector<T>& ordered_values, const T& value, Int32& i_min) 
+    static bool getClosestLowerIndex(const std::vector<T>& ordered_values, const T& value, Int32& i_min) 
     {
       if(value < ordered_values.front() || value > ordered_values.back())
         {
           return false;
         }
       
-      typename std::vector<T>::iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
+      typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
       if(*it_min > value) it_min = it_min -1; 
 
       i_min = it_min - ordered_values.begin();
       return true;
     }
+
     //the closet at left or right, at epsilon
     static Int32 getCloserIndex(const std::vector<T>& ordered_values, const T& value) 
     {
       Float64 epsilon = 1E-8;
-      if (value - ordered_values.front() < epsilon || value - ordered_values.back()> epsilon)
+      if (((value < ordered_values.front()) && (std::abs(ordered_values.front()-value) > epsilon)) || 
+          (value - ordered_values.back() > epsilon))
         {
           Log.LogError("%.5f does not belong to [%.5f,%.5f]",value,ordered_values.front(),ordered_values.back());
-          return false;
+          return -1;
         }
       typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
 
-      if(std::abs(*it - ordered_values.front()<epsilon)) it = it -1;
+      //check if referring to the last element
+      if(it == ordered_values.end())
+          it = it-1;
 
-      if(std::abs(*it - value) > std::abs( ordered_values[it-1 - ordered_values.begin()] - value)) 
-        it = it -1;
+      else if( it != ordered_values.begin()){
+        //compare diff between value and it and it-1 --> select the it that gives the minimal difference
+        if(std::abs(*it - value) > std::abs( *(it-1) - value)) 
+          it = it -1;
+      }
 
       Int32 i_min = it - ordered_values.begin();
       return i_min;
