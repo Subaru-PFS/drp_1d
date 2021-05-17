@@ -46,17 +46,17 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     std::vector<CMask> maskList;    
 
-    std::string scopeStr = "templatefitting";
+    std::string scopeStr = "tplcombination";
 
     EType _type;
     if(opt_spcComponent=="raw"){
       _type = nType_raw;
     }else if(opt_spcComponent=="nocontinuum"){
       _type = nType_noContinuum;
-      scopeStr = "templatefitting_nocontinuum";
+      scopeStr = "tplcombination_nocontinuum";
     }else if(opt_spcComponent=="continuum"){
       _type = nType_continuumOnly;
-      scopeStr = "templatefitting_continuum";
+      scopeStr = "tplcombination_continuum";
     }else if(opt_spcComponent=="all"){
       _type = nType_all;
     }
