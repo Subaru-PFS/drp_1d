@@ -109,7 +109,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     // save in resultstore pdf results
 
-    resultStore->StoreGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
 
     // save in resultstore candidates results
     resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult );
