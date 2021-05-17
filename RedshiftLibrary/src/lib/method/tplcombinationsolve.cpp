@@ -176,7 +176,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     Int32 enable_dustFitting = 0;
     if(opt_dustFitting=="yes")
     {
-        enable_dustFitting = 1;
+        enable_dustFitting = 1;//here we dont distinguish between using on single ismCoeff or iterating over all coeffs. Default to all!
     }
 
     //prepare the list of components/templates
@@ -227,7 +227,6 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
             scopeStr = "tplcombination_nocontinuum";
-            //
             enable_dustFitting = 0;
         }
 

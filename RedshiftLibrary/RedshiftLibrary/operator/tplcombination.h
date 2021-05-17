@@ -44,7 +44,9 @@ private:
         CSpectrum/*CModelSpectrumResult*/   modelSpectrum;
         TFloat64List    fittingAmplitudes;
         TFloat64List    fittingErrors;
-        std::vector<TFloat64List> ChiSquareInterm;
+        std::vector<TFloat64List>    ChiSquareInterm;
+        std::vector<TFloat64List>    IsmCalzettiCoeffInterm;
+        std::vector<TInt32List>      IgmMeiksinIdxInterm;
         std::vector<std::string> tplNames; //cause combination of templates
         Int32 igmIdx;
         Float64 ebmvCoeff;
