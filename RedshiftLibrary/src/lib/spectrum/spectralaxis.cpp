@@ -31,22 +31,20 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale ) :
-    CSpectrumAxis(std::move(samples)),
-    m_SpectralFlags( 0 )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale ) :
+    CSpectrumAxis(samples)
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
 }
 
-/**
- * Constructor.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples) :
-    CSpectrumAxis(std::move(samples)),
-    m_SpectralFlags( 0 )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis(  TFloat64List && samples, Bool isLogScale ) :
+    CSpectrumAxis(std::move(samples))
 {
+    if( isLogScale )
+        m_SpectralFlags |= nFLags_LogScale;
 }
+
 //only used by client
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
     CSpectrumAxis( samples, n ),
@@ -54,35 +52,6 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) 
 {
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other):
-    CSpectrumAxis(other),
-    m_SpectralFlags(other.m_SpectralFlags),
-    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
-    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
-{}
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(CSpectrumSpectralAxis && other):
-    CSpectrumAxis(other),
-    m_SpectralFlags(other.m_SpectralFlags),
-    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
-    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
-{}
-
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
-{
-    m_Samples = other.m_Samples;
-    m_SpectralFlags  = other.m_SpectralFlags;
-    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
-    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
-    return *this;
-}
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( CSpectrumSpectralAxis&& other)
-{
-    m_Samples = other.m_Samples;
-    m_SpectralFlags  = other.m_SpectralFlags;
-    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
-    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
-    return *this;
-}
 /**
  * Constructor, shifts origin along direction an offset distance.
  */

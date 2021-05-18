@@ -16,11 +16,11 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
 {
   CNoiseFlat ONoiseFlat= CNoiseFlat();
   CSpectrum OSpectrum = CSpectrum();
-  CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
-  fluxAxis.SetSize(3);
+  CSpectrumFluxAxis  fluxAxis(3);
   fluxAxis[0]= 1.0;
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
+  OSpectrum.SetFluxAxis(std::move(fluxAxis));
   BOOST_CHECK_NO_THROW(ONoiseFlat.AddNoise(OSpectrum));
 }
 

@@ -19,14 +19,14 @@ BOOST_AUTO_TEST_CASE(AddNoise_test)
 {
   CNoiseFromFile noiseFromFile = CNoiseFromFile();
   CSpectrum OSpectrum = CSpectrum();
-  CSpectrumFluxAxis& fluxAxis = OSpectrum.GetFluxAxis();
   CSpectrumIOGenericReader reader;
   boost::filesystem::path tempfile = generate_spectrum_fits(123, 3800, 12600);
 
-  fluxAxis.SetSize(3);
+  CSpectrumFluxAxis fluxAxis(3);
   fluxAxis[0]= 1.0;
   fluxAxis[1]= 1.5;
   fluxAxis[2]= 2.5;
+  OSpectrum.SetFluxAxis(std::move(fluxAxis));
 
   BOOST_CHECK_THROW(noiseFromFile.AddNoise(OSpectrum), runtime_error);
 

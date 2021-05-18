@@ -20,9 +20,9 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
 
 }
 
-CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError ):
-   CSpectrumAxis(otherFlux),
-   m_StdError(otherError)
+CSpectrumFluxAxis::CSpectrumFluxAxis( CSpectrumAxis otherFlux,  CSpectrumNoiseAxis  otherError ):
+   CSpectrumAxis(std::move(otherFlux)),
+   m_StdError(std::move(otherError))
 {}
 
 
@@ -32,7 +32,15 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 {
 
 }
-CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples) :
+
+CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List & samples) :
+    CSpectrumAxis(samples),
+    m_StdError(samples.size())//default to 1
+{
+
+}
+
+CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List && samples) :
     CSpectrumAxis(std::move(samples)),
     m_StdError(samples.size())//default to 1
 {
@@ -95,7 +103,8 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
     if( GetSamplesCount() < ( kernelHalfWidth ) + 1 )
         return false;
 
-    CSpectrumAxis tmp = *this;
+
+    TAxisSampleList tmp(m_Samples.size());
 
     Int32 left = 0;
     Int32 right = 0;
@@ -106,9 +115,11 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
         left = max( 0, i - (Int32)kernelHalfWidth );
         right = min( (Int32)GetSamplesCount() - 1, i + (Int32)kernelHalfWidth );
 
-        (*this)[i] = mean.Find( tmp.GetSamples()+left, ( right - left ) +1 );
+        tmp[i] = mean.Find( m_Samples.data()+left, ( right - left ) +1 );
     }
-
+    
+    m_Samples = std::move(tmp);
+    
     return true;
 }
 

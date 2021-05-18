@@ -219,20 +219,12 @@ Bool CContinuumDF::RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noCo
     //fits_close_file(fptr2, &status);
     fits_close_file(fptr2BIS, &status);
 
-
-	CSpectrum s_baseline;
-	CSpectrumFluxAxis& baseline = s_baseline.GetFluxAxis();
-	CSpectrumAxis& wavAxis = s_baseline.GetSpectralAxis();
-	wavAxis =  s.GetSpectralAxis();
-
-	baseline.SetSize(nn);
     CSpectrumFluxAxis fluxAxis = s.GetRawFluxAxis();
 
 	noContinuumFluxAxis.SetSize(nn);
 	for(Int32 j=0;j<nn;j++)
 	{
 		estimatedBaseline[j]        = estimatedBaseline_extd[j+nb];
-		baseline[j]                       =  estimatedBaseline[j]  ;
 		noContinuumFluxAxis[j] = fluxAxis[j]-estimatedBaseline[j];
 	}
 

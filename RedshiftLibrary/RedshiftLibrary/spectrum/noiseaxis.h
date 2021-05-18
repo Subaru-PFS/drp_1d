@@ -13,6 +13,7 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
 {
 
 public:
+    using CSpectrumAxis::CSpectrumAxis;
 
     CSpectrumNoiseAxis() = default;
     CSpectrumNoiseAxis(const CSpectrumNoiseAxis & other) = default; 

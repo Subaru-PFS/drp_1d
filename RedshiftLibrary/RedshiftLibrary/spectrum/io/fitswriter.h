@@ -18,7 +18,7 @@ public:
 	CSpectrumIOFitsWriter();
     ~CSpectrumIOFitsWriter();
 
-    Bool Write( const char* filePath, CSpectrum& s );
+    Bool Write( const char* filePath, const CSpectrum& s ) override;
 
 private:
 

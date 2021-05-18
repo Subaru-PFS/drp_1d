@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   modelSamples[8] = 1.;
   modelSamples[9] = 1.;
 
-  spc.GetFluxAxis() = modelfluxAxis;
-  spc.GetSpectralAxis() = spectralAxis;
+  spc.SetFluxAxis(modelfluxAxis);
+  spc.SetSpectralAxis(std::move(spectralAxis));
   Float64 winsize = 10000;
   TInt32Range range = TInt32Range(0,10);
   TFloat64List mask= TFloat64List();
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
 
   modelSamples[8] = 1.2;
   modelSamples[9] = 1.1;
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(modelfluxAxis);
 
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,&maxFluxnoContinuum, &noise);
   BOOST_CHECK_CLOSE( ratioAmp, 37./3, 1e-12);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   error[7] = 0.8;
   error[8] = 0.9;
   error[9] = 0.3;
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(modelfluxAxis);
   ratioAmp = lineDetection.ComputeFluxes(spc, winsize, range, mask,&maxFluxnoContinuum, &noise);
   BOOST_CHECK_CLOSE( ratioAmp, 3.4/0.66, 1e-12);
   BOOST_CHECK_CLOSE( noise , 0.6, 1e-12);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   for(Int32 k=0; k<n; k++){
     fluxAxis[k]=k;
   }
-  spc.GetSpectralAxis() = spectralAxis;
+  spc.SetSpectralAxis(std::move(spectralAxis));
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
     modelfluxAxis[k]=k;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
   CRay ray2 = CRay("Ray2",mu2, 2, CRay::SYM, 2, A2, sigma2, 5.8);
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(std::move(modelfluxAxis));
 
 
   CLineDetectionResult lineDetectionResult;
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=0; k<n; k++){
     fluxAxis[k]=k;
   }
-  spc.GetSpectralAxis() = spectralAxis;
+  spc.SetSpectralAxis(spectralAxis);
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
     modelfluxAxis[k]=k;
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(Retest){
     modelfluxAxis[k]+=A2/(sigma2 *2.506597694086548) *exp(-(k-mu2)*(k-mu2)/(2*sigma2)/(2*sigma2)) ;
   }
   CRay ray2 = CRay("Ray2",mu2, 2, CRay::SYM, 2, A2, sigma2, 5.8);
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(std::move(modelfluxAxis));
 
 
   CLineDetectionResult lineDetectionResult;
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(std::move(modelfluxAxis));
 
 
   CLineDetectionResult lineDetectionResult2;
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   for(Int32 k=0; k<n; k++){
     fluxAxis[k]=k;
   }
-  spc.GetSpectralAxis() = spectralAxis;
+  spc.SetSpectralAxis(std::move(spectralAxis));
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
     modelfluxAxis[k]=k*0.0001;
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   //   BOOST_TEST_MESSAGE("modelfluxAxis "<< modelfluxAxis[k]);
   // }
 
-  spc.GetFluxAxis() = modelfluxAxis;
+  spc.SetFluxAxis(std::move(modelfluxAxis));
 
 
   TLambdaRange lambdaRange = TLambdaRange(0.0,2000.0); //useless

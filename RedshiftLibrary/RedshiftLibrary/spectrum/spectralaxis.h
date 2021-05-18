@@ -33,17 +33,17 @@ public:
     };
 
     CSpectrumSpectralAxis();
-    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other);
-    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other);
-    CSpectrumSpectralAxis( UInt32 n, Bool isLogScale );
-    CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale  );
-    CSpectrumSpectralAxis( const TFloat64List samples) ;
+    CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other) = default;
+    CSpectrumSpectralAxis(CSpectrumSpectralAxis && other) = default;
+    CSpectrumSpectralAxis( UInt32 n, Bool isLogScale =false);
+    CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale=false  );
+    CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale=false  );
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n);
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     ~CSpectrumSpectralAxis() = default;
 
-    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other);
-    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other);
+    CSpectrumSpectralAxis& operator=(const CSpectrumSpectralAxis& other) = default;
+    CSpectrumSpectralAxis& operator=( CSpectrumSpectralAxis&& other) = default;
 
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
     Float64             GetMeanResolution() const;
@@ -78,7 +78,7 @@ public:
     UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
 private:
 
-    mutable UInt32      m_SpectralFlags;
+    mutable UInt32      m_SpectralFlags = 0;
     mutable Bool        m_regularLogSamplingChecked=false;
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
 

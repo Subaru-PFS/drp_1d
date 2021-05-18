@@ -31,7 +31,7 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
     for(Int32 kr=1; kr<nRolls; kr++)
     {
         //check that the rolls have the same sample counts
-        if(!(spcList[0]->GetSampleCount()==spcList[kr]->GetSampleCount()))
+        if(!(spcList[kr]->GetSampleCount()==nSamples))
         {
             sameGrid = false;
             break;
@@ -39,7 +39,7 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
 
         //check that all spectral axis values are the same
         bool sameSpcAxis = true;
-        for(Int32 ks=0; ks<spcList[0]->GetSampleCount(); ks++)
+        for(Int32 ks=0; ks<nSamples; ks++)
         {
             if(spcList[0]->GetSpectralAxis()[ks] != spcList[kr]->GetSpectralAxis()[ks])
             sameSpcAxis=false;
@@ -56,18 +56,10 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
         return -2;
     }
 
-    //spcCombined = std::shared_ptr<CSpectrum>( new CSpectrum(*spcList[0]) );
-    //*spcCombined = *spcList[0];
-    Float64* weightSumSq = new Float64 [(int)spcCombined.GetSampleCount()]();
-    CSpectrumFluxAxis& combinedFluxAxis = spcCombined.GetFluxAxis();
-    Float64* combinedFlux = combinedFluxAxis.GetSamples();
-    CSpectrumNoiseAxis& combinedNoise = combinedFluxAxis.GetError();
-    for(Int32 ks=0; ks<nSamples; ks++)
-    {
-        weightSumSq[ks]=0.0;
-        combinedFlux[ks]=0.0;
-        combinedNoise[ks]=0.0;
-    }
+    CSpectrumFluxAxis combinedFlux(nSamples);
+    CSpectrumNoiseAxis& combinedNoise = combinedFlux.GetError();
+    TAxisSampleList weightSumSq(nSamples);
+
     for(Int32 kr=0; kr<nRolls; kr++)
     {
         CSpectrumFluxAxis rollFluxAxis = spcList[kr]->GetFluxAxis();
@@ -84,7 +76,8 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
         combinedFlux[ks] *= 1.0/weightSumSq[ks];
         combinedNoise[ks] = sqrt(1.0/weightSumSq[ks]);
     }
+    
+    spcCombined.SetFluxAxis(std::move(combinedFlux));
 
-    delete[] weightSumSq;
     return 0;
 }

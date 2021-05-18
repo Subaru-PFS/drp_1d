@@ -37,12 +37,6 @@ void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
         throw runtime_error("Sample counts don't match");
     }
 
-    TFloat64List& dstError = s1.GetFluxAxis().GetError().GetSamplesVector();
-    const Float64* srcError = m_NoiseSpectrum.GetFluxAxis().GetSamples();
-
-    for( UInt32 i=0; i<s1.GetFluxAxis().GetSamplesCount(); i++ )
-    {
-        dstError[i] = srcError[i];
-    }
-
+    CSpectrumNoiseAxis dstError = CSpectrumNoiseAxis(m_NoiseSpectrum.GetFluxAxis().GetSamplesVector());
+    s1.SetErrorAxis(std::move(dstError));
 }

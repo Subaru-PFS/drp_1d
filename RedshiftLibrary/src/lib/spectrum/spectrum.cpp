@@ -127,6 +127,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_ContinuumFluxAxis = other.m_ContinuumFluxAxis;
     m_WithoutContinuumFluxAxis = other.m_WithoutContinuumFluxAxis;
     m_spcType = other.m_spcType;
+    SetType(m_spcType);
 
     m_LSF = other.m_LSF;
 
@@ -150,13 +151,34 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     parameterStore.Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
     parameterStore.Get( "continuumRemoval.decompScales", nscales, 6.0 );
     parameterStore.Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
-    if( smoothWidth > 0 )
-        GetFluxAxis().ApplyMeanSmooth(smoothWidth);
+    SetType(EType::nType_raw);
+    if( smoothWidth > 0 ){
+        m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
+    }
+    ResetContinuum();
     SetContinuumEstimationMethod(medianRemovalMethod);
     SetMedianWinsize(medianKernelWidth);
     SetDecompScales((Int32)nscales);
     SetWaveletsDFBinPath(dfBinPath);
 }
+
+
+/*
+void CSpectrum::SetRawFluxAxis()
+{
+
+}
+
+void CSpectrum::SetContinuumFluxAxis()
+{
+
+}
+
+void CSpectrum::SetWithoutContinuumFluxAxis()
+{
+
+}
+*/
 
 /**
  * below should be calculated in the case of precomputedfinegrid
@@ -174,8 +196,8 @@ Bool CSpectrum::RebinFineGrid() const
 
   m_pfgFlux.resize(nTgt);
 
-  const TAxisSampleList Ysrc = GetFluxAxis().GetSamplesVector();
-  const TAxisSampleList Xsrc = m_SpectralAxis.GetSamplesVector();
+  const TAxisSampleList & Ysrc = GetFluxAxis().GetSamplesVector();
+  const TAxisSampleList & Xsrc = m_SpectralAxis.GetSamplesVector();
 
   //Initialize and allocate the gsl objects
   gsl_spline* spline = gsl_spline_alloc(gsl_interp_cspline, n);
@@ -202,8 +224,8 @@ void CSpectrum::ResetContinuum() const
 {
     alreadyRemoved = false;
 
-    m_ContinuumFluxAxis.SetSize(0);
-    m_WithoutContinuumFluxAxis.SetSize(0);
+    m_ContinuumFluxAxis.clear();
+    m_WithoutContinuumFluxAxis.clear();
 }
 
 Bool CSpectrum::RemoveContinuum( CContinuum& remover ) const
@@ -411,8 +433,10 @@ const CSpectrum::EType CSpectrum::GetType() const
 void CSpectrum::SetType(const CSpectrum::EType type) const
 {
     if(m_spcType != type)
-        InitPrecomputeFineGrid();
-    m_spcType = type;
+    {   
+        ClearFineGrid();
+        m_spcType = type;
+    }
 }
 
 
@@ -537,8 +561,9 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
     Bool corrected = false;
     Int32 nCorrected = 0;
 
-    TFloat64List& error = GetFluxAxis().GetError().GetSamplesVector();
-    Float64 *flux = GetFluxAxis().GetSamples();
+    CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
+    TFloat64List & error = fluxaxis.GetError().GetSamplesVector();
+    TFloat64List & flux = fluxaxis.GetSamplesVector();
 
     Int32 iMin = m_SpectralAxis.GetIndexAtWaveLength(LambdaMin);
     Int32 iMax = m_SpectralAxis.GetIndexAtWaveLength(LambdaMax);
@@ -549,8 +574,8 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
     for(Int32 i=iMin; i<iMax; i++){
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - RAW sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
         //check noise & flux
-	if (!checkNoise(error[i], i) || !checkFlux(flux[i], i))
-	    continue;
+        if (!checkNoise(error[i], i) || !checkFlux(flux[i], i))
+            continue;
 
         //Log.LogDebug("    CSpectrum::correctSpectrum - debug - valid sample for maxFlux/minNoise. Found err(=%f) and flux=%f", error[i], flux[i]);
         if(error[i] > maxNoise)
@@ -584,6 +609,8 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
             nCorrected++;
         }
     }
+
+    SetFluxAxis(std::move(fluxaxis));
 
     if(nCorrected>0)
     {
@@ -682,9 +709,10 @@ void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
 }
 
 
-void CSpectrum::InitPrecomputeFineGrid() const
+void CSpectrum::ClearFineGrid() const
 {
     m_FineGridInterpolated = false;
+    m_pfgFlux.clear();
 }
 
 ///
@@ -739,10 +767,10 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     }
 
     rebinedSpectrum.ResetContinuum();
-
-    rebinedSpectrum.m_SpectralAxis = targetSpectralAxis; // copy (necessary)
-
-    CSpectrumFluxAxis& rebinedFluxAxis = rebinedSpectrum.GetFluxAxis();
+    rebinedSpectrum.SetType(EType::nType_raw);
+    rebinedSpectrum.SetSpectralAxis(targetSpectralAxis); 
+    
+    CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
     rebinedMask.SetSize(s);
@@ -895,6 +923,8 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
             ErrorRebin[j] = INFINITY;
         j++;
     }
+
+    rebinedSpectrum.SetFluxAxis(std::move(rebinedFluxAxis));
 
     return true;
 }

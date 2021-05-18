@@ -30,7 +30,7 @@ CSpectrumIOFitsWriter::~CSpectrumIOFitsWriter()
 /**
  * 
  */
-Bool CSpectrumIOFitsWriter::Write( const char* filePath, CSpectrum& spectrum )
+Bool CSpectrumIOFitsWriter::Write( const char* filePath, const CSpectrum& spectrum )
 {
     fitsfile *fptr = NULL;
     Int32 status = 0;
@@ -56,12 +56,12 @@ Bool CSpectrumIOFitsWriter::Write( const char* filePath, CSpectrum& spectrum )
     	return false;
     }
 
-    if( fits_write_col(fptr, TDOUBLE, 1, 1, 1, spectrum.GetSampleCount(), spectrum.GetSpectralAxis().GetSamples(), &status ) )
+    if( fits_write_col(fptr, TDOUBLE, 1, 1, 1, spectrum.GetSampleCount(), const_cast<Float64 *>(spectrum.GetSpectralAxis().GetSamples()), &status ) )
     {
     	return false;
     }
 
-    if( fits_write_col(fptr, TDOUBLE, 2, 1, 1, spectrum.GetSampleCount(), spectrum.GetFluxAxis().GetSamples(), &status ) )
+    if( fits_write_col(fptr, TDOUBLE, 2, 1, 1, spectrum.GetSampleCount(), const_cast<Float64 *>(spectrum.GetFluxAxis().GetSamples()), &status ) )
     {
     	return false;
     }

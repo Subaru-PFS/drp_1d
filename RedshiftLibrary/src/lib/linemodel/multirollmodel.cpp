@@ -58,7 +58,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         }
 
         // Estimate continuum spectrum
-        CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
+        const CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
         for(Int32 km=0; km<nModels; km++)
         {
             spcRolls[km]->SetContinuumEstimationMethod(ContinuumFluxAxis);

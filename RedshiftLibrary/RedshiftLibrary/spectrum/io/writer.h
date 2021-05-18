@@ -18,7 +18,7 @@ public:
     CSpectrumIOWriter();
     virtual ~CSpectrumIOWriter();
 
-    virtual Bool Write( const char* path, CSpectrum& s ) = 0;
+    virtual Bool Write( const char* path, const  CSpectrum& s ) = 0;
 
 private:
 

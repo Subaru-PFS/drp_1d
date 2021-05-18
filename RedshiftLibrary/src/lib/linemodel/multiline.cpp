@@ -1095,19 +1095,13 @@ void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpec
     for(Int32 k=0; k<m_Rays.size(); k++)
     { //loop on the interval
         if(m_OutsideLambdaRangeList[k])
-	{
             continue;
-	}
 
         if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
-        {
             continue;
-        }
 
         for(Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
-        {
             flux[i] = continuumfluxAxis[i];
-        }
     }
     return;
 }

@@ -52,10 +52,6 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
 
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
     {
-        m_templatesRebined_bf[ktpl].GetSpectralAxis().SetSize(spectrum.GetSampleCount());
-        m_templatesRebined_bf[ktpl].GetFluxAxis().SetSize(spectrum.GetSampleCount());
-        m_masksRebined_bf[ktpl].SetSize(spectrum.GetSampleCount());
-
         m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti = tplList[ktpl].m_ismCorrectionCalzetti;
         m_templatesRebined_bf[ktpl].m_igmCorrectionMeiksin = tplList[ktpl].m_igmCorrectionMeiksin;
     }

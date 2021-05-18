@@ -158,7 +158,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; 
     m_kDust = kDust;
 
-    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
 
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
@@ -188,7 +188,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(m_redshiftMeiksin); //index for IGM Meiksin redshift range
     Bool igmCorrectionAppliedOnce = false;
 
-    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
 
     for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
@@ -276,7 +276,7 @@ void CTemplate::InitIsmIgmConfig()
     if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
         m_NoIsmIgmFluxAxis = GetFluxAxis();
     else // reset the fluxAxis
-        GetFluxAxis() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
+        GetFluxAxis_() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
     
     SetIsmIgmLambdaRange(0, GetSampleCount()-1);
     

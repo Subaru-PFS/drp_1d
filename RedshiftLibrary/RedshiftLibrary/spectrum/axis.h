@@ -19,10 +19,12 @@ public:
     CSpectrumAxis() = default;
     CSpectrumAxis(const CSpectrumAxis & other) = default;
     CSpectrumAxis(CSpectrumAxis && other) = default;
-    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
+    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 ):m_Samples( n , value){} ;
     CSpectrumAxis( const Float64* samples, UInt32 n );
-    CSpectrumAxis( const TFloat64List samples);
-    ~CSpectrumAxis() = default;
+    CSpectrumAxis( const TFloat64List & samples) : m_Samples(samples){};
+    CSpectrumAxis(  TFloat64List && samples) : m_Samples(std::move(samples)){};
+
+    virtual ~CSpectrumAxis() = default;
     CSpectrumAxis& operator=(const CSpectrumAxis& other) = default;
     CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;
     CSpectrumAxis& operator*=(const Float64 op);

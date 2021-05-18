@@ -205,7 +205,7 @@ private:
 
     void ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
     void ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &ExtremaResults);
-    Float64 FitBayesWidth( CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
+    Float64 FitBayesWidth( const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, Float64 z, Int32 start, Int32 end);
 
     Bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
