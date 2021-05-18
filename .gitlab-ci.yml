@@ -403,7 +403,7 @@ coverage-manylinux2014:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
     - make -j4
     - make test
-    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root .
+    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     paths:
