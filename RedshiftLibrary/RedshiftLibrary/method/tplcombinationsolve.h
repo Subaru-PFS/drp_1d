@@ -3,6 +3,8 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
+#include <RedshiftLibrary/method/tplcombinationsolveresult.h>
+
 #include <RedshiftLibrary/method/solve.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>

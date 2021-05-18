@@ -1,7 +1,5 @@
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
 
-#include <RedshiftLibrary/common/exception.h>
-
 #include <stdio.h>
 #include <float.h>
 #include <RedshiftLibrary/log/log.h>

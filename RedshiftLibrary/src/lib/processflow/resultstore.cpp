@@ -222,6 +222,15 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
         }
       else result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);      
     }
+  else if(method.compare("tplcombinationsolve") == 0)
+  {
+    if (name == "Redshift" || name == "RedshiftError" || name =="RedshiftProba")
+        {
+          result = GetGlobalResult(object_type,method,"candidatesresult");
+          return result.lock()->getCandidateData(rank,name,v);
+        }
+    //else{return -1.;}
+  }
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   result.lock()->getData(name,v);
 }

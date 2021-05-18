@@ -137,13 +137,14 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 
     
-    std::shared_ptr< CTemplateFittingSolveResult> solveResult =
-      std::make_shared< CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
-                                                     ExtremaResult,
+    std::shared_ptr<CTplCombinationSolveResult> solveResult = 
+      std::make_shared<CTplCombinationSolveResult>(  m_opt_pdfcombination=="marg" ? candidateResult->m_ranked_candidates[0].second.ValSumProba : candidateResult->m_ranked_candidates[0].second.ValProba,
+                                                     candidateResult->m_ranked_candidates[0].second.Redshift,
+                                                     resultStore->GetCurrentScopeName(),
                                                      m_opt_pdfcombination,
                                                      pdfz.m_postmargZResult->valEvidenceLog);
 
-    // TBD
+    // TBD 
 
     return solveResult;
 

@@ -26,6 +26,9 @@ namespace NSEpic
     CPdfSolveResult(const std::shared_ptr<const CExtremaResult> & ExtremaResult,
                  const std::string & opt_pdfcombination,
                  Float64 evidence);
+    CPdfSolveResult( Float64 merit, Float64 redshift,
+                      const std::string & opt_pdfcombination,
+                      Float64 evidence);
     virtual ~CPdfSolveResult()=default;
     CPdfSolveResult(CPdfSolveResult const& other) = default;
     CPdfSolveResult& operator=(CPdfSolveResult const& other) = default;
