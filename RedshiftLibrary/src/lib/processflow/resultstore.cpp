@@ -229,7 +229,7 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
           result = GetGlobalResult(object_type,method,"candidatesresult");
           return result.lock()->getCandidateData(rank,name,v);
         }
-    //else{return -1.;}
+    else{v=-1.; return;}
   }
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   result.lock()->getData(name,v);
@@ -244,6 +244,8 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       return result.lock()->getCandidateData(rank,name,v);
     }
   else if(method.compare("templatefittingsolve") == 0) result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);
+  else if(method.compare("tplcombinationsolve") == 0)
+  {v="UNKNOWN";return;}
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   result.lock()->getData(name,v);
 }
@@ -258,6 +260,8 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
       return result.lock()->getCandidateData(rank,name,v);
     }
   else if(method.compare("templatefittingsolve") == 0) result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);
+  else if(method.compare("tplcombinationsolve") == 0)
+  {v=-1; return;}
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
   if (name == "Rank") result.lock()->getCandidateData(rank,name,v);
   else result.lock()->getData(name,v);
@@ -270,6 +274,8 @@ void COperatorResultStore::getCandidateData(const std::string& object_type,const
     {
       if (method == "templatefittingsolve") result = GetGlobalResult(object_type,method,"templatefitting_spc_extrema_",rank);
       else if(method == "linemodelsolve") result = GetGlobalResult(object_type,method,"linemodel_spc_extrema_",rank);
+      else if(method.compare("tplcombinationsolve") == 0)
+      {data={}; return;}
       else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown method "<<method<< " for attribute" <<name );
 
     }
