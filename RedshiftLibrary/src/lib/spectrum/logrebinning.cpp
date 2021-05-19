@@ -45,6 +45,9 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     //TODO: rebin only if parameters to use are different from previously used params
     for(std::string s : inputContext.GetTemplateCatalog()->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
     { 
+        //rebin only galaxy templates
+        if(s!="galaxy")
+            continue;
         // check existence of already  & correctly logsampled templates
         inputContext.GetTemplateCatalog()->m_logsampling = true;
         TTemplateRefList  TplList = inputContext.GetTemplateCatalog()->GetTemplate(TStringList{s});
