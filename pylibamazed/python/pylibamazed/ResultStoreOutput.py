@@ -275,11 +275,11 @@ class ResultStoreOutput(AbstractOutput):
                     model = self.model[object_type][rank].to_records()
                     # model = np.array()
                     lambda_grid_size = self.model[object_type][rank].index.size
-                    candidate.create_dataset("model",
-                                             (lambda_grid_size,),
-                                              cand_multi_types["model"],
-                                              data=model)
-
+                    if solve_method != "tplcombinationsolve":
+                        candidate.create_dataset("model",
+                                                 (lambda_grid_size,),
+                                                 cand_multi_types["model"],
+                                                 data=model)
                     if solve_method == "linemodelsolve":
                         best_continuum = self.best_continuum[object_type][rank]
                         candidate.create_dataset("continuum",
