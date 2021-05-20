@@ -24,8 +24,9 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CRay ray4 = CRay("Em",5520, 2, CRay::SYM, 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
   CRayCatalog::TRayVector _restRayList = {ray1, ray2, ray3, ray4};
 
-  COperatorResultStore resultStore = COperatorResultStore();
-  CParameterStore parameStore = CParameterStore();
+  TScopeStack scopeStack;
+  COperatorResultStore resultStore = COperatorResultStore(scopeStack);
+  CParameterStore parameStore = CParameterStore(scopeStack);
   CDataStore store(resultStore, parameStore);
 
   boost::filesystem::path temp = boost::filesystem::unique_path();
@@ -33,7 +34,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   ofstream stream(temp.c_str());
 
   CModelFittingResult result_empty = CModelFittingResult();
-  CModelFittingResult result_loaded;
 
   CLineModelResult linemodelResult = CLineModelResult();
   linemodelResult.Redshifts.push_back(0.6);
@@ -105,11 +105,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CModelFittingResult result = CModelFittingResult(lineModelSolution, 0.5, 1.2,
 						   _restRayList, -1.0, -1.0 );
 
-  result.Save(stream);
-
-  result_loaded.Load(temp.c_str());
-
-  CLineModelSolution solution = result_loaded.GetLineModelSolution();
+  CLineModelSolution solution = result.GetLineModelSolution();
 
   //BOOST_CHECK_CLOSE( result_loaded.Redshift, 0.5, 1e-18 );
   //BOOST_CHECK_CLOSE( result_loaded.VelocityEmission, -1.0, 1e-18 );

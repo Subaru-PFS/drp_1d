@@ -11,6 +11,7 @@
 %shared_ptr(CLogConsoleHandler)
 %shared_ptr(CLogHandler)
 %shared_ptr(CParameterStore)
+%shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CSingleton<CLog>)
 %shared_ptr(CLSF)
@@ -37,8 +38,6 @@
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/processflow/parameterstore.h"
-#include "RedshiftLibrary/reliability/zclassifierstore.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
@@ -51,11 +50,7 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstant.h"
-#include "RedshiftLibrary/method/linemodelsolve.h"
-#include "RedshiftLibrary/method/linematchingsolve.h"
-#include "RedshiftLibrary/method/templatefittingsolve.h"
-#include "RedshiftLibrary/method/templatefittinglogsolve.h"
-#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/solvedescription.h"
 using namespace NSEpic;
 static PyObject* pParameterException;
 static PyObject* pGlobalException;
@@ -177,6 +172,8 @@ class CRange
 };
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
+typedef std::vector<std::string> TScopeStack;
+
 %template(TFloat64Range) CRange<Float64>;
 
 %apply std::string &OUTPUT { std::string& out_str };
@@ -184,29 +181,6 @@ typedef TFloat64Range   TLambdaRange;
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 
-class CParameterStore {
-%rename(Get_String) Get( const std::string& name, std::string& out_str, std::string = "");
-%rename(Get_Int64) Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0);
-%rename(Get_Float64) Get( const std::string& name, Float64& out_float, Float64 defaultValue = 0);
-%rename(Set_String) Set( const std::string& name, const std::string& v);
-
-public:
-  CParameterStore();
-  void Load( const std::string& path );
-  void FromString(const std::string & json);
-  void Save( const std::string& path ) const;
-  void Get( const std::string& name, std::string& out_str, std::string defaultValue = "" );
-  void Get( const std::string& name, Float64& out_float, Float64 defaultValue  = 0 );
-  void Get( const std::string& name, Int64& out_long, Int64 defaultValue = 0 );
-  void Set( const std::string& name, const std::string& v );
-
-};
-
-class CClassifierStore {
-public:
-  CClassifierStore();
-  bool Load ( const char* dirPath );
-};
 
 class CRayCatalog
 {
@@ -222,44 +196,25 @@ class CTemplateCatalog
 {
 public:
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
-    void Load( const char* filePath );
-    void Add( std::shared_ptr<CTemplate> r );
+    void Add( std::shared_ptr<CTemplate> r);
 };
 
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
-  bool Init(std::shared_ptr<CSpectrum> spectrum,
-            std::string processingID,
-            std::shared_ptr<const CTemplateCatalog> templateCatalog,
-            std::shared_ptr<const CRayCatalog> rayCatalog,
-            std::shared_ptr<CParameterStore> paramStore,
-            std::shared_ptr<CClassifierStore> zqualStore);
-  CDataStore& GetDataStore();
-  COperatorResultStore& GetResultStore();
+  void Init(std::shared_ptr<CSpectrum> spectrum,
+            std::shared_ptr<CTemplateCatalog> templateCatalog,
+            std::shared_ptr<CRayCatalog> rayCatalog,
+            const std::string& paramsJSONString);
+  std::shared_ptr<COperatorResultStore> GetResultStore();
 };
 
-%catches(std::string, std::runtime_error, ...) CProcessFlow::Process;
 
 class CProcessFlow {
 public:
   CProcessFlow();
   void Process( CProcessFlowContext& ctx );
 };
-
-class CDataStore
-{
-public:
-  CDataStore(COperatorResultStore& resultStore, CParameterStore& parameStore);
-  void SaveRedshiftResult(const std::string& dir);
-  void SaveCandidatesResult(const std::string& dir);
-  void SaveReliabilityResult(const std::string& dir);
-  void SaveStellarResult(const std::string& dir);
-  void SaveQsoResult(const std::string& dir);
-  void SaveClassificationResult(const std::string& dir);
-  void SaveAllResults(const std::string& dir, const std::string opt) const;
-};
-
 
 
 class COperatorResultStore
@@ -278,7 +233,7 @@ class COperatorResultStore
 
 
  public:
-  COperatorResultStore();
+  COperatorResultStore(const TScopeStack& scopeStack);
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& out_float) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
   void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
@@ -290,10 +245,6 @@ class COperatorResultStore
   void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
   void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
 
-  
-
-  void test();
-  
 };
 
 %catches(std::string, ...) CSpectrum::LoadSpectrum;
@@ -364,6 +315,7 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 %clear (const Float64* samples, UInt32 n);
 
 
+
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
@@ -415,46 +367,6 @@ class CLSFConstantGaussian : public CLSF
   Float64 GetSigma(Float64 lambda=-1.0) const;
   void SetSigma(const Float64 sigma);
   bool IsValid() const;
-};
-
-class CLineModelSolve
-{
- public:
-  CLineModelSolve(std::string calibrationPath="");
-  ~CLineModelSolve();
-  const std::string GetDescription();
-};
- 
-class CMethodLineMatchingSolve
-{
- public:
-  CMethodLineMatchingSolve();
-  ~CMethodLineMatchingSolve();
-  const std::string GetDescription();
-};
-
-class CMethodTemplateFittingSolve
-{
- public:
-  CMethodTemplateFittingSolve();
-  ~CMethodTemplateFittingSolve();
-  const std::string GetDescription();
-};
-
-class CMethodTemplateFittingLogSolve
-{
- public:
-  CMethodTemplateFittingLogSolve( std::string calibrationPath="" );
-  ~CMethodTemplateFittingLogSolve();
-  const std::string GetDescription();
-};
-
-class CMethodTplcombinationSolve
-{
- public:
-  CMethodTplcombinationSolve();
-  ~CMethodTplcombinationSolve();
-  const std::string GetDescription();
 };
 
   typedef enum ErrorCode
@@ -511,4 +423,13 @@ class ParameterException: public AmzException
   ParameterException(ErrorCode ec,std::string message);
   ParameterException(const ParameterException& e);
   ~ParameterException();  
+};
+
+class CSolveDescription
+{
+ public:
+  CSolveDescription(){}
+  ~CSolveDescription(){}
+    
+  static const std::string GetDescription(const std::string& method);
 };

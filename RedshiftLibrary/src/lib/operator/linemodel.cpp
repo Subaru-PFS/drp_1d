@@ -16,6 +16,7 @@
 #include <RedshiftLibrary/statistics/priorhelper.h>
 
 #include <RedshiftLibrary/common/quicksort.h>
+#include <RedshiftLibrary/common/indexing.h>
 #include <RedshiftLibrary/log/log.h>
 #include <RedshiftLibrary/spectrum/io/fitswriter.h>
 
@@ -54,11 +55,36 @@ COperatorLineModel::COperatorLineModel():m_maxModelSaveCount(20)  { }
  **/
 COperatorLineModel::~COperatorLineModel() {}
 
+void COperatorLineModel::CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts)
+{
+    for(Int32 i = 0; i<m_sortedRedshifts.size(); i+=ratio){
+        largeGridRedshifts.push_back(m_sortedRedshifts[i]);
+    }
+    /*for(Int32 i = m_sortedRedshifts.size()-1;i>=0; i-=ratio){
+        largeGridRedshifts.push_back(m_sortedRedshifts[i]);
+    }
+    std::reverse(largeGridRedshifts.begin(), largeGridRedshifts.end());//*/
+    if (largeGridRedshifts.empty())
+    {
+        m_enableFastFitLargeGrid = 0;
+        Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
+                    "raw %d redshifts will be calculated",
+                    m_sortedRedshifts.size());
+    } else
+    {
+        Log.LogInfo(
+            "  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
+            "will be calculated on the large grid (%d initially)",
+            largeGridRedshifts.size(), m_sortedRedshifts.size());
+    }
+
+}
 /**
  * @brief COperatorLineModel::ComputeFirstPass
  * @return 0=no errors, -1=error
  */
 Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
+                                           const CSpectrum& rebinnedSpectrum,//this is temporary
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
@@ -74,68 +100,30 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const std::string &opt_continuumreest,
                                            const std::string &opt_rules,
                                            const std::string &opt_velocityFitting,
-                                           const Float64 &opt_twosteplargegridstep,
+                                           const UInt32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
                                            const std::string &opt_rigidity,
                                            const std::string &opt_tplratioCatRelPath,
                                            const std::string &opt_offsetCatRelPath)
 {
-
+    TFloat64List largeGridRedshifts;
     // redefine redshift grid
     m_enableFastFitLargeGrid = 0;
-    if (opt_twosteplargegridstep > 0.0)
+    if (opt_twosteplargegridstep_ratio > 1)
     {
         m_enableFastFitLargeGrid = 1;
+        CreateRedshiftLargeGrid(opt_twosteplargegridstep_ratio, largeGridRedshifts);
+    }else{
+        largeGridRedshifts = m_sortedRedshifts;
     }
-
-    TFloat64List largeGridRedshifts;
-    //*
-    if (m_enableFastFitLargeGrid == 1)
+    // save larggrid data
+    /*FILE* f = fopen( "largegrid.txt", "w+" );
+    for( Float64 v :largeGridRedshifts)
     {
-        // Log.LogInfo("  Operator-Linemodel:  Fast Fit Large Grid enabled");
-        // calculate on a wider grid, defined by a minimum step
-        Float64 dz_thres = opt_twosteplargegridstep;
-        Int32 lastKeptInd = 0;
-        largeGridRedshifts.push_back(m_sortedRedshifts[lastKeptInd]);
-        for (Int32 i = 1; i < m_sortedRedshifts.size() - 1; i++)
-        {
-            Bool conditionKeepSample = true;
-            if (opt_twosteplargegridsampling == "log")
-            {
-                Float64 onepz = abs(1. + m_sortedRedshifts[i]);
-                conditionKeepSample =
-                    (abs(m_sortedRedshifts[i] -
-                         m_sortedRedshifts[lastKeptInd]) < onepz * dz_thres) &&
-                    (abs(m_sortedRedshifts[i + 1] - m_sortedRedshifts[i]) <
-                     onepz * dz_thres);
-            } else
-            {
-                conditionKeepSample =
-                    (abs(m_sortedRedshifts[i] -
-                         m_sortedRedshifts[lastKeptInd]) < dz_thres) &&
-                    (abs(m_sortedRedshifts[i + 1] - m_sortedRedshifts[i]) <
-                     dz_thres);
-            }
-            if (!conditionKeepSample) 
-            {
-                largeGridRedshifts.push_back(m_sortedRedshifts[i]);
-                lastKeptInd = i;
-            }
-        }
-        if (largeGridRedshifts.empty())
-        {
-            m_enableFastFitLargeGrid = 0;
-            Log.LogInfo("  Operator-Linemodel: FastFitLargeGrid auto disabled: "
-                        "raw %d redshifts will be calculated",
-                        m_sortedRedshifts.size());
-        } else
-        {
-            Log.LogInfo(
-                "  Operator-Linemodel: FastFitLargeGrid enabled: %d redshifts "
-                "will be calculated on the large grid (%d initially)",
-                largeGridRedshifts.size(), m_sortedRedshifts.size());
-        }
+        fprintf( f, "%f\n", v);
     }
+    fclose( f );
+    */
 
     Int32 typeFilter = -1;
     if (opt_lineTypeFilter == "A")
@@ -161,15 +149,18 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
     bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
-
+    /*bool currentsampling = tplCatalog.m_logsampling;
+    if(m_opt_tplfit_fftprocessing)
+        tplCatalog.m_logsampling = 1;//choose to only orthogonolize one catalog: could be problematic if second pass fit requires other templates
+    else tplCatalog.m_logsampling = 0;*/
     // prepare continuum templates catalog
+    std::string opt_fittingmethod_ortho="hybrid";
     CTemplatesOrthogonalization tplOrtho(
                 tplCatalog,
                 tplCategoryList,
                 opt_calibrationPath,
                 restRayList,
-                opt_fittingmethod,
-                m_opt_continuumcomponent,
+                opt_fittingmethod_ortho,
                 opt_lineWidthType,
                 m_opt_enableLSF,
                 m_linesmodel_nsigmasupport,
@@ -180,6 +171,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 opt_rigidity,
                 enableOrtho);
 
+    //tplCatalog.m_logsampling = currentsampling;
     // CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
     CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
     Int32 ctlgIdx = 0; // only one ortho config for now
@@ -188,12 +180,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          tplCatalog,
-                                                         *m_orthoTplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
                                                          restRayList,
                                                          opt_fittingmethod,
                                                          m_opt_continuumcomponent,
+                                                         m_opt_continuum_neg_amp_threshold,
                                                          opt_lineWidthType,
                                                          m_opt_enableLSF,
                                                          m_linesmodel_nsigmasupport,
@@ -303,15 +295,15 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
     m_model->m_opt_secondpass_fittingmethod = opt_fittingmethod;
 
-    Int32 opt_tplfit_integer_chi2_dustfit = -1;
+    Int32 opt_tplfit_integer_chi2_ebmv = -1;
     if(m_opt_tplfit_dustFit)
     {
-        opt_tplfit_integer_chi2_dustfit=-10;
+        opt_tplfit_integer_chi2_ebmv=-10;
     }
     //should be replaced with option passed in param.json?
     Int32 observedFrame = 0;
     //passing the ignorelinesSupport option to the secondpass; //before it was hardcoded to 0
-    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_dustfit, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
+    m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_ebmv, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
 
     m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
     m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
@@ -377,17 +369,30 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
     m_phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
     m_model->SetFitContinuum_PriorHelper(m_phelperContinuum);
+
+
+    Log.LogInfo("  Operator-Linemodel: start processing");
+
+    // Set model parameters to FIRST-PASS
+    m_model->setPassMode(1);
+    Log.LogInfo(
+        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+    Log.LogInfo("  Operator-Linemodel: now computing first-pass");
+    Log.LogInfo(
+        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
+
     // fit continuum
-    bool enableFitContinuumPrecomputed = true;
-    if (enableFitContinuumPrecomputed && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto") )
+    ////////////////////
+    if (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
     {
-        PrecomputeContinuumFit(spectrum,
-                               *m_orthoTplCatalog,
-                               tplCategoryList,
-                               opt_calibrationPath,
-                               lambdaRange,
-                               largeGridRedshifts,
-                               m_opt_tplfit_ignoreLinesSupport);
+        PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
+                    *m_orthoTplCatalog,
+                    tplCategoryList,
+                    opt_calibrationPath,
+                    lambdaRange,
+                    largeGridRedshifts,
+                    m_opt_tplfit_ignoreLinesSupport);
+
     }else{
         if(m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
         {
@@ -423,10 +428,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    baselineResult); return NULL;
     //    // end of hack
     //    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    m_result->nSpcSamples = m_model->getSpcNSamples(lambdaRange);
-    m_result->dTransposeD = m_model->getDTransposeD(lambdaRange);
-    m_result->cstLog = m_model->getLikelihood_cstLog(lambdaRange);
+    m_result->nSpcSamples = m_model->getSpcNSamples(clampedlambdaRange);
+    m_result->dTransposeD = m_model->getDTransposeD(clampedlambdaRange);
+    m_result->cstLog = m_model->getLikelihood_cstLog(clampedlambdaRange);
 
     Int32 contreest_iterations = 0;
     if (opt_continuumreest == "always")
@@ -450,15 +457,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 "0 means disabled)",
                 m_estimateLeastSquareFast);
 
-    Log.LogInfo("  Operator-Linemodel: start processing");
-
-    // Set model parameters to FIRST-PASS
-    m_model->setPassMode(1);
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
-    Log.LogInfo("  Operator-Linemodel: now computing first-pass");
-    Log.LogInfo(
-        "  Operator-Linemodel: ---------- ---------- ---------- ----------");
 
     //
     TBoolList allAmplitudesZero;
@@ -478,11 +476,10 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //#pragma omp parallel for
     for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
     {
-      //TODO [ml] unitialized value in test below
         if (m_enableFastFitLargeGrid == 0 || m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             m_result->ChiSquare[i] = m_model->fit(m_result->Redshifts[i],
-                                                  lambdaRange,
+                                                  clampedlambdaRange,
                                                   m_result->LineModelSolutions[i],
                                                   m_result->ContinuumModelSolutions[i],
                                                   contreest_iterations,
@@ -504,7 +501,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                        m_model->getLeastSquareContinuumMerit(lambdaRange);
+                        m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -537,7 +534,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                    m_model->getLeastSquareContinuumMerit(lambdaRange);
+                    m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -623,6 +620,7 @@ Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
  * @candidateIdx@ is also an indicator of pass mode
  * */
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
+                                                const CSpectrum &rebinnedSpectrum,
                                                 const CTemplateCatalog &tplCatalog,
                                                 const TStringList &tplCategoryList,
                                                 const std::string opt_calibrationPath,
@@ -650,47 +648,45 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
     std::vector<std::string> chisquareResultsTplName;
 
-    if (redshiftsTplFit.size() < 100 && m_opt_tplfit_method != "templatefitting")
-        // warning arbitrary number of redshifts threshold
-        // to consider templateFitting faster than chisquarelog
+    bool fftprocessing = m_model->GetPassNumber()==1 ? m_opt_tplfit_fftprocessing : m_opt_tplfit_fftprocessing_secondpass;
+    const Int32 fftprocessing_min_sample_nb = 100; // warning arbitrary number of redshift samples threshold below which 
+                                             // fftprocessing is considered slower
+                                             // TB revised
+    if ((redshiftsTplFit.size() < fftprocessing_min_sample_nb) && fftprocessing )
     {
-        m_opt_tplfit_method = "templatefitting";
-        m_opt_tplfit_method_secondpass = "templatefitting";
-        Log.LogInfo("  Operator-Linemodel: precomputing- auto select templateFitting operator"
+        fftprocessing = false;
+        Log.LogInfo("  Operator-Linemodel: precomputing- auto deselect fft processing"
                     " (faster when only few redshifts calc. points)");
     }
 
+    Bool currentSampling = tplCatalog.m_logsampling; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
-    Log.LogInfo("  Operator-Linemodel: precomputing- with operator = %s",
-                m_opt_tplfit_method.c_str());
+    Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
+                fftprocessing);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
                 m_opt_tplfit_dustFit);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_igm = %d",
                 m_opt_tplfit_extinction);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum opt_interp = %s",
                 opt_interp.c_str());
-    //reuse the shared pointer for secondpass
-    if(templateFittingOperator == nullptr) {
-        if (m_opt_tplfit_method == "templatefittinglog" && m_opt_tplfit_method_secondpass == "templatefittinglog")
-        {
-            bool enableLogRebin = true;
-            templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(opt_calibrationPath);
-            std::shared_ptr<COperatorTemplateFittingLog> templateFittingLogOperator =
-                std::dynamic_pointer_cast<COperatorTemplateFittingLog>(templateFittingOperator);
-            templateFittingLogOperator->enableSpcLogRebin(enableLogRebin);
-        } else if (m_opt_tplfit_method == "templatefitting" && m_opt_tplfit_method_secondpass == "templatefitting")
-        {
+
+    TFloat64Range clampedlambdaRange;
+    if (fftprocessing)  
+    {
+        if(templateFittingOperator == nullptr || !templateFittingOperator->IsFFTProcessing()) //else reuse the shared pointer for secondpass
+            templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>();
+        rebinnedSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        tplCatalog.m_logsampling = true;
+    } else 
+    {
+        if(templateFittingOperator == nullptr || templateFittingOperator->IsFFTProcessing()) //else reuse the shared pointer for secondpass
             templateFittingOperator = std::make_shared<COperatorTemplateFitting>();
-        } else
-        {
-            Log.LogError("  Operator-Linemodel: unable to parse templatefitting continuum fit operator");
-            throw std::runtime_error("  Operator-Linemodel: unable to parse templatefitting continuum fit operator. use templatefitting or templatefittinglog");
-        }
+        spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+        tplCatalog.m_logsampling = false;
     }
-   
 
     Float64 overlapThreshold = 1.0;
-    if (m_opt_tplfit_method != "templatefitting" && ignoreLinesSupport==true)
+    if (fftprocessing && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
         Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
@@ -704,7 +700,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         maskList.resize(redshiftsTplFit.size());
         for(UInt32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
         {
-            m_model->initModelAtZ(redshiftsTplFit[kztplfit], lambdaRange, spectrum.GetSpectralAxis());
+            m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, fftprocessing?rebinnedSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
             maskList[kztplfit]=m_model->getOutsideLinesMask();
         }
 
@@ -718,13 +714,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     duration_tplfitmaskprep_seconds);
     }
 
-    Int32 opt_tplfit_integer_chi2_dustfit = -1;
+    Int32 opt_tplfit_integer_chi2_ebmv = -1;
     if(m_opt_tplfit_dustFit)
     {
-        opt_tplfit_integer_chi2_dustfit=-10;
+        opt_tplfit_integer_chi2_ebmv=-10;
     }
 
-    Float64 meiksinIdx = -1, dustCoeff = -1;
+    Float64 meiksinIdx = -1, EbmvCoeff = -1;
     Bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
@@ -736,8 +732,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
             keepismigm = true;//telling that we want to keep the ism and igm indexes
             meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
-            dustCoeff =  m_firstpass_extremaResult->FittedTplDustCoeff[candidateIdx];
-            opt_tplfit_integer_chi2_dustfit = Int32(dustCoeff*10);
+            EbmvCoeff =  m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
+            //access any template and retrieve the ismcorrection object
+            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(tplCategoryList[0], 0)->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+
         }
     }          
 
@@ -749,11 +747,11 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
             //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
-            const CTemplate &tpl = tplCatalog.GetTemplate(category, j);
+            std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
             
             //case where we only want to refit using one template:
             if( m_continnuum_fit_option == 3){
-                if(tpl.GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
+                if(tpl->GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
                     continue;   
                 else
                     found= true;          
@@ -761,7 +759,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
 
             CPriorHelper::TPriorZEList zePriorData;
             //*
-            bool retGetPrior = m_phelperContinuum->GetTplPriorData(tpl.GetName(), redshiftsTplFit, zePriorData);
+            bool retGetPrior = m_phelperContinuum->GetTplPriorData(tpl->GetName(), redshiftsTplFit, zePriorData);
             if(retGetPrior==false)
             {
                 Log.LogError("  Operator-Linemodel: Failed to get prior for chi2 continuum precomp fit. aborting...");
@@ -774,28 +772,28 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             auto templatefittingResult =
                 std::dynamic_pointer_cast<CTemplateFittingResult>(
                     templateFittingOperator->Compute(
-                            spectrum,
-                            tpl,
-                            lambdaRange,
+                            fftprocessing?rebinnedSpectrum:spectrum,
+                            *tpl,
+                            clampedlambdaRange,
                             redshiftsTplFit,
                             overlapThreshold,
                             maskList,
                             opt_interp,
                             m_opt_tplfit_extinction,
-                            opt_tplfit_integer_chi2_dustfit,
+                            opt_tplfit_integer_chi2_ebmv,
                             zePriorData,
                             keepismigm,
-                            dustCoeff,
+                            EbmvCoeff,
                             meiksinIdx));
 
             if (!templatefittingResult)
             {
                 Log.LogInfo("  Operator-Linemodel failed to compute chisquare value for tpl=%s",
-                            tpl.GetName().c_str());
+                            tpl->GetName().c_str());
             } else
             {
                 chisquareResultsAllTpl.push_back(templatefittingResult);
-                chisquareResultsTplName.push_back(tpl.GetName());
+                chisquareResultsTplName.push_back(tpl->GetName());
             }
             if(found)
                 break;
@@ -817,13 +815,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     chisquareResultsAllTpl[j]);
 
             bool retAdd = tplfitStore->Add(chisquareResultsTplName[j],
-                             chisquareResult->FitDustCoeff[i],
+                             chisquareResult->FitEbmvCoeff[i],
                              chisquareResult->FitMeiksinIdx[i],
                              redshift,
                              chisquareResult->ChiSquare[i],
                              chisquareResult->FitAmplitude[i],
                              chisquareResult->FitAmplitudeError[i],
-                             chisquareResult->FitAmplitudeNegative[i],
+                             chisquareResult->FitAmplitudeSigma[i],
                              chisquareResult->FitDtM[i],
                              chisquareResult->FitMtM[i],
                              chisquareResult->LogPrior[i]);
@@ -860,6 +858,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
     
     m_model->SetFitContinuum_FitStore(tplfitStore);
+    tplCatalog.m_logsampling = currentSampling; 
 
     boost::chrono::thread_clock::time_point stop_tplfitprecompute =
         boost::chrono::thread_clock::now();
@@ -872,18 +871,22 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     Log.LogDetail("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
 
 
-    // Check if best continuum amplitudes are negative fitted amplitudes
-    Int32 icontinuum = 0;
-    for (Int32 i = 0; i < nredshiftsTplFitResults; i++)
-    {
-        Float64 redshift = redshiftsTplFit[i];
-        CTemplatesFitStore::TemplateFitValues fitValues = tplfitStore->GetFitValues(redshift, icontinuum);
-        bool bestIsNegative = fitValues.fitAmplitudeNegative;
-        if(bestIsNegative) {
-            Log.LogError("  Operator-Linemodel: Negative amplitude found at z=%.5f: best continuum tpl %s, amplitude = %e & error = %e", redshift, fitValues.tplName.c_str(), fitValues.fitAmplitude, fitValues.fitAmplitudeError);
+    // Check if best continuum amplitudes are negative fitted amplitudes at all z
+    CTemplatesFitStore::TemplateFitValues fitValues;
+    Float64 max_fitamplitudeSigma_z=NAN;
+    Float64 max_fitamplitudeSigma=tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
+    if(max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
+        if (m_opt_continuumcomponent != "tplfitauto")
+        {
+            Log.LogError("  Operator-Linemodel: Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
             throw runtime_error("  Operator-Linemodel: Failed to compute continuum fit. Negative amplitude detected! aborting...");
-        }
+        }else{
+            Log.LogWarning(" Operator-Linemodel: Switching to spectrum continuum since Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
+            m_opt_continuumcomponent = "fromspectrum";
+            m_model->SetContinuumComponent("fromspectrum"); 
     }
+}
+
 }
 
 /**
@@ -895,18 +898,13 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
 {
     TFloat64List extendedList;
 
-    const TFloat64Range redshiftsRange(m_result->Redshifts);    
-    Float64 left_border =
-        max(redshiftsRange.GetBegin(), z - m_secondPass_halfwindowsize*(1.+z));
-    Float64 right_border =
-        min(redshiftsRange.GetEnd(), z + m_secondPass_halfwindowsize*(1.+z));
-    for (Int32 i = 0; i < m_result->Redshifts.size(); i++)
+    const Float64 halfwindowsize_z = m_secondPass_halfwindowsize*(1.+z);
+    TFloat64Range secondpass_window = {z - halfwindowsize_z, z + halfwindowsize_z};
+    Int32 i_min, i_max;
+    secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
+    for (Int32 i=i_min; i<=i_max; ++i)
     {
-        if (m_result->Redshifts[i] >= left_border &&
-            m_result->Redshifts[i] <= right_border)
-        {
-            extendedList.push_back( m_result->Redshifts[i]);
-        }
+        extendedList.push_back( m_result->Redshifts[i]);
     }
 
     return extendedList;
@@ -923,7 +921,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
 {
     m_firstpass_extremaResult = std::make_shared<CLineModelExtremaResult>(candidatesz.size());
 
-    m_firstpass_extremaResult->Candidates = candidatesz;
+    m_firstpass_extremaResult->m_ranked_candidates = candidatesz;
 
     // extend z around the extrema
     for (Int32 j = 0; j < candidatesz.size(); j++)
@@ -940,10 +938,10 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
     }
 
     //now preparing the candidates extrema results
-    for (Int32 i = 0; i < m_firstpass_extremaResult->Candidates.size(); i++)
+    for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         // find the index in the zaxis results
-        Int32 idx = m_result->getRedshiftIndex(candidatesz[i].second.Redshift);
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
@@ -954,19 +952,13 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->FittedTplAmplitude[i] = m_result->ContinuumModelSolutions[idx].tplAmplitude;
         m_firstpass_extremaResult->FittedTplAmplitudeError[i] = m_result->ContinuumModelSolutions[idx].tplAmplitudeError;
         m_firstpass_extremaResult->FittedTplMerit[i] = m_result->ContinuumModelSolutions[idx].tplMerit;
-        m_firstpass_extremaResult->FittedTplDustCoeff[i] = m_result->ContinuumModelSolutions[idx].tplDustCoeff;
+        m_firstpass_extremaResult->FittedTplEbmvCoeff[i] = m_result->ContinuumModelSolutions[idx].tplEbmvCoeff;
         m_firstpass_extremaResult->FittedTplMeiksinIdx[i] = m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
         m_firstpass_extremaResult->FittedTplRedshift[i] = m_result->ContinuumModelSolutions[idx].tplRedshift;
         m_firstpass_extremaResult->FittedTplDtm[i] = m_result->ContinuumModelSolutions[idx].tplDtm;
         m_firstpass_extremaResult->FittedTplMtm[i] = m_result->ContinuumModelSolutions[idx].tplMtm;
         m_firstpass_extremaResult->FittedTplLogPrior[i] = m_result->ContinuumModelSolutions[idx].tplLogPrior;
         m_firstpass_extremaResult->FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
-
-        if(m_result->ContinuumModelSolutions[idx].tplName=="")
-        {
-            Log.LogError(" Saving first pass extremum w. ContinuumModelSolutions tplname=%s", m_result->ContinuumModelSolutions[idx].tplName.c_str());
-            Log.LogError(" Saving first pass extremum w. result idx=%d, w. m_result->Redshifts[idx]=%f", idx, m_result->Redshifts[idx]);
-        }
 
         //... TODO: more first pass results can be saved here if needed
     }
@@ -1004,7 +996,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
         }
 
         //append the candidate to m_firstpass_extremaResult
-        m_firstpass_extremaResult->Candidates[startIdx + keb] = firstpass_results_b->Candidates[keb];
+        m_firstpass_extremaResult->m_ranked_candidates[startIdx + keb] = firstpass_results_b->m_ranked_candidates[keb];
             
         // extend z around the extrema
         m_firstpass_extremaResult->ExtendedRedshifts[startIdx + keb] = SpanRedshiftWindow(z_fpb);
@@ -1020,7 +1012,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
             m_firstpass_extremaResult->FittedTplAmplitude.push_back(firstpass_results_b->FittedTplAmplitude[keb]);
             m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(firstpass_results_b->FittedTplAmplitudeError[keb]);
             m_firstpass_extremaResult->FittedTplMerit.push_back(firstpass_results_b->FittedTplMerit[keb]);
-            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(firstpass_results_b->FittedTplDustCoeff[keb]);
+            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(firstpass_results_b->FittedTplEbmvCoeff[keb]);
             m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(firstpass_results_b->FittedTplMeiksinIdx[keb]);
             m_firstpass_extremaResult->FittedTplRedshift.push_back(firstpass_results_b->FittedTplRedshift[keb]);
             m_firstpass_extremaResult->FittedTplDtm.push_back(firstpass_results_b->FittedTplDtm[keb]);
@@ -1030,14 +1022,14 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
         }else{
             // find the index in the zaxis results
           
-            Int32 idx =  m_result->getRedshiftIndex(z_fpb);
+            Int32 idx =  CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
           
             //save the continuum fitting parameters from first pass
             m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
             m_firstpass_extremaResult->FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
             m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitudeError);
             m_firstpass_extremaResult->FittedTplMerit.push_back(m_result->ContinuumModelSolutions[idx].tplMerit);
-            m_firstpass_extremaResult->FittedTplDustCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplDustCoeff);
+            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplEbmvCoeff);
             m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(m_result->ContinuumModelSolutions[idx].tplMeiksinIdx);
             m_firstpass_extremaResult->FittedTplRedshift.push_back(m_result->ContinuumModelSolutions[idx].tplRedshift);
             m_firstpass_extremaResult->FittedTplDtm.push_back(m_result->ContinuumModelSolutions[idx].tplDtm);
@@ -1058,6 +1050,7 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLi
 }
 
 Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
+                                            const CSpectrum &rebinnedSpectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
@@ -1117,7 +1110,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
-                PrecomputeContinuumFit(spectrum,
+                PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
                                 *m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
@@ -1125,6 +1118,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 m_opt_tplfit_ignoreLinesSupport,
                                 i);
+
             }
         }else{
             //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
@@ -1148,7 +1142,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_secondpass_parameters_extremaResult.FittedTplAmplitude[i] = m_firstpass_extremaResult->FittedTplAmplitude[i];
             m_secondpass_parameters_extremaResult.FittedTplAmplitudeError[i] = m_firstpass_extremaResult->FittedTplAmplitudeError[i];
             m_secondpass_parameters_extremaResult.FittedTplMerit[i] = m_firstpass_extremaResult->FittedTplMerit[i];
-            m_secondpass_parameters_extremaResult.FittedTplDustCoeff[i] = m_firstpass_extremaResult->FittedTplDustCoeff[i];
+            m_secondpass_parameters_extremaResult.FittedTplEbmvCoeff[i] = m_firstpass_extremaResult->FittedTplEbmvCoeff[i];
             m_secondpass_parameters_extremaResult.FittedTplMeiksinIdx[i] = m_firstpass_extremaResult->FittedTplMeiksinIdx[i];
             m_secondpass_parameters_extremaResult.FittedTplDtm[i] = m_firstpass_extremaResult->FittedTplDtm[i];
             m_secondpass_parameters_extremaResult.FittedTplMtm[i] = m_firstpass_extremaResult->FittedTplMtm[i];
@@ -1157,11 +1151,12 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_secondpass_parameters_extremaResult.FittedTplpCoeffs[i] = m_firstpass_extremaResult->FittedTplpCoeffs[i];
         }
     } 
-
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
     //now that we recomputed what should be recomputed, we define once for all the secondpass 
     // estimate second pass parameters (mainly elv, alv...)
     EstimateSecondPassParameters(spectrum,
-                                 lambdaRange,
+                                 clampedlambdaRange,
                                  opt_continuumreest,
                                  opt_fittingmethod,
                                  opt_rigidity,
@@ -1174,7 +1169,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                  opt_absvelocityfitstep);
 
     // recompute the fine grid results around the extrema
-    Int32 ret = RecomputeAroundCandidates(lambdaRange,
+    Int32 ret = RecomputeAroundCandidates(clampedlambdaRange,
                                           opt_continuumreest,
                                           m_continnuum_fit_option); //0: retry all cont. templates at this stage
 
@@ -1193,14 +1188,14 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             }
         }
         m_model->SetFittingMethod(m_opt_secondpasslcfittingmethod);
-        RecomputeAroundCandidates(lambdaRange,
+        RecomputeAroundCandidates(clampedlambdaRange,
                                   opt_continuumreest,
                                   2,
                                   true);
         m_model->SetFittingMethod(opt_fittingmethod);
 
         Log.LogInfo("  Operator-Linemodel: now re-computing the final chi2 for each candidate");
-        RecomputeAroundCandidates(lambdaRange,
+        RecomputeAroundCandidates(clampedlambdaRange,
                                   opt_continuumreest,
                                   2);
     }
@@ -1250,7 +1245,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
         Float64 z = zCandidates[i].second.Redshift;
 
         // find the index in the zaxis results
-        Int32 idx = m_result->getRedshiftIndex(z);
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
         Float64 m = m_result->ChiSquare[idx];
         
         Int32 i_2pass = -1;
@@ -1270,7 +1265,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
                                            m_result->ContinuumModelSolutions[idx].tplAmplitude,
                                            m_result->ContinuumModelSolutions[idx].tplAmplitudeError,
                                            m_result->ContinuumModelSolutions[idx].tplMerit,   
-                                           m_result->ContinuumModelSolutions[idx].tplDustCoeff,
+                                           m_result->ContinuumModelSolutions[idx].tplEbmvCoeff,
                                            m_result->ContinuumModelSolutions[idx].tplMeiksinIdx,
                                            m_result->ContinuumModelSolutions[idx].tplRedshift,
                                            m_result->ContinuumModelSolutions[idx].tplDtm,
@@ -1427,7 +1422,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
                                 m_model->getFitContinuum_tplMerit(),
                                 m_model->getFitContinuum_tplAmplitude(),
                                 m_model->getFitContinuum_tplAmplitudeError(),
-                                m_model->getFitContinuum_tplIsmDustCoeff(),
+                                m_model->getFitContinuum_tplIsmEbmvCoeff(),
                                 m_model->getFitContinuum_tplIgmMeiksinIdx(),
                                 m_model->getFitContinuum_snr());
                 ExtremaResult->m_savedModelContinuumFittingResults[i] = resultfitcontinuummodel;
@@ -1463,7 +1458,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
             savedModels++;
         }
         
-        ExtremaResult->Candidates = zCandidates;
+        ExtremaResult->m_ranked_candidates = zCandidates;
 
         ExtremaResult->Elv[i] = m_model->GetVelocityEmission();
         ExtremaResult->Alv[i] = m_model->GetVelocityAbsorption();
@@ -1552,7 +1547,7 @@ std::shared_ptr<CLineModelExtremaResult> COperatorLineModel::SaveExtremaResults(
         ExtremaResult->FittedTplAmplitude[i] = m_model->getFitContinuum_tplAmplitude();
         ExtremaResult->FittedTplAmplitudeError[i] = m_model->getFitContinuum_tplAmplitudeError();
         ExtremaResult->FittedTplMerit[i] = m_model->getFitContinuum_tplMerit();
-        ExtremaResult->FittedTplDustCoeff[i] = m_model->getFitContinuum_tplIsmDustCoeff();
+        ExtremaResult->FittedTplEbmvCoeff[i] = m_model->getFitContinuum_tplIsmEbmvCoeff();
         ExtremaResult->FittedTplMeiksinIdx[i] = m_model->getFitContinuum_tplIgmMeiksinIdx();
 
         CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
@@ -1635,7 +1630,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     }
 
     //std::cout << "Second Pass" << std::endl;
-    m_secondpass_parameters_extremaResult.Candidates = m_firstpass_extremaResult->Candidates;
+    m_secondpass_parameters_extremaResult.m_ranked_candidates = m_firstpass_extremaResult->m_ranked_candidates;
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         Log.LogInfo("");
@@ -1645,27 +1640,27 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         Float64 m = m_firstpass_extremaResult->ValProba(i);
 
         m_secondpass_parameters_extremaResult.ExtendedRedshifts[i] = m_firstpass_extremaResult->ExtendedRedshifts[i];
-
-        //inject continuumFitValues of current candidate 
-        if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
-            m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-        else{
-            m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult->FittedTplName[i],
-                                            m_firstpass_extremaResult->FittedTplAmplitude[i],
-                                            m_firstpass_extremaResult->FittedTplAmplitudeError[i],
-                                            m_firstpass_extremaResult->FittedTplMerit[i],
-                                            m_firstpass_extremaResult->FittedTplDustCoeff[i],
-                                            m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
-                                            m_firstpass_extremaResult->FittedTplRedshift[i],
-                                            m_firstpass_extremaResult->FittedTplDtm[i],
-                                            m_firstpass_extremaResult->FittedTplMtm[i],
-                                            m_firstpass_extremaResult->FittedTplLogPrior[i],
-                                            m_firstpass_extremaResult->FittedTplpCoeffs[i]);
-            m_model->SetFitContinuum_Option(2);
+        if(m_opt_continuumcomponent== "tplfit" || m_opt_continuumcomponent== "tplfitauto"){   
+            //inject continuumFitValues of current candidate 
+            if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
+                m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
+            else{
+                m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult->FittedTplName[i],
+                                                m_firstpass_extremaResult->FittedTplAmplitude[i],
+                                                m_firstpass_extremaResult->FittedTplAmplitudeError[i],
+                                                m_firstpass_extremaResult->FittedTplMerit[i],
+                                                m_firstpass_extremaResult->FittedTplEbmvCoeff[i],
+                                                m_firstpass_extremaResult->FittedTplMeiksinIdx[i],
+                                                m_firstpass_extremaResult->FittedTplRedshift[i],
+                                                m_firstpass_extremaResult->FittedTplDtm[i],
+                                                m_firstpass_extremaResult->FittedTplMtm[i],
+                                                m_firstpass_extremaResult->FittedTplLogPrior[i],
+                                                m_firstpass_extremaResult->FittedTplpCoeffs[i]);
+                m_model->SetFitContinuum_Option(2);
+            }
         }
-
         // find the index in the zaxis results
-        Int32 idx = -1; idx = m_result->getRedshiftIndex(z); 
+        Int32 idx = -1; idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z); 
 
         // reestimate the model (eventually with continuum reestimation) on
         // the extrema selected
@@ -1836,9 +1831,13 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         Float64 meritMin = DBL_MAX;
                         Float64 vOptim = -1.0;
                         Float64 z_vOptim = -1.0;
-                        const Int32 half_nb_zsteps =6;
-                        Int32 lowerzIdx = std::max(0, idx - half_nb_zsteps);
-                        Int32 higherzIdx = std::min( idx + half_nb_zsteps, Int32(m_result->Redshifts.size()-1) );
+                        const Int32 half_nb_zsteps = 6;
+                        Float64 z_front =  m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].front();
+                        Float64 z_back = m_secondpass_parameters_extremaResult.ExtendedRedshifts[i].back();
+                        Int32 idx_begin = CIndexing<Float64>::getIndex(m_result->Redshifts, z_front);  
+                        Int32 idx_end = CIndexing<Float64>::getIndex(m_result->Redshifts, z_back); 
+                        Int32 lowerzIdx = std::max(idx_begin, idx - half_nb_zsteps);
+                        Int32 higherzIdx = std::min(idx_end, idx + half_nb_zsteps);
                         for(Int32 idzTest=lowerzIdx; idzTest<=higherzIdx; ++idzTest)
                         {
                             for (Int32 kv = 0; kv < nVelSteps; kv++)
@@ -2001,7 +2000,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
         Log.LogInfo("");
         Log.LogInfo("  Operator-Linemodel: Second pass - recompute around Candidate #%d", i);
         Log.LogInfo("  Operator-Linemodel: ---------- /\\ ---------- ---------- ---------- Candidate #%d", i);
-        Float64 z = extremaResult.Redshift(i);
+        Float64 Z = extremaResult.Redshift(i);
 
         if(m_enableWidthFitByGroups)
         {
@@ -2053,7 +2052,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                                                 extremaResult.FittedTplAmplitude[i],
                                                 extremaResult.FittedTplAmplitudeError[i],
                                                 extremaResult.FittedTplMerit[i],
-                                                extremaResult.FittedTplDustCoeff[i],
+                                                extremaResult.FittedTplEbmvCoeff[i],
                                                 extremaResult.FittedTplMeiksinIdx[i],
                                                 extremaResult.FittedTplRedshift[i],
                                                 extremaResult.FittedTplDtm[i],
@@ -2078,7 +2077,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
         Log.LogInfo("    Operator-Linemodel: recompute with tplfit_option=%d", tplfit_option);
         
         // find the index in the zaxis results
-        const Int32 idx = m_result->getRedshiftIndex(z);
+        const Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, Z); 
 
         // reestimate the model (eventually with continuum reestimation) on
         // the extrema selected
@@ -2097,7 +2096,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                     extremaResult.ExtendedRedshifts[i].back());
         for (const Float64 z:extremaResult.ExtendedRedshifts[i])
         {
-            const Int32 iz = m_result->getRedshiftIndex(z);
+            const Int32 iz = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
             Log.LogDetail("Fit for Extended redshift %d, z = %f", iz, z);
 
             m_result->ChiSquare[iz] =

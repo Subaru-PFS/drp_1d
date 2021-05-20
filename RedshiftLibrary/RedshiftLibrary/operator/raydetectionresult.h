@@ -22,9 +22,6 @@ public:
     CLineDetectionResult();
     virtual ~CLineDetectionResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-  
     CRayCatalog RayCatalog;
     std::vector<std::string> PeakListDetectionStatus;
 };

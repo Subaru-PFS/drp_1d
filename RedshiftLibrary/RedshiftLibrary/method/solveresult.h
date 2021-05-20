@@ -9,29 +9,38 @@ namespace NSEpic
 {
   class CExtremaResult;
 
+
   class CSolveResult: public COperatorResult
+  {
+  public:
+    
+    virtual ~CSolveResult()=0;
+
+  };
+  
+  class CPdfSolveResult: public CSolveResult
   {
 
   public:
 
-    CSolveResult(const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+    CPdfSolveResult(const std::shared_ptr<const CExtremaResult> & ExtremaResult,
                  const std::string & opt_pdfcombination,
                  Float64 evidence);
-    virtual ~CSolveResult();
+    virtual ~CPdfSolveResult()=default;
+    CPdfSolveResult(CPdfSolveResult const& other) = default;
+    CPdfSolveResult& operator=(CPdfSolveResult const& other) = default;
+    CPdfSolveResult(CPdfSolveResult&& other) = default;
+    CPdfSolveResult& operator=(CPdfSolveResult&& other) = default;
 
-    void SetReliabilityLabel( std::string lbl );
-    void SetTypeLabel( std::string lbl );
 
     //virtual void preSave(const CDataStore& store) = 0;
     Int32 m_bestRedshiftMethod = 2; //0:best chi2 or proba, 2: best marg proba
 
-    std::string m_ReliabilityLabel="-1";
-    std::string m_TypeLabel="-1";
 
-    Float64 getMerit() {return m_merit;}
-    Float64 getEvidence() {return m_evidence;}
+    inline Float64 getMerit() const {return m_merit;}  
+    inline Float64 getEvidence() const {return m_evidence;} 
 
-    void getData(const std::string& name, std::string& v) const;
+    //    void getData(const std::string& name, std::string& v) const;
 
   protected:
     Float64 m_redshift;

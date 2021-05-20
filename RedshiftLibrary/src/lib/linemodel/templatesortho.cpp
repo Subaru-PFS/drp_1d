@@ -11,7 +11,6 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                                          const std::string calibrationPath,
                                                          const CRayCatalog::TRayVector& restRayList,
                                                          const std::string& opt_fittingmethod,
-                                                         const std::string& opt_continuumcomponent,
                                                          const std::string& widthType,
                                                          const std::string &opt_enable_LSF,
                                                          const Float64 opt_nsigmasupport,
@@ -24,46 +23,48 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
 {
 
     m_enableOrtho = enableOrtho;
-
+    Bool currentsampling = tplCatalog.m_logsampling; 
     for( UInt32 i=0; i<tplCategoryList.size(); i++ )
     {
         std::string category = tplCategoryList[i];
-
-        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        for(Bool sampling:{0, 1})
         {
-            const CTemplate& tpl = tplCatalog.GetTemplate( category, j );
+            tplCatalog.m_logsampling = sampling;
+            m_tplCatalogOrthogonal.m_logsampling = sampling; 
+            TTemplateConstRefList  TplList = tplCatalog.GetTemplate(TStringList{category});
+            for(auto tpl:TplList )
+            {
+                std::string rigidity = opt_rigidity.c_str();
+                std::string rules = opt_rules.c_str();
+                //temporary options override to be removed when full tpl ortho is implemented
+                Bool enableOverride = true;
+                if(enableOverride){
+                    rigidity = "rules";
+                    rules = "no";
+                }
 
-
-            std::string rigidity = opt_rigidity.c_str();
-            std::string rules = opt_rules.c_str();
-            //temporary options override to be removed when full tpl ortho is implemented
-            Bool enableOverride = true;
-            if(enableOverride){
-                rigidity = "rules";
-                rules = "no";
+                Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
+                Int32 ret = OrthogonalizeTemplate(*tpl,
+                                    calibrationPath,
+                                    restRayList,
+                                    opt_fittingmethod,
+                                    widthType,
+                                    opt_enable_LSF,
+                                    opt_nsigmasupport,
+                                    resolution,
+                                    velocityEmission,
+                                    velocityAbsorption,
+                                    rules,
+                                    rigidity);
+            if(ret!=0)
+            {
+                //do something...
             }
-            std::string opt_fittingmethod2 = "hybrid";
-
-            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl.GetName().c_str() );
-            Int32 ret = OrthogonalizeTemplate(tpl,
-                                  calibrationPath,
-                                  restRayList,
-                                  opt_fittingmethod2,
-                                  widthType,
-                                  opt_enable_LSF,
-                                  opt_nsigmasupport,
-                                  resolution,
-                                  velocityEmission,
-                                  velocityAbsorption,
-                                  rules,
-                                  rigidity);
-           if(ret!=0)
-           {
-               //do something...
-           }
+            }
         }
     }
-
+    tplCatalog.m_logsampling = currentsampling;
+    m_tplCatalogOrthogonal.m_logsampling = currentsampling; 
     std::shared_ptr<CTemplateCatalog> tplCatalogPtr = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(m_tplCatalogOrthogonal) );
 //    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
 
@@ -107,6 +108,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
     if(enableModelSubtraction){
 
         std::string opt_continuumcomponent = "fromspectrum";
+        Float64 opt_continuum_neg_threshold=-INFINITY; // not relevant in the "fromspectrum" case
         CSpectrum spectrum = inputTemplate;
         std::string saveContinuumEstimationMethod = spectrum.GetContinuumEstimationMethod();
         spectrum.SetContinuumEstimationMethod("zero");
@@ -117,12 +119,12 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         //Compute linemodel on the template
         CLineModelElementList model( spectrum,
                                      tplCatalogUnused,
-                                     tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,
                                      restRayList,
                                      opt_fittingmethod,
                                      opt_continuumcomponent,
+                                     opt_continuum_neg_threshold,
                                      opt_lineWidthType,
                                      opt_enable_LSF,
                                      opt_nsigmasupport,

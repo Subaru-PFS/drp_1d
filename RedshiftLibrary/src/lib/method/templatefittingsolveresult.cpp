@@ -18,71 +18,18 @@ CTemplateFittingSolveResult::CTemplateFittingSolveResult(const std::string & sco
                                                          const std::shared_ptr<const CExtremaResult> & ExtremaResult,
                                                          const std::string & opt_pdfcombination,
                                                          Float64 evidence ):
-    CSolveResult( ExtremaResult, opt_pdfcombination, evidence),
+    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
     m_scope(scope),
     ExtremaResult(ExtremaResult),
     m_tplName(ExtremaResult->FittedTplName[0]),
     m_amplitude(ExtremaResult->FittedTplAmplitude[0]),
     m_amplitudeError(ExtremaResult->FittedTplAmplitudeError[0]),
-    m_dustCoeff(ExtremaResult->FittedTplDustCoeff[0]),
+    m_EbmvCoeff(ExtremaResult->FittedTplEbmvCoeff[0]),
     m_meiksinIdx(ExtremaResult->FittedTplMeiksinIdx[0]),
     m_fittingSNR(ExtremaResult->FittedTplSNR[0])
 {}
 
-/*
-void CTemplateFittingSolveResult::preSave(const CDataStore& store)
-{
-    if(m_bestRedshiftMethod==0)//bestXi2
-        GetBestRedshift(store);
-    if(m_bestRedshiftMethod==2)//bestPDF
-    {
-        GetBestRedshiftFromPdf(store);
-        Log.LogInfo( "%s-result: extracting best redshift from PDF: z=%f", m_name.c_str(), m_redshift);
-        Int32 b = GetBestModel(store, m_redshift);
-        if(b==-1){
-            Log.LogError(" CTemplateFittingSolveResult::preSave: Couldn't find index of %f", m_redshift);
-            throw runtime_error("CTemplateFittingSolveResult::preSave: Couldn't find redshift index. Aborting!");
-        }
-        Log.LogInfo( "%s-result: extracted best model: model=%s", m_name.c_str(), m_tplName.c_str());
-
-    }
-    if(m_tplName=="")
-        m_tplName = "Undefined";
-}*/
-
-void CTemplateFittingSolveResult::Save(std::ostream& stream ) const
-{
-
-  
-    stream <<  "#Redshifts\tMerit\tTemplate\tAmplitude\tAmplitudeError\tdustcoeff\tmeiksinidx"<< std::endl;
-
-    stream << m_redshift << "\t"
-                << m_merit << "\t"
-                << m_tplName << "\t"
-                << m_amplitude << "\t"
-                << m_amplitudeError << "\t"
-                << std::setprecision(4) << m_dustCoeff << "\t"
-                << m_meiksinIdx << std::endl;
-
-    stream <<  "#Redshifts\tprobaLog\tevidenceLog\tModel"<< std::endl;
-    if(m_bestRedshiftMethod==2)
-    {
-        stream << m_redshift << "\t"
-               << m_merit << "\t"
-               << m_evidence << "\t"
-               << m_tplName << std::endl;
-    }else{
-        stream <<  "-1\t-1\t-1"<< std::endl;
-    }
-
-    stream << std::endl;
-    stream << std::endl;
-    std::string detailStr;
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    //    GetBestRedshiftPerTemplateString( store, detailStr);
-    //stream << detailStr.c_str();
-}
-
+// TODO DV erase this ?
 /*
 Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const
 {
@@ -133,34 +80,6 @@ Bool CTemplateFittingSolveResult::GetBestRedshiftPerTemplateString( const CDataS
 
 }*/
 
-//called for saving redshift.csv for Xi2
-void CTemplateFittingSolveResult::SaveLine(std::ostream& stream ) const
-{
-    char tmpChar[256];
-    Float64 dtreepathnum;
-    
-    //TODO review this (commented after removing DataStore from Save and SaveLine)      
-    /*
-    store.GetParam( "dtreepathnum", dtreepathnum );
-    sprintf(tmpChar, "%.2f", dtreepathnum);
-
-    //preSave(store);
-
-    stream << store.GetSpectrumName() << "\t"
-           << store.GetProcessingID() << "\t"
-                << m_redshift << "\t"
-                << m_merit << "\t"
-                << m_tplName << "\t"
-                << m_name + "_" << tmpChar << "\t"
-                << "-1" << "\t" //deltaz
-                << m_ReliabilityLabel << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << "-1" << "\t"
-                << m_TypeLabel << std::endl; //reliability label
-    */
-}
 
 /*
 Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store) 
@@ -212,7 +131,7 @@ Bool CTemplateFittingSolveResult::GetBestRedshift( const CDataStore& store)
         m_tplName = tmpTplName;
         m_amplitude = tmpAmplitude;
         m_amplitudeError = tmpAmplitudeError;
-        m_dustCoeff = tmpDustCoeff;
+        m_EbmvCoeff = tmpDustCoeff;
         m_meiksinIdx = tmpMeiksinIdx;          
         return true;
     }
@@ -373,7 +292,7 @@ Int32 CTemplateFittingSolveResult::GetBestModel(const CDataStore& store, Float64
         m_merit = tmpMerit;
         m_tplName = tmpTplName;
         m_meiksinIdx = tmpMeiksinIdx;
-        m_dustCoeff = tmpDustCoeff;
+        m_EbmvCoeff = tmpDustCoeff;
         m_amplitude = tmpAmplitude;
         m_amplitudeError = tmpAmplitudeError;
     }else{
@@ -389,7 +308,7 @@ void CTemplateFittingSolveResult::getData(const std::string& name, Float64& v) c
   else if (name.compare("lfHa") == 0)  v = -1;
   else if (name.compare("snrOII") == 0)  v = -1;
   else if (name.compare("lfOII") == 0)  v = -1;
-  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
+  else if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);
 }
 
@@ -407,7 +326,7 @@ void CTemplateFittingSolveResult::getData(const std::string& name, Int32& v) con
 
 void CTemplateFittingSolveResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
 {
-  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_dustCoeff;
+  if (name.compare("ContinuumIsmCoeff")== 0)  v = m_EbmvCoeff;
   else if (name.compare("ContinuumAmplitude") == 0) v = m_amplitude;
   else if (name.compare("ContinuumAmplitudeError") == 0) v = m_amplitudeError; 
   else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"Unknown data "<< name);

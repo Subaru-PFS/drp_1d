@@ -105,6 +105,29 @@ void CLog::LogDebug( const char* format, ... )
     m_Mutex.Unlock();
 }
 
+void CLog::log(const std::string& msg,CLog::ELevel lvl)
+{
+   m_Mutex.Lock();
+   for( int i=0;i<LOG_HANDLER_TABLE_SIZE;i++ )
+     {
+       if( m_HandlerTable[i] )
+         {
+           if ( m_HandlerTable[i]->GetLevelMask() <= lvl )
+             {
+               m_HandlerTable[i]->LogEntry( lvl, GetHeader( lvl ), msg.c_str() );
+             }
+         }
+     }
+   m_Mutex.Unlock();
+}
+
+void CLog::LogError( const std::string& msg){log(msg,nLevel_Error);}
+void CLog::LogDebug( const std::string& msg){log(msg,nLevel_Debug);}
+void CLog::LogInfo( const std::string& msg){log(msg,nLevel_Info);}
+void CLog::LogWarning( const std::string& msg){log(msg,nLevel_Warning);}
+void CLog::LogDetail( const std::string& msg){log(msg,nLevel_Detail);}
+
+
 /**
  * Calls LogEntry in every handler registered on the table with the input message, if the handler has a level mask <= the message level.
  */

@@ -16,15 +16,21 @@ class CSpectrumAxis
 
 public:
 
-    CSpectrumAxis();
-    explicit CSpectrumAxis( UInt32 n );
+    CSpectrumAxis() = default;
+    CSpectrumAxis(const CSpectrumAxis & other) = default;
+    CSpectrumAxis(CSpectrumAxis && other) = default;
+    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
     CSpectrumAxis( const Float64* samples, UInt32 n );
-    ~CSpectrumAxis();
-
-    CSpectrumAxis& operator=(const CSpectrumAxis& other);
+    CSpectrumAxis( const TFloat64List samples);
+    ~CSpectrumAxis() = default;
+    CSpectrumAxis& operator=(const CSpectrumAxis& other) = default;
+    CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;
     CSpectrumAxis& operator*=(const Float64 op);
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
+    
+    void MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
+    static void maskVector(TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector);
 
     const Float64*           GetSamples() const;
     Float64*                 GetSamples();
@@ -33,7 +39,9 @@ public:
     UInt32                   GetSamplesCount() const;
     UInt32                   GetSamplesCount();
     virtual void             SetSize( UInt32 s );
-
+    void                     clear();
+    Int32 extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx);
+    Bool isEmpty() const ;
 protected:
 
     TAxisSampleList          m_Samples;
@@ -82,6 +90,9 @@ const TAxisSampleList& CSpectrumAxis::GetSamplesVector() const
 {
     return m_Samples;
 }
-
+inline
+Bool CSpectrumAxis::isEmpty() const{
+    return m_Samples.size()==0;
+}
 }
 #endif

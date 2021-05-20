@@ -15,28 +15,32 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
-    ~CTemplateCatalog();
+    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool sampling = 0 );
+    
+    void                    Add( std::shared_ptr<CTemplate> tpl);
+    std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
+    std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
 
-    void Add( std::shared_ptr<CTemplate> );
-    void Add( const char* templatePath, const std::string& category );
-    void Load( const char* filePath );
-    Bool Save(const char* filePath , Bool saveWithoutContinuum=true);
+    TTemplateConstRefList GetTemplate( const TStringList& categoryList ) const;
+    TTemplateRefList GetTemplate( const TStringList& categoryList );
+    
+    static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
 
-    const CTemplate& GetTemplate( const std::string& category, UInt32 i ) const;
-    const CTemplate& GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
-
-    TTemplateRefList GetTemplate( const TStringList& categoryList ) const;
-
-    TStringList GetCategoryList() const;
-
-    UInt32 GetTemplateCount( const std::string& category ) const;
+    TStringList             GetCategoryList() const;
+    UInt32                  GetTemplateCount( const std::string& category ) const;
+    void                    InitIsmIgm(const std::string & calibrationPath, std::shared_ptr<const CParameterStore> parameterStore);
+    mutable Bool            m_logsampling = 0;//non-log by default
 
 private:
+    // this const version must stay private, since it returns non const templates.
+    TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 
 
-    Bool                     LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+    //Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
+    const TTemplatesRefDict &    GetList() const;//using m_sampling
+
 
     TTemplatesRefDict        m_List;
+    TTemplatesRefDict        m_ListRebinned;
 
     std::string m_continuumRemovalMethod;
     Float64 m_continuumRemovalMedianKernelWidth;
@@ -48,11 +52,36 @@ private:
 /**
  * Returns the contents of the i-th entry in the category item of m_List.
  */
-inline const CTemplate& CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
+inline 
+std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
-    return *m_List.at( category )[i];
+    return GetList().at( category )[i];   
 }
 
+// non const getter returning mutable templates
+inline 
+TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList )
+{
+    return GetTemplate_(categoryList);
+}
+
+//  const getter returning const templates
+inline
+TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
+{
+    return const_TTemplateRefList_cast( GetTemplate_(categoryList)); 
+}
+
+
+ //below functions aim at avoid using if..else to access the right categoryList
+inline 
+const TTemplatesRefDict & CTemplateCatalog::GetList() const
+{
+    if(!m_logsampling)
+        return m_List;
+    else
+        return m_ListRebinned;       
+}
 
 }
 

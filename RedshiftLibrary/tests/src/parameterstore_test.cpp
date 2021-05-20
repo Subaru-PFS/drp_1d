@@ -16,8 +16,10 @@ BOOST_AUTO_TEST_SUITE(ParameterStore)
 
 BOOST_AUTO_TEST_CASE(ParameterStore1)
 {
-  CParameterStore store = CParameterStore();
-  CParameterStore store_;
+  TScopeStack scopeStack;
+
+  CParameterStore store = CParameterStore(scopeStack);
+  CParameterStore store_(scopeStack);
 
   TFloat64List float64_list {1.0, 2.0, 3.14};
   TInt64List int64_list {42, 99, -100};
@@ -94,7 +96,8 @@ BOOST_AUTO_TEST_CASE(ParameterStore1)
 
 BOOST_AUTO_TEST_CASE(ParameterStore2)
 {
-  CParameterStore store = CParameterStore();
+  TScopeStack scopeStack;
+  CParameterStore store = CParameterStore(scopeStack);
 
   TFloat64List float64_list {1.0, 2.0, 3.14};
   TInt64List int64_list {42, 99, -100};
@@ -157,7 +160,8 @@ BOOST_AUTO_TEST_CASE(ParameterStore2)
 
 BOOST_AUTO_TEST_CASE(ParameterStore3)
 {
-  CParameterStore store;
+  TScopeStack scopeStack;
+  CParameterStore store(scopeStack);
 
   try {
     store.Load("/this/file/should/not/exist");

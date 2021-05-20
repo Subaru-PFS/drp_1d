@@ -35,30 +35,6 @@ CModelSpectrumResult::~CModelSpectrumResult()
 
 }
 
-/**
- * \brief Prints to argument stream each lambda and flux in the model.
- **/
-void CModelSpectrumResult::Save(std::ostream& stream ) const
-{
-    const CSpectrumSpectralAxis& spectralAxis = m_model.GetSpectralAxis();
-    const CSpectrumFluxAxis& modelFluxAxis = m_model.GetFluxAxis();
-
-    stream <<  "#lambda\tflux\t"<< std::endl;
-    for ( int i=0; i<spectralAxis.GetSamplesCount(); i++)
-    {
-        stream << spectralAxis[i] << std::setprecision(16) << "\t" << std::scientific << modelFluxAxis[i] << std::endl;
-    }
-
-
-}
-
-/**
- * \brief Empty method.
- **/
-void CModelSpectrumResult::SaveLine(std::ostream& stream ) const
-{
-
-}
 
 CSpectrum& CModelSpectrumResult::GetSpectrum()
 {

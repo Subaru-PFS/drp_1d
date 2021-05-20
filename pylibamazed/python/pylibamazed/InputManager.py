@@ -20,8 +20,9 @@ class InputManager:
         if not os.access(os.path.expanduser(self.config["calibration_dir"]), os.R_OK):
             raise Exception("Calibration directory " + self.config["calibration_dir"] + " does not exist")
 
-        if "linemodelsolve" in amazed_parameters and "tplratio_catalog" in amazed_parameters["linemodelsolve"]["linemodel"]:
-            self.tpl_ratio_catalog = amazed_parameters["linemodelsolve"]["linemodel"]["tplratio_catalog"]
+        if "linemodelsolve" in amazed_parameters["galaxy"] \
+                and "tplratio_catalog" in amazed_parameters["galaxy"]["linemodelsolve"]["linemodel"]:
+            self.tpl_ratio_catalog = amazed_parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_catalog"]
         else:
             self.tpl_ratio_catalog = None
 
@@ -34,9 +35,9 @@ class InputManager:
     def get_spectra_dir(self):
         return os.path.expanduser(self.config["spectrum_dir"])
 
-    def get_template_dir(self):
+    def get_template_dir(self,object_type):
         return os.path.expanduser(os.path.join(self.config["calibration_dir"],
-            self.amazed_parameters["template_dir"]))
+            self.amazed_parameters[object_type]["template_dir"]))
 
     def get_linecatalog_path(self):
         return os.path.expanduser(os.path.join(self.config["calibration_dir"],
@@ -53,8 +54,8 @@ class InputManager:
     def get_template_ratio_path(self, tplratio_file):
         return os.path.join(self.config["calibration_dir"], self.tpl_ratio_catalog, tplratio_file)
 
-    def get_template_path(self, tpl_file):
-        return glob.glob(os.path.join(self.get_template_dir(), "*", tpl_file))[0]
+    def get_template_path(self, object_type,tpl_file):
+        return os.path.join(self.get_template_dir(object_type), object_type, tpl_file)
 
     def get_full_catalog_path(self):
         return self.get_linecatalog_path()
@@ -63,12 +64,6 @@ class InputManager:
         module_root_dir = os.path.split(__file__)[0]
         return os.path.join(module_root_dir, "resources", "mismatches.csv")
 
-    def get_star_template_path(self,filename):
-        return os.path.join(self.config["calibration_dir"],
-                            "templates",
-                            "stars_templates_vlba37_2018",
-                            "star",
-                            filename)
     # ************************* Data retrieval functions ************************* #
 
     def get_spectrum_data(self, spectrum=None):
@@ -201,20 +196,6 @@ class InputManager:
                              "force": tsd_emi["force"].to_list(),
                              "ampl": tsd_emi["nominal_ampl"].to_list()}
         return res
-
-    def get_shifted_amplified_star_template_data(self, template, redshift, ampl ,spectrum):
-        df = pd.read_csv(self.get_star_template_path(template), sep="\s+", # header=1,
-                         skiprows=[0, 2])
-
-        df[df.columns[1]] = df[df.columns[1]] *ampl
-        df[df.columns[0]] = df[df.columns[0]]*(1+redshift)
-        spectrum_data = self.get_spectrum_data(spectrum)
-        lambda_min = spectrum_data["lambda"][0]
-        lambda_max = spectrum_data["lambda"][-1]
-
-        df = df[ df[df.columns[0]] > lambda_min]
-        df = df[ df[df.columns[0]] < lambda_max]
-        return df
 
     def export_input_spectrum_list(self, filtered_redshifts):
         merged = self.spectra.merge(filtered_redshifts,

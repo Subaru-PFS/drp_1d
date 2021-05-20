@@ -146,34 +146,3 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
     }
     return index;
 }
-
-/**
- * @brief CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList
- * Hardcoded for meiksin files as of 2017-06-13.
- * @return
- */
-
-
-Float64 CSpectrumFluxCorrectionMeiksin::getCoeff(Int32 meiksinIdx, Float64 redshift, Float64 restLambda) const
-{
-    Int32 redshiftIdx = GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
-    Float64 coeffIGM = 1.0;
-    if(restLambda <= GetLambdaMax())
-    {
-        Int32 kLbdaMeiksin = 0;
-        if(restLambda >= GetLambdaMin())
-        {
-            kLbdaMeiksin = Int32(restLambda-GetLambdaMin()+0.5);
-        }else //if lambda lower than min meiksin value, use lower meiksin value
-        {
-            kLbdaMeiksin = 0;
-        }
-
-        coeffIGM = m_corrections[redshiftIdx].fluxcorr[meiksinIdx][kLbdaMeiksin];
-        //if(verboseLogFitFitRangez)
-        //{
-        //    Log.LogInfo("ChisquareLog, FitAllz: coeffIGM=%f", coeffIGM);
-        //}
-    }
-    return coeffIGM;
-}

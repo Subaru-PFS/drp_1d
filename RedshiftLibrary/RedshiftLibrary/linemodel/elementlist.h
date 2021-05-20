@@ -39,12 +39,12 @@ public:
 
     CLineModelElementList(const CSpectrum& spectrum,
                           const CTemplateCatalog& tplCatalog,
-                          const CTemplateCatalog& orthoTplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
                           const CRayCatalog::TRayVector& restRayList,
                           const std::string& opt_fittingmethod,
                           const std::string &opt_continuumcomponent,
+                          const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
                           const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
@@ -80,8 +80,8 @@ public:
                         Float64 &merit,
                         Float64& fitAmplitude,
                         Float64& fitAmplitudeError,
-                        Bool& fitAmplitudeNegative,
-                        Float64 &fitDustCoeff,
+                        Float64& fitAmplitudeSigma,
+                        Float64 &fitEbmvCoeff,
                         Int32 &fitMeiksinIdx,
                         Float64& fitDtM,
                         Float64& fitMtM,
@@ -92,7 +92,7 @@ public:
     Float64 getFitContinuum_snr();
     Float64 getFitContinuum_tplMerit();
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
-    Float64 getFitContinuum_tplIsmDustCoeff();
+    Float64 getFitContinuum_tplIsmEbmvCoeff();
     Float64 getFitContinuum_tplIgmMeiksinIdx();
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
@@ -299,6 +299,7 @@ public:
     Float64 m_opt_lya_fit_delta_step=1.;
 
     Int32 m_opt_fitcontinuum_maxCount = 2;
+    Float64 m_opt_fitcontinuum_neg_threshold = - INFINITY;
     bool m_opt_firstpass_forcedisableMultipleContinuumfit=true;
     bool m_opt_firstpass_forcedisableTplratioISMfit=true;
     std::string m_opt_firstpass_fittingmethod = "hybrid";
@@ -355,7 +356,7 @@ private:
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
     CTemplate m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
-    TFloat64List& m_ErrorNoContinuum;
+    CSpectrumNoiseAxis& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
     Float64 m_dTransposeD; //the cached dtd (maximum chisquare value)
@@ -385,7 +386,6 @@ private:
     bool m_forcedisableTplratioISMfit=false;
 
     CTemplateCatalog m_tplCatalog;
-    CTemplateCatalog m_orthoTplCatalog;
     TStringList m_tplCategoryList;
     std::string m_tplshapeBestTplName;
     Float64 m_tplshapeBestTplIsmCoeff;
@@ -404,15 +404,16 @@ private:
     std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
     Int32 m_fitContinuum_option;
     std::string m_fitContinuum_tplName;
-    Float64 m_fitContinuum_tplFitAmplitude=-1.0;
-    Float64 m_fitContinuum_tplFitAmplitudeError;
-    Float64 m_fitContinuum_tplFitMerit;
-    Float64 m_fitContinuum_tplFitDustCoeff;
-    Int32 m_fitContinuum_tplFitMeiksinIdx;
-    Float64 m_fitContinuum_tplFitRedshift; // only used with m_fitContinuum_option==2 for now
-    Float64 m_fitContinuum_tplFitDtM;
-    Float64 m_fitContinuum_tplFitMtM;
-    Float64 m_fitContinuum_tplFitLogprior;
+    Float64 m_fitContinuum_tplFitAmplitude = NAN;
+    Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
+    Float64 m_fitContinuum_tplFitAmplitudeSigmaMAX = NAN;
+    Float64 m_fitContinuum_tplFitMerit = NAN;
+    Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
+    Int32   m_fitContinuum_tplFitMeiksinIdx = -1;
+    Float64 m_fitContinuum_tplFitRedshift = NAN; // only used with m_fitContinuum_option==2 for now
+    Float64 m_fitContinuum_tplFitDtM = NAN;
+    Float64 m_fitContinuum_tplFitMtM = NAN;
+    Float64 m_fitContinuum_tplFitLogprior = NAN;
     Float64 m_fitContinuum_tplFitSNRMax=0.0;
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;

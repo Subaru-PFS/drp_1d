@@ -2,6 +2,7 @@
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
 #include <RedshiftLibrary/processflow/datastore.h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/ray/ray.h>
 #include <RedshiftLibrary/spectrum/template/catalog.h>
@@ -9,7 +10,6 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/io/reader.h>
 #include <RedshiftLibrary/linemodel/calibrationconfig.h> 
-#include <RedshiftLibrary/reliability/zclassifierstore.h>
 
 #include <gsl/gsl_errno.h>
 
@@ -27,7 +27,7 @@ class CParameterStore;
 class COperatorResultStore;
 class CDataStore;
 class CClassifierStore;
-
+class CInputContext;
 /**
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
@@ -40,50 +40,32 @@ public:
     CProcessFlowContext();
     ~CProcessFlowContext();
 
-    bool Init(std::shared_ptr<CSpectrum> spectrum,
-              std::string processingID,
-              std::shared_ptr<const CTemplateCatalog> templateCatalog,
-              std::shared_ptr<const CRayCatalog> rayCatalog,
-              std::shared_ptr<CParameterStore> paramStore,
-              std::shared_ptr<CClassifierStore> zqualStore);
+  void Init(std::shared_ptr<CSpectrum> spectrum,
+            std::shared_ptr<CTemplateCatalog> templateCatalog,
+            std::shared_ptr<CRayCatalog> rayCatalog,
+            const std::string& paramsJSONString
+            );
+  std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
+  std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
+  std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
+  std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_inputContext->GetRayCatalog();}
+  std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_inputContext->GetParameterStore();}
+  std::shared_ptr<const CInputContext> GetInputContext() const {return m_inputContext;}
+  std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
 
-    const CSpectrum&                GetSpectrum() const;
-    const CTemplateCatalog&         GetTemplateCatalog() const;
-    const CRayCatalog&              GetRayCatalog() const;
-
-    bool correctSpectrum(Float64 LambdaMin, Float64 LambdaMax);
-
-    CParameterStore&                GetParameterStore();
-    COperatorResultStore&           GetResultStore();
-    CDataStore&                     GetDataStore();
-    CClassifierStore&               GetClassifierStore();
-    
-    const TStringList&                    GetStarCategoryList() const;
-    const TStringList&                    GetQSOCategoryList() const;
-    const TStringList&                    GetGalaxyCategoryList() const;
-
+  TScopeStack                     m_ScopeStack;
 private:
 
-    void                                       InitSpectrum();
-    void                                       InitIsmIgm(const std::string & CalibrationDirPath);
+    std::shared_ptr<COperatorResultStore>  m_ResultStore;
 
-    std::shared_ptr<CSpectrum>                 m_Spectrum;
-
-    std::shared_ptr<const CTemplateCatalog>    m_TemplateCatalog;
-    std::shared_ptr<const CRayCatalog>         m_RayCatalog;
-
-    std::shared_ptr<CParameterStore>           m_ParameterStore;
-    std::shared_ptr<COperatorResultStore>      m_ResultStore;
-
-    std::shared_ptr<CDataStore>                m_DataStore;
-    std::shared_ptr<CClassifierStore>          m_ClassifierStore;
-    
-    TStringList                                m_filteredStarTemplateCategoryList{"star"}; 
-    TStringList                                m_filteredQSOTemplateCategoryList{"qso", "emission"}; //"qso"
-    TStringList                                m_filteredGalaxyTemplateCategoryList{"galaxy"};
-
+    std::shared_ptr<const CInputContext>  m_inputContext;
+ 
+    //added below variables - to discuss if we only define them here (and no more in processflow)
+    TFloat64Range m_spclambdaRange;
+    TFloat64Range m_redshiftRange;
+    TFloat64List  m_redshifts;
+    std::string   m_redshiftSampling;
 };
-
 
 }
 

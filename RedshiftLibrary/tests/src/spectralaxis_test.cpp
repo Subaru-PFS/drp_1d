@@ -20,30 +20,31 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CSpectrumSpectralAxis n22Axis = CSpectrumSpectralAxis(1, true);
   BOOST_CHECK(n22Axis.GetSamplesCount()==1);
   // One element initialized to one element array
-  Float64 n3Array[] = {1.};
-  CSpectrumSpectralAxis n31Axis = CSpectrumSpectralAxis(n3Array, 1, false);
+  TFloat64List n3Array = {1.};
+  CSpectrumSpectralAxis n31Axis = CSpectrumSpectralAxis(n3Array, false);
   BOOST_CHECK(n31Axis.GetSamplesCount()==1);
-  CSpectrumSpectralAxis n32Axis = CSpectrumSpectralAxis(n3Array, 1, true);
+  CSpectrumSpectralAxis n32Axis = CSpectrumSpectralAxis(n3Array, true);
   BOOST_CHECK(n32Axis.GetSamplesCount()==1);
 
-  CSpectrumSpectralAxis n33Axis = CSpectrumSpectralAxis(n3Array, 1);
+  TFloat64List n3ArrayList(1, 1);
+  CSpectrumSpectralAxis n33Axis = CSpectrumSpectralAxis(n3ArrayList);
 
   // Clone from an other spectral axis redshift 0
   CSpectrumSpectralAxis n41Axis  = CSpectrumSpectralAxis(1, false);
   // CSpectrumSpectralAxis n42Axis  = CSpectrumSpectralAxis(n41Axis,0.,CSpectrumSpectralAxis::nShiftForward);
   // One element from 2 elements array
-  Float64 n5Array[] = {1., 2.};
-  CSpectrumSpectralAxis n5Axis = CSpectrumSpectralAxis(n5Array, 1, false);
-  BOOST_CHECK(n5Axis.GetSamplesCount()==1);
+  TFloat64List n5Array = {1., 2.};
+  CSpectrumSpectralAxis n5Axis = CSpectrumSpectralAxis(n5Array, false);
+  BOOST_CHECK(n5Axis.GetSamplesCount()==2);
 
   // Two elements from 1 element array
-  Float64 n6Array[] = {1.};
+  /*TFloat64List n6Array = {1.};
   CSpectrumSpectralAxis n6Axis = CSpectrumSpectralAxis(n6Array, 2, false);
   BOOST_CHECK(n6Axis.GetSamplesCount()==2);
-
+  */
   // ShiftByWaveLength linear forward
-  Float64 n7Array[] = {2., 3.};
-  CSpectrumSpectralAxis n7Axis = CSpectrumSpectralAxis(n7Array, 2, false);
+  TFloat64List n7Array = {2., 3.};
+  CSpectrumSpectralAxis n7Axis = CSpectrumSpectralAxis(n7Array, false);
   CSpectrumSpectralAxis n7ShiftForward = CSpectrumSpectralAxis(n7Axis, 10.1,
 							       CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(n7ShiftForward.GetSamplesCount() == 2);
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   BOOST_CHECK_CLOSE(n7ShiftBack.GetSamples()[1], 3./2, 1.e-12);
 
   // ShiftByWaveLength log forward
-  CSpectrumSpectralAxis n7AxisLog = CSpectrumSpectralAxis(n7Array, 2, true);
+  CSpectrumSpectralAxis n7AxisLog = CSpectrumSpectralAxis(n7Array, true);
   CSpectrumSpectralAxis n7ShiftLogForward = CSpectrumSpectralAxis(n7AxisLog, exp(10.1),
 								  CSpectrumSpectralAxis::nShiftForward);
   BOOST_CHECK(n7ShiftLogForward.GetSamplesCount() == 2);
@@ -82,8 +83,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
 BOOST_AUTO_TEST_CASE(ApplyOffset)
 {
-  Float64 array[] = {1., 2., 3.};
-  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 3, false);
+  TFloat64List array = {1., 2., 3.};
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, false);
 
   axis.ApplyOffset(1.);
 
@@ -95,16 +96,16 @@ BOOST_AUTO_TEST_CASE(ApplyOffset)
 BOOST_AUTO_TEST_CASE(Operator)
 {
   CSpectrumSpectralAxis n71Axis = CSpectrumSpectralAxis();
-  Float64 n7Array[] = {1.};
-  CSpectrumSpectralAxis n72Axis = CSpectrumSpectralAxis(n7Array, 1, false);
+  TFloat64List n7Array = {1.};
+  CSpectrumSpectralAxis n72Axis = CSpectrumSpectralAxis(n7Array, false);
   n71Axis = n72Axis;
   BOOST_CHECK_CLOSE(n71Axis[0],n72Axis[0],1.e-12);
 }
 
 BOOST_AUTO_TEST_CASE(Resolution)
 {
-  Float64 n8Array[] = {1.,3.,4.,10.,15.,16.};
-  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,6,false);
+  TFloat64List n8Array = {1.,3.,4.,10.,15.,16.};
+  CSpectrumSpectralAxis n8Axis = CSpectrumSpectralAxis(n8Array,false);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(),2.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetMeanResolution(),3.0,1.e-12);
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(-1.0),2.0,1.e-12);
@@ -124,8 +125,8 @@ BOOST_AUTO_TEST_CASE(Resolution)
   BOOST_CHECK_CLOSE(n8Axis.GetResolution(17.2),1.0,1.e-12);
 
   // not enough samples
-  Float64 array[] = {10.};
-  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array,1,false);
+  TFloat64List array = {10.};
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array,false);
   BOOST_CHECK_CLOSE(axis.GetResolution(),0.0,1.e-12);
   BOOST_CHECK_CLOSE(axis.GetMeanResolution(),0.0,1.e-12);
 
@@ -133,18 +134,18 @@ BOOST_AUTO_TEST_CASE(Resolution)
 
 BOOST_AUTO_TEST_CASE(GetMask)
 {
-  Float64 array[] = {1.,3.,4.,10.};
+  TFloat64List array = {1.,3.,4.,10.};
   CMask mask;
   TFloat64Range range(0.5,5.);
   Mask result[] = {1,1,1,0};
 
   // linear
-  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 4, false);
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, false);
   axis.GetMask(range, mask);
   BOOST_CHECK( std::equal(result, result + 4, mask.GetMasks()) );
 
   // log
-  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, 4, true);
+  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, true);
   Mask resultlog[] = {1,0,0,0};
   axislog.GetMask(range, mask);
   BOOST_CHECK( std::equal(resultlog, resultlog + 4, mask.GetMasks()) );
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate)
 {
   CMask mask(4);
   TFloat64Range range(0.5,5.);
-  Float64 array[] = {1.,3.,4.,10.};
+  TFloat64List array = {1.,3.,4.,10.};
 
   mask[0] = 1;
   mask[1] = 1;
@@ -163,11 +164,11 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate)
   mask[3] = 0;
 
   // linear
-  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, 4, false);
+  CSpectrumSpectralAxis axis = CSpectrumSpectralAxis(array, false);
   BOOST_CHECK_CLOSE(axis.IntersectMaskAndComputeOverlapRate(range, mask), 2./3, 1e-18);
 
   // log
-  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, 4, true);
+  CSpectrumSpectralAxis axislog = CSpectrumSpectralAxis(array, true);
   BOOST_CHECK_CLOSE(axislog.IntersectMaskAndComputeOverlapRate(range, mask), 1., 1e-18);
 
   TFloat64Range outrange(-5,0.);
@@ -177,8 +178,8 @@ BOOST_AUTO_TEST_CASE(IntersectMaskAndComputeOverlapRate)
 BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange)
 {
   // GetIndexAtWaveLength tests
-  Float64 n100Array[] = {0.0, 2.0, 3.0, 6.0};
-  CSpectrumSpectralAxis n100Axis = CSpectrumSpectralAxis(n100Array,4,false);
+  TFloat64List n100Array = {0.0, 2.0, 3.0, 6.0};
+  CSpectrumSpectralAxis n100Axis = CSpectrumSpectralAxis(n100Array, false);
   BOOST_CHECK(n100Axis.GetIndexAtWaveLength(-1.0)==0);
   BOOST_CHECK(n100Axis.GetIndexAtWaveLength(0.0)==0);
   BOOST_CHECK(n100Axis.GetIndexAtWaveLength(1.0)==1);
@@ -230,8 +231,8 @@ BOOST_AUTO_TEST_CASE(GetIndexAtWaveLength_and_GetIndexesAtWaveLengthRange)
 
 BOOST_AUTO_TEST_CASE(Scale)
 {
-  Float64 n111Array[] = {1.,1.};
-  CSpectrumSpectralAxis n111Axis = CSpectrumSpectralAxis(n111Array,2,false);
+  TFloat64List n111Array = {1.,1.};
+  CSpectrumSpectralAxis n111Axis = CSpectrumSpectralAxis(n111Array,false);
 
   BOOST_CHECK(n111Axis.IsInLinearScale()==true);
   BOOST_CHECK(n111Axis.IsInLogScale()==false);
@@ -259,8 +260,8 @@ BOOST_AUTO_TEST_CASE(Scale)
 BOOST_AUTO_TEST_CASE(LambdaRange)
 {
   // linear
-  Float64 n121Array[] = {0.,1.};
-  CSpectrumSpectralAxis n121Axis = CSpectrumSpectralAxis(n121Array,2,false);
+  TFloat64List n121Array = {0.,1.};
+  CSpectrumSpectralAxis n121Axis = CSpectrumSpectralAxis(n121Array,false);
   TLambdaRange irange6 = n121Axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange6.GetBegin(),n121Array[0],1.e-12);
   BOOST_CHECK_CLOSE(irange6.GetEnd(),n121Array[1],1.e-12);
@@ -274,8 +275,8 @@ BOOST_AUTO_TEST_CASE(LambdaRange)
   BOOST_CHECK_CLOSE(irange8.GetEnd(),0.,1.e-12);
 
   // log
-  Float64 n124Array[] = {0.,1.,2.};
-  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,3,true);
+  TFloat64List n124Array = {0.,1.,2.};
+  CSpectrumSpectralAxis n124Axis = CSpectrumSpectralAxis(n124Array,true);
   BOOST_CHECK(n124Axis.IsInLogScale()==true);
   TLambdaRange irange9 = n124Axis.GetLambdaRange();
   BOOST_CHECK_CLOSE(irange9.GetBegin(),exp(0.),1.e-12);
@@ -285,8 +286,8 @@ BOOST_AUTO_TEST_CASE(LambdaRange)
 BOOST_AUTO_TEST_CASE(ClampLambdaRange)
 {
   // Axis from [0. ... 1.]
-  Float64 n131Array[] = {0.,1.};
-  CSpectrumSpectralAxis n131Axis = CSpectrumSpectralAxis(n131Array,2,false);
+  TFloat64List n131Array = {0.,1.};
+  CSpectrumSpectralAxis n131Axis = CSpectrumSpectralAxis(n131Array,false);
   TFloat64Range crange;
   // Range [0.1 ... 0.9] inside axis range
   TFloat64Range irange10 = TFloat64Range(0.1,0.9);

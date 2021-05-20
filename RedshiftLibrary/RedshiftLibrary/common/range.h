@@ -83,7 +83,7 @@ template <typename T> class CRange
             return v;
         }
 
-        Int32 count = GetLength() / delta;
+        Int32 count = (GetLength() + epsilon) / delta;
 
         v.resize(count + 1);
         for (UInt32 i = 0; i < v.size(); i++)
@@ -94,29 +94,47 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta) const
+    std::vector<T> SpreadOverLog(Float64 delta, Float64 offset=0.) const
     {
-	std::vector<T> v;
-	if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
-	{
-	    v.resize(1);
-	    v[0] = m_Begin;
-	    return v;
-	}
+        std::vector<T> v;
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+        {
+            v.resize(1);
+            v[0] = m_Begin;
+            return v;
+        }
 
-        Float64 x = m_Begin + 1.;
+        Float64 x = m_Begin + offset;
         Float64 edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
-        while (x < m_End+1. && count < maxCount)
+        while (x < (m_End + offset + epsilon) && count < maxCount)
         {
-            v.push_back(x-1.);
+            v.push_back(x - offset);
             count++;
             x *= edelta;
         }
-
         return v;
+    }  
+    //spread over log (z+1)
+    std::vector<T> SpreadOverLogZplusOne(Float64 delta) const
+    {
+        return SpreadOverLog(delta, 1.);
     }
+    //  template<typename T>
+  friend std::ostream& operator<< (std::ostream &out, const CRange<T> &range)
+  {
+    out <<"["<< range.m_Begin<<","<< range.m_End<<"]";
+    return out;
+  }
+
+  friend std::istream& operator>> (std::istream &in, CRange<T> &range)
+  {
+    in >> range.m_Begin;
+    in >> range.m_End;
+    return in;
+ }
+
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
   bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
   {
@@ -198,17 +216,21 @@ template <typename T> class CRange
     typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
     
     if (it_max==ordered_values.end()) --it_max;
-    
     else if(*it_max > m_End) --it_max;
 
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
+    if(i_min>i_max){
+        Log.LogError("min index is higher that max index",i_min, i_max);
+        return false;
+    }
     return true;
   } 
 
   private:
     T m_Begin;
     T m_End;
+    Float64 epsilon = 1E-6;
 };
 
 typedef CRange<Int32> TInt32Range;

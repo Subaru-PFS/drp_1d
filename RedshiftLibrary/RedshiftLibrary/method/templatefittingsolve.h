@@ -2,10 +2,13 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include <RedshiftLibrary/common/datatypes.h>
+#include <RedshiftLibrary/method/solve.h>
+#include <RedshiftLibrary/processflow/resultstore.h>
+#include <RedshiftLibrary/processflow/inputcontext.h>
 #include <RedshiftLibrary/method/templatefittingsolveresult.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
+#include <RedshiftLibrary/operator/templatefittingBase.h>
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
@@ -19,7 +22,7 @@ class CDataStore;
 /**
  * \ingroup Redshift
  */
-class CMethodTemplateFittingSolve
+  class CMethodTemplateFittingSolve : public CSolve
 {
 
  public:
@@ -33,11 +36,15 @@ class CMethodTemplateFittingSolve
     };
 
 
-    CMethodTemplateFittingSolve() = default;
-    ~CMethodTemplateFittingSolve() = default;
+  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
-    const std::string GetDescription() const;
+private:
 
+  std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+                                        std::shared_ptr<COperatorResultStore> resultStore,
+                                        TScopeStack &scope) override;
+
+  /*
     std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
                                                    const CSpectrum& spc,
                                                    const CTemplateCatalog& tplCatalog,
@@ -52,12 +59,10 @@ class CMethodTemplateFittingSolve
                                                    std::string opt_interp="lin",
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
+  */ 
+  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
-    
-
-private:
-
-    Bool Solve(CDataStore& resultStore,
+  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplate& tpl,
                const TFloat64Range& lambdaRange,
@@ -69,28 +74,28 @@ private:
                std::string opt_extinction="no",
                std::string opt_dustFitting="no");
 
-    ChisquareArray BuildChisquareArray(const CDataStore& store, const std::string & scopeStr) const;
+  ChisquareArray BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const;
 
-    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   const CDataStore& store, const std::string & scopeStr,
+    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   shared_ptr<const COperatorResultStore> store,
+                                                                const std::string & scopeStr,
                                                                 const TCandidateZbyRank & ranked_zCandidates,
                                                                 const CSpectrum& spc,
                                                                 const CTemplateCatalog& tplCatalog,
                                                                 const TStringList& tplCategoryList,
                                                                 const TFloat64Range& lambdaRange,
                                                                 Float64 overlapThreshold,
-                                                                std::string opt_interp,
-                                                                std::string opt_extinction
-                                                                );
+                                                                std::string opt_interp);
 
-    void StoreExtremaResults(CDataStore &dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
+    void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
     
-    COperatorTemplateFitting m_templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
+
 };
 
 

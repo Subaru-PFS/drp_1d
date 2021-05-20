@@ -63,17 +63,17 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   // no continuum
   CLineModelElementList model_nocontinuum(spectrum,
-                                          tplCatalog, tplCatalog, tplCategories,
+                                          tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
-					                                "lmfit", "nocontinuum",
+					                                "lmfit", "nocontinuum", -INFINITY,
                                           opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
   CLineModelElementList model_fromspectrum(spectrum,
-                                           tplCatalog, tplCatalog, tplCategories,
+                                           tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
-					                                 "lmfit", "fromspectrum",
+					                                 "lmfit", "fromspectrum", -INFINITY,
                                            opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
 					                                 opt_velocityAbsorption, opt_rules, opt_rigidity);
 
@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(Constructor)
   // tplfit
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
   CLineModelElementList model_tplfit(spectrum,
-                                     tplCatalog, tplCatalog, tplCategories,
+                                     tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
-   				                           "lmfit", "tplfit",
+   				                           "lmfit", "tplfit", -5.0,
                                      opt_lineWidthType, opt_enable_LSF, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
    				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
 

@@ -33,21 +33,3 @@ CModelRulesResult::~CModelRulesResult()
 {
 }
 
-/**
- * \brief Prints the rules of the Linemodel in the argument store, using the argument stream as output.
- **/
-void CModelRulesResult::Save(std::ostream& stream ) const
-{
-    for(Int32 k=0; k<LogStrings.size(); k++)
-    {
-        stream << k << "\t" << LogStrings[k].c_str() << std::endl;
-    }
-}
-
-/**
- * \brief Empty method.
- **/
-void CModelRulesResult::SaveLine(std::ostream& stream ) const
-{
-
-}

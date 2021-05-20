@@ -23,9 +23,6 @@ public:
     CModelSpectrumResult();
     virtual ~CModelSpectrumResult();
 
-    void Save(std::ostream& stream ) const;
-    void SaveLine(std::ostream& stream ) const;
-    
     CSpectrum& GetSpectrum();
 
   void getData(const std::string& name, double **data, int *size) const;

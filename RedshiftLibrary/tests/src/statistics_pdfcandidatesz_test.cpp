@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Statistics_pdfcandidatesz)
 
 TFloat64Range redshiftRange = TFloat64Range( 0, 5);
 Float64       redshiftStep = 1E-4;
-TRedshiftList pdfz = redshiftRange.SpreadOverLog( redshiftStep );
+TRedshiftList pdfz = redshiftRange.SpreadOverLogZplusOne( redshiftStep );
 
 
 
@@ -112,4 +112,56 @@ BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
     BOOST_CHECK_CLOSE(ranges["EXT0"].GetBegin(), correct_ranges["EXT0"].GetBegin(), 1E-4);
     BOOST_CHECK_CLOSE(ranges["EXT1"].GetBegin(), correct_ranges["EXT1"].GetBegin(), 1E-4);
 }
+/*
+
+BOOST_AUTO_TEST_CASE(SortByValSumProbaInt)
+{
+    TRedshiftList center_redshifts = {1.0, 4.0, 3.0};
+
+    TCandidateZbyID zcandidates;
+    zcandidates["EXT0"].Redshift = center_redshifts[1];
+    zcandidates["EXT0"].ValSumProba = 0.;
+
+    zcandidates["EXT1"].Redshift = center_redshifts[0];
+    zcandidates["EXT1"].ValSumProba = 0.;
+
+    zcandidates["EXT2"].Redshift = center_redshifts[2];
+    zcandidates["EXT2"].ValSumProba = 1.;
+
+    CPdfCandidatesZ zcand_op =  CPdfCandidatesZ(zcandidates);
+
+    TCandidateZbyRank ranked_candidates;
+    zcand_op.SortByValSumProbaInt(ranked_candidates);
+    std::cout<< ranked_candidates[0].second.ValSumProba<<","<<ranked_candidates[0].first<<"\n";
+    std::cout<< ranked_candidates[1].second.ValSumProba<<","<<ranked_candidates[1].first<<"\n";
+    std::cout<< ranked_candidates[2].second.ValSumProba<<","<<ranked_candidates[2].first<<"\n";
+}
+
+
+BOOST_AUTO_TEST_CASE(SortByValSumProbaInt2)
+{
+    TCandidateZbyID zcandidates;
+    zcandidates["EXT5"].ValSumProba = 0.;
+    zcandidates["EXT1"].ValSumProba = 0.;
+    zcandidates["EXT2"].ValSumProba = 1.;
+    std::vector<std::string> Ids;
+    for (const auto & c : zcandidates){
+        Ids.push_back(c.first); // keys = ids
+        std::cout<< c.first <<"\n";
+    }
+    const TCandidateZbyID & c = zcandidates; 
+
+    std::stable_sort(Ids.rbegin(), Ids.rend(),
+        [&c](std::string Id1, std::string Id2) {return c.at(Id1).ValSumProba < c.at(Id2).ValSumProba;});
+    
+    std::cout<<"Descending order after stable_sort: \n";
+    TCandidateZbyRank ranked_candidates;
+    for (const auto & Id: Ids){
+        std::cout<<Id<<" "<<zcandidates[Id].ValSumProba<<"\n";
+        ranked_candidates.emplace_back(Id, zcandidates.at(Id));
+    }
+    for (const auto & cc : ranked_candidates){
+        std::cout<<cc.first<<" "<<cc.second.ValSumProba<<"\n";
+    }
+}*/
 BOOST_AUTO_TEST_SUITE_END()
