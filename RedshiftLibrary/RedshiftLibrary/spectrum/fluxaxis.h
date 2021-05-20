@@ -41,7 +41,7 @@ public:
     Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
 
 
-    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev, const CSpectrumNoiseAxis error={} ) const;
+    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev) const;
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();
@@ -50,7 +50,7 @@ public:
 private:
 
     Bool                ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const;
-    Bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const;
+    Bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev) const;
 
     CSpectrumNoiseAxis        m_StdError;//STD
 

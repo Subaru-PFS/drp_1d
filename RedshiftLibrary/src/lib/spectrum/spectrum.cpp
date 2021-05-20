@@ -346,7 +346,7 @@ bool CSpectrum::GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64& mean, F
     const CSpectrumNoiseAxis& error = GetFluxAxis().GetError();
     Float64 _Mean = 0.0;
     Float64 _SDev = 0.0;
-    GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev, error);//we can skip passing the error cause belongs to the same class
+    GetFluxAxis().ComputeMeanAndSDev(mask, _Mean, _SDev);
 
     mean = _Mean;
     std = _SDev;
