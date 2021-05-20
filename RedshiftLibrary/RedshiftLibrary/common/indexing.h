@@ -33,7 +33,7 @@ template <typename T> class CIndexing
     //value[index] can be equal or smaller than Z
     static bool getClosestLowerIndex(const std::vector<T>& ordered_values, const T& value, Int32& i_min) 
     {
-      if(value < ordered_values.front() || value > ordered_values.back())
+      if(value < ordered_values.front())
         {
           return false;
         }
@@ -48,13 +48,6 @@ template <typename T> class CIndexing
     //the closet at left or right, at epsilon
     static Int32 getCloserIndex(const std::vector<T>& ordered_values, const T& value) 
     {
-      Float64 epsilon = 1E-8;
-      if (((value < ordered_values.front()) && (std::abs(ordered_values.front()-value) > epsilon)) || 
-          (value - ordered_values.back() > epsilon))
-        {
-          Log.LogError("%.5f does not belong to [%.5f,%.5f]",value,ordered_values.front(),ordered_values.back());
-          return -1;
-        }
       typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
 
       //check if referring to the last element

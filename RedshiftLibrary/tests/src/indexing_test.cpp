@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(LowerIndex_outsideBorders)
 
     Float64 target = 6.519999999;   
     i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
-    BOOST_CHECK( i_min == -1);
+    BOOST_CHECK( i_min == 10);
 
     target = -0.019999999;
     i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(LowerIndex_outsideBorders)
 
     target = 0-1E-9;
     i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
-    BOOST_CHECK( i_min == 0);
+    BOOST_CHECK( i_min == -1);
 }
 
 /////
