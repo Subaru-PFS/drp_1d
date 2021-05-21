@@ -37,7 +37,11 @@ template <typename T> class CIndexing
         {
           return false;
         }
-      
+      if(value > ordered_values.back())
+      {
+          i_min = ordered_values.size()-1;
+          return true;
+      }
       typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
       if(*it_min > value) it_min = it_min -1; 
 

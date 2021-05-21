@@ -531,7 +531,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         UInt32 izmin = zindexesFullLstSquare[0];
         for (Int32 k = 1; k < zindexesFullLstSquare.size(); k++)
         {
-            UInt32 izmax = zindexesFullLstSquare[k] + 1;
+            UInt32 izmax = zindexesFullLstSquare[k]==result->Redshifts.size()-1? zindexesFullLstSquare[k]: zindexesFullLstSquare[k] + 1;
             izrangelist.push_back(TInt32Range(izmin, izmax));
             izmin = izmax; //setting min for next range (one value overlapping)        
         }
