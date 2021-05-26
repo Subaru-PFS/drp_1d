@@ -11,7 +11,6 @@
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
 #include <RedshiftLibrary/debug/assert.h>
-#include "RedshiftLibrary/spectrum/LSFbyExtrinsicComponents.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>
@@ -260,13 +259,15 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 
     //initialize the lsf depending on LSFType
     std::string lsfType;
-    Float64 instrumentResolution, nominalWidth;
+    TLSFArguments args;
     //TODO: below two params should be added in client and wiki page
     parameterStore.Get( "LSFType", lsfType );//todo: what is the default value?
-    parameterStore.Get( "NominalWidth", nominalWidth, 13. );
-    //below is very specific to linemodel....
-    parameterStore.Get( "linemodelsolve.linemodel.instrumentresolution", instrumentResolution,  2350.0 );
-    m_LSF = std::make_shared<CLSFbyExtrinsicComponents>(lsfType, instrumentResolution, nominalWidth);
+    parameterStore.Get( "LSF.width", args.width, 13. );
+    parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
+    parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
+
+    //m_LSF = CLSFFactory::Get()->Create(lsfType, args);//using factoryClass
+    m_LSF = CLSF::make_LSF(lsfType, args);
 }
 
 /**

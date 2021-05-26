@@ -11,7 +11,12 @@
 #include <stdlib.h>
 #include <boost/test/unit_test.hpp>
 #include "test-config.h"
-#include "RedshiftLibrary/spectrum/LSFbyExtrinsicComponents.h"
+#include <RedshiftLibrary/spectrum/LSFFactory.h>
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
+#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -53,9 +58,10 @@ BOOST_AUTO_TEST_CASE(Constructor)
   noise.SetNoiseFilePath(noisePath.c_str(), reader);
   noise.AddNoise(spectrum);
 
-  std::string lsfType="fixed";
-  Float64 opt_nominalWidth = 13.;
-  std::shared_ptr<CLSF> lsf{std::make_shared<CLSFbyExtrinsicComponents>(lsfType, opt_resolution, opt_nominalWidth)};
+  std::string lsfType="GaussianConstantWidth";
+  TLSFArguments args; args.width = 13;
+  std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
+  //std::shared_ptr<CLSF> lsf = CLSFFactory::Get()->Create(lsfType, opt_resolution, opt_nominalWidth);
   spectrum.SetLSF(lsf);
 
   generate_template_catalog(tplCatalog, 100, 3500., 12500.);

@@ -15,7 +15,7 @@
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
 %shared_ptr(CLSF)
-%shared_ptr(CLSFConstantGaussianWidth)
+%shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -464,11 +464,11 @@ class CLSF
   virtual bool IsValid() const=0;
 };
 
-class CLSFConstantGaussianWidth : public CLSF
+class CLSFGaussianConstantWidth : public CLSF
 {
  public:
-  CLSFConstantGaussianWidth(const Float64 sigma=0.0);
-  ~CLSFConstantGaussianWidth();
+  CLSFGaussianConstantWidth(const Float64 sigma=0.0);
+  ~CLSFGaussianConstantWidth();
   Float64 GetWidth(Float64 lambda=-1.0) const;
   void SetWidth(const Float64 sigma);
   bool IsValid() const;

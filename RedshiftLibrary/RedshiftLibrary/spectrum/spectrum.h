@@ -6,7 +6,14 @@
 #include <RedshiftLibrary/spectrum/fluxaxis.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
 #include <RedshiftLibrary/spectrum/LSF.h>
-#include <RedshiftLibrary/spectrum/LSFConstantWidth.h>
+
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
+//TODO: check if below are still required
+#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
+#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+
 #include <RedshiftLibrary/continuum/continuum.h>
 #include <RedshiftLibrary/processflow/parameterstore.h>
 #include <unordered_map>
@@ -75,7 +82,7 @@ public:
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 
     std::shared_ptr<CLSF>           GetLSF();
-    void                            SetLSF(const std::shared_ptr<CLSF> lsf);
+    void                            SetLSF(const std::shared_ptr<CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -296,7 +303,7 @@ std::shared_ptr<CLSF> CSpectrum::GetLSF()
 }
 
 inline 
-void CSpectrum::SetLSF(const std::shared_ptr<CLSF> lsf)
+void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
 {
     m_LSF = lsf;
 }

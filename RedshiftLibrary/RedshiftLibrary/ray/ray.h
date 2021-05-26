@@ -61,11 +61,11 @@ public:
           TAsymParams asymParams={NAN, NAN, NAN},
 	        Int32 id=-1);
 
-    CRay& operator=(const CRay& other);
-    CRay(const CRay& other);
-    CRay& operator=(const CRay&& other); 
-    CRay(const CRay&& other);
-    ~CRay();
+    CRay& operator=(const CRay& other)=default;
+    CRay(const CRay& other)=default;
+    CRay& operator=(CRay&& other)=default; 
+    CRay(CRay&& other)=default;
+    ~CRay()=default;
 
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;

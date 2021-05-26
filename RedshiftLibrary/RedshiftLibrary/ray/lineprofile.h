@@ -44,33 +44,11 @@ namespace NSEpic
             virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class 
         protected:
             Float64 m_nsigmasupport;
-            std::string m_name = "NONE";//hack to avoid using dynamic casting
+            const std::string m_name;//hack to avoid using dynamic casting
 
     };
     typedef std::shared_ptr<CLineProfile> CLineProfile_ptr;
     typedef std::vector<CLineProfile_ptr> TProfileList;
-
-    inline
-    const std::string& CLineProfile::GetName(){
-        return m_name;
-    }
-
-    //no need to define a constructor here
-    inline 
-    CLineProfile::CLineProfile(const Float64 nsigmasupport): 
-    m_nsigmasupport(nsigmasupport)
-    {}
-
-    inline 
-    CLineProfile::CLineProfile(const Float64 nsigmasupport, const std::string name): 
-    m_nsigmasupport(nsigmasupport),
-    m_name(name)
-    {}
-
-    inline
-    Float64 CLineProfile::GetNSigmaSupport(){
-        return m_nsigmasupport;
-    }
 
 }
 #endif

@@ -2,7 +2,8 @@
 #include <RedshiftLibrary/linemodel/multiline.h>
 #include <RedshiftLibrary/ray/ray.h>
 #include "RedshiftLibrary/ray/lineprofile.h"
-
+#include <RedshiftLibrary/spectrum/LSFFactory.h>
+#include "RedshiftLibrary/spectrum/LSF.h"
 #include <time.h>
 #include <iostream>
 #include <stdlib.h>
@@ -75,6 +76,27 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     CMultiLine elementcombined = CMultiLine(rs,  "combined", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
     CMultiLine elementVD = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
     //CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+
+    //setLSF on multiLines
+    std::string lsfType="GaussianConstantWidth"; //TBC
+    TLSFArguments args; args.width = 13;
+    //std::shared_ptr<CLSF> lsf = CLSFFactory::Create(lsfType, opt_resolution, opt_nominalWidth);
+    std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
+
+    elementID.SetLSF(lsf);
+    elementcombined.SetLSF(lsf);
+    elementVD.SetLSF(lsf);
+    
+    /*
+    std::cout<<elementID.GetLineWidth(10000., 1., true)<<"\n";
+    std::cout<<elementID.GetLineWidth(10000., 1., false)<<"\n";
+    
+    std::cout<<elementcombined.GetLineWidth(10000., 1., true)<<"\n";
+    std::cout<<elementcombined.GetLineWidth(10000., 1., false)<<"\n";
+
+    std::cout<<elementVD.GetLineWidth(10000., 1., true)<<"\n";
+    std::cout<<elementVD.GetLineWidth(10000., 1., false)<<"\n";
+    */
 
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., true), 0.001);
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., false),0.001);
@@ -152,7 +174,7 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(8.)};
   std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYMFIXED>(40.)};
   std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(40.)};
-
+/*
   CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
@@ -162,19 +184,18 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-  
-  std::cout << "hey"; 
-  std::cout << profilesym->GetNSigmaSupport()<<"\n";
+  */
+  /*std::cout << profilesym->GetNSigmaSupport()<<"\n";
   std::cout << profilelor->GetNSigmaSupport()<<"\n";
   std::cout << profileasym->GetNSigmaSupport()<<"\n";
   std::cout << profileasymfit->GetNSigmaSupport()<<"\n";
   std::cout << profileasymfixed->GetNSigmaSupport()<<"\n";
-
+*/
   BOOST_CHECK_CLOSE(8., profilesym->GetNSigmaSupport(), 0.001);
-  BOOST_CHECK_CLOSE(16., profilelor->GetNSigmaSupport(), 0.001);
+  BOOST_CHECK_CLOSE(32., profilelor->GetNSigmaSupport(), 0.001);
   BOOST_CHECK_CLOSE(8., profileasym->GetNSigmaSupport(), 0.001);
-  BOOST_CHECK_CLOSE(40., profileasymfit->GetNSigmaSupport(), 0.001);
-  BOOST_CHECK_CLOSE(40., profileasymfixed->GetNSigmaSupport(), 0.001);
+  BOOST_CHECK_CLOSE(200., profileasymfit->GetNSigmaSupport(), 0.001);
+  BOOST_CHECK_CLOSE(200., profileasymfixed->GetNSigmaSupport(), 0.001);
 
 }
 

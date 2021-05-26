@@ -9,22 +9,25 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-class CLSFConstantGaussianWidth : public CLSF
+class CLSFGaussianConstantWidth : public CLSF
 {
 
 public:
+    CLSFGaussianConstantWidth(const Float64 width);
 
-    CLSFConstantGaussianWidth(const Float64 width=0.0);
-    ~CLSFConstantGaussianWidth();
+    virtual Float64               GetWidth(Float64 lambda=-1.0) const override;
+    virtual bool                  IsValid() const override;
 
-    virtual Float64             GetWidth(Float64 lambda=-1.0)const override;
-    virtual void                SetWidth(const Float64 width) override;
-    virtual bool                IsValid() const override;
+    //static std::shared_ptr<CLSF> make_LSF();
 
 private:
-
-    Float64             m_width = 0.0;
+    const Float64             m_width = 0.0;
 };
+/*inline
+std::shared_ptr<CLSF> CLSFGaussianConstantWidth::make_LSF()
+{
+    return std::make_shared<CLSFGaussianConstantWidth>();
+}*/
 
 }
 
