@@ -113,11 +113,13 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
 }
 
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
-  if( !error.isEmpty() )
+    const CSpectrumNoiseAxis & error = GetError();
+
+    if( !error.isEmpty() )
     {
-        return ComputeMeanAndSDevWithError( mask, mean, sdev, error );
+        return ComputeMeanAndSDevWithError( mask, mean, sdev );
     }
     else
     {
@@ -130,33 +132,23 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
     Int32 j;
-    Float64 sum,var,ep;
+    Float64 sum = 0.0, sum2 = 0.0;
     Float64 ndOfSampleUsed;
 
-    sum=0.0;
     ndOfSampleUsed=0;
     for ( j=0; j < GetSamplesCount(); j++)
     {
         DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
         sum += mask[j] * m_Samples[j];
+        sum2 += mask[j] * m_Samples[j] * m_Samples[j];
         ndOfSampleUsed += mask[j];
     }
 
     if( ndOfSampleUsed > 1 )
     {
         mean = sum / ndOfSampleUsed;
-
-        var=0.0;
-        ep = 0.0;
-        for( j=0; j < GetSamplesCount() ;j++ )
-        {
-            sum = mask[j] * ( m_Samples[j] - mean );
-            ep+=sum;
-            var += sum * sum;
-        }
-
-        sdev = sqrt( (var - ep*ep / ndOfSampleUsed) / (ndOfSampleUsed-1) );
+        sdev = sqrt((sum2 - sum*sum*ndOfSampleUsed)/(ndOfSampleUsed-1));
     }
     else
     {
@@ -168,41 +160,32 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     return true;
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
+    const CSpectrumNoiseAxis & error = GetError();
+
     Int32 j;
 
-    Float64 sum, var, errorSum, err;
-    Int32 ndOfSampleUsed=0;
+    Float64 sum = 0.0, sum2 = 0.0, weigthSum = 0.0, weigthSum2=0.0, weight;
 
-    sum=0.0;
-    errorSum= 0.0;
-    ndOfSampleUsed=0;
     for (j=0;j< GetSamplesCount();j++)
     {
-        err = 1.0 / ( error[j] * error[j] );
+        DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
-        sum += mask[j] * m_Samples[j] * err;
-        errorSum += mask[j] * err;
+        weight = 1.0 / ( error[j] * error[j] );
 
-        ndOfSampleUsed += mask[j];
+        sum += mask[j] * m_Samples[j] * weight;
+        sum2 += mask[j] * m_Samples[j] * m_Samples[j] * weight;
+        weigthSum += mask[j] * weight;
+        weigthSum2 += mask[j] * weight * weight;
     }
 
-    if (ndOfSampleUsed>1)
+    if (weigthSum>0.0)
     {
-        mean = sum / errorSum;
-
-        var=0.0;
-        for (j=0;j < GetSamplesCount();j++)
-        {
-            sum = mask[j] * ( m_Samples[j] - mean );
-
-            var += sum * sum;
-        }
-
-        sdev = sqrt( var / ( ndOfSampleUsed - 1 ) );
+        mean = sum / weigthSum;
+        sdev = sqrt((sum2 - sum*sum*weigthSum)/(weigthSum - weigthSum2/weigthSum));
     }
     else
     {

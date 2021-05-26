@@ -397,17 +397,18 @@ BOOST_AUTO_TEST_CASE(calcul)
   const CSpectrumNoiseAxis error(1);
   const CSpectrumNoiseAxis empty_error;
 
+  object_FluxAxisA->GetError() = error;
   Bool resultComputeMeanAndSDev_cas1 =
-    object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev, error);
+    object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas1 == false);
 
   for (int i=0;i<10;i++) {
     (*Mask)[i] = 0;
   }
 
-
+  object_FluxAxisA->GetError() = empty_error;
   Bool resultComputeMeanAndSDev_cas2 =
-    object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev, empty_error);
+    object_FluxAxisA->ComputeMeanAndSDev((*Mask), mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas2 == false);
 }
 
