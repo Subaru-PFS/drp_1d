@@ -12,13 +12,20 @@ namespace NSEpic
     class CLineProfileASYMFIXED: public CLineProfile
     {
         public:
-            CLineProfileASYMFIXED(const Float64 nsigmasupport = 8.0);
-            Float64 GetLineProfile(Float64 x, Float64 x0, Float64 sigma) override;
-            Float64 GetLineFlux( Float64 A , Float64 sigma) override;
-            Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma) override;
-            Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma) override;
+            CLineProfileASYMFIXED(const Float64 nsigmasupport = 8.0, const std::string centeringMethod = "mean");
+            CLineProfileASYMFIXED(const TProfile pltype, const Float64 nsigmasupport = 8.0, const std::string centeringMethod = "mean");
+            Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma) override;
+            Float64 GetLineFlux( Float64 A , const Float64 sigma) override;
+            Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, const Float64 sigma) override;
+            Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) override;
             Float64 GetNSigmaSupport() override;
             TFloat64List GetLineProfileVector() override;//equivalent to ::computeKernel
+
+            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
+            Float64 GetAsymDelta() override;
+            virtual Bool    isAsymFixed()override;
+            virtual Bool    isAsymFit() override;
+            void    SetAsymParams(TAsymParams params);
 
             CLineProfileASYMFIXED(const CLineProfileASYMFIXED & other) = default; 
             CLineProfileASYMFIXED(CLineProfileASYMFIXED && other) = default; 
@@ -26,98 +33,85 @@ namespace NSEpic
             CLineProfileASYMFIXED& operator=(CLineProfileASYMFIXED&& other) = default; 
 
             ~CLineProfileASYMFIXED()=default; 
-        private:
-            Float64 m_asymfit_delta = 0.0;
-            Float64 m_asymfit_alpha = 2.0;
-            Float64 m_asymfit_sigma_coeff = 2.0;
-            // TAsymParams     m_asymParams = {NAN, NAN, NAN};
-            /*
-            m_SourceSizeDispersion = 0.1;
-
-            m_asym_sigma_coeff = 1.0;
-            m_asym_alpha = 4.5;
-
-            m_symxl_sigma_coeff = 5.0;
-
-            m_asym2_sigma_coeff = 2.0;
-            m_asym2_alpha = 2.0;*/
+        protected:
+            Float64 m_asym_delta = 0.0;
+            Float64 m_asym_alpha = 2.0;
+            Float64 m_asym_sigma_coeff = 2.0;
+            std::string m_centeringMethod = "mean";//"mean or mode"
+            Float64 m_constSigma = 2.5;//for fit/fixed
 
     };
 inline
-CLineProfileASYMFIXED::CLineProfileASYMFIXED(const Float64 nsigmasupport):
-CLineProfile(nsigmasupport, "ASYMFIXED")
+CLineProfileASYMFIXED::CLineProfileASYMFIXED(const Float64 nsigmasupport, const std::string centeringMethod):
+CLineProfile(nsigmasupport, ASYM),
+m_centeringMethod(centeringMethod)
 {}
+
+inline
+CLineProfileASYMFIXED::CLineProfileASYMFIXED(const TProfile pltype, const Float64 nsigmasupport, const std::string centeringMethod):
+CLineProfile(nsigmasupport, pltype),
+m_centeringMethod(centeringMethod)
+{}
+
+inline 
+Float64 CLineProfileASYMFIXED::GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc)
+{
+    sigma = sigma*m_asym_sigma_coeff;
+    Float64 delta = m_asym_alpha/std::sqrt(1.+m_asym_alpha*m_asym_alpha);
+    Float64 muz = delta*sqrt(2./M_PI);
+
+    Float64 m0 = 0;
+    if(m_centeringMethod == "mode")
+    {//correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+        Float64 sigmaz = std::sqrt(1-muz*muz);
+        Float64 gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
+        m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/m_asym_alpha);
+    }else 
+    if(m_centeringMethod == "mean")
+    {//correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
+        m0 = muz;
+    }else if(m_centeringMethod == "none"){
+        m0 = 0; //i.e., no centering;
+        delta = 0.; //reset it cause no centering here
+    }
+    xc = xc + sigma*m0;
+
+    Float64 xcd = xc + m_asym_delta;
+    xsurc = xcd/sigma;
+    return m0;
+}
 
 inline
 Float64 CLineProfileASYMFIXED::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
 {  
-    Float64 xc = x-x0, xcd;
-    Float64  delta, muz;
-    Float64 val = 0.0;
     Float64 xsurc;
 
-    sigma = sigma*m_asymfit_sigma_coeff;
-    //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    delta = m_asymfit_alpha/std::sqrt(1.+m_asymfit_alpha*m_asymfit_alpha);
-    muz = delta*sqrt(2./M_PI);
-    xc = xc + sigma*muz;
+    GetXSurc(x-x0, sigma, xsurc);
 
-    /*
-    //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    delta = alpha/std::sqrt(1.+alpha*alpha);
-    muz = delta*sqrt(2./M_PI);
-    sigmaz = std::sqrt(1-muz*muz);
-    gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-    m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-    xc = xc + sigma*m0;
-    //*/
-
-    xcd = xc + m_asymfit_delta;
-    xsurc = xcd/sigma;
-    val = exp(-0.5*xsurc*xsurc)*(1.0+erf(m_asymfit_alpha/sqrt(2.0)*xsurc));
+    Float64 val = exp(-0.5*xsurc*xsurc)*(1.0+erf(m_asym_alpha/sqrt(2.0)*xsurc));
     return val;
 }
 inline
 Float64 CLineProfileASYMFIXED::GetNSigmaSupport()
 {
-    return m_nsigmasupport*m_asymfit_sigma_coeff*2.5;
+    return m_nsigmasupport*m_asym_sigma_coeff*m_constSigma;
 }
 inline
 Float64 CLineProfileASYMFIXED::GetLineFlux( Float64 A, Float64 sigma)
 {
-    return A*sigma*m_asymfit_sigma_coeff*sqrt(2*M_PI);
+    return A*sigma*m_asym_sigma_coeff*sqrt(2*M_PI);
 }
 inline
-Float64 CLineProfileASYMFIXED::GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)
+Float64 CLineProfileASYMFIXED::GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, Float64 sigma)
 {
-    Float64 xc = x-lambda0*(1+redshift), xcd;
-    Float64 val=0.0;
-    Float64 xsurc, xsurc2;
-    Float64 delta, muz; 
-    Float64 alpha2;
+    Float64 xsurc;
+    Float64 alpha2 = m_asym_alpha*m_asym_alpha;
+    Float64 xc = x-x0*(1+redshift);
 
-    sigma = sigma*m_asymfit_sigma_coeff;
-    alpha2 = m_asymfit_alpha*m_asymfit_alpha;
+    GetXSurc(xc, sigma, xsurc);
 
-    //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    delta = m_asymfit_alpha/std::sqrt(1.+alpha2);
-    muz = delta*sqrt(2./M_PI);
-    xc = xc + sigma*muz;
-
-    /*
-    //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    delta = alpha/std::sqrt(1.+alpha2);
-    muz = delta*sqrt(2./M_PI);
-    sigmaz = std::sqrt(1-muz*muz);
-    gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-    m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-    xc = xc + sigma*m0;
-    //*/
-
-    xcd = xc+m_asymfit_delta;
-    xsurc = xcd/sigma;
-    xsurc2 = xsurc*xsurc;
-    val = lambda0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(m_asymfit_alpha/sqrt(2.0)*xsurc)) -m_asymfit_alpha * lambda0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha2)/2 * xsurc2);
+    Float64 xsurc2 = xsurc*xsurc;
+    Float64 val = x0 /sigma * xsurc * exp(-0.5*xsurc2) *(1.0+erf(m_asym_alpha/sqrt(2.0)*xsurc)) - m_asym_alpha * x0 /sqrt(2*M_PI) /sigma * exp(-(1+alpha2)/2 * xsurc2);
 
     return val;
 }
@@ -125,47 +119,50 @@ Float64 CLineProfileASYMFIXED::GetLineProfileDerivZ(Float64 x, Float64 lambda0, 
 inline
 Float64 CLineProfileASYMFIXED::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)
 {
-    Float64 val=0.0;
-    Float64 xc = x-x0;
-    Float64 xsurc, xsurc2, alpha2, valsym, valsymd, valasym, valasymd, xcd;
-    Float64 muz;
+    Float64 alpha2 = m_asym_alpha*m_asym_alpha;
 
-    sigma = sigma*m_asymfit_sigma_coeff;
-    alpha2 = m_asymfit_alpha*m_asymfit_alpha;
+    Float64 xsurc;
+    Float64 muz = GetXSurc(x-x0, sigma, xsurc);
+    Float64 xsurc2 = xsurc*xsurc;
 
-    //correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    Float64 delta = m_asymfit_alpha/std::sqrt(1.+alpha2);
-    muz = delta*sqrt(2./M_PI);
-    xc = xc + sigma*muz;
+    Float64 valSym = exp(-0.5*xsurc2);
+    Float64 valAsym = (1.0+erf(m_asym_alpha/sqrt(2.0)*xsurc));
 
-    /*
-    //correction in order to have the line shifted on the mode: from https://en.wikipedia.org/wiki/Skew_normal_distribution
-    delta = alpha/std::sqrt(1.+alpha2);
-    muz = delta*sqrt(2./M_PI);
-    sigmaz = std::sqrt(1-muz*muz);
-    gamma1 = ((4-M_PI)/2.0)*pow(delta*std::sqrt(2/M_PI), 3.)/pow(1-2*delta*delta/M_PI, 3./2.);
-    m0 = muz - gamma1*sigmaz/2.0 - 0.5*exp(-2*M_PI/alpha);
-    xc = xc + sigma*m0;
-    //*/
+    Float64 valSymD, valAsymD;
+    if(m_centeringMethod == "none"){
+        //temporary: double check muz == 0
+        if(muz)
+            throw std::runtime_error("Problem: mu is not null for ASYM profile!");
+    }
+    valSymD  = m_asym_sigma_coeff * (xsurc2/sigma - muz*xsurc/sigma)*exp(-0.5*xsurc2); 
+    valAsymD = m_asym_sigma_coeff * m_asym_alpha*sqrt(2)/(sigma*sqrt(M_PI))*(muz - xsurc)*exp(-0.5*xsurc2*alpha2);
 
-    xcd = xc + m_asymfit_delta;
-    xsurc = xcd/sigma;
-    xsurc2 = xsurc * xsurc;
-    valsym = exp(-0.5*xsurc2);
-    valsymd = m_asymfit_sigma_coeff * (xsurc2 /sigma - muz*xsurc/sigma) * exp(-0.5*xsurc2); // for mean centering
-    /* valsymd = coeff * (xsurc2 /sigma - m0*xsurc/sigma) * exp(-0.5*xsurc2); //for mode centering*/
-
-    valasym = (1.0+erf(m_asymfit_alpha/sqrt(2.0)*xsurc));
-    valasymd = m_asymfit_sigma_coeff  * m_asymfit_alpha*sqrt(2)/(sigma*sqrt(M_PI))*(muz - xsurc) * exp(-0.5*xsurc2*alpha2); // for mean centering
-    /* valasymd = coeff  * alpha*sqrt(2)/(sigma*sqrt(M_PI))*(m0 - xsurc) * exp(-0.5*xsurc2*alpha2); // for mode centering */
-
-    val = valsym * valasymd + valsymd * valasym;
+    Float64 val = valSym * valAsymD + valSymD * valAsym;
     return val;
 }
 inline
 TFloat64List CLineProfileASYMFIXED::GetLineProfileVector(){
     TFloat64List v;
     return v;
+}
+inline
+Float64 CLineProfileASYMFIXED::GetAsymDelta(){
+    return m_asym_delta;//default. Mainly used for asymfit/fixed
+}
+inline
+Bool CLineProfileASYMFIXED::isAsymFixed(){
+    return 1; 
+}
+inline
+Bool CLineProfileASYMFIXED::isAsymFit(){
+    return 0; 
+}
+inline
+void CLineProfileASYMFIXED::SetAsymParams(TAsymParams params)
+{
+    m_asym_delta = params.delta;
+    m_asym_alpha = params.alpha;
+    m_asym_sigma_coeff = params.sigma;
 }
 }
 #endif

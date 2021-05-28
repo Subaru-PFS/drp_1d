@@ -127,7 +127,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
     start = end + 1;
     end = profileString.find("_", start);
     temp = profileString.substr(start, end-start);
-    asymParams.width = std::stod(temp);
+    asymParams.sigma = std::stod(temp);
 
     start = end + 1;
     end = profileString.find("_", start);
@@ -263,26 +263,35 @@ void CRayCatalog::Load( const char* filePath )
             Float64 nominalAmplitude = 1.0;
             std::string velGroupName = "-1";
 
+            //tmp: default values 
+            Float64 nsigmasupport = 8.;
+            TAsymParams _asymParams = {1., 4.5, 0.};
+            //TAsymParams _asymFixedParams = {2., 2., 0.};
+            TAsymParams _asymFitParams = {2., 2., 0.};
+
+
             std::shared_ptr<CLineProfile> profile;
             // Parse profile name
             ++it;
             if( it != tok.end() ){
                 profileName = *it;
                 if (profileName.find("ASYMFIXED") != std::string::npos) {
-                    profile = std::make_shared<CLineProfileASYMFIXED>();
-                    parse_asymfixed(profileName, asymParams);
+                    parse_asymfixed(profileName, asymParams);//reading params from catalog files
+                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, asymParams, "mean");
                 }
                 else if (profileName == "SYM") {
-                    profile = std::make_shared<CLineProfileSYM>();
+                    profile = std::make_shared<CLineProfileSYM>(nsigmasupport);
                 }
                 else if (profileName == "LOR") { 
-                    profile = std::make_shared<CLineProfileLOR>();
+                    profile = std::make_shared<CLineProfileLOR>(nsigmasupport);
                 }
-                else if (profileName == "ASYM") { 
-                    profile = std::make_shared<CLineProfileASYM>();
+                else if (profileName == "ASYM") {
+                    asymParams =  _asymParams;
+                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none");
                 }
-                else if (profileName == "ASYMFIT") { 
-                    profile = std::make_shared<CLineProfileASYMFIT>();
+                else if (profileName == "ASYMFIT") {
+                    asymParams =  _asymFitParams; //using default values
+                    profile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFitParams, "mean");
                 }
             }
 

@@ -506,44 +506,43 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
 
 Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting)
 {
-    if(iCatalog<0){
+    if(iCatalog<0)
         return false;
-    }
+    
     linetags ltags;
     std::string lyaTag = ltags.lya_em;
+
     //loop the amplitudes in the iLine_st catalog in order to find Lya
     CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
     Int32 nLines = currentCatalogLineList.size();
+
     for(Int32 kL=0; kL<nLines; kL++)
     {
-        if(! (currentCatalogLineList[kL].GetName()==lyaTag.c_str()))
-        {
+        if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
             continue;
-        }
-	std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
-    if(forceLyaFitting)
-    {
-        targetProfile = std::make_shared<CLineProfileASYMFIT>();   
-    }
+
+        //accessing params from catalog
+        TAsymParams asymParams = currentCatalogLineList[kL].GetAsymParams();
+        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
+        
+        if(forceLyaFitting)
+            targetProfile = std::make_shared<CLineProfileASYMFIT>(8., currentCatalogLineList[kL].GetAsymParams(), "mean");   
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
         {
             //get the max nominal amplitude
             Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++){
-
+            for(UInt32 j=0; j<nRays; j++)
+            {
                 if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
                 {
-                    TAsymParams asymParams = currentCatalogLineList[kL].GetAsymParams();
                     LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
+                    //SetAsymParams could be removed since now it is now included in the profile of the ray.
                     LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetAsymParams(asymParams);
                     break;
                 }
-
             }
-
-
         }
 
     }

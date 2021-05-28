@@ -181,29 +181,20 @@ Float64 CLineModelElement::GetVelocity()
     return vel;
 }
 
-void CLineModelElement::SetAsymfitWidthCoeff(Float64 coeff)
-{
-    m_asymfit_sigma_coeff = coeff;
-}
-
 Float64 CLineModelElement::GetAsymfitWidthCoeff()
 {
     return m_asymfit_sigma_coeff;
 }
 
-void CLineModelElement::SetAsymfitAlphaCoeff(Float64 coeff)
+void CLineModelElement::SetAsymfitParams(Float64 sigma, Float64 alpha, Float64 delta)
 {
-    m_asymfit_alpha = coeff;
+    m_asymfit_sigma_coeff = sigma;
+    m_asymfit_alpha = alpha;
+    m_asymfit_delta = delta;
 }
-
 Float64 CLineModelElement::GetAsymfitAlphaCoeff()
 {
     return m_asymfit_alpha;
-}
-
-void CLineModelElement::SetAsymfitDelta(Float64 coeff)
-{
-    m_asymfit_delta = coeff;
 }
 
 Float64 CLineModelElement::GetAsymfitDelta()

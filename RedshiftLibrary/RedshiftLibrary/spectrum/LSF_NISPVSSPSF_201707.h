@@ -13,8 +13,8 @@ namespace NSEpic
   {
     public:
         CLSFGaussianNISPVSSPSF201707(Float64 sourcesize=0.1);
-        virtual Float64             GetWidth(Float64 lambda=-1.0) const override;
-        virtual bool                IsValid() const override;
+        Float64             GetWidth(Float64 lambda=-1.0) const override;
+        bool                IsValid() const override;
 
         //static std::shared_ptr<CLSF>   make_LSF(Float64 sourcesize);
     private:

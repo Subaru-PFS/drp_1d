@@ -17,13 +17,6 @@ namespace NSEpic
 {
 
 /**
- * struct that holds ASYMFIXED profile parameters
- */
-typedef struct {
-    Float64 width, alpha, delta;
-} TAsymParams;
-
-/**
  * \ingroup Redshift
  * Represent a Single Line.
  */
@@ -91,7 +84,7 @@ public:
     Float64             GetSigmaFitError() const;
     Float64             GetAmpFitError() const;
     TAsymParams         GetAsymParams() { return m_asymParams; };
-    void                SetAsymParams(TAsymParams asymParams) { m_asymParams = asymParams; };
+    void                SetAsymParams(TAsymParams asymParams);
 
 
     const std::string&  GetName() const;

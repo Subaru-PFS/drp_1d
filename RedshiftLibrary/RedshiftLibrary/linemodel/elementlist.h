@@ -330,6 +330,11 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
+    TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
+                                    const Float64& redshift, 
+                                    const UInt32& idxLyaE,
+                                    const TUInt32List& filterEltsIdxLya, 
+                                    const UInt32& idxLineLyaE);
     void SetLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);

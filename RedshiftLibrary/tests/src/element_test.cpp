@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     //CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
     //setLSF on multiLines
-    std::string lsfType="GaussianConstantWidth"; //TBC
-    TLSFArguments args; args.width = 13;
+    std::string lsfType="GaussianConstantResolution"; //TBC
+    TLSFArguments args; args.resolution = 0.9; 
     //std::shared_ptr<CLSF> lsf = CLSFFactory::Create(lsfType, opt_resolution, opt_nominalWidth);
     std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
 
 BOOST_AUTO_TEST_CASE(GetLineProfile){
   std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-  CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
+  CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2, 1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
   std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
@@ -126,12 +126,19 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "combined", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>()};
-  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>()};
-  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>()};
-  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYMFIXED>()};
+  Float64 nsigmasupport = 8.;
+  Float64 resolution = 0.9;
+  TAsymParams _asymParams = {1., 4.5, 0.};
+  TAsymParams _asymFixedParams = {2., 2., 0.};
+  TAsymParams _asymFitParams = {2., 2., 0.};
+
+  CMultiLine element = CMultiLine(rs,  "combined", nsigmasupport, resolution, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+
+  std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(nsigmasupport)};
+  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
+  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFixedParams, "mean")};
+  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymFitParams, "mean")};
 
   BOOST_CHECK_CLOSE(0.237755, profilesym->GetLineProfile(6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.2581961, profilelor->GetLineProfile(6564.61, 6568., 2. ), 0.001);
@@ -156,9 +163,15 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   catalogIndexes.push_back(0);
   CMultiLine element = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>()};
-  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>()};
-  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYMFIXED>()};
+  Float64 nsigmasupport = 8.;
+  Float64 resolution = 0.9;
+  TAsymParams _asymParams = {1., 4.5, 0.};
+  TAsymParams _asymFixedParams = {2., 2., 0.};
+  TAsymParams _asymFitParams = {2., 2., 0.};
+
+  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
+  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFixedParams, "mean")};
+  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymFitParams, "mean")};
 
   BOOST_CHECK_CLOSE(0.34153872866337925, profilesym->GetLineProfileDerivSigma(6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.24081246138668605, profileasym->GetLineProfileDerivSigma( 6564.61, 6565., 2. ), 0.001);

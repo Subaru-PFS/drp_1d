@@ -460,7 +460,6 @@ class CLSF
  public:
   virtual ~CLSF();
   virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
-  virtual void SetWidth(const Float64 sigma)=0;
   virtual bool IsValid() const=0;
 };
 
@@ -470,7 +469,6 @@ class CLSFGaussianConstantWidth : public CLSF
   CLSFGaussianConstantWidth(const Float64 sigma=0.0);
   ~CLSFGaussianConstantWidth();
   Float64 GetWidth(Float64 lambda=-1.0) const;
-  void SetWidth(const Float64 sigma);
   bool IsValid() const;
 };
 

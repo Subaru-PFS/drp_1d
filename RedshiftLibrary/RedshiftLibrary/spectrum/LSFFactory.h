@@ -40,10 +40,10 @@ private:
     CLSFFactory();
 
 
-    CLSFFactory(const CLSFFactory & other) = default; 
-    CLSFFactory(CLSFFactory && other) = default; 
-    CLSFFactory& operator=(const CLSFFactory& other) = default;  
-    CLSFFactory& operator=(CLSFFactory&& other) = default; 
+    CLSFFactory(const CLSFFactory & other) = delete; 
+    CLSFFactory(CLSFFactory && other) = delete; 
+    CLSFFactory& operator=(const CLSFFactory& other) = delete;  
+    CLSFFactory& operator=(CLSFFactory&& other) = delete; 
 
     typedef std::map<std::string, CreateLSFFn> FactoryMap;
     FactoryMap m_FactoryMap;

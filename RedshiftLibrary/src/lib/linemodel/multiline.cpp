@@ -453,12 +453,7 @@ Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool do
     if (doAsymfitdelta)
     {
         std::shared_ptr<CLineProfile> profile = m_Rays[subeIdx].GetProfile();
-
-        //if (profile==CRay::ASYMFIT || profile==CRay::ASYMFIXED)
-        if(profile->GetName()=="ASYMFIT" || profile->GetName()=="ASYMFITXED")
-        {
-            mu -= m_asymfit_delta;
-        }
+        mu -= profile->GetAsymDelta();
     }
     return mu;
 }

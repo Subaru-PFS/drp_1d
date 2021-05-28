@@ -34,9 +34,9 @@ public:
     CLSF(TLSFType name, CLineProfile_ptr profile);
     virtual ~CLSF() = default;
 
-    //CLSF(const CLSF & other) = default; 
+    CLSF(const CLSF & other) = default; 
     CLSF(CLSF && other) = default; 
-    //CLSF& operator=(const CLSF& other) = default;  
+    CLSF& operator=(const CLSF& other) = default;  
     CLSF& operator=(CLSF&& other) = default; 
 
     virtual Float64             GetWidth(Float64 lambda=-1.0) const=0;

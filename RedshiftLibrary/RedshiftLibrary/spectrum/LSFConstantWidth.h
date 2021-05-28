@@ -15,8 +15,8 @@ class CLSFGaussianConstantWidth : public CLSF
 public:
     CLSFGaussianConstantWidth(const Float64 width);
 
-    virtual Float64               GetWidth(Float64 lambda=-1.0) const override;
-    virtual bool                  IsValid() const override;
+    Float64               GetWidth(Float64 lambda=-1.0) const override;
+    bool                  IsValid() const override;
 
     //static std::shared_ptr<CLSF> make_LSF();
 

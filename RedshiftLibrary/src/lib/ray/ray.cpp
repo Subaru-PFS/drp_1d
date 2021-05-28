@@ -63,6 +63,13 @@ bool CRay::operator != (const CRay& str) const
     }
 }
 
+void CRay::SetAsymParams(TAsymParams asymParams)
+{
+    m_asymParams = asymParams; //probably irrelevant. we shoudl pass  by m_profile
+    if(!m_Profile)
+        throw runtime_error("CRay::SetAsymParams: lineprofile is not initialized");
+    m_Profile->SetAsymParams(asymParams);
+}
 Bool CRay::GetIsStrong() const
 {
     return m_Force == nForce_Strong;

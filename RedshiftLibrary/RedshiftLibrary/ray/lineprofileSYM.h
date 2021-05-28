@@ -28,7 +28,7 @@ namespace NSEpic
     };
 inline
 CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport):
-CLineProfile(nsigmasupport, "SYM")
+CLineProfile(nsigmasupport, SYM)
 {}
 
 inline

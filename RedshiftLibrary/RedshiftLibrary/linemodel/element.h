@@ -118,10 +118,13 @@ class CLineModelElement
     void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitWidthCoeff(Float64 coeff);
-    Float64 GetAsymfitWidthCoeff();
     void SetAsymfitAlphaCoeff(Float64 coeff);
-    Float64 GetAsymfitAlphaCoeff();
     void SetAsymfitDelta(Float64 coeff);
+
+    void SetAsymfitParams(Float64 sigma, Float64 alpha, Float64 delta);
+
+    Float64 GetAsymfitWidthCoeff();
+    Float64 GetAsymfitAlphaCoeff();
     Float64 GetAsymfitDelta();
 
     virtual Float64 GetSignFactor(Int32 subeIdx) = 0;
