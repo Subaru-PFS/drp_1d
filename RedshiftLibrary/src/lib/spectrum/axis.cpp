@@ -50,13 +50,13 @@ Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */
-void CSpectrumAxis::MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const//const//mask is 0. or 1.
+void CSpectrumAxis::MaskAxis(const TFloat64List& mask, CSpectrumAxis& maskedAxis) const//const//mask is 0. or 1.
 {
     return maskVector(mask, m_Samples, maskedAxis.m_Samples);
 }
 
 
-void CSpectrumAxis::maskVector(TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector)
+void CSpectrumAxis::maskVector(const TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector)
 {
     if(mask.size()!=inputVector.size()){
         Log.LogError("CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");

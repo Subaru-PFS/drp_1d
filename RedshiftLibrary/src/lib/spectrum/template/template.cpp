@@ -11,14 +11,6 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * Constructor, empty.
- */
-CTemplate::CTemplate( )
-{
-
-}
-
-/**
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
@@ -28,8 +20,8 @@ CTemplate::CTemplate( const std::string& name, const std::string& category ) :
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
-		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
-    CSpectrum(spectralAxis, fluxAxis),
+		      CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis) :
+    CSpectrum(std::move(spectralAxis), std::move(fluxAxis)),
     m_Category( category )
 {
     m_Name = name;
@@ -51,7 +43,23 @@ CTemplate::CTemplate( const CTemplate& other):
 {
 }
 
-CTemplate::CTemplate( const CTemplate& other, TFloat64List mask): 
+CTemplate::CTemplate( CTemplate&& other): 
+    CSpectrum(std::move(other)),
+    m_kDust(other.m_kDust),
+    m_meiksinIdx(other.m_meiksinIdx),
+    m_redshiftMeiksin(other.m_redshiftMeiksin),
+    m_Category( std::move(other.m_Category)),
+    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
+    m_IsmIgm_kend(other.m_IsmIgm_kend),
+    m_computedDustCoeff(std::move(other.m_computedDustCoeff)), 
+    m_computedMeiksingCoeff(std::move(other.m_computedMeiksingCoeff)),
+    m_ismCorrectionCalzetti(std::move(other.m_ismCorrectionCalzetti)),
+    m_igmCorrectionMeiksin(std::move(other.m_igmCorrectionMeiksin)),
+    m_NoIsmIgmFluxAxis(std::move(other.m_NoIsmIgmFluxAxis))
+{
+}
+
+CTemplate::CTemplate( const CTemplate& other, const TFloat64List& mask): 
     CSpectrum(other, mask),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
@@ -73,12 +81,11 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
             CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
         }
     }
-
 }
+
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
-    CSpectrum::operator =(other);
-    m_Name = other.m_Name;
+    CSpectrum::operator=(other);
 
     m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
     m_kDust = other.m_kDust;
@@ -91,6 +98,24 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     m_IsmIgm_kend = other.m_IsmIgm_kend;
     m_ismCorrectionCalzetti = other.m_ismCorrectionCalzetti;
     m_igmCorrectionMeiksin = other.m_igmCorrectionMeiksin;
+    return *this;
+}
+
+CTemplate& CTemplate::operator=(CTemplate&& other)
+{
+    CSpectrum::operator=(std::move(other));
+
+    m_NoIsmIgmFluxAxis = std::move(other.m_NoIsmIgmFluxAxis);
+    m_kDust = other.m_kDust;
+    m_meiksinIdx = other.m_meiksinIdx;
+    m_redshiftMeiksin = other.m_redshiftMeiksin;
+    m_computedDustCoeff = std::move(other.m_computedDustCoeff); 
+    m_computedMeiksingCoeff = std::move(other.m_computedMeiksingCoeff);
+    m_Category = std::move(other.m_Category);
+    m_IsmIgm_kstart = other.m_IsmIgm_kstart;
+    m_IsmIgm_kend = other.m_IsmIgm_kend;
+    m_ismCorrectionCalzetti = std::move(other.m_ismCorrectionCalzetti);
+    m_igmCorrectionMeiksin = std::move(other.m_igmCorrectionMeiksin);
     return *this;
 }
 

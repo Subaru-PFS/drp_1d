@@ -10,37 +10,6 @@
 
 using namespace NSEpic;
 
-/**
- * \brief Empty constructor.
- **/
-CModelSpectrumResult::CModelSpectrumResult()
-{
-  
-}
-
-/**
- * \brief Sets the model to CSpectrum ( spc ).
- **/
-CModelSpectrumResult::CModelSpectrumResult(const CSpectrum& spc):
-    m_model(spc)
-{
-    //probably can add model params as class variable here..
-}
-
-/**
- * \brief Empty destructor.
- **/
-CModelSpectrumResult::~CModelSpectrumResult()
-{
-
-}
-
-
-CSpectrum& CModelSpectrumResult::GetSpectrum()
-{
-    return m_model;
-}
-
 void CModelSpectrumResult::getData(const std::string& name, double **data, int *size) const
 {
   if( name.compare("ModelLambda") == 0)

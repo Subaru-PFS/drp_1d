@@ -36,7 +36,7 @@ CSpectrum::CSpectrum():
 
 CSpectrum::CSpectrum(const std::string& name):m_Name(name){};
 
-CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
+CSpectrum::CSpectrum(const CSpectrum& other, const TFloat64List& mask):
     m_estimationMethod(other.m_estimationMethod),
     m_dfBinPath(other.m_dfBinPath),
     m_medianWindowSize(other.m_medianWindowSize),
@@ -73,9 +73,13 @@ CSpectrum::CSpectrum(const CSpectrum& other, TFloat64List mask):
     }
 }
 
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf) :
-    m_SpectralAxis(spectralAxis),
-    m_RawFluxAxis(fluxAxis),
+CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis):
+    CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr)
+{}
+
+CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf) :
+    m_SpectralAxis(std::move(spectralAxis)),
+    m_RawFluxAxis(std::move(fluxAxis)),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
     m_nbScales(-1),
@@ -83,18 +87,11 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_Name(""),
     m_LSF(lsf)
 {
-    if (spectralAxis.GetSamplesCount() != fluxAxis.GetSamplesCount()){
+    if (m_SpectralAxis.GetSamplesCount() != m_RawFluxAxis.GetSamplesCount()){
         Log.LogError("CSpectrum: FluxAxis and SpectralAxis do not have same length");
         throw runtime_error("CSpectrum: FluxAxis and SpectralAxis do not have same length");
     }
 }
-
-CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis):
-    CSpectrum(spectralAxis, fluxAxis, std::make_shared<CLSFConstantGaussian>())
-{
-
-}
-
 
 //copy constructor
 // copy everything exept fullpath, rebined buffer (m_FineGridInterpolated, m_pfgFlux)
@@ -111,6 +108,23 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
     m_Name(other.m_Name),
+    alreadyRemoved(other.alreadyRemoved)
+{
+
+}
+
+CSpectrum::CSpectrum(CSpectrum&& other):
+    m_estimationMethod(std::move(other.m_estimationMethod)),
+    m_dfBinPath(std::move(other.m_dfBinPath)),
+    m_medianWindowSize(other.m_medianWindowSize),
+    m_nbScales(other.m_nbScales),
+    m_SpectralAxis(std::move(other.m_SpectralAxis)),
+    m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
+    m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
+    m_WithoutContinuumFluxAxis(std::move(other.m_WithoutContinuumFluxAxis)),
+    m_spcType(other.m_spcType),
+    m_LSF(std::move(other.m_LSF)),
+    m_Name(std::move(other.m_Name)),
     alreadyRemoved(other.alreadyRemoved)
 {
 
@@ -140,6 +154,27 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_nbScales = other.m_nbScales;
     m_Name = other.m_Name;
     alreadyRemoved = other.alreadyRemoved;
+    return *this;
+}
+
+CSpectrum& CSpectrum::operator=(CSpectrum&& other)
+{
+    m_SpectralAxis = std::move(other.m_SpectralAxis);
+    m_RawFluxAxis = std::move(other.m_RawFluxAxis);
+    m_ContinuumFluxAxis = std::move(other.m_ContinuumFluxAxis);
+    m_WithoutContinuumFluxAxis = std::move(other.m_WithoutContinuumFluxAxis);
+    m_spcType = other.m_spcType;
+    SetType(m_spcType);
+
+    m_LSF = std::move(other.m_LSF);
+
+    m_estimationMethod = std::move(other.m_estimationMethod);
+    m_dfBinPath = std::move(other.m_dfBinPath);
+    m_medianWindowSize = other.m_medianWindowSize;
+    m_nbScales = other.m_nbScales;
+    m_Name = std::move(other.m_Name);
+    alreadyRemoved = other.alreadyRemoved;
+
     return *this;
 }
 

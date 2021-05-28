@@ -31,8 +31,8 @@ public:
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
     
-    void MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
-    static void maskVector(TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector);
+    void MaskAxis(const TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
+    static void maskVector(const TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector);
 
     const Float64*           GetSamples() const;
     Float64*                 GetSamples();

@@ -38,13 +38,15 @@ public:
 
     CSpectrum();
     CSpectrum(const std::string& name);
-    CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
+    CSpectrum(CSpectrum&& other);
+    CSpectrum(const CSpectrum& other, const TFloat64List & mask);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
+    CSpectrum& operator=(CSpectrum&& other);
 
     void InitSpectrum(CParameterStore& parameterStore);
     void SetName(const std::string name);

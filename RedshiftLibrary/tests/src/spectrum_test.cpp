@@ -101,11 +101,7 @@ BOOST_AUTO_TEST_CASE(LSF)
 
     //Test constructor with spectralAxis and fluxAxis
     CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
-
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->IsValid() == false);
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.0);
-    object_CSpectrum2.GetLSF()->SetSigma(0.01);
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.01);
+    BOOST_CHECK(object_CSpectrum2.GetLSF() == nullptr);
     
     //Test default constructor
     CSpectrum object_CSpectrum3;

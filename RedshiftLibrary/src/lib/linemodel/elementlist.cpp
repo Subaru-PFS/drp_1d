@@ -6393,7 +6393,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
         fluxAxisNothingUnderLines[t] -= spcmodel4linefittingFluxAxis[t];
     }
 
-    CSpectrum spcCorrectedUnderLines=CSpectrum(spectralAxis ,fluxAxisNothingUnderLines);
+    CSpectrum spcCorrectedUnderLines=CSpectrum(spectralAxis ,std::move(fluxAxisNothingUnderLines));
 
 
     // TODO: use the continuum remover defined in the CSpectrum continuum member, with params defined in the smae place
@@ -6416,12 +6416,12 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
 
 
 
-    CSpectrumFluxAxis fluxAxisNewContinuum;
-    fluxAxisNewContinuum.SetSize( fluxAxisNothingUnderLines.GetSamplesCount() );
+    CSpectrumFluxAxis fluxAxisNewContinuum(spcCorrectedUnderLines.GetSampleCount());
+    const CSpectrumFluxAxis & fluxAxisNothingUnderLines_ = spcCorrectedUnderLines.GetFluxAxis(); 
 
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
-        fluxAxisNewContinuum[t] = fluxAxisNothingUnderLines[t];
+        fluxAxisNewContinuum[t] = fluxAxisNothingUnderLines_[t];
     }
     fluxAxisNewContinuum.Subtract(fluxAxisWithoutContinuumCalc);
 

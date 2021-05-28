@@ -18,13 +18,15 @@ class CTemplate : public CSpectrum
 
 public:
 
-    CTemplate();
+    CTemplate() = default;
     CTemplate( const std::string& name, const std::string& category );
     CTemplate( const std::string& name, const std::string& category,
-	       CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+	       CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
     CTemplate(const CTemplate& other);
-    CTemplate(const CTemplate& other, TFloat64List mask);
+    CTemplate(CTemplate&& other);
+    CTemplate(const CTemplate& other, const TFloat64List & mask);
     CTemplate& operator=(const CTemplate& other); 
+    CTemplate& operator=(CTemplate&& other); 
     ~CTemplate()=default;
 
     const std::string&  GetCategory() const;

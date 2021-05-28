@@ -96,7 +96,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     const CSpectrumFluxAxis & modelflux =  m_templateRebined_bf.GetFluxAxis();
     CSpectrumSpectralAxis modelwav = m_templateRebined_bf.GetSpectralAxis(); // needs a copy to be shifted
     modelwav.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
-    spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(modelwav, modelflux));
+    spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelwav), modelflux));
     return 0;
 }
 
