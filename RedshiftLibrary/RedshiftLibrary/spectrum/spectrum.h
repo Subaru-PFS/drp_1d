@@ -65,11 +65,11 @@ public:
     const CSpectrumNoiseAxis&       GetErrorAxis() const;
     std::shared_ptr<const CLSF>     GetLSF() const;
 
-    void                            SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis);
-    void                            SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
-    void                            SetFluxAxis(const CSpectrumFluxAxis & fluxaxis);
-    void                            SetFluxAxis(CSpectrumFluxAxis && fluxaxis);
-    void                            SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis);
+    virtual void                    SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis);
+    virtual void                    SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
+    virtual void                    SetFluxAxis(const CSpectrumFluxAxis & fluxaxis);
+    virtual void                    SetFluxAxis(CSpectrumFluxAxis && fluxaxis);
+    virtual void                    SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis);
     void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 

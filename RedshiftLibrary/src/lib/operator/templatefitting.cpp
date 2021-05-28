@@ -225,8 +225,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         Int32 kStart = -1, kEnd = -1;
             
         if (apply_ism || opt_extinction){          
-            m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-            m_templateRebined_bf.SetIsmIgmLambdaRange( range );
+            m_templateRebined_bf.InitIsmIgmConfig(range, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
             m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
         }else{
             currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);

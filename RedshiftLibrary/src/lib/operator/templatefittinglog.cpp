@@ -853,8 +853,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
    //note that there is no need to copy the ism/igm cause they already exist in the rebinned template
     if(m_enableIGM || m_enableISM){
-        m_templateRebinedLog.InitIsmIgmConfig();
-        m_templateRebinedLog.SetIsmIgmLambdaRange(kstart, kend);
+        m_templateRebinedLog.InitIsmIgmConfig(kstart, kend);
     }
     for (Int32 kIGM = 0; kIGM < nIGM; kIGM++)
     {

@@ -202,9 +202,10 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis & fluxaxis)
         Log.LogError("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
         throw runtime_error("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
     }
-
+    
     ResetContinuum();
     SetType(EType::nType_raw);
+    ClearFineGrid();
     m_RawFluxAxis = fluxaxis;
 }
 
@@ -217,6 +218,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis && fluxaxis)
 
     ResetContinuum();
     SetType(EType::nType_raw);
+    ClearFineGrid();
     m_RawFluxAxis = std::move(fluxaxis);
 }
 
@@ -226,6 +228,10 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumF
         Log.LogError("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
         throw runtime_error("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
     }
+
+    ResetContinuum();
+    SetType(EType::nType_raw);
+    ClearFineGrid();
 
     m_SpectralAxis  = std::move(spcaxis);
     SetFluxAxis(std::move(fluxaxis));
@@ -259,7 +265,7 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 Bool CSpectrum::RebinFineGrid() const
 {
   // Precalculate a fine grid template to be used for the 'closest value' rebin method
-  Int32 n = GetFluxAxis().GetSamplesCount();
+  Int32 n = GetSampleCount();
   if(!n)
     return false;
 
@@ -1006,4 +1012,6 @@ void CSpectrum::ScaleFluxAxis(Float64 scale){
         m_ContinuumFluxAxis *= scale;
         m_WithoutContinuumFluxAxis *= scale;
     }
+    if (m_FineGridInterpolated)
+        ClearFineGrid();
 }

@@ -74,9 +74,10 @@ CTemplate::CTemplate( const CTemplate& other, const TFloat64List& mask):
         if(!ret)//complete range is masked
         {
             m_IsmIgm_kstart = -1; m_IsmIgm_kend = -1;//not necessary but for security
-            DisableIsmIgm();
+            m_NoIsmIgmFluxAxis.clear();
         }else{
             other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+
             CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
             CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
         }
@@ -127,17 +128,6 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
-void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
-{
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
-    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
-}
-
-void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
-{
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
-    m_IsmIgm_kstart = kstart; m_IsmIgm_kend = kend;
-}
 /**
  * Saves the template in the given filePath.
  */
@@ -270,24 +260,31 @@ bool CTemplate::MeiksinInitFailed() const
     return failed;
 }
 
-Bool CTemplate::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                       CTemplate& rebinedTemplate, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
-{
-    rebinedTemplate.DisableIsmIgm();
-    return CSpectrum::Rebin(range, targetSpectralAxis, rebinedTemplate, rebinedMask, opt_interp, opt_error_interp);
-}
 //init ism/igm configuration when we change redshift value
 void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-                                const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
-    m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-    m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    
-    InitIsmIgmConfig();
+    InitIsmIgmConfig(0, GetSampleCount()-1, ismCorrectionCalzetti, igmCorrectionMeiksin);
 }
 
-void CTemplate::InitIsmIgmConfig()
+void CTemplate::InitIsmIgmConfig( const TFloat64Range & lbdaRange,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
+    Int32 kstart, kend;
+    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
+    InitIsmIgmConfig(kstart, kend, ismCorrectionCalzetti, igmCorrectionMeiksin);
+}
+
+void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+{
+    if (ismCorrectionCalzetti)
+        m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+
+    if (igmCorrectionMeiksin)
+        m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
     if (MeiksinInitFailed() && CalzettiInitFailed() ) {
         Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
@@ -297,14 +294,14 @@ void CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
+    m_IsmIgm_kstart = kstart; 
+    m_IsmIgm_kend = kend; 
 
     if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
         m_NoIsmIgmFluxAxis = GetFluxAxis();
     else // reset the fluxAxis
         GetFluxAxis_() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
-    
-    SetIsmIgmLambdaRange(0, GetSampleCount()-1);
-    
+        
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
     
