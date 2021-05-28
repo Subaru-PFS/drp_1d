@@ -79,8 +79,7 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
         }
     }
   file.close();
-  spectrum.SetSpectralAxis(std::move(spcSpectralAxis));
-  spectrum.SetFluxAxis(std::move(spcFluxAxis));
+  spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
   
   Log.LogDebug ( "File contents read as ASCII characters." );
 }

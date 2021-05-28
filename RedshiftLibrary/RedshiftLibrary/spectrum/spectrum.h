@@ -67,6 +67,7 @@ public:
     void                            SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
     void                            SetFluxAxis(const CSpectrumFluxAxis & fluxaxis);
     void                            SetFluxAxis(CSpectrumFluxAxis && fluxaxis);
+    void                            SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis);
     void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 
@@ -263,30 +264,6 @@ inline
 const CSpectrumNoiseAxis&  CSpectrum::GetErrorAxis() const
 {
     return GetFluxAxis().GetError();
-}
-
-inline
-void CSpectrum::SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis)
-{
-    m_SpectralAxis  = spectralaxis;
-}
-
-inline
-void CSpectrum::SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis)
-{
-    m_SpectralAxis  = std::move(spectralaxis);
-}
-
-inline
-void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis & fluxaxis)
-{
-    GetFluxAxis_() = fluxaxis;
-}
-
-inline
-void CSpectrum::SetFluxAxis(CSpectrumFluxAxis && fluxaxis)
-{
-    GetFluxAxis_() = std::move(fluxaxis);
 }
 
 inline 

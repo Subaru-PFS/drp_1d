@@ -65,12 +65,11 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
     if( fits_read_col( fptr, TDOUBLE, 1, 1, 1, length, &nullval, spcSpectralAxis.GetSamples(), &anynul, &status ) )
         return false;
 
-    spectrum.SetSpectralAxis(std::move(spcSpectralAxis));
 
     if( fits_read_col( fptr, TDOUBLE, 2, 1, 1, length, &nullval, spcFluxAxis.GetSamples(), &anynul, &status ) )
         return false;
 
-    spectrum.SetFluxAxis(std::move(spcFluxAxis));
+    spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
 
     return true;
 }
@@ -131,8 +130,6 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     Log.LogDebug("    CSpectrumIOFitsReader: loaded flux values n samples=%d", length);
     Log.LogDebug("    CSpectrumIOFitsReader: loaded flux values first sample=%f", spcFluxAxis.GetSamples()[0]);
 
-    spectrum.SetFluxAxis(std::move(spcFluxAxis));
-
     // read keywords
     float crpix1, crval1, cdelt1;
     if( fits_read_key( fptr, TFLOAT, "CRPIX1", &crpix1, NULL, &status ) )
@@ -163,7 +160,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
 
     Log.LogDebug("    CSpectrumIOFitsReader: loaded spectral values first sample=%f", spcSpectralAxis.GetSamples()[0]);
         
-    spectrum.SetSpectralAxis(std::move(spcSpectralAxis));
+    spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
 
 
     return true;

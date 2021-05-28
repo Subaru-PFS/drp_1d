@@ -296,7 +296,6 @@ const CSpectrum& CLineModelElementList::GetModelSpectrum() const
 
 CSpectrum CLineModelElementList::GetSpectrumModelContinuum() const
 {
-    //std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>( new CSpectrum(*m_SpectrumModel) );
     CSpectrum spc(m_SpectrumModel);
     spc.SetFluxAxis(m_ContinuumFluxAxis);
     return spc;
@@ -1157,9 +1156,7 @@ Int32 CLineModelElementList::LoadFitContaminantTemplate(const TFloat64Range& lam
     gsl_spline_free (spline);
     gsl_interp_accel_free (accelerator);
 
-    m_tplContaminantSpcRebin.SetSpectralAxis(std::move(tplContaminantRebinSpcAxis));
-    m_tplContaminantSpcRebin.SetFluxAxis(std::move(tplContaminantRebinFluxAxis));
-
+    m_tplContaminantSpcRebin.SetSpectralAndFluxAxes(std::move(tplContaminantRebinSpcAxis),std::move(tplContaminantRebinFluxAxis));
 
     //*
     //Fit contaminant template AMPLITUDE
@@ -4558,8 +4555,7 @@ std::vector<UInt32> CLineModelElementList::ReestimateContinuumUnderLines(const s
         //                    (*_FluxAxis).GetError()[i] = tmpError[i];
         //                }
     }
-    spcBuffer.SetSpectralAxis(std::move(_SpectralAxis));
-    spcBuffer.SetFluxAxis(std::move(_FluxAxis));
+    spcBuffer.SetSpectralAndFluxAxes(std::move(_SpectralAxis),std::move(_FluxAxis));
 
     /*
     // export for debug

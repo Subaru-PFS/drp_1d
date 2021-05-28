@@ -75,8 +75,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
         }
         break;
     }
-    spectrum.SetSpectralAxis(std::move(spectralAxis));
-    spectrum.SetFluxAxis(std::move(fluxAxis));
+    spectrum.SetSpectralAndFluxAxes(std::move(spectralAxis),std::move(fluxAxis));
 
 }
 

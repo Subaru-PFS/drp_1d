@@ -35,10 +35,9 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                    
     if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
         std::shared_ptr<CSpectrum> spc = make_shared<CSpectrum>(inputContext.GetSpectrum()->GetName());;//std::make_shared<CSpectrum>(*inputContext.GetSpectrum());
-        spc->SetFluxAxis(inputContext.GetSpectrum()->GetFluxAxis());
         CSpectrumSpectralAxis  spcWav = inputContext.GetSpectrum()->GetSpectralAxis();
         spcWav.RecomputePreciseLoglambda(); // in case input spectral lambda have less precision
-        spc->SetSpectralAxis(std::move(spcWav));
+        spc->SetSpectralAndFluxAxes(std::move(spcWav), inputContext.GetSpectrum()->GetFluxAxis());
         inputContext.SetRebinnedSpectrum(spc);
     }else
         inputContext.SetRebinnedSpectrum(LoglambdaRebinSpectrum(inputContext.GetSpectrum(), errorRebinMethod));        

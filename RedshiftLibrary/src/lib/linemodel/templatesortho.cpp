@@ -102,7 +102,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                             const std::string &opt_rigidity)
 {
 
-    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate) );
+    std::shared_ptr<CTemplate> tplOrtho = std::make_shared<CTemplate>(inputTemplate);
 
     bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){

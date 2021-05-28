@@ -173,8 +173,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_TEST_MESSAGE("index1:"<<m_SpectralAxis.GetSamplesCount());
     BOOST_TEST_MESSAGE("index2:"<<m_FluxAxis.GetSamplesCount());
 
-    object_CSpectrum.SetSpectralAxis(m_SpectralAxis);
-    object_CSpectrum.SetFluxAxis(m_FluxAxis);
+    object_CSpectrum.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
 
     BOOST_TEST_MESSAGE("index21:"<<object_CSpectrum.GetSampleCount());
     BOOST_CHECK(object_CSpectrum.GetSampleCount()==nbmax);

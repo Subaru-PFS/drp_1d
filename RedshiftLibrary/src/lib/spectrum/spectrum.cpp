@@ -83,7 +83,10 @@ CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumF
     m_Name(""),
     m_LSF(lsf)
 {
-
+    if (spectralAxis.GetSamplesCount() != fluxAxis.GetSamplesCount()){
+        Log.LogError("CSpectrum: FluxAxis and SpectralAxis do not have same length");
+        throw runtime_error("CSpectrum: FluxAxis and SpectralAxis do not have same length");
+    }
 }
 
 CSpectrum::CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis):
@@ -140,6 +143,59 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     return *this;
 }
 
+void CSpectrum::SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis)
+{
+    if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()){
+        Log.LogError("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+        throw runtime_error("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+    }
+    m_SpectralAxis  = spectralaxis;
+}
+
+void CSpectrum::SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis)
+{
+    if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()){
+        Log.LogError("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+        throw runtime_error("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+    }
+    m_SpectralAxis  = std::move(spectralaxis);
+}
+
+void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis & fluxaxis)
+{
+    if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount()){
+        Log.LogError("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+        throw runtime_error("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+    }
+
+    ResetContinuum();
+    SetType(EType::nType_raw);
+    m_RawFluxAxis = fluxaxis;
+}
+
+void CSpectrum::SetFluxAxis(CSpectrumFluxAxis && fluxaxis)
+{
+    if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount()){
+        Log.LogError("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+        throw runtime_error("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+    }
+
+    ResetContinuum();
+    SetType(EType::nType_raw);
+    m_RawFluxAxis = std::move(fluxaxis);
+}
+
+void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis)
+{
+    if (fluxaxis.GetSamplesCount() != spcaxis.GetSamplesCount()){
+        Log.LogError("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
+        throw runtime_error("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
+    }
+
+    m_SpectralAxis  = std::move(spcaxis);
+    SetFluxAxis(std::move(fluxaxis));
+}
+
 //called from context
 void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 {
@@ -161,24 +217,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     SetDecompScales((Int32)nscales);
     SetWaveletsDFBinPath(dfBinPath);
 }
-
-
-/*
-void CSpectrum::SetRawFluxAxis()
-{
-
-}
-
-void CSpectrum::SetContinuumFluxAxis()
-{
-
-}
-
-void CSpectrum::SetWithoutContinuumFluxAxis()
-{
-
-}
-*/
 
 /**
  * below should be calculated in the case of precomputedfinegrid
@@ -765,10 +803,6 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     if(m_SpectralAxis.IsInLinearScale()){
         currentRange = range;
     }
-
-    rebinedSpectrum.ResetContinuum();
-    rebinedSpectrum.SetType(EType::nType_raw);
-    rebinedSpectrum.SetSpectralAxis(targetSpectralAxis); 
     
     CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
@@ -924,7 +958,9 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         j++;
     }
 
-    rebinedSpectrum.SetFluxAxis(std::move(rebinedFluxAxis));
+    rebinedSpectrum.ResetContinuum();
+    rebinedSpectrum.SetType(EType::nType_raw);
+    rebinedSpectrum.SetSpectralAndFluxAxes(targetSpectralAxis,std::move(rebinedFluxAxis)); 
 
     return true;
 }

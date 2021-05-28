@@ -2205,9 +2205,7 @@ Int32 COperatorLineModel::initContaminant(
     // applying offset for ra/dec distance between main source and contaminant
     spcSpectralAxis.ApplyOffset(m_contLambdaOffset);
 
-    m_tplContaminant->SetSpectralAxis(std::move(spcSpectralAxis));
-    m_tplContaminant->SetFluxAxis(std::move(spcFluxAxis));
-
+    m_tplContaminant->SetSpectralAndFluxAxes(std::move(spcSpectralAxis), std::move(spcFluxAxis));
     m_enableLoadContTemplate = true;
     return 0;
 }

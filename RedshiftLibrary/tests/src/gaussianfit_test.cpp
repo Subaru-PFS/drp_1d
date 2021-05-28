@@ -27,14 +27,13 @@ void addRay(CSpectrumFluxAxis& spectrumFluxAxis , Float64 sigma, Float64 mu, Flo
 Float64 precision = 1e-4;
 
 BOOST_AUTO_TEST_CASE(GaussianFit){
-  CSpectrum spc =  CSpectrum();
 
   Int32 n = 1000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
   for(Int32 k=0; k<n; k++){
     spectralAxis[k]=k;
   }
-  spc.SetSpectralAxis(std::move(spectralAxis));
+
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
     modelfluxAxis[k]=0;
@@ -69,7 +68,8 @@ BOOST_AUTO_TEST_CASE(GaussianFit){
 
 
   addRay(modelfluxAxis, 4,150.5,1.5);
-  spc.SetFluxAxis(std::move(modelfluxAxis));
+
+  CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 
   CGaussianFit fitter;
 
