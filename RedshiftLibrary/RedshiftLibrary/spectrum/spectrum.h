@@ -50,8 +50,9 @@ public:
 
     void InitSpectrum(CParameterStore& parameterStore);
     void SetName(const std::string name);
-    void SetType(const EType type) const;
-
+    virtual void SetType(const EType type) const;
+    virtual void SetType(const EType type) {const_cast<const CSpectrum *>(this)->SetType(type); };// non const version needed for the virtualization 
+ 
     const std::string&              GetName() const;
     const EType                     GetType() const;
 

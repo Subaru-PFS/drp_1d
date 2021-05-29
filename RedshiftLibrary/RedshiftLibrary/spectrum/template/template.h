@@ -38,6 +38,10 @@ public:
     void SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis) override;
     void SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis) override;
 
+    // override changing component type to reset ism/igm
+    void SetType(const CSpectrum::EType type) override;
+    void SetType(const CSpectrum::EType type) const override;
+
     const std::string&  GetCategory() const;
 
     Bool Save(const char *filePath ) const;
@@ -120,6 +124,34 @@ void CTemplate::SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis)
     m_NoIsmIgmFluxAxis.clear();
     CSpectrum::SetSpectralAxis(std::move(spectralaxis));
 }
+
+// override changing component type to reset ism/igm
+inline
+void CTemplate::SetType(const CSpectrum::EType type)
+{
+    if(m_spcType != type)
+    {   
+        DisableIsmIgm();
+        CSpectrum::SetType(type);
+    }
+}
+
+inline
+void CTemplate::SetType(const CSpectrum::EType type) const 
+{
+    if(m_spcType != type)
+    {   
+        if (!CheckIsmIgmEnabled())
+            CSpectrum::SetType(type);
+        else
+        {
+            Log.LogError("CTemplate::SetType: cannot change component type when ism/igm enabled on a const CTemplate");
+            throw std::runtime_error("CTemplate::SetType: cannot change component type");
+        }   
+    }
+}
+
+
 
 inline
 void CTemplate::DisableIsmIgm() 
