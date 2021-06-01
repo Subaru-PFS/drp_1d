@@ -206,7 +206,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
     }
 
     if(m_meiksinIdx == meiksinIdx)
-        return true;
+        return m_Igm_kend==-1 ? false:true;
 
     m_meiksinIdx = meiksinIdx;
 

@@ -49,10 +49,11 @@ public:
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx); 
     void ScaleFluxAxis(Float64 amplitude);
-    Int32 GetIsmCoeff();
-    Int32 GetIgmCoeff();
+    Int32 GetIsmCoeff() const;
+    Int32 GetIgmCoeff() const;
 
-    void GetIsmIgmRangeIndex(Int32& begin, Int32& ismend, Int32& igmend);
+    void GetIsmIgmRangeIndex(Int32& begin, Int32& end) const;
+    Int32 GetIgmEndIndex() const;
 
     void InitIsmIgmConfig( Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
@@ -162,7 +163,7 @@ void CTemplate::DisableIsmIgm()
 }
 
 inline
-Int32 CTemplate::GetIsmCoeff()
+Int32 CTemplate::GetIsmCoeff() const
 {
     if (!CheckIsmIgmEnabled()){
         Log.LogError("CTemplate::GetIsmCoeff:  ismigm initialization not done");
@@ -172,7 +173,7 @@ Int32 CTemplate::GetIsmCoeff()
 }
 
 inline
-Int32 CTemplate::GetIgmCoeff() 
+Int32 CTemplate::GetIgmCoeff() const
 {
     if (!CheckIsmIgmEnabled()){
         Log.LogError("CTemplate::GetIgmCoeff:  ismigm initialization not done");
@@ -182,7 +183,7 @@ Int32 CTemplate::GetIgmCoeff()
 }
 
 inline
-void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend, Int32& igmend)
+void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend) const
 {
     if (!CheckIsmIgmEnabled()){
         Log.LogError("CTemplate::GetIsmIgmRangeIndex:  ismigm initialization not done");
@@ -190,7 +191,16 @@ void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend, Int32& igmend)
     }    
     begin = m_IsmIgm_kstart;
     ismend = m_Ism_kend;
-    igmend = m_Igm_kend;
+}
+
+inline
+Int32 CTemplate::GetIgmEndIndex() const
+{
+    if (!CheckIsmIgmEnabled()){
+        Log.LogError("CTemplate::GetIgmEndIndex:  ismigm initialization not done");
+        throw std::runtime_error("CTemplate::GetIgmEndIndex:  ismigm initialization not done");
+    }
+    return m_Igm_kend;
 }
 
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;

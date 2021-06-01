@@ -88,7 +88,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
             Log.LogError("  Operator-TemplateFitting: asked model with IGM extinction with no Meikin calib. file loaded in template" );
             return -1;
         }
-        Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
+        m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
     //shift the spectralaxis to sync with the spectrum lambdaAxis
