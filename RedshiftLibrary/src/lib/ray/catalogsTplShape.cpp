@@ -496,15 +496,16 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
                 }
 
             }
-
-
         }
 
     }
     return true;
 }
 
-Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting)
+Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, 
+                                        Int32 iCatalog, 
+                                        bool forceLyaFitting,
+                                        const Float64 nsigmasupport)
 {
     if(iCatalog<0)
         return false;
@@ -526,7 +527,7 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
         std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
         
         if(forceLyaFitting)
-            targetProfile = std::make_shared<CLineProfileASYMFIT>(8., currentCatalogLineList[kL].GetAsymParams(), "mean");   
+            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
@@ -538,8 +539,6 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
                 if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
                 {
                     LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
-                    //SetAsymParams could be removed since now it is now included in the profile of the ray.
-                    LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetAsymParams(asymParams);
                     break;
                 }
             }

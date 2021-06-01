@@ -13,7 +13,7 @@ class CLSFGaussianConstantWidth : public CLSF
 {
 
 public:
-    CLSFGaussianConstantWidth(const Float64 width);
+    CLSFGaussianConstantWidth(const Float64 width = 0.);
 
     Float64               GetWidth(Float64 lambda=-1.0) const override;
     bool                  IsValid() const override;

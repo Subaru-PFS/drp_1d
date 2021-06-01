@@ -723,7 +723,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
         if(lines.size()>0)
         {
-            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -743,7 +743,7 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
 
     if(lines.size()>0)
     {
-        m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -767,7 +767,7 @@ void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVe
 
         if(lines.size()>0)
         {
-            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -1474,7 +1474,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting);
+    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
     m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, itplshape );
 
@@ -5471,7 +5471,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     std::vector<UInt32> a;
     a.push_back(index1);
     a.push_back(index2);
-    m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
+    m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
 }
 
 /**

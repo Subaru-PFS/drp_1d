@@ -3,6 +3,7 @@
 
 #include <string>
 #include "RedshiftLibrary/common/datatypes.h"
+#include <cmath>
 namespace NSEpic
 {
     enum TProfile
@@ -31,6 +32,7 @@ namespace NSEpic
             virtual Float64 GetNSigmaSupport();
             virtual TFloat64List GetLineProfileVector()=0;//TODO: equivalent to ::computeKernel
             const TProfile& GetName();
+            virtual const TAsymParams GetAsymParams(){return {NAN,NAN,NAN};};
             virtual Float64 GetAsymDelta();
             virtual Bool isAsymFit();
             virtual Bool isAsymFixed();

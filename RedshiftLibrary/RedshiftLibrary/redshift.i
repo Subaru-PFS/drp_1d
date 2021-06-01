@@ -457,7 +457,14 @@ class CTemplate : public CSpectrum
 
 class CLSF
 {
+ enum TLSFType {
+      GaussianConstantWidth,
+      GaussianConstantResolution,
+      GaussianNISPSIM2016,
+      GaussianNISPVSSPSF201707
+    };
  public:
+  CLSF(TLSFType name);
   virtual ~CLSF();
   virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
   virtual bool IsValid() const=0;

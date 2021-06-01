@@ -15,7 +15,15 @@ namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 
-CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 nsigmasupport, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption)
+CLineModelElement::CLineModelElement(const std::string& widthType, const Float64 velocityEmission, const Float64 velocityAbsorption):
+    m_VelocityEmission(velocityEmission),
+    m_VelocityAbsorption(velocityAbsorption),
+    m_dataExtinctionFlux(NULL),
+    m_OutsideLambdaRange(true),
+    m_fittingGroupInfo("-1"),
+    m_OutsideLambdaRangeOverlapThreshold(0.33)//33% overlap minimum in order to keep the line
+    //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
+
 {
     if( widthType == "instrumentdriven"){
         m_LineWidthType = INSTRUMENTDRIVEN;
@@ -28,19 +36,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
         throw std::runtime_error("Unknown LineWidthType");
     }
 
-    m_nsigmasupport = nsigmasupport;
-
-    m_VelocityEmission = velocityEmission;
-    m_VelocityAbsorption= velocityAbsorption;
-
-    m_dataExtinctionFlux = NULL;
-
-    m_OutsideLambdaRange = true;
-    m_OutsideLambdaRangeOverlapThreshold = 0.33; //33% overlap minimum in order to keep the line
-    //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
-
     //LoadDataExtinction(); //uncomment if this line profile is used
-    m_fittingGroupInfo = "-1";
 }
 
 CLineModelElement::~CLineModelElement()

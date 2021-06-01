@@ -24,34 +24,32 @@ using namespace NSEpic;
  **/
 CMultiLine::CMultiLine( std::vector<CRay> rs,
                         const std::string& widthType,
-                        const Float64 nsigmasupport,
-                        const Float64 resolution,
                         const Float64 velocityEmission,
                         const Float64 velocityAbsorption,
                         std::vector<Float64> nominalAmplitudes,
-                        Float64 nominalWidth,
-                        std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, nsigmasupport, resolution, velocityEmission, velocityAbsorption )
+                        Float64 nominalWidth,//corresponds to the lsf of type constant width
+                        std::vector<UInt32> catalogIndexes ) : 
+CLineModelElement ( widthType, velocityEmission, velocityAbsorption ),
+m_NominalAmplitudes(nominalAmplitudes)
 {
-    m_ElementType = "CMultiLine";
-
+    //TODO:below variables should be initialized throw CLineModelElt rather than here
     m_Rays = rs;
+    m_ElementType = "CMultiLine";
+    m_absLinesLimit=-1.0;//-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
+    m_sumCross = 0.;
+    m_sumGauss = 0.;
+    m_dtmFree = 0.;
+    m_NominalWidth = nominalWidth;
 
     Int32 nRays = m_Rays.size();
-
     m_SignFactors.resize(nRays);
     for(Int32 i=0; i<nRays; i++)
     {
         if( m_Rays[i].GetType()==CRay::nType_Emission )
-        {
             m_SignFactors[i] = 1.0;
-        }
         else
-        {
             m_SignFactors[i] = -1.0;
-        }
     }
-    m_NominalWidth = nominalWidth;
-    m_NominalAmplitudes = nominalAmplitudes;
 
     for(int i=0; i<catalogIndexes.size(); i++)
     {
@@ -62,22 +60,13 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
     {
         m_FittedAmplitudes.resize(nRays);
         m_FittedAmplitudeErrorSigmas.resize(nRays);
-
         m_profile.resize(nRays);
     }
     for(Int32 k2=0; k2<nRays; k2++)
     {
         m_profile[k2] = m_Rays[k2].GetProfile();
     }
-
-    m_absLinesLimit = -1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
-
-    m_sumCross = 0.0;
-    m_sumGauss = 0.0;
-    m_dtmFree = 0.0;
-
     SetFittedAmplitude(-1.0, -1.0);
-
 }
 
 /**

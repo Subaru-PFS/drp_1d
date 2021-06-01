@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_CASE(Instance){
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
+  BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
 		    std::runtime_error);
 
-    BOOST_CHECK_THROW(CMultiLine(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
+    BOOST_CHECK_THROW(CMultiLine(rs,  "fixed",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
 		    std::runtime_error);
   /*
   CMultiLine element = CMultiLine(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
-    CMultiLine elementID = CMultiLine(rs,  "instrumentdriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    //CMultiLine elementfixed = CMultiLine(rs,  "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementcombined = CMultiLine(rs,  "combined", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementVD = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    //CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementID = CMultiLine(rs,  "instrumentdriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    //CMultiLine elementfixed = CMultiLine(rs,  "fixed", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementcombined = CMultiLine(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CMultiLine elementVD = CMultiLine(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    //CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
     //setLSF on multiLines
     std::string lsfType="GaussianConstantResolution"; //TBC
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
 
-  CMultiLine element = CMultiLine(rs,  "combined", nsigmasupport, resolution, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(nsigmasupport)};
   std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "velocitydriven", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CMultiLine element = CMultiLine(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;
@@ -185,7 +185,6 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>(8.0)};
   std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(16.)};
   std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(8.)};
-  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYMFIXED>(40.)};
   std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(40.)};
 /*
   CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
@@ -208,7 +207,6 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   BOOST_CHECK_CLOSE(32., profilelor->GetNSigmaSupport(), 0.001);
   BOOST_CHECK_CLOSE(8., profileasym->GetNSigmaSupport(), 0.001);
   BOOST_CHECK_CLOSE(200., profileasymfit->GetNSigmaSupport(), 0.001);
-  BOOST_CHECK_CLOSE(200., profileasymfixed->GetNSigmaSupport(), 0.001);
 
 }
 

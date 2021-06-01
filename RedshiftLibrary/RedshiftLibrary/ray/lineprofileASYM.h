@@ -38,9 +38,8 @@ namespace NSEpic
             Float64 GetNSigmaSupport() override;
             TFloat64List GetLineProfileVector() override;//equivalent to ::computeKernel
 
-            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
             Float64 GetAsymDelta();
-
+            const TAsymParams  GetAsymParams() override;
             virtual Bool    isAsymFixed() override;
             virtual Bool    isAsymFit()   override;
 
@@ -55,14 +54,16 @@ namespace NSEpic
             Float64 m_asym_delta = 0.;
             std::string m_centeringMethod = "none";
             Float64 m_constSigma = 1;//vs 2.5 for AsymFit and AsymFixed
+        private:
+            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
     };
 inline
 CLineProfileASYM::CLineProfileASYM(const Float64 nsigmasupport, TAsymParams params, const std::string centeringMethod):
     CLineProfile(nsigmasupport, ASYM),
-    m_centeringMethod(centeringMethod),
     m_asym_sigma_coeff(params.sigma),
     m_asym_alpha(params.alpha),
-    m_asym_delta(params.delta)
+    m_asym_delta(params.delta),
+    m_centeringMethod(centeringMethod)
 {
     if(m_centeringMethod == "mean" || m_centeringMethod == "mode")
         m_constSigma = 2.5; //not sure if should be also a param
@@ -71,10 +72,10 @@ CLineProfileASYM::CLineProfileASYM(const Float64 nsigmasupport, TAsymParams para
 inline
 CLineProfileASYM::CLineProfileASYM(const TProfile pltype, const Float64 nsigmasupport, const TAsymParams params, const std::string centeringMethod):
     CLineProfile(nsigmasupport, pltype),
-    m_centeringMethod(centeringMethod),
     m_asym_sigma_coeff(params.sigma),
     m_asym_alpha(params.alpha),
-    m_asym_delta(params.delta)
+    m_asym_delta(params.delta),
+    m_centeringMethod(centeringMethod)
 {
     if(m_centeringMethod == "mean" || m_centeringMethod == "mode")
         m_constSigma = 2.5; //not sure if should be also a param
@@ -183,6 +184,10 @@ Bool CLineProfileASYM::isAsymFit(){ //probably we need to clean this
 inline
 Float64 CLineProfileASYM::GetAsymDelta(){
     return m_asym_delta;//default. Mainly used for asymfit/fixed
+}
+inline
+const TAsymParams CLineProfileASYM::GetAsymParams(){
+    return {m_asym_sigma_coeff, m_asym_alpha, m_asym_delta};//default. Mainly used for asymfit/fixed
 }
 }
 #endif

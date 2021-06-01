@@ -23,7 +23,7 @@ CRay::CRay(const string& name,
            const std::string& groupName,
            Float64 nominalAmp,
            const string &velGroupName,
-           TAsymParams asymParams,
+           //TAsymParams asymParams,
 	       Int32 id):
 m_Name(name),
 m_Pos(pos),
@@ -39,7 +39,7 @@ m_AmpFitErr(ampErr),
 m_GroupName(groupName),
 m_NominalAmplitude(nominalAmp),
 m_VelGroupName(velGroupName),
-m_asymParams(asymParams),
+//m_asymParams(asymParams),
 m_id(id)
 {
     m_Offset = 0.0;
@@ -65,11 +65,17 @@ bool CRay::operator != (const CRay& str) const
 
 void CRay::SetAsymParams(TAsymParams asymParams)
 {
-    m_asymParams = asymParams; //probably irrelevant. we shoudl pass  by m_profile
     if(!m_Profile)
         throw runtime_error("CRay::SetAsymParams: lineprofile is not initialized");
     m_Profile->SetAsymParams(asymParams);
 }
+const TAsymParams CRay::GetAsymParams()
+{
+    if(!m_Profile)
+        throw std::runtime_error("CRay::GetAsymParams: lineprofile is not initialized");
+    return m_Profile->GetAsymParams();
+}
+
 Bool CRay::GetIsStrong() const
 {
     return m_Force == nForce_Strong;

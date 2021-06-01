@@ -3,7 +3,6 @@
 #include <string>
 #include <math.h>
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/lineprofileASYMFIXED.h"
 namespace NSEpic
 {
     /**

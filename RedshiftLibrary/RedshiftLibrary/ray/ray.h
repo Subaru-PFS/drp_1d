@@ -8,7 +8,6 @@
 #include <RedshiftLibrary/ray/lineprofileSYM.h>
 #include <RedshiftLibrary/ray/lineprofileASYM.h>
 #include <RedshiftLibrary/ray/lineprofileASYMFIT.h>
-#include <RedshiftLibrary/ray/lineprofileASYMFIXED.h>
 
 #include <string>
 #include <cmath>
@@ -51,8 +50,8 @@ public:
           const std::string& groupName="-1",
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
-          TAsymParams asymParams={NAN, NAN, NAN},
-	        Int32 id=-1);
+          //TAsymParams asymParams={NAN, NAN, NAN},
+	      Int32 id=-1);
 
     CRay& operator=(const CRay& other)=default;
     CRay(const CRay& other)=default;
@@ -83,7 +82,7 @@ public:
     Float64             GetPosFitError() const;
     Float64             GetSigmaFitError() const;
     Float64             GetAmpFitError() const;
-    TAsymParams         GetAsymParams() { return m_asymParams; };
+    const TAsymParams   GetAsymParams();
     void                SetAsymParams(TAsymParams asymParams);
 
 
@@ -109,7 +108,7 @@ private:
     Float64         m_Width = 0.;
     Float64         m_Cut = 0.;
 
-    TAsymParams     m_asymParams = {NAN, NAN, NAN};
+    //TAsymParams     m_asymParams = {NAN, NAN, NAN};
 
     //fit err
     Float64         m_PosFitErr = 0.;

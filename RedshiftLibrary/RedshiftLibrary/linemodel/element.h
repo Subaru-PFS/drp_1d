@@ -28,8 +28,6 @@ class CLineModelElement
 
   public:
     CLineModelElement(const std::string &widthType,
-                      const Float64 nsigmasupport,
-                      const Float64 resolution,
                       const Float64 velocityEmission,
                       const Float64 velocityAbsorption);
     ~CLineModelElement();
@@ -159,8 +157,7 @@ class CLineModelElement
     Bool LoadDataExtinction();
 
     TLineWidthType m_LineWidthType;
-    Float64 m_nsigmasupport;
-    Float64 m_NominalWidth;
+    Float64 m_NominalWidth;//relevant only for LSF GaussianConstantWidth
 
     Float64 m_VelocityEmission;
     Float64 m_VelocityAbsorption;

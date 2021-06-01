@@ -244,7 +244,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
             char buffer [64];
             sprintf( buffer,"detected_peak_%d", j );
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr, gaussAmpErr) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, std::make_shared<CLineProfileSYM>(), force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr, gaussAmpErr) );
 	  }
     }
 
@@ -561,7 +561,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             std::string peakName = buffer;
 
             //CLineProfile *profile = new CLineProfileSYM();
-            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
+            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, std::make_shared<CLineProfileSYM>(), force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result.RayCatalog.Sort();
         }
     }
