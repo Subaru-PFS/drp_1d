@@ -195,7 +195,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     Float64 lbda_max, lbdaMax_IGM;
     if (opt_extinction)
     {
-        lbdaMax_IGM = tpl.m_igmCorrectionMeiksin->GetLambdaMax()*(1+redshift);
+        lbdaMax_IGM = tpl.m_igmCorrectionMeiksin->GetLambdaMax();
     }
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
@@ -222,11 +222,11 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         }
 
         TFloat64Range range(currentRange.GetBegin(), lbda_max);
-        Int32 kStart = -1, kEnd = -1;
+        Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
             
         if (apply_ism || opt_extinction){          
-            m_templateRebined_bf.InitIsmIgmConfig(range, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-            m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
+            m_templateRebined_bf.InitIsmIgmConfig(range, redshift, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
+            m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd, kIgmEnd);
         }else{
             currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
         }
@@ -241,7 +241,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         //Meiksin IGM extinction
         if(opt_extinction)
         {
-            igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
+            igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
         }
