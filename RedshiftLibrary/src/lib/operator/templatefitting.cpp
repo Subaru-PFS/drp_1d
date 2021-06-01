@@ -138,8 +138,9 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
     if (apply_ism || opt_extinction){          
         m_templateRebined_bf.InitIsmIgmConfig(kStart, kEnd, redshift, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-        kIgmEnd = m_templateRebined_bf.GetIgmEndIndex();
     }
+    if (opt_extinction)
+        kIgmEnd = m_templateRebined_bf.GetIgmEndIndex();
         
     if( ret == -1 ){
         status = nStatus_NoOverlap; 

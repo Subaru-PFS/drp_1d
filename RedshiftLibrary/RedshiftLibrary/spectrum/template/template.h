@@ -186,8 +186,8 @@ inline
 void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend) const
 {
     if (!CheckIsmIgmEnabled()){
-        Log.LogError("CTemplate::GetIsmIgmRangeIndex:  ismigm initialization not done");
-        throw std::runtime_error("CTemplate::GetIsmIgmRangeIndex:  ismigm initialization not done");
+        Log.LogError("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
+        throw std::runtime_error("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
     }    
     begin = m_IsmIgm_kstart;
     ismend = m_Ism_kend;
@@ -196,9 +196,9 @@ void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend) const
 inline
 Int32 CTemplate::GetIgmEndIndex() const
 {
-    if (!CheckIsmIgmEnabled()){
-        Log.LogError("CTemplate::GetIgmEndIndex:  ismigm initialization not done");
-        throw std::runtime_error("CTemplate::GetIgmEndIndex:  ismigm initialization not done");
+    if (!CheckIsmIgmEnabled() || MeiksinInitFailed()){
+        Log.LogError("CTemplate::GetIgmEndIndex: igm initialization not done");
+        throw std::runtime_error("CTemplate::GetIgmEndIndex: igm initialization not done");
     }
     return m_Igm_kend;
 }
