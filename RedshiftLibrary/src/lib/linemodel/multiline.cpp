@@ -5,15 +5,7 @@
 #include <RedshiftLibrary/debug/assert.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/log/log.h>
-/*
-//not sure all below are required
-#include <RedshiftLibrary/ray/lineprofile.h>
-#include <RedshiftLibrary/ray/lineprofileLOR.h>
-#include <RedshiftLibrary/ray/lineprofileSYM.h>
-#include <RedshiftLibrary/ray/lineprofileASYM.h>//yes
-#include <RedshiftLibrary/ray/lineprofileASYMFIT.h>
-#include <RedshiftLibrary/ray/lineprofileASYMFIXED.h>//yes
-*/
+
 #include <float.h>
 #include <algorithm>
 
@@ -65,6 +57,8 @@ m_NominalAmplitudes(nominalAmplitudes)
     for(Int32 k2=0; k2<nRays; k2++)
     {
         m_profile[k2] = m_Rays[k2].GetProfile();
+        if(m_profile[k2]->isAsymFit())
+            m_asymLineIndices.push_back(k2);
     }
     SetFittedAmplitude(-1.0, -1.0);
 }
@@ -883,6 +877,11 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             Float64 lambda = spectral[i];
             Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
             flux[i] += Yi;
+            if(isnan(flux[i])){
+                Log.LogError("Ray %d: ContinuumFlux %f, ModelAtLambda Yi = %f for range [%d, %d]", k, continuumfluxAxis[i], Yi, m_StartNoOverlap[k], m_EndNoOverlap[k]);
+                Log.LogError("addToSpectrumModel has a NaN flux at index i %d ", i);
+                throw std::runtime_error("addToSpectrumModel has a NaN flux ");
+            }
         }
     }
     return;
@@ -954,6 +953,9 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
                 Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfileAtRedshift(k2, redshift, x);
             }else{
                 Yi += m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
+            }
+            if(isnan(Yi)){
+                Log.LogError("Ray nb: %d adn GetLineProfileAtRedshift: %f", k2, GetLineProfileAtRedshift(k2, redshift, x));
             }
         }
     }

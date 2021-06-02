@@ -119,11 +119,9 @@ class CLineModelElement
     void SetAsymfitAlphaCoeff(Float64 coeff);
     void SetAsymfitDelta(Float64 coeff);
 
-    void SetAsymfitParams(Float64 sigma, Float64 alpha, Float64 delta);
-
-    Float64 GetAsymfitWidthCoeff();
-    Float64 GetAsymfitAlphaCoeff();
-    Float64 GetAsymfitDelta();
+    void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
+    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0);
+    void resetAsymfitParams();
 
     virtual Float64 GetSignFactor(Int32 subeIdx) = 0;
     virtual Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) = 0;
@@ -166,15 +164,7 @@ class CLineModelElement
     bool m_OutsideLambdaRange;
     std::string m_ElementType;
 
-    Float64 m_asym_sigma_coeff;
-    Float64 m_asym_alpha;
-    Float64 m_symxl_sigma_coeff;
-
-    Float64 m_asym2_sigma_coeff;
-    Float64 m_asym2_alpha;
-    Float64 m_asymfit_sigma_coeff;
-    Float64 m_asymfit_alpha;
-    Float64 m_asymfit_delta;
+    TUInt32List         m_asymLineIndices;//corresponds to indices of asymmetric lines, mainly LyA. Currently max 1 asymfit is found per linecatalog
 
     Float64 *m_dataExtinctionFlux = NULL;
     Float64 m_dataStepLambda = 0.1;

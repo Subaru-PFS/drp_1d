@@ -81,8 +81,8 @@ public:
     void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 
-    std::shared_ptr<CLSF>           GetLSF();
-    void                            SetLSF(const std::shared_ptr<CLSF>& lsf);
+    //std::shared_ptr<CLSF>           GetLSF();
+    void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -132,7 +132,7 @@ protected:
     CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis_();
 
     CSpectrumSpectralAxis           m_SpectralAxis;
-    std::shared_ptr<CLSF>           m_LSF;
+    std::shared_ptr<const CLSF>           m_LSF;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -292,18 +292,17 @@ inline
 std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
 {
     return m_LSF;
-
 }
-
+/*
 inline
 std::shared_ptr<CLSF> CSpectrum::GetLSF()
 {
     return m_LSF;
 
-}
+}*/
 
 inline 
-void CSpectrum::SetLSF(const std::shared_ptr<CLSF>& lsf)
+void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 {
     m_LSF = lsf;
 }

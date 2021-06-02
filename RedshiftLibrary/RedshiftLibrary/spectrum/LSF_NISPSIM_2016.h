@@ -17,7 +17,8 @@ namespace NSEpic
 
         Float64             GetWidth(Float64 lambda=-1.0) const override;
         bool                IsValid() const override;
-        void                        SetSourcesizeDispersion(Float64 sigma);
+        void                SetSourcesizeDispersion(Float64 sigma);
+
         //static std::shared_ptr<CLSF> make_LSF();
   };
 /*inline

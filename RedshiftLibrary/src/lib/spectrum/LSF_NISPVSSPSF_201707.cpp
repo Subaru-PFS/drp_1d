@@ -1,5 +1,5 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 
 using namespace NSEpic;
@@ -33,5 +33,5 @@ Float64 CLSFGaussianNISPVSSPSF201707::GetWidth(Float64 lambda) const
 
 bool CLSFGaussianNISPVSSPSF201707::IsValid() const
 {
-    return true;//TODO
+    return true;
 }

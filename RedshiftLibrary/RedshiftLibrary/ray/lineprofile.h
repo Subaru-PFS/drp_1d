@@ -6,6 +6,13 @@
 #include <cmath>
 namespace NSEpic
 {
+    /**
+    * struct that holds ASYMFIXED profile parameters
+    */
+    typedef struct {
+        Float64 sigma, alpha, delta;
+    } TAsymParams;
+    
     enum TProfile
     {
         NONE,
@@ -30,14 +37,14 @@ namespace NSEpic
             virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)=0;
             virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)=0;
             virtual Float64 GetNSigmaSupport();
-            virtual TFloat64List GetLineProfileVector()=0;//TODO: equivalent to ::computeKernel
+
             const TProfile& GetName();
             virtual const TAsymParams GetAsymParams(){return {NAN,NAN,NAN};};
             virtual Float64 GetAsymDelta();
             virtual Bool isAsymFit();
             virtual Bool isAsymFixed();
             virtual void SetAsymParams(TAsymParams params){};
-
+            virtual void resetAsymFitParams();
             CLineProfile(const CLineProfile & other) = default; 
             CLineProfile(CLineProfile && other) = default; 
             CLineProfile& operator=(const CLineProfile& other) = default;  
@@ -85,6 +92,10 @@ namespace NSEpic
     inline
     Bool CLineProfile::isAsymFixed(){
         return 0; //default to no
+    }
+    inline
+    void CLineProfile::resetAsymFitParams(){
+        return;
     }
 }
 #endif

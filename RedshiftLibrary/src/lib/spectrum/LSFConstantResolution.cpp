@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/spectrum/LSFConstantResolution.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
+#include "RedshiftLibrary/log/log.h"
 
 
 using namespace NSEpic;
@@ -9,7 +9,7 @@ CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(const Float64 res
     CLSF(GaussianConstantResolution, std::make_shared<CLineProfileSYM>()),
     m_Resolution(resolution)
 {
-    
+    IsValid();
 }
 
 Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda) const
@@ -20,5 +20,5 @@ Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda) const
 
 bool CLSFGaussianConstantResolution::IsValid() const
 {
-    return true;//TODO
+    return (m_Resolution>1.);
 }

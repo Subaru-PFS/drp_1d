@@ -106,7 +106,8 @@ BOOST_AUTO_TEST_CASE(LSF)
 
     BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
     BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetWidth() == 1.09);
-
+    
+    /*
     //Test constructor with spectralAxis and fluxAxis
     CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
     BOOST_CHECK(object_CSpectrum2.GetLSF() == nullptr);

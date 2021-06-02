@@ -176,26 +176,31 @@ Float64 CLineModelElement::GetVelocity()
     }
     return vel;
 }
-
-Float64 CLineModelElement::GetAsymfitWidthCoeff()
+//wrapper function 
+void CLineModelElement::SetAsymfitParams(TAsymParams params, Int32 idx)
 {
-    return m_asymfit_sigma_coeff;
+    if(!m_asymLineIndices.size()) return;
+    if(idx>=0){
+        m_Rays[idx].SetAsymParams(params);
+    }
+    else{
+        for(auto i : m_asymLineIndices)
+            m_Rays[i].SetAsymParams(params);
+    }
+    return;
+}
+//wrapper function 
+void CLineModelElement::resetAsymfitParams()
+{
+    for(auto i : m_asymLineIndices)
+        m_Rays[i].resetAsymFitParams();
 }
 
-void CLineModelElement::SetAsymfitParams(Float64 sigma, Float64 alpha, Float64 delta)
+const TAsymParams CLineModelElement::GetAsymfitParams(UInt32 idx)
 {
-    m_asymfit_sigma_coeff = sigma;
-    m_asymfit_alpha = alpha;
-    m_asymfit_delta = delta;
-}
-Float64 CLineModelElement::GetAsymfitAlphaCoeff()
-{
-    return m_asymfit_alpha;
-}
-
-Float64 CLineModelElement::GetAsymfitDelta()
-{
-    return m_asymfit_delta;
+    if(!m_asymLineIndices.size())
+        return {NAN, NAN, NAN};//case where no asymprofile in linecatalog
+    return m_Rays[m_asymLineIndices[idx]].GetAsymParams();
 }
 
 Float64 CLineModelElement::GetSumCross()

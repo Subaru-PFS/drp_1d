@@ -1,5 +1,5 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -18,5 +18,5 @@ Float64 CLSFGaussianNISPSIM2016::GetWidth(Float64 lambda) const
 
 bool CLSFGaussianNISPSIM2016::IsValid() const
 {
-    return true;//TODO
+    return true;
 }

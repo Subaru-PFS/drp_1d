@@ -18,7 +18,9 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                                          const Float64 velocityAbsorption,
                                                          const std::string& opt_rules,
                                                          const std::string& opt_rigidity,
-                                                         bool enableOrtho)
+                                                         std::shared_ptr<const CLSF> lsf,
+                                                         bool enableOrtho):
+m_LSF(lsf)                                                        
 {
 
     m_enableOrtho = enableOrtho;
@@ -107,6 +109,8 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         std::string opt_continuumcomponent = "fromspectrum";
         Float64 opt_continuum_neg_threshold=-INFINITY; // not relevant in the "fromspectrum" case
         CSpectrum spectrum = inputTemplate;
+        spectrum.SetLSF(m_LSF);
+
         std::string saveContinuumEstimationMethod = spectrum.GetContinuumEstimationMethod();
         spectrum.SetContinuumEstimationMethod("zero");
 

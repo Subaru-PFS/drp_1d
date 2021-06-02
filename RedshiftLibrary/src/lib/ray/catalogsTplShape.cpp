@@ -24,8 +24,10 @@ using namespace boost;
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath, 
                                 std::string opt_tplratioCatRelPath, 
                                 Int32 enableISMCalzetti, 
-                                std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
+                                std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+                                Float64 nsigmasupport)
 {
+    m_nsigmasupport = nsigmasupport;
     //here we should only copy the ism instead of loading it
     if(opt_tplratioCatRelPath.size()<1)
     {
@@ -154,7 +156,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             CRayCatalog lineCatalog;
             try
             {
-                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str() );
+                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str(), m_nsigmasupport);
             }
             catch (std::string& e)
             {
@@ -522,8 +524,6 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
         if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
             continue;
 
-        //accessing params from catalog
-        TAsymParams asymParams = currentCatalogLineList[kL].GetAsymParams();
         std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
         
         if(forceLyaFitting)

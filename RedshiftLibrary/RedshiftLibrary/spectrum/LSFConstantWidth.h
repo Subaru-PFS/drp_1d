@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_SPECTRUM_LSFCONSTANTWIDTH_
 #define _REDSHIFT_SPECTRUM_LSFCONSTANTWIDTH_
 
-#include <RedshiftLibrary/spectrum/LSF.h>
+#include "RedshiftLibrary/spectrum/LSF.h"
 
 namespace NSEpic
 {

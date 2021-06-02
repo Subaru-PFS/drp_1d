@@ -260,12 +260,15 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     //initialize the lsf depending on LSFType
     std::string lsfType;
     TLSFArguments args;
-    //TODO: below two params should be added in client and wiki page
     parameterStore.Get( "LSFType", lsfType );//todo: what is the default value?
-    parameterStore.Get( "LSF.width", args.width, 13. );
-    parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
-    parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
-
+    if(lsfType=="FROMSPECTRUMDATA"){
+        //nothing to do here cause lsf already included in the spectrum
+    }else{ //create an LSF with arguments from param.json
+         //note that relevant arguments depend on the lsf type 
+        parameterStore.Get( "LSF.width", args.width, 13. );
+        parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
+        parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
+    }
     //m_LSF = CLSFFactory::Get()->Create(lsfType, args);//using factoryClass
     m_LSF = CLSF::make_LSF(lsfType, args);
 }

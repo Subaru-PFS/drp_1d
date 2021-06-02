@@ -149,10 +149,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
     bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto");
     Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
-    /*bool currentsampling = tplCatalog.m_logsampling;
-    if(m_opt_tplfit_fftprocessing)
-        tplCatalog.m_logsampling = 1;//choose to only orthogonolize one catalog: could be problematic if second pass fit requires other templates
-    else tplCatalog.m_logsampling = 0;*/
+    
     // prepare continuum templates catalog
     std::string opt_fittingmethod_ortho="hybrid";
     CTemplatesOrthogonalization tplOrtho(
@@ -168,6 +165,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                 opt_velocityAbsorption,
                 opt_rules,
                 opt_rigidity,
+                spectrum.GetLSF(),
                 enableOrtho);
 
     //tplCatalog.m_logsampling = currentsampling;

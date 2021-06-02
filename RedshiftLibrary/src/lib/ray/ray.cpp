@@ -5,10 +5,7 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
-CRay::CRay()
-{
-    m_Offset = 0.0;
-}
+CRay::CRay():m_Offset(0.){}
 
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
@@ -23,7 +20,6 @@ CRay::CRay(const string& name,
            const std::string& groupName,
            Float64 nominalAmp,
            const string &velGroupName,
-           //TAsymParams asymParams,
 	       Int32 id):
 m_Name(name),
 m_Pos(pos),
@@ -39,12 +35,12 @@ m_AmpFitErr(ampErr),
 m_GroupName(groupName),
 m_NominalAmplitude(nominalAmp),
 m_VelGroupName(velGroupName),
-//m_asymParams(asymParams),
-m_id(id)
+m_id(id),
+m_Offset(0.),
+m_OffsetFit(false)
 {
-    m_Offset = 0.0;
-    m_OffsetFit = false;
 }
+
 bool CRay::operator < (const CRay& str) const
 {
     if(m_Pos == str.m_Pos){
@@ -68,6 +64,12 @@ void CRay::SetAsymParams(TAsymParams asymParams)
     if(!m_Profile)
         throw runtime_error("CRay::SetAsymParams: lineprofile is not initialized");
     m_Profile->SetAsymParams(asymParams);
+}
+void CRay::resetAsymFitParams()
+{
+    if(!m_Profile)
+        throw runtime_error("CRay::resetAsymParams: lineprofile is not initialized");
+    m_Profile->resetAsymFitParams();
 }
 const TAsymParams CRay::GetAsymParams()
 {

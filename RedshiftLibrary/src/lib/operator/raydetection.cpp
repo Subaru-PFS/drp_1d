@@ -560,7 +560,6 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             sprintf( buffer, "detected_retested_peak_%d", k );
             std::string peakName = buffer;
 
-            //CLineProfile *profile = new CLineProfileSYM();
             result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, std::make_shared<CLineProfileSYM>(), force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result.RayCatalog.Sort();
         }

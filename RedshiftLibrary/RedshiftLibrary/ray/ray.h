@@ -50,14 +50,7 @@ public:
           const std::string& groupName="-1",
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
-          //TAsymParams asymParams={NAN, NAN, NAN},
 	      Int32 id=-1);
-
-    CRay& operator=(const CRay& other)=default;
-    CRay(const CRay& other)=default;
-    CRay& operator=(CRay&& other)=default; 
-    CRay(CRay&& other)=default;
-    ~CRay()=default;
 
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
@@ -84,7 +77,7 @@ public:
     Float64             GetAmpFitError() const;
     const TAsymParams   GetAsymParams();
     void                SetAsymParams(TAsymParams asymParams);
-
+    void                resetAsymFitParams();
 
     const std::string&  GetName() const;
     const std::string&  GetGroupName() const;
@@ -107,8 +100,6 @@ private:
     Float64         m_Amp = 0.;
     Float64         m_Width = 0.;
     Float64         m_Cut = 0.;
-
-    //TAsymParams     m_asymParams = {NAN, NAN, NAN};
 
     //fit err
     Float64         m_PosFitErr = 0.;

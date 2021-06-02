@@ -27,7 +27,8 @@ public:
     Bool Init(std::string calibrationPath, 
               std::string opt_tplratioCatRelPath, 
               Int32 enableISMCalzetti,
-              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti);
+              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+              Float64 nsigmasupport);
 
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
@@ -63,6 +64,7 @@ private:
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;
+    Float64 m_nsigmasupport;
 };
 
 

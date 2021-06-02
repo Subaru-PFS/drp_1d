@@ -111,7 +111,8 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
 
 	parameterStore->GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     parameterStore->GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
-    parameterStore->GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
+    //instrumentResolution is now provided by LSF
+    parameterStore->Get( "LSF.resolution", m_opt_resolution, 2350.0 );
     parameterStore->GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     parameterStore->GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     parameterStore->GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
@@ -182,15 +183,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }else if(m_opt_lineWidthType=="instrumentdriven"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }else if(m_opt_lineWidthType=="velocitydriven"){
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispvsspsf201707"){
-        Log.LogInfo( "    -source size: hardcoded");
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispsim2016"){
         Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());

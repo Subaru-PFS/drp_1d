@@ -145,7 +145,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
  * Loads a line catalog in TSV format as of v0.4
  * @param filePath
  */
-void CRayCatalog::Load( const char* filePath )
+void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
 {
     std::ifstream file;
 
@@ -256,9 +256,7 @@ void CRayCatalog::Load( const char* filePath )
             std::string velGroupName = "-1";
 
             //tmp: default values 
-            Float64 nsigmasupport = 8.;
             TAsymParams _asymParams = {1., 4.5, 0.};
-            //TAsymParams _asymFixedParams = {2., 2., 0.};
             TAsymParams _asymFitParams = {2., 2., 0.};
 
 

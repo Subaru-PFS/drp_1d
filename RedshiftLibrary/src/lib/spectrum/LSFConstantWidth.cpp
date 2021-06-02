@@ -1,6 +1,5 @@
-#include <RedshiftLibrary/spectrum/LSFConstantWidth.h>
-#include <RedshiftLibrary/log/log.h>
-
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -11,7 +10,9 @@ using namespace std;
 CLSFGaussianConstantWidth::CLSFGaussianConstantWidth(const Float64 width):
     CLSF(GaussianConstantWidth, std::make_shared<CLineProfileSYM>()),
     m_width(width)
-{}
+{
+    IsValid();
+}
 
 Float64 CLSFGaussianConstantWidth::GetWidth(Float64 lambda) const
 {

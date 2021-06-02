@@ -53,12 +53,6 @@ struct SPoint {
     Float64 X;
     Float64 Y;
 };
-/**
- * struct that holds ASYMFIXED profile parameters
- */
-typedef struct {
-    Float64 sigma, alpha, delta;
-} TAsymParams;
 
 typedef std::vector<SPoint> TPointList;
 
