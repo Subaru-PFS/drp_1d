@@ -1,12 +1,12 @@
 stages:
-  - build-coverage
-  - sonar
   - build
   - test
   - build-wheel
   - push-rc
   - test-rc
   - push-prod
+  - build-coverage
+  - sonar
 
 variables:
   TWINE_USERNAME: gitlab-ci-token
@@ -14,7 +14,6 @@ variables:
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
-  VERSION: "0.22"
 
 # OSX Stages
 
@@ -414,6 +413,8 @@ sonar-scanner-manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   stage: sonar
   allow_failure: true
+  before_script:
+    - export VERSION=`cat VERSION`
   script:
     - sonar-scanner
         -Dsonar.projectKey=${CI_PROJECT_NAME}
