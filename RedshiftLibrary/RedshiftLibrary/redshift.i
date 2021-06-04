@@ -13,7 +13,6 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
-%shared_ptr(CSingleton<CLog>)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFConstantGaussian)
 %shared_ptr(CSpectrum)
@@ -139,7 +138,8 @@ public:
      nLevel_Debug = 60,
      nLevel_None = 0
    };
-  CLog( );
+
+  static CLog& GetInstance();
 
   void LogError( const char* format, ... );
   void LogWarning( const char* format, ... );
@@ -148,17 +148,21 @@ public:
   void LogDebug( const char* format, ... );
   void Indent();
   void UnIndent();
+
+private:
+   CLog();
+   ~CLog();
 };
 
 class CLogConsoleHandler {
 public:
-  CLogConsoleHandler( CLog& logger );
+  CLogConsoleHandler();
   void SetLevelMask( UInt32 mask );
 };
 
 class CLogFileHandler {
 public:
-  CLogFileHandler( CLog& logger, const char* filePath );
+  CLogFileHandler( const char* filePath );
   void SetLevelMask( UInt32 mask );
 };
 

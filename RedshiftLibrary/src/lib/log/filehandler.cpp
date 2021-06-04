@@ -6,8 +6,7 @@
 
 using namespace NSEpic;
 
-CLogFileHandler::CLogFileHandler( CLog& logger, const char* filePath ) :
-    CLogHandler( logger )
+CLogFileHandler::CLogFileHandler( const char* filePath )
 {
     m_OutputStream.open( filePath, std::fstream::out );
 }

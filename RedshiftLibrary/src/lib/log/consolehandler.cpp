@@ -5,15 +5,6 @@
 using namespace NSEpic;
 
 
-CLogConsoleHandler::CLogConsoleHandler( CLog& logger ) :
-    CLogHandler( logger )
-{
-}
-
-CLogConsoleHandler::~CLogConsoleHandler()
-{
-
-}
 
 /**
  * Prints log message in stdout.

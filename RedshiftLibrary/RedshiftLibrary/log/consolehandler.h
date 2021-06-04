@@ -16,9 +16,6 @@ class CLogConsoleHandler : public CLogHandler
 
 public:
 
-    CLogConsoleHandler( CLog& logger );
-    ~CLogConsoleHandler();
-
     void LogEntry( UInt32 lvl, const char* header, const char* msg );
 
 private:
