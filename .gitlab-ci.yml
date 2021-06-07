@@ -2,18 +2,25 @@ stages:
   - build
   - test
   - build-wheel
-  - push-rc
-  - test-rc
-  - push-prod
   - build-coverage
   - sonar
-
+  - push-rc
+  
 variables:
   TWINE_USERNAME: gitlab-ci-token
   TWINE_PASSWORD: $CI_JOB_TOKEN
   TWINE_REPOSITORY_URL: https://gitlab.lam.fr/api/v4/projects/${CI_PROJECT_ID}/packages/pypi
   IMAGE_BUILD_DIR: $CI_REGISTRY/cpf/docker_builds
   SONARQUBE_URL: https://sonarqube.lam.fr
+
+# Specific Rules
+
+.trigger-rules:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+      when: manual
 
 # OSX Stages
 
@@ -143,6 +150,23 @@ push-rc-38-osx:
     policy: push
     untracked: true
 
+.build-coverage-manylinux:
+  stage: build-coverage
+  when: manual
+  script:
+    - source /venv/p36/bin/activate
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
+    - make -j4
+    - make test
+    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
+  coverage: /^\s*lines:\s*\d+.\d+\%/
+  artifacts:
+    paths:
+      - build/coverage.xml
+    expire_in: 1 week
+
 .test-manylinux:
   stage: test
   allow_failure: true
@@ -188,6 +212,26 @@ push-rc-38-osx:
   cache:
     policy: pull
     untracked: true
+
+.sonar-manylinux:
+  stage: sonar
+  when: manual
+  allow_failure: true
+  before_script:
+    - export VERSION=`cat VERSION`
+  script:
+    - sonar-scanner
+        -Dsonar.projectKey=${CI_PROJECT_NAME}
+        -Dsonar.language=c++
+        -Dsonar.cxx.file.suffixes=.cpp,.h
+        -Dsonar.sources=RedshiftLibrary/src/lib
+        -Dsonar.cxx.includeDirectories=RedshiftLibrary/RedshiftLibrary
+        -Dsonar.cxx.forceIncludes=RedshiftLibrary/RedshiftLibrary
+        -Dsonar.projectVersion=$VERSION
+        -Dsonar.host.url=$SONARQUBE_URL
+        -Dsonar.login=$SONAR_TOKEN
+        -Dsonar.exclusions=*.xml
+        -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
 # Manylinux1 stages
 
@@ -393,50 +437,13 @@ push-rc-38-manylinux2014:
     - wheel38-manylinux2014
 
 coverage-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: build-coverage
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-  script:
-    - source /venv/p36/bin/activate
-    - mkdir -p build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
-    - make -j4
-    - make test
-    - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
-  coverage: /^\s*lines:\s*\d+.\d+\%/
-  artifacts:
-    paths:
-      - build/coverage.xml
-    expire_in: 1 week
+  extends:
+    - .manylinux2014
+    - .build-coverage-manylinux
 
 sonar-scanner-manylinux2014:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux2014
-  stage: sonar
-  allow_failure: true
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: always
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
-      when: manual
-  before_script:
-    - export VERSION=`cat VERSION`
-  script:
-    - sonar-scanner
-        -Dsonar.projectKey=${CI_PROJECT_NAME}
-        -Dsonar.language=c++
-        -Dsonar.cxx.file.suffixes=.cpp,.h
-        -Dsonar.sources=RedshiftLibrary/src/lib
-        -Dsonar.cxx.includeDirectories=RedshiftLibrary/RedshiftLibrary
-        -Dsonar.cxx.forceIncludes=RedshiftLibrary/RedshiftLibrary
-        -Dsonar.projectVersion=$VERSION
-        -Dsonar.host.url=$SONARQUBE_URL
-        -Dsonar.login=$SONAR_TOKEN
-        -Dsonar.exclusions=*.xml
-        -Dsonar.cxx.coverage.reportPath=build/coverage.xml
+  extends:
+    - .manylinux2014
+    - .sonar-manylinux
   dependencies:
     - coverage-manylinux2014
