@@ -47,19 +47,21 @@ public:
     Bool Save(const char *filePath ) const;
 
     bool ApplyDustCoeff(Int32 kDust);
-    bool ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift); 
+    bool ApplyMeiksinCoeff(Int32 meiksinIdx); 
     void ScaleFluxAxis(Float64 amplitude);
-    Int32 GetIsmCoeff();
-    Int32 GetIgmCoeff();
+    Int32 GetIsmCoeff() const;
+    Int32 GetIgmCoeff() const;
 
-    void GetIsmIgmRangeIndex(Int32& begin, Int32& end);
+    void GetIsmIgmRangeIndex(Int32& begin, Int32& end) const;
+    Int32 GetIgmEndIndex() const;
 
-    void InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
-                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
-    void InitIsmIgmConfig(const TFloat64Range& lbdaRange, 
+    void InitIsmIgmConfig( Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
-    void InitIsmIgmConfig(Int32 kstart, Int32 kend,
+    void InitIsmIgmConfig(const TFloat64Range& lbdaRange, Float64 redshift,
+                           const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
+                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
+    void InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
                            const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
     void DisableIsmIgm();
@@ -77,9 +79,9 @@ private:
 
     Int32   m_kDust = -1; 
     Int32   m_meiksinIdx = -1;
-    Float64 m_redshiftMeiksin = -1;
+    Int32   m_meiksinRedshiftIdx = -1;
 
-    Int32 m_IsmIgm_kstart = -1, m_IsmIgm_kend = -1;
+    Int32 m_IsmIgm_kstart = -1, m_Ism_kend = -1, m_Igm_kend = -1;
     CSpectrumFluxAxis   m_NoIsmIgmFluxAxis;
 
     //below vectors should be updated each time we change m_kDust, m_meiksinIdx for a specific redshift
@@ -161,25 +163,44 @@ void CTemplate::DisableIsmIgm()
 }
 
 inline
-Int32 CTemplate::GetIsmCoeff()
+Int32 CTemplate::GetIsmCoeff() const
 {
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
+    if (!CheckIsmIgmEnabled()){
+        Log.LogError("CTemplate::GetIsmCoeff:  ismigm initialization not done");
+        throw std::runtime_error("CTemplate::GetIsmCoeff:  ismigm initialization not done");
+    }
     return m_kDust;
 }
 
 inline
-Int32 CTemplate::GetIgmCoeff() 
+Int32 CTemplate::GetIgmCoeff() const
 {
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
+    if (!CheckIsmIgmEnabled()){
+        Log.LogError("CTemplate::GetIgmCoeff:  ismigm initialization not done");
+        throw std::runtime_error("CTemplate::GetIgmCoeff:  ismigm initialization not done");
+    }
     return m_meiksinIdx;
 }
 
 inline
-void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& end)
+void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend) const
 {
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
+    if (!CheckIsmIgmEnabled()){
+        Log.LogError("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
+        throw std::runtime_error("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
+    }    
     begin = m_IsmIgm_kstart;
-    end   = m_IsmIgm_kend;
+    ismend = m_Ism_kend;
+}
+
+inline
+Int32 CTemplate::GetIgmEndIndex() const
+{
+    if (!CheckIsmIgmEnabled() || MeiksinInitFailed()){
+        Log.LogError("CTemplate::GetIgmEndIndex: igm initialization not done");
+        throw std::runtime_error("CTemplate::GetIgmEndIndex: igm initialization not done");
+    }
+    return m_Igm_kend;
 }
 
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;

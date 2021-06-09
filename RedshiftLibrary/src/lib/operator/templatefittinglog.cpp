@@ -853,7 +853,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
    //note that there is no need to copy the ism/igm cause they already exist in the rebinned template
     if(m_enableIGM || m_enableISM){
-        m_templateRebinedLog.InitIsmIgmConfig(kstart, kend);
+        m_templateRebinedLog.InitIsmIgmConfig(kstart, kend, redshiftValueMeiksin);
     }
     for (Int32 kIGM = 0; kIGM < nIGM; kIGM++)
     {
@@ -865,7 +865,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         if (enableIGM)
         {
             Int32 meiksinIdx = igmMeiksinCoeffs[kIGM];
-            m_templateRebinedLog.ApplyMeiksinCoeff(meiksinIdx, redshiftValueMeiksin);
+            m_templateRebinedLog.ApplyMeiksinCoeff(meiksinIdx);
         }
 
         for (Int32 kISM = 0; kISM < nISM; kISM++)
