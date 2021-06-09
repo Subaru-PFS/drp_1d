@@ -20,17 +20,13 @@ class CSpectrumFluxAxis : public CSpectrumAxis
 public:
 
     CSpectrumFluxAxis() = default;
-    CSpectrumFluxAxis(const CSpectrumFluxAxis & other) = default;
-    CSpectrumFluxAxis(CSpectrumFluxAxis && other) = default;
     //value =0. is a default value for flux and not for error.
     explicit CSpectrumFluxAxis( UInt32 n, Float64 value = 0.0);
-    CSpectrumFluxAxis( const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError );
+    CSpectrumFluxAxis( CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError );
     CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-    CSpectrumFluxAxis( const TFloat64List samples);
+    CSpectrumFluxAxis( const TFloat64List & samples);
+    CSpectrumFluxAxis( TFloat64List && samples);
     CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 m);
-    ~CSpectrumFluxAxis() = default;
-    CSpectrumFluxAxis& operator=(const CSpectrumFluxAxis& other) = default;//copy assignement operator
-    CSpectrumFluxAxis& operator=( CSpectrumFluxAxis&& other)=default;//move assignement operator
 
     const CSpectrumNoiseAxis&      GetError() const;
     CSpectrumNoiseAxis&            GetError();

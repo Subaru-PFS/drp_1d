@@ -19,18 +19,20 @@ public:
     CSpectrumAxis() = default;
     CSpectrumAxis(const CSpectrumAxis & other) = default;
     CSpectrumAxis(CSpectrumAxis && other) = default;
-    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 );
+    explicit CSpectrumAxis( UInt32 n, Float64 value = 0.0 ):m_Samples( n , value){} ;
     CSpectrumAxis( const Float64* samples, UInt32 n );
-    CSpectrumAxis( const TFloat64List samples);
-    ~CSpectrumAxis() = default;
+    CSpectrumAxis( const TFloat64List & samples) : m_Samples(samples){};
+    CSpectrumAxis(  TFloat64List && samples) : m_Samples(std::move(samples)){};
+
+    virtual ~CSpectrumAxis() = default;
     CSpectrumAxis& operator=(const CSpectrumAxis& other) = default;
     CSpectrumAxis& operator=(CSpectrumAxis&& other) = default;
     CSpectrumAxis& operator*=(const Float64 op);
     Float64 operator[]( const UInt32 i ) const;
     Float64& operator[]( const UInt32 i );
     
-    void MaskAxis(TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
-    static void maskVector(TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector);
+    void MaskAxis(const TFloat64List& mask, CSpectrumAxis& maskedAxis) const;
+    static void maskVector(const TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector);
 
     const Float64*           GetSamples() const;
     Float64*                 GetSamples();

@@ -38,18 +38,21 @@ public:
 
     CSpectrum();
     CSpectrum(const std::string& name);
-    CSpectrum(const CSpectrum& other, TFloat64List mask);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-    CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
     CSpectrum(const CSpectrum& other);
+    CSpectrum(CSpectrum&& other);
+    CSpectrum(const CSpectrum& other, const TFloat64List & mask);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
+    CSpectrum& operator=(CSpectrum&& other);
 
     void InitSpectrum(CParameterStore& parameterStore);
     void SetName(const std::string name);
-    void SetType(const EType type) const;
-
+    virtual void SetType(const EType type) const;
+    virtual void SetType(const EType type) {const_cast<const CSpectrum *>(this)->SetType(type); };// non const version needed for the virtualization 
+ 
     const std::string&              GetName() const;
     const EType                     GetType() const;
 
@@ -60,13 +63,17 @@ public:
     const CSpectrumFluxAxis&        GetRawFluxAxis() const;
     const CSpectrumFluxAxis&        GetContinuumFluxAxis() const;
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
+    const CSpectrumNoiseAxis&       GetErrorAxis() const;
     std::shared_ptr<const CLSF>     GetLSF() const;
 
-    CSpectrumSpectralAxis&          GetSpectralAxis();
-    CSpectrumFluxAxis&              GetFluxAxis();
-    CSpectrumFluxAxis&              GetRawFluxAxis();
-    CSpectrumFluxAxis&              GetContinuumFluxAxis();
-    CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis();
+    virtual void                    SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis);
+    virtual void                    SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
+    virtual void                    SetFluxAxis(const CSpectrumFluxAxis & fluxaxis);
+    virtual void                    SetFluxAxis(CSpectrumFluxAxis && fluxaxis);
+    virtual void                    SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis);
+    void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
+    void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
+
     std::shared_ptr<CLSF>           GetLSF();
     void                            SetLSF(const std::shared_ptr<CLSF>& lsf);
 
@@ -104,13 +111,18 @@ public:
 
     void                            ScaleFluxAxis(Float64 scale);
 
-    void                            InitPrecomputeFineGrid() const;
-
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
                                            const std::string opt_error_interp="no" ) const;
     Int32                           extractFrom(const CSpectrum& other, Int32 startIdx, Int32 endIdx);
+
 protected:
+
+    // protected mutable getters
+    CSpectrumFluxAxis&              GetFluxAxis_(); 
+    CSpectrumFluxAxis&              GetRawFluxAxis_();
+    CSpectrumFluxAxis&              GetContinuumFluxAxis_();
+    CSpectrumFluxAxis&              GetWithoutContinuumFluxAxis_();
 
     CSpectrumSpectralAxis           m_SpectralAxis;
     std::shared_ptr<CLSF>           m_LSF;
@@ -118,6 +130,8 @@ protected:
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
     Bool                            RebinFineGrid() const;
+    void                            ClearFineGrid() const;
+
 
     const Float64                   m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
                                                              //check if enough to be private
@@ -169,17 +183,35 @@ inline
 const CSpectrumFluxAxis& CSpectrum::GetFluxAxis() const
 {
     switch(m_spcType){
+    case nType_raw :
+            return GetRawFluxAxis();
+            break;
+    case nType_continuumOnly :
+            return GetContinuumFluxAxis();
+            break;
+    case nType_noContinuum :
+            return GetWithoutContinuumFluxAxis();
+            break;
+    default :
+            return GetRawFluxAxis();
+    }
+}
+
+inline
+CSpectrumFluxAxis& CSpectrum::GetFluxAxis_() 
+{
+    switch(m_spcType){
         case nType_raw :
-                return GetRawFluxAxis();
+                return GetRawFluxAxis_();
                 break;
         case nType_continuumOnly :
-                return GetContinuumFluxAxis();
+                return GetContinuumFluxAxis_();
                 break;
         case nType_noContinuum :
-                return GetWithoutContinuumFluxAxis();
+                return GetWithoutContinuumFluxAxis_();
                 break;
         default :
-                return GetRawFluxAxis();
+                return GetRawFluxAxis_();
     }
 }
 
@@ -190,7 +222,22 @@ const CSpectrumFluxAxis& CSpectrum::GetRawFluxAxis() const
 }
 
 inline
+CSpectrumFluxAxis& CSpectrum::GetRawFluxAxis_()
+{
+    return m_RawFluxAxis;
+}
+
+inline
 const CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis() const
+{
+    if( !alreadyRemoved ) {
+        EstimateContinuum();
+    }
+    return m_ContinuumFluxAxis;
+}
+
+inline
+CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis_()
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
@@ -208,46 +255,7 @@ const CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis() const
 }
 
 inline
-CSpectrumSpectralAxis& CSpectrum::GetSpectralAxis()
-{
-    return m_SpectralAxis;
-}
-
-inline
-CSpectrumFluxAxis& CSpectrum::GetFluxAxis()
-{
-    switch(m_spcType){
-        case nType_raw :
-                return GetRawFluxAxis();
-                break;
-        case nType_continuumOnly :
-                return GetContinuumFluxAxis();
-                break;
-        case nType_noContinuum :
-                return GetWithoutContinuumFluxAxis();
-                break;
-        default :
-                return GetRawFluxAxis();
-    }
-}
-
-inline
-CSpectrumFluxAxis& CSpectrum::GetRawFluxAxis()
-{
-    return m_RawFluxAxis;
-}
-
-inline
-CSpectrumFluxAxis& CSpectrum::GetContinuumFluxAxis()
-{
-    if( !alreadyRemoved ) {
-        EstimateContinuum();
-    }
-    return m_ContinuumFluxAxis;
-}
-
-inline
-CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
+CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis_()
 {
     if( !alreadyRemoved ) {
         EstimateContinuum();
@@ -256,13 +264,32 @@ CSpectrumFluxAxis& CSpectrum::GetWithoutContinuumFluxAxis()
 }
 
 inline
-std::shared_ptr<CLSF> CSpectrum::GetLSF()
+const CSpectrumNoiseAxis&  CSpectrum::GetErrorAxis() const
 {
-    return m_LSF;
+    return GetFluxAxis().GetError();
+}
+
+inline 
+void CSpectrum::SetErrorAxis(const CSpectrumNoiseAxis & erroraxis)
+{
+    GetFluxAxis_().GetError() = erroraxis;
+}
+
+inline 
+void CSpectrum::SetErrorAxis(CSpectrumNoiseAxis && erroraxis)
+{
+    GetFluxAxis_().GetError() = std::move(erroraxis);
 }
 
 inline
 std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
+{
+    return m_LSF;
+
+}
+
+inline
+std::shared_ptr<CLSF> CSpectrum::GetLSF()
 {
     return m_LSF;
 

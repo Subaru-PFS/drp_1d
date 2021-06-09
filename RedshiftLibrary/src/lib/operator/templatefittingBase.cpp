@@ -64,8 +64,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     
     if ((EbmvCoeff>0.) || (meiksinIdx>-1)){
-        m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-        m_templateRebined_bf.SetIsmIgmLambdaRange(currentRange);
+        m_templateRebined_bf.InitIsmIgmConfig(currentRange, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }
     
     if (EbmvCoeff>0.)
@@ -92,9 +91,11 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
         Bool igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx, redshift);
     } 
     m_templateRebined_bf.ScaleFluxAxis(amplitude);
-    //shift the spectralaxis to synch with the spectrum lambdaAxis
-    m_templateRebined_bf.GetSpectralAxis().ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
-    spcPtr = std::make_shared<CModelSpectrumResult>(m_templateRebined_bf);
+    //shift the spectralaxis to sync with the spectrum lambdaAxis
+    const CSpectrumFluxAxis & modelflux =  m_templateRebined_bf.GetFluxAxis();
+    CSpectrumSpectralAxis modelwav = m_templateRebined_bf.GetSpectralAxis(); // needs a copy to be shifted
+    modelwav.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
+    spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelwav), modelflux));
     return 0;
 }
 

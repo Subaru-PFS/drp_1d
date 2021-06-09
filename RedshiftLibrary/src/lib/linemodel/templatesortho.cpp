@@ -102,7 +102,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                             const std::string &opt_rigidity)
 {
 
-    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate) );
+    std::shared_ptr<CTemplate> tplOrtho = std::make_shared<CTemplate>(inputTemplate);
 
     bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){
@@ -168,11 +168,13 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         fclose( f );
         //*/
 
-        CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
-        CSpectrumFluxAxis& continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
+        const CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
+        CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
         for(UInt32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
             continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
         }
+        tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));
+        
         /*//debug:
         FILE* f2 = fopen( "templatesortho_orthotemplate_dbg.txt", "w+" );
         for( Int32 t=0;t<modelSpc.GetSampleCount();t++)

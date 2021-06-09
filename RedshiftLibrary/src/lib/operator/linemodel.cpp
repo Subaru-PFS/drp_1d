@@ -2198,25 +2198,14 @@ Int32 COperatorLineModel::initContaminant(
     m_tplContaminant =
         std::shared_ptr<CTemplate>(new CTemplate("contaminant", category));
     Int32 length = contModelSpectrum->GetSpectrum().GetSampleCount();
-    CSpectrumAxis &contModelFluxAxis =
-        contModelSpectrum->GetSpectrum().GetFluxAxis();
-    CSpectrumAxis &contModelSpectralAxis =
-        contModelSpectrum->GetSpectrum().GetSpectralAxis();
-
-    CSpectrumAxis &spcFluxAxis = m_tplContaminant->GetFluxAxis();
-    spcFluxAxis.SetSize(length);
-    CSpectrumAxis &spcSpectralAxis = m_tplContaminant->GetSpectralAxis();
-    spcSpectralAxis.SetSize(length);
-
-    for (Int32 k = 0; k < length; k++)
-    {
-        spcFluxAxis[k] = contModelFluxAxis[k];
-        spcSpectralAxis[k] = contModelSpectralAxis[k];
-    }
+   
+    CSpectrumFluxAxis  spcFluxAxis = contModelSpectrum->GetSpectrum().GetFluxAxis();
+    CSpectrumSpectralAxis spcSpectralAxis = contModelSpectrum->GetSpectrum().GetSpectralAxis();
 
     // applying offset for ra/dec distance between main source and contaminant
-    m_tplContaminant->GetSpectralAxis().ApplyOffset(m_contLambdaOffset);
+    spcSpectralAxis.ApplyOffset(m_contLambdaOffset);
 
+    m_tplContaminant->SetSpectralAndFluxAxes(std::move(spcSpectralAxis), std::move(spcFluxAxis));
     m_enableLoadContTemplate = true;
     return 0;
 }
@@ -2277,11 +2266,9 @@ void COperatorLineModel::ComputeArea1(std::shared_ptr<CLineModelExtremaResult> &
 {
     // prepare p
     Float64 maxp = DBL_MIN;
-    CSpectrum pspc;
-    CSpectrumFluxAxis &spcFluxAxis = pspc.GetFluxAxis();
-    spcFluxAxis.SetSize(m_result->Redshifts.size());
-    CSpectrumSpectralAxis &spcSpectralAxis = pspc.GetSpectralAxis();
-    spcSpectralAxis.SetSize(m_result->Redshifts.size());
+    //CSpectrum pspc;
+    CSpectrumFluxAxis spcFluxAxis(m_result->Redshifts.size());
+    CSpectrumSpectralAxis spcSpectralAxis(m_result->Redshifts.size());
     for (Int32 i2 = 0; i2 < m_result->Redshifts.size(); i2++)
     {
         if (maxp < m_result->ChiSquare[i2])
@@ -2518,8 +2505,8 @@ void COperatorLineModel::ComputeArea2(std::shared_ptr<CLineModelExtremaResult> &
  *parameterized by c. Save the minimal result. If the result is not greater than
  *zero, return zero. Return the result.
  **/
-Float64 COperatorLineModel::FitBayesWidth(CSpectrumSpectralAxis &spectralAxis,
-                                          CSpectrumFluxAxis &fluxAxis,
+Float64 COperatorLineModel::FitBayesWidth(const CSpectrumSpectralAxis &spectralAxis,
+                                          const CSpectrumFluxAxis &fluxAxis,
                                           Float64 z, Int32 start, Int32 end)
 {
     Float64 A = boost::numeric::bounds<float>::lowest();

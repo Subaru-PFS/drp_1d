@@ -254,8 +254,8 @@ class CSpectrum
  %rename(CSpectrum_default) CSpectrum();
  public:
   CSpectrum();
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
   std::shared_ptr<const CLSF> GetLSF() const;
   void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
@@ -346,7 +346,7 @@ class CTemplate : public CSpectrum
 {
  public:
   CTemplate( const std::string& name, const std::string& category,
-	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+	     CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   bool Save( const char* filePath ) const;
 };
 

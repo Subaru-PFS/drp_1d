@@ -853,8 +853,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
    //note that there is no need to copy the ism/igm cause they already exist in the rebinned template
     if(m_enableIGM || m_enableISM){
-        m_templateRebinedLog.InitIsmIgmConfig();
-        m_templateRebinedLog.SetIsmIgmLambdaRange(kstart, kend);
+        m_templateRebinedLog.InitIsmIgmConfig(kstart, kend);
     }
     for (Int32 kIGM = 0; kIGM < nIGM; kIGM++)
     {
@@ -1284,7 +1283,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio, lambdaRange);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
         // scale the variance by ssratio
-        m_spectrumRebinedLog.GetFluxAxis().GetError() *= 1./sqrt(ssRatio); 
+        CSpectrumNoiseAxis scaledNoise = m_spectrumRebinedLog.GetErrorAxis();
+        scaledNoise  *= 1./sqrt(ssRatio);
+        m_spectrumRebinedLog.SetErrorAxis(std::move(scaledNoise));
 
         TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), rebinnedTpl.GetSpectralAxis(), TFloat64Range(redshifts));
         TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio, ilbda);

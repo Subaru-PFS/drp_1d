@@ -59,11 +59,8 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
       throw runtime_error("Read: file length == -1");
     }
 
-  CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
-  spcFluxAxis.SetSize( length );
-
-  CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-  spcSpectralAxis.SetSize( length );
+  CSpectrumFluxAxis spcFluxAxis(length);
+  CSpectrumSpectralAxis spcSpectralAxis(length);
 
   Int32 i = 0;
   file.clear();
@@ -82,6 +79,8 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
         }
     }
   file.close();
+  spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
+  
   Log.LogDebug ( "File contents read as ASCII characters." );
 }
 

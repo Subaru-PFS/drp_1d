@@ -225,8 +225,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         Int32 kStart = -1, kEnd = -1;
             
         if (apply_ism || opt_extinction){          
-            m_templateRebined_bf.InitIsmIgmConfig(tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
-            m_templateRebined_bf.SetIsmIgmLambdaRange( range );
+            m_templateRebined_bf.InitIsmIgmConfig(range, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
             m_templateRebined_bf.GetIsmIgmRangeIndex(kStart, kEnd);
         }else{
             currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
@@ -579,7 +578,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     if(0)
     {
         //CSpectrumFluxAxis tmp_tplFluxAxis = tpl.GetFluxAxis();
-        CSpectrumSpectralAxis tmp_tplSpectralAxis = tpl.GetSpectralAxis();
+        const CSpectrumSpectralAxis & tmp_tplSpectralAxis = tpl.GetSpectralAxis();
         for(UInt32 k=0; k<std::min(Int32(tmp_tplSpectralAxis.GetSamplesCount()), Int32(10)); k++)
         {
             Log.LogDebug("  Operator-TemplateFitting: tpl_SpectralAxis[%d] = %f",

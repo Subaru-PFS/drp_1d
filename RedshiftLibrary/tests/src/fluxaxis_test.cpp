@@ -80,20 +80,6 @@ BOOST_AUTO_TEST_CASE(calcul)
 								rebinnedSpectrum,
 								(*rebinedMask)));
 
-  // cas 2
-
-  CSpectrumSpectralAxis *sourceSpectralAxis2 =
-    new CSpectrumSpectralAxis(n + 1, false);
-
-  std::shared_ptr<CSpectrum> object_CSpectrum2;
-  object_CSpectrum2 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis2), (*sourceFluxAxis)));
-  CSpectrum rebinnedSpectrum2;
-  bool resultcas2 = object_CSpectrum2->Rebin((*object_Range),
-						    (*targetSpectralAxis),
-						    rebinnedSpectrum2,
-						    (*rebinedMask));
-  BOOST_CHECK(resultcas2 == false);
-  BOOST_TEST_MESSAGE("cas2:" << resultcas2);
 
   // cas 3
 
@@ -153,19 +139,6 @@ BOOST_AUTO_TEST_CASE(calcul)
 							   opt_interp);
   BOOST_CHECK(resultRebincas1 == true);
   BOOST_TEST_MESSAGE("Rebin cas1:" << resultRebincas1);
-
-  // cas 2
-  CMask *rebinedMask4 = new CMask();
-  std::shared_ptr<CSpectrum> object_CSpectrum6;
-  object_CSpectrum6 = std::shared_ptr<CSpectrum>( new CSpectrum( (*sourceSpectralAxis2), (*sourceFluxAxis)));
-  CSpectrum rebinnedSpectrum6;
-  bool resultRebincas2 = object_CSpectrum6->Rebin((*object_Range),
-							   (*targetSpectralAxis),
-							   rebinnedSpectrum6,
-							   (*rebinedMask4),
-							   opt_interp);
-  BOOST_CHECK(resultRebincas2 == false);
-  BOOST_TEST_MESSAGE("Rebin cas2:" << resultRebincas2);
 
   // cas 3
   CMask *rebinedMask5 = new CMask();
@@ -437,28 +410,6 @@ BOOST_AUTO_TEST_CASE(RebinVarianceWeighted)
 							   (*rebinedMask13),
 							   opt_interp, errorRebinMethod);
   BOOST_CHECK(resultRebinvaria1 == true);
-
-  std::shared_ptr<CSpectrum> object_CSpectrum14;
-  object_CSpectrum14 = std::shared_ptr<CSpectrum>( new CSpectrum( (bogus_sourceSpectralAxis), (sourceFluxAxis)));
-  CMask *rebinedMask14 = new CMask();
-  CSpectrum rebinnedSpectrum14;
-  bool resultRebinvaria2 = object_CSpectrum14->Rebin(currentRange,
-							   (targetSpectralAxis),
-							   rebinnedSpectrum14,
-							   (*rebinedMask14),
-							   opt_interp, errorRebinMethod);
-  BOOST_CHECK(resultRebinvaria2 == false);
-
-  std::shared_ptr<CSpectrum> object_CSpectrum15;
-  object_CSpectrum15 = std::shared_ptr<CSpectrum>( new CSpectrum( (bogus_sourceSpectralAxis), (sourceFluxAxis)));
-  CMask *rebinedMask15 = new CMask();
-  CSpectrum rebinnedSpectrum15;
-  bool resultRebinvaria3 = object_CSpectrum15->Rebin(currentRange,
-							   (targetSpectralAxis),
-							   rebinnedSpectrum15,
-							   (*rebinedMask15),
-							   "dummy", errorRebinMethod);
-  BOOST_CHECK(resultRebinvaria3 == false);  
 
 }
 

@@ -11,14 +11,6 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * Constructor, empty.
- */
-CTemplate::CTemplate( )
-{
-
-}
-
-/**
  * Constructor, assigns values to members.
  */
 CTemplate::CTemplate( const std::string& name, const std::string& category ) :
@@ -28,8 +20,8 @@ CTemplate::CTemplate( const std::string& name, const std::string& category ) :
 }
 
 CTemplate::CTemplate( const std::string& name, const std::string& category,
-		      CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis) :
-    CSpectrum(spectralAxis, fluxAxis),
+		      CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis) :
+    CSpectrum(std::move(spectralAxis), std::move(fluxAxis)),
     m_Category( category )
 {
     m_Name = name;
@@ -51,7 +43,23 @@ CTemplate::CTemplate( const CTemplate& other):
 {
 }
 
-CTemplate::CTemplate( const CTemplate& other, TFloat64List mask): 
+CTemplate::CTemplate( CTemplate&& other): 
+    CSpectrum(std::move(other)),
+    m_kDust(other.m_kDust),
+    m_meiksinIdx(other.m_meiksinIdx),
+    m_redshiftMeiksin(other.m_redshiftMeiksin),
+    m_Category( std::move(other.m_Category)),
+    m_IsmIgm_kstart(other.m_IsmIgm_kstart),
+    m_IsmIgm_kend(other.m_IsmIgm_kend),
+    m_computedDustCoeff(std::move(other.m_computedDustCoeff)), 
+    m_computedMeiksingCoeff(std::move(other.m_computedMeiksingCoeff)),
+    m_ismCorrectionCalzetti(std::move(other.m_ismCorrectionCalzetti)),
+    m_igmCorrectionMeiksin(std::move(other.m_igmCorrectionMeiksin)),
+    m_NoIsmIgmFluxAxis(std::move(other.m_NoIsmIgmFluxAxis))
+{
+}
+
+CTemplate::CTemplate( const CTemplate& other, const TFloat64List& mask): 
     CSpectrum(other, mask),
     m_kDust(other.m_kDust),
     m_meiksinIdx(other.m_meiksinIdx),
@@ -66,19 +74,19 @@ CTemplate::CTemplate( const CTemplate& other, TFloat64List mask):
         if(!ret)//complete range is masked
         {
             m_IsmIgm_kstart = -1; m_IsmIgm_kend = -1;//not necessary but for security
-            DisableIsmIgm();
+            m_NoIsmIgmFluxAxis.clear();
         }else{
             other.m_NoIsmIgmFluxAxis.MaskAxis(mask, m_NoIsmIgmFluxAxis);
+
             CSpectrumAxis::maskVector(mask, other.m_computedDustCoeff, m_computedDustCoeff);
             CSpectrumAxis::maskVector(mask, other.m_computedMeiksingCoeff, m_computedMeiksingCoeff);
         }
     }
-
 }
+
 CTemplate& CTemplate::operator=(const CTemplate& other)
 {
-    CSpectrum::operator =(other);
-    m_Name = other.m_Name;
+    CSpectrum::operator=(other);
 
     m_NoIsmIgmFluxAxis = other.m_NoIsmIgmFluxAxis;
     m_kDust = other.m_kDust;
@@ -94,6 +102,24 @@ CTemplate& CTemplate::operator=(const CTemplate& other)
     return *this;
 }
 
+CTemplate& CTemplate::operator=(CTemplate&& other)
+{
+    CSpectrum::operator=(std::move(other));
+
+    m_NoIsmIgmFluxAxis = std::move(other.m_NoIsmIgmFluxAxis);
+    m_kDust = other.m_kDust;
+    m_meiksinIdx = other.m_meiksinIdx;
+    m_redshiftMeiksin = other.m_redshiftMeiksin;
+    m_computedDustCoeff = std::move(other.m_computedDustCoeff); 
+    m_computedMeiksingCoeff = std::move(other.m_computedMeiksingCoeff);
+    m_Category = std::move(other.m_Category);
+    m_IsmIgm_kstart = other.m_IsmIgm_kstart;
+    m_IsmIgm_kend = other.m_IsmIgm_kend;
+    m_ismCorrectionCalzetti = std::move(other.m_ismCorrectionCalzetti);
+    m_igmCorrectionMeiksin = std::move(other.m_igmCorrectionMeiksin);
+    return *this;
+}
+
 /**
  * Returns the value stored in m_Category.
  */
@@ -102,17 +128,6 @@ const std::string& CTemplate::GetCategory() const
     return m_Category;
 }
 
-void CTemplate::SetIsmIgmLambdaRange(TFloat64Range& lbdaRange)
-{
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
-    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_IsmIgm_kend);
-}
-
-void CTemplate::SetIsmIgmLambdaRange(Int32 kstart, Int32 kend)
-{
-    if(!CheckIsmIgmEnabled()) InitIsmIgmConfig();
-    m_IsmIgm_kstart = kstart; m_IsmIgm_kend = kend;
-}
 /**
  * Saves the template in the given filePath.
  */
@@ -158,7 +173,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
         return true; 
     m_kDust = kDust;
 
-    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
 
     for(Int32 k =m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
@@ -188,7 +203,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx, Float64 redshift)
     Int32 redshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(m_redshiftMeiksin); //index for IGM Meiksin redshift range
     Bool igmCorrectionAppliedOnce = false;
 
-    CSpectrumFluxAxis & FluxAxis = GetFluxAxis();
+    CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
 
     for(Int32 k = m_IsmIgm_kstart; k < m_IsmIgm_kend + 1; k++)
     {
@@ -245,24 +260,31 @@ bool CTemplate::MeiksinInitFailed() const
     return failed;
 }
 
-Bool CTemplate::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                       CTemplate& rebinedTemplate, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
-{
-    rebinedTemplate.DisableIsmIgm();
-    return CSpectrum::Rebin(range, targetSpectralAxis, rebinedTemplate, rebinedMask, opt_interp, opt_error_interp);
-}
 //init ism/igm configuration when we change redshift value
 void CTemplate::InitIsmIgmConfig( const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-                                const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
-    m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-    m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-    
-    InitIsmIgmConfig();
+    InitIsmIgmConfig(0, GetSampleCount()-1, ismCorrectionCalzetti, igmCorrectionMeiksin);
 }
 
-void CTemplate::InitIsmIgmConfig()
+void CTemplate::InitIsmIgmConfig( const TFloat64Range & lbdaRange,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
+    Int32 kstart, kend;
+    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
+    InitIsmIgmConfig(kstart, kend, ismCorrectionCalzetti, igmCorrectionMeiksin);
+}
+
+void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+{
+    if (ismCorrectionCalzetti)
+        m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+
+    if (igmCorrectionMeiksin)
+        m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
     if (MeiksinInitFailed() && CalzettiInitFailed() ) {
         Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
@@ -272,14 +294,14 @@ void CTemplate::InitIsmIgmConfig()
     m_kDust = -1;
     m_meiksinIdx = -1;
     m_redshiftMeiksin = -1; 
+    m_IsmIgm_kstart = kstart; 
+    m_IsmIgm_kend = kend; 
 
     if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
         m_NoIsmIgmFluxAxis = GetFluxAxis();
     else // reset the fluxAxis
-        GetFluxAxis() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
-    
-    SetIsmIgmLambdaRange(0, GetSampleCount()-1);
-    
+        GetFluxAxis_() = m_NoIsmIgmFluxAxis; //note: the type component (raw/continuum/wocontinuum should not have changed)
+        
     m_computedMeiksingCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedMeiksingCoeff.begin(), m_computedMeiksingCoeff.end(), 1.0);
     

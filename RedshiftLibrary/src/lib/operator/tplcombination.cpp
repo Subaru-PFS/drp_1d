@@ -52,10 +52,6 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
 
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
     {
-        m_templatesRebined_bf[ktpl].GetSpectralAxis().SetSize(spectrum.GetSampleCount());
-        m_templatesRebined_bf[ktpl].GetFluxAxis().SetSize(spectrum.GetSampleCount());
-        m_masksRebined_bf[ktpl].SetSize(spectrum.GetSampleCount());
-
         m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti = tplList[ktpl].m_ismCorrectionCalzetti;
         m_templatesRebined_bf[ktpl].m_igmCorrectionMeiksin = tplList[ktpl].m_igmCorrectionMeiksin;
     }
@@ -266,7 +262,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }  
     fittingResults.modelSpectrum = modelSpec;
     */
-    fittingResults.modelSpectrum = CSpectrum(CSpectrumSpectralAxis(spc_extract), CSpectrumFluxAxis(modelFlux));
     fittingResults.igmIdx = bestidxMeiksin;
     fittingResults.ebmvCoeff = bestkDust;
     fittingResults.snr = -1.0;
@@ -280,6 +275,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         err2 = spcError[k+imin_lbda]*spcError[k+imin_lbda];
         fittingResults.chisquare += diff*diff/err2;
     }
+
+    fittingResults.modelSpectrum = CSpectrum(CSpectrumSpectralAxis(std::move(spc_extract)), CSpectrumFluxAxis(std::move(modelFlux)));
 
     //save the interm chisquares: for now, ism and igm deactivated so that interm chi2=global chi2
     for(Int32 kism=0; kism<fittingResults.ChiSquareInterm.size(); kism++)
