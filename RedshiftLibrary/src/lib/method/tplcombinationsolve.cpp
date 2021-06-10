@@ -191,7 +191,26 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
             tplList.push_back(*tpl);
         }
     }
-
+    //check all templates have same spectralAxis
+    const CSpectrumSpectralAxis& refSpcAxis = tplList[0].GetSpectralAxis();
+    UInt32 axisSize = refSpcAxis.GetSamplesCount();
+    for(Int32 ktpl=1; ktpl<tplList.size(); ktpl++)
+    {
+        const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl].GetSpectralAxis();
+        if(axisSize != tplList[ktpl].GetSampleCount())
+        {
+            Log.LogError("  Method-tplcombination: templates dont have same size");
+            throw std::runtime_error("  Method-tplcombination: templates dont have same size");
+        }
+        for (Int32 i = 0; i<axisSize; i++)
+        {
+            if(refSpcAxis[i]!=currentSpcAxis[i])
+            {
+                Log.LogError("  Method-tplcombination: templates dont have same spectralAxis");
+                throw std::runtime_error("  Method-tplcombination: templates dont have same spectralAxis");
+            }
+        }
+    }
 
     //case: nType_all
     if(spctype == nType_all){
