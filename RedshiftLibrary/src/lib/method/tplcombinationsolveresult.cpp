@@ -11,11 +11,11 @@
 #include <memory>
 
 using namespace NSEpic;
-CTplCombinationSolveResult::CTplCombinationSolveResult( Float64 merit, Float64 redshift,
-                                                        const std::string & scope, 
-                                                        const std::string & opt_pdfcombination,
-                                                        Float64 evidence ):
-    CPdfSolveResult( merit, redshift, opt_pdfcombination, evidence),
+CTplCombinationSolveResult::CTplCombinationSolveResult(const std::string & scope, 
+                                                         const TCandidateZ & BestExtremumResult,
+                                                         const std::string & opt_pdfcombination,
+                                                         Float64 evidence ):
+    CPdfSolveResult( BestExtremumResult, opt_pdfcombination, evidence),
     m_scope(scope)
 {}
 

@@ -1,16 +1,14 @@
   class CModelSpectrumResult : public COperatorResult
 {
 
-public:
+ public:
 
-    CModelSpectrumResult(const CSpectrum& spc);
-    //  CModelSpectrumResult();
-    virtual ~CModelSpectrumResult();
+  CModelSpectrumResult(const CSpectrum& spc);
+  CModelSpectrumResult(CSpectrum&& spc);
 
-    CSpectrum& GetSpectrum();
+  //  CModelSpectrumResult();
+    
+   const TFloat64List ModelLambda;
+   const TFloat64List ModelFlux;
 
-    const TFloat64List& ModelLambda;
-    const TFloat64List& ModelFlux;
-private:
-  CSpectrum m_model;
 };

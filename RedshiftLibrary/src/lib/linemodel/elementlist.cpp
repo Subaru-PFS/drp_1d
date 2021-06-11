@@ -1031,7 +1031,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
                                                  overlapThreshold, spcmodel);
 
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
-    m_observeGridContinuumFlux = (*spcmodel).GetSpectrum().GetFluxAxis().GetSamplesVector();
+    m_observeGridContinuumFlux = (*spcmodel).ModelFlux;
 
   return 0;
 }

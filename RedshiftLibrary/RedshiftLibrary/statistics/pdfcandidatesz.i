@@ -6,10 +6,7 @@ public:
     TCandidateZ& operator=(const TCandidateZ&) = default;
     TCandidateZ& operator=(TCandidateZ&&) = default;
     virtual ~TCandidateZ() = default;
-    TCandidateZ()
-      {
-	Redshift=-1;
-      };
+    TCandidateZ() = default;
     
     Float64           	  Redshift = NAN;
     Float64               ValProba = NAN;

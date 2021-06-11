@@ -2089,7 +2089,7 @@ Int32 COperatorLineModel::initContaminant(
     std::shared_ptr<CModelSpectrumResult> contModelSpectrum,
     Int32 iRollContaminated, Float64 contLambdaOffset)
 {
-    //
+  /*
     Log.LogInfo("  Operator-Linemodel: Initializing contaminant for roll #%d, "
                 "with offset=%.2f",
                 iRollContaminated, contLambdaOffset);
@@ -2099,7 +2099,7 @@ Int32 COperatorLineModel::initContaminant(
     const std::string &category = "emission";
     m_tplContaminant =
         std::shared_ptr<CTemplate>(new CTemplate("contaminant", category));
-    Int32 length = contModelSpectrum->GetSpectrum().GetSampleCount();
+    Int32 length = contModelSpectrum->ModelFlux.size();
    
     CSpectrumFluxAxis  spcFluxAxis = contModelSpectrum->GetSpectrum().GetFluxAxis();
     CSpectrumSpectralAxis spcSpectralAxis = contModelSpectrum->GetSpectrum().GetSpectralAxis();
@@ -2109,6 +2109,7 @@ Int32 COperatorLineModel::initContaminant(
 
     m_tplContaminant->SetSpectralAndFluxAxes(std::move(spcSpectralAxis), std::move(spcFluxAxis));
     m_enableLoadContTemplate = true;
+  */
     return 0;
 }
 

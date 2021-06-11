@@ -139,7 +139,10 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     
     std::shared_ptr<CTplCombinationSolveResult> solveResult = 
       std::make_shared<CTplCombinationSolveResult>( resultStore->GetCurrentScopeName(),
-                                                     extremaResult->m_ranked_candidates[0].second);
+						    extremaResult->m_ranked_candidates[0].second,
+						    m_opt_pdfcombination,
+						    pdfz.m_postmargZResult->valEvidenceLog
+						    );
 
     // TBD 
 

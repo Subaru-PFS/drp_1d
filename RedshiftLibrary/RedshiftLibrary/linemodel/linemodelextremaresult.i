@@ -8,51 +8,11 @@ public:
     this->m_type="TLineModelResult";
   }
 
-    TLineModelResult(const TLineModelResult&) = default;
-    TLineModelResult(TLineModelResult&&) = default;
-    TLineModelResult& operator=(const TLineModelResult&) = default;
-    TLineModelResult& operator=(TLineModelResult&&) = default;
-    virtual ~TLineModelResult() = default;
-    TLineModelResult() = default;
+    TLineModelResult(const CContinuumModelSolution& cms);
+    
+    void updateFromContinuumModelSolution(const CContinuumModelSolution& cms,bool all);
 
-  TLineModelResult(const CContinuumModelSolution& cms)
-  {
-    FittedTplName = cms.tplName;
-    FittedTplAmplitude = cms.tplAmplitude;
-    FittedTplAmplitudeError = cms.tplAmplitudeError;
-    FittedTplMerit = cms.tplMerit;
-    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-    FittedTplRedshift = cms.tplRedshift;
-    FittedTplDtm = cms.tplDtm;
-    FittedTplMtm = cms.tplMtm;
-    FittedTplLogPrior = cms.tplLogPrior;
-    FittedTplpCoeffs = cms.pCoeffs;
-  }
-
-  void updateFromContinuumModelSolution(const CContinuumModelSolution& cms,bool all)
-  {
-    if (all)
-      {
-    FittedTplName = cms.tplName;
-    FittedTplAmplitude = cms.tplAmplitude;
-    FittedTplAmplitudeError = cms.tplAmplitudeError;
-    FittedTplMerit = cms.tplMerit;
-    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-      }
-    FittedTplRedshift = cms.tplRedshift;
-    FittedTplDtm = cms.tplDtm;
-    FittedTplMtm = cms.tplMtm;
-    FittedTplLogPrior = cms.tplLogPrior;
-    FittedTplpCoeffs = cms.pCoeffs;
-  }
-
-  void updateFromLineModelSolution(const CLineModelSolution& cms)
-  {
-    Elv= cms.EmissionVelocity;
-    Alv= cms.AbsorptionVelocity;
-  }
+    void updateFromLineModelSolution(const CLineModelSolution& cms);
 
   void updateContinuumFromModel(std::shared_ptr<const CLineModelElementList> lmel);
   void updateTplRatioFromModel(std::shared_ptr<const CLineModelElementList> lmel);

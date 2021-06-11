@@ -5,6 +5,47 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
+
+// TODO this should be a TExtremaResult constructor, using member initialization list
+TLineModelResult::TLineModelResult(const CContinuumModelSolution& cms)
+{
+   FittedTplName = cms.tplName;
+    FittedTplAmplitude = cms.tplAmplitude;
+    FittedTplAmplitudeError = cms.tplAmplitudeError;
+    FittedTplMerit = cms.tplMerit;
+    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
+    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
+    FittedTplRedshift = cms.tplRedshift;
+    FittedTplDtm = cms.tplDtm;
+    FittedTplMtm = cms.tplMtm;
+    FittedTplLogPrior = cms.tplLogPrior;
+    FittedTplpCoeffs = cms.pCoeffs;
+  }
+
+void TLineModelResult::updateFromContinuumModelSolution(const CContinuumModelSolution& cms,bool all)
+  {
+    if (all)
+      {
+    FittedTplName = cms.tplName;
+    FittedTplAmplitude = cms.tplAmplitude;
+    FittedTplAmplitudeError = cms.tplAmplitudeError;
+    FittedTplMerit = cms.tplMerit;
+    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
+    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
+      }
+    FittedTplRedshift = cms.tplRedshift;
+    FittedTplDtm = cms.tplDtm;
+    FittedTplMtm = cms.tplMtm;
+    FittedTplLogPrior = cms.tplLogPrior;
+    FittedTplpCoeffs = cms.pCoeffs;
+  }
+
+void TLineModelResult::updateFromLineModelSolution(const CLineModelSolution& cms)
+  {
+    Elv= cms.EmissionVelocity;
+    Alv= cms.AbsorptionVelocity;
+  }
+
 void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelElementList> lmel)
   {
     FittedTplName= lmel->getFitContinuum_tplName();

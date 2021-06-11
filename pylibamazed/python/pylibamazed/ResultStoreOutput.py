@@ -2,10 +2,12 @@ from .AbstractOutput import AbstractOutput
 from .OutputSpecifications import results_specifications
 import numpy as np
 import pandas as pd
-import abc
 import resource
 from collections import defaultdict
-from pylibamazed.redshift import PC_Get_Float64Array,PC_Get_Int32Array
+from pylibamazed.redshift import PC_Get_Float64Array,PC_Get_Int32Array,CLog
+
+zlog = CLog.GetInstance()
+
 
 class ResultStoreOutput(AbstractOutput):
 
@@ -14,7 +16,12 @@ class ResultStoreOutput(AbstractOutput):
         self.results_store = result_store
         self.parameters = parameters
 
-        self.object_types = ["galaxy"] # result_store.getProcessedObjectTypes()
+        self.object_types = ["galaxy"]
+        if self.parameters["enablestellarsolve"] == "yes":
+            self.object_types.append("star")
+        if self.parameters["enableqsosolve"] == "yes":
+            self.object_types.append("qso")
+
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
@@ -30,7 +37,7 @@ class ResultStoreOutput(AbstractOutput):
             for index,ds_row in ds_attributes.iterrows():
                 self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row)
 
-    def load_object_level(self,object_type):
+    def load_object_level(self, object_type):
         rs = results_specifications
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
@@ -81,15 +88,9 @@ class ResultStoreOutput(AbstractOutput):
                 res = defaultdict(list)
                 {res[key].append(sub[key]) for sub in candidates for key in sub}
                 self.object_dataframes[object_type][ds] = pd.DataFrame(res)
-                self.object_dataframes[object_type][ds]["Rank"]=range(nb_candidates)
+                self.object_dataframes[object_type][ds]["Rank"] = range(nb_candidates)
 
-    def load_all(self):
-        self.load_root()
-        for object_type in self.object_types:
-            self.load_object_level(object_type)
-            self.load_candidate_level(object_type)
-
-    def write_hdf5_root(self, hdf5_spectrum_node, zlog):
+    def write_hdf5_root(self, hdf5_spectrum_node):
         rs = results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
@@ -121,13 +122,13 @@ class ResultStoreOutput(AbstractOutput):
                 else:
                     raise Exception("h5write : TODO handle dataset with of size 1 in object scope")
 
-    def write_hdf5(self,hdf5_root,spectrum_id, zlog):
+    def write_hdf5(self,hdf5_root,spectrum_id):
         obs = hdf5_root.create_group(spectrum_id)
         obs.attrs["user_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_utime
         obs.attrs["system_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_stime
         obs.attrs["memory_used"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
-        self.write_hdf5_root(obs, zlog)
+        self.write_hdf5_root(obs)
 
         for object_type in self.object_types:
             object_results = obs.create_group(object_type) #h5
@@ -141,8 +142,9 @@ class ResultStoreOutput(AbstractOutput):
                 candidate = candidates.create_group(self.get_candidate_group_name(rank))
                 for ds in candidate_datasets:
                     if self.has_dataset(object_type,ds):
-                        ds_size = self.get_dataset_size(object_type,ds,0)
-                        if ds_size == 1:
+                        ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                        ds_dim = ds_attributes["dimension"].unique()[0]
+                        if ds_dim == "mono":
                             candidate.create_group(ds)
 
             for ds in candidate_datasets:
@@ -187,12 +189,12 @@ class ResultStoreOutput(AbstractOutput):
 
     def get_operator_result(self, data_spec, object_type, rank = None):
         if data_spec.level == "root":
-            or_type = self.results_store.GetGlobalResultType(data_spec.object_type,
-                                                             data_spec.object_type,
+            or_type = self.results_store.GetGlobalResultType(data_spec.hdf5_dataset,
+                                                             data_spec.hdf5_dataset,
                                                              data_spec.ResultStore_key)
             if or_type == "CClassificationResult":
-                return self.results_store.GetClassificationResult(data_spec.object_type,
-                                                                  data_spec.object_type,
+                return self.results_store.GetClassificationResult(data_spec.hdf5_dataset,
+                                                                  data_spec.hdf5_dataset,
                                                                   data_spec.ResultStore_key)
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)

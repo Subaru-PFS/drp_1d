@@ -253,6 +253,7 @@ bool COperatorResultStore::HasCandidateDataset(const std::string& objectType,
 						       const std::string& name ,
 						       const std::string& dataset) const
 {
+  
   bool ret = GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
   return ret;
 }

@@ -15,7 +15,10 @@ class AbstractOutput:
         self.manual_redshift = None
         
     def load_all(self):
-        pass
+        self.load_root()
+        for object_type in self.object_types:
+            self.load_object_level(object_type)
+            self.load_candidate_level(object_type)
 
     def get_solve_method(self,object_type):
         return self.parameters[object_type]["method"]
@@ -50,12 +53,6 @@ class AbstractOutput:
     def get_pdf(self,object_type):
         return self.object_dataframes[object_type]["pdf"]
 
-    def get_rays_info(self,object_type="galaxy"):
-        return self.object_results[object_type]["rays_info"]
-
-    def get_rays_info_df(self,object_type="galaxy"):
-        return self.object_results[object_type]["rays_info"]
-
     def get_classification_type(self):
         return self.root_results["classification"]["Type"]
 
@@ -63,8 +60,7 @@ class AbstractOutput:
         return self.root_results["classification"]
     
     def get_fitted_continuum_by_rank(self, object_type, rank):
-        self.load_fitted_continuum_by_rank(object_type,rank)
-        return self.best_continuum[object_type][rank]
+        return self.object_dataframes[object_type]["continuum"][rank]
 
     def get_fitted_model_by_rank(self, object_type, rank):
         return self.object_dataframes[object_type]["model"][rank]
@@ -76,8 +72,7 @@ class AbstractOutput:
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
 
     def get_nb_candidates(self,object_type):
-        self.load_nb_candidates(object_type)
-        return self.nb_candidates[object_type]
+        return len(self.object_dataframes[object_type]["model"])
     
     def set_manual_redshift_value(self,val):
         self.manual_redshift=val

@@ -22,8 +22,8 @@ class CTplCombinationSolveResult : public CPdfSolveResult
 {
 
 public:
-    CTplCombinationSolveResult( Float64 merit, Float64 redshift,
-                                const std::string & scope, 
+    CTplCombinationSolveResult( const std::string & scope, 
+                                const TCandidateZ& ExtremaResult,
                                 const std::string & opt_pdfcombination,
                                 Float64 evidence );
 

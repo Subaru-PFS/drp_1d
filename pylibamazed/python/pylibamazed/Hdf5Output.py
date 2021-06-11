@@ -3,7 +3,13 @@ from .OutputSpecifications import results_specifications
 import numpy as np
 import pandas as pd
 import abc
+from collections import defaultdict
 from pandas.core.dtypes.common import is_numeric_dtype, is_string_dtype
+
+
+def get_attribute_from_attrs(hdf5_group, attr_name, is_string):
+    return hdf5_group.attrs[attr_name]
+
 
 class Hdf5Output(AbstractOutput):
 
@@ -18,159 +24,124 @@ class Hdf5Output(AbstractOutput):
             self.object_types.append("star")
         if self.parameters["enableqsosolve"] == "yes":
             self.object_types.append("qso")
+        for object_type in self.object_types:
+            self.object_results[object_type] = dict()
+            self.object_dataframes[object_type] = dict()
+        self.load_all()
 
-    def load_all():
+    def load_root(self):
         rs = results_specifications
         rs = rs[rs["level"] == "root"]
-        root_datasets = list(rs["dataset"].unique())
+        root_datasets = list(rs["hdf5_dataset"].unique())
         for ds in root_datasets:
-            ds_attributes = rs[rs["dataset"]=ds]
+            ds_attributes = rs[rs["hdf5_dataset"]==ds]
             self.root_results[ds]=dict()
-            for index,ds_row in ds_attributes.iterrow():
-#            for attr in list(ds_attributes["hdf5_name"]):
-                if self.hdf5_group.hasAttribute("root",ds,attr):
-                    self.root_results[ds][ds_row["hdf5_name"]]=self.get_attribute(ds_row)
+            for index,ds_row in ds_attributes.iterrows():
+                if self.hdf5_group.get(ds).attrs.__contains__(ds_row["hdf5_name"]):
+                    self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_h5(ds_row)
 
-    def get_attribute(attribute_spec):
+    def load_object_level(self, object_type):
+        rs = results_specifications
+        rs = rs[rs["level"] == "object"]
+        object_datasets = list(rs["hdf5_dataset"].unique())
+        for ds in object_datasets:
+            ds_attributes = rs[rs["hdf5_dataset"] == ds]
+            # TODO handle case where attribute dimension != multi (here we only have pdf for now)
+            self.object_results[object_type][ds] = dict()
+            self.object_dataframes[object_type][ds] = pd.DataFrame(np.array(self.hdf5_group.get(object_type).get(ds)))
+            
+    def load_candidate_level(self, object_type):
+        rs = results_specifications
+        rs = rs[rs["level"] == "candidate"]
+        candidate_datasets = list(rs["hdf5_dataset"].unique())
+
+        for ds in candidate_datasets:
+            ds_attributes = rs[rs["hdf5_dataset"] == ds]
+            rs_key = ds_attributes["ResultStore_key"].unique()[0]
+            if not self.has_candidate_dataset(object_type, ds):
+                continue
+            #                self.object_results[ds]=dict()
+            # self.object_results[ds]["dataframe"]=pd.DataFrame()
+            # TODO change here when we will deal with 2D ranking or model ranking
+            nb_candidates = self.get_nb_candidates(object_type)
+            candidates = []
+            candidates_df = []  # useless if dataset attributes dimension is not multi
+            dimension = ds_attributes["dimension"].unique()[0]
+            for rank in range(nb_candidates):
+                candidates.append(dict())
+                if dimension == "multi":
+                    candidates_df.append(pd.DataFrame(np.array(self.get_h5_candidate_dataset(object_type, ds, rank))))
+                else:
+                    for index, ds_row in ds_attributes.iterrows():
+                        if self.has_candidate_attribute_in_h5(object_type, ds, rank, ds_row["hdf5_name"]):
+                            candidates[rank][ds_row["hdf5_name"]] = self.get_attribute_from_h5(ds_row,object_type,rank)
+            self.object_results[object_type][ds] = candidates
+            if dimension == "mono":
+                res = defaultdict(list)
+                {res[key].append(sub[key]) for sub in candidates for key in sub}
+                self.object_dataframes[object_type][ds] = pd.DataFrame(res)
+                self.object_dataframes[object_type][ds]["Rank"] = range(nb_candidates)
+            else:
+                self.object_dataframes[object_type][ds] = candidates_df
+
+    def get_attribute_from_h5(self, attribute_spec, object_type=None, rank=None):
         if attribute_spec["dimension"] == "mono":
             if attribute_spec["level"] == "root":
-                return self.hdf5_group.get(attribute_spec["dataset"]).attrs[attribute_spec["hdf5_name"]]
+                return get_attribute_from_attrs(self.hdf5_group.get(attribute_spec["hdf5_dataset"]),
+                                                attribute_spec["hdf5_name"],
+                                                attribute_spec["c_type"]=="string")
             elif attribute_spec["level"] == "object":
-                    
-    def load_classification(self):
-        classification = np.array(self.hdf5_group.get("classification"))
-        self.classification["Type"]=classification["Type"][0].decode('utf-8')
-        self.classification["GalaxyProba"]=classification["GalaxyProba"][0]
-        self.classification["StarProba"]=classification[ "StarProba"][0]
-        self.classification["QSOProba"]=classification[ "QSOProba"][0]
-        self.classification["GalaxyEvidence"] = classification[ "GalaxyEvidence"][0]
-        self.classification["StarEvidence"] = classification["StarEvidence"][0]
-        self.classification["QSOEvidence"] = classification["QSOEvidence"][0]
+                return get_attribute_from_attrs(self.hdf5_group.get(object_type).get(attribute_spec["hdf5_dataset"]),
+                                                attribute_spec["hdf5_name"],
+                                                attribute_spec["c_type"] == "string")
+            elif attribute_spec["level"] == "candidate":
+                return get_attribute_from_attrs(self.get_h5_candidate_dataset(object_type,attribute_spec["hdf5_dataset"],rank),
+                                                attribute_spec["hdf5_name"],
+                                                attribute_spec["c_type"] == "string")
+            else:
+                raise Exception("Unknown level + " + attribute_spec["level"])
+        else:
+            raise Exception("get_attribute_from_h5 does not support dimension=multi (not necessary)")
 
-    def load_pdf(self, object_type):
-        if object_type not in self.pdf.keys():
-            self.pdf[object_type] = pd.DataFrame(np.array(self.hdf5_group.get(object_type + "/pdf")))
-
-    def load_candidates_results(self, object_type):
-        if object_type not in self.candidates_results.keys():
-            first = True
-            candidates = self.hdf5_group.get(object_type + "/candidates")
-            params_names = []
-            for candidate in candidates.keys():
-                cand = candidates.get(candidate)
-                params = np.array(cand.get("model_parameters"))
-                if first:
-                    for p in params.dtype.names:
-                        if np.issubdtype(params.dtype.fields[p][0], bytes):
-                            params_names.append(p)
-                    self.candidates_results[object_type] = pd.DataFrame(params)
-                    first = False
+    def load_candidates_results_supplementary_data(self, object_type):
+       self.object_dataframes[object_type]["model_parameters"].set_index("Rank", inplace=True, drop=False)
+       if self.reference_redshift is not None:
+           self.object_dataframes[object_type]["model_parameters"]["abs_deltaZ"] = abs(
+               self.object_dataframes[object_type]["model_parameters"]["Redshift"] -
+                self.reference_redshift)
+           reference_values = dict()
+           for col in self.object_dataframes[object_type]["model_parameters"].columns:
+                if is_numeric_dtype(self.object_dataframes[object_type]["model_parameters"][col]):
+                    reference_values[col] = np.nan
+                if is_string_dtype(self.object_dataframes[object_type]["model_parameters"][col]):
+                    reference_values[col] = ""
                 else:
-                    self.candidates_results[object_type] = self.candidates_results[object_type].append(
-                        pd.DataFrame(params))
+                    reference_values[col] = []
+           reference_values["Redshift"] = self.reference_redshift
+           reference_values["Rank"] = -1
+           self.object_dataframes[object_type]["model_parameters"] = self.object_dataframes[object_type]["model_parameters"].append(
+                pd.Series(reference_values),
+                ignore_index=True)
+       manual_values = dict()
+       for col in self.object_dataframes[object_type]["model_parameters"].columns:
+            if is_numeric_dtype(self.object_dataframes[object_type]["model_parameters"][col]):
+                manual_values[col] = np.nan
+            if is_string_dtype(self.object_dataframes[object_type]["model_parameters"][col]):
+                manual_values[col] = ""
+            else:
+                manual_values[col] = []
+       manual_values["Redshift"]=0
+       manual_values["Rank"]=-2
+       self.object_dataframes[object_type]["model_parameters"] =self.object_dataframes[object_type]["model_parameters"].append(pd.Series(manual_values),ignore_index=True)
 
-            self.candidates_results[object_type] = pd.DataFrame(self.candidates_results[object_type])
-            for param in params_names:
-                self.candidates_results[object_type][param] = self.candidates_results[object_type][param].apply(
-                    lambda x: x.decode('utf-8'))
-            self.candidates_results[object_type].set_index("Rank", inplace=True, drop=False)
-            if self.add_sup_columns:
-                self.load_pdf(object_type)
-                proba = []
-                ranks = []
-                proba_df = pd.DataFrame()
-                for z, rank in zip(self.candidates_results[object_type]["Redshift"],
-                                   self.candidates_results[object_type]["Rank"]):
-                    self.pdf[object_type]["dist_z"] = abs(self.pdf[object_type]["zGrid"] - z)
-                    proba.append(self.pdf[object_type][self.pdf[object_type]["dist_z"] ==
-                                                       self.pdf[object_type]["dist_z"].min()]
-                                 ["probaLog"].iloc[0])
-                    ranks.append(rank)
-                proba_df["proba"] = proba
-                proba_df["ranks"] = ranks
-                proba_df.set_index("ranks", inplace=True)
+    def has_candidate_dataset(self,object_type, dataset):
+        return dataset in self.hdf5_group.get(object_type).get("candidates").get("candidateA").keys()
 
-                self.candidates_results[object_type] = pd.merge(self.candidates_results[object_type], proba_df,
-                                                                left_index=True, right_index=True)
+    def get_nb_candidates(self, object_type):
+        return len(self.hdf5_group.get(object_type).get("candidates"))
 
-                # Find closest indexes for [z-3dz,z+3z] in self.pdf[object_type][
-                intg_area_indexes = []
-                ranks = []
-                intg_area_indexes_df = pd.DataFrame()
-                for z, rank, dz in zip(self.candidates_results[object_type]["Redshift"],
-                                       self.candidates_results[object_type]["Rank"],
-                                       self.candidates_results[object_type]["RedshiftError"]):
-                    zmin = min(enumerate(self.pdf[object_type]["zGrid"]),
-                               key=lambda x: abs(z - 3 * dz - x[1]))
-                    zmax = min(enumerate(self.pdf[object_type]["zGrid"]),
-                               key=lambda x: abs(z + 3 * dz - x[1]))
-                    intg_area_indexes.append([zmin[0], zmax[0]])
-                    ranks.append(rank)
+    def get_h5_candidate_dataset(self,object_type, dataset, rank):
+        return self.hdf5_group.get(object_type).get("candidates").get(self.get_candidate_group_name(rank)).get(dataset)
 
-                intg_area_indexes_df["Rank"] = ranks
-                intg_area_indexes_df["IntgAreaIndexes"] = intg_area_indexes
-                intg_area_indexes_df.set_index("Rank", inplace=True)
-                self.candidates_results[object_type] = pd.merge(self.candidates_results[object_type],
-                                                                intg_area_indexes_df,
-                                                                left_index=True, right_index=True)
-
-                if self.reference_redshift is not None:
-                    self.candidates_results[object_type]["abs_deltaZ"] = abs(
-                        self.candidates_results[object_type]["Redshift"] -
-                        self.reference_redshift)
-                    reference_values = dict()
-                    for col in self.candidates_results[object_type].columns:
-                        if is_numeric_dtype(self.candidates_results[object_type][col]):
-                            reference_values[col] = np.nan
-                        if is_string_dtype(self.candidates_results[object_type][col]):
-                            reference_values[col] = ""
-                        else:
-                            reference_values[col] = []
-                    reference_values["Redshift"] = self.reference_redshift
-                    reference_values["Rank"] = -1
-                    self.candidates_results[object_type] = self.candidates_results[object_type].append(
-                        pd.Series(reference_values),
-                        ignore_index=True)
-                manual_values = dict()
-                for col in self.candidates_results[object_type].columns:
-                    if is_numeric_dtype(self.candidates_results[object_type][col]):
-                        manual_values[col] = np.nan
-                    if is_string_dtype(self.candidates_results[object_type][col]):
-                        manual_values[col] = ""
-                    else:
-                        manual_values[col] = []
-                manual_values["Redshift"]=0
-                manual_values["Rank"]=-2
-                self.candidates_results[object_type] = self.candidates_results[object_type].append(pd.Series(manual_values),ignore_index=True)
-
-    def load_rays_info(self):
-        if self.rays_infos is None:
-            self.rays_infos = np.array(self.hdf5_group.get("rays_info"))
-
-    def load_fitted_rays(self, object_type, rank):
-        if rank not in self.fitted_rays[object_type].keys():
-            # TODO [bug] group should be retrieved by looking in parameters.rank rather than by name
-            cand = self.hdf5_group.get("galaxy/candidates/" + self.get_candidate_group_name(rank))
-            fitted_rays = np.array(cand.get("fitted_rays"))
-            df_fr = pd.DataFrame(fitted_rays)
-            df_fr.set_index('FittedRaysID', inplace=True)
-            df_catalog = self.input_manager.get_full_catalog_df([])
-            df_full = pd.merge(df_fr, df_catalog, left_index=True, right_index=True)
-            self.fitted_rays[object_type][rank] = df_full[df_full["FittedRaysLambda"] > 0]
-
-    def load_fitted_continuum_by_rank(self, object_type,rank):
-        if rank not in self.best_continuum[object_type]:
-            cand = self.hdf5_group.get("galaxy/candidates/"  + self.get_candidate_group_name(rank))
-            self.best_continuum[object_type][rank] = np.array(cand.get("continuum"))
-
-    def load_model_by_rank(self, object_type, rank):
-        if rank not in self.model[object_type]:
-            cand = self.hdf5_group.get(object_type + "/candidates/"  + self.get_candidate_group_name(rank))
-            self.model[object_type][rank] = np.array(cand.get("model"))
-
-    def load_nb_candidates(self,object_type):
-        self.nb_candidates[object_type] = len(self.hdf5_group.get(object_type + "/candidates"))
-
-    def load_reliability(self,object_type):
-        if "reliability" in list(self.hdf5_group.get("galaxy").keys()):
-            self.reliability[object_type]["Label"]=self.hdf5_group.get("galaxy/reliability").attrs["label"]
+    def has_candidate_attribute_in_h5(self,object_type, dataset, rank, attribute):
+        return self.get_h5_candidate_dataset(object_type,dataset,rank).attrs.__contains__(attribute)

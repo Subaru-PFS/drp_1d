@@ -29,20 +29,18 @@ class CModelContinuumFittingResult;
     std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
     std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
 
-    CExtremaResult<TExtremaResult>() = default;
+
     CExtremaResult<TExtremaResult>(const TCandidateZbyRank& zCandidates)
     {
       this->m_type="ExtremaResult";
-      this->m_ranked_candidates.resize(zCandidates.size());
-      int i=0;
       for (std::pair<std::string,const TCandidateZ&> cand:zCandidates)
         {
-          this->m_ranked_candidates[i].first = cand.first;
-          this->m_ranked_candidates[i].second = TExtremaResult(cand.second);
-          i++;
+          this->m_ranked_candidates.push_back(std::make_pair<std::string,TExtremaResult>(std::string(cand.first),
+											 TExtremaResult(cand.second)
+											 ));
         }
-      this->m_savedModelContinuumFittingResults.resize(i);
-      this->m_savedModelSpectrumResults.resize(i);
+      this->m_savedModelContinuumFittingResults.resize(this->m_ranked_candidates.size());
+      this->m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
     }
 
     std::shared_ptr<const COperatorResult> getCandidate(const int& rank,const std::string& dataset) const;

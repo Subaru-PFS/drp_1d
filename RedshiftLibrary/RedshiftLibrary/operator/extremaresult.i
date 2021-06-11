@@ -2,6 +2,7 @@
 class TExtremaResult : public TCandidateZ {
 
 public:
+  
   TExtremaResult()
     {
     };
@@ -15,17 +16,19 @@ public:
     {
       this->m_type = "TExtremaResult";
     }
+
   
-  std::string       FittedTplName;    //Name of the best template fitted for continuum
-  Float64      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
-  Float64      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
-  Float64      FittedTplMerit;     //Chisquare for the best template fitted for continuum
-  Float64      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
-  Int32        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
-  Float64      FittedTplDtm;    //DTM for the best template fitted for continuum
-  Float64      FittedTplMtm;    //MTM for the best template fitted for continuum
-  Float64      FittedTplLogPrior;    //log prior for the best template fitted for continuum
-  Float64      FittedTplSNR; 
+  
+  std::string       FittedTplName ="";    //Name of the best template fitted for continuum
+  Float64      FittedTplAmplitude = NAN;     //Amplitude for the best template fitted for continuum
+  Float64      FittedTplAmplitudeError= NAN;     //Amplitude error for the best template fitted for continuum
+  Float64      FittedTplMerit= NAN;     //Chisquare for the best template fitted for continuum
+  Float64      FittedTplEbmvCoeff= NAN;     //Calzetti ebmvcoeff for the best template fitted for continuum
+  Int32        FittedTplMeiksinIdx=-1;    //Meiksin igm index for the best template fitted for continuum
+  Float64      FittedTplDtm= NAN;    //DTM for the best template fitted for continuum
+  Float64      FittedTplMtm= NAN;    //MTM for the best template fitted for continuum
+  Float64      FittedTplLogPrior= NAN;    //log prior for the best template fitted for continuum
+  Float64      FittedTplSNR= NAN; 
   
 
 };

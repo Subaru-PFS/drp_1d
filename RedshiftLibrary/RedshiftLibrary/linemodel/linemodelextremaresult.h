@@ -46,13 +46,10 @@ class CLineModelElementList;
     CExtremaResult<TLineModelResult>(const TCandidateZbyRank& zCandidates)
     {
       this->m_type = "LineModelExtremaResult";
-      this->m_ranked_candidates.resize(zCandidates.size());
       int i=0;
       for (std::pair<std::string,const TCandidateZ&> cand:zCandidates)
         {
-          this->m_ranked_candidates[i].first = cand.first;
-          this->m_ranked_candidates[i].second = TLineModelResult(cand.second);
-	  i++;
+	  this->m_ranked_candidates.push_back(std::make_pair<std::string,TLineModelResult>(std::string(cand.first),TLineModelResult(cand.second)));
         }
       this->Resize(zCandidates.size());
     }

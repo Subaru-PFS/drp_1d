@@ -241,8 +241,8 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
         Log.LogInfo( "      -tplfit_priors_betaZ:  %f", m_opt_tplfit_continuumprior_betaZ);
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
-    Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
-    Log.LogInfo( "    -extremacount-firstpass B: %.0f", m_opt_extremacountB);
+    Log.LogInfo( "    -extremacount: %i", m_opt_extremacount);
+    Log.LogInfo( "    -extremacount-firstpass B: %i", m_opt_extremacountB);
     Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
     Log.LogInfo( "      -largegridstepratio: %d", m_opt_firstpass_largegridstepRatio);
@@ -642,35 +642,7 @@ void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore>
     resultStore->StoreScopedGlobalResult( "extrema_results", ExtremaResult );
 
     Int32 nResults = ExtremaResult->size();
-    /*
-    for (Int32 k = 0; k < nResults; k++)
-    {
-        std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_spc.c_str(),
-                                          ExtremaResult->m_savedModelSpectrumResults[k]);
-
-        std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_fit.c_str(),
-                                          ExtremaResult->m_savedModelFittingResults[k]);
-
-        std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_fitcontinuum.c_str(), 
-                                          ExtremaResult->m_savedModelContinuumFittingResults[k]);
-
-        std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_rules.c_str(),
-                                          ExtremaResult->m_savedModelRulesResults[k]);
-
-        std::string nameBaselineStr =
-            (boost::format("linemodel_continuum_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(nameBaselineStr.c_str(), 
-                                         ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
-    }
-    */
+   
 }
 
 
