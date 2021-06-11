@@ -46,17 +46,17 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     std::vector<CMask> maskList;    
 
-    std::string scopeStr = "templatefitting";
+    std::string scopeStr = "tplcombination";
 
     EType _type;
     if(opt_spcComponent=="raw"){
       _type = nType_raw;
     }else if(opt_spcComponent=="nocontinuum"){
       _type = nType_noContinuum;
-      scopeStr = "templatefitting_nocontinuum";
+      scopeStr = "tplcombination_nocontinuum";
     }else if(opt_spcComponent=="continuum"){
       _type = nType_continuumOnly;
-      scopeStr = "templatefitting_continuum";
+      scopeStr = "tplcombination_continuum";
     }else if(opt_spcComponent=="all"){
       _type = nType_all;
     }
@@ -109,7 +109,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     // save in resultstore pdf results
 
-    resultStore->StoreGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
+    resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
 
     // save in resultstore candidates results
     resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult );
@@ -137,13 +137,14 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 
     
-    std::shared_ptr< CTemplateFittingSolveResult> solveResult =
-      std::make_shared< CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
-                                                     ExtremaResult,
+    std::shared_ptr<CTplCombinationSolveResult> solveResult = 
+      std::make_shared<CTplCombinationSolveResult>(  m_opt_pdfcombination=="marg" ? candidateResult->m_ranked_candidates[0].second.ValSumProba : candidateResult->m_ranked_candidates[0].second.ValProba,
+                                                     candidateResult->m_ranked_candidates[0].second.Redshift,
+                                                     resultStore->GetCurrentScopeName(),
                                                      m_opt_pdfcombination,
                                                      pdfz.m_postmargZResult->valEvidenceLog);
 
-    // TBD
+    // TBD 
 
     return solveResult;
 

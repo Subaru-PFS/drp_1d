@@ -230,7 +230,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
     //build the model
     TFloat64List spc_extract = TFloat64List(spcSpectralAxis.GetSamplesVector().begin() + imin_lbda, 
-                                            spcSpectralAxis.GetSamplesVector().begin() + imax_lbda);
+                                            spcSpectralAxis.GetSamplesVector().begin() + imax_lbda + 1);
     TFloat64List modelFlux(n, 0.0);
     for (Int32 iddl = 0; iddl < nddl; iddl++){
         TFloat64List tmp = TFloat64List( m_templatesRebined_bf[iddl].GetFluxAxis().GetSamplesVector().begin() + imin_lbda, 

@@ -16,6 +16,8 @@ class Hdf5Output(AbstractOutput):
         self.object_types = ["galaxy"]
         if self.parameters["enablestellarsolve"] == "yes":
             self.object_types.append("star")
+        if self.parameters["enableqsosolve"] == "yes":
+            self.object_types.append("qso")
 
     def load_classification(self):
         classification = np.array(self.hdf5_group.get("classification"))

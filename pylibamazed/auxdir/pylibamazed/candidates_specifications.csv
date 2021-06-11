@@ -30,11 +30,11 @@ FittedRaysLambda	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
 FittedRaysLambdaRest	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
 FittedRaysID	i	list[int]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
 FittedRaysFlux	f8	list[double]	linemodelsolve			FALSE	fitted_rays	multi	galaxy
-ModelLambda	f8	list[double]	linemodelsolve/templatefittingsolve/tplcombinationsolve			FALSE	model	multi	star/qso/galaxy
-ModelFlux	f8	list[double]	linemodelsolve/templatefittingsolve/tplcombinationsolve			FALSE	model	multi	star/qso/galaxy
+ModelLambda	f8	list[double]	linemodelsolve/templatefittingsolve			FALSE	model	multi	star/qso/galaxy
+ModelFlux	f8	list[double]	linemodelsolve/templatefittingsolve			FALSE	model	multi	star/qso/galaxy
 BestContinuumLambda	f8	list[double]	linemodelsolve			FALSE	continuum	multi	galaxy
 BestContinuumFlux	f8	list[double]	linemodelsolve			FALSE	continuum	multi	galaxy
-ModelMeiksinIdx	i	int	templatefittingsolve/tplcombinationsolve	FALSE	IgmIdx	FALSE	model_parameters	mono	star/qso/galaxy
-ModelTplName	S40	string	templatefittingsolve/tplcombinationsolve	FALSE	Name	FALSE	model_parameters	mono	star/qso/galaxy
-ModelDustCoeff	f8	double	templatefittingsolve/tplcombinationsolve	FALSE	IsmCoeff	FALSE	model_parameters	mono	star/qso/galaxy
-ModelAmplitude	f8	double	templatefittingsolve/tplcombinationsolve	FALSE	Amp	FALSE	model_parameters	mono	star/qso/galaxy
+ModelMeiksinIdx	i	int	templatefittingsolve	FALSE	IgmIdx	FALSE	model_parameters	mono	star/qso/galaxy
+ModelTplName	S40	string	templatefittingsolve	FALSE	Name	FALSE	model_parameters	mono	star/qso/galaxy
+ModelDustCoeff	f8	double	templatefittingsolve	FALSE	IsmCoeff	FALSE	model_parameters	mono	star/qso/galaxy
+ModelAmplitude	f8	double	templatefittingsolve	FALSE	Amp	FALSE	model_parameters	mono	star/qso/galaxy

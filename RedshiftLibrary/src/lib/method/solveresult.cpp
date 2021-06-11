@@ -13,4 +13,12 @@ CPdfSolveResult::CPdfSolveResult( const std::shared_ptr<const CExtremaResult> & 
   m_redshift(ExtremaResult->Redshift(0)),
   m_evidence(evidence)
 {}
-
+//a temporaru hack used by tplcombination
+CPdfSolveResult::CPdfSolveResult( Float64 merit, Float64 redshift,
+                            const std::string & opt_pdfcombination,
+                            Float64 evidence):
+  m_merit(merit),
+  m_bestRedshiftMethod(opt_pdfcombination=="marg" ? 2 :0),
+  m_redshift(redshift),
+  m_evidence(evidence)
+{}
