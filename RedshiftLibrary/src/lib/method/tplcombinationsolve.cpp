@@ -204,7 +204,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         }
         for (Int32 i = 0; i<axisSize; i++)
         {
-            if(refSpcAxis[i]!=currentSpcAxis[i])
+            if(std::abs(refSpcAxis[i]-currentSpcAxis[i])>1E-8)
             {
                 Log.LogError("  Method-tplcombination: templates dont have same spectralAxis");
                 throw std::runtime_error("  Method-tplcombination: templates dont have same spectralAxis");
