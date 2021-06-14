@@ -80,23 +80,12 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     //setLSF on multiLines
     std::string lsfType="GaussianConstantResolution"; //TBC
     TLSFArguments args; args.resolution = 0.9; 
-    //std::shared_ptr<CLSF> lsf = CLSFFactory::Create(lsfType, opt_resolution, opt_nominalWidth);
-    std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
+    std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
+    //std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
 
     elementID.SetLSF(lsf);
     elementcombined.SetLSF(lsf);
     elementVD.SetLSF(lsf);
-    
-    /*
-    std::cout<<elementID.GetLineWidth(10000., 1., true)<<"\n";
-    std::cout<<elementID.GetLineWidth(10000., 1., false)<<"\n";
-    
-    std::cout<<elementcombined.GetLineWidth(10000., 1., true)<<"\n";
-    std::cout<<elementcombined.GetLineWidth(10000., 1., false)<<"\n";
-
-    std::cout<<elementVD.GetLineWidth(10000., 1., true)<<"\n";
-    std::cout<<elementVD.GetLineWidth(10000., 1., false)<<"\n";
-    */
 
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., true), 0.001);
     BOOST_CHECK_CLOSE( 3346.06, elementID.GetLineWidth(10000., 1., false),0.001);

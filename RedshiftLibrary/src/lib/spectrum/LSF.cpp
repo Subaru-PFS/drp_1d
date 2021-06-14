@@ -19,7 +19,7 @@ CLSF::CLSF(TLSFType name):m_name(name){} //To be deleted once child classes are 
 Float64 CLSF::GetLineProfile (Float64 lambda, Float64 lambda0){
     return m_profile->GetLineProfile(lambda, lambda0, GetWidth());
 }
-
+/*
 std::shared_ptr<CLSF>  CLSF::make_LSF(const std::string lsfType, const TLSFArguments& args)
 {
     if( lsfType == "GaussianConstantWidth"){
@@ -34,4 +34,4 @@ std::shared_ptr<CLSF>  CLSF::make_LSF(const std::string lsfType, const TLSFArgum
         Log.LogError("Unknown lsfType %s", lsfType.c_str());
         throw std::runtime_error("Unknown lsfType");
     }
-}
+}*/

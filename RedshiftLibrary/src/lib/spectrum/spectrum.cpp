@@ -269,8 +269,8 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
         parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
         parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
     }
-    //m_LSF = CLSFFactory::Get()->Create(lsfType, args);//using factoryClass
-    m_LSF = CLSF::make_LSF(lsfType, args);
+    m_LSF = LSFFactory.Create(lsfType, args);//using factoryClass
+    //m_LSF = CLSF::make_LSF(lsfType, args);
 }
 
 /**

@@ -13,8 +13,6 @@ class CLineProfile;
     Float64 width;
     Float64 sourcesize;
   }TLSFArguments;
-    //typedef struct LSFArguments TLSFArguments;
-    //TLSFArguments LSFDefaultArgs = { 2350.0, 0., 0.1};//default width to 0, i.e., invalid lsf
 /**
  * \ingroup Redshift
  */
@@ -43,13 +41,10 @@ public:
     void                        SetSourcesizeDispersion(Float64 sigma) const{};//empty default implementation
 
     //define a factory method (static by default) to return an instance of the subclass whenever needed
-    static std::shared_ptr<CLSF>  make_LSF(const std::string lsfType, const TLSFArguments& args = { 2350.0, 0., 0.1});
-                                          
+    //static std::shared_ptr<CLSF>  make_LSF(const std::string lsfType, const TLSFArguments& args = { 2350.0, 0., 0.1});
+    //virtual    std::shared_ptr<CLSF>  make_LSF(const TLSFArguments& args = { 2350.0, 0., 0.1});                          
     const TLSFType  m_name;
-  /*  
-    template<typename ...T>
-    typedef std::shared_ptr<CLSF> ( *_CreateLSFFn)(T val, ...); //typedef a function pointer 
-    static _CreateLSFFn CreateLSFFn; //define it as static to be called with no object instanciation*/
+    
 protected:
     CLineProfile_ptr m_profile;
 };

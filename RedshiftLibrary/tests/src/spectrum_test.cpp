@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(LSF)
     std::string lsfType = "GaussianConstantWidth";
     TLSFArguments args;
     args.width = 1.09;
-    //std::shared_ptr<CLSF> LSF = CLSFFactory::Get()->Create(lsfType, 1.09);
-    std::shared_ptr<CLSF> LSF = CLSF::make_LSF(lsfType, args);
+    std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
+    //std::shared_ptr<CLSF> LSF = CLSF::make_LSF(lsfType, args);
 
     //Test constructor with spectralAxis, fluxAxis and LSF
     CSpectrum object_CSpectrum = CSpectrum(SpectralAxis, FluxAxis, LSF);
@@ -107,11 +107,11 @@ BOOST_AUTO_TEST_CASE(LSF)
     BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
     BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetWidth() == 1.09);
     
-    /*
+    
     //Test constructor with spectralAxis and fluxAxis
     CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
     BOOST_CHECK(object_CSpectrum2.GetLSF() == nullptr);
-    
+    /*
     //Test default constructor
     CSpectrum object_CSpectrum3;
     BOOST_CHECK(object_CSpectrum3.GetLSF() == nullptr);

@@ -18,18 +18,18 @@ namespace NSEpic
         Float64             GetWidth(Float64 lambda=-1.0) const override;
         bool                IsValid() const override;
 
-        //static std::shared_ptr<CLSF>   make_LSF(const Float64 resolution);
+        static std::shared_ptr<CLSF>   make_LSF(const TLSFArguments& args);
 
     private:
         const Float64 m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35;
         //CLineProfile_ptr m_profile{std::make_shared<CLineProfileSYM>()}; // default to sym
         const Float64 m_Resolution;
   };
-/*inline
-std::shared_ptr<CLSF> CLSFGaussianConstantResolution::make_LSF(const Float64 resolution)
+inline
+std::shared_ptr<CLSF> CLSFGaussianConstantResolution::make_LSF(const TLSFArguments& args)
 {
-    return std::make_shared<CLSFGaussianConstantResolution>(resolution);
-}*/
+    return std::make_shared<CLSFGaussianConstantResolution>(args.resolution);
+}
 
 }
 

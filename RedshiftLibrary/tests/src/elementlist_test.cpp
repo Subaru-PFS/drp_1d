@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   std::string lsfType="GaussianConstantWidth";
   TLSFArguments args; args.width = 13;
-  std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
-  //std::shared_ptr<CLSF> lsf = CLSFFactory::Get()->Create(lsfType, opt_resolution, opt_nominalWidth);
+  //std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
+  std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
   spectrum.SetLSF(lsf);
 
   generate_template_catalog(tplCatalog, 100, 3500., 12500.);

@@ -1,6 +1,9 @@
 #ifndef _REDSHIFT_SPECTRUM_LSFFACTORY_
 #define _REDSHIFT_SPECTRUM_LSFFACTORY_
-/*
+#define LSFFactory (CLSFFactory::GetInstance())
+
+#include "RedshiftLibrary/common/singleton.h"
+
 #include <map>
 #include <stdio.h>
 #include "RedshiftLibrary/common/datatypes.h"
@@ -12,17 +15,14 @@
 namespace NSEpic
 {
 class CLSF;
-
-class CLSFFactory
+//the idea  is to define one single factory instance accross app instances
+//now CLSFFactory, as defined here, "multiplexes" between the different LSFs
+class CLSFFactory : public CSingleton<CLSFFactory>
 {
 
 public:
 
-    template<typename...T>
-    using CreateLSFFn = std::shared_ptr<CLSF> (*)(T&&...);//new way C++14 for typedef
-    //static _CreateLSFFn CreateLSFFn; //define it as static to be called with no object instanciation
-    
-    ~CLSFFactory();
+    using CreateLSFFn = std::shared_ptr<CLSF> (*)(const TLSFArguments& args);//new way C++14 for typedef
 
     static CLSFFactory *Get()
     {
@@ -32,13 +32,13 @@ public:
 
     void Register(const std::string &name, CreateLSFFn fn_makeLSF);
     
-    template<typename... T> 
-    std::shared_ptr<CLSF> Create(const std::string &name, T&&... args);//&& forward referencing
+    std::shared_ptr<CLSF> Create(const std::string &name, TLSFArguments& args);
 
 private:
+    friend class CSingleton<CLSFFactory>;
 
     CLSFFactory();
-
+    ~CLSFFactory();
 
     CLSFFactory(const CLSFFactory & other) = delete; 
     CLSFFactory(CLSFFactory && other) = delete; 
@@ -69,15 +69,14 @@ void CLSFFactory::Register(const std::string &name, CreateLSFFn fn_makeLSF)
     m_FactoryMap[name] = fn_makeLSF;
 }
 
-//there is a problem here cause we should pass variable nb of variables depending on the the selected object
-template<typename... T>
-std::shared_ptr<CLSF> CLSFFactory::Create(const std::string &name, T&&... args)
+inline
+std::shared_ptr<CLSF> CLSFFactory::Create(const std::string &name, TLSFArguments& args)
 {
   FactoryMap::iterator it = m_FactoryMap.find(name);
   if(it!=m_FactoryMap.end())
-    return it->second(std::forward<T>(args)...); 
+    return it->second(args); 
   return NULL;
 }
 
-}*/
+}
 #endif

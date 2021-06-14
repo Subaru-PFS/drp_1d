@@ -19,13 +19,13 @@ namespace NSEpic
         bool                IsValid() const override;
         void                SetSourcesizeDispersion(Float64 sigma);
 
-        //static std::shared_ptr<CLSF> make_LSF();
+        static std::shared_ptr<CLSF> make_LSF(const TLSFArguments& args);
   };
-/*inline
-std::shared_ptr<CLSF>   CLSFGaussianNISPSIM2016::make_LSF()
+inline
+std::shared_ptr<CLSF>   CLSFGaussianNISPSIM2016::make_LSF(const TLSFArguments& args)
 {
      return std::make_shared<CLSFGaussianNISPSIM2016>();
-}*/
+}
 
 }
 #endif

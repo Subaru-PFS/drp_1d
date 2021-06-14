@@ -16,17 +16,17 @@ namespace NSEpic
         Float64             GetWidth(Float64 lambda=-1.0) const override;
         bool                IsValid() const override;
 
-        //static std::shared_ptr<CLSF>   make_LSF(Float64 sourcesize);
+        static std::shared_ptr<CLSF>   make_LSF(const TLSFArguments& args);
     private:
         const Float64 m_SourceSizeDispersion;// = 0.1; // source size in the dispersion direction
                                         // (sigma arcsec)
   };
-/*
+
 inline
-std::shared_ptr<CLSF> CLSFGaussianNISPVSSPSF201707::make_LSF(Float64 sourcesize)
+std::shared_ptr<CLSF> CLSFGaussianNISPVSSPSF201707::make_LSF(const TLSFArguments& args)
 {
-    return std::make_shared<CLSFGaussianNISPVSSPSF201707>(sourcesize);
-}*/
+    return std::make_shared<CLSFGaussianNISPVSSPSF201707>(args.sourcesize);
+}
 
 }
 
