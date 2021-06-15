@@ -37,12 +37,7 @@ public:
                                              Float64 FitMeiksinIdx=-1);
 
   void SaveSpectrumResults(std::shared_ptr<COperatorResultStore> resultStore);
-  gsl_matrix * InvertMatrix(gsl_matrix* cov, UInt32 dim);
-  Float64 ComputeChi2_invCovBased(gsl_matrix* cov, 
-                                    const TFloat64List& amplitudes, 
-                                    const CSpectrumFluxAxis& spcFlux, 
-                                    UInt32 nTpl,
-                                    const TInt32Range& spcRange, Float64 normFactor);
+  Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range range); //could be also made static
 private:
 
     struct STplcombination_basicfitresult
@@ -100,7 +95,7 @@ private:
     Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis& correctedFlux, 
                                   const CSpectrumFluxAxis& spcFluxAxis,
                                   const Int32 imin_lbda);
-
+    Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n);
 };
 
 

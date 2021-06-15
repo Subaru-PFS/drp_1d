@@ -109,7 +109,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
     //I consider here that all templates share the same spectralAxis
     currentRange.getClosedIntervalIndices(m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
-    
+    Int32 kStart_model = kStart; //mainly used at high redshifts, when desextincting spectrum is happenning with null coeffs
     Int32 nddl = tplList.size();
     if (opt_extinction || opt_dustFitting){
         for (Int32 iddl = 0; iddl <nddl; iddl++)
@@ -142,7 +142,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Int32 n = kEnd-kStart +1;
     Log.LogDebug("  Operator-Tplcombination: prep. linear fitting with n=%d samples in the clamped lambdarange spectrum (imin=%d, lbda_min=%.3f - imax=%d, lbda_max=%.3f)", n, kStart, spcSpectralAxis[kStart], kEnd, spcSpectralAxis[kEnd]);
     
-    gsl_matrix *X, *cov, *E;
+    gsl_matrix *X, *cov;
     gsl_vector *y, *w, *c;
 
     X = gsl_matrix_alloc (n, nddl);
@@ -152,16 +152,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     cov = gsl_matrix_alloc (nddl, nddl);
 
     // Normalizing factor
-    Float64 normFactor;
-    Float64 maxabsval = DBL_MIN;
-    for (Int32 k = 0; k < n; k++)
-    {
-        if(maxabsval<std::abs(spcFluxAxis[k+kStart]))
-        {
-            maxabsval=std::abs(spcFluxAxis[k+kStart]);
-        }
-    }
-    normFactor = maxabsval;
+    Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
+
     if(verbose)
     {
         Log.LogDetail("  Operator-Tplcombination: Linear fitting, found normalization Factor=%e", normFactor);
@@ -169,15 +161,17 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
     Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
     Bool igmLoopUseless_WavelengthRange = false;
-    fittingResults.chisquare = 0.;//final best Xi2 value
+    fittingResults.chisquare = boost::numeric::bounds<float>::highest();//final best Xi2 value
     Float64 chisq;
+    Float64 dtd_complement = 0.;//value mainly relevant with DisextinctData method
     /**
      * there are two ways to apply extinction:
      * 1. apply the inverse of extinction on both spcFlux and error on flux
      * 2. apply extinction on all templates, using original spcFlux an error
      * 
+     * TODO: keep the first method once we completely validate the equivalence of both method
     */
-    Bool DisextinctData = true; // true = option 1; false = option 2
+    Bool DisextinctData = false; // true = option 1; false = option 2
     //create a template with cte flux = 1, to be used only when disextincting data and noise
     CTemplate identityTemplate("identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(), std::move(CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1)));
     // Prepare the fit data, once for all
@@ -213,9 +207,10 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         bool igmCorrectionAppliedOnce = false;
         //applyMeiksin on all templates
         if(opt_extinction == 1 && !DisextinctData){
+            igmCorrectionAppliedOnce = true;//since we are multiplying the bools, rather init to true
             for (Int32 iddl = 0; iddl <nddl; iddl++)
             {
-                m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
+                igmCorrectionAppliedOnce &= m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
             } 
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
@@ -235,19 +230,40 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             if((opt_extinction || opt_dustFitting) && DisextinctData)
             {
                 identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift, tplList[0].m_ismCorrectionCalzetti, tplList[0].m_igmCorrectionMeiksin);
-                if(opt_extinction) 
-                    identityTemplate.ApplyMeiksinCoeff(meiksinIdx);
+                if(opt_extinction){ 
+                    igmCorrectionAppliedOnce = identityTemplate.ApplyMeiksinCoeff(meiksinIdx);
+                    if(!igmCorrectionAppliedOnce)
+                        igmLoopUseless_WavelengthRange = true;
+                }
                 if(opt_dustFitting){
                     coeffEBMV = m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
                     identityTemplate.ApplyDustCoeff(kEbmv);
                 }
                 const CSpectrumFluxAxis& extinction = identityTemplate.GetFluxAxis();
                 Float64 yi, ei;
+                //Important: hereinafter we assume that kStart_up can only be equal or higher than kStart when moving throw the igm curves
+                //this is valid only iif igm curves are loaded in the increasing ordre,i.e., from the least extinction curve to the highest extinction curve
+                UInt32 kStart_up = kStart;
                 for(Int32 i = 0; i < n; i++)
                 {
                     if(!extinction[i]){
-                        Log.LogError("COperator::TplCombination: applied extinction (ism/igm) cannot be null");
-                        //throw std::runtime_error("COperator::TplCombination: applied extinction (ism/igm) cannot be null");
+                        kStart_up++; //find the first non-null value and update kStart accordingly
+                        continue;
+                    }
+                    if(kStart_up>kStart)
+                    {
+                        //compute the dtd part than wont be computed using gsl
+                        dtd_complement += ComputeDtD(spcFluxAxis, TInt32Range(kStart_model, kStart_up - 1));
+                        n = kEnd - kStart_up + 1; //update the length value
+                        kStart = kStart_up;
+                        //free previously allocated buffers
+                        gsl_matrix_free (X);
+                        gsl_vector_free (y);
+                        gsl_vector_free (w);
+                        //reallocate buffers with the newly calculated value
+                        X = gsl_matrix_alloc (n, nddl);
+                        y = gsl_vector_alloc (n);
+                        w = gsl_vector_alloc (n);
                     }
                     yi = spcFluxAxis[i+kStart]/extinction[i]/normFactor;
                     ei = spcError[i+kStart]/extinction[i]/normFactor;
@@ -278,6 +294,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 gsl_multifit_wlinear (X, w, y, c, cov, &chisq, work);
                 gsl_multifit_linear_free (work);
             }
+            chisq+= dtd_complement;//complement with the dtd value, only in the case of DisextinctData.  
             //
             boost::chrono::thread_clock::time_point stop_fit = boost::chrono::thread_clock::now();
             Float64 duration_fit = boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit - start_fit).count();
@@ -320,11 +337,11 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             {
                 Log.LogDebug("  Operator-Tplcombination: Found nfittedamps(=%d) different than nddl(=%d)", fittingResults.fittingAmplitudes.size(), nddl);
             }
-
-            //build the combined template model: can be optimized
-            TFloat64List spc_extract = TFloat64List(spcSpectralAxis.GetSamplesVector().begin() + kStart, 
+            UInt32 modelSize = kEnd - kStart_model + 1;
+            //build the combined template model: spcmodel should have the same size as input spc
+            TFloat64List spc_extract = TFloat64List(spcSpectralAxis.GetSamplesVector().begin() + kStart_model, 
                                                     spcSpectralAxis.GetSamplesVector().begin() + kEnd + 1);
-            TFloat64List modelFlux(n, 0.0);
+            TFloat64List modelFlux(modelSize, 0.0);
             for (Int32 iddl = 0; iddl < nddl; iddl++){
                 const CSpectrumFluxAxis & tmp = m_templatesRebined_bf[iddl].GetFluxAxis(); 
                 const CSpectrumFluxAxis & ext = identityTemplate.GetFluxAxis(); //works for both cases
@@ -339,29 +356,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             CSpectrumFluxAxis yAxis(std::move(modelFlux));
             CTemplate modelSpec("combination", "", std::move(xAxis), std::move(yAxis));//m_templatesRebined_bf cant be used, thus we create a new CTemplate to apply corrections
             fittingResults.modelSpectrum = modelSpec;
-            /*
-            const CSpectrumFluxAxis& correctedFlux = modelSpec.GetFluxAxis();
-            Bool optimizeComputation = true;
-            Float64 optimized_Chi2 = NAN;
-            Float64 chi2Value = NAN;
-            if(optimizeComputation){
-                const TInt32Range range(kStart, kEnd);
-                optimized_Chi2 = ComputeChi2_invCovBased(cov, 
-                                                            fittingResults.fittingAmplitudes, 
-                                                            spcFluxAxis, 
-                                                            nddl, 
-                                                            range, normFactor);
-            }else{
-                //estimate the lst-square brute force
-                chi2Value = ComputeXi2_bruteForce(correctedFlux, spcFluxAxis, kStart);
-            }
-            //temporary control
-            if((chisq - chi2Value)>1E-6)
-            {
-                Log.LogError("  Operator-Tplcombination: OptimizedChi2: %f,  vs chi2Value: %f", optimized_Chi2, chi2Value);
-                throw std::runtime_error("  Operator-Tplcombination: problem validating the Chi2 values" );
-            }
-            */
+
             if(chisq < fittingResults.chisquare)
             {
                 fittingResults.chisquare = chisq;
@@ -379,17 +374,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             Log.LogDebug( "  Operator-Tplcombination: Linear fitting, postprocess = %.3f microsec", duration_postprocess);
 
         }//end iterating over ISM
-        if(kIgmEnd == -1) {//no need to loop over all igm since lyA is/will never be seen
-            //copy obtained result to fill fittingResults for all igm values
-            for(Int32 i = 1; i<nIGM; i++){
-                for(Int32 k =0; k<fittingResults.ChiSquareInterm.size(); k++){
-                    fittingResults.ChiSquareInterm[k][i] = fittingResults.ChiSquareInterm[k][0];
-                    fittingResults.IsmCalzettiCoeffInterm[k][i] = fittingResults.IsmCalzettiCoeffInterm[k][0];
-                    fittingResults.IgmMeiksinIdxInterm[k][i] = fittingResults.IgmMeiksinIdxInterm[k][0];
-                }
-            }
-            break; 
-        }
     }//end iterating over IGM
 
     //fittingResults.modelSpectrum = CSpectrum(CSpectrumSpectralAxis(std::move(spc_extract)), CSpectrumFluxAxis(std::move(modelFlux)));
@@ -847,60 +831,30 @@ void COperatorTplcombination::SaveSpectrumResults(std::shared_ptr<COperatorResul
     }
 }
 
-gsl_matrix * COperatorTplcombination::InvertMatrix(gsl_matrix* m, UInt32 dim)
+Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n)
 {
-    int s;
-    // Compute the  inverse of the LU decomposition
-    gsl_permutation * p = gsl_permutation_alloc (dim);
-
-    // Compute the LU decomposition of this matrix
-    gsl_linalg_LU_decomp (m, p, &s);  
-
-    gsl_matrix *inv = gsl_matrix_alloc(dim, dim);
-    gsl_linalg_LU_invert(m, p, inv);
-
-    gsl_permutation_free (p);
-    return inv;
-}
-/**
- * Xi2 = dt.N-1.d -at.C-1.a (where all elements are vect or matrices)
- * xi2Value (z,ism,igm) = SumD -SumAC
- *       SumD = Sum(di*di*ni); //di and ni = 1/err2 correspond to data and error on data
- *       SumAC= Sum(Sum((ai*aj*bij))); //ai corresponds to gsl-computed amplitude per template and bij corresponds to elements of the inverse of covariance matrix
- **/
-Float64 COperatorTplcombination::ComputeChi2_invCovBased(gsl_matrix* cov, 
-                                                         const TFloat64List& amplitudes, 
-                                                         const CSpectrumFluxAxis& spcFlux, 
-                                                         UInt32 nTpl,
-                                                         const TInt32Range& spcRange, Float64 normFactor)
-{
-    //compute the inverse of covariance matrix:
-    gsl_matrix *invCov = InvertMatrix(cov, nTpl);
-#define INVCOV(i,j) (gsl_matrix_get(invCov,(i),(j)))
-#define COV(i,j) (gsl_matrix_get(cov,(i),(j)))
-    const CSpectrumNoiseAxis& spcError = spcFlux.GetError();
-
-    UInt32 kStart = spcRange.GetBegin();
-    UInt32 kEnd = spcRange.GetEnd();
-
-    //this value is common when ism/igm are activated. Should be calculated once for all
-    Float64 sumD = 0.;
-    for(Int32 i = kStart; i<= kEnd; i++)
+    Float64 maxabsval = DBL_MIN;
+    for (Int32 k = 0; k < n; k++)
     {
-        sumD+= spcFlux[i]*spcFlux[i]/spcError[i]/spcError[i];
-    }
-
-    Float64 sumAC = 0.;
-    for(Int32 i = 0; i<amplitudes.size(); i++)
-    {
-        for(Int32 j = 0; j<amplitudes.size(); j++)
+        if(maxabsval<std::abs(spcFluxAxis[k+kStart]))
         {
-            sumAC+= amplitudes[i]*amplitudes[j]/normFactor/normFactor*INVCOV(i,j);
+            maxabsval=std::abs(spcFluxAxis[k+kStart]);
         }
     }
+    return maxabsval;
+}
+//compute dtd on a specific range
+Float64 COperatorTplcombination::ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis,
+                                            const TInt32Range range)
+{
+    const CSpectrumNoiseAxis& spcError = spcFluxAxis.GetError();
 
-    Float64 fit = sumD - sumAC;
-
-    gsl_matrix_free (invCov);
-    return fit;
+    Float64 err2;
+    Float64 dtd = .0;
+    for(Int32 k=range.GetBegin(); k<=range.GetEnd(); k++)
+    {
+        err2 = spcError[k]*spcError[k];
+        dtd += spcFluxAxis[k]*spcFluxAxis[k]/err2;
+    }
+    return dtd;
 }

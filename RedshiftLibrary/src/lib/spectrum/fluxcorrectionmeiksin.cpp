@@ -52,7 +52,7 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath )
         bfs::path fPath = ( calibrationFolder/"igm"/"IGM_variation_curves_meiksin"/fileNamesList[k].c_str() ).string();
         std::string fPathStr = (fPath).string();
 
-        bool ret = LoadFile(fPathStr.c_str());
+        bool ret = LoadCurvesinIncreasingExtinctionOrder(fPathStr.c_str());
         if(!ret)
         {
             Log.LogError("Unable to load the Meiksin flux correction data. aborting...");
@@ -64,9 +64,12 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath )
     return true;
 }
 
-
-
-Bool CSpectrumFluxCorrectionMeiksin::LoadFile( const char* filePath )
+/**
+ * Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
+ * i.e., from the least extinction curve to the highest extinction curve 
+ *         
+ * */
+Bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
 {
     bool loadSuccess=true;
     std::ifstream file;

@@ -29,7 +29,7 @@ public:
     ~CSpectrumFluxCorrectionMeiksin();
 
     Bool Init( std::string calibrationPath );
-    Bool LoadFile( const char* filePath );
+    Bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
 
     std::vector<MeiksinCorrection> m_corrections;
 
