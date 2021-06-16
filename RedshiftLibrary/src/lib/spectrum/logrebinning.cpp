@@ -45,10 +45,6 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                    SSratio);
                    
     if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
-        std::shared_ptr<CSpectrum> spc = make_shared<CSpectrum>(inputContext.GetSpectrum()->GetName());;//std::make_shared<CSpectrum>(*inputContext.GetSpectrum());
-        CSpectrumSpectralAxis  spcWav = inputContext.GetSpectrum()->GetSpectralAxis();
-        spcWav.RecomputePreciseLoglambda(); // in case input spectral lambda have less precision
-        spc->SetSpectralAndFluxAxes(std::move(spcWav), inputContext.GetSpectrum()->GetFluxAxis());
         inputContext.SetRebinnedSpectrum(spc);
     }else
         inputContext.SetRebinnedSpectrum(LoglambdaRebinSpectrum(inputContext.GetSpectrum(), errorRebinMethod));        
@@ -77,7 +73,9 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                     needrebinning = true;
                 if (m_lambdaRange_tpl.GetEnd() > tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
                     needrebinning = true;
-                
+                if (!CheckTemplateAlignment(tpl))
+                    needrebinning = true;
+
                 if (needrebinning)
                 {
                     Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName().c_str());
@@ -307,4 +305,12 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(const 
     }
     CSpectrumSpectralAxis targetSpectralAxis(std::move(axis));
     return targetSpectralAxis;
+}
+
+Bool CSpectrumLogRebinning::CheckTemplateAlignment(const std::shared_ptr<const CTemplate> &tpl) const 
+{
+    const TAxisSampleList &w = tpl->GetSpectralAxis().GetSamplesVector();
+    const Float64 &lstart = m_lambdaRange_tpl.GetBegin();
+    Int32 idx=CIndexing<Float64>::getCloserIndex(w, lstart);
+    return (lstart-w[idx])/w[idx]<=2E-7;
 }

@@ -34,6 +34,7 @@ private:
 
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 gridCount) const;
     void InferTemplateRebinningSetup(const TFloat64Range & lambdaRange_Ref);
+    Bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl) const;
     const std::string m_rebinMethod = "lin";
 
     UInt32 m_loglambda_count_spc, m_loglambda_count_tpl;
