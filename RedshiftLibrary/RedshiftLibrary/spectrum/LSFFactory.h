@@ -22,28 +22,17 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 
 public:
 
-    using CreateLSFFn = std::shared_ptr<CLSF> (*)(const TLSFArguments& args);//new way C++14 for typedef
-
-    static CLSFFactory *Get()
-    {
-        static CLSFFactory instance;
-        return &instance;
-    }
+    using CreateLSFFn = std::shared_ptr<CLSF> (*)(const TLSFArguments& args);
 
     void Register(const std::string &name, CreateLSFFn fn_makeLSF);
     
-    std::shared_ptr<CLSF> Create(const std::string &name, TLSFArguments& args);
+    std::shared_ptr<CLSF> Create(const std::string &name, TLSFArguments& args){return m_FactoryMap.at(name)(args);};
 
 private:
     friend class CSingleton<CLSFFactory>;
 
     CLSFFactory();
-    ~CLSFFactory();
-
-    CLSFFactory(const CLSFFactory & other) = delete; 
-    CLSFFactory(CLSFFactory && other) = delete; 
-    CLSFFactory& operator=(const CLSFFactory& other) = delete;  
-    CLSFFactory& operator=(CLSFFactory&& other) = delete; 
+    ~CLSFFactory() = default;
 
     typedef std::map<std::string, CreateLSFFn> FactoryMap;
     FactoryMap m_FactoryMap;
@@ -58,25 +47,9 @@ CLSFFactory::CLSFFactory()
 }
 
 inline
-CLSFFactory::~CLSFFactory()
-{
-  m_FactoryMap.clear();
-}
-
-inline
 void CLSFFactory::Register(const std::string &name, CreateLSFFn fn_makeLSF)
 {
     m_FactoryMap[name] = fn_makeLSF;
 }
-
-inline
-std::shared_ptr<CLSF> CLSFFactory::Create(const std::string &name, TLSFArguments& args)
-{
-  FactoryMap::iterator it = m_FactoryMap.find(name);
-  if(it!=m_FactoryMap.end())
-    return it->second(args); 
-  return NULL;
-}
-
 }
 #endif

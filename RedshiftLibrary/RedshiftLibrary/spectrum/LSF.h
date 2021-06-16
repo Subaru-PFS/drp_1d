@@ -39,10 +39,7 @@ public:
     virtual bool                IsValid() const = 0;
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.);
     void                        SetSourcesizeDispersion(Float64 sigma) const{};//empty default implementation
-
-    //define a factory method (static by default) to return an instance of the subclass whenever needed
-    //static std::shared_ptr<CLSF>  make_LSF(const std::string lsfType, const TLSFArguments& args = { 2350.0, 0., 0.1});
-    //virtual    std::shared_ptr<CLSF>  make_LSF(const TLSFArguments& args = { 2350.0, 0., 0.1});                          
+                        
     const TLSFType  m_name;
     
 protected:
