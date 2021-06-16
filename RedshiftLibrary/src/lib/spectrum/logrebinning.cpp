@@ -194,7 +194,7 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
 std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<const CSpectrum> spectrum, 
                                                                                 std::string errorRebinMethod) const
 { 
-    Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
+    Log.LogInfo("  Log-regular lambda resampling START");
 
     //prepare return rebinned vector  
     auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum->GetName());
@@ -216,7 +216,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
     spectrumRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);//double make sure that sampling is well done
 
     //the rebinned spectrum and we change logscale
-    Log.LogDetail("  Operator-TemplateFittingLog: Log-regular lambda resampling FINISHED");
+    Log.LogDetail("  Log-regular lambda resampling FINISHED");
 
     return spectrumRebinedLog;  
 }

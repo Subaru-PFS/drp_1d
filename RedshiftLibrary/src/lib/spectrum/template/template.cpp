@@ -304,6 +304,7 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
 
     m_IsmIgm_kstart = kstart; 
     m_Ism_kend = kend;
+    m_Igm_kend = -1;
 
     if (!MeiksinInitFailed())
     {
@@ -313,7 +314,8 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
         TAxisSampleList::iterator istart = m_SpectralAxis.GetSamplesVector().begin()+m_IsmIgm_kstart;
         TAxisSampleList::iterator iend = m_SpectralAxis.GetSamplesVector().begin()+m_Ism_kend+1;
         TAxisSampleList::iterator it = std::upper_bound(istart, iend, m_igmCorrectionMeiksin->GetLambdaMax());
-        m_Igm_kend = it - m_SpectralAxis.GetSamplesVector().begin() -1; // should -1 if not applicable (lambdamax< lmabd[kstart])
+        if (it!=istart)  // should -1 if not applicable (lambdamax< lmabd[kstart]) 
+            m_Igm_kend = it - m_SpectralAxis.GetSamplesVector().begin() -1; 
     }
 
     if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
