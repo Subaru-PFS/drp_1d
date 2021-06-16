@@ -793,15 +793,21 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     std::reverse(z_vect.begin(), z_vect.end());
     // prepare z array
     std::vector<Float64> z_vect_verif(nshifts, 0.0);
+    Float64 relative_zgrid_error_max = 0.;
     for (Int32 t = 0; t < nshifts; t++)
     {
         z_vect_verif[t] = (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[t + kstart]) /
                     tplRebinedLambdaGlobal[t + kstart];
         //compare with z_vect
-        if(std::abs(z_vect[t] - z_vect_verif[t])>1E-8){
+        Float64 relative_zgrid_error = std::abs(z_vect[t] - z_vect_verif[t])/(1+z_vect_verif[t]);
+        if (relative_zgrid_error > relative_zgrid_error_max) relative_zgrid_error_max = relative_zgrid_error;
+    }
+    if (verboseLogFitFitRangez)
+        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: max diff in zgrid=%e",relative_zgrid_error_max);
+    if (relative_zgrid_error_max>5E-7){
             throw runtime_error("z_vect and z_vect_verification do not correspond.");
         }
-    }
+    
     //check borders
     if(z_vect.size()!=z_vect_verif.size())
         throw runtime_error("z_vect size and z_vect_verification size do not match.");

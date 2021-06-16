@@ -446,7 +446,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
     if (!IsLogSampled() )
         return false;
 
-    if (std::abs(m_regularLogSamplingStep - logGridstep)>1E-8)
+    if (std::abs(m_regularLogSamplingStep - logGridstep)>1E-7)
     {
         Log.LogDetail("   CSpectrumSpectralAxis::IsLogSampled: Log-regular sampling with bad step");
         return false;
@@ -534,5 +534,32 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
     }
 
     TFloat64Range lrange = GetLambdaRange();
-    m_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
+    TFloat64List new_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
+
+    // gain one more decimal
+    const Int32 bs = 100, nm1=m_Samples.size()-1;
+    Float64 bias_start=0., bias_end=0.;
+     // take the mean value (assuming rounding to even), 
+     //  should take the max value if truncation
+    if (IsInLogScale()){
+        for (Int32 k=0; k<bs; k++){
+            bias_start += (new_Samples[k] - m_Samples[k]);
+            bias_end += (new_Samples[nm1-k] - m_Samples[nm1-k]);
+        }
+    }else{
+        for (Int32 k=0; k<bs; k++){
+            bias_start += log(new_Samples[k]/m_Samples[k]);
+            bias_end += log(new_Samples[nm1-k]/m_Samples[nm1-k]);
+        }
+    }
+    bias_start /= 100;
+    bias_end /= 100;
+    Float64 lstart=log(lrange.GetBegin()), lend=log(lrange.GetEnd());
+    Float64 new_lstart=lstart-bias_start;
+    Float64 new_lend=lend-bias_end;
+    TFloat64Range new_lrange(exp(new_lstart), exp(new_lend));
+
+    Float64 new_regularLogSamplingStep=(new_lend-new_lstart)/nm1;
+    m_Samples = new_lrange.SpreadOverLog(new_regularLogSamplingStep);
+    m_regularLogSamplingStep = new_regularLogSamplingStep;
 }

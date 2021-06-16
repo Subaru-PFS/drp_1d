@@ -29,10 +29,10 @@ private:
                         const TFloat64Range & zInputRange,
                         UInt32 SSratio);
     std::shared_ptr<CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
-                                                            std::string errorRebinMethod="rebinVariance");
-    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl);
+                                                            std::string errorRebinMethod="rebinVariance") const;
+    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl) const;
 
-    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(TFloat64Range lambdarange, UInt32 gridCount);
+    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 gridCount) const;
     void InferTemplateRebinningSetup(const TFloat64Range & lambdaRange_Ref);
     const std::string m_rebinMethod = "lin";
 

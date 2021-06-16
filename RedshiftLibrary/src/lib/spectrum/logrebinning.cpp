@@ -27,7 +27,18 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     if(inputContext.GetParameterStore()->Has<UInt32>( "galaxy.linemodelsolve.linemodel.firstpass.largegridstepratio"))
         SSratio = inputContext.GetParameterStore()->Get<UInt32>( "galaxy.linemodelsolve.linemodel.firstpass.largegridstepratio");
 
-    SetupRebinning(*inputContext.GetSpectrum(), 
+    std::shared_ptr<CSpectrum> spc;
+
+    if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
+        spc = make_shared<CSpectrum>(inputContext.GetSpectrum()->GetName());
+        CSpectrumSpectralAxis  spcWav = inputContext.GetSpectrum()->GetSpectralAxis();
+        spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
+        spc->SetSpectralAndFluxAxes(std::move(spcWav), inputContext.GetSpectrum()->GetFluxAxis());
+    }else{
+        spc = inputContext.GetSpectrum();
+    }
+
+    SetupRebinning(*spc, 
                    inputContext.m_lambdaRange, 
                    redshiftStep, 
                    redshiftRange,
@@ -45,7 +56,7 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     inputContext.m_redshiftRangeFFT = m_zrange;
     inputContext.m_redshiftStepFFT = m_logGridStep;
     //rebin templates using previously identified parameters,
-    //TODO: rebin only if parameters to use are different from previously used params
+    // rebin only if rebinning parameters are different from previously used ones
     for(std::string s : inputContext.GetTemplateCatalog()->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
     { 
         //rebin only galaxy templates
@@ -183,7 +194,7 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
 *  step2: do the rebin
 */
 std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<const CSpectrum> spectrum, 
-                                                                                std::string errorRebinMethod)
+                                                                                std::string errorRebinMethod) const
 { 
     Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START");
 
@@ -245,7 +256,7 @@ void CSpectrumLogRebinning::InferTemplateRebinningSetup(const TFloat64Range & la
  * Step3: construct target loglambda axis for the template and check borders
  * Step4: rebin the template --> rebinned flux is saved in templateRebinedLog
 **/
-std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl)
+std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl) const
 {
     Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START for template %s", tpl->GetName().c_str());
     // check template coverage is enough for zrange and spectrum coverage
@@ -286,7 +297,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
     return templateRebinedLog;
 }
 
-CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(TFloat64Range lambdarange, UInt32 count)
+CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 count) const
 {//spreadoverlog expects m_Begin to be non-log value
     TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
     if(axis.size()!= count)
