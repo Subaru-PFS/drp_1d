@@ -17,6 +17,9 @@
 #include <gsl/gsl_matrix_double.h>
 namespace NSEpic
 {
+class CSpectrum;
+class COperatorResult;
+class CModelSpectrumResult;
 
 class COperatorTplcombination
 {
@@ -36,8 +39,17 @@ public:
                                              Float64 FitEbmvCoeff=-1,
                                              Float64 FitMeiksinIdx=-1);
 
-  void SaveSpectrumResults(std::shared_ptr<COperatorResultStore> resultStore);
-  Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range range); //could be also made static
+    Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range range); //could be also made static
+    Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,
+                                    const std::vector<CTemplate> tplList,
+                                    Float64 redshift,
+                                    Float64 EbmvCoeff,
+                                    Int32 meiksinIdx,
+                                    TFloat64List amplitudes,
+                                    std::string opt_interp,
+                                    const TFloat64Range& lambdaRange,
+                                    Float64 overlapThreshold,
+                                    std::shared_ptr<CModelSpectrumResult> & spcPtr);
 private:
 
     struct STplcombination_basicfitresult
@@ -58,8 +70,6 @@ private:
         Float64 snr;
     };
 
-    std::vector<std::shared_ptr<CModelSpectrumResult>  > m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<CModelContinuumFittingResult> > m_savedModelContinuumFittingResults;
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum,
                                      const std::vector<CTemplate>& tplList);
 

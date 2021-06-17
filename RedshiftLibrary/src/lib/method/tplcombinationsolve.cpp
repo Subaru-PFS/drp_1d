@@ -116,34 +116,26 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
     //for each candidate, get best model by reading from datastore and selecting best fit
     /////////////////////////////////////////////////////////////////////////////////////
-
-    
-    std::shared_ptr<ExtremaResult> extremaResult = std::make_shared<ExtremaResult>(candidateResult->m_ranked_candidates);
-    //TODO this is taken from templatefittingsolve, make it work here ?
-    // common base class for templatefitting and tplcombination 
-      /*                    SaveExtremaResult( resultStore, scopeStr,
-                                               candidateResult->m_ranked_candidates,
-                                               spc,
-                                               tplCatalog,
-                                               m_categoryList,
-                                               m_lambdaRange,
-                                               overlapThreshold,
-                                               opt_interp,
-                                               opt_extinction );
+    TFloat64Range clampedLbdaRange;
+    spc.GetSpectralAxis().ClampLambdaRange( m_lambdaRange, clampedLbdaRange );
+    std::shared_ptr<const ExtremaResult> extremaResult = 
+                    SaveExtremaResult(  resultStore, scopeStr,
+                                        candidateResult->m_ranked_candidates,
+                                        spc,
+                                        tplCatalog,
+                                        m_categoryList,
+                                        clampedLbdaRange,
+                                        overlapThreshold,
+                                        opt_interp);
     // store extrema results
-        StoreExtremaResults(resultStore, ExtremaResult);
-    */
+    StoreExtremaResults(resultStore, extremaResult);
 
-
-    
     std::shared_ptr<CTplCombinationSolveResult> solveResult = 
       std::make_shared<CTplCombinationSolveResult>( resultStore->GetCurrentScopeName(),
 						    extremaResult->m_ranked_candidates[0].second,
 						    m_opt_pdfcombination,
 						    pdfz.m_postmargZResult->valEvidenceLog
 						    );
-
-    // TBD 
 
     return solveResult;
 
@@ -267,9 +259,6 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
             // Store results
             Log.LogDetail("tplcombinationsolve: Save tplcombination results");
             resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result );
-            // Store spectrum results
-            Log.LogDetail("tplcombinationsolve: Save spectrum/model results");
-            m_tplcombinationOperator.SaveSpectrumResults(resultStore);
         }
     }
 
@@ -370,4 +359,81 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
 
     return chisquarearray;
 }
+std::shared_ptr<const ExtremaResult> 
+CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+                                               const std::string & scopeStr,
+                                               const TCandidateZbyRank & ranked_zCandidates,
+                                               const CSpectrum& spc,
+                                               const CTemplateCatalog& tplCatalog,
+                                               const TStringList& tplCategoryList,
+                                               const TFloat64Range& lambdaRange,
+                                               Float64 overlapThreshold,
+                                               std::string opt_interp)
+{
 
+    Log.LogDetail("CTplCombinationSolve::SaveExtremaResult: building chisquare array");
+    std::string scope = store->GetCurrentScopeName() + ".";
+    scope.append(scopeStr.c_str());
+
+    Log.LogDetail("    tplCombinationSolve: using results in scope: %s", scope.c_str());
+
+    //Bool foundRedshiftAtLeastOnce = false;
+
+    Int32 extremumCount = ranked_zCandidates.size();
+    
+    //prepare the list of components/templates
+    std::vector<CTemplate> tplList;
+    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    {
+        std::string category = tplCategoryList[i];
+
+        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        {
+            std::shared_ptr<const CTemplate>  tpl = tplCatalog.GetTemplate( category, j );
+            tplList.push_back(*tpl);
+        }
+    }
+
+    std::shared_ptr<ExtremaResult> extremaResult = make_shared<ExtremaResult>(ranked_zCandidates);
+    for (Int32 i = 0; i < extremumCount; i++)
+    {
+        Float64 z = ranked_zCandidates[i].second.Redshift;
+
+        //make sure tpl is non-rebinned
+        Bool currentSampling = tplCatalog.m_logsampling;
+        tplCatalog.m_logsampling=false;
+        TFloat64List amps(tplList.size(), -1);
+        std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
+        m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
+                                                        z,
+                                                        -1,//TplFitResult->FitEbmvCoeff[idx],
+                                                        -1,//TplFitResult->FitMeiksinIdx[idx],
+                                                        amps,//TplFitResult->FitAmplitude[idx],
+                                                        opt_interp, lambdaRange, 
+                                                        overlapThreshold, spcmodelPtr);
+        tplCatalog.m_logsampling = currentSampling;                                                
+        extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+
+        extremaResult->m_savedModelContinuumFittingResults[i] = 
+                        std::make_shared<CModelContinuumFittingResult>( z,
+                                                                        "ALLTpls",
+                                                                        -1,//ChiSquare,
+                                                                        -1,//TplFitResult->FitAmplitude[idx],
+                                                                        -1,//TplFitResult->FitAmplitudeError[idx],
+                                                                        -1,//TplFitResult->FitEbmvCoeff[idx],
+                                                                        -1,//TplFitResult->FitMeiksinIdx[idx],
+                                                                        -1);//FitSNR );          
+    }
+
+    return extremaResult;
+}
+
+
+void CMethodTplcombinationSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+                                                       std::shared_ptr<const ExtremaResult> & extremaResult) const
+{
+  resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
+  Log.LogInfo("TplCombination, saving extrema results");
+   
+  return;
+}
