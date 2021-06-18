@@ -1,16 +1,15 @@
-#include <RedshiftLibrary/operator/tplcombination.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/tools.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/log/log.h>
+#include  "RedshiftLibrary/operator/tplcombination.h"
+#include  "RedshiftLibrary/operator/tplcombinationresult.h"
+#include  "RedshiftLibrary/spectrum/axis.h"
+#include  "RedshiftLibrary/spectrum/spectrum.h"
+#include  "RedshiftLibrary/spectrum/template/template.h"
+#include  "RedshiftLibrary/spectrum/tools.h"
+#include  "RedshiftLibrary/common/mask.h"
+#include  "RedshiftLibrary/extremum/extremum.h"
+#include  "RedshiftLibrary/common/quicksort.h"
+#include  "RedshiftLibrary/common/indexing.h"
+#include  "RedshiftLibrary/processflow/datastore.h"
+#include  "RedshiftLibrary/log/log.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 #include <math.h>
@@ -43,18 +42,18 @@ using namespace NSEpic;
 using namespace std;
 
 
-void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spectrum, const std::vector<CTemplate>& tplList)
+void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spectrum, TTemplateConstRefList tplList)
 {
-
+    Int32 componentCount = tplList.size();
     // Pre-Allocate the rebined template and mask with regard to the spectrum size
-    m_templatesRebined_bf.resize(tplList.size());
-    m_masksRebined_bf.resize(tplList.size());
+    m_templatesRebined_bf.resize(componentCount);
+    m_masksRebined_bf.resize(componentCount);
     m_spcSpectralAxis_restframe.SetSize(spectrum.GetSampleCount());
 
-    for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
+    for(Int32 ktpl=0; ktpl<componentCount; ktpl++)
     {
-        m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti = tplList[ktpl].m_ismCorrectionCalzetti;
-        m_templatesRebined_bf[ktpl].m_igmCorrectionMeiksin = tplList[ktpl].m_igmCorrectionMeiksin;
+        m_templatesRebined_bf[ktpl].m_ismCorrectionCalzetti = tplList[ktpl]->m_ismCorrectionCalzetti;
+        m_templatesRebined_bf[ktpl].m_igmCorrectionMeiksin = tplList[ktpl]->m_igmCorrectionMeiksin;
     }
 }
 
@@ -62,7 +61,7 @@ void COperatorTplcombination::BasicFit_preallocateBuffers(const CSpectrum& spect
 // loops over igm/ism corrections
 
 void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
-                                       const std::vector<CTemplate>& tplList,
+                                       TTemplateConstRefList tplList,
                                        const TFloat64Range& lambdaRange,
                                        Float64 redshift,
                                        Float64 overlapThreshold,
@@ -228,7 +227,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
             if((opt_extinction || opt_dustFitting) && DisextinctData)
             {
-                identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift, tplList[0].m_ismCorrectionCalzetti, tplList[0].m_igmCorrectionMeiksin);
+                identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift, tplList[0]->m_ismCorrectionCalzetti, tplList[0]->m_igmCorrectionMeiksin);
                 if(opt_extinction){ 
                     igmCorrectionAppliedOnce = identityTemplate.ApplyMeiksinCoeff(meiksinIdx);
                     if(!igmCorrectionAppliedOnce)
@@ -332,6 +331,14 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             }
             fittingResults.fittingAmplitudesInterm[kEbmv_][kigm] = fittingResults.fittingAmplitudes;//saving 
 
+            //save covariance matrix into MtM
+            for (Int32 iddl = 0; iddl < nddl; iddl++)
+            {
+               for (Int32 iddc = 0; iddc < nddl; iddc++)
+               {
+                   fittingResults.MtM[iddl][iddc]=COV(iddl,iddc);
+               } 
+            }
             if(fittingResults.fittingAmplitudes.size()!=nddl)
             {
                 Log.LogDebug("  Operator-Tplcombination: Found nfittedamps(=%d) different than nddl(=%d)", fittingResults.fittingAmplitudes.size(), nddl);
@@ -361,6 +368,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 fittingResults.chisquare = chisq;
                 fittingResults.igmIdx = meiksinIdx;
                 fittingResults.ebmvCoeff = coeffEBMV;
+                status_chisquareSetAtLeastOnce = true;
             }
 
             //save the interm chisquares in the intermediate vector
@@ -412,7 +420,7 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(const CSpectrumFluxAxis& 
 }
 
 Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
-                                                const std::vector<CTemplate>& tplList,
+                                                TTemplateConstRefList tplList,
                                                 Float64 redshift,
                                                 const TFloat64Range& lambdaRange,
                                                 std::string opt_interp,
@@ -437,8 +445,8 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
     Log.LogDebug("  Operator-tplcombination: BasicFit - interpolating");
     for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
     {
-        const CSpectrumSpectralAxis& tplSpectralAxis = tplList[ktpl].GetSpectralAxis();
-        const CSpectrumFluxAxis& tplFluxAxis = tplList[ktpl].GetFluxAxis();
+        const CSpectrumSpectralAxis& tplSpectralAxis = tplList[ktpl]->GetSpectralAxis();
+        const CSpectrumFluxAxis& tplFluxAxis = tplList[ktpl]->GetFluxAxis();
 
         // Compute clamped lambda range over template
         TFloat64Range tplLambdaRange;
@@ -455,7 +463,7 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
         CTemplate & itplTplSpectrum = m_templatesRebined_bf[ktpl];
         CMask & itplMask = m_masksRebined_bf[ktpl];
 
-        tplList[ktpl].Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
+        tplList[ktpl]->Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, itplTplSpectrum, itplMask, opt_interp );
         
         const CSpectrumSpectralAxis& itplTplSpectralAxis = itplTplSpectrum.GetSpectralAxis();
         Log.LogDebug("  Operator-Tplcombination: Rebinned template #%d has n=%d samples in lambdarange: %.2f - %.2f", 
@@ -481,7 +489,7 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
  * @lambdaRange is not clamped
  **/
 std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectrum& spectrum,
-                                                                  const std::vector<CTemplate> & tplList,
+                                                                  TTemplateConstRefList tplList,
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
@@ -494,7 +502,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   Float64 FitEbmvCoeff,
                                                                   Float64 FitMeiksinIdx)
 {
-    Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", tplList.size());
+    Int32 componentCount = tplList.size();
+    Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", componentCount);
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false )
     {
@@ -502,26 +511,26 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         throw std::runtime_error("  Operator-tplcombination: input spectrum is not in log scale");
     }
 
-    for(Int32 ktpl=0; ktpl<tplList.size(); ktpl++)
+    for(Int32 ktpl=0; ktpl<componentCount; ktpl++)
     {
-        if( tplList[ktpl].GetSpectralAxis().IsInLinearScale() == false )
+        if( tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false )
         {
             Log.LogError("  Operator-tplcombination: input template k=%d are not in log scale", ktpl);
             throw std::runtime_error("  Operator-tplcombination: input template k=%d are not in log scale");
         }
-        if( opt_dustFitting && tplList[ktpl].m_ismCorrectionCalzetti->calzettiInitFailed)
+        if( opt_dustFitting && tplList[ktpl]->m_ismCorrectionCalzetti->calzettiInitFailed)
         {
             Log.LogError("  Operator-tplcombination: no calzetti calib. file loaded... aborting");
             throw std::runtime_error("  Operator-tplcombination: no calzetti calib. file loaded... aborting");
         }
-        if( opt_extinction && tplList[ktpl].m_igmCorrectionMeiksin->meiksinInitFailed)
+        if( opt_extinction && tplList[ktpl]->m_igmCorrectionMeiksin->meiksinInitFailed)
         {
             Log.LogError("  Operator-tplcombination: no meiksin calib. file loaded... aborting");
             throw std::runtime_error("  Operator-tplcombination: no meiksin calib. file loaded... aborting");
         }
     }
 
-    Log.LogDebug("  Operator-tplcombination: allocating memory for buffers (N = %d)", tplList.size());
+    Log.LogDebug("  Operator-tplcombination: allocating memory for buffers (N = %d)", componentCount);
 
     BasicFit_preallocateBuffers(spectrum, tplList);
 
@@ -541,18 +550,18 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     Log.LogDebug("  Operator-tplcombination: prepare the results");
-    std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
+    std::shared_ptr<CTplCombinationResult> result = std::shared_ptr<CTplCombinationResult>( new CTplCombinationResult() );
     Int32 nEbmvCoeffs = 1;
     if(opt_dustFitting && !keepigmism)
     {
-        nEbmvCoeffs = tplList.front().m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+        nEbmvCoeffs = tplList.front()->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
     Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nEbmvCoeffs);
     
     Int32 nIGMCoeffs = 1;
     if(opt_extinction && !keepigmism)
     {
-        nIGMCoeffs = tplList.front().m_igmCorrectionMeiksin->GetIdxCount();
+        nIGMCoeffs = tplList.front()->m_igmCorrectionMeiksin->GetIdxCount();
     }
     Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
     
@@ -568,7 +577,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         MeiksinList[0] = -1;
     }
 
-    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs);
+    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs, componentCount);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -596,7 +605,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     TFloat64List _chi2List(nIGMCoeffs, DBL_MAX);
     TFloat64List _ismList(nEbmvCoeffs, -1.0);
     TInt32List   _igmList(nIGMCoeffs, -1);
-    TFloat64List _ampList(tplList.size(), NAN);
+    TFloat64List _ampList(componentCount, NAN);
+    TFloat64List _mtmList(componentCount, NAN);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -635,11 +645,14 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                 fittingResults.fittingAmplitudesInterm[kism][kigm]=_ampList;
         }
         fittingResults.chisquare = boost::numeric::bounds<float>::highest();
-        fittingResults.fittingAmplitudes = TFloat64List(tplList.size(), NAN);
-        fittingResults.fittingErrors = TFloat64List(tplList.size(), NAN);
+        fittingResults.fittingAmplitudes = TFloat64List(componentCount, NAN);
+        fittingResults.fittingErrors = TFloat64List(componentCount, NAN);
         fittingResults.overlapRate = 0.0;
         fittingResults.status = COperator::nStatus_DataError;
-        //
+        fittingResults.MtM.resize(componentCount);
+        for(Int32 iddl = 0; iddl<componentCount; iddl++){
+            fittingResults.MtM[iddl] = _mtmList;
+        }
 
         BasicFit( spectrum,
                   tplList,
@@ -661,10 +674,22 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
             Log.LogError("  Operator-Tplcombination: found invalid tplcombination products for z=%f. Now breaking z loop.", redshift);
             throw std::runtime_error("  Operator-Tplcombination: found invalid tplcombination products for z");      
         }
-
-        result->ChiSquare[i]=fittingResults.chisquare;
-        result->Overlap[i]=fittingResults.overlapRate;
-        result->ChiSquareIntermediate[i]=fittingResults.ChiSquareInterm;
+        //we 'd better directly pass these values
+        result->ChiSquare[i] = fittingResults.chisquare;
+        result->Overlap[i] = fittingResults.overlapRate;
+        result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
+        result->FitAmplitude[i] = fittingResults.fittingAmplitudes;
+        //result->FitAmplitudeSigma[i] = NAN; //not yet calculated
+        result->FitAmplitudeError[i] = fittingResults.fittingErrors;
+        //dtm not caluclated for tplcombination
+        result->FitMtM[i] = fittingResults.MtM;
+        //result->LogPrior[i]=NAN: //not yet calculated
+        result->FitEbmvCoeff[i] = fittingResults.ebmvCoeff; 
+        result->FitMeiksinIdx[i] = fittingResults.igmIdx;
+        result->Status[i] = fittingResults.status;
+        result->ChiSquareIntermediate[i] = fittingResults.ChiSquareInterm;
+        result->IsmEbmvCoeffIntermediate[i] = fittingResults.IsmCalzettiCoeffInterm;
+        result->IgmMeiksinIdxIntermediate[i] = fittingResults.IgmMeiksinIdxInterm;
 
     }
 
@@ -735,11 +760,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 }
 
 Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum,
-                                                        const std::vector<CTemplate> tplList,
+                                                        TTemplateConstRefList tplList,
                                                         Float64 redshift,
                                                         Float64 EbmvCoeff,
                                                         Int32 meiksinIdx,
-                                                        TFloat64List amplitudes,
+                                                        const TFloat64List& amplitudes,
                                                         std::string opt_interp,
                                                         const TFloat64Range& lambdaRange,
                                                         Float64 overlapThreshold,
@@ -774,11 +799,11 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
     currentRange.getClosedIntervalIndices(m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
 
     //create identityTemplate on which we apply meiksin and ism, once for all tpllist
-    CTemplate identityTemplate("identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(), std::move(CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1)));
+    CTemplate identityTemplate("identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(), CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1));
     
     if ((EbmvCoeff>0.) || (meiksinIdx>-1))
     {
-        identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift, tplList[0].m_ismCorrectionCalzetti, tplList[0].m_igmCorrectionMeiksin);
+        identityTemplate.InitIsmIgmConfig(kStart, kEnd, redshift, tplList[0]->m_ismCorrectionCalzetti, tplList[0]->m_igmCorrectionMeiksin);
     }
 
     if(EbmvCoeff>0.)
@@ -809,7 +834,7 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
             modelFlux[k]+= amplitudes[iddl]*tmp[k+kStart]*extinction[k+kStart];
         }
     }
-    spcPtr = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(std::move(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)))));
+    spcPtr = std::shared_ptr<CModelSpectrumResult>( new CModelSpectrumResult(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux))));
 
     // Deallocate the rebined template and mask buffers
     m_templatesRebined_bf.clear();
@@ -857,7 +882,7 @@ Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAx
 }
 //compute dtd on a specific range
 Float64 COperatorTplcombination::ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis,
-                                            const TInt32Range range)
+                                            const TInt32Range& range)
 {
     const CSpectrumNoiseAxis& spcError = spcFluxAxis.GetError();
 

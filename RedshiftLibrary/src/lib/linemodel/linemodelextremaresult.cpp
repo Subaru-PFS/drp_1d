@@ -186,5 +186,5 @@ const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::st
 bool LineModelExtremaResult::HasCandidateDataset(const std::string& dataset) const
 {
   return (dataset == "model_parameters" || dataset == "model" ||
-	  dataset == "continuum" || "fitted_rays");
+	  dataset == "continuum" || dataset == "fitted_rays");
 }

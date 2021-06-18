@@ -45,3 +45,5 @@ QSOProba	classification	f8	solveResult	mono	False	root	m_prob_qso	double	0.000e+
 Type	classification	S1	solveResult	mono	False	root	m_TypeLabel	string	
 PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts	list[double]	
 PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]	
+ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]	0.00E+00
+ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]	0.00E+00

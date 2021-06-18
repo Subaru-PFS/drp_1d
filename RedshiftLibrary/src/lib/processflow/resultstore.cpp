@@ -7,6 +7,7 @@
 #include <RedshiftLibrary/method/classificationresult.h>
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 #include <RedshiftLibrary/operator/extremaresult.h>
+#include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
@@ -179,6 +180,18 @@ std::shared_ptr<const TLineModelResult> COperatorResultStore::GetLineModelResult
 
 
 
+}
+
+std::shared_ptr<const TTplCombinationResult> COperatorResultStore::GetTplCombinationResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const
+    
+{
+  std::shared_ptr<const COperatorResult> cop = GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model_parameters");
+  std::shared_ptr<const TTplCombinationResult> ttc = std::dynamic_pointer_cast<const TTplCombinationResult>(cop); 
+  return ttc;
 }
 
 std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(const std::string& objectType,
@@ -382,7 +395,8 @@ std::shared_ptr<const COperatorResult> COperatorResultStore::GetSolveResult(cons
       std::size_t second_dot = s.rfind(".");
       std::string object_type = s.substr(0,first_dot);
       std::string rs_name = s.substr(second_dot+1,s.size()-second_dot-1);
-      if(object_type == objectType && rs_name == "solveResult") return it->second;
+      if(object_type == objectType && rs_name == "solveResult") 
+        return it->second;
     }
     throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "no solveResult found for objectType" <<objectType);
 }

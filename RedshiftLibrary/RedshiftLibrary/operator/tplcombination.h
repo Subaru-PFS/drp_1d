@@ -1,19 +1,19 @@
 #ifndef _REDSHIFT_OPERATOR_TPLCOMBINATION_
 #define _REDSHIFT_OPERATOR_TPLCOMBINATION_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include <gsl/gsl_matrix_double.h>
 namespace NSEpic
 {
@@ -26,7 +26,7 @@ class COperatorTplcombination
 public:
 
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                             const std::vector<CTemplate> &tplList,
+                                             TTemplateConstRefList tplList,
                                              const TFloat64Range& lambdaRange,
                                              const TFloat64List& redshifts,
                                              Float64 overlapThreshold,
@@ -39,13 +39,13 @@ public:
                                              Float64 FitEbmvCoeff=-1,
                                              Float64 FitMeiksinIdx=-1);
 
-    Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range range); //could be also made static
+    Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range& range); //could be also made static
     Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,
-                                    const std::vector<CTemplate> tplList,
+                                    TTemplateConstRefList tplList,
                                     Float64 redshift,
                                     Float64 EbmvCoeff,
                                     Int32 meiksinIdx,
-                                    TFloat64List amplitudes,
+                                    const TFloat64List& amplitudes,
                                     std::string opt_interp,
                                     const TFloat64Range& lambdaRange,
                                     Float64 overlapThreshold,
@@ -68,13 +68,14 @@ private:
         Int32 igmIdx;
         Float64 ebmvCoeff;
         Float64 snr;
+        std::vector<TFloat64List> MtM; 
     };
 
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum,
-                                     const std::vector<CTemplate>& tplList);
+                                     TTemplateConstRefList tplList);
 
     void BasicFit(const CSpectrum& spectrum,
-                  const std::vector<CTemplate>& tplList,
+                  TTemplateConstRefList tplList,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,
@@ -87,7 +88,7 @@ private:
                   bool keepigmism=false,
                   const TInt32List& MeiksinList=TInt32List(-1));
     Int32 RebinTemplate(const CSpectrum& spectrum,
-                        const std::vector<CTemplate>& tplList,
+                        TTemplateConstRefList tplList,
                         Float64 redshift,
                         const TFloat64Range& lambdaRange,
                         std::string opt_interp,
