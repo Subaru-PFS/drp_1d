@@ -15,6 +15,7 @@ class ResultStoreOutput(AbstractOutput):
         AbstractOutput.__init__(self, input_manager)
         self.results_store = result_store
         self.parameters = parameters
+        self.operator_results = dict()
 
         self.object_types = ["galaxy"]
         if self.parameters["enablestellarsolve"] == "yes":
@@ -25,6 +26,7 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
+            self.operator_results[object_type] = dict()
         self.load_all()
 
     def load_root(self):
@@ -188,6 +190,39 @@ class ResultStoreOutput(AbstractOutput):
             return False
 
     def get_operator_result(self, data_spec, object_type, rank = None):
+        if object_type is not None:
+            if data_spec.hdf5_dataset in self.operator_results[object_type]:
+                if rank is not None:
+                    if rank not in self.operator_results[object_type][data_spec.hdf5_dataset]:
+                        self.operator_results[object_type][data_spec.hdf5_dataset][rank] = self.load_operator_result(
+                            data_spec,
+                            object_type,
+                            rank)
+                    return self.operator_results[object_type][data_spec.hdf5_dataset][rank]
+                elif rank is None:
+                    return self.operator_results[object_type][data_spec.hdf5_dataset]
+            else:
+                if rank is not None:
+                    self.operator_results[object_type][data_spec.hdf5_dataset] = dict()
+                    self.operator_results[object_type][data_spec.hdf5_dataset][rank] = self.load_operator_result(data_spec,
+                                                                                                                 object_type,
+                                                                                                                 rank)
+                    return self.operator_results[object_type][data_spec.hdf5_dataset][rank]
+                else:
+                    self.operator_results[object_type][data_spec.hdf5_dataset] = self.load_operator_result(data_spec,
+                                                                                                           object_type,
+                                                                                                           rank)
+                    return self.operator_results[object_type][data_spec.hdf5_dataset]
+        else:
+            if data_spec.hdf5_dataset in self.operator_results:
+                return self.operator_results[data_spec.hdf5_dataset]
+            else:
+                self.operator_results[data_spec.hdf5_dataset] = self.load_operator_result(data_spec,
+                                                                                          object_type,
+                                                                                          rank)
+                return self.operator_results[data_spec.hdf5_dataset]
+
+    def load_operator_result(self, data_spec, object_type, rank=None):
         if data_spec.level == "root":
             or_type = self.results_store.GetGlobalResultType(data_spec.hdf5_dataset,
                                                              data_spec.hdf5_dataset,
