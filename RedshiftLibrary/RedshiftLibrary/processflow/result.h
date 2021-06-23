@@ -10,8 +10,6 @@
 namespace NSEpic
 {
 
-class CDataStore;
-
 /**
  * \ingroup Redshift
  */
@@ -23,24 +21,23 @@ public:
     COperatorResult() = default;
     virtual ~COperatorResult() = default;
 
-    //should pure virtual, let's implement them first here before changing all operator results ....
-  virtual void getCandidateData(const int& rank,const std::string& name, Float64& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, Int32& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, std::string& v) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, double **data, int *size) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, std::string *data, int *size) const;
-  virtual void getCandidateData(const int& rank,const std::string& name, int  **data, int *size) const;
+  const std::string& getType() const {return m_type;}
+  virtual const std::string& getCandidateDatasetType(const std::string& dataset) const
+  {
+    throw GlobalException(UNKNOWN_ATTRIBUTE,"This operator result does not support this operation");
+  }
+  virtual std::shared_ptr<const COperatorResult> getCandidate(const int& rank,const std::string& dataset) const
+  {
+    throw GlobalException(UNKNOWN_ATTRIBUTE,"This operator result does not support this operation");
+  }
 
-  virtual void getData(const std::string& name, Int32& v) const;
-  virtual void getData(const std::string& name, Float64& v) const;
-  virtual void getData(const std::string& name, std::string& v) const;
-  virtual void getData(const std::string& name, double **data, int *size) const;
-  virtual void getData(const std::string& name, std::string *data, int *size) const;
-  virtual void getData(const std::string& name, int **data, int *size) const;
+  virtual bool HasCandidateDataset(const std::string& dataset) const {
+    throw GlobalException(UNKNOWN_ATTRIBUTE,"This operator result does not support this operation");
+  }
 
 protected:
 
-
+  std::string m_type="COperatorResult";
 };
 
 typedef std::vector< std::shared_ptr<COperatorResult> >           TOperatorResultList;

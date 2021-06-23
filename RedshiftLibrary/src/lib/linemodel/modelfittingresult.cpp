@@ -19,6 +19,7 @@ using namespace NSEpic;
  **/
 CModelFittingResult::CModelFittingResult()
 {
+  this->m_type = "CModelFittingResult";
 }
 
 
@@ -32,6 +33,7 @@ CModelFittingResult::CModelFittingResult( CLineModelSolution _lineModelSolution,
                                           Float64 _velEmission,
                                           Float64 _velAbsorption)
 {
+    this->m_type = "CModelFittingResult";
     LineModelSolution   = _lineModelSolution;
     Redshift            = _redshift;
     Merit               = _merit;
@@ -39,6 +41,11 @@ CModelFittingResult::CModelFittingResult( CLineModelSolution _lineModelSolution,
     VelocityEmission               = _velEmission;
     VelocityAbsorption               = _velAbsorption;
 
+    // This is only to make linemodelsolution members available for output
+    for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayId.emplace_back(restRayList[j].GetID());
+    for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayLambdaRest.emplace_back(restRayList[j].GetPosition());
+    FittedRaysFlux = LineModelSolution.Fluxs;
+    FittedRaysLambda = LineModelSolution.LambdaObs;    
 }
 
 /**
@@ -119,94 +126,4 @@ void CModelFittingResult::Load( const char* filePath )
         }
     }
     file.close();
-}
-
-
-
-void CModelFittingResult::getData(const std::string& name, int **data, int *size) const
-{
-  *size = LineModelSolution.LambdaObs.size();
- 
-  if (name.compare("FittedRaysID") == 0)
-    {
-
-      if (rayId.empty())
-      	{
-          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayId.emplace_back(restRayList[j].GetID());
-        }
-	  *data = const_cast<int *>(rayId.data());
-    }
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unkwown data "<<name);
-}
-
-
-void CModelFittingResult::getData(const std::string& name, double **data, int *size) const
-{
-  *size = LineModelSolution.LambdaObs.size();
-  if (name.compare("FittedRaysLambda") == 0)
-    {
-      *data = const_cast<double *>(LineModelSolution.LambdaObs.data());
-    }
-  else if (name.compare("FittedRaysLambdaRest") == 0)
-    {
-      if (rayLambdaRest.empty())
-        {
-          for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++) rayLambdaRest.emplace_back(restRayList[j].GetPosition());
-        }
-      *data = const_cast<double *>(rayLambdaRest.data());
-    }
-  else if (name.compare("FittedRaysFlux") == 0)
-    {
-      *data = const_cast<double *>(LineModelSolution.Fluxs.data());
-    }
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unkwown data"<<name);
-
-}
-
-void CModelFittingResult::getData(const std::string& name, std::string *data, int *size) const
-{
-  *size  = LineModelSolution.LambdaObs.size();
-  /*
- if (name.compare("FittedRaysType") == 0)
-    {
-      if (rayType.empty())
-	{
-	  rayType = new std::vector<std::string>(*size);
-	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
-	    {
-	      if(restRayList[j].GetType() == CRay::nType_Absorption) rayType.emplace_back("A");
-	      else rayType.emplace_back("E");
-	    }
-	}
-      *data = const_cast<double *>(rayType.data());
-    }
-  else if (name.compare("FittedRaysForce") == 0)
-    {
-      if (rayForce.empty())
-	{
-	  rayForce = new std::vector<std::string>(*size);
-	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
-	    {
-	      if(restRayList[j].GetForce() == CRay::nForce_Strong) rayType.emplace_back("S");
-	      else rayType.emplace_back("W");
-	    }
-	}
-      *data = const_cast<double *>(rayType.data());
-    }
-  else if (name.compare("FittedRaysName") == 0)
-    {
-      if (rayForce.empty())
-	{
-	  rayForce = new std::vector<std::string>(*size);
-	  for (UInt32 j=0; j<LineModelSolution.Amplitudes.size(); j++)
-	    {
-	      if(restRayList[j].GetForce() == CRay::nForce_Strong) rayType.emplace_back("S");
-	      else rayType.emplace_back("W");
-	    }
-	}
-      *data = const_cast<double *>(rayType.data());
-    }
-  */ 
-  
-
 }

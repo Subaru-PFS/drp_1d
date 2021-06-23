@@ -4,6 +4,7 @@
 #include <RedshiftLibrary/common/datatypes.h>
 #include <RedshiftLibrary/operator/operator.h>
 #include <RedshiftLibrary/common/range.h>
+#include <RedshiftLibrary/processflow/result.h>
 #include <cmath>
 #include <map>
 #include <string>
@@ -13,32 +14,13 @@
 namespace NSEpic
 {
 
-struct TCandidateZ {
-    Float64           	  Redshift = NAN;
-    Float64               ValProba = NAN;
-    Float64           	  ValSumProba = 0.;
-    Float64               Deltaz = 0.;
-    Float64           	  ValSumProbaZmin = NAN;
-    Float64           	  ValSumProbaZmax = NAN;
-
-    std::string           ParentId = "";
-
-    //opt 1: direct integration
-    //
-    //opt 2: gaussian fit
-    Float64           		GaussAmp = NAN;
-    Float64           		GaussAmpErr = NAN;
-    Float64           		GaussSigma = NAN;
-    Float64           		GaussSigmaErr = NAN;
-
-};
-
+#include <RedshiftLibrary/statistics/pdfcandidatesz.i>
 
 typedef std::map<std::string, TCandidateZ> TCandidateZbyID;
 typedef std::vector<std::pair<std::string, TCandidateZ>> TCandidateZbyRank;
 typedef std::map<std::string, TFloat64Range> TCandidateZRangebyID;
 
-class CPdfCandidateszResult;
+  template <typename T> class CPdfCandidateszResult;
 
 class CPdfCandidatesZ : public COperator
 {
@@ -48,7 +30,7 @@ public:
     CPdfCandidatesZ(const TCandidateZbyID & candidates);
     CPdfCandidatesZ(const TFloat64List & redshifts);
    
-    std::shared_ptr<CPdfCandidateszResult> Compute(TRedshiftList const & PdfRedshifts, 
+  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(TRedshiftList const & PdfRedshifts, 
                                   TFloat64List const & PdfProbaLog);
     
     TStringList SetIntegrationWindows(const TFloat64Range PdfZRange, TCandidateZRangebyID & ranges);

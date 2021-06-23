@@ -16,39 +16,7 @@ namespace NSEpic
   /**
    * \ingroup Redshift
    */
-class CModelFittingResult : public COperatorResult
-{
-
-public:
-
-    CModelFittingResult(CLineModelSolution _lineModelSolution, Float64 _redshift, Float64 _merit, CRayCatalog::TRayVector _restRayList, Float64 _velEmission=-1.0, Float64 _velAbsorption=-1.0 );
-    CModelFittingResult();
-    virtual ~CModelFittingResult();
-
-  void Load( const char* filePath );
-
-    const CLineModelSolution& GetLineModelSolution() const;
-  void getData(const std::string& name, double **data, int *size) const;
-  void getData(const std::string& name, std::string *data, int *size) const;
-  void getData(const std::string& name, int  **data, int *size) const;
-
-
-private:
-
-    CLineModelSolution LineModelSolution;
-    Float64 Redshift;
-    Float64 Merit;
-
-    CRayCatalog::TRayVector restRayList;
-    Float64 VelocityEmission;
-    Float64 VelocityAbsorption;
-
-  //copies from restRayList For output only
-    mutable std::vector<Int32> rayId;
-    mutable std::vector<Float64> rayLambdaRest;
-
-};
-
+#include "RedshiftLibrary/linemodel/modelfittingresult.i"
 inline
 const CLineModelSolution& CModelFittingResult::GetLineModelSolution() const
 {

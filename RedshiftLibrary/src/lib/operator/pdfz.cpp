@@ -45,7 +45,7 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
 * Main Pdf operator entrance
 *  combine pdf and search for candidates.
 */
-std::shared_ptr<CPdfCandidateszResult> COperatorPdfz::Compute(const ChisquareArray & chisquarearray,
+std::shared_ptr<PdfCandidatesZResult> COperatorPdfz::Compute(const ChisquareArray & chisquarearray,
                                                               Bool integ)
 {
     Log.LogInfo("%s: Pdfz computation", __func__);    
@@ -56,7 +56,7 @@ std::shared_ptr<CPdfCandidateszResult> COperatorPdfz::Compute(const ChisquareArr
     // find candidates redshifts
     TCandidateZbyID zcandidates = searchMaxPDFcandidates(); // will be sorted by the id syntax inside each redhisftwindow
 
-    std::shared_ptr<CPdfCandidateszResult> CandidateszResult;
+    std::shared_ptr<PdfCandidatesZResult> CandidateszResult;
     if (integ){
         // compute pdf candidate properties (deltaz, integ, rank )
         CPdfCandidatesZ zcand_op =  CPdfCandidatesZ(zcandidates);
@@ -66,7 +66,7 @@ std::shared_ptr<CPdfCandidateszResult> COperatorPdfz::Compute(const ChisquareArr
         size_t newsize = std::min(CandidateszResult->m_ranked_candidates.size(), size_t(m_maxCandidate));
         CandidateszResult->m_ranked_candidates.resize(newsize);
     }else{
-        CandidateszResult = std::make_shared<CPdfCandidateszResult>();
+        CandidateszResult = std::make_shared<PdfCandidatesZResult>();
             for (auto c:zcandidates){
                 CandidateszResult->m_ranked_candidates.emplace_back(c);
             }

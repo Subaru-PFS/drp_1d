@@ -23,7 +23,6 @@ public:
 
   CReliabilityResult();
 
-  void getData(const std::string& name, std::string& v) const;
 
   std::string m_ReliabilityLabel="C6";
 

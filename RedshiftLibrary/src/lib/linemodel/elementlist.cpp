@@ -1031,7 +1031,7 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
                                                  overlapThreshold, spcmodel);
 
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
-    m_observeGridContinuumFlux = (*spcmodel).GetSpectrum().GetFluxAxis().GetSamplesVector();
+    m_observeGridContinuumFlux = (*spcmodel).ModelFlux;
 
   return 0;
 }
@@ -1221,23 +1221,23 @@ std::shared_ptr<CModelSpectrumResult> CLineModelElementList::GetContaminantSpect
     return resultcont;
 }
 
-const std::string & CLineModelElementList::getFitContinuum_tplName()
+const std::string & CLineModelElementList::getFitContinuum_tplName() const
 {
     return m_fitContinuum_tplName;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplAmplitude()
+Float64 CLineModelElementList::getFitContinuum_tplAmplitude() const
 {
     return m_fitContinuum_tplFitAmplitude;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplAmplitudeError()
+Float64 CLineModelElementList::getFitContinuum_tplAmplitudeError() const
 {
     return m_fitContinuum_tplFitAmplitudeError;
 }
 
 //This SNR estimate maybe needs to use observed spectrum with lines removed ?
-Float64 CLineModelElementList::getFitContinuum_snr()
+Float64 CLineModelElementList::getFitContinuum_snr() const
 {
     Float64 snr = -1;
     if(m_fitContinuum_tplFitMtM>0.)
@@ -1247,17 +1247,17 @@ Float64 CLineModelElementList::getFitContinuum_snr()
     return snr;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplMerit()
+Float64 CLineModelElementList::getFitContinuum_tplMerit() const
 {
     return m_fitContinuum_tplFitMerit;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplIsmEbmvCoeff()
+Float64 CLineModelElementList::getFitContinuum_tplIsmEbmvCoeff() const
 {
     return m_fitContinuum_tplFitEbmvCoeff;
 }
 
-Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx()
+Float64 CLineModelElementList::getFitContinuum_tplIgmMeiksinIdx() const
 {
     return m_fitContinuum_tplFitMeiksinIdx;
 }
@@ -1317,7 +1317,7 @@ void CLineModelElementList::SetFitContinuum_SNRMax(Float64 snr_max)
     m_fitContinuum_tplFitSNRMax = snr_max;
 }
 
-Int32 CLineModelElementList::GetFitContinuum_Option()
+Int32 CLineModelElementList::GetFitContinuum_Option() const
 {
     return m_fitContinuum_option;
 }
@@ -1371,34 +1371,34 @@ void CLineModelElementList::PrepareContinuum()
     }
 }
 
-const std::string & CLineModelElementList::getTplshape_bestTplName()
+const std::string & CLineModelElementList::getTplshape_bestTplName() const
 {
     return m_tplshapeBestTplName;
 }
-Float64 CLineModelElementList::getTplshape_bestTplIsmCoeff()
+Float64 CLineModelElementList::getTplshape_bestTplIsmCoeff() const
 {
     return m_tplshapeBestTplIsmCoeff;
 }
 
-Float64 CLineModelElementList::getTplshape_bestAmplitude()
+Float64 CLineModelElementList::getTplshape_bestAmplitude() const
 {
     return m_tplshapeBestTplAmplitude;
 }
 
 
-Float64 CLineModelElementList::getTplshape_bestDtm()
+Float64 CLineModelElementList::getTplshape_bestDtm() const
 {
     return m_tplshapeBestTplDtm;
 }
 
 
-Float64 CLineModelElementList::getTplshape_bestMtm()
+Float64 CLineModelElementList::getTplshape_bestMtm() const
 {
     return m_tplshapeBestTplMtm;
 }
 
 
-Int32 CLineModelElementList::getTplshape_count()
+Int32 CLineModelElementList::getTplshape_count() 
 {
     if(m_rigidity!="tplshape")
     {
@@ -1407,7 +1407,7 @@ Int32 CLineModelElementList::getTplshape_count()
     return m_CatalogTplShape.GetCatalogsCount();
 }
 
-const std::vector<Float64> & CLineModelElementList::getTplshape_priors()
+const std::vector<Float64> & CLineModelElementList::getTplshape_priors() 
 {
     if(m_rigidity!="tplshape")
     {
@@ -1417,7 +1417,7 @@ const std::vector<Float64> & CLineModelElementList::getTplshape_priors()
     return m_CatalogTplShape.getCatalogsPriors();
 }
 
-const std::vector<Float64> & CLineModelElementList::GetChisquareTplshape()
+const std::vector<Float64> & CLineModelElementList::GetChisquareTplshape() const
 {
     return m_ChisquareTplshape;
 }
@@ -1427,7 +1427,7 @@ const std::vector<Float64> & CLineModelElementList::GetChisquareTplshape()
  * WARNING: as stated in fit(), the prior is valid in this code structure only for tplratio with only 1 element containing the EL component, hence using idx=0 here
  * @return
  */
-std::vector<Float64> CLineModelElementList::GetPriorLinesTplshape()
+std::vector<Float64> CLineModelElementList::GetPriorLinesTplshape() const
 {
     std::vector<Float64> plinestplshape;
     Int32 eltIdx = 0;
@@ -1438,17 +1438,17 @@ std::vector<Float64> CLineModelElementList::GetPriorLinesTplshape()
     return plinestplshape;
 }
 
-const std::vector<Float64> & CLineModelElementList::GetScaleMargTplshape()
+const std::vector<Float64> & CLineModelElementList::GetScaleMargTplshape() const
 {
     return m_ScaleMargCorrTplshape;
 }
 
-const TBoolList & CLineModelElementList::GetStrongELPresentTplshape()
+const TBoolList & CLineModelElementList::GetStrongELPresentTplshape() const
 {
     return m_StrongELPresentTplshape;
 }
 
-const std::vector<Int32> & CLineModelElementList::GetNLinesAboveSNRTplshape()
+const std::vector<Int32> & CLineModelElementList::GetNLinesAboveSNRTplshape() const
 {
     return m_NLinesAboveSNRTplshape;
 }
@@ -1713,50 +1713,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     SetElementAmplitude(iElts, a/maxNominalAmp, err);
                 }
             }
-
-            //generate amplitudes from existing linemodel fit solution file .csv
-            if(m_fittingmethod=="fromfile")
-            {
-                CModelFittingResult result;
-                std::string linemodelFitResultsPath = "/home/aschmitt/gitlab/cpf-redshift/tools/simulation"; //this is the simulation folder absolute path !
-                linemodelFitResultsPath.append("/amazed/linecatalogs/linemodelsolve.linemodel_fit_extrema_0.csv");
-
-                Log.LogInfo( "\nLineModel fitting from File: loading: %s", linemodelFitResultsPath.c_str());
-                result.Load(linemodelFitResultsPath.c_str());
-                if(result.GetLineModelSolution().Amplitudes.size()<2)
-                {
-                    Log.LogError( "\nLineModel fitting from File: unable to load from file: %s", linemodelFitResultsPath.c_str());
-                }
-
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-                {
-                    Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
-
-                    //get the max nominal amplitude
-                    Int32 nRays = m_Elements[iElts]->GetSize();
-                    Float64 nominalAmp = -1.0;
-                    Float64 err=1.5*1e-20; //not used
-                    for(UInt32 j=0; j<nRays; j++){
-                        Int32 lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[j];
-                        nominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
-                        Float64 a = result.GetLineModelSolution().Amplitudes[lineIndex];
-
-                        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
-                        {
-                            Float64 ampFitted = meanContinuum*a/nominalAmp;
-                            SetElementAmplitude(iElts, ampFitted, err);
-                        }else{
-                            Float64 ampFitted = a/nominalAmp;
-                            SetElementAmplitude(iElts, ampFitted, err);
-                        }
-
-                    }
-
-
-                }
-
-            }
-
 
             //fit the amplitudes of each element independently
             if(m_fittingmethod=="individual")

@@ -1,5 +1,0 @@
-[format="tsv", options="header"]
-|===
-include::pylibamazed/resources/candidates_specifications.csv[]
-|===
-

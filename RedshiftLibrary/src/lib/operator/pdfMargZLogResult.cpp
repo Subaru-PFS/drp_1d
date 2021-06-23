@@ -14,13 +14,20 @@ using namespace std;
 using namespace NSEpic;
 
 
+CPdfMargZLogResult::CPdfMargZLogResult()
+{
+  this->m_type = "CPdfMargZLogResult";
+
+}
+
+
 CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
     Redshifts(redshifts),
     countTPL(redshifts.size()), // assumed 1 model per z
     valProbaLog(redshifts.size(), -DBL_MAX),
     valEvidenceLog(-1.0)
 {
-
+  this->m_type = "CPdfMargZLogResult";
 }
 
 Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
@@ -38,29 +45,3 @@ Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
 }
 
 
-  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
-  {
-  }
-  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
-  {
-  }
-  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const{}
-  void CPdfMargZLogResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const{}
-
-  void CPdfMargZLogResult::getData(const std::string& name, Int32& v) const{}
-  void CPdfMargZLogResult::getData(const std::string& name, Float64& v) const{}
-  void CPdfMargZLogResult::getData(const std::string& name, std::string& v) const{}
-  void CPdfMargZLogResult::getData(const std::string& name, double **data, int *size) const
-  {
-
-    if(name.compare("pdf_zgrid") == 0)
-      {
-        *size = Redshifts.size();
-        *data = const_cast<double *>(Redshifts.data());
-      }
-    if(name.compare("pdf_probaLog") == 0)
-      {
-        *size = valProbaLog.size();
-        *data = const_cast<double *>(valProbaLog.data());
-      }
-  }

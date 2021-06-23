@@ -325,7 +325,7 @@ endif()
 #INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
 #INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config.cmake DESTINATION share/cmake )
 #INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config-version.cmake DESTINATION share/cmake )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candidates_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/results_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv COPYONLY)
 
 #--------------------------------------------------------
 # Build python wrapper
@@ -340,7 +340,7 @@ set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
   "${CMAKE_CURRENT_SOURCE_DIR}/dist"
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
@@ -350,7 +350,7 @@ set(PYTHON_BUILD_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
   "${CMAKE_CURRENT_SOURCE_DIR}/dist"
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"

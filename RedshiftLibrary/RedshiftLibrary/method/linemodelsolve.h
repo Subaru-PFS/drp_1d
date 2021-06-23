@@ -57,8 +57,8 @@ private:
 
     //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
 
-    void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
-                              std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const;
+      void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
+                             std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
 
@@ -78,7 +78,7 @@ private:
     bool m_opt_tplfit_fftprocessing_secondpass=true;
     std::string m_opt_tplfit_dustfit="no";
     std::string m_opt_tplfit_igmfit="no";
-    Float64 m_opt_continuumfitcount;
+  Float64 m_opt_continuumfitcount; //TODO is this really a double and not an integer ?
     Float64 m_opt_tplfit_continuumprior_betaA=1.0;
     Float64 m_opt_tplfit_continuumprior_betaTE=1.0;
     Float64 m_opt_tplfit_continuumprior_betaZ=1.0;

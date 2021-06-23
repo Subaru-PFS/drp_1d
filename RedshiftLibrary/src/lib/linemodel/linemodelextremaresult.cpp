@@ -1,129 +1,190 @@
 #include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
-
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <string>
-#include <fstream>
-#include <iomanip>      // std::setprecision
-#include <iostream>
-#include <numeric>
+#include <RedshiftLibrary/linemodel/elementlist.h>
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
-CLineModelExtremaResult::CLineModelExtremaResult(Int32 n)
+
+// TODO this should be a TExtremaResult constructor, using member initialization list
+TLineModelResult::TLineModelResult(const CContinuumModelSolution& cms)
 {
-    Resize(n);
-}
+   FittedTplName = cms.tplName;
+    FittedTplAmplitude = cms.tplAmplitude;
+    FittedTplAmplitudeError = cms.tplAmplitudeError;
+    FittedTplMerit = cms.tplMerit;
+    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
+    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
+    FittedTplRedshift = cms.tplRedshift;
+    FittedTplDtm = cms.tplDtm;
+    FittedTplMtm = cms.tplMtm;
+    FittedTplLogPrior = cms.tplLogPrior;
+    FittedTplpCoeffs = cms.pCoeffs;
+  }
 
-void CLineModelExtremaResult::Resize(Int32 size)
-{   
-    CExtremaResult::Resize(size);
+void TLineModelResult::updateFromContinuumModelSolution(const CContinuumModelSolution& cms,bool all)
+  {
+    if (all)
+      {
+    FittedTplName = cms.tplName;
+    FittedTplAmplitude = cms.tplAmplitude;
+    FittedTplAmplitudeError = cms.tplAmplitudeError;
+    FittedTplMerit = cms.tplMerit;
+    FittedTplEbmvCoeff = cms.tplEbmvCoeff;
+    FittedTplMeiksinIdx = cms.tplMeiksinIdx;
+      }
+    FittedTplRedshift = cms.tplRedshift;
+    FittedTplDtm = cms.tplDtm;
+    FittedTplMtm = cms.tplMtm;
+    FittedTplLogPrior = cms.tplLogPrior;
+    FittedTplpCoeffs = cms.pCoeffs;
+  }
 
-    MeritContinuum.resize(size);
+void TLineModelResult::updateFromLineModelSolution(const CLineModelSolution& cms)
+  {
+    Elv= cms.EmissionVelocity;
+    Alv= cms.AbsorptionVelocity;
+  }
 
-    mTransposeM.resize(size);
-    CorrScaleMarg.resize(size);
-    NDof.resize(size);
-    Redshift_lmfit.resize(size);
-    snrHa.resize(size);
-    lfHa.resize(size);
-    snrOII.resize(size);
-    lfOII.resize(size);
+void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelElementList> lmel)
+  {
+    FittedTplName= lmel->getFitContinuum_tplName();
+    FittedTplAmplitude= lmel->getFitContinuum_tplAmplitude();
+    FittedTplAmplitudeError= lmel->getFitContinuum_tplAmplitudeError();
+    FittedTplMerit= lmel->getFitContinuum_tplMerit();
+    FittedTplEbmvCoeff= lmel->getFitContinuum_tplIsmEbmvCoeff();
+    FittedTplMeiksinIdx= lmel->getFitContinuum_tplIgmMeiksinIdx();
+  }
 
-    ExtendedRedshifts.resize(size);
-    NLinesOverThreshold.resize(size);
-    LogArea.resize(size);
-    LogAreaCorrectedExtrema.resize(size);
-    SigmaZ.resize(size);
+void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelElementList> lmel)
+  {
+        FittedTplratioName = lmel->getTplshape_bestTplName();
+        FittedTplratioIsmCoeff = lmel->getTplshape_bestTplIsmCoeff();
+        FittedTplratioAmplitude = lmel->getTplshape_bestAmplitude();
+        FittedTplratioDtm = lmel->getTplshape_bestDtm();
+        FittedTplratioMtm = lmel->getTplshape_bestMtm();
 
-    StrongELSNR.resize(size);
-    StrongELSNRAboveCut.resize(size);
-    bic.resize(size);
-    ContinuumIndexes.resize(size);
-    OutsideLinesMask.resize(size);
-    OutsideLinesSTDFlux.resize(size);
-    OutsideLinesSTDError.resize(size);
+  }
 
-    Elv.resize(size);
-    Alv.resize(size);
-    GroupsELv.resize(size);
-    GroupsALv.resize(size);
-    for(Int32 ke=0; ke<size; ke++)
-    {
-        GroupsELv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
-        GroupsALv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
-    }
-
-    FittedTplRedshift.resize(size);
-    FittedTplpCoeffs.resize(size);
-
-    FittedTplratioName.resize(size);
-    FittedTplratioAmplitude.resize(size);
-    FittedTplratioDtm.resize(size);
-    FittedTplratioMtm.resize(size);
-    FittedTplratioIsmCoeff.resize(size);
+void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelElementList> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int idx,const TFloat64Range &lambdaRange, int i_2pass)
+  {
     
-    m_savedModelFittingResults.resize(size);
-    m_savedModelRulesResults.resize(size);
-    m_savedModelContinuumSpectrumResults.resize(size);
-}
+    // TODO : make all these getters const in CLineModelElementList before uncommenting this
+    //LineModelSolutions
+    Elv = lmel->GetVelocityEmission();
+    Alv = lmel->GetVelocityAbsorption();
+        
+    if (!estimateLeastSquareFast)
+      {
+        MeritContinuum =
+          lmel->getLeastSquareContinuumMerit(lambdaRange);
+      } else
+      {
+        MeritContinuum =
+          lmel->getLeastSquareContinuumMeritFast();
+      }
 
+    // store model Ha SNR & Flux
+    snrHa =
+      lmresult->LineModelSolutions[idx].snrHa;
+    lfHa =
+      lmresult->LineModelSolutions[idx].lfHa;
 
-void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
-{
-    if (name.compare("VelocityEmission") == 0 || name.compare("FirstpassVelocityEmission") == 0) v = Elv[rank];
-    else if (name.compare("VelocityAbsorption") == 0 || name.compare("FirstpassVelocityAbsorption") == 0) v = Alv[rank];
-    else if (name.compare("StrongEmissionLinesSNR") == 0) v = StrongELSNR[rank];
-    else if (name.compare("LinesRatioIsmCoeff") == 0) v = FittedTplratioIsmCoeff[rank];
-    else if (name.compare("LinesRatioAmplitude") == 0) v = FittedTplratioAmplitude[rank];
-    else CExtremaResult::getCandidateData(rank, name, v);
-}
+    // store model OII SNR & Flux
+    snrOII =
+      lmresult->LineModelSolutions[idx].snrOII;
+    lfOII =
+      lmresult->LineModelSolutions[idx].lfOII;
 
-void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
-{
-    CExtremaResult::getCandidateData(rank, name, v);
-}
+    // store the model norm
+    mTransposeM =
+      lmel->EstimateMTransposeM(lambdaRange);
 
-void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
-{
-    if (name.compare("LinesRatioName") == 0) v = FittedTplratioName[rank];
-    else CExtremaResult::getCandidateData(rank, name, v);
-}
+    // scale marginalization correction
+    Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
+    CorrScaleMarg = corrScaleMarg;
 
-void CLineModelExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const
-{
-  if (name.compare("ContinuumIndexesColor") == 0)
-    {
-      *size = ContinuumIndexes[rank].size();
-      if (continuumIndexesColorCopy.find(rank) != continuumIndexesColorCopy.end())
-	{
-	  continuumIndexesColorCopy[rank] = TFloat64List(*size);
-	  for (UInt32 j=0; j<*size;j++) continuumIndexesColorCopy[rank].emplace_back(ContinuumIndexes[rank][j].Color);
-	  *data = const_cast<double *>(continuumIndexesColorCopy[rank].data());
-	}
+    static Float64 cutThres = 3.0;
+    Int32 nValidLines = lmresult->GetNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+    NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
+    Float64 cumulStrongELSNR = lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
+    StrongELSNR = cumulStrongELSNR;
+
+    std::vector<std::string> strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
+    StrongELSNRAboveCut = strongELSNRAboveCut;
+
+    Int32 nddl = lmel->GetNElements(); // get the total number of
+    // elements in the model
+    nddl = lmresult->LineModelSolutions[idx].nDDL; // override nddl by the actual number of elements in
+    // the fitted model
+    NDof =
+      lmel->GetModelNonZeroElementsNDdl();
+
+    Float64 bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
+    // Float64 aic = m + 2*nddl; //AIC
+    bic = bic;
+    // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
+    // //AICc, better when nsamples small
+
+    // compute continuum indexes
+    // TODO VB is this useful/necessary now ? if there is a computation it should be done before
+    //NB AA commented to avoid adding spectrum to getFromModel arguments
+    /*
+    CContinuumIndexes continuumIndexes;
+    ContinuumIndexes =
+      continuumIndexes.getIndexes(spectrum, z);
+    */
+      
+    // save the outsideLinesMask
+    OutsideLinesMask =
+      lmel->getOutsideLinesMask();
+
+    OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1, lambdaRange);
+    OutsideLinesSTDError = lmel->getOutsideLinesSTD(2, lambdaRange);
+    Float64 ratioSTD = -1;
+    if(OutsideLinesSTDError>0.0)
+      {
+        ratioSTD = OutsideLinesSTDFlux/OutsideLinesSTDError;
+        Float64 ratio_thres = 1.5;
+        if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
+          {
+            Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+          }else{
+          Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+        }
+      }else{
+      Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
     }
-  else if( name.compare("ContinuumIndexesBreak") == 0)
-    {
-      *size = ContinuumIndexes[rank].size();
-      if (continuumIndexesBreakCopy.find(rank) != continuumIndexesBreakCopy.end())
+
+
+  }
+
+
+
+
+std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(const int& rank,const std::string& dataset) const{
+      if (dataset == "model_parameters")  return std::make_shared<const TLineModelResult>(this->m_ranked_candidates[rank].second);
+      else if (dataset == "fitted_rays")
 	{
-	  continuumIndexesBreakCopy[rank] = TFloat64List(*size);
-	  for (UInt32 j=0; j<*size;j++) continuumIndexesBreakCopy[rank].emplace_back(ContinuumIndexes[rank][j].Break);
-	  *data = const_cast<double *>(continuumIndexesBreakCopy[rank].data());
+	  std::shared_ptr<const COperatorResult> cop =  this->m_savedModelFittingResults[rank];
+	  return cop;
 	}
+      else if (dataset == "model")  return this->m_savedModelSpectrumResults[rank];
+      else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[rank];
+
+      else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
     }
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown candidate string data "<<name);
-}
+    
+const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::string& dataset) const {
+      if (dataset == "model_parameters")      return this->m_ranked_candidates[0].second.getType();
+      else if (dataset == "fitted_rays")  return this->m_savedModelFittingResults[0]->getType();
+      else if (dataset == "model")  return this->m_savedModelSpectrumResults[0]->getType();
+      else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[0]->getType();
+      else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
+    }
 
-
-void CLineModelExtremaResult::getData(const std::string& name, Int32& v) const{}
-void CLineModelExtremaResult::getData(const std::string& name, Float64& v) const{}
-void CLineModelExtremaResult::getData(const std::string& name, std::string& v) const{}
-void CLineModelExtremaResult::getData(const std::string& name, double **data, int *size) const
+bool LineModelExtremaResult::HasCandidateDataset(const std::string& dataset) const
 {
-
+  return (dataset == "model_parameters" || dataset == "model" ||
+	  dataset == "continuum" || "fitted_rays");
 }
-

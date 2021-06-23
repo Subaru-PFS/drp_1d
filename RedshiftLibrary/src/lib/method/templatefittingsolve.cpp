@@ -139,7 +139,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     {
         COperatorPdfz pdfz(m_opt_pdfcombination, m_redshiftSeparation, 0.0, m_opt_maxCandidate);   
 
-        std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
+        std::shared_ptr<PdfCandidatesZResult> candidateResult = pdfz.Compute(BuildChisquareArray(resultStore, scopeStr));
 
         // save in resultstore pdf results
         //        std::string pdfPath = outputPdfRelDir+"/logposterior.logMargP_Z_data";
@@ -154,7 +154,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         //using clamped lambdaRange:
         TFloat64Range clampedLbdaRange;
         spc.GetSpectralAxis().ClampLambdaRange( m_lambdaRange, clampedLbdaRange );
-        std::shared_ptr<const CExtremaResult> ExtremaResult = 
+        std::shared_ptr<const ExtremaResult> extremaResult = 
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
                                                spc,
@@ -165,11 +165,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                                                opt_interp);
 
         // store extrema results
-        StoreExtremaResults(resultStore, ExtremaResult);
+        StoreExtremaResults(resultStore, extremaResult);
 
         std::shared_ptr< CTemplateFittingSolveResult> TemplateFittingSolveResult = 
                         std::make_shared<CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
-                                                                      ExtremaResult,
+                                                                      extremaResult->m_ranked_candidates[0].second,
                                                                       m_opt_pdfcombination,
                                                                       pdfz.m_postmargZResult->valEvidenceLog);
 
@@ -373,7 +373,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
 }
 
 
-std::shared_ptr<const CExtremaResult> 
+std::shared_ptr<const ExtremaResult> 
 CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
@@ -437,9 +437,8 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 
     }
 
-    std::shared_ptr<CExtremaResult> ExtremaResult = make_shared<CExtremaResult>(extremumCount);
+    std::shared_ptr<ExtremaResult> extremaResult = make_shared<ExtremaResult>(ranked_zCandidates);
 
-    ExtremaResult->m_ranked_candidates = ranked_zCandidates;
 
     for (Int32 i = 0; i < extremumCount; i++)
     {
@@ -465,20 +464,20 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 
         // Fill extrema Result
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( results[tplName] );
-        ExtremaResult->FittedTplMerit[i] = ChiSquare;
-        ExtremaResult->FittedTplName[i] = tplName;
-        ExtremaResult->FittedTplMeiksinIdx[i] = TplFitResult->FitMeiksinIdx[idx];
-        ExtremaResult->FittedTplEbmvCoeff[i] = TplFitResult->FitEbmvCoeff[idx];
-        ExtremaResult->FittedTplAmplitude[i] = TplFitResult->FitAmplitude[idx];
-        ExtremaResult->FittedTplAmplitudeError[i] = TplFitResult->FitAmplitudeError[idx];
-        ExtremaResult->FittedTplDtm[i] = TplFitResult->FitDtM[idx];
-        ExtremaResult->FittedTplMtm[i] = TplFitResult->FitMtM[idx];
-        ExtremaResult->FittedTplLogPrior[i] = TplFitResult->LogPrior[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplMerit = ChiSquare;
+        extremaResult->m_ranked_candidates[i].second.FittedTplName= tplName;
+        extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx= TplFitResult->FitMeiksinIdx[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff= TplFitResult->FitEbmvCoeff[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplAmplitude= TplFitResult->FitAmplitude[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeError= TplFitResult->FitAmplitudeError[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplDtm= TplFitResult->FitDtM[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplMtm= TplFitResult->FitMtM[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior= TplFitResult->LogPrior[idx];
 
         Float64 FitSNR = NAN;
         if (TplFitResult->FitMtM[idx] != 0.)
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
-        ExtremaResult->FittedTplSNR[i] = FitSNR;
+        extremaResult->m_ranked_candidates[i].second.FittedTplSNR= FitSNR;
         //make sure tpl is non-rebinned
         Bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
@@ -492,9 +491,9 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                         opt_interp, lambdaRange, 
                                                         overlapThreshold, spcmodelPtr);
         tplCatalog.m_logsampling = currentSampling;                                                
-        ExtremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
+        extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
-        ExtremaResult->m_savedModelContinuumFittingResults[i] = 
+        extremaResult->m_savedModelContinuumFittingResults[i] = 
                         std::make_shared<CModelContinuumFittingResult>( z,
                                                                         tplName,
                                                                         ChiSquare,
@@ -505,31 +504,15 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                                         FitSNR );          
     }
 
-    return ExtremaResult;
+    return extremaResult;
 }
 
 
 void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
-                                                       std::shared_ptr<const CExtremaResult> & ExtremaResult) const
+                                                       std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
-    Int32 nResults = ExtremaResult->size();
-
-    auto & m_savedModelContinuumFittingResults = ExtremaResult->m_savedModelContinuumFittingResults;
-    auto & m_savedModelSpectrumResults = ExtremaResult->m_savedModelSpectrumResults;
-
-    if( m_savedModelContinuumFittingResults.size()!= m_savedModelSpectrumResults.size()){
-        Log.LogError(" CMethodTemplateFittingSolve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size.");
-        throw runtime_error(" CMethodTemplateFittingSolve::SaveSpectrumResults: spectrumModel size doesnt not correspond to modelParam size. Aborting!");
-    }
-
-    Log.LogDetail("  Methode-COperatorTemplatefitting: now saving spectrum/model templatefitting results n=%d", m_savedModelSpectrumResults.size());
-    for(Int32 i=0; i<m_savedModelSpectrumResults.size(); i++)
-    {
-        std::string fname_spc = (boost::format("templatefitting_spc_extrema_%1%") % i).str();
-        resultStore->StoreScopedGlobalResult( fname_spc.c_str(), m_savedModelSpectrumResults[i] );
-
-        fname_spc = (boost::format("templatefitting_fitcontinuum_extrema_%1%") % i).str();
-        resultStore->StoreScopedGlobalResult( fname_spc.c_str(),  m_savedModelContinuumFittingResults[i] );
-    }
-    return;
+  resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
+  Log.LogInfo("Linemodel, saving extrema results");
+   
+  return;
 }

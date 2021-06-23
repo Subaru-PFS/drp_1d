@@ -50,22 +50,3 @@ CModelContinuumFittingResult::~CModelContinuumFittingResult()
 {
 }
 
-void CModelContinuumFittingResult::getData(const std::string& name, Int32& v) const
-{
-  if(name.compare("ModelMeiksinIdx") == 0)
-    v = IgmIndex;  
-}
-void CModelContinuumFittingResult::getData(const std::string& name, std::string& v) const
-{
-  if(name.compare("ModelTplName") == 0)
-    v = Name;
-}
-void CModelContinuumFittingResult::getData(const std::string& name, Float64& v) const
-{
-  if(name.compare("ModelDustCoeff") == 0)//shd be changed
-    v = IsmCoeff;
-  else  if(name.compare("ModelAmplitude") == 0)
-    v = Amp; 
-  else if(name.compare("ModelAmplitudeError") == 0)
-    v = AmpErr;
-}   
