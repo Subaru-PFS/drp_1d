@@ -1,8 +1,8 @@
 hdf5_name	hdf5_dataset	hdf5_type	ResultStore_key	dimension	debug	level	OperatorResult_name	c_type	format
 Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double	0.0000
 RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double	0.000e+0
-RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double	0.0000
-RedshiftProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double	0.0000
+RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double	0.000e+0
+RedshiftLogProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double	0.000
 RedshiftProbaZmin	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmin	double	0.000e+0
 RedshiftProbaZmax	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmax	double	0.000e+0
 ContinuumName	model_parameters	S40	extrema_results	mono	False	candidate	FittedTplName	string	
