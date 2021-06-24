@@ -14,7 +14,7 @@
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
 #include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
-
+#include <gsl/gsl_matrix_double.h>
 namespace NSEpic
 {
 
@@ -30,10 +30,14 @@ public:
                                              std::vector<CMask> additional_spcMasks, 
                                              std::string opt_interp, 
                                              Int32 opt_extinction=0, 
-                                             Int32 opt_dustFitting=0);
+                                             Int32 opt_dustFitting=0,
+                                             CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                             Bool keepigmism = false,
+                                             Float64 FitEbmvCoeff=-1,
+                                             Float64 FitMeiksinIdx=-1);
 
   void SaveSpectrumResults(std::shared_ptr<COperatorResultStore> resultStore);
-
+  Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range range); //could be also made static
 private:
 
     struct STplcombination_basicfitresult
@@ -44,7 +48,10 @@ private:
         CSpectrum/*CModelSpectrumResult*/   modelSpectrum;
         TFloat64List    fittingAmplitudes;
         TFloat64List    fittingErrors;
-        std::vector<TFloat64List> ChiSquareInterm;
+        std::vector<TFloat64List>    ChiSquareInterm;
+        std::vector<TFloat64List>    IsmCalzettiCoeffInterm;
+        std::vector<TInt32List>      IgmMeiksinIdxInterm;
+        std::vector<std::vector<TFloat64List>>    fittingAmplitudesInterm; //intermediate amplitudes
         std::vector<std::string> tplNames; //cause combination of templates
         Int32 igmIdx;
         Float64 ebmvCoeff;
@@ -62,7 +69,13 @@ private:
                   Float64 redshift,
                   Float64 overlapThreshold,
                   STplcombination_basicfitresult& fittingResults,
-                  std::string opt_interp, Float64 forcedAmplitude=-1, Int32 opt_extinction=0, Int32 opt_dustFitting=0, CMask spcMaskAdditional=CMask() );
+                  std::string opt_interp, Float64 forcedAmplitude=-1, 
+                  Int32 opt_extinction=0, 
+                  Int32 opt_dustFitting=0, 
+                  CMask spcMaskAdditional=CMask(),
+                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
+                  bool keepigmism=false,
+                  const TInt32List& MeiksinList=TInt32List(-1));
     Int32 RebinTemplate(const CSpectrum& spectrum,
                         const std::vector<CTemplate>& tplList,
                         Float64 redshift,
@@ -79,6 +92,10 @@ private:
     //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 
+    Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis& correctedFlux, 
+                                  const CSpectrumFluxAxis& spcFluxAxis,
+                                  const Int32 imin_lbda);
+    Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n);
 };
 
 

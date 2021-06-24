@@ -176,7 +176,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     Int32 enable_dustFitting = 0;
     if(opt_dustFitting=="yes")
     {
-        enable_dustFitting = 1;
+        enable_dustFitting = 1;//here we dont distinguish between using on single ismCoeff or iterating over all coeffs. Default to all!
     }
 
     //prepare the list of components/templates
@@ -191,7 +191,26 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
             tplList.push_back(*tpl);
         }
     }
-
+    //check all templates have same spectralAxis
+    const CSpectrumSpectralAxis& refSpcAxis = tplList[0].GetSpectralAxis();
+    UInt32 axisSize = refSpcAxis.GetSamplesCount();
+    for(Int32 ktpl=1; ktpl<tplList.size(); ktpl++)
+    {
+        const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl].GetSpectralAxis();
+        if(axisSize != tplList[ktpl].GetSampleCount())
+        {
+            Log.LogError("  Method-tplcombination: templates dont have same size");
+            throw std::runtime_error("  Method-tplcombination: templates dont have same size");
+        }
+        for (Int32 i = 0; i<axisSize; i++)
+        {
+            if(std::abs(refSpcAxis[i]-currentSpcAxis[i])>1E-8)
+            {
+                Log.LogError("  Method-tplcombination: templates dont have same spectralAxis");
+                throw std::runtime_error("  Method-tplcombination: templates dont have same spectralAxis");
+            }
+        }
+    }
 
     //case: nType_all
     if(spctype == nType_all){
@@ -227,7 +246,6 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         }else if(_spctype == CSpectrum::nType_noContinuum){
             // use spectrum without continuum
             scopeStr = "tplcombination_nocontinuum";
-            //
             enable_dustFitting = 0;
         }
 

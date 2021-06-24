@@ -51,6 +51,8 @@ public:
     void ScaleFluxAxis(Float64 amplitude);
     Int32 GetIsmCoeff() const;
     Int32 GetIgmCoeff() const;
+    const TFloat64List& GetcomputedDustCoeffs() const;
+    const TFloat64List& GetcomputedMeiksinCoeffs() const;
 
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end) const;
     Int32 GetIgmEndIndex() const;
@@ -202,6 +204,9 @@ Int32 CTemplate::GetIgmEndIndex() const
     }
     return m_Igm_kend;
 }
+
+inline const TFloat64List& CTemplate::GetcomputedDustCoeffs() const{ return m_computedDustCoeff;}
+inline const TFloat64List& CTemplate::GetcomputedMeiksinCoeffs() const{ return m_computedMeiksingCoeff;};
 
 typedef std::vector< std::shared_ptr<CTemplate> >          TTemplateRefList;
 typedef std::vector< std::shared_ptr< const CTemplate> >   TTemplateConstRefList;
