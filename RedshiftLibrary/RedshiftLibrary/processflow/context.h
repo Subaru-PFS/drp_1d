@@ -41,13 +41,14 @@ public:
 
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> rayCatalog,
+            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
             const std::string& paramsJSONString
             );
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
-  std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_inputContext->GetRayCatalog();}
+  std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const {return m_inputContext->GetRayCatalog(objectType);}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_inputContext->GetParameterStore();}
   std::shared_ptr<const CInputContext> GetInputContext() const {return m_inputContext;}
   std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}

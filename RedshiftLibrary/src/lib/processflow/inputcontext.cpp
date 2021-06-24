@@ -9,11 +9,13 @@ using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                             std::shared_ptr<CRayCatalog> rayCatalog,
+                             std::shared_ptr<CRayCatalog> gal_rayCatalog,
+                             std::shared_ptr<CRayCatalog> qso_rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
-  m_RayCatalog(std::move(rayCatalog)),
+  m_gal_RayCatalog(std::move(gal_rayCatalog)),
+  m_qso_RayCatalog(std::move(qso_rayCatalog)),
   m_ParameterStore(std::move(paramStore))
 {
     m_Spectrum->InitSpectrum(*m_ParameterStore);

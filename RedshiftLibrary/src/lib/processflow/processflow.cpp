@@ -86,7 +86,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                           ctx.m_ScopeStack);
                                       }
         
-        else if(qso_method=="linemodel"){
+        else if(qso_method=="linemodelsolve"){
             Log.LogInfo("Linemodel qso fitting...");
             CLineModelSolve Solve(ctx.m_ScopeStack,"qso",calibrationDirPath);
             Solve.Compute( ctx.GetInputContext(),

@@ -30,8 +30,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
-
+  
     Bool storeResult = false;
     m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");

@@ -275,7 +275,8 @@ public:
   CProcessFlowContext();
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> rayCatalog,
+            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
             const std::string& paramsJSONString);
   std::shared_ptr<COperatorResultStore> GetResultStore();
   void testResultStore();

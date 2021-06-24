@@ -275,7 +275,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
   PopulateParameters( inputContext->GetParameterStore() );
 
   bool retSolve = Solve( resultStore,
