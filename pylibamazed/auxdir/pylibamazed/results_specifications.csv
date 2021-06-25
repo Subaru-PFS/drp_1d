@@ -47,3 +47,7 @@ PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts	list[double]
 PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]	
 ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]	0.00E+00
 ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]	0.00E+00
+LinemeasRaysLambda	linemeas	f8	linemeas	multi	True	object	FittedRaysLambda	list[double]	
+LinemeasRaysLambdaRest	linemeas	f8	linemeas	multi	False	object	rayLambdaRest	list[double]	
+LinemeasRaysID	linemeas	i	linemeas	multi	False	object	rayId	list[int]	
+LinemeasRaysFlux	linemeas	f8	linemeas	multi	False	object	FittedRaysFlux	list[double]	

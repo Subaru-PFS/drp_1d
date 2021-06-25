@@ -3,6 +3,8 @@
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+
 
 #include <sstream>
 #include <boost/filesystem.hpp>
@@ -176,8 +178,38 @@ Float64 CLineModelElement::GetVelocity()
     }
     return vel;
 }
-//wrapper function 
-void CLineModelElement::SetAsymfitParams(TAsymParams params, Int32 idx)
+
+void CLineModelElement::setVelocity(Float64 vel)
+{
+    if(m_Rays.size()>0)
+    {
+        if(m_Rays[0].GetIsEmission())
+        {
+            m_VelocityEmission = vel;
+        }else{
+            m_VelocityAbsorption = vel;
+        }
+    }
+    else throw GlobalException(INTERNAL_ERROR,"Empty line model element, could not set velocity");
+
+}
+
+void CLineModelElement::SetAsymfitWidthCoeff(Float64 coeff)
+{
+    m_asymfit_sigma_coeff = coeff;
+}
+
+Float64 CLineModelElement::GetAsymfitWidthCoeff()
+{
+    return m_asymfit_sigma_coeff;
+}
+
+void CLineModelElement::SetAsymfitAlphaCoeff(Float64 coeff)
+{
+    m_asymfit_alpha = coeff;
+}
+
+Float64 CLineModelElement::GetAsymfitAlphaCoeff()
 {
     if(!m_asymLineIndices.size()) return;
     if(idx>=0){

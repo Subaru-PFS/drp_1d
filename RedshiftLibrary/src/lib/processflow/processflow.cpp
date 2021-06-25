@@ -15,6 +15,7 @@
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
@@ -98,8 +99,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Galaxy method
 
-
-    if(true)
+    if(ctx.GetParameterStore()->Get<std::string>( "enablegalaxysolve")=="yes")
       {
         std::string methodName;
         ctx.GetParameterStore()->Get( "galaxy.method", methodName );
@@ -155,19 +155,30 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-
-    {
-      CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
-      classifier.Compute(ctx.GetInputContext(),
-                         ctx.GetResultStore(),
-                         ctx.m_ScopeStack);
-    }
-    {
-      CReliabilitySolve reliability(ctx.m_ScopeStack,"reliability");
-      reliability.Compute(ctx.GetInputContext(),
+    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="no")
+      {
+        {
+          CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
+          classifier.Compute(ctx.GetInputContext(),
+                             ctx.GetResultStore(),
+                             ctx.m_ScopeStack);
+        }
+        {
+          CReliabilitySolve reliability(ctx.m_ScopeStack,"reliability");
+          reliability.Compute(ctx.GetInputContext(),
+                              ctx.GetResultStore(),
+                              ctx.m_ScopeStack);
+        }
+      }
+    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="yes")
+      {
+        CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas");
+        solve.Compute(ctx.GetInputContext(),
                           ctx.GetResultStore(),
                           ctx.m_ScopeStack);
-    }
+
+      }
+    
 }
 
 /**

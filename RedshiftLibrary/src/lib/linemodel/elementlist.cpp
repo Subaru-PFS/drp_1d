@@ -18,6 +18,8 @@
 #include "RedshiftLibrary/spectrum/io/fitswriter.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/common/quicksort.h"
@@ -137,7 +139,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_Regulament.EnableRulesAccordingToParameters ( m_rulesoption );
 
     // Load the line catalog
-    Log.LogDebug( "About to load catalog." );
+    Log.LogDebug( "About to load line catalog." );
     if(m_rigidity != "tplshape")
     {
         //load the regular catalog
@@ -268,6 +270,13 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceLyaFitting = m_opt_lya_forcefit;
         Log.LogDetail("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
+    if(iPass==3)
+      {
+        m_forceDisableLyaFitting =false;
+        m_forcedisableTplratioISMfit = false;
+        m_forcedisableMultipleContinuumfit=false;
+        m_enableAmplitudeOffsets = true;
+      }
 
     return true;
 }
@@ -6189,6 +6198,39 @@ void CLineModelElementList::SetVelocityEmission(Float64 vel)
     {
         m_Elements[j]->SetVelocityEmission(vel);
     }
+}
+
+void CLineModelElementList::setVelocity(Float64 vel,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->setVelocity(vel);
+    }
+}
+
+
+//TODO rayType may be useless, because element are homogeneous in rayType, but maybe m_velocityEmission and m_velocityAbsorption are useful ?
+void CLineModelElementList::setVelocity(Float64 vel,Int32 idxElt,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+  if(idxElt<m_Elements.size())
+    {
+        m_Elements[idxElt]->setVelocity(vel);
+    }
+  else throw GlobalException(INTERNAL_ERROR,Formatter()<<"Wrong index for line model element "<<idxElt);
 }
 
 void CLineModelElementList::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)

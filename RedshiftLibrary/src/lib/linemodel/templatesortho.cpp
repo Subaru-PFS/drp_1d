@@ -56,6 +56,7 @@ m_LSF(lsf)
                                     rigidity);
             if(ret!=0)
             {
+              Log.LogError("error in orthogonalization");
                 //do something...
             }
             }

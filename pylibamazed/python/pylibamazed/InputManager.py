@@ -20,7 +20,7 @@ class InputManager:
         if not os.access(os.path.expanduser(self.config["calibration_dir"]), os.R_OK):
             raise Exception("Calibration directory " + self.config["calibration_dir"] + " does not exist")
 
-        if "linemodelsolve" in amazed_parameters["galaxy"] \
+        if amazed_parameters["enablegalaxysolve"] == "yes" and "linemodelsolve" in amazed_parameters["galaxy"] \
                 and "tplratio_catalog" in amazed_parameters["galaxy"]["linemodelsolve"]["linemodel"]:
             self.tpl_ratio_catalog = amazed_parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_catalog"]
         else:

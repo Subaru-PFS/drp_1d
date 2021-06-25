@@ -110,6 +110,7 @@ class CLineModelElement
     void SetVelocityAbsorption(Float64 vel);
     Float64 GetVelocityAbsorption();
     Float64 GetVelocity();
+  void setVelocity(Float64 vel);
 
     void SetSourcesizeDispersion(Float64 sigma);
 

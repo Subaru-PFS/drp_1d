@@ -25,8 +25,10 @@
 #include <boost/numeric/conversion/bounds.hpp>
 //#include <boost/progress.hpp>
 
-#include "RedshiftLibrary/processflow/datastore.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+
 
 #include <algorithm> // std::sort
 #include <assert.h>
@@ -641,6 +643,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::string> chisquareResultsTplName;
 
     bool fftprocessing = m_model->GetPassNumber()==1 ? m_opt_tplfit_fftprocessing : m_opt_tplfit_fftprocessing_secondpass;
+    Log.LogInfo(Formatter()<<" redshtplfitsize "<<redshiftsTplFit.size());
     const Int32 fftprocessing_min_sample_nb = 100; // warning arbitrary number of redshift samples threshold below which 
                                              // fftprocessing is considered slower
                                              // TB revised
@@ -736,11 +739,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     {
         std::string category = tplCategoryList[i];
         //for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category); j++)
+        Log.LogDebug(Formatter()<<"Processing "<< tplCatalog.GetTemplateCount(category) << " templates");
+
         for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
             //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
-            
+            Log.LogDebug(Formatter()<<"Processing tpl "<< tpl->GetName());
             //case where we only want to refit using one template:
             if( m_continnuum_fit_option == 3){
                 if(tpl->GetName() != m_firstpass_extremaResult->FittedTplName[candidateIdx])
@@ -845,7 +850,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     tplfitStore->m_opt_fitcontinuum_maxCount = (m_opt_fitcontinuum_maxN == -1? tplfitStore->GetContinuumCount(): v); 
     Log.LogInfo("  Operator-Linemodel: fitStore with fitcontinuum_maxCount set to %f", tplfitStore->m_opt_fitcontinuum_maxCount);
     
-    if(m_model->GetPassNumber() == 1)//firstpass
+    if(m_model->GetPassNumber() == 1 || m_model->GetPassNumber() == 3)//firstpass
         m_tplfitStore_firstpass = tplfitStore;
     else{//secondpass
         m_tplfitStore_secondpass[candidateIdx] = tplfitStore;
@@ -2225,4 +2230,274 @@ Float64 COperatorLineModel::FitBayesWidth(const CSpectrumSpectralAxis &spectralA
         minc = 0;
     }
     return minc;
+}
+
+
+CLineModelSolution COperatorLineModel::fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift)
+{
+  /*  CDataStore &datastore = context.GetDataStore();
+  const TFloat64Range &lambdaRange = context.GetLambdaRange();
+  Float64 redshift_min = datastore.GetFloat64Range("redshiftrange").GetBegin();
+  Float64 redshift_max = datastore.GetFloat64Range("redshiftrange").GetEnd();
+  CLineModelSolution modelSolution;
+  CLineModelSolution bestModelSolution;
+
+  CContinuumModelSolution continuumModelSolution;
+
+  m_model->SetFittingMethod("hybrid");
+
+    if (opt_rigidity == "tplshape")
+    {
+    m_model->SetFittingMethod("individual");
+    }
+
+  m_model->SetForcedisableTplratioISMfit(true);//m_model->m_opt_firstpass_forcedisableTplratioISMfit); //todo, add new param for this ?
+
+  //TODO these params should be in a dedicated scope "velocityfit"
+  datastore.PushScope("linemodel");
+  const Float64&velfitMinE = datastore.GetScopedFloat64Param("emvelocityfitmin");
+  const Float64&velfitMaxE = datastore.GetScopedFloat64Param("emvelocityfitmax");
+  const Float64&velfitStepE = datastore.GetScopedFloat64Param("emvelocityfitstep");
+  const Float64&velfitMinA = datastore.GetScopedFloat64Param("absvelocityfitmin");
+  const Float64&velfitMaxA = datastore.GetScopedFloat64Param("absvelocityfitmax");
+  const Float64&velfitStepA = datastore.GetScopedFloat64Param("absvelocityfitstep");
+  const Float64&opt_manvelfit_dzmin = datastore.GetScopedFloat64Param("manvelocityfitdzmin");
+  const Float64&opt_manvelfit_dzmax = datastore.GetScopedFloat64Param("manvelocityfitdzmax");
+  const Float64&opt_manvelfit_dzstep = datastore.GetScopedFloat64Param("manvelocityfitdzstep");
+  datastore.PopScope();
+  
+  //TODO there should be a mapping between this variable and opt_continuumreest
+  Int32 contreest_iterations = 0; 
+  // contreest_iterations = 1;
+
+
+  //output
+  TFloat64List GroupsElv;
+  TFloat64List GroupsAlv;
+  Float64 Elv,Alv;
+  
+  Float64 dzInfLim = roundf(opt_manvelfit_dzmin*10000)/10000;//set precision to 10^4
+  Float64 dzStep = opt_manvelfit_dzstep;
+  Float64 dzSupLim = roundf(10000*opt_manvelfit_dzmax)/10000;
+
+  TFloat64List velFitEList = TFloat64Range(velfitMinE,velfitMaxE).SpreadOver(velfitStepE);
+  TFloat64List velFitAList = TFloat64Range(velfitMinA,velfitMaxA).SpreadOver(velfitStepA);
+  
+  // Prepare velocity grid to be checked
+  // TODO log grid ?
+
+  if (redshift + dzInfLim < redshift)
+    {
+      dzInfLim = redshift_min - redshift;
+    }
+  if (redshift + dzSupLim > redshift_max)
+    {
+      dzSupLim = redshift_max - redshift;
+    }
+  TFloat64List zList = TFloat64Range(redshift-opt_manvelfit_dzmin,redshift+opt_manvelfit_dzmax).SpreadOver(opt_manvelfit_dzstep);
+
+  fitVelocityByGroups(velFitEList,zList,CRay::nType_Emission);
+  fitVelocityByGroups(velFitAList,zList,CRay::nType_Absorption);
+
+*/
+    CLineModelSolution clms;
+  return clms;
+}
+
+void COperatorLineModel::fitVelocityByGroups(std::vector<Float64> velfitlist,
+                                            std::vector<Float64> zfitlist,
+                                            Int32 rayType)
+{
+  Int32 nVelSteps = velfitlist.size();
+
+  std::vector<std::vector<Int32>> idxVelfitGroups = m_model->GetModelVelfitGroups(rayType);
+  TFloat64List GroupsV;
+
+  for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
+    {
+      Log.LogDetail("  Operator-Linemodel: manualStep fitting group=%d", kgroup);
+
+      Float64 meritMin = DBL_MAX;
+      Float64 vOptim = -1.0;
+      Float64 z_vOptim = -1.0;
+      for (Int32 kdz = 0; kdz < zfitlist.size(); kdz++)
+        {
+          Float64 dzTest = zfitlist[kdz];
+          for (Int32 kv = 0; kv < nVelSteps; kv++)
+            {
+              Float64 vTest = velfitlist[kv];
+              for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
+                {
+                  m_model->setVelocity(vTest,idxVelfitGroups[kgroup][ke],rayType);
+                }
+            }
+        }
+    }
+         
+
+}
+
+CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inputContext,
+                                                          std::string calibrationDir,
+                                                          TFloat64List& redshiftsGrid)
+{
+
+  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
+
+  TStringList tplCategoryList({"linemeas"});
+  std::string opt_fittingmethod_ortho = "hybrid";
+  std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
+  std::string opt_enableLSF = "no";
+  Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport");
+  Float64 opt_resolution = params->GetScoped<Float64>("instrumentresolution");
+  Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");
+  Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");
+  std::string opt_rules =params->GetScoped<std::string>("rules");
+  std::string opt_rigidity =params->GetScoped<std::string>("rigidity");
+  std::string opt_tplratio_reldirpath = params->GetScoped<std::string>( "tplratio_catalog");
+  std::string opt_offsets_reldirpath = params->GetScoped<std::string>( "offsets_catalog");
+  CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(-1,-1);
+  m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit") == "yes";
+  bool enableOrtho = true;
+  CTemplatesOrthogonalization tplOrtho(tplCatalog,
+                                       tplCategoryList,
+                                       calibrationDir,
+                                       restRayList,
+                                       opt_fittingmethod_ortho,
+                                       opt_lineWidthType,
+                                       opt_enableLSF,
+                                       opt_nsigmasupport,
+                                       opt_resolution,
+                                       opt_velocityEmission,
+                                       opt_velocityAbsorption,
+                                       opt_rules,
+                                       opt_rigidity,
+                                       enableOrtho);
+  CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
+   
+   Int32 ctlgIdx = 0; // only one ortho config for now
+    m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
+   
+
+  const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
+  bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
+  const std::string opt_fittingmethod="hybrid";
+  const std::string& opt_continuumcomponent = params->GetScoped<std::string>("continuumcomponent");
+  m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
+  
+  m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
+                                                                             tplCatalog,
+                                                                             tplCategoryList,
+                                                                             calibrationDir,
+                                                                             restRayList,
+                                                                             opt_fittingmethod,
+                                                                             opt_continuumcomponent,
+                                                                             m_opt_continuum_neg_amp_threshold,
+                                                                             opt_lineWidthType,
+                                                                             opt_enableLSF,
+                                                                             opt_nsigmasupport,
+                                                                             opt_resolution,
+                                                                             opt_velocityEmission,
+                                                                             opt_velocityAbsorption,
+                                                                             opt_rules,
+                                                                             opt_rigidity));
+  Float64 setssSizeInit = 0.1;
+  m_model->SetSourcesizeDispersion(setssSizeInit);
+  Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
+              setssSizeInit);
+  m_model->setPassMode(3);
+  /*
+  if (opt_rigidity == "tplshape")
+    {
+      // init catalog tplratios
+      Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
+      bool tplratioInitRet =
+        m_model->initTplratioCatalogs(opt_tplratio_reldirpath, m_opt_tplratio_ismFit);
+      if (!tplratioInitRet)
+        {
+          Log.LogError("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+          throw runtime_error("  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+        }
+
+      m_model->m_opt_firstpass_forcedisableTplratioISMfit = !m_opt_firstpass_tplratio_ismFit;
+
+      InitTplratioPriors();
+    }
+  */
+    // init catalog offsets
+  /*
+    Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
+    try
+    {
+        m_model->initLambdaOffsets(opt_offsets_reldirpath);
+    } catch (std::exception const &e)
+    {
+        Log.LogError("  Operator-Linemodel: Failed to init lambda offsets. "
+                     "Continuing without offsets...");
+        throw std::runtime_error("  Operator-Linemodel: Failed to init lambda offsets. "
+                     "Continuing without offsets...");
+    }
+  */
+    //commom between firstpass and secondpass processes
+    m_phelperContinuum = std::make_shared<CPriorHelper>();
+    m_phelperContinuum->Init(m_opt_tplfit_continuumprior_dirpath.c_str(), 0);
+    m_phelperContinuum->SetBetaA(m_opt_tplfit_continuumprior_betaA);
+    m_phelperContinuum->SetBetaTE(m_opt_tplfit_continuumprior_betaTE);
+    m_phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
+    m_model->SetFitContinuum_PriorHelper(m_phelperContinuum);
+
+  
+  Log.LogInfo("precompute continuum fit");
+  PrecomputeContinuumFit(spc, rebinnedSpc,
+                         *m_orthoTplCatalog,
+                         tplCategoryList,
+                         calibrationDir,
+                         lambdaRange,
+                         redshiftsGrid,
+                         opt_tplfit_ignoreLinesSupport);
+
+  
+  CLineModelSolution modelSolution;
+  CContinuumModelSolution continuumModelSolution;
+  CLineModelSolution bestModelSolution;
+  CContinuumModelSolution bestContinuumModelSolution;
+
+  Float64 bestScore=0;
+  Float64 bestz=NAN;
+  for (Float64 &z:redshiftsGrid)
+    {
+      Log.LogInfo(Formatter()<<"test with z="<<z);
+
+      Float64 score = m_model->fit(z,lambdaRange,modelSolution,continuumModelSolution,0,false);
+      if (score > bestScore)
+        {
+          bestScore = score;
+          bestModelSolution = modelSolution;
+          bestContinuumModelSolution = continuumModelSolution;
+          bestz=z;
+          Log.LogInfo(Formatter()<<"solution size "<< modelSolution.ElementId.size());
+        }
+    }
+
+    Log.LogInfo(Formatter()<<"best z="<<bestz);
+  
+
+  return bestModelSolution;
+  /*
+  m_model->SetFitContinuum_FitValues(m_firstpass_extremaResult.FittedTplName[i],
+                                     m_firstpass_extremaResult.FittedTplAmplitude[i],
+                                     m_firstpass_extremaResult.FittedTplAmplitudeError[i],
+                                     m_firstpass_extremaResult.FittedTplMerit[i],
+                                     m_firstpass_extremaResult.FittedTplDustCoeff[i],
+                                     m_firstpass_extremaResult.FittedTplMeiksinIdx[i],
+                                     m_firstpass_extremaResult.FittedTplRedshift[i],
+                                     m_firstpass_extremaResult.FittedTplDtm[i],
+                                     m_firstpass_extremaResult.FittedTplMtm[i],
+                                     m_firstpass_extremaResult.FittedTplLogPrior[i],
+                                     m_firstpass_extremaResult.FittedTplpCoeffs[i]);
+  */
 }

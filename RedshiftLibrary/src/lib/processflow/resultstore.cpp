@@ -167,6 +167,8 @@ std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogRe
 
 //std::shared_ptr<const CLineModelExtremaResult<TLineModelResult>>
 
+//TODO AA those getters should have an argument std::string dataset, rather than hard coded values
+
 std::shared_ptr<const TLineModelResult> COperatorResultStore::GetLineModelResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,
@@ -214,6 +216,15 @@ std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFitting
     
 {
   return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
+}
+
+std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFittingResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name 
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock());
 }
 
 std::shared_ptr<const CSpectraFluxResult> COperatorResultStore::GetSpectraFluxResult(const std::string& objectType,
@@ -266,9 +277,21 @@ bool COperatorResultStore::HasCandidateDataset(const std::string& objectType,
 						       const std::string& name ,
 						       const std::string& dataset) const
 {
-  
-  bool ret = GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
-  return ret;
+  if (HasDataset(objectType,method,name))
+    {
+      return  GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
+    }
+  else return false;
+}
+
+bool COperatorResultStore::HasDataset(const std::string& objectType,
+                                      const std::string& method,
+                                      const std::string& name ) const
+{
+  std::ostringstream oss;
+  oss << objectType << "." << method << "." << name;
+  TResultsMap::const_iterator it = m_GlobalResults.find( oss.str() );
+  return (it != m_GlobalResults.end());
 }
 
 
@@ -278,9 +301,14 @@ int COperatorResultStore::getNbRedshiftCandidates(const std::string& objectType,
 {
   std::ostringstream oss;
   oss << objectType << "." << method << ".candidatesresult" ;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+  TResultsMap::const_iterator it = m_GlobalResults.find( oss.str() );
+  if (it != m_GlobalResults.end())
+    {
+      std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
-  return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
+      return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
+    }
+  else return 0;
 
 }
 

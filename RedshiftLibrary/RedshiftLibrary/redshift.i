@@ -346,6 +346,11 @@ class COperatorResultStore
 								   const int& rank
 								   ) const  ;
 
+  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name 
+								   ) const  ;
+
   std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
 								     const std::string& method,
 								     const std::string& name ,
@@ -371,6 +376,10 @@ class COperatorResultStore
 			   const std::string& method,
 			   const std::string& name ,
 			   const std::string& dataset) const;
+
+      bool HasDataset(const std::string& objectType,
+			   const std::string& method,
+			   const std::string& name ) const;
 
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;

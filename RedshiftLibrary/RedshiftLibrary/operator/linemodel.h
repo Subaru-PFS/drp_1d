@@ -199,6 +199,7 @@ public:
 
 
   
+class CInputContext;
 /**
  * \ingroup Redshift
  */
@@ -299,6 +300,9 @@ public:
                                     const std::string &opt_continuumreest,
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
+  CLineModelSolution computeForLineMeas(std::shared_ptr<const CInputContext> context,
+                          std::string calibrationDir,
+                          TFloat64List& redshiftsGrid);
 
   std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,
@@ -364,6 +368,11 @@ public:
     //candidates
   std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
     COperatorLineModelExtremaResult m_secondpass_parameters_extremaResult;
+
+  CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
+  void fitVelocityByGroups(std::vector<Float64> velfitlist,
+                           std::vector<Float64> zfitlist,
+                           Int32 rayType);
 
 private:
 
