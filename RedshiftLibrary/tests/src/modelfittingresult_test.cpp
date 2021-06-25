@@ -18,10 +18,11 @@ BOOST_AUTO_TEST_SUITE(ModelFittingResult)
 BOOST_AUTO_TEST_CASE(Constructor)
 {
   CLineModelSolution lineModelSolution;
-  CRay ray1 = CRay("Abs",5500, 1, CRay::SYM, 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
-  CRay ray2 = CRay("Abs",5500, 2, CRay::SYM, 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
-  CRay ray3 = CRay("Abs",5500, 2, CRay::SYM, 1, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
-  CRay ray4 = CRay("Em",5520, 2, CRay::SYM, 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
+  CRay ray1 = CRay("Abs",5500, 1, profilesym, 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+  CRay ray2 = CRay("Abs",5500, 2, profilesym, 2, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+  CRay ray3 = CRay("Abs",5500, 2, profilesym, 1, 10.2, 10.3, 10.4 ,10.5 , 10.6, 10.7, "group", 10.8);
+  CRay ray4 = CRay("Em",5520, 2, profilesym, 2, 10.2, 10.3, 20.4 ,10.5 , 10.6, 10.7, "group", 10.8);
   CRayCatalog::TRayVector _restRayList = {ray1, ray2, ray3, ray4};
 
   TScopeStack scopeStack;

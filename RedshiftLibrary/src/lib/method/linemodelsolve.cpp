@@ -109,10 +109,10 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }
     parameterStore->GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
-	parameterStore->GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );    
 	parameterStore->GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     parameterStore->GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
-    parameterStore->GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
+    //instrumentResolution is now provided by LSF
+    parameterStore->Get( "LSF.resolution", m_opt_resolution, 2350.0 );
     parameterStore->GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     parameterStore->GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     parameterStore->GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
@@ -174,7 +174,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
-    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
     if(m_opt_lineWidthType=="combined"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
@@ -184,15 +183,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }else if(m_opt_lineWidthType=="instrumentdriven"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }else if(m_opt_lineWidthType=="velocitydriven"){
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispvsspsf201707"){
-        Log.LogInfo( "    -source size: hardcoded");
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispsim2016"){
         Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
@@ -850,7 +840,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         m_linemodel.m_opt_continuum_neg_amp_threshold = m_opt_continuum_neg_amp_threshold;
     }
 
-    m_linemodel.m_opt_enableLSF=m_opt_enableLSF;
 
     m_linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
     m_linemodel.m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;

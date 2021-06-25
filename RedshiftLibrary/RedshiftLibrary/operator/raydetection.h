@@ -6,12 +6,17 @@
 
 #include <RedshiftLibrary/operator/raydetectionresult.h>
 #include <RedshiftLibrary/spectrum/spectralaxis.h>
+//#include <RedshiftLibrary/ray/lineprofile.h>
+
+#include <RedshiftLibrary/ray/lineprofileASYM.h>
 
 namespace NSEpic
 {
 
 class CSpectrum;
 class CLineDetectionResult;
+class CLineProfileSYM;
+
 
 /**
  * \ingroup Redshift

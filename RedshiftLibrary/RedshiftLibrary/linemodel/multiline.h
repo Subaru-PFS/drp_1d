@@ -6,13 +6,14 @@
 #include <RedshiftLibrary/spectrum/spectrum.h>
 #include <RedshiftLibrary/common/range.h>
 #include <RedshiftLibrary/common/datatypes.h>
-
+#include <RedshiftLibrary/ray/lineprofile.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
 namespace NSEpic
 {
-
+class CLineProfileASYM;
+class CLineProfileASYMFIXED;
   /**
    * \ingroup Redshift
    */
@@ -21,7 +22,13 @@ class CMultiLine:public CLineModelElement
 
 public:
 
-    CMultiLine(std::vector<CRay> rs, const std::string& widthType, const Float64 nsigmasupport, const Float64 resolution, const Float64 velocityEmission, const Float64 velocityAbsorption, TFloat64List nominalAmplitudes, Float64 nominalWidth, TUInt32List catalogIndexes);
+    CMultiLine(std::vector<CRay> rs, 
+               const std::string& widthType,
+               const Float64 velocityEmission, 
+               const Float64 velocityAbsorption, 
+               TFloat64List nominalAmplitudes, 
+               Float64 nominalWidth, 
+               TUInt32List catalogIndexes);
     ~CMultiLine();
 
     std::string GetRayName(Int32 subeIdx);
@@ -74,7 +81,6 @@ public:
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
     bool SetAbsLinesLimit(Float64 limit);
-
 private:
     Int32 FindElementIndex(std::string LineTagStr);
 
@@ -86,7 +92,7 @@ private:
 
     Float64 m_absLinesLimit;
 
-    CRay::TProfileList  m_profile;
+    TProfileList  m_profile;
 
 
     TInt32List          m_StartNoOverlap;

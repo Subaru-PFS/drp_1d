@@ -9,7 +9,7 @@
 
 #include <RedshiftLibrary/ray/catalog.h>
 #include <RedshiftLibrary/spectrum/spectrum.h>
-
+#include <RedshiftLibrary/spectrum/LSF.h>
 #include <RedshiftLibrary/operator/templatefitting.h>
 
 #include <RedshiftLibrary/operator/linemodelresult.h>
@@ -36,13 +36,13 @@ public:
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
                                 const std::string &widthType,
-                                const std::string &opt_enable_LSF,
                                 const Float64 opt_nsigmasupport,
                                 const Float64 resolution,
                                 const Float64 velocityEmission,
                                 const Float64 velocityAbsorption,
                                 const std::string &opt_rules,
                                 const std::string &opt_rigidity,
+                                std::shared_ptr<const CLSF> lsf,
                                 bool enableOrtho=false);
 
     ~CTemplatesOrthogonalization();
@@ -53,13 +53,12 @@ public:
 private:
 
     bool m_enableOrtho;
-
+    std::shared_ptr<const CLSF> m_LSF = nullptr;
     Int32 OrthogonalizeTemplate(const CTemplate& inputTemplate,
                                 const std::string calibrationPath,
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
                                 const std::string &widthType,
-                                const std::string &opt_enable_LSF,
                                 const Float64 opt_nsigmasupport,
                                 const Float64 resolution,
                                 const Float64 velocityEmission,

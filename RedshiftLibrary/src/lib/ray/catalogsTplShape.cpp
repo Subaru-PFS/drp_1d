@@ -24,8 +24,10 @@ using namespace boost;
 Bool CRayCatalogsTplShape::Init( std::string calibrationPath, 
                                 std::string opt_tplratioCatRelPath, 
                                 Int32 enableISMCalzetti, 
-                                std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
+                                std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+                                Float64 nsigmasupport)
 {
+    m_nsigmasupport = nsigmasupport;
     //here we should only copy the ism instead of loading it
     if(opt_tplratioCatRelPath.size()<1)
     {
@@ -154,7 +156,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             CRayCatalog lineCatalog;
             try
             {
-                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str() );
+                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str(), m_nsigmasupport);
             }
             catch (std::string& e)
             {
@@ -496,54 +498,50 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
                 }
 
             }
-
-
         }
 
     }
     return true;
 }
 
-Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting)
+Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, 
+                                        Int32 iCatalog, 
+                                        bool forceLyaFitting,
+                                        const Float64 nsigmasupport)
 {
-    if(iCatalog<0){
+    if(iCatalog<0)
         return false;
-    }
+    
     linetags ltags;
     std::string lyaTag = ltags.lya_em;
+
     //loop the amplitudes in the iLine_st catalog in order to find Lya
     CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
     Int32 nLines = currentCatalogLineList.size();
+
     for(Int32 kL=0; kL<nLines; kL++)
     {
-        if(! (currentCatalogLineList[kL].GetName()==lyaTag.c_str()))
-        {
+        if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
             continue;
-        }
-	CRay::TProfile targetProfile = currentCatalogLineList[kL].GetProfile();
-    if(forceLyaFitting)
-    {
-        targetProfile = CRay::ASYMFIT;
-    }
+
+        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
+        
+        if(forceLyaFitting)
+            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
         {
             //get the max nominal amplitude
             Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++){
-
+            for(UInt32 j=0; j<nRays; j++)
+            {
                 if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
                 {
-                    TAsymParams asymParams = currentCatalogLineList[kL].GetAsymParams();
                     LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
-                    LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetAsymParams(asymParams);
                     break;
                 }
-
             }
-
-
         }
 
     }

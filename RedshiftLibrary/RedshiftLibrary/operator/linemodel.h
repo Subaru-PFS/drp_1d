@@ -348,7 +348,6 @@ public:
     std::string m_opt_tplratio_prior_dirpath="";
     std::string m_opt_continuumcomponent;
     Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
-    std::string m_opt_enableLSF;
 
     std::string m_opt_lya_forcefit;
     std::string m_opt_lya_forcedisablefit;

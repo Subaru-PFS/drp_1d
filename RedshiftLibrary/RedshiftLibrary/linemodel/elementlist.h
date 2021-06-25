@@ -31,6 +31,9 @@
 namespace NSEpic
 {
   static Int32 defaultIdx = -1;
+  //to avoid circular dependency
+  class CLineProfileASYM;
+  class CLineProfileASYMFIXED;
 
 class CLineModelElementList
 {
@@ -46,7 +49,6 @@ public:
                           const std::string &opt_continuumcomponent,
                           const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
-                          const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
@@ -328,7 +330,12 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
-    void ActivateLSF();
+    TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
+                                    const Float64& redshift, 
+                                    const UInt32& idxLyaE,
+                                    const TUInt32List& filterEltsIdxLya, 
+                                    const UInt32& idxLineLyaE);
+    void SetLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);

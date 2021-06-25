@@ -208,7 +208,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   for(Int32 k=mu1-10; k<mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
-  CRay ray1 = CRay("Ray1",mu1, 2, CRay::SYM, 2, A1, sigma1, 5.6);
+  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
+  CRay ray1 = CRay("Ray1",mu1, 2, profilesym, 2, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -218,7 +219,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
-  CRay ray2 = CRay("Ray2",mu2, 2, CRay::SYM, 2, A2, sigma2, 5.8);
+  CRay ray2 = CRay("Ray2",mu2, 2, profilesym, 2, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 
@@ -265,7 +266,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=mu1-10; k<mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1)/(2*sigma1)) ;
   }
-  CRay ray1 = CRay("Ray1",mu1, 2, CRay::SYM, 2, A1, sigma1, 5.6);
+  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
+  CRay ray1 = CRay("Ray1",mu1, 2, profilesym, 2, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -275,7 +277,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=mu2-10; k<mu2+10; k++){
     modelfluxAxis[k]+=A2/(sigma2 *2.506597694086548) *exp(-(k-mu2)*(k-mu2)/(2*sigma2)/(2*sigma2)) ;
   }
-  CRay ray2 = CRay("Ray2",mu2, 2, CRay::SYM, 2, A2, sigma2, 5.8);
+  CRay ray2 = CRay("Ray2",mu2, 2, profilesym, 2, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 

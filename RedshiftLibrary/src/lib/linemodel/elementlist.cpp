@@ -27,7 +27,6 @@
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
-
 #include <stdlib.h>
 #include <stdio.h>
 //#include <gsl/gsl_rng.h>
@@ -37,8 +36,6 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include <numeric>
-
-
 using namespace NSEpic;
 using namespace std;
 
@@ -57,7 +54,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const std::string& opt_continuumcomponent,
                                              const Float64 opt_continuum_neg_threshold,
                                              const std::string& widthType,
-                                             const std::string & opt_enable_LSF,
                                              const Float64 nsigmasupport,
                                              const Float64 resolution,
                                              const Float64 velocityEmission,
@@ -170,7 +166,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     }
     */
 
-    if (opt_enable_LSF=="yes") ActivateLSF();
+    SetLSF();
 
 }
 
@@ -202,7 +198,8 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
     bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
                                       opt_tplratioCatRelPath, 
                                       opt_tplratio_ismFit, 
-                                      m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti);
+                                      m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti,
+                                      m_NSigmaSupport);
     if(!ret)
     {
         Log.LogError("Unable to initialize the the tpl-shape catalogs. aborting...");
@@ -717,7 +714,7 @@ void CLineModelElementList::LoadCatalog(const CRayCatalog::TRayVector& restRayLi
         }
         if(lines.size()>0)
         {
-            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -737,7 +734,7 @@ void CLineModelElementList::LoadCatalogOneMultiline(const CRayCatalog::TRayVecto
 
     if(lines.size()>0)
     {
-        m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+        m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
     }
 }
 
@@ -761,7 +758,7 @@ void CLineModelElementList::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVe
 
         if(lines.size()>0)
         {
-            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
+            m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, m_nominalWidthDefaultAbsorption, inds)));
         }
     }
 }
@@ -885,7 +882,7 @@ void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, I
         m_fitContinuum_tplFitEbmvCoeff = fitValues.ismEbmvCoeff;
         m_fitContinuum_tplFitMeiksinIdx = fitValues.igmMeiksinIdx;
         m_fitContinuum_tplFitRedshift = m_Redshift;
-        m_fitContinuum_tplFitDtM = fitValues.fitDtM;;
+        m_fitContinuum_tplFitDtM = fitValues.fitDtM;
         m_fitContinuum_tplFitMtM = fitValues.fitMtM;
         m_fitContinuum_tplFitLogprior = fitValues.logprior;
         m_fitContinuum_tplFitPolyCoeffs = {};
@@ -1460,6 +1457,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
     //prepare the elements support
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
+        m_Elements[iElts]->resetAsymfitParams();
         m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
     }
 
@@ -1468,7 +1466,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting);
+    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
     m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, itplshape );
 
@@ -2233,10 +2231,11 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                                 m_FittedErrorTplshape[ifitting][iElts] = amp_error/nominal_amp;
                                 m_DtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumCross();
                                 m_MtmTplshape[ifitting][iElts] = m_Elements[iElts]->GetSumGauss();
-
-                                m_LyaAsymCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitAlphaCoeff();
-                                m_LyaWidthCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitWidthCoeff();
-                                m_LyaDeltaCoeffTplshape[ifitting][iElts] = m_Elements[iElts]->GetAsymfitDelta();
+                                
+                                TAsymParams params = m_Elements[iElts]->GetAsymfitParams(0);
+                                m_LyaAsymCoeffTplshape[ifitting][iElts] = params.alpha;
+                                m_LyaWidthCoeffTplshape[ifitting][iElts] = params.sigma;
+                                m_LyaDeltaCoeffTplshape[ifitting][iElts] = params.delta;
 
                                 savedAmp=true;
                                 break;
@@ -2328,14 +2327,12 @@ Float64 CLineModelElementList::fit(Float64 redshift,
             }
 
             //Lya
-            //*
             for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
-                m_Elements[iElts]->SetAsymfitAlphaCoeff(m_LyaAsymCoeffTplshape[savedIdxFitted][iElts]);
-                m_Elements[iElts]->SetAsymfitWidthCoeff(m_LyaWidthCoeffTplshape[savedIdxFitted][iElts]);
-                m_Elements[iElts]->SetAsymfitDelta(m_LyaDeltaCoeffTplshape[savedIdxFitted][iElts]);
+                m_Elements[iElts]->SetAsymfitParams({m_LyaWidthCoeffTplshape[savedIdxFitted][iElts], 
+                                    m_LyaAsymCoeffTplshape[savedIdxFitted][iElts], 
+                                    m_LyaDeltaCoeffTplshape[savedIdxFitted][iElts]});
             }
-            //*/
 
             refreshModel();
 
@@ -2433,8 +2430,8 @@ void CLineModelElementList::reinitModel()
             throw runtime_error("CLineModelElementList::reinitModel: NaN value found");
             break;
         }
-    }
-    */
+    }*/
+    
 
     //init spectrum model with continuum
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -3579,9 +3576,9 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElementsBySupport( UInt
     CRay ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    CRay::TProfile profile = ray.GetProfile();
-    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission(), profile);
-    Float64 winsize = m_Elements[ind]->GetNSigmaSupport(profile)*c;
+    std::shared_ptr<CLineProfile> profile = ray.GetProfile();
+    Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
+    Float64 winsize = profile->GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
 
@@ -3684,17 +3681,17 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, co
             for( UInt32 iRayRef=0; iRayRef<raysRef.size(); iRayRef++ )
             {
                 Float64 muRef = raysRef[iRayRef].GetPosition()*(1+m_Redshift);
-                CRay::TProfile profileRef = raysRef[iRayRef].GetProfile();
-                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission(), profileRef);
-                Float64 winsizeRef = m_Elements[ind]->GetNSigmaSupport(profileRef)*cRef;
+                std::shared_ptr<CLineProfile> profileRef = raysRef[iRayRef].GetProfile();
+                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, m_Redshift, raysRef[iRayRef].GetIsEmission());
+                Float64 winsizeRef = profileRef->GetNSigmaSupport()*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
                 xinf = muRef-winsizeRef/2.0;
                 xsup = muRef+winsizeRef/2.0;
 
                 Float64 muElt = raysElt[iRayElt].GetPosition()*(1+m_Redshift);
-                CRay::TProfile profileElt = raysElt[iRayElt].GetProfile();
-                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission(), profileElt);
-                Float64 winsizeElt = m_Elements[iElts]->GetNSigmaSupport(profileElt)*cElt;
+                std::shared_ptr<CLineProfile> profileElt = raysElt[iRayElt].GetProfile();
+                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, m_Redshift, raysElt[iRayElt].GetIsEmission());
+                Float64 winsizeElt = profileElt->GetNSigmaSupport()*cElt;
                 yinf = muElt-winsizeElt/2.0;
                 ysup = muElt+winsizeElt/2.0;
 
@@ -4331,20 +4328,18 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
     for(Int32 iray=0; iray<nrays; iray++)
     {
         Int32 lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[iray];
-        CRay::TProfile profile = m_RestRayList[lineIndex].GetProfile();
+        std::shared_ptr<CLineProfile> profile = m_RestRayList[lineIndex].GetProfile();
         bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
-        if( profile==CRay::ASYMFIT && !lineOutsideLambdaRange)
+
+        if( profile->isAsymFit() && !lineOutsideLambdaRange)
         {
             asimfitProfileFound = true;
             break;
-        }else if(profile==CRay::ASYMFIXED)
+        }else if(profile->isAsymFixed())
         {
             //use the manual fixed profile parameters from catalog profile string
             asimfixedProfileFound = true;
-            TAsymParams asym_params = m_RestRayList[lineIndex].GetAsymParams();
-            m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asym_params.width);
-            m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asym_params.alpha);
-            m_Elements[idxLyaE]->SetAsymfitDelta(asym_params.delta);
+            m_Elements[idxLyaE]->SetAsymfitParams(m_RestRayList[lineIndex].GetAsymParams()); 
             break;
         }
     }
@@ -4361,81 +4356,81 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
             Log.LogInfo("Fitting Lya Profile: width, asym, delta");
         }
         //3. find the best width and asym coeff. parameters
-        Float64 widthCoeffStep = m_opt_lya_fit_width_step;
-        Float64 widthCoeffMin = m_opt_lya_fit_width_min;
-        Float64 widthCoeffMax = m_opt_lya_fit_width_max;
-        Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+1.5);
-        Float64 asymCoeffStep = m_opt_lya_fit_asym_step;
-        Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
-        Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
-        Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
-        Float64 deltaStep = m_opt_lya_fit_delta_step;
-        Float64 deltaMin = m_opt_lya_fit_delta_min;
-        Float64 deltaMax = m_opt_lya_fit_delta_max;
-        Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+1.5);
-
-        Float64 bestWidth = widthCoeffMin;
-        Float64 bestAlpha = asymCoeffMin;
-        Float64 bestDelta = deltaMin;
-        Float64 meritMin = boost::numeric::bounds<float>::highest();
-
-        for(Int32 iDelta=0; iDelta<nDeltaSteps; iDelta++)
-        {
-            Float64 delta = deltaMin + deltaStep*iDelta;
-            for(Int32 iWidth=0; iWidth<nWidthSteps; iWidth++)
-            {
-                Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep*iWidth;
-                for(Int32 iAsym=0; iAsym<nAsymSteps; iAsym++)
-                {
-                    Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep*iAsym;
-
-                    m_Elements[idxLyaE]->SetAsymfitDelta(delta);
-                    m_Elements[idxLyaE]->SetAsymfitWidthCoeff(asymWidthCoeff);
-                    m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(asymAlphaCoeff);
-
-                    //idxLineLyaE = -1;
-                    m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift, idxLineLyaE);
-
-
-                    Float64 m = m_dTransposeD;
-                    if(1)
-                    {
-                        refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
-                        m = getModelErrorUnderElement(idxLyaE);
-                    }else{
-                        m = getLeastSquareMeritFast(idxLyaE);
-                    }
-                    if( m<meritMin )
-                    {
-                        meritMin = m;
-                        bestWidth = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
-                        bestAlpha = m_Elements[idxLyaE]->GetAsymfitAlphaCoeff();
-                        bestDelta = m_Elements[idxLyaE]->GetAsymfitDelta();
-                    }
-
-                    if(verbose)
-                    {
-                        Log.LogInfo("Fitting Lya Profile: width=%f, asym=%f, delta=%f", asymWidthCoeff, asymAlphaCoeff, delta);
-                        Log.LogInfo("Fitting Lya Profile: merit=%e", m);
-                        Log.LogInfo("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE, idxLineLyaE);
-                    }
-                }
-            }
-        }
-
+        TAsymParams bestfitParams = FitAsymParameters(spectralAxis, redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
         //4. set the associated Lya members in the element definition
-        if(verbose)
-        {
-            Log.LogInfo("Lya Profile found: width=%f, asym=%f, delta=%f", bestWidth, bestAlpha, bestDelta);
-        }
-        m_Elements[idxLyaE]->SetAsymfitWidthCoeff(bestWidth);
-        m_Elements[idxLyaE]->SetAsymfitAlphaCoeff(bestAlpha);
-        m_Elements[idxLyaE]->SetAsymfitDelta(bestDelta);
+        m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
     }
 
     return 1;
 }
+TAsymParams CLineModelElementList::FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
+                                                    const Float64& redshift, 
+                                                    const UInt32& idxLyaE,
+                                                    const TUInt32List& filterEltsIdxLya, 
+                                                    const UInt32& idxLineLyaE)
+{
 
+    //3. find the best width and asym coeff. parameters
+    Float64 widthCoeffStep = m_opt_lya_fit_width_step;
+    Float64 widthCoeffMin = m_opt_lya_fit_width_min;
+    Float64 widthCoeffMax = m_opt_lya_fit_width_max;
+    Int32 nWidthSteps = int((widthCoeffMax-widthCoeffMin)/widthCoeffStep+1.5);
+    Float64 asymCoeffStep = m_opt_lya_fit_asym_step;
+    Float64 asymCoeffMin = m_opt_lya_fit_asym_min;
+    Float64 asymCoeffMax = m_opt_lya_fit_asym_max;
+    Int32 nAsymSteps = int((asymCoeffMax-asymCoeffMin)/asymCoeffStep+1.5);
+    Float64 deltaStep = m_opt_lya_fit_delta_step;
+    Float64 deltaMin = m_opt_lya_fit_delta_min;
+    Float64 deltaMax = m_opt_lya_fit_delta_max;
+    Int32 nDeltaSteps = int((deltaMax-deltaMin)/deltaStep+1.5);
+
+    TAsymParams bestparams = {widthCoeffMin, asymCoeffMin, deltaMin};
+    Float64 meritMin = boost::numeric::bounds<float>::highest();
+
+    bool verbose = false;
+    for(Int32 iDelta=0; iDelta<nDeltaSteps; iDelta++)
+    {
+        Float64 delta = deltaMin + deltaStep*iDelta;
+        for(Int32 iWidth=0; iWidth<nWidthSteps; iWidth++)
+        {
+            Float64 asymWidthCoeff = widthCoeffMin + widthCoeffStep*iWidth;
+            for(Int32 iAsym=0; iAsym<nAsymSteps; iAsym++)
+            {
+                Float64 asymAlphaCoeff = asymCoeffMin + asymCoeffStep*iAsym;
+                m_Elements[idxLyaE]->SetAsymfitParams({asymWidthCoeff, asymAlphaCoeff, delta});
+
+                //idxLineLyaE = -1;
+                m_Elements[idxLyaE]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift, idxLineLyaE);
+
+                Float64 m = m_dTransposeD;
+                if(1)
+                {
+                    refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
+                    m = getModelErrorUnderElement(idxLyaE);
+                }else{
+                    m = getLeastSquareMeritFast(idxLyaE);
+                }
+                if( m<meritMin )
+                {
+                    meritMin = m;
+                    bestparams = m_Elements[idxLyaE]->GetAsymfitParams(0);
+                }
+
+                if(verbose)
+                {
+                    Log.LogInfo("Fitting Lya Profile: width=%f, asym=%f, delta=%f", asymWidthCoeff, asymAlphaCoeff, delta);
+                    Log.LogInfo("Fitting Lya Profile: merit=%e", m);
+                    Log.LogInfo("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE, idxLineLyaE);
+                }
+            }
+        }
+    }
+    if(verbose)
+    {
+        Log.LogInfo("Lya Profile found: width=%f, asym=%f, delta=%f", bestparams.sigma, bestparams.alpha, bestparams.delta);
+    }
+    return bestparams;
+}
 
 /**
 * @brief CLineModelElementList::ReestimateContinuumUnderLines
@@ -5459,7 +5454,7 @@ void CLineModelElementList::addDoubleLine(const CRay &r1, const CRay &r2, Int32 
     std::vector<UInt32> a;
     a.push_back(index1);
     a.push_back(index2);
-    m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_NSigmaSupport, m_resolution, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
+    m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CMultiLine(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
 }
 
 /**
@@ -5517,9 +5512,7 @@ Int32 CLineModelElementList::LoadModelSolution(const CLineModelSolution&  modelS
     Int32 idxLyaE = FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
     {
-        m_Elements[idxLyaE]-> SetAsymfitWidthCoeff(modelSolution.LyaWidthCoeff );
-        m_Elements[idxLyaE]-> SetAsymfitAlphaCoeff(modelSolution.LyaAlpha );
-        m_Elements[idxLyaE]-> SetAsymfitDelta(modelSolution.LyaDelta);
+        m_Elements[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff, modelSolution.LyaAlpha , modelSolution.LyaDelta});
     }
   }
   SetVelocityEmission(modelSolution.EmissionVelocity);
@@ -5736,13 +5729,13 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                     {
-                        flux = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, amp);
-                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, ampError);
+                        flux = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, ampError);
                     }else{
                         Float64 _amp = cont*amp;
                         Float64 _ampError = cont*ampError;
-                        flux = -m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _amp);
-                        fluxError = m_Elements[eIdx]->GetLineFlux(m_RestRayList[iRestRay].GetProfile(), sigma, _ampError);
+                        flux = -m_RestRayList[iRestRay].GetProfile()->GetLineFlux( _amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, _ampError);
                     }
                 }
                 modelSolution.Sigmas.push_back(sigma);
@@ -5826,9 +5819,10 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
     Int32 idxLyaE = FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
     {
-        modelSolution.LyaWidthCoeff = m_Elements[idxLyaE]->GetAsymfitWidthCoeff();
-        modelSolution.LyaAlpha = m_Elements[idxLyaE]->GetAsymfitAlphaCoeff();
-        modelSolution.LyaDelta = m_Elements[idxLyaE]->GetAsymfitDelta();
+        TAsymParams params = m_Elements[idxLyaE]->GetAsymfitParams(0);
+        modelSolution.LyaWidthCoeff = params.sigma;
+        modelSolution.LyaAlpha = params.alpha;
+        modelSolution.LyaDelta = params.delta;
     }
     modelSolution.EmissionVelocity = m_velocityEmission;
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
@@ -6175,21 +6169,21 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
     }
 }
 
-void CLineModelElementList::ActivateLSF()
+void CLineModelElementList::SetLSF()
 {
     const std::shared_ptr<const CLSF> & lsf = m_inputSpc.GetLSF();
 
     if (lsf == nullptr){
-        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF spetrum member is not initialized");
-    }else if( ! lsf->IsValid()){
-        Log.LogError("%s: Cannot enable LSF, LSF spectrum member is not valid",__func__);
-        throw std::runtime_error("Cannot enable LSF, LSF spectrum member is not valid");
+        Log.LogError("CLineModelElementList::%s: Cannot enable LSF, LSF spectrum member is not initialized",__func__);
+        throw std::runtime_error("CLineModelElementList::Cannot enable LSF, LSF spetrum member is not initialized");
+    }else if( !lsf->IsValid()){
+        Log.LogError("CLineModelElementList::%s: Cannot enable LSF, LSF spectrum member is not valid",__func__);
+        throw std::runtime_error("CLineModelElementList::Cannot enable LSF, LSF spectrum member is not valid");
     }
 
     for(Int32 j=0; j<m_Elements.size(); j++)
     {
-        m_Elements[j]->ActivateLSF(lsf);
+        m_Elements[j]->SetLSF(lsf); //lsf has now a type to be used for width computations
     }
 }
 
