@@ -67,26 +67,17 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 void CInputContext::RebinInputWrapper() 
 {
     //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
-    //The drawback of the below code is that we are violating object and method scopes by trying to read "deep" info
-    //Another option could be to move fftprocessing to the object scope (vs object.method scope)
-    bool fft_processing = false, fft_processing_qso = false, fft_processing_star = false, fft_processinglmContinuum = false;
-    if(m_ParameterStore->Has<std::string>( "qso.templatefittingsolve.fftprocessing"))
-        fft_processing_qso = m_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>( "star.templatefittingsolve.fftprocessing"))
-        fft_processing_star = m_ParameterStore->Get<std::string>( "star.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.templatefittingsolve.fftprocessing"))
-        fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing"))
-        fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
-    /*if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing"))
-        fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
-    */
+    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
+    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
+    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing("star");
+    
     if(fft_processing_qso || fft_processing_star)
     {
         Log.LogError("FFT processing is not yet supported for stars or qso");
         throw std::runtime_error("FFT processing is not yet supported for star or qso");
     }
-    m_use_LogLambaSpectrum = fft_processing || fft_processing_qso || fft_processing_star || fft_processinglmContinuum;
+
+    m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
 
     if(!m_use_LogLambaSpectrum) return;
 
