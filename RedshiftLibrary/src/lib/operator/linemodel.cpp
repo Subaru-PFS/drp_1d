@@ -2349,7 +2349,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   TStringList tplCategoryList({"linemeas"});
-  std::string opt_fittingmethod_ortho = "hybrid";
+  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   std::string opt_enableLSF = "no";
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport");
@@ -2385,7 +2385,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
-  const std::string opt_fittingmethod="hybrid";
+  const std::string opt_fittingmethod=params->GetScoped<std::string>("fittingmethod");
   const std::string& opt_continuumcomponent = params->GetScoped<std::string>("continuumcomponent");
   m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
   
@@ -2472,7 +2472,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     {
       Log.LogInfo(Formatter()<<"test with z="<<z);
 
-      Float64 score = m_model->fit(z,lambdaRange,modelSolution,continuumModelSolution,0,false);
+      Float64 score = m_model->fit(z,lambdaRange,modelSolution,continuumModelSolution,0,true);
       if (score > bestScore)
         {
           bestScore = score;

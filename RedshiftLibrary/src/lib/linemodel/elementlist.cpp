@@ -2270,6 +2270,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     m_tplshapeBestTplMtm = m_MtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                 }
             }
+	    else savedIdxContinuumFitted = 0;
 
             //if(m_rigidity=="tplcorr")
             //{
@@ -2298,6 +2299,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 {
                     autoselect = 1;
                 }
+		//TODO savedIdxContinuumFitted=-1 if rigidity!=tplshape 
                 LoadFitContinuum(lambdaRange, savedIdxContinuumFitted, autoselect);
             }
             if(m_fittingmethod=="svdlc")
