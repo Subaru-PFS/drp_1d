@@ -7,17 +7,16 @@ void CTplCombinationResult::Init(UInt32 n , Int32 nISM, Int32 nIGM, Int32 compon
     ChiSquare.resize(n);
     FitEbmvCoeff.resize(n);
     FitMeiksinIdx.resize(n);
-    //FitDtM.resize(n);
-    FitMtM.resize(n);//covariance
+    FitCOV.resize(n);//covariance
     //LogPrior.resize(n);
     Redshifts.resize(n);
     Overlap.resize(n);
     Status.resize(n);
-    
+    SNR.resize(n);
     //Queue
     TFloat64List _ampList(componentSize, NAN);
     TFloat64List _chi2IGMList(nIGM, DBL_MAX);
-    TFloat64List _EbmvCoeffIGMList(nISM, -1.0);
+    TFloat64List _EbmvCoeffIGMList(nIGM, NAN);
     TInt32List   _meiksinIdxIGMList(nIGM, -1);
     
     //fill for each ism

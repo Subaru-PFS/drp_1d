@@ -1,6 +1,5 @@
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/operator/tplcombinationresult.h"
-#include "RedshiftLibrary/operator/modelCombinationcontinuumfittingresult.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -174,7 +173,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    TTemplateConstRefList tplList = tplCatalog.GetTemplate( TStringList{tplCategoryList[0]} );
+    TTemplateConstRefList tplList = tplCatalog.GetTemplate(tplCategoryList);
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();
@@ -370,7 +369,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     scope.append(scopeStr.c_str());
 
     Log.LogDetail("    tplCombinationSolve: using results in scope: %s", scope.c_str());
-    //in contraste to linemodel and TF, there is no perTemplateResults for tplCombination
+    //in contrast to linemodel and TF, there is no perTemplateResults for tplCombination
     auto results = store->GetGlobalResult(scope.c_str());
     if(results.expired())
     {
@@ -400,9 +399,8 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    TTemplateConstRefList tplList = tplCatalog.GetTemplate( TStringList{tplCategoryList[0]} );
+    TTemplateConstRefList tplList = tplCatalog.GetTemplate(tplCategoryList);
 
-    //std::shared_ptr<ExtremaResult> extremaResult = make_shared<ExtremaResult>(ranked_zCandidates);
     std::shared_ptr<TplCombinationExtremaResult> extremaResult = make_shared<TplCombinationExtremaResult>(ranked_zCandidates);
     Int32 extremumCount = ranked_zCandidates.size();
     for (Int32 i = 0; i < extremumCount; i++)
@@ -417,10 +415,10 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff= TplFitResult->FitEbmvCoeff[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeList= TplFitResult->FitAmplitude[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeErrorList= TplFitResult->FitAmplitudeError[idx];
-        extremaResult->m_ranked_candidates[i].second.FittedTplMtmMatrix= TplFitResult->FitMtM[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeSigmaList= TplFitResult->FitAmplitudeSigma[idx]; 
+        extremaResult->m_ranked_candidates[i].second.FittedTplCovMatrix= TplFitResult->FitCOV[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior= NAN;
-
-        extremaResult->m_ranked_candidates[i].second.FittedTplSNR= NAN;//TBD 2mr
+        extremaResult->m_ranked_candidates[i].second.FittedTplSNR= TplFitResult->SNR[idx];
         //make sure tpl is non-rebinned
         Bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;

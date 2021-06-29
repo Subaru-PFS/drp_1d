@@ -21,9 +21,7 @@ public:
     std::vector<TFloat64List>   FitAmplitude;
     std::vector<TFloat64List>   FitAmplitudeError;
     std::vector<TFloat64List>   FitAmplitudeSigma;
-    //TFloat64List            FitDtM;//not computed for tplCombination
-    std::vector<std::vector<TFloat64List>>            FitMtM; //corresponding to the covariance matrix
-    //TFloat64List            LogPrior;//not yet used 
+    std::vector<std::vector<TFloat64List>>   FitCOV;
 };
 
 }

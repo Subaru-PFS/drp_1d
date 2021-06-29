@@ -36,6 +36,7 @@ public:
     //TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed for correct prior use in marg. mode tplmodel method
 
     Float64                 CstLog;
+    TFloat64List            SNR;
     TFloat64List            Overlap;
     COperator::TStatusList  Status;
 

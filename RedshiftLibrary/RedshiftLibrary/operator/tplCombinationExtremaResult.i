@@ -10,7 +10,8 @@ class TTplCombinationResult: public TExtremaResult
 
     TFloat64List              FittedTplAmplitudeList;
     TFloat64List              FittedTplAmplitudeErrorList;
-    std::vector<TFloat64List> FittedTplMtmMatrix;
+    TFloat64List              FittedTplAmplitudeSigmaList;
+    std::vector<TFloat64List> FittedTplCovMatrix;
 
 };
 

@@ -2,13 +2,11 @@
 #define _REDSHIFT_TPLCOMBINATION_EXTREMARESULT_
 
 #include "RedshiftLibrary/operator/extremaresult.h"
-#include "RedshiftLibrary/operator/modelCombinationcontinuumfittingresult.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic
 {
   class CModelSpectrumResult;
-  class CModelContinuumTplCombinationFittingResult;
   class CSpectraFluxResult;
 
   #include "RedshiftLibrary/operator/tplCombinationExtremaResult.i"

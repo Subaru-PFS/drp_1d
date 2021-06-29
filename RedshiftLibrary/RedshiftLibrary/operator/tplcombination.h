@@ -26,7 +26,7 @@ class COperatorTplcombination
 public:
 
     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                             TTemplateConstRefList tplList,
+                                             const TTemplateConstRefList& tplList,
                                              const TFloat64Range& lambdaRange,
                                              const TFloat64List& redshifts,
                                              Float64 overlapThreshold,
@@ -41,7 +41,7 @@ public:
 
     Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range& range); //could be also made static
     Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,
-                                    TTemplateConstRefList tplList,
+                                    const TTemplateConstRefList& tplList,
                                     Float64 redshift,
                                     Float64 EbmvCoeff,
                                     Int32 meiksinIdx,
@@ -57,25 +57,26 @@ private:
         COperator::EStatus status;
         Float64     overlapRate;
         Float64     chisquare;
-        CSpectrum/*CModelSpectrumResult*/   modelSpectrum;
+        CSpectrum   modelSpectrum;
         TFloat64List    fittingAmplitudes;
-        TFloat64List    fittingErrors;
+        TFloat64List    fittingAmplitudeErrors;
+        TFloat64List    fittingAmplitudeSigmas;
         std::vector<TFloat64List>    ChiSquareInterm;
         std::vector<TFloat64List>    IsmCalzettiCoeffInterm;
         std::vector<TInt32List>      IgmMeiksinIdxInterm;
         std::vector<std::vector<TFloat64List>>    fittingAmplitudesInterm; //intermediate amplitudes
         std::vector<std::string> tplNames; //cause combination of templates
-        Int32 igmIdx;
-        Float64 ebmvCoeff;
-        Float64 snr;
-        std::vector<TFloat64List> MtM; 
+        Int32 IGMIdx;
+        Float64 EbmvCoeff;
+        Float64 SNR;
+        std::vector<TFloat64List> COV; 
     };
 
     void BasicFit_preallocateBuffers(const CSpectrum& spectrum,
-                                     TTemplateConstRefList tplList);
+                                     const TTemplateConstRefList& tplList);
 
     void BasicFit(const CSpectrum& spectrum,
-                  TTemplateConstRefList tplList,
+                  const TTemplateConstRefList& tplList,
                   const TFloat64Range& lambdaRange,
                   Float64 redshift,
                   Float64 overlapThreshold,
@@ -88,7 +89,7 @@ private:
                   bool keepigmism=false,
                   const TInt32List& MeiksinList=TInt32List(-1));
     Int32 RebinTemplate(const CSpectrum& spectrum,
-                        TTemplateConstRefList tplList,
+                        const TTemplateConstRefList& tplList,
                         Float64 redshift,
                         const TFloat64Range& lambdaRange,
                         std::string opt_interp,
