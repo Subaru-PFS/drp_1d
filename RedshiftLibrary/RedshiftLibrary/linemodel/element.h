@@ -115,10 +115,6 @@ class CLineModelElement
 
     void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
-    void SetAsymfitWidthCoeff(Float64 coeff);
-    void SetAsymfitAlphaCoeff(Float64 coeff);
-    void SetAsymfitDelta(Float64 coeff);
-
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
     const TAsymParams GetAsymfitParams(UInt32 asymIdx=0);
     void resetAsymfitParams();

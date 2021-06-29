@@ -548,7 +548,7 @@ void CMultiLine::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)
     if(m_SignFactors[subeIdx]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[subeIdx]>m_absLinesLimit){
         m_FittedAmplitudes[subeIdx]=m_absLinesLimit;
     }
-    //*/
+
     m_FittedAmplitudeErrorSigmas[subeIdx] = SNR*m_NominalAmplitudes[subeIdx]; //todo: check correct formulation for Error
 
 }
@@ -947,7 +947,7 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        if(A>=0.0)
+        if(A>0.0)
         {
             if(m_SignFactors[k2]==-1){
                 Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfileAtRedshift(k2, redshift, x);
