@@ -450,7 +450,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             {
                 chiSquare = fit;
                 fittingEbmvCoeff = coeffEBMV;
-                fittingMeiksinIdx = meiksinIdx;
+                fittingMeiksinIdx = igmCorrectionAppliedOnce==true?meiksinIdx:-1;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
                 fittingAmplitudeSigma = ampl_sigma;
