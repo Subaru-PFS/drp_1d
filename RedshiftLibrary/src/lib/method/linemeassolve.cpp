@@ -48,7 +48,7 @@ namespace NSEpic
 
       cms =m_linemodel.computeForLineMeas(inputContext,m_calibrationPath,m_redshifts);
     }
-    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
 
     std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(cms,

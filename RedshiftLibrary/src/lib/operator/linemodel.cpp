@@ -2345,7 +2345,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
