@@ -1116,6 +1116,8 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 m_opt_tplfit_ignoreLinesSupport,
                                 i);
+                if (m_opt_continuumcomponent == "fromspectrum")
+                    break; // when set to "fromspectrum" by PrecomputeContinuumFit because negative continuum with tplfitauto
 
             }
         }else{

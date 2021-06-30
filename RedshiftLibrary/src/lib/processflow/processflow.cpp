@@ -31,18 +31,15 @@ using namespace boost;
 using namespace NSEpic;
 namespace bfs = boost::filesystem;
 
-CProcessFlow::CProcessFlow()
-{
-
-}
-
-CProcessFlow::~CProcessFlow()
-{
-
-}
 
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+
+    Log.LogInfo("=====================================================================");
+    std::ostringstream oss;
+    oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
+    Log.LogInfo(oss.str());
+    Log.LogInfo("=====================================================================");
 
     Float64       maxCount; 
     Float64       redshiftseparation;
@@ -55,8 +52,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //************************************
     // Stellar method
 
+    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve");
+    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
 
-    if(ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve")=="yes"){
+    if(enableStarFitting=="yes"){
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         solve.Compute(ctx.GetInputContext(),

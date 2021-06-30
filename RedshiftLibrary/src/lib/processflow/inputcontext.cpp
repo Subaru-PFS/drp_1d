@@ -94,7 +94,7 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
 {
   TFloat64Range clampedlambdaRange;
   spectrum->GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
+  Log.LogInfo( "Validate spectrum: (CLambdaRange: %f-%f:%f)",
                clampedlambdaRange.GetBegin(),
                clampedlambdaRange.GetEnd(),
                spectrum->GetResolution());

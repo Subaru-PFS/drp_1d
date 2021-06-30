@@ -18,9 +18,6 @@ class CProcessFlow
 
 public:
 
-    CProcessFlow();
-    ~CProcessFlow();
-
     void Process( CProcessFlowContext& ctx );
 
 private:
