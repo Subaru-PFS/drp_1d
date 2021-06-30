@@ -343,4 +343,15 @@ template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& 
   return TFloat64Range(fl[0],fl[1]);
 }
 
+Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
+{
+    Bool fft_processing = false;
+    if(Has<std::string>(objectType + ".templatefittingsolve.fftprocessing"))
+        fft_processing |= Get<std::string>(objectType + ".templatefittingsolve.fftprocessing") == "yes";
+    if(Has<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
+        fft_processing |= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
+
+    return fft_processing;
+}
+
 }

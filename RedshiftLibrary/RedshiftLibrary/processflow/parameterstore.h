@@ -54,6 +54,8 @@ public:
       }
     return true;
   }
+
+  Bool HasFFTProcessing(const std::string &objectType) const;  
   
   template<typename T> T Get(const std::string& name) const
   {

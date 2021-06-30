@@ -47,8 +47,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
-
+  
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
   Bool storeResult = false;
