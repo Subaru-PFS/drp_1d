@@ -2348,6 +2348,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
+  std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
   TStringList tplCategoryList({"linemeas"});
   std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
@@ -2358,8 +2359,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");
   std::string opt_rules =params->GetScoped<std::string>("rules");
   std::string opt_rigidity =params->GetScoped<std::string>("rigidity");
-  std::string opt_tplratio_reldirpath = params->GetScoped<std::string>( "tplratio_catalog");
-  std::string opt_offsets_reldirpath = params->GetScoped<std::string>( "offsets_catalog");
+  bool velocityfit = params->GetScoped<std::string>("velocityfit")=="yes";
+  if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
+
   CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(-1,-1);
   m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit") == "yes";
   bool enableOrtho = true;
@@ -2369,13 +2371,13 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                        restRayList,
                                        opt_fittingmethod_ortho,
                                        opt_lineWidthType,
-                                       opt_enableLSF,
                                        opt_nsigmasupport,
                                        opt_resolution,
                                        opt_velocityEmission,
                                        opt_velocityAbsorption,
                                        opt_rules,
                                        opt_rigidity,
+				       lsf,
                                        enableOrtho);
   CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
    
@@ -2398,7 +2400,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                                              opt_continuumcomponent,
                                                                              m_opt_continuum_neg_amp_threshold,
                                                                              opt_lineWidthType,
-                                                                             opt_enableLSF,
                                                                              opt_nsigmasupport,
                                                                              opt_resolution,
                                                                              opt_velocityEmission,
@@ -2413,6 +2414,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   /*
   if (opt_rigidity == "tplshape")
     {
+    std::string opt_tplratio_reldirpath = params->GetScoped<std::string>( "tplratio_catalog");
       // init catalog tplratios
       Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
       bool tplratioInitRet =
@@ -2433,6 +2435,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
     try
     {
+    std::string opt_offsets_reldirpath = params->GetScoped<std::string>( "offsets_catalog");
         m_model->initLambdaOffsets(opt_offsets_reldirpath);
     } catch (std::exception const &e)
     {

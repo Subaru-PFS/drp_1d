@@ -194,22 +194,8 @@ void CLineModelElement::setVelocity(Float64 vel)
 
 }
 
-void CLineModelElement::SetAsymfitWidthCoeff(Float64 coeff)
-{
-    m_asymfit_sigma_coeff = coeff;
-}
-
-Float64 CLineModelElement::GetAsymfitWidthCoeff()
-{
-    return m_asymfit_sigma_coeff;
-}
-
-void CLineModelElement::SetAsymfitAlphaCoeff(Float64 coeff)
-{
-    m_asymfit_alpha = coeff;
-}
-
-Float64 CLineModelElement::GetAsymfitAlphaCoeff()
+//wrapper function 
+void CLineModelElement::SetAsymfitParams(TAsymParams params, Int32 idx)
 {
     if(!m_asymLineIndices.size()) return;
     if(idx>=0){
