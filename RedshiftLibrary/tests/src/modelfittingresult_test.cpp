@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/linemodel/modelfittingresult.h>
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
+#include "RedshiftLibrary/processflow/datastore.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 #include <iostream>
 #include <fstream>

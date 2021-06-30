@@ -1,17 +1,17 @@
 #ifndef _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 #define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
-#include <RedshiftLibrary/operator/extremaresult.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/linemodel/linemodelsolution.h>
+#include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/linemodel/linemodelsolution.h"
 
-//#include <RedshiftLibrary/operator/modelspectrumresult.h>
-//#include <RedshiftLibrary/linemodel/modelfittingresult.h>
-//#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-//#include <RedshiftLibrary/linemodel/modelrulesresult.h>
-//#include <RedshiftLibrary/operator/spectraFluxResult.h>
-#include <RedshiftLibrary/linemodel/continuummodelsolution.h>
-#include <RedshiftLibrary/processflow/result.h>
+//#include "RedshiftLibrary/operator/modelspectrumresult.h>
+//#include "RedshiftLibrary/linemodel/modelfittingresult.h>
+//#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+//#include "RedshiftLibrary/linemodel/modelrulesresult.h>
+//#include "RedshiftLibrary/operator/spectraFluxResult.h>
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/processflow/result.h"
 
 
 
@@ -25,7 +25,7 @@ class CSpectraFluxResult;
 class CLineModelElementList;
 
   class CLineModelResult;
-  #include <RedshiftLibrary/linemodel/linemodelextremaresult.i>
+  #include "RedshiftLibrary/linemodel/linemodelextremaresult.i"
   
   template<> class CExtremaResult<TLineModelResult>: public CPdfCandidateszResult<TLineModelResult>
   {

@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/linemodel/continuummodelsolution.h>
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

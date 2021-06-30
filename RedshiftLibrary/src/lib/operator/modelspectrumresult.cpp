@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iomanip>      // std::setprecision
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 

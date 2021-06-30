@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/multiline.h>
-#include <RedshiftLibrary/ray/ray.h>
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/multiline.h"
+#include "RedshiftLibrary/ray/ray.h"
 #include "RedshiftLibrary/ray/lineprofile.h"
-#include <RedshiftLibrary/spectrum/LSFFactory.h>
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include <time.h>
 #include <iostream>

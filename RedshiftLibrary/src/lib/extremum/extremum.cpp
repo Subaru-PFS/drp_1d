@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/range.h"
 
 #include <cmath>
 #include <float.h>

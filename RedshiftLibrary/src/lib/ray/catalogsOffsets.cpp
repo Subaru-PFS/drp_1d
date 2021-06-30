@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/catalogsOffsets.h>
-#include <RedshiftLibrary/linemodel/calibrationconfig.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/catalogsOffsets.h"
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>

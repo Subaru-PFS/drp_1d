@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/method/classificationsolve.h>
-#include <RedshiftLibrary/method/classificationresult.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 using namespace NSEpic;
 

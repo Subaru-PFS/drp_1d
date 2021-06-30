@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
+#include "RedshiftLibrary/spectrum/io/fitswriter.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 
 
 #include <boost/filesystem.hpp>

@@ -1,13 +1,13 @@
 #ifndef _REDSHIFT_RAY_RAY_
 #define _REDSHIFT_RAY_RAY_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
-#include <RedshiftLibrary/ray/lineprofile.h>
-#include <RedshiftLibrary/ray/lineprofileLOR.h>
-#include <RedshiftLibrary/ray/lineprofileSYM.h>
-#include <RedshiftLibrary/ray/lineprofileASYM.h>
-#include <RedshiftLibrary/ray/lineprofileASYMFIT.h>
+#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/ray/lineprofileLOR.h"
+#include "RedshiftLibrary/ray/lineprofileSYM.h"
+#include "RedshiftLibrary/ray/lineprofileASYM.h"
+#include "RedshiftLibrary/ray/lineprofileASYMFIT.h"
 
 #include <string>
 #include <cmath>

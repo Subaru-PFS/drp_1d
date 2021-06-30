@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_NOISE_FLAT_
 #define _REDSHIFT_NOISE_FLAT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/noise/noise.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/noise/noise.h"
 
 namespace NSEpic
 {

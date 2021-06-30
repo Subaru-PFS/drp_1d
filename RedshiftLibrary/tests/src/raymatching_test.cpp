@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/operator/raymatching.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/ray/ray.h>
+#include "RedshiftLibrary/operator/raymatching.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/ray.h"
 
 
 #include <time.h>

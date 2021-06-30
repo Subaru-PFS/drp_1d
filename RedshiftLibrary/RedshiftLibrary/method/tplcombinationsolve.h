@@ -1,16 +1,16 @@
 #ifndef _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
 #define _REDSHIFT_METHOD_TPLCOMBINATIONSOLVE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/templatefittingsolveresult.h>
-#include <RedshiftLibrary/method/tplcombinationsolveresult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/tplcombination.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/tplcombination.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 namespace NSEpic

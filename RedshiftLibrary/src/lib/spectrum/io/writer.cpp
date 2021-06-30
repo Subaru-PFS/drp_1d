@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/spectrum/io/writer.h>
+#include "RedshiftLibrary/spectrum/io/writer.h"
 
 using namespace NSEpic;
 

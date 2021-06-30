@@ -5,9 +5,9 @@
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ruleBalmerLinearSolver.h>
-#include <RedshiftLibrary/ray/linetags.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ruleBalmerLinearSolver.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 using namespace NSEpic;
 using namespace std;

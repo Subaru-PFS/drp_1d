@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/log/filehandler.h>
+#include "RedshiftLibrary/log/filehandler.h"
 
-#include <RedshiftLibrary/log/handler.h>
+#include "RedshiftLibrary/log/handler.h"
 
 #include <stdio.h>
 

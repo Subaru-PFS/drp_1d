@@ -2,14 +2,14 @@
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
 
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/reader.h>
-#include <RedshiftLibrary/linemodel/calibrationconfig.h> 
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/io/reader.h"
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
 #include <gsl/gsl_errno.h>
 

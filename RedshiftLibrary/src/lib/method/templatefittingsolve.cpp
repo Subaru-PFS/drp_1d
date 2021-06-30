@@ -1,18 +1,18 @@
-#include <RedshiftLibrary/method/templatefittingsolve.h>
-#include <RedshiftLibrary/method/templatefittingsolveresult.h>
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/templatefittingsolveresult.h"
 
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
+#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
-#include <RedshiftLibrary/operator/templatefittinglog.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/operator/templatefittinglog.h"
 
 using namespace NSEpic;
 using namespace std;

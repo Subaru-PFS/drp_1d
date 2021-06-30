@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/operator/raydetection.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/gaussianfit/gaussianfit.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include "RedshiftLibrary/operator/raydetection.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/gaussianfit/gaussianfit.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
 
 

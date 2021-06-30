@@ -1,9 +1,9 @@
 #ifndef _METHOD_CLASSIFICATION_
 #define _METHOD_CLASSIFICATION_
 
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/method/classificationresult.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/classificationresult.h"
 
 
 namespace NSEpic

@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_RELIABILITY_ZQUALRESULT_
 #define _REDSHIFT_RELIABILITY_ZQUALRESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/processflow/datastore.h>
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/datastore.h"
 
 namespace NSEpic
 {

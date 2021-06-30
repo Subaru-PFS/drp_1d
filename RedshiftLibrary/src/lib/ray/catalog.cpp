@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -10,7 +10,7 @@
 #include <cmath>
 #include <boost/filesystem.hpp>
 
-#include <RedshiftLibrary/ray/lineprofile.h>
+#include "RedshiftLibrary/ray/lineprofile.h"
 
 using namespace NSEpic;
 using namespace std;

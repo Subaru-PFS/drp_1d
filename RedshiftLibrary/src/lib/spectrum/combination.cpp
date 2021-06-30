@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/spectrum/combination.h>
+#include "RedshiftLibrary/spectrum/combination.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/common/mask.h"
 
 #include <math.h>
 

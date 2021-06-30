@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_NOISE_NOISE_
 #define _REDSHIFT_NOISE_NOISE_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic
 {

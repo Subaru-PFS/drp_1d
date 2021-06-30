@@ -1,6 +1,6 @@
 #ifndef PYCONV_H
 #define PYCONV_H
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 namespace NSEpic
 {
 class PC

@@ -1,12 +1,12 @@
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/gaussianfit/gaussianfit.h>
-#include <RedshiftLibrary/operator/raydetection.h>
-#include <RedshiftLibrary/operator/raydetectionresult.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/gaussianfit/gaussianfit.h"
+#include "RedshiftLibrary/operator/raydetection.h"
+#include "RedshiftLibrary/operator/raydetectionresult.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
 #include "boost/format.hpp"
 

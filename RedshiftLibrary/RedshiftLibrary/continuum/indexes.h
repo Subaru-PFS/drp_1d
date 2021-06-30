@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_CONTINUUM_INDEXES_
 #define _REDSHIFT_CONTINUUM_INDEXES_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 #include <gsl/gsl_vector.h>
 #include <boost/format.hpp>
 

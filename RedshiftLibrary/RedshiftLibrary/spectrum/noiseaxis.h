@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_NOISEAXIS_
 #define _REDSHIFT_SPECTRUM_NOISEAXIS_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 
 namespace NSEpic
 {

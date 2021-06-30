@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/spectrum/logrebinning.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/logrebinning.h"
+#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
 

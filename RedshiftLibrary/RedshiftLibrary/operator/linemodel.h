@@ -1,24 +1,24 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODEL_
 #define _REDSHIFT_OPERATOR_LINEMODEL_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/linemodel/multirollmodel.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
-#include <RedshiftLibrary/linemodel/modelfittingresult.h>
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
-#include <RedshiftLibrary/linemodel/modelrulesresult.h>
-#include <RedshiftLibrary/operator/spectraFluxResult.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/multirollmodel.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
+#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
+#include "RedshiftLibrary/linemodel/modelrulesresult.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
-#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
 namespace NSEpic
 {

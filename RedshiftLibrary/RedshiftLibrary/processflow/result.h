@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 #define _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/continuum/indexes.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/continuum/indexes.h"
 #include <vector>
 #include <ostream>
 #include <map>

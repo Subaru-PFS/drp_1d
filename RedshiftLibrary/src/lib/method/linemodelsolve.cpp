@@ -1,18 +1,18 @@
-#include <RedshiftLibrary/method/linemodelsolve.h>
+#include "RedshiftLibrary/method/linemodelsolve.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/operator/pdfLogresult.h>
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+#include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/operator/pdfLogresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

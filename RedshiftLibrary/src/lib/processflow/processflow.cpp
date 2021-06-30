@@ -1,21 +1,21 @@
-#include <RedshiftLibrary/processflow/processflow.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
+#include "RedshiftLibrary/processflow/processflow.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 
-#include <RedshiftLibrary/linemodel/calibrationconfig.h>
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/debug/assert.h"
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/method/templatefittingsolve.h>
-#include <RedshiftLibrary/method/linematchingsolve.h>
-#include <RedshiftLibrary/method/tplcombinationsolve.h>
-#include <RedshiftLibrary/method/linemodelsolve.h>
-#include <RedshiftLibrary/method/classificationsolve.h>
-#include <RedshiftLibrary/method/reliabilitysolve.h>
-#include <RedshiftLibrary/method/classificationresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/reliability/zqual.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/reliabilitysolve.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

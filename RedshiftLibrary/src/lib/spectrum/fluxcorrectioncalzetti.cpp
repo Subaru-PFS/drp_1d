@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>

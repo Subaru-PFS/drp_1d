@@ -1,13 +1,13 @@
-#include <RedshiftLibrary/method/tplcombinationsolveresult.h>
+#include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
 #include <stdio.h>
 #include <float.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
-#include <RedshiftLibrary/method/solveresult.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/method/solveresult.h"
 #include <memory>
 
 using namespace NSEpic;

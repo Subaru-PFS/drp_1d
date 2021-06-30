@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include <cmath>
 #include <algorithm>
 #include <iterator>

@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_PROCESSFLOW_OPERATORRESULTSTORE_
 #define _REDSHIFT_PROCESSFLOW_OPERATORRESULTSTORE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/processflow/scopestore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/processflow/scopestore.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>

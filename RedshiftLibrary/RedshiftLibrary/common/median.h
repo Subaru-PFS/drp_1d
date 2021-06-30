@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_COMMON_MEDIAN_
 #define _REDSHIFT_COMMON_MEDIAN_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/quicksort.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/quicksort.h"
 
 #include <algorithm>
 #include <vector>

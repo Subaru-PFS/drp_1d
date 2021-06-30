@@ -1,10 +1,10 @@
-#include <RedshiftLibrary/continuum/median.h>
+#include "RedshiftLibrary/continuum/median.h"
 
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/common/mean.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/mean.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <math.h>
 

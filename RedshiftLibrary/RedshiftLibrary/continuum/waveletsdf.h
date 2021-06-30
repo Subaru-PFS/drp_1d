@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_CONTINUUM_WAVELETSDF_
 #define  _REDSHIFT_CONTINUUM_WAVELETSDF_
 
-#include <RedshiftLibrary/continuum/continuum.h>
+#include "RedshiftLibrary/continuum/continuum.h"
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic
 {

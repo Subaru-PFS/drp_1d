@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/operator/tplcombination.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/operator/tplcombination.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>

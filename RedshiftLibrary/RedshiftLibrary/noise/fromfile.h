@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_NOISE_FROMFILE_
 #define _REDSHIFT_NOISE_FROMFILE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/noise/noise.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/reader.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/noise/noise.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/io/reader.h"
 
 #include <memory>
 

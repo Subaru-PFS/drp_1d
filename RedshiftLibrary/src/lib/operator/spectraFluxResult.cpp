@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/operator/spectraFluxResult.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
+#include "RedshiftLibrary/log/log.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 #include <limits>
 
 

@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/spectrum/combination.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/spectrum/combination.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <time.h>
 #include <iostream>

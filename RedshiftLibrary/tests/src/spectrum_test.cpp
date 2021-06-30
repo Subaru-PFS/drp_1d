@@ -1,14 +1,14 @@
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/LSFFactory.h>
-#include <RedshiftLibrary/spectrum/LSF.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/debug/assert.h"
 
 #include <algorithm>
 #include <cmath>
@@ -20,11 +20,9 @@
 
 #include <gsl/gsl_fit.h>
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
-
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
-
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;

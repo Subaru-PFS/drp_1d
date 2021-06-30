@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/version.h>
+#include "RedshiftLibrary/version.h"
 
 using namespace NSEpic;
 

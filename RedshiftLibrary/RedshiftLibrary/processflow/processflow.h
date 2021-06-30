@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 #define _REDSHIFT_PROCESSFLOW_PROCESSFLOW_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/operator/operator.h"
 
 namespace NSEpic
 {

@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
 #define _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>

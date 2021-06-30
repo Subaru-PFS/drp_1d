@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
 #include <fstream>
 #include <iostream>
 

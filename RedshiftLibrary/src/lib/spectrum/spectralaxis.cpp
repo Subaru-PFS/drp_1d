@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include <cmath>

@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/linemodel/modelfittingresult.h>
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -7,10 +7,10 @@
 #include <fstream>
 #include <iomanip>      // std::setprecision
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 

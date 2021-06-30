@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/processflow/result.h>
+#include "RedshiftLibrary/processflow/result.h"
 
 using namespace NSEpic;
 

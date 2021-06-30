@@ -1,11 +1,11 @@
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/continuum/median.h>
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
-#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/continuum/median.h"
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/continuum/waveletsdf.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/filesystem.hpp>
 

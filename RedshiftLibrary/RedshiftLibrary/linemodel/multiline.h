@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_LINEMODEL_MULTILINE_
 #define _REDSHIFT_LINEMODEL_MULTILINE_
 
-#include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/lineprofile.h>
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/lineprofile.h"
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 

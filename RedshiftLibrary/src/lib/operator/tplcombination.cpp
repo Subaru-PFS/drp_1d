@@ -21,9 +21,6 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_linalg.h>
-//#include <gsl/gsl_randist.h>
-//#include <gsl/gsl_vector.h>
-//#include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <numeric>
 #include <sstream>

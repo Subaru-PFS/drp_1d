@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_PROCESSFLOW_DATASTORE_
 #define _REDSHIFT_PROCESSFLOW_DATASTORE_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
-#include <RedshiftLibrary/processflow/parameterstore.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 #include <boost/filesystem.hpp>
 #include <vector>

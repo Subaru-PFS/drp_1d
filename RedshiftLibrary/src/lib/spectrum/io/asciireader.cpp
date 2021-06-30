@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
-#include <RedshiftLibrary/spectrum/io/asciireader.h>
+#include "RedshiftLibrary/spectrum/io/asciireader.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <sstream>

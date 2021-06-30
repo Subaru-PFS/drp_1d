@@ -1,32 +1,32 @@
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/linemodel/templatesfitstore.h>
-#include <RedshiftLibrary/linemodel/templatesortho.h>
-#include <RedshiftLibrary/linemodel/templatesorthostore.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
-#include <RedshiftLibrary/operator/templatefittinglog.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/operator/linemodel.h>
-#include <RedshiftLibrary/operator/spectraFluxResult.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/tools.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/statistics/priorhelper.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/linemodel/templatesortho.h"
+#include "RedshiftLibrary/linemodel/templatesorthostore.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/operator/templatefittinglog.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/operator/linemodel.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/tools.h"
+#include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
 
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/spectrum/io/fitswriter.h"
 
 #include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 //#include <boost/progress.hpp>
 
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
+#include "RedshiftLibrary/processflow/datastore.h"
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
 
 #include <algorithm> // std::sort
 #include <assert.h>

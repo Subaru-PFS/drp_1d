@@ -1,14 +1,14 @@
-#include <RedshiftLibrary/operator/templatefitting.h>
+#include "RedshiftLibrary/operator/templatefitting.h"
 
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/tools.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/tools.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
@@ -25,7 +25,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <assert.h>
-#include <RedshiftLibrary/processflow/datastore.h>
+#include "RedshiftLibrary/processflow/datastore.h"
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 

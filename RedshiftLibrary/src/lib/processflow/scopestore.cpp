@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/processflow/scopestore.h>
+#include "RedshiftLibrary/processflow/scopestore.h"
 
 using namespace NSEpic;
 std::string CScopeStore::GetCurrentScopeName() const

@@ -1,14 +1,14 @@
 #ifndef _REDSHIFT_OPERATOR_RAYDETECTION_
 #define _REDSHIFT_OPERATOR_RAYDETECTION_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
-#include <RedshiftLibrary/operator/raydetectionresult.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-//#include <RedshiftLibrary/ray/lineprofile.h>
+#include "RedshiftLibrary/operator/raydetectionresult.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+//#include "RedshiftLibrary/ray/lineprofile.h"
 
-#include <RedshiftLibrary/ray/lineprofileASYM.h>
+#include "RedshiftLibrary/ray/lineprofileASYM.h"
 
 namespace NSEpic
 {

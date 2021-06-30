@@ -1,7 +1,4 @@
-#include <RedshiftLibrary/processflow/parameterstore.h>
-
-
-
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 namespace bpt = boost::property_tree;
 

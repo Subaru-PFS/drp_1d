@@ -1,12 +1,12 @@
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/processflow/resultstore.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/method/classificationresult.h>
-#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
-#include <RedshiftLibrary/operator/extremaresult.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
@@ -19,9 +19,9 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 

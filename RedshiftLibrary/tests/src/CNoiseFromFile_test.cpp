@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/noise/fromfile.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/tests/test-tools.h>
+#include "RedshiftLibrary/noise/fromfile.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/tests/test-tools.h"
 #include "test-config.h"
 
 using namespace NSEpic;

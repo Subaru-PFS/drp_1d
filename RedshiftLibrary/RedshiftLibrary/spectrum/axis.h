@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_SPECTRUM_AXIS_
 #define _REDSHIFT_SPECTRUM_AXIS_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <vector>
 

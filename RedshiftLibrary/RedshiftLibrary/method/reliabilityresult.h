@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_PROCESSFLOW_RELIABILITYRESULT_
 #define _REDSHIFT_PROCESSFLOW_RELIABILITYRESULT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/solveresult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solveresult.h"
 
 #include <vector>
 #include <ostream>

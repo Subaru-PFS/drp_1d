@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/operator/raymatching.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/operator/raymatching.h"
+#include "RedshiftLibrary/operator/raymatchingresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

@@ -1,16 +1,16 @@
-#include <RedshiftLibrary/operator/templatefittinglog.h>
+#include "RedshiftLibrary/operator/templatefittinglog.h"
 
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/tools.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/tools.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
