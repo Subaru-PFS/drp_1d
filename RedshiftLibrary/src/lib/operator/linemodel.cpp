@@ -2363,7 +2363,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
 
   CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(-1,-1);
-  m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit") == "yes";
+
   bool enableOrtho = true;
   CTemplatesOrthogonalization tplOrtho(tplCatalog,
                                        tplCategoryList,
@@ -2415,6 +2415,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   if (opt_rigidity == "tplshape")
     {
     std::string opt_tplratio_reldirpath = params->GetScoped<std::string>( "tplratio_catalog");
+  m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit") == "yes";
       // init catalog tplratios
       Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
       bool tplratioInitRet =
