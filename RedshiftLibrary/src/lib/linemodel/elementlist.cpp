@@ -4339,7 +4339,7 @@ Int32 CLineModelElementList::setLyaProfile(Float64 redshift, const CSpectrumSpec
         {
             //use the manual fixed profile parameters from catalog profile string
             asimfixedProfileFound = true;
-            m_Elements[idxLyaE]->SetAsymfitParams(m_RestRayList[lineIndex].GetAsymParams()); 
+            m_Elements[idxLyaE]->SetAsymfitParams(m_RestRayList[lineIndex].GetAsymParams());
             break;
         }
     }
