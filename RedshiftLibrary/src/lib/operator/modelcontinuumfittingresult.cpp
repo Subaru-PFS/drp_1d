@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -7,17 +7,9 @@
 #include <fstream>
 #include <iomanip>      // std::setprecision
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
-
-/**
- * \brief Empty constructor.
- **/
-CModelContinuumFittingResult::CModelContinuumFittingResult()
-{
-}
-
 
 /**
  * \brief Attributes values to member variables according to arguments.

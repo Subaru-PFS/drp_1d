@@ -274,6 +274,11 @@ class ResultStoreOutput(AbstractOutput):
                                                                 self.get_solve_method(object_type),
                                                                 data_spec.ResultStore_key,
                                                                 rank)
+            elif or_type == "TTplCombinationResult":
+                return self.results_store.GetTplCombinationResult(object_type,
+                                                                self.get_solve_method(object_type),
+                                                                data_spec.ResultStore_key,
+                                                                rank)	
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
 

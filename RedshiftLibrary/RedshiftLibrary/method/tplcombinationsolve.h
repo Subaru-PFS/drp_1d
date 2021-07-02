@@ -12,6 +12,7 @@
 #include <RedshiftLibrary/operator/pdfz.h>
 #include <RedshiftLibrary/operator/pdfMargZLogResult.h>
 
+#include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 namespace NSEpic
 {
 
@@ -59,7 +60,18 @@ private:
                std::string opt_dustFitting="no");
     
     ChisquareArray BuildChisquareArray(std::shared_ptr<COperatorResultStore> store, const std::string & scopeStr) const;
-
+    void StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+                              std::shared_ptr<const TplCombinationExtremaResult> & extremaResult) const;
+    std::shared_ptr<const TplCombinationExtremaResult> 
+    SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+                                               const std::string & scopeStr,
+                                               const TCandidateZbyRank & ranked_zCandidates,
+                                               const CSpectrum& spc,
+                                               const CTemplateCatalog& tplCatalog,
+                                               const TStringList& tplCategoryList,
+                                               const TFloat64Range& lambdaRange,
+                                               Float64 overlapThreshold,
+                                               std::string opt_interp);
     COperatorTplcombination m_tplcombinationOperator;
 
     std::string m_opt_pdfcombination;

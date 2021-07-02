@@ -18,11 +18,13 @@ class CTemplate;
 class CClassificationResult;
 class CPdfMargZLogResult;
 class TLineModelResult;
+class TTplCombinationResult;
 class TExtremaResult;
 class CModelFittingResult;
 class CModelSpectrumResult;
 class CSpectraFluxResult;
 template<class T=TLineModelResult>  class CLineModelExtremaResult;
+template<class T=TTplCombinationResult>  class CTplCombinationExtremaResult;
   //  class CLineModelExtremaResult<TLineModelResult>;
   //class LineModelExtremaResult;
   /**
@@ -81,7 +83,11 @@ public:
 							     const std::string& name ,
 							     const int& rank
 							     ) const;
-
+  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const;
   std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
 										 const std::string& method,
 										 const std::string& name ,

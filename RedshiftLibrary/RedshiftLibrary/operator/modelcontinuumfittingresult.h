@@ -2,12 +2,12 @@
 #define _REDSHIFT_LINEMODEL_MODELCONTINUUMFITTINGRESULT_
 
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/operator/linemodelresult.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
 
 namespace NSEpic
@@ -30,10 +30,9 @@ public:
                                  Int32 _igmIndex,
                                  Float64 _fitting_snr);
 
-    CModelContinuumFittingResult();
     virtual ~CModelContinuumFittingResult();
 
-private:
+protected:
 
     Float64 Redshift;
     std::string Name;
