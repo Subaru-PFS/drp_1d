@@ -72,7 +72,7 @@ Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
     return val;
 }
  
-Float64 CLineProfileASYM::GetNSigmaSupport(){
+Float64 CLineProfileASYM::GetNSigmaSupport()const {
     return m_nsigmasupport*m_asym_sigma_coeff*m_constSigma;
 }
  

@@ -18,7 +18,7 @@ Float64 CLineProfileLOR::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
     return val;
 }
  
-Float64 CLineProfileLOR::GetNSigmaSupport()
+Float64 CLineProfileLOR::GetNSigmaSupport() const
 {
     return m_nsigmasupport*2.0;
 }

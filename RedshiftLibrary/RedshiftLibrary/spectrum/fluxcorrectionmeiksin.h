@@ -3,7 +3,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-
+#include "RedshiftLibrary/spectrum/LSF.h"
 #include <boost/format.hpp>
 
 #include <vector>
@@ -21,31 +21,40 @@ class CSpectrumFluxCorrectionMeiksin
 public:
 
     struct MeiksinCorrection{
-        std::vector<Float64> lbda; // wavelength
+        TFloat64List lbda; // wavelength
         std::vector<TFloat64List> fluxcorr; // 7 flux correction lists
     };
 
     CSpectrumFluxCorrectionMeiksin();
     ~CSpectrumFluxCorrectionMeiksin();
 
-    Bool Init( std::string calibrationPath );
     Bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
-
-    std::vector<MeiksinCorrection> m_corrections;
-
+    Bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf);
+    TFloat64List Convolve(const TFloat64List& arr, const TFloat64List& kernel);
+    TFloat64List ApplyAdaptativeKernel(const TFloat64List& arr, 
+                                        const Float64 z_center, 
+                                        const std::shared_ptr<const CLSF>& lsf,
+                                        const TFloat64List& lambdas);
+    void ConvolveAll(const std::shared_ptr<const CLSF>& lsf);
+    
     Int32 GetIdxCount() const;
     Int32 GetRedshiftIndex(Float64 z) const;
-    std::vector<Float64> GetSegmentsStartRedshiftList() const;
 
+    std::vector<Float64> GetSegmentsStartRedshiftList() const;
+    TFloat64List         GetLSFProfileVector(Float64 lambda0_rest, 
+                                             Float64 z_bin_meiksin, 
+                                             const std::shared_ptr<const CLSF>& lsf);//for convolution
     Float64 GetLambdaMin() const;
     Float64 GetLambdaMax() const;
 
     bool meiksinInitFailed = false;
 
+    std::vector<MeiksinCorrection> m_corrections;
 private:
-
+    std::vector<MeiksinCorrection> m_rawCorrections;
     Float64 m_LambdaMin;
     Float64 m_LambdaMax;
+    TFloat64List m_kernel;
 
 };
 

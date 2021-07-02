@@ -1530,7 +1530,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         return 0;
     }
 
-    //std::cout << "Second Pass" << std::endl;
+
     m_secondpass_parameters_extremaResult.m_ranked_candidates = m_firstpass_extremaResult->m_ranked_candidates;
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
