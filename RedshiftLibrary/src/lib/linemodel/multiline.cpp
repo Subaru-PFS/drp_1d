@@ -1,10 +1,10 @@
 
-#include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/multiline.h>
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/multiline.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <float.h>
 #include <algorithm>

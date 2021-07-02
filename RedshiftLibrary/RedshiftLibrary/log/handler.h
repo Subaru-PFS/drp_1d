@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_LOG_HANDLER_
 #define _REDSHIFT_LOG_HANDLER_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
 namespace NSEpic
 {
 

@@ -1,17 +1,17 @@
 #ifndef _REDSHIFT_LINEMODEL_MULTIROLLMODEL_
 #define _REDSHIFT_LINEMODEL_MULTIROLLMODEL_
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/linemodel/templatesfitstore.h>
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/multiline.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/multiline.h"
 
 #include <cmath>
 #include <cfloat>

@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
 #define _REDSHIFT_PROCESSFLOW_PARAMETERSTORE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/processflow/scopestore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/processflow/scopestore.h"
 #include <boost/property_tree/ptree.hpp>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/property_tree/json_parser.hpp>
 #undef BOOST_BIND_GLOBAL_PLACEHOLDERS

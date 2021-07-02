@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_OPERATOR_EXTREMARESULT_
 #define _REDSHIFT_OPERATOR_EXTREMARESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
 #include <vector>
 #include <memory>
@@ -14,7 +14,7 @@ namespace NSEpic
 class CModelSpectrumResult;
 class CModelContinuumFittingResult;
 
-#include <RedshiftLibrary/operator/extremaresult.i>
+#include "RedshiftLibrary/operator/extremaresult.i"
 
   template <class T>
   class CExtremaResult : public CPdfCandidateszResult<T>

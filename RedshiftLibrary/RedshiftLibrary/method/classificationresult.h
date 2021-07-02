@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CLASSIFICATIONRESULT_
 #define _REDSHIFT_PROCESSFLOW_CLASSIFICATIONRESULT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/solveresult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solveresult.h"
 
 #include <vector>
 #include <ostream>
@@ -14,7 +14,7 @@ namespace NSEpic
 /**
  * \ingroup Redshift
  */
-#include <RedshiftLibrary/method/classificationresult.i>
+#include "RedshiftLibrary/method/classificationresult.i"
 }
 
 #endif

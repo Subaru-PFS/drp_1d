@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZ_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/processflow/result.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/processflow/result.h"
 #include <cmath>
 #include <map>
 #include <string>
@@ -14,7 +14,7 @@
 namespace NSEpic
 {
 
-#include <RedshiftLibrary/statistics/pdfcandidatesz.i>
+#include "RedshiftLibrary/statistics/pdfcandidatesz.i"
 
 typedef std::map<std::string, TCandidateZ> TCandidateZbyID;
 typedef std::vector<std::pair<std::string, TCandidateZ>> TCandidateZbyRank;

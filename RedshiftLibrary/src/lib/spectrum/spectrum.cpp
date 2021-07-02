@@ -1,16 +1,16 @@
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
-#include <RedshiftLibrary/noise/flat.h>
-#include <RedshiftLibrary/noise/fromfile.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/noise/flat.h"
+#include "RedshiftLibrary/noise/fromfile.h"
 
-#include <RedshiftLibrary/continuum/waveletsdf.h>
-#include <RedshiftLibrary/continuum/median.h>
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/continuum/waveletsdf.h"
+#include "RedshiftLibrary/continuum/median.h"
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_interp.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/debug/assert.h"
 #include <cmath>
 #include <cstdio>
 #include <algorithm>

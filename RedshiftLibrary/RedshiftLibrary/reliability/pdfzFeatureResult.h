@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_RELIABILITY_PDFZFEATURERESULT_
 #define _REDSHIFT_RELIABILITY_PDFZFEATURERESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <boost/unordered_map.hpp>
 

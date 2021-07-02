@@ -1,18 +1,13 @@
-#include <RedshiftLibrary/continuum/waveletsdf.h>
+#include "RedshiftLibrary/continuum/waveletsdf.h"
 
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
+#include "RedshiftLibrary/spectrum/io/fitswriter.h"
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <math.h>
 #include <iostream>
 #include <iomanip>
-
-//#include <utility>
-//#include <type_traits>
-//#include <typeinfo>
-//#include <cxxabi.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>

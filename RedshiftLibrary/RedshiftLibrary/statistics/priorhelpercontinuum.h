@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
 #define _REDSHIFT_STATISTICS_PRIORHELPERCONTINUUM_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 #include <boost/format.hpp>
 #include <cfloat>

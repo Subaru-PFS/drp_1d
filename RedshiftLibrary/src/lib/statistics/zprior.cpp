@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/statistics/zprior.h>
+#include "RedshiftLibrary/statistics/zprior.h"
 
 #include <float.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_SPECTRUM_FLUXAXIS_
 #define _REDSHIFT_SPECTRUM_FLUXAXIS_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/noiseaxis.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/noiseaxis.h"
+#include "RedshiftLibrary/common/range.h"
 
 namespace NSEpic
 {

@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_IO_FITSREADER_
 #define _REDSHIFT_SPECTRUM_IO_FITSREADER_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/io/reader.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/io/reader.h"
 
 #include <vector>
 #include <fitsio.h>

@@ -1,8 +1,8 @@
 #include <cstdarg>
 #include <iostream>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ruleSuperStrongHighest.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ruleSuperStrongHighest.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -1,10 +1,10 @@
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/logrebinning.h>
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/logrebinning.h"
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,

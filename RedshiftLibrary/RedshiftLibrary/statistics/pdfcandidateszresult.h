@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 #define _REDSHIFT_STATISTICS_PDFCANDIDATESZRESULT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 //#include <cmath>
 //#include <map>

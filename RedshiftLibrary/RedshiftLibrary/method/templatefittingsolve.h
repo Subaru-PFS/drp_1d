@@ -1,16 +1,16 @@
 #ifndef _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/method/templatefittingsolveresult.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/templatefittingBase.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 
 namespace NSEpic
 {

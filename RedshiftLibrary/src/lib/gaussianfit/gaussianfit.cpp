@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/gaussianfit/gaussianfit.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/gaussianfit/gaussianfit.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <math.h>
 #include <gsl/gsl_rng.h>

@@ -1,14 +1,14 @@
-#include <RedshiftLibrary/method/linemodelsolveresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/extremum/extremum.h>
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/extremum/extremum.h"
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/operator/pdfz.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 
 using namespace NSEpic;
 

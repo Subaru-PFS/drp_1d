@@ -1,15 +1,15 @@
 #ifndef _REDSHIFT_LINEMODEL_ELEMENT_
 #define _REDSHIFT_LINEMODEL_ELEMENT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/ray/lineprofile.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/ray/lineprofile.h"
 #include <gsl/gsl_const_mksa.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 

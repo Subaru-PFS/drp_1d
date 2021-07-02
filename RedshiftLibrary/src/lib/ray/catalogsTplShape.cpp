@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/linemodel/calibrationconfig.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/ray/catalogsTplShape.h>
-#include <RedshiftLibrary/ray/linetags.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/ray/catalogsTplShape.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>

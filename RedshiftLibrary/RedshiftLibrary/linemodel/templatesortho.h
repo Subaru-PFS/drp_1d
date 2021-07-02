@@ -1,22 +1,22 @@
 #ifndef _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
 #define _REDSHIFT_LINEMODEL_TEMPLATESORTHO_
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/LSF.h>
-#include <RedshiftLibrary/operator/templatefitting.h>
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
 
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/linemodel/element.h>
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/linemodel/element.h"
 
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/linemodel/templatesorthostore.h>
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/linemodel/templatesorthostore.h"
 
 #include <boost/shared_ptr.hpp>
 

@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_LOG_FILEHANDLER_
 #define _REDSHIFT_LOG_FILEHANDLER_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/handler.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/handler.h"
 
 #include <fstream>
 

@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <vector>
 

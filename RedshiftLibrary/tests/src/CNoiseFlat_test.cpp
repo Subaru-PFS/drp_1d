@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/noise/flat.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/noise/flat.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 using namespace std;

@@ -2,9 +2,9 @@
 #define _REDSHIFT_LINEMODEL_TEMPLATESFITSTORE_
 
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
 
 
 #include <boost/filesystem.hpp>

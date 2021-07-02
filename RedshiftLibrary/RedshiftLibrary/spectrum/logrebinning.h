@@ -1,14 +1,14 @@
 #ifndef _REDSHIFT_SPECTRUM_LOGREBINNING_
 #define _REDSHIFT_SPECTRUM_LOGREBINNING_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 
 namespace NSEpic
 {

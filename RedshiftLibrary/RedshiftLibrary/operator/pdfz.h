@@ -1,13 +1,13 @@
 #ifndef _REDSHIFT_OPERATOR_PDFZ_
 #define _REDSHIFT_OPERATOR_PDFZ_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 
 #include <string>
 

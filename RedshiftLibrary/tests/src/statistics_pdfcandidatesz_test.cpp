@@ -1,12 +1,7 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-//#include <RedshiftLibrary/operator/templatefittingresult.h>
-//#include <RedshiftLibrary/processflow/datastore.h>
-//#include <RedshiftLibrary/processflow/parameterstore.h>
-//#include <RedshiftLibrary/processflow/resultstore.h>
-//#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 
 #include <istream>
 #include <iostream>

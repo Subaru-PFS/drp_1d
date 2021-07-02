@@ -1,12 +1,12 @@
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/common/mean.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/mean.h"
+#include "RedshiftLibrary/common/mask.h"
 
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;

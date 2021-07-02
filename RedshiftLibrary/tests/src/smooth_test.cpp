@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <boost/test/unit_test.hpp>
 

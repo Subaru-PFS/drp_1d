@@ -1,10 +1,10 @@
-#include <RedshiftLibrary/operator/peakdetection.h>
+#include "RedshiftLibrary/operator/peakdetection.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/operator/peakdetectionresult.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/operator/peakdetectionresult.h"
 
 #include <math.h>
 

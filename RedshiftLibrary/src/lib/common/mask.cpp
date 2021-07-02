@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/common/mask.h"
 
 
 #include <math.h>

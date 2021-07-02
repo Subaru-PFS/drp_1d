@@ -1,17 +1,17 @@
 #ifndef _REDSHIFT_METHOD_LINEMODELSOLVE_
 #define _REDSHIFT_METHOD_LINEMODELSOLVE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/linemodelsolveresult.h>
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/linemodel.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/operator/pdfLogresult.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/linemodel.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/pdfLogresult.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 namespace NSEpic
 {

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_SINGLETON_
 #define _REDSHIFT_COMMON_SINGLETON_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 

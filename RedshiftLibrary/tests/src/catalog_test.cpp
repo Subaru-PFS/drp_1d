@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/tests/test-tools.h>
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/tests/test-tools.h"
 
 #include <boost/test/unit_test.hpp>
 

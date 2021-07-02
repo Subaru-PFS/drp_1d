@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_QUICKSORT_
 #define _REDSHIFT_COMMON_QUICKSORT_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <algorithm>
 #include <vector>

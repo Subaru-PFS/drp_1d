@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <memory>
 #include <vector>

@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/ray/rules.h>
-#include <RedshiftLibrary/ray/linetags.h>
-#include <RedshiftLibrary/operator/raydetection.h>
+#include "RedshiftLibrary/ray/rules.h"
+#include "RedshiftLibrary/ray/linetags.h"
+#include "RedshiftLibrary/operator/raydetection.h"
 
 using namespace NSEpic;
 using namespace std;

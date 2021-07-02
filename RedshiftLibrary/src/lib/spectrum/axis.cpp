@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/log/log.h"
 #include <numeric>
 #include <algorithm>
 

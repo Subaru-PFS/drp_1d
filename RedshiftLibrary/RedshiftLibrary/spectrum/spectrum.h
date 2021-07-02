@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_SPECTRUM_SPECTRUM_
 #define _REDSHIFT_SPECTRUM_SPECTRUM_
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-#include <RedshiftLibrary/spectrum/LSF.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
 
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 //TODO: check if below are still required
@@ -14,8 +14,8 @@
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 
-#include <RedshiftLibrary/continuum/continuum.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/continuum/continuum.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 #include <unordered_map>
 #include <stdexcept>
 #include <string>

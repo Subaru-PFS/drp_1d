@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/common/singleton.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/singleton.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 using namespace NSEpic;
 using namespace std;

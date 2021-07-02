@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/operator/raymatching.h>
+#include "RedshiftLibrary/operator/raymatching.h"
 
 #include <algorithm>    // std::sort
 #include <math.h>
 #include <stdio.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 
 using namespace NSEpic;

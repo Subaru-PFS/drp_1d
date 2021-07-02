@@ -1,7 +1,7 @@
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/common/mean.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/mean.h"
 
 #include <time.h>
 #include <iostream>

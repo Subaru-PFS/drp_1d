@@ -1,7 +1,7 @@
 #ifndef _SCOPE_STORE_H
 #define _SCOPE_STORE_H
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic
 {

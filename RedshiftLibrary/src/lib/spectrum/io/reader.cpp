@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/spectrum/io/reader.h>
+#include "RedshiftLibrary/spectrum/io/reader.h"
 
 using namespace NSEpic;
 

@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_LINEMODEL_LMFITCONTROLLER_
 #define _REDSHIFT_LINEMODEL_LMFITCONTROLLER_
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic
 {

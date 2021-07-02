@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_TEMPLATE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+#include "RedshiftLibrary/log/log.h"
 #include <stdexcept>
 #include <string>
 #include <map>

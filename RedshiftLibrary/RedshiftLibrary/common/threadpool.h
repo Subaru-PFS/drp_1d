@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_THREADPOOL_
 #define _REDSHIFT_COMMON_THREADPOOL_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>

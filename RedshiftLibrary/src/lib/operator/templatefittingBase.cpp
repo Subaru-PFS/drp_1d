@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/operator/templatefittingBase.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
+#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 using namespace NSEpic;
 using namespace std;

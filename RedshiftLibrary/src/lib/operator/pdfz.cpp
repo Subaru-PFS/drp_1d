@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/extremum/extremum.h>
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/extremum/extremum.h"
 
 using namespace NSEpic;
 using namespace std;

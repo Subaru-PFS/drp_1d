@@ -1,13 +1,13 @@
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/common/mean.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/mean.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 #include <math.h>

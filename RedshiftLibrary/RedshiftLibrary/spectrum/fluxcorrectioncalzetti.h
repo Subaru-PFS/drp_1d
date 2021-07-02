@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_FLUXCORRECTIONCALZETTI_
 #define _REDSHIFT_SPECTRUM_FLUXCORRECTIONCALZETTI_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 #include <boost/format.hpp>
 

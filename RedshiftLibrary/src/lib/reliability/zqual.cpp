@@ -1,17 +1,17 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
-#include <RedshiftLibrary/processflow/result.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
+#include "RedshiftLibrary/processflow/result.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/datastore.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
-#include <RedshiftLibrary/extremum/extremum.h>
+#include "RedshiftLibrary/extremum/extremum.h"
 
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/reliability/pdfzFeatureResult.h>
-#include <RedshiftLibrary/reliability/pdfzPredictResult.h>
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/reliability/pdfzFeatureResult.h"
+#include "RedshiftLibrary/reliability/pdfzPredictResult.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/unordered_map.hpp>
@@ -23,9 +23,9 @@
 #include <stdio.h>
 #include <vector>
 
-#include <RedshiftLibrary/reliability/zclassifierstore.h>
-#include <RedshiftLibrary/reliability/zqual.h>
-#include <RedshiftLibrary/reliability/zqualresult.h>
+#include "RedshiftLibrary/reliability/zclassifierstore.h"
+#include "RedshiftLibrary/reliability/zqual.h"
+#include "RedshiftLibrary/reliability/zqualresult.h"
 
 using namespace std;
 using namespace NSEpic;

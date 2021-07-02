@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/operator/extremaresult.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
 
 using namespace NSEpic;
 

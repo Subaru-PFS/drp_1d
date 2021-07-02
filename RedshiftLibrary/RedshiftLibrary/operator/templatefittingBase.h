@@ -1,14 +1,14 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATE_FITTING_BASE_
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_BASE_
 
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/statistics/priorhelper.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 #include <vector>
 

@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/method/linematchingsolveresult.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
+#include "RedshiftLibrary/method/linematchingsolveresult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/operator/raymatchingresult.h"
 
 #include <float.h>
 

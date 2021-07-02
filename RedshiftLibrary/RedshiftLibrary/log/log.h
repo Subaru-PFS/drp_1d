@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_LOG_LOG_
 #define _REDSHIFT_LOG_LOG_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/singleton.h>
-#include <RedshiftLibrary/common/mutex.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/singleton.h"
+#include "RedshiftLibrary/common/mutex.h"
 
 #include <cstdarg>
 

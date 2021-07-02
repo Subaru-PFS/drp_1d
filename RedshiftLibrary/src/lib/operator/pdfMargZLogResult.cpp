@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;

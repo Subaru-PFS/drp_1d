@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
 #include <vector>
 #include<iostream>
 namespace NSEpic {
