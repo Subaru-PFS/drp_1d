@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/debug/debug.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/debug/debug.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <assert.h>
 #include <signal.h>

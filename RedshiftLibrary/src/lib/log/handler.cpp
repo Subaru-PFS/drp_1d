@@ -1,19 +1,19 @@
-#include <RedshiftLibrary/log/handler.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/handler.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 
 
-CLogHandler::CLogHandler( CLog& logger )
+CLogHandler::CLogHandler():
+    m_Logger(Log)
 {
-    m_Logger = &logger;
     m_LevelMask = CLog::nLevel_Warning;
-    m_Logger->AddHandler( *this );
+    m_Logger.AddHandler( *this );
 }
 
 CLogHandler::~CLogHandler()
 {
-    m_Logger->RemoveHandler( *this );
+    m_Logger.RemoveHandler( *this );
 }
 
 void CLogHandler::SetLevelMask( UInt32 mask )

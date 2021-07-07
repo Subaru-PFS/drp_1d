@@ -22,6 +22,7 @@ tools/CMakeFiles/
 *.sh
 
 bin/*
+coverage/
 test/report/report.xml
 RedshiftLibrary/tests/src/test-config.h
 

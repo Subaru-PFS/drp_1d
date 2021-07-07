@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/reliability/pdfzPredictResult.h>
+#include "RedshiftLibrary/reliability/pdfzPredictResult.h"
 
-#include <RedshiftLibrary/processflow/datastore.h>
+#include "RedshiftLibrary/processflow/datastore.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>

@@ -1,12 +1,12 @@
-#include <RedshiftLibrary/spectrum/fluxaxis.h>
+#include "RedshiftLibrary/spectrum/fluxaxis.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/common/median.h>
-#include <RedshiftLibrary/common/mean.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/common/median.h"
+#include "RedshiftLibrary/common/mean.h"
+#include "RedshiftLibrary/common/mask.h"
 
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -20,9 +20,9 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
 
 }
 
-CSpectrumFluxAxis::CSpectrumFluxAxis(const CSpectrumAxis & otherFlux, const CSpectrumNoiseAxis & otherError ):
-   CSpectrumAxis(otherFlux),
-   m_StdError(otherError)
+CSpectrumFluxAxis::CSpectrumFluxAxis( CSpectrumAxis otherFlux,  CSpectrumNoiseAxis  otherError ):
+   CSpectrumAxis(std::move(otherFlux)),
+   m_StdError(std::move(otherError))
 {}
 
 
@@ -32,7 +32,15 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
 {
 
 }
-CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List samples) :
+
+CSpectrumFluxAxis::CSpectrumFluxAxis( const TFloat64List & samples) :
+    CSpectrumAxis(samples),
+    m_StdError(samples.size())//default to 1
+{
+
+}
+
+CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List && samples) :
     CSpectrumAxis(std::move(samples)),
     m_StdError(samples.size())//default to 1
 {
@@ -95,7 +103,8 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
     if( GetSamplesCount() < ( kernelHalfWidth ) + 1 )
         return false;
 
-    CSpectrumAxis tmp = *this;
+
+    TAxisSampleList tmp(m_Samples.size());
 
     Int32 left = 0;
     Int32 right = 0;
@@ -106,18 +115,22 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
         left = max( 0, i - (Int32)kernelHalfWidth );
         right = min( (Int32)GetSamplesCount() - 1, i + (Int32)kernelHalfWidth );
 
-        (*this)[i] = mean.Find( tmp.GetSamples()+left, ( right - left ) +1 );
+        tmp[i] = mean.Find( m_Samples.data()+left, ( right - left ) +1 );
     }
-
+    
+    m_Samples = std::move(tmp);
+    
     return true;
 }
 
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
-  if( !error.isEmpty() )
+    const CSpectrumNoiseAxis & error = GetError();
+
+    if( !error.isEmpty() )
     {
-        return ComputeMeanAndSDevWithError( mask, mean, sdev, error );
+        return ComputeMeanAndSDevWithError( mask, mean, sdev );
     }
     else
     {
@@ -130,33 +143,23 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
     Int32 j;
-    Float64 sum,var,ep;
+    Float64 sum = 0.0, sum2 = 0.0;
     Float64 ndOfSampleUsed;
 
-    sum=0.0;
     ndOfSampleUsed=0;
     for ( j=0; j < GetSamplesCount(); j++)
     {
         DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
         sum += mask[j] * m_Samples[j];
+        sum2 += mask[j] * m_Samples[j] * m_Samples[j];
         ndOfSampleUsed += mask[j];
     }
 
     if( ndOfSampleUsed > 1 )
     {
         mean = sum / ndOfSampleUsed;
-
-        var=0.0;
-        ep = 0.0;
-        for( j=0; j < GetSamplesCount() ;j++ )
-        {
-            sum = mask[j] * ( m_Samples[j] - mean );
-            ep+=sum;
-            var += sum * sum;
-        }
-
-        sdev = sqrt( (var - ep*ep / ndOfSampleUsed) / (ndOfSampleUsed-1) );
+        sdev = sqrt((sum2 - sum*sum*ndOfSampleUsed)/(ndOfSampleUsed-1));
     }
     else
     {
@@ -168,41 +171,32 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     return true;
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev, const CSpectrumNoiseAxis error ) const
+Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
+    const CSpectrumNoiseAxis & error = GetError();
+
     Int32 j;
 
-    Float64 sum, var, errorSum, err;
-    Int32 ndOfSampleUsed=0;
+    Float64 sum = 0.0, sum2 = 0.0, weigthSum = 0.0, weigthSum2=0.0, weight;
 
-    sum=0.0;
-    errorSum= 0.0;
-    ndOfSampleUsed=0;
     for (j=0;j< GetSamplesCount();j++)
     {
-        err = 1.0 / ( error[j] * error[j] );
+        DebugAssert( mask[j] == 1 || mask[j] == 0 );
 
-        sum += mask[j] * m_Samples[j] * err;
-        errorSum += mask[j] * err;
+        weight = 1.0 / ( error[j] * error[j] );
 
-        ndOfSampleUsed += mask[j];
+        sum += mask[j] * m_Samples[j] * weight;
+        sum2 += mask[j] * m_Samples[j] * m_Samples[j] * weight;
+        weigthSum += mask[j] * weight;
+        weigthSum2 += mask[j] * weight * weight;
     }
 
-    if (ndOfSampleUsed>1)
+    if (weigthSum>0.0)
     {
-        mean = sum / errorSum;
-
-        var=0.0;
-        for (j=0;j < GetSamplesCount();j++)
-        {
-            sum = mask[j] * ( m_Samples[j] - mean );
-
-            var += sum * sum;
-        }
-
-        sdev = sqrt( var / ( ndOfSampleUsed - 1 ) );
+        mean = sum / weigthSum;
+        sdev = sqrt((sum2 - sum*sum*weigthSum)/(weigthSum - weigthSum2/weigthSum));
     }
     else
     {

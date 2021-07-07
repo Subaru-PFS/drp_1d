@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/noise/flat.h>
+#include "RedshiftLibrary/noise/flat.h"
 
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -25,6 +25,6 @@ void CNoiseFlat::SetStatErrorLevel( Float64 level )
 
 void CNoiseFlat::AddNoise( CSpectrum& s1 ) const
 {
-    CSpectrumNoiseAxis& statError = s1.GetFluxAxis().GetError();
-    statError.SetSize(s1.GetFluxAxis().GetSamplesCount(), m_StatErrorLevel);
+    CSpectrumNoiseAxis statError = CSpectrumNoiseAxis(s1.GetSampleCount(), m_StatErrorLevel);
+    s1.SetErrorAxis(std::move(statError));
 }

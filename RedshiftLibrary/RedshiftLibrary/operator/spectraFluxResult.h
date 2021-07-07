@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_SPECTRARESULT_
 #define _REDSHIFT_OPERATOR_SPECTRARESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
 
 using namespace std;
@@ -18,14 +18,9 @@ public:
     CSpectraFluxResult();
     virtual ~CSpectraFluxResult();
 
-    CSpectraFluxResult ( UInt32 optio );
-
-  void getData(const std::string& name, double **data, int *size) const;
-
     TFloat64List   fluxes;
     TFloat64List   wavel;
 
-    UInt32	         m_optio;
 
 };
 

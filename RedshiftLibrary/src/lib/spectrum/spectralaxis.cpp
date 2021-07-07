@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/spectrum/spectralaxis.h>
+#include "RedshiftLibrary/spectrum/spectralaxis.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include <cmath>
@@ -31,22 +31,20 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples, Bool isLogScale ) :
-    CSpectrumAxis(std::move(samples)),
-    m_SpectralFlags( 0 )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale ) :
+    CSpectrumAxis(samples)
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
 }
 
-/**
- * Constructor.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List samples) :
-    CSpectrumAxis(std::move(samples)),
-    m_SpectralFlags( 0 )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis(  TFloat64List && samples, Bool isLogScale ) :
+    CSpectrumAxis(std::move(samples))
 {
+    if( isLogScale )
+        m_SpectralFlags |= nFLags_LogScale;
 }
+
 //only used by client
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
     CSpectrumAxis( samples, n ),
@@ -54,35 +52,6 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) 
 {
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(const CSpectrumSpectralAxis & other):
-    CSpectrumAxis(other),
-    m_SpectralFlags(other.m_SpectralFlags),
-    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
-    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
-{}
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(CSpectrumSpectralAxis && other):
-    CSpectrumAxis(other),
-    m_SpectralFlags(other.m_SpectralFlags),
-    m_regularLogSamplingStep(other.m_regularLogSamplingStep),
-    m_regularLogSamplingChecked(other.m_regularLogSamplingChecked)
-{}
-
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=(const CSpectrumSpectralAxis& other)
-{
-    m_Samples = other.m_Samples;
-    m_SpectralFlags  = other.m_SpectralFlags;
-    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
-    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
-    return *this;
-}
-CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator=( CSpectrumSpectralAxis&& other)
-{
-    m_Samples = other.m_Samples;
-    m_SpectralFlags  = other.m_SpectralFlags;
-    m_regularLogSamplingStep = other.m_regularLogSamplingStep;
-    m_regularLogSamplingChecked = other.m_regularLogSamplingChecked;
-    return *this;
-}
 /**
  * Constructor, shifts origin along direction an offset distance.
  */
@@ -477,7 +446,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
     if (!IsLogSampled() )
         return false;
 
-    if (std::abs(m_regularLogSamplingStep - logGridstep)>1E-8)
+    if (std::abs(m_regularLogSamplingStep - logGridstep)>1E-7)
     {
         Log.LogDetail("   CSpectrumSpectralAxis::IsLogSampled: Log-regular sampling with bad step");
         return false;
@@ -565,5 +534,32 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
     }
 
     TFloat64Range lrange = GetLambdaRange();
-    m_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
+    TFloat64List new_Samples = lrange.SpreadOverLog(m_regularLogSamplingStep);
+
+    // gain one more decimal
+    const Int32 bs = 100, nm1=m_Samples.size()-1;
+    Float64 bias_start=0., bias_end=0.;
+     // take the mean value (assuming rounding to even), 
+     //  should take the max value if truncation
+    if (IsInLogScale()){
+        for (Int32 k=0; k<bs; k++){
+            bias_start += (new_Samples[k] - m_Samples[k]);
+            bias_end += (new_Samples[nm1-k] - m_Samples[nm1-k]);
+        }
+    }else{
+        for (Int32 k=0; k<bs; k++){
+            bias_start += log(new_Samples[k]/m_Samples[k]);
+            bias_end += log(new_Samples[nm1-k]/m_Samples[nm1-k]);
+        }
+    }
+    bias_start /= 100;
+    bias_end /= 100;
+    Float64 lstart=log(lrange.GetBegin()), lend=log(lrange.GetEnd());
+    Float64 new_lstart=lstart-bias_start;
+    Float64 new_lend=lend-bias_end;
+    TFloat64Range new_lrange(exp(new_lstart), exp(new_lend));
+
+    Float64 new_regularLogSamplingStep=(new_lend-new_lstart)/nm1;
+    m_Samples = new_lrange.SpreadOverLog(new_regularLogSamplingStep);
+    m_regularLogSamplingStep = new_regularLogSamplingStep;
 }

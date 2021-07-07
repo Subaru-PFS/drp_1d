@@ -1,8 +1,8 @@
 #include <cstdarg>
 #include <iostream>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/rule2singlelinesamplitude.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/rule2singlelinesamplitude.h"
 #include "boost/format.hpp"
 
 using namespace NSEpic;

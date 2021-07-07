@@ -1,7 +1,4 @@
-#include <RedshiftLibrary/processflow/parameterstore.h>
-
-
-
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 namespace bpt = boost::property_tree;
 
@@ -341,6 +338,17 @@ template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& 
 {
   TFloat64List fl = GetList<Float64>(name);
   return TFloat64Range(fl[0],fl[1]);
+}
+
+Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
+{
+    Bool fft_processing = false;
+    if(Has<std::string>(objectType + ".templatefittingsolve.fftprocessing"))
+        fft_processing |= Get<std::string>(objectType + ".templatefittingsolve.fftprocessing") == "yes";
+    if(Has<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
+        fft_processing |= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
+
+    return fft_processing;
 }
 
 }

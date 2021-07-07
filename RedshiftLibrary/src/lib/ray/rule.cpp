@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/rule.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/rule.h"
 
 #include <cstdarg>
 

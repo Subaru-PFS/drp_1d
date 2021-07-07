@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
 #define _REDSHIFT_OPERATOR_RAYDETECTIONRESULT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <vector>
 

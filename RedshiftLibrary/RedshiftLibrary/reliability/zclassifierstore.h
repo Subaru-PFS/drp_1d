@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_RELIABILITY_ZCLASSIFIERSTORE_
 #define _REDSHIFT_RELIABILITY_ZCLASSIFIERSTORE_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <boost/unordered_map.hpp>
 #include <gsl/gsl_matrix.h>

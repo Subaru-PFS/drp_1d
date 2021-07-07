@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_RAY_RULESUPERSTRONG_
 #define _REDSHIFT_RAY_RULESUPERSTRONG_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/ray/rule.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/ray/rule.h"
 #include <boost/format.hpp>
 
 namespace NSEpic {

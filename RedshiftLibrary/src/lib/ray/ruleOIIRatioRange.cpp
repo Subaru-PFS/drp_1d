@@ -5,8 +5,8 @@
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ruleOIIRatioRange.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ruleOIIRatioRange.h"
 
 using namespace NSEpic;
 using namespace std;

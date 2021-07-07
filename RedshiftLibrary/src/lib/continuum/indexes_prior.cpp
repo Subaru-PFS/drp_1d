@@ -1,10 +1,10 @@
 
-#include <RedshiftLibrary/continuum/indexes_prior.h>
+#include "RedshiftLibrary/continuum/indexes_prior.h"
 
 #include <iostream>
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/method/reliabilitysolve.h>
-#include <RedshiftLibrary/method/reliabilityresult.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/method/reliabilitysolve.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 using namespace NSEpic;
 
@@ -19,7 +19,7 @@ std::shared_ptr<CSolveResult> CReliabilitySolve::compute(std::shared_ptr<const C
   
   std::shared_ptr<const CPdfSolveResult> galaxyResult=std::shared_ptr<const CPdfSolveResult>(nullptr); //std::make_shared<const CPdfSolveResult>();
 
-  galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetGlobalResult("galaxy.result").lock());
+  galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
 
   /*
   std::shared_ptr<const CPdfSolveResult> starResult=std::shared_ptr<const CPdfSolveResult>(nullptr);//std::make_shared<const CPdfSolveResult>();

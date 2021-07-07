@@ -1,12 +1,12 @@
 #ifndef _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 #define _REDSHIFT_LINEMODEL_CONTINUUMMODELSOLUTION_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/continuum/indexes.h>
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/continuum/indexes.h"
 #include <cmath>
 
 namespace NSEpic

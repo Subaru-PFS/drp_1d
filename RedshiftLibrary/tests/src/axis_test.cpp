@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/spectrum/axis.h"
 
 using namespace NSEpic;
 

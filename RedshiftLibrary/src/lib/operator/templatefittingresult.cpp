@@ -24,7 +24,7 @@ void CTemplateFittingResult::Init(UInt32 n , Int32 nISM, Int32 nIGM)
     Redshifts.resize( n );
     Overlap.resize( n );
     Status.resize( n );
-
+    SNR.resize( n );
     ChiSquareIntermediate.clear();
     IsmEbmvCoeffIntermediate.clear();
     IgmMeiksinIdxIntermediate.clear();

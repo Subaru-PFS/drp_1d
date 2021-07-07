@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/operator/operator.h"
 
 using namespace NSEpic;
 using namespace std;

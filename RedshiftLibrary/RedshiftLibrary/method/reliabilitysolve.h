@@ -1,9 +1,9 @@
 #ifndef _METHOD_RELIABILITY_
 #define _METHOD_RELIABILITY_
 
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/method/reliabilityresult.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
 
 
 namespace NSEpic

@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 #define _REDSHIFT_SPECTRUM_TEMPLATE_CATALOG_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 #include <boost/filesystem.hpp>
 #include <vector>
@@ -28,7 +28,9 @@ public:
 
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
-    void                    InitIsmIgm(const std::string & calibrationPath, std::shared_ptr<const CParameterStore> parameterStore);
+    void                    InitIsmIgm(const std::string & calibrationPath, 
+                                       std::shared_ptr<const CParameterStore> parameterStore,
+                                       const std::shared_ptr<const CLSF>& lsf);
     mutable Bool            m_logsampling = 0;//non-log by default
 
 private:

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_DEBUG_DEBUG_
 #define _REDSHIFT_DEBUG_DEBUG_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <cstdio>
 

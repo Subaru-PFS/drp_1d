@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/extremum/extremum.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/extremum/extremum.h"
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>  

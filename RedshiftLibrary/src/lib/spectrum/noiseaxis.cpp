@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/spectrum/noiseaxis.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/spectrum/noiseaxis.h"
+#include "RedshiftLibrary/common/mask.h"
 
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;

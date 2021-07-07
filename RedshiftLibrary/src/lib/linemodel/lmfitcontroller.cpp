@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/linemodel/lmfitcontroller.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/linemodel/lmfitcontroller.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 /*

@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/statistics/pdfcandidatesz.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -109,7 +109,7 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
 /**
  * @brief CPdfCandidatesZ::Compute
  */
-std::shared_ptr<CPdfCandidateszResult> CPdfCandidatesZ::Compute(TRedshiftList const & PdfRedshifts, TFloat64List const & PdfProbaLog)
+std::shared_ptr<PdfCandidatesZResult> CPdfCandidatesZ::Compute(TRedshiftList const & PdfRedshifts, TFloat64List const & PdfProbaLog)
 {
     if(m_optMethod==0)
     {
@@ -156,7 +156,7 @@ std::shared_ptr<CPdfCandidateszResult> CPdfCandidatesZ::Compute(TRedshiftList co
         }
     }
 
-    std::shared_ptr<CPdfCandidateszResult> result = std::make_shared<CPdfCandidateszResult>(m_optMethod);
+    std::shared_ptr<PdfCandidatesZResult> result = std::make_shared<PdfCandidatesZResult>(m_optMethod);
 
     SortByValSumProbaInt(result->m_ranked_candidates);
 

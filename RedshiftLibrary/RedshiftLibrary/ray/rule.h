@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_RAY_RULE_
 #define _REDSHIFT_RAY_RULE_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 #include <boost/format.hpp>
 
 namespace NSEpic

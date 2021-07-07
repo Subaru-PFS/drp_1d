@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_RAY_CATALOG_
 #define _REDSHIFT_RAY_CATALOG_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/ray.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/ray.h"
 
 #include <vector>
 #include <string>
@@ -32,7 +32,7 @@ public:
 
 
     Bool Add( const CRay& r );
-    void Load( const char* filePath );
+    void Load( const char* filePath, Float64 nsigmasupport=8.);
     Bool Save( const char* filePath );
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
@@ -47,7 +47,6 @@ private:
     TRayVector m_List;
 
 };
-
 
 }
 

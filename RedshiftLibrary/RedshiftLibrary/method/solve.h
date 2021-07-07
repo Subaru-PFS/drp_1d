@@ -1,11 +1,11 @@
 #ifndef _SOLVE_H_
 #define _SOLVE_H_
 
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 
 namespace NSEpic
 {

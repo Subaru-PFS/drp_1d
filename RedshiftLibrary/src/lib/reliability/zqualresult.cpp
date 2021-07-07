@@ -1,9 +1,9 @@
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/processflow/datastore.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/datastore.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -13,8 +13,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include <RedshiftLibrary/reliability/zqualresult.h>
-#include <RedshiftLibrary/reliability/pdfzPredictResult.h>
+#include "RedshiftLibrary/reliability/zqualresult.h"
+#include "RedshiftLibrary/reliability/pdfzPredictResult.h"
 
 using namespace std;
 using namespace NSEpic;

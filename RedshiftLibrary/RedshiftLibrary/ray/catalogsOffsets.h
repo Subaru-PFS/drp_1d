@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_RAY_CATALOGSOFFSETS_
 #define _REDSHIFT_RAY_CATALOGSOFFSETS_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
 
 
 #include <boost/format.hpp>

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_SINGLETON_
 #define _REDSHIFT_COMMON_SINGLETON_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic {
 
@@ -9,23 +9,25 @@ namespace NSEpic {
  * \ingroup Redshift
  * Singleton base class
  */
-template <typename T> class CSingleton
+template <typename T>
+class CSingleton
 {
+public:
 
-  public:
-    CSingleton() { m_Instance = (T *)this; }
+    // non copyable
+    CSingleton(const CSingleton &) = delete;
+    CSingleton & operator= (const CSingleton &) = delete;
 
-    virtual ~CSingleton() { m_Instance = NULL; }
+    static T &GetInstance() { 
+      static T m_Instance{};
+      return m_Instance; 
+      }
 
-    static Bool IsCreated() { return m_Instance != NULL; }
+protected:
+    CSingleton() = default;
+    ~CSingleton() = default;
 
-    static T &GetInstance() { return *m_Instance; }
-
-  private:
-    static T *m_Instance;
 };
-
-template <typename T> T *CSingleton<T>::m_Instance = NULL;
 
 } // namespace NSEpic
 

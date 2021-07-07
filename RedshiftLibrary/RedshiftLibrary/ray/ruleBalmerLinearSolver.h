@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_RAY_RULEBALMERLINEARSOLVER_
 #define _REDSHIFT_RAY_RULEBALMERLINEARSOLVER_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 #include <boost/format.hpp>
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/ray/rule.h>
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/ray/rule.h"
 
 namespace NSEpic
 {

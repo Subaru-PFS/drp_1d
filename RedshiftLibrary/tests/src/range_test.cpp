@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/range.h"
 #include <vector>
 
 using namespace NSEpic;
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(Closed_interval)
 }
 BOOST_AUTO_TEST_CASE(maskedRange)
 {
-    TFloat64Range range(3,5);
+    TInt32Range range(3,5);
     TFloat64List otherVector= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     TFloat64List mask       = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1}; //mask deactivating the range from 2 to 7
     
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(maskedRange)
 }
 BOOST_AUTO_TEST_CASE(maskedRange_oneCommon)
 {
-    TFloat64Range range(1,5);
+    TInt32Range range(1,5);
     TFloat64List otherVector= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     TFloat64List mask       = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1}; //mask deactivating the range from 2 to 7
     

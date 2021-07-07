@@ -1,30 +1,32 @@
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/logrebinning.h>
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/logrebinning.h"
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                             std::shared_ptr<CRayCatalog> rayCatalog,
+                             std::shared_ptr<CRayCatalog> gal_rayCatalog,
+                             std::shared_ptr<CRayCatalog> qso_rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
-  m_RayCatalog(std::move(rayCatalog)),
+  m_gal_RayCatalog(std::move(gal_rayCatalog)),
+  m_qso_RayCatalog(std::move(qso_rayCatalog)),
   m_ParameterStore(std::move(paramStore))
 {
     m_Spectrum->InitSpectrum(*m_ParameterStore);
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     
-    RebinInputWrapper(); 
+    RebinInputWrapper();
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
-    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore);
+    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore, m_Spectrum->GetLSF());
 
     std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
     Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
@@ -65,26 +67,17 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 void CInputContext::RebinInputWrapper() 
 {
     //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
-    //The drawback of the below code is that we are violating object and method scopes by trying to read "deep" info
-    //Another option could be to move fftprocessing to the object scope (vs object.method scope)
-    bool fft_processing = false, fft_processing_qso = false, fft_processing_star = false, fft_processinglmContinuum = false;
-    if(m_ParameterStore->Has<std::string>( "qso.templatefittingsolve.fftprocessing"))
-        fft_processing_qso = m_ParameterStore->Get<std::string>( "qso.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>( "star.templatefittingsolve.fftprocessing"))
-        fft_processing_star = m_ParameterStore->Get<std::string>( "star.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.templatefittingsolve.fftprocessing"))
-        fft_processing = m_ParameterStore->Get<std::string>("galaxy.templatefittingsolve.fftprocessing") == "yes";
-    if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing"))
-        fft_processinglmContinuum = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
-    /*if(m_ParameterStore->Has<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing"))
-        fft_processinglm = m_ParameterStore->Get<std::string>("galaxy.linemodelsolve.linemodel.fftprocessing")=="yes";//new param to decide if we should use fft for linemodel 
-    */
+    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
+    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
+    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing("star");
+    
     if(fft_processing_qso || fft_processing_star)
     {
         Log.LogError("FFT processing is not yet supported for stars or qso");
         throw std::runtime_error("FFT processing is not yet supported for star or qso");
     }
-    m_use_LogLambaSpectrum = fft_processing || fft_processing_qso || fft_processing_star || fft_processinglmContinuum;
+
+    m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
 
     if(!m_use_LogLambaSpectrum) return;
 
@@ -101,7 +94,7 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
 {
   TFloat64Range clampedlambdaRange;
   spectrum->GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo( "Processing spc: (CLambdaRange: %f-%f:%f)",
+  Log.LogInfo( "Validate spectrum: (CLambdaRange: %f-%f:%f)",
                clampedlambdaRange.GetBegin(),
                clampedlambdaRange.GetEnd(),
                spectrum->GetResolution());

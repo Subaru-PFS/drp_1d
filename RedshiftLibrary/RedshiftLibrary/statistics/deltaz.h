@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_STATISTICS_DELTAZ_
 #define _REDSHIFT_STATISTICS_DELTAZ_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 
 #include <string>

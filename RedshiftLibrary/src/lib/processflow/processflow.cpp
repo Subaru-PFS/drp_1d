@@ -1,21 +1,21 @@
-#include <RedshiftLibrary/processflow/processflow.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
+#include "RedshiftLibrary/processflow/processflow.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 
-#include <RedshiftLibrary/linemodel/calibrationconfig.h>
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/debug/assert.h"
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/method/templatefittingsolve.h>
-#include <RedshiftLibrary/method/linematchingsolve.h>
-#include <RedshiftLibrary/method/tplcombinationsolve.h>
-#include <RedshiftLibrary/method/linemodelsolve.h>
-#include <RedshiftLibrary/method/classificationsolve.h>
-#include <RedshiftLibrary/method/reliabilitysolve.h>
-#include <RedshiftLibrary/method/classificationresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/reliability/zqual.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/reliabilitysolve.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -31,18 +31,15 @@ using namespace boost;
 using namespace NSEpic;
 namespace bfs = boost::filesystem;
 
-CProcessFlow::CProcessFlow()
-{
-
-}
-
-CProcessFlow::~CProcessFlow()
-{
-
-}
 
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
+
+    Log.LogInfo("=====================================================================");
+    std::ostringstream oss;
+    oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
+    Log.LogInfo(oss.str());
+    Log.LogInfo("=====================================================================");
 
     Float64       maxCount; 
     Float64       redshiftseparation;
@@ -55,8 +52,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //************************************
     // Stellar method
 
+    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve");
+    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
 
-    if(ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve")=="yes"){
+    if(enableStarFitting=="yes"){
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         solve.Compute(ctx.GetInputContext(),
@@ -86,7 +85,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                           ctx.m_ScopeStack);
                                       }
         
-        else if(qso_method=="linemodel"){
+        else if(qso_method=="linemodelsolve"){
             Log.LogInfo("Linemodel qso fitting...");
             CLineModelSolve Solve(ctx.m_ScopeStack,"qso",calibrationDirPath);
             Solve.Compute( ctx.GetInputContext(),

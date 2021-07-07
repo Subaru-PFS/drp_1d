@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
 using namespace NSEpic;
 
@@ -51,12 +51,13 @@ void CSolve::Compute(std::shared_ptr<const CInputContext> inputContext,
   {
     CAutoScope autoscope(scope,m_name);
     result = compute(inputContext,resultStore,scope);
+    saveToResultStore(result,resultStore);
   }
-  saveToResultStore(result,resultStore);
+
   //endCompute(inputContext,resultStore,scope);
 }
 
 void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,std::shared_ptr<COperatorResultStore> resultStore) const
 {
-  resultStore->StoreScopedGlobalResult("result",result); 
+  resultStore->StoreScopedGlobalResult("solveResult",result); 
 }

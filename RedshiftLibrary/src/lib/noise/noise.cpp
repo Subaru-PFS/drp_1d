@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/noise/noise.h>
+#include "RedshiftLibrary/noise/noise.h"
 
 using namespace NSEpic;
 using namespace std;

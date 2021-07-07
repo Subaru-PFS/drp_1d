@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -9,6 +9,8 @@
 #include <iostream>
 #include <cmath>
 #include <boost/filesystem.hpp>
+
+#include "RedshiftLibrary/ray/lineprofile.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -125,7 +127,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
     start = end + 1;
     end = profileString.find("_", start);
     temp = profileString.substr(start, end-start);
-    asymParams.width = std::stod(temp);
+    asymParams.sigma = std::stod(temp);
 
     start = end + 1;
     end = profileString.find("_", start);
@@ -143,7 +145,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
  * Loads a line catalog in TSV format as of v0.4
  * @param filePath
  */
-void CRayCatalog::Load( const char* filePath )
+void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
 {
     std::ifstream file;
 
@@ -203,27 +205,22 @@ void CRayCatalog::Load( const char* filePath )
         {
             // Parse position
             double pos = 0.0;
-            try
-            {
+            try{
                 pos = lexical_cast<double>(*it);
-            }
-            catch (const bad_lexical_cast& e)
+            }catch (const bad_lexical_cast& e)
             {
-	      Log.LogError("Bad file format : %s [%s]", filePath, e.what());
-	      throw runtime_error("Bad file format");
+                Log.LogError("Bad file format : %s [%s]", filePath, e.what());
+                throw runtime_error("Bad file format");
             }
 
             // Parse name
             ++it;
             string name;
             if( it != tok.end() )
-            {
                 name = *it;
-            }
-            else
-            {
-	      Log.LogError("Bad name in : %s", + filePath);
-	      throw runtime_error("Bad name");
+            else{
+                Log.LogError("Bad name in : %s", + filePath);
+                throw runtime_error("Bad name");
             }
 
             // Parse type
@@ -232,11 +229,10 @@ void CRayCatalog::Load( const char* filePath )
             string type = "None";
             if( it != tok.end() )
                 type = *it;
-            if( strcmp(type.c_str(),"A")==0 ){
+            if( strcmp(type.c_str(),"A")==0 )
                 Etype = 1;
-            }else if( strcmp(type.c_str(),"E")==0 ){
+            else if( strcmp(type.c_str(),"E")==0 )
                 Etype = 2;
-            }
 
             // Parse weak or strong
             int Eforce = 0;
@@ -244,39 +240,47 @@ void CRayCatalog::Load( const char* filePath )
             string strong = "None";
             if( it != tok.end() )
                 strong = *it;
-            if( strcmp(strong.c_str(),"W")==0 ){
+            if( strcmp(strong.c_str(),"W")==0 )
                 Eforce = 1;
-            }else if( strcmp(strong.c_str(),"S")==0 ){
+            else if( strcmp(strong.c_str(),"S")==0 )
                 Eforce = 2;
-            }
-            else
-              {
+            else{
                 Log.LogError("Bad force in : %s", + filePath);
                 throw runtime_error("Bad force");
-              }
+            }
 
             std::string profileName = "SYM";
-            CRay::TProfile profile;
             TAsymParams asymParams = {NAN, NAN, NAN};
             std::string groupName = "-1";
             Float64 nominalAmplitude = 1.0;
             std::string velGroupName = "-1";
 
+            //tmp: default values 
+            TAsymParams _asymParams = {1., 4.5, 0.};
+            TAsymParams _asymFitParams = {2., 2., 0.};
+
+
+            std::shared_ptr<CLineProfile> profile;
             // Parse profile name
             ++it;
             if( it != tok.end() ){
                 profileName = *it;
-		if (profileName.find("ASYMFIXED") != std::string::npos) {
-                    profile = CRay::ASYMFIXED;
-                    parse_asymfixed(profileName, asymParams);
-		}
-                else if (profileName == "SYM") { profile = CRay::SYM; }
-                else if (profileName == "SYMXL") { profile = CRay::SYMXL; }
-                else if (profileName == "LOR") { profile = CRay::LOR; }
-                else if (profileName == "ASYM") { profile = CRay::ASYM; }
-                else if (profileName == "ASYM2") { profile = CRay::ASYM2; }
-                else if (profileName == "ASYMFIT") { profile = CRay::ASYMFIT; }
-                else if (profileName == "EXTINCT") { profile = CRay::EXTINCT; }
+                if (profileName.find("ASYMFIXED") != std::string::npos) {
+                    parse_asymfixed(profileName, asymParams);//reading params from catalog files
+                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, asymParams, "mean");
+                }
+                else if (profileName == "SYM")
+                    profile = std::make_shared<CLineProfileSYM>(nsigmasupport);
+                else if (profileName == "LOR")
+                    profile = std::make_shared<CLineProfileLOR>(nsigmasupport);
+                else if (profileName == "ASYM"){
+                    asymParams =  _asymParams;
+                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none");
+                }
+                else if (profileName == "ASYMFIT"){
+                    asymParams =  _asymFitParams; //using default values
+                    profile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFitParams, "mean");
+                }
             }
 
             // Parse group name
@@ -288,47 +292,36 @@ void CRayCatalog::Load( const char* filePath )
                 ++it;
                 if( it != tok.end() )
                 {
-                    try
-                    {
+                    try{
                         nominalAmplitude = lexical_cast<double>(*it);
-                    }
-                    catch (bad_lexical_cast&)
-                    {
+                    }catch (bad_lexical_cast&){
                         Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
                         nominalAmplitude = 1.0;
                     }
                 }
                 if(groupName=="" || groupName=="-1")
-                {
                     nominalAmplitude = 1.0;
-                }
             }
 
             // Parse velocity group name
             ++it;
-            if( it != tok.end() ){
+            if( it != tok.end() )
                 velGroupName = *it;
-            }
 
 	    ++it;
 	    int id=-1;
 	    if( it != tok.end() ){
-	      try
-		{
-		  id = lexical_cast<int>(*it);
-		}
-	      catch (const bad_lexical_cast& e)
-		{
-		  Log.LogError("Bad file format : %s [%s]", filePath, e.what());
-		  throw runtime_error("Bad file format");
-		}
-            }
-	    
-
-            if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
+	        try{
+		        id = lexical_cast<int>(*it);
+            }catch (const bad_lexical_cast& e)
             {
-	      Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, asymParams, id) );
+                Log.LogError("Bad file format : %s [%s]", filePath, e.what());
+                throw runtime_error("Bad file format");
             }
+        }
+	    
+        if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
+	        Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, id) );
         }
     }
     file.close();
@@ -370,7 +363,7 @@ Bool CRayCatalog::Save( const char* filePath )
         {
             file << "S" << "\t";
         }
-        file << m_List[i].GetProfile() << "\t";
+        file << m_List[i].GetName() << "\t";
 
         file << m_List[i].GetGroupName() << "\t";
         file << m_List[i].GetNominalAmplitude() << "\t";

@@ -1,17 +1,17 @@
 #ifndef _REDSHIFT_OPERATOR_LINEMODELRESULT_
 #define _REDSHIFT_OPERATOR_LINEMODELRESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/continuum/indexes.h>
-#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
-#include <RedshiftLibrary/linemodel/linemodelsolution.h>
-#include <RedshiftLibrary/linemodel/continuummodelsolution.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/priorhelper.h>
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/continuum/indexes.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/linemodel/linemodelsolution.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic
 {

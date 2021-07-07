@@ -1,8 +1,9 @@
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/debug/assert.h"
 
 #include <boost/filesystem.hpp>
 
@@ -31,7 +32,8 @@ CProcessFlowContext::~CProcessFlowContext()
 }
 void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CTemplateCatalog> templateCatalog,
-                               std::shared_ptr<CRayCatalog> rayCatalog,
+                               std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
+                               std::shared_ptr<CRayCatalog> qso_rayCatalog,
                                const std::string& paramsJSONString)
 {
   Log.LogInfo("Processing context initialization");
@@ -40,9 +42,13 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
   parameterStore->FromString(paramsJSONString);
 
 //  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
-  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,rayCatalog,parameterStore);
+  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,galaxy_rayCatalog,qso_rayCatalog,parameterStore);
 
   m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
 
 }
 
+void CProcessFlowContext::testResultStore() {
+  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
+    m_ResultStore->test();
+  }

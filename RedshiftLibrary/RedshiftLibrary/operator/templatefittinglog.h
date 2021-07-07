@@ -1,19 +1,19 @@
 #ifndef _REDSHIFT_OPERATOR_CHISQUARELOGLAMBDA_
 #define _REDSHIFT_OPERATOR_CHISQUARELOGLAMBDA_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/templatefittingBase.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/common/mask.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/common/mask.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
-#include <RedshiftLibrary/statistics/priorhelper.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
-#include <RedshiftLibrary/operator/modelcontinuumfittingresult.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 
 #include <fftw3.h>
 

@@ -1,10 +1,14 @@
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/LSF.h>
-#include <RedshiftLibrary/spectrum/LSFConstant.h>
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
+#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/debug/assert.h"
 
 #include <algorithm>
 #include <cmath>
@@ -16,11 +20,9 @@
 
 #include <gsl/gsl_fit.h>
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
-
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
-
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -79,51 +81,52 @@ BOOST_AUTO_TEST_CASE(LSF)
 
     CSpectrumSpectralAxis SpectralAxis;
     CSpectrumFluxAxis FluxAxis;
-    std::shared_ptr<CLSF> LSF=std::make_shared<CLSFConstantGaussian>(1.09);
+    std::string lsfType = "GaussianConstantWidth";
+    TLSFArguments args;
+    args.width = 1.09;
+    std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
+    //std::shared_ptr<CLSF> LSF = CLSF::make_LSF(lsfType, args);
 
     //Test constructor with spectralAxis, fluxAxis and LSF
-    CSpectrum object_CSpectrum(SpectralAxis, FluxAxis, LSF);
+    CSpectrum object_CSpectrum = CSpectrum(SpectralAxis, FluxAxis, LSF);
 
     BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum.GetLSF()->GetSigma() == 1.09);
+    BOOST_CHECK(object_CSpectrum.GetLSF()->GetWidth() == 1.09);
 
     //Test assignment copy constructor
     CSpectrum object_CSpectrum1 = object_CSpectrum;
 
     BOOST_CHECK(object_CSpectrum1.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum1.GetLSF()->GetSigma() == 1.09);
+    BOOST_CHECK(object_CSpectrum1.GetLSF()->GetWidth() == 1.09);
 
     //Test copy constructor
     CSpectrum object_CSpectrum1_bis(object_CSpectrum1);
 
     BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetSigma() == 1.09);
-
+    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetWidth() == 1.09);
+    
+    
     //Test constructor with spectralAxis and fluxAxis
     CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
-
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->IsValid() == false);
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.0);
-    object_CSpectrum2.GetLSF()->SetSigma(0.01);
-    BOOST_CHECK(object_CSpectrum2.GetLSF()->GetSigma() == 0.01);
-    
+    BOOST_CHECK(object_CSpectrum2.GetLSF() == nullptr);
+    /*
     //Test default constructor
     CSpectrum object_CSpectrum3;
     BOOST_CHECK(object_CSpectrum3.GetLSF() == nullptr);
     
     object_CSpectrum3.SetLSF(LSF);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 1.09);
-    object_CSpectrum3.GetLSF()->SetSigma(2.04e-60);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 2.04e-60); 
-    object_CSpectrum3.GetLSF()->SetSigma(0.0);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 1.09);
+    /*object_CSpectrum3.GetLSF()->SetWidth(2.04e-60);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 2.04e-60); 
+    object_CSpectrum3.GetLSF()->SetWidth(0.0);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == false);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == 0.0);
-    object_CSpectrum3.GetLSF()->SetSigma(DBL_MAX);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 0.0);
+    object_CSpectrum3.GetLSF()->SetWidth(DBL_MAX);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetSigma() == DBL_MAX);
+    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == DBL_MAX);
     BOOST_TEST_MESSAGE("LSF OK");
-
+    */
 }
 
 BOOST_AUTO_TEST_CASE(Calcul)
@@ -136,51 +139,44 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_TEST_MESSAGE("index:"<<object_CSpectrum.GetSampleCount());
     BOOST_CHECK(object_CSpectrum.GetSampleCount()==0);
 
-    CSpectrumFluxAxis m_FluxAxis;
-    CSpectrumSpectralAxis m_SpectralAxis;
-
     int nbmin=0;
     int nbmax=12;
 
-    CSpectrumSpectralAxis *_SpectralAxis = new CSpectrumSpectralAxis(nbmax, false);
-    CSpectrumFluxAxis *_FluxAxis = new CSpectrumFluxAxis(nbmax);
+    CSpectrumFluxAxis m_FluxAxis(nbmax);
+    CSpectrumSpectralAxis m_SpectralAxis(nbmax, false);
 
     for (int i=nbmin; i<nbmax;++i)
     {
-        (*_SpectralAxis)[i] = i+1;
+        m_SpectralAxis[i] = i+1;
 
         if (i<5)
         {
-            (*_FluxAxis)[i] = 0.0;
-            (*_FluxAxis).GetError()[i] = 0.0;
+            m_FluxAxis[i] = 0.0;
+            m_FluxAxis.GetError()[i] = 0.0;
         }
         else if (i==7)
         {
-            (*_FluxAxis)[i] = std::nan("1");
-            (*_FluxAxis).GetError()[i] = std::nan("2");
+            m_FluxAxis[i] = std::nan("1");
+            m_FluxAxis.GetError()[i] = std::nan("2");
         }
         else if (i==9)
         {
-            (*_FluxAxis)[i] = std::numeric_limits<double>::infinity();
-            (*_FluxAxis).GetError()[i] = std::numeric_limits<double>::infinity();
+            m_FluxAxis[i] = std::numeric_limits<double>::infinity();
+            m_FluxAxis.GetError()[i] = std::numeric_limits<double>::infinity();
         }
         else
         {
-            (*_FluxAxis)[i] = i+2;
-            (*_FluxAxis).GetError()[i] = 1e-12;
+            m_FluxAxis[i] = i+2;
+            m_FluxAxis.GetError()[i] = 1e-12;
         }
 
-        BOOST_TEST_MESSAGE("(*_SpectralAxis)[i]:"<<(*_SpectralAxis)[i]);
+        BOOST_TEST_MESSAGE("m_SpectralAxis[i]:"<<m_SpectralAxis[i]);
     }
-
-    m_SpectralAxis = *_SpectralAxis;
-    m_FluxAxis = *_FluxAxis;
 
     BOOST_TEST_MESSAGE("index1:"<<m_SpectralAxis.GetSamplesCount());
     BOOST_TEST_MESSAGE("index2:"<<m_FluxAxis.GetSamplesCount());
 
-    object_CSpectrum.GetSpectralAxis()=m_SpectralAxis;
-    object_CSpectrum.GetFluxAxis()=m_FluxAxis;
+    object_CSpectrum.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
 
     BOOST_TEST_MESSAGE("index21:"<<object_CSpectrum.GetSampleCount());
     BOOST_CHECK(object_CSpectrum.GetSampleCount()==nbmax);
@@ -202,12 +198,12 @@ BOOST_AUTO_TEST_CASE(Calcul)
     CSpectrum* object_CSpectrum3 = new CSpectrum(object_CSpectrum2,mask);
 
     BOOST_CHECK(object_CSpectrum3->GetSampleCount()==nbmax);
-    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[0]==(*_FluxAxis)[0]);
-    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[0]==(*_FluxAxis).GetError()[0]);
-    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[0]==(*_SpectralAxis)[0]);
-    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[nbmax-1]==(*_FluxAxis)[nbmax-1]);
-    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[nbmax-1]==(*_FluxAxis).GetError()[nbmax-1]);
-    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[nbmax-1]==(*_SpectralAxis)[nbmax-1]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[0]==m_FluxAxis[0]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[0]==m_FluxAxis.GetError()[0]);
+    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[0]==m_SpectralAxis[0]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis()[nbmax-1]==m_FluxAxis[nbmax-1]);
+    BOOST_CHECK(object_CSpectrum3->GetFluxAxis().GetError()[nbmax-1]==m_FluxAxis.GetError()[nbmax-1]);
+    BOOST_CHECK(object_CSpectrum3->GetSpectralAxis()[nbmax-1]==m_SpectralAxis[nbmax-1]);
 
     BOOST_TEST_MESSAGE("index42:"<<object_CSpectrum3->GetSampleCount());
     BOOST_TEST_MESSAGE("index43:"<<object_CSpectrum3->GetFluxAxis()[0]);
@@ -232,9 +228,9 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum3_ter.GetSampleCount()==nbmax/2);
     for (int i=nbmin; i<nbmax/2;++i)
     {
-        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis()[i]==(*_FluxAxis)[2*i]);
-        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[2*i]);
-        BOOST_CHECK(object_CSpectrum3_ter.GetSpectralAxis()[i]==(*_SpectralAxis)[2*i]);
+        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis()[i]==m_FluxAxis[2*i]);
+        BOOST_CHECK(object_CSpectrum3_ter.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[2*i]);
+        BOOST_CHECK(object_CSpectrum3_ter.GetSpectralAxis()[i]==m_SpectralAxis[2*i]);
     }
 
     BOOST_TEST_MESSAGE("test constructeur OK");
@@ -313,11 +309,11 @@ BOOST_AUTO_TEST_CASE(Calcul)
         }
     }
 
-    CSpectrum* object_CSpectrum4 = new CSpectrum(*_SpectralAxis, *_FluxAxis2);
-    CSpectrum* object_CSpectrum5 = new CSpectrum(*_SpectralAxis, *_FluxAxis3);
-    CSpectrum* object_CSpectrum6 = new CSpectrum(*_SpectralAxis, *_FluxAxis4);
-    CSpectrum* object_CSpectrum7 = new CSpectrum(*_SpectralAxis, *_FluxAxis5);
-    CSpectrum* object_CSpectrum8 = new CSpectrum(*_SpectralAxis, *_FluxAxis6);
+    CSpectrum* object_CSpectrum4 = new CSpectrum(m_SpectralAxis, *_FluxAxis2);
+    CSpectrum* object_CSpectrum5 = new CSpectrum(m_SpectralAxis, *_FluxAxis3);
+    CSpectrum* object_CSpectrum6 = new CSpectrum(m_SpectralAxis, *_FluxAxis4);
+    CSpectrum* object_CSpectrum7 = new CSpectrum(m_SpectralAxis, *_FluxAxis5);
+    CSpectrum* object_CSpectrum8 = new CSpectrum(m_SpectralAxis, *_FluxAxis6);
 
     //--------------------//
     //test IsFluxValid
@@ -376,7 +372,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(e8==e8c);
 
     //cas dans l'intervalle 1 à 5 avec 0.0
-    BOOST_CHECK_THROW(object_CSpectrum2.correctSpectrum(1,5.4), std::runtime_error);
+    CSpectrum object_CSpectrum2copy = object_CSpectrum2;
+    BOOST_CHECK_THROW(object_CSpectrum2copy.correctSpectrum(1,5.4), std::runtime_error);
 
     //cas dans l'intervalle 1 à 6
     CSpectrum object_CSpectrum9=object_CSpectrum;
@@ -390,8 +387,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
             BOOST_CHECK(std::isnan(object_CSpectrum9.GetFluxAxis()[i])==true);
             BOOST_CHECK(std::isnan(object_CSpectrum9.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum9.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum9.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis()[i]==m_FluxAxis[i]);
+            BOOST_CHECK(object_CSpectrum9.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[i]);
         }
     }
 
@@ -404,8 +401,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
             BOOST_CHECK(std::isnan(object_CSpectrum10.GetFluxAxis()[i])==true);
             BOOST_CHECK(std::isnan(object_CSpectrum10.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum10.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum10.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum10.GetFluxAxis()[i]==m_FluxAxis[i]);
+            BOOST_CHECK(object_CSpectrum10.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[i]);
         }
     }
 
@@ -418,8 +415,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
             BOOST_CHECK(object_CSpectrum11.GetFluxAxis()[i]==0.8);
             BOOST_CHECK(object_CSpectrum11.GetFluxAxis().GetError()[i]==1e-11);
         }else{
-            BOOST_CHECK(object_CSpectrum11.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum11.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis()[i]==m_FluxAxis[i]);
+            BOOST_CHECK(object_CSpectrum11.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[i]);
         }
     }
 
@@ -432,8 +429,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
             BOOST_CHECK(std::isnan(object_CSpectrum12.GetFluxAxis()[i])==true);
             BOOST_CHECK(std::isnan(object_CSpectrum12.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum12.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum12.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum12.GetFluxAxis()[i]==m_FluxAxis[i]);
+            BOOST_CHECK(object_CSpectrum12.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[i]);
         }
     }
 
@@ -449,8 +446,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
             BOOST_CHECK(std::isnan(object_CSpectrum13.GetFluxAxis()[i])==true);
             BOOST_CHECK(std::isnan(object_CSpectrum13.GetFluxAxis().GetError()[i])==true);
         }else{
-            BOOST_CHECK(object_CSpectrum13.GetFluxAxis()[i]==(*_FluxAxis)[i]);
-            BOOST_CHECK(object_CSpectrum13.GetFluxAxis().GetError()[i]==(*_FluxAxis).GetError()[i]);
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis()[i]==m_FluxAxis[i]);
+            BOOST_CHECK(object_CSpectrum13.GetFluxAxis().GetError()[i]==m_FluxAxis.GetError()[i]);
         }
     }
 
@@ -481,7 +478,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
     //test ConvertToLinearScale
 
     bool result2=object_CSpectrum2.ConvertToLinearScale();
-    bool result3=object_CSpectrum2.GetSpectralAxis().ConvertToLinearScale();
+    CSpectrumSpectralAxis wavAxis1 = object_CSpectrum2.GetSpectralAxis();
+    bool result3=wavAxis1.ConvertToLinearScale();
 
     BOOST_CHECK( result2 == result3 );
 
@@ -493,7 +491,8 @@ BOOST_AUTO_TEST_CASE(Calcul)
     ///test ConvertToLogScale
 
     bool result4=object_CSpectrum2.ConvertToLogScale();
-    bool result5=object_CSpectrum2.GetSpectralAxis().ConvertToLogScale();
+    CSpectrumSpectralAxis wavAxis2 = object_CSpectrum2.GetSpectralAxis();
+    bool result5=wavAxis2.ConvertToLogScale();
 
     BOOST_CHECK( result4 == result5 );
 
@@ -533,8 +532,6 @@ BOOST_AUTO_TEST_CASE(Calcul)
     BOOST_CHECK(object_CSpectrum2.RemoveContinuum(remover2)==true);
     BOOST_TEST_MESSAGE("test Remove:"<<object_CSpectrum2.RemoveContinuum(remover2));
 
-    delete _SpectralAxis;
-    delete _FluxAxis;
     delete _FluxAxis2;
     delete _FluxAxis3;
     delete _FluxAxis4;

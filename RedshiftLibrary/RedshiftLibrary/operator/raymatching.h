@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_OPERATOR_RAYMATCHING_
 #define _REDSHIFT_OPERATOR_RAYMATCHING_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/operator/raymatchingresult.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 namespace NSEpic
 {
