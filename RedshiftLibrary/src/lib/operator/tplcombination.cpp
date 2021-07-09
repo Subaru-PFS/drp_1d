@@ -69,8 +69,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                                        Int32 opt_dustFitting,
                                        CMask spcMaskAdditional,
                                        CPriorHelper::TPriorEList logpriore,
-                                       bool keepigmism,
-                                       const TInt32List& MeiksinList)
+                                       const TInt32List& MeiksinList,
+                                       const TInt32List& EbmvList)
 {
     bool verbose = false;
     if(verbose)
@@ -127,12 +127,9 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Int32 nISM = fittingResults.IsmCalzettiCoeffInterm.size(); 
     Int32 nIGM = fittingResults.IgmMeiksinIdxInterm[0].size(); 
 
-    Int32 iEbmvCoeffMin = 0;
-    Int32 iEbmvCoeffMax = iEbmvCoeffMin+nISM;
-    if(keepigmism){
-        iEbmvCoeffMin = m_templatesRebined_bf[0].m_ismCorrectionCalzetti->GetEbmvIndex(fittingResults.EbmvCoeff);
-        iEbmvCoeffMax = iEbmvCoeffMin;
-    }
+    Int32 iEbmvCoeffMin = EbmvList[0];
+    Int32 iEbmvCoeffMax = EbmvList[nISM-1];
+
     // Linear fit
     Int32 n = kEnd-kStart +1;
     Log.LogDebug("  Operator-Tplcombination: prep. linear fitting with n=%d samples in the clamped lambdarange spectrum (imin=%d, lbda_min=%.3f - imax=%d, lbda_max=%.3f)", n, kStart, spcSpectralAxis[kStart], kEnd, spcSpectralAxis[kEnd]);
@@ -584,6 +581,18 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         MeiksinList[0] = -1;
     }
 
+    TInt32List EbmvList(nEbmvCoeffs);
+    if(opt_dustFitting>-1)
+    {
+        if(keepigmism)
+            EbmvList[0] = FitEbmvCoeff;
+        else if(opt_dustFitting==-10)
+                std::iota(EbmvList.begin(), EbmvList.end(), 0);
+            else 
+                EbmvList[0] = opt_dustFitting;
+    }else{
+        EbmvList[0] = -1;
+    }
     result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs, componentCount);
     result->Redshifts = sortedRedshifts;
 
@@ -673,8 +682,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                   opt_dustFitting,
                   additional_spcMask,
                   logp,
-                  keepigmism,
-                  MeiksinList);
+                  MeiksinList,
+                  EbmvList);
 
         if(result->Status[i]==COperator::nStatus_InvalidProductsError)
         {

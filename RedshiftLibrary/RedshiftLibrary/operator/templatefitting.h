@@ -69,7 +69,8 @@ private:
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
-                  bool keepigmism=false);
+                  const TInt32List& MeiksinList=TInt32List(-1),
+                  const TInt32List& EbmvList=TInt32List(-1));
 
 
     Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
