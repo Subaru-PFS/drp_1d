@@ -36,8 +36,8 @@ public:
                                              Int32 opt_dustFitting=0,
                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                              Bool keepigmism = false,
-                                             Float64 FitEbmvCoeff=-1,
-                                             Float64 FitMeiksinIdx=-1);
+                                             Float64 FitEbmvCoeff=-1.,
+                                             Int32 FitMeiksinIdx=-1);
 
     Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range& range); //could be also made static
     Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,

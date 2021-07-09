@@ -842,7 +842,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     TFloat64List bestFitDtm(nshifts, -1.0);
     TFloat64List bestFitMtm(nshifts, -1.0);
     TFloat64List bestISMCoeff(nshifts, -1.0);
-    TFloat64List bestIGMIdx(nshifts, -1.0);
+    TInt32List   bestIGMIdx(nshifts, -1);
 
     // prepare intermediate fit data buffer
     std::vector<std::vector<TFloat64List>> intermediateChi2;
@@ -1234,7 +1234,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                                                                     CPriorHelper::TPriorZEList logpriorze,
                                                                     Bool keepigmism,
                                                                     Float64 FitEbmvCoeff,
-                                                                    Float64 FitMeiksinIdx)
+                                                                    Int32 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFittingLog: starting computation for template: %s", rebinnedTpl.GetName().c_str());
 
@@ -1317,17 +1317,21 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
     // Optionally apply some IGM absorption
-    std::vector<Int32> igmMeiksinCoeffs;
     Int32 nIGMCoeffs = 1;
-    if (opt_extinction)
+    if(opt_extinction && !keepigmism)
     {
         nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
-        igmMeiksinCoeffs.resize(nIGMCoeffs);
-        std::iota(igmMeiksinCoeffs.begin(), igmMeiksinCoeffs.end(), 0);
-    } else
+    }
+    //create meikinList
+    TInt32List igmMeiksinCoeffs(nIGMCoeffs);
+    if(opt_extinction)
     {
-        igmMeiksinCoeffs.push_back(-1);
-        m_enableIGM = 0;
+        if(keepigmism)
+            igmMeiksinCoeffs[0] = FitMeiksinIdx;
+        else
+            std::iota(igmMeiksinCoeffs.begin(), igmMeiksinCoeffs.end(), 0);
+    }else{//at least have one element
+        igmMeiksinCoeffs[0] = -1;
     }
 
     // Optionally apply some ISM attenuation

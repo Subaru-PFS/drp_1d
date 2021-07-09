@@ -507,7 +507,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   CPriorHelper::TPriorZEList logpriorze,
                                                                   Bool keepigmism,
                                                                   Float64 FitEbmvCoeff,
-                                                                  Float64 FitMeiksinIdx)
+                                                                  Int32 FitMeiksinIdx)
 {
     Int32 componentCount = tplList.size();
     Log.LogInfo("  Operator-tplcombination: starting computation with N-template = %d", componentCount);

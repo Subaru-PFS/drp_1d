@@ -77,7 +77,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
                                    Float64 &fittingEbmvCoeff,
-                                   Float64 &fittingMeiksinIdx,
+                                   Int32 &fittingMeiksinIdx,
                                    EStatus& status,
                                    std::vector<TFloat64List>& ChiSquareInterm,
                                    std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
@@ -496,7 +496,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                                                               CPriorHelper::TPriorZEList logpriorze,
                                                               Bool keepigmism,
                                                               Float64 FitEbmvCoeff,
-                                                              Float64 FitMeiksinIdx)
+                                                              Int32 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFitting: starting computation for template: %s", tpl.GetName().c_str());
 

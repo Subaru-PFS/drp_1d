@@ -45,8 +45,8 @@ public:
                                                        Int32 opt_dustFitting,
                                                        CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
                                                        Bool keepigmism = false,
-                                                       Float64 FitEbmvCoeff=-1,
-                                                       Float64 FitMeiksinIdx=-1) = 0;
+                                                       Float64 FitEbmvCoeff=-1.,
+                                                       Int32 FitMeiksinIdx=-1) = 0;
 
   Int32  ComputeSpectrumModel(const CSpectrum& spectrum,
                               const CTemplate& tpl,

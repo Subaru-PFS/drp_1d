@@ -23,7 +23,7 @@ public:
     TFloat64List            FitAmplitudeError;
     TFloat64List            FitAmplitudeSigma;
     TFloat64List            FitEbmvCoeff;
-    TFloat64List            FitMeiksinIdx;
+    TInt32List              FitMeiksinIdx;
     TFloat64List            FitDtM;
     TFloat64List            FitMtM;
     TFloat64List            LogPrior;
