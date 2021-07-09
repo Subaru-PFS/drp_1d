@@ -841,6 +841,7 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
             modelFlux[k]+= amplitudes[iddl]*tmp[k+kStart]*extinction[k+kStart];
         }
     }
+    modelSpcAxis.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
     spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)));
 
     // Deallocate the rebined template and mask buffers
