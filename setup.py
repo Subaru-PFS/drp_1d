@@ -14,7 +14,7 @@ if gitrevision:
 else:
     gitrevision_python=''
 
-__version__ = version+gitrevision_python
+__version__ = version
 
 
 class CustomBuild(build):
