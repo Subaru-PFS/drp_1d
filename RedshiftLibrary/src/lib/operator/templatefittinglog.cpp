@@ -1319,47 +1319,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     // Optionally apply some IGM absorption
     TInt32List MeiksinList;
     TInt32List EbmvList;
-    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    rebinnedTpl.GetIsmIgmIdxList( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
     Int32 nIGMCoeffs = MeiksinList.size();
     Int32 nISMCoeffs = EbmvList.size();
-/*    Int32 nIGMCoeffs = 1;
-    if(opt_extinction && !keepigmism)
-    {
-        nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
-    }
 
-    TInt32List MeiksinList(nIGMCoeffs);
-    if(opt_extinction)
-    {
-        if(keepigmism)
-            MeiksinList[0] = FitMeiksinIdx;
-        else
-            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
-    }else{
-        MeiksinList[0] = -1;
-    }
-
-    // Optionally apply some ISM attenuation
-    Int32 nISMCoeffs = 1;
-    if(opt_dustFitting==-10)//do we want to keep these options?
-    {
-        nISMCoeffs = rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-    }
-    TInt32List EbmvList(nISMCoeffs); 
-    if (opt_dustFitting>-1){
-        if(keepigmism){
-            EbmvList[0] = rebinnedTpl.m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
-        }else if(opt_dustFitting==-10){
-                std::iota(EbmvList.begin(), EbmvList.end(), 0);
-            }else{
-                EbmvList[0] = opt_dustFitting;
-            }
-    }else
-    {
-        EbmvList[0] = -1;
-        m_enableISM = 0;
-    }
-*/
+    m_enableIGM = (MeiksinList[0] == -1)?0:1;
     m_enableISM = (EbmvList[0] == -1)?0:1;
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
     result->Init(redshifts.size(), nISMCoeffs, nIGMCoeffs);

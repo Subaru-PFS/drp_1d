@@ -78,13 +78,6 @@ protected:
   CMask           m_mskRebined_bf; //buffer
   //Likelihood
   Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
-  void   SetupIsmIgm( Int32 opt_extinction,
-                      Int32 opt_dustFitting,
-                      TInt32List& MeiksinList, //return 
-                      TInt32List& EbmvList, //return
-                      Bool keepigmism = 0,
-                      Float64 FitEbmvCoeff = NAN,
-                      Int32 FitMeiksinIdx = -1);
 
 };
 

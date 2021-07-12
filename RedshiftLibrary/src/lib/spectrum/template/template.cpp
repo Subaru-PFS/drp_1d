@@ -336,3 +336,48 @@ void CTemplate::ScaleFluxAxis(Float64 amplitude){
     if (CheckIsmIgmEnabled()) 
         m_NoIsmIgmFluxAxis *= amplitude;
 }
+void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
+                            Int32 opt_dustFitting,
+                            TInt32List& MeiksinList, //return 
+                            TInt32List& EbmvList, //return
+                            Bool keepigmism,
+                            Float64 FitEbmvCoeff,
+                            Int32 FitMeiksinIdx)const
+{//handling cas of star templates with no Meiksin object
+    if ((MeiksinInitFailed()&&opt_extinction)|| CalzettiInitFailed()){
+        Log.LogError("CTemplate::GetIsmIgmIdxList: try to apply dust extinction without ism initialization");
+        throw runtime_error("CTemplate::GetIsmIgmIdxList: try to apply dust extinction without ism initialization");
+    }
+    Int32 nIGMCoeffs=1;
+    if(opt_extinction && !keepigmism)
+    {
+        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+    }
+    MeiksinList.resize(nIGMCoeffs);
+    if(opt_extinction)
+    {
+        if(keepigmism)
+            MeiksinList[0] = FitMeiksinIdx;
+        else
+            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+    }else{
+        MeiksinList[0] = -1;
+    }
+    Int32 nISMCoeffs = 1;
+    if(opt_dustFitting==-10)
+    {
+        nISMCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    }
+
+    EbmvList.resize(nISMCoeffs);
+    if(opt_dustFitting!=-1){
+        if(keepigmism)
+            EbmvList[0] = m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
+        else if(opt_dustFitting==-10)
+                std::iota(EbmvList.begin(), EbmvList.end(), 0);
+            else 
+                EbmvList[0] = opt_dustFitting;
+    }else{
+        EbmvList[0] = -1;
+    } 
+}

@@ -124,8 +124,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }*/
 
     //determine min and max value of ebmv coeff
-    Int32 nISM = fittingResults.IsmCalzettiCoeffInterm.size(); 
-    Int32 nIGM = fittingResults.IgmMeiksinIdxInterm[0].size(); 
+    Int32 nISM = EbmvList.size(); 
+    Int32 nIGM = MeiksinList.size(); 
 
     Int32 iEbmvCoeffMin = EbmvList[0];
     Int32 iEbmvCoeffMax = EbmvList[nISM-1];
@@ -213,7 +213,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 igmLoopUseless_WavelengthRange = true; 
         }
 
-        for(Int32 kEbmv = iEbmvCoeffMin; kEbmv<nISM; kEbmv++)
+        for(Int32 kEbmv = iEbmvCoeffMin; kEbmv<=iEbmvCoeffMax; kEbmv++)
         {
             Int32 kEbmv_ = kEbmv - iEbmvCoeffMin; //index used to fill some arrays
             Float64 coeffEBMV = -1.; //no ism by default (ie DustCoeff=1.)
@@ -558,52 +558,13 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
     TInt32List MeiksinList;
     TInt32List EbmvList;
-    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
-    Int32 nIGMCoeffs = MeiksinList.size();
-    Int32 nISMCoeffs = EbmvList.size();
-    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nISMCoeffs);
-    Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
-/*
-    Int32 nISMCoeffs = 1;
-    if(opt_dustFitting && !keepigmism)
-    {
-        nISMCoeffs = tplList.front()->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-    }
-    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nISMCoeffs);
-    
-    Int32 nIGMCoeffs = 1;
-    if(opt_extinction && !keepigmism)
-    {
-        nIGMCoeffs = tplList.front()->m_igmCorrectionMeiksin->GetIdxCount();
-    }
-    Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
-    
-    //create meikinList
-    TInt32List MeiksinList(nIGMCoeffs);
-    if(opt_extinction)
-    {
-        if(keepigmism)
-            MeiksinList[0] = FitMeiksinIdx;
-        else
-            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
-    }else{//at least have one element
-        MeiksinList[0] = -1;
-    }
+    m_templatesRebined_bf.front().GetIsmIgmIdxList( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 MeiksinListSize = MeiksinList.size();
+    Int32 EbmvListSize = EbmvList.size();
+    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", EbmvListSize);
+    Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", MeiksinListSize);
 
-    TInt32List EbmvList(nISMCoeffs);
-    if(opt_dustFitting>-1)
-    {
-        if(keepigmism)
-            EbmvList[0] = m_templatesRebined_bf.front()->m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
-        else if(opt_dustFitting==-10)
-                std::iota(EbmvList.begin(), EbmvList.end(), 0);
-            else 
-                EbmvList[0] = opt_dustFitting;
-    }else{
-        EbmvList[0] = -1;
-    }
-*/
-    result->Init(sortedRedshifts.size(), nISMCoeffs, nIGMCoeffs, componentCount);
+    result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize, componentCount);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -628,9 +589,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    TFloat64List _chi2List(nIGMCoeffs, DBL_MAX);
-    TFloat64List _ismList(nIGMCoeffs, NAN);
-    TInt32List   _igmList(nIGMCoeffs, -1);
+    TFloat64List _chi2List(MeiksinListSize, DBL_MAX);
+    TFloat64List _ismList(MeiksinListSize, NAN);
+    TInt32List   _igmList(MeiksinListSize, -1);
     TFloat64List _ampList(componentCount, NAN);
     TFloat64List _covList(componentCount, NAN);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
@@ -658,15 +619,15 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
             fittingResults.EbmvCoeff = FitEbmvCoeff;
         }
         //init fittingResult intermediate values before passing to ::BasicFit
-        fittingResults.fittingAmplitudesInterm.resize(nISMCoeffs);
-        for(Int32 kism=0; kism<nISMCoeffs; kism++)
+        fittingResults.fittingAmplitudesInterm.resize(EbmvListSize);
+        for(Int32 kism=0; kism<EbmvListSize; kism++)
         {   
             fittingResults.ChiSquareInterm.push_back(_chi2List);
             fittingResults.IsmCalzettiCoeffInterm.push_back(_ismList);
             fittingResults.IgmMeiksinIdxInterm.push_back(_igmList);
 
-            fittingResults.fittingAmplitudesInterm[kism].resize(nIGMCoeffs);
-            for(Int32 kigm = 0; kigm<nIGMCoeffs; kigm++)
+            fittingResults.fittingAmplitudesInterm[kism].resize(MeiksinListSize);
+            for(Int32 kigm = 0; kigm<MeiksinListSize; kigm++)
                 fittingResults.fittingAmplitudesInterm[kism][kigm]=_ampList;
         }
         fittingResults.chisquare = boost::numeric::bounds<float>::highest();
@@ -921,47 +882,4 @@ Float64 COperatorTplcombination::ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis
         dtd += spcFluxAxis[k]*spcFluxAxis[k]/err2;
     }
     return dtd;
-}
-
-
-void  COperatorTplcombination::SetupIsmIgm(Int32 opt_extinction,
-                                            Int32 opt_dustFitting,
-                                            TInt32List& MeiksinList, //return 
-                                            TInt32List& EbmvList, //return
-                                            Bool keepigmism,
-                                            Float64 FitEbmvCoeff,
-                                            Int32 FitMeiksinIdx)
-{
-    Int32 nIGMCoeffs=1;
-    if(opt_extinction && !keepigmism)
-    {
-        nIGMCoeffs = m_templatesRebined_bf.front().m_igmCorrectionMeiksin->GetIdxCount();
-    }
-    MeiksinList.resize(nIGMCoeffs);
-    if(opt_extinction)
-    {
-        if(keepigmism)
-            MeiksinList[0] = FitMeiksinIdx;
-        else
-            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
-    }else{
-        MeiksinList[0] = -1;
-    }
-    Int32 nISMCoeffs = 1;
-    if(opt_dustFitting==-10)
-    {
-        nISMCoeffs = m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-    }
-
-    EbmvList.resize(nISMCoeffs);
-    if(opt_dustFitting>-1){
-        if(keepigmism)
-            EbmvList[0] = m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
-        else if(opt_dustFitting==-10)
-                std::iota(EbmvList.begin(), EbmvList.end(), 0);
-            else 
-                EbmvList[0] = opt_dustFitting;
-    }else{
-        EbmvList[0] = -1;
-    } 
 }

@@ -143,19 +143,19 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         return;
     }
 
-    Int32 nISMCoeffs = ChiSquareInterm.size();
-    Int32 nIGMCoeffs = ChiSquareInterm[0].size();
+    Int32 EbmvListSize = ChiSquareInterm.size();
+    Int32 MeiksinListSize = ChiSquareInterm[0].size();
 
     Int32 iEbmvCoeffMin = EbmvList[0];
-    Int32 iEbmvCoeffMax = EbmvList[nISMCoeffs-1];
+    Int32 iEbmvCoeffMax = EbmvList[EbmvListSize-1];
 
     Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true);
-    TFloat64List  sumCross_outsideIGM(nISMCoeffs, 0.0);
-    TFloat64List  sumT_outsideIGM(nISMCoeffs, 0.0);
-    TFloat64List  sumS_outsideIGM(nISMCoeffs, 0.0);
+    TFloat64List  sumCross_outsideIGM(EbmvListSize, 0.0);
+    TFloat64List  sumT_outsideIGM(EbmvListSize, 0.0);
+    TFloat64List  sumS_outsideIGM(EbmvListSize, 0.0);
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
-    for(Int32 kM=0; kM<nIGMCoeffs; kM++)
+    for(Int32 kM=0; kM<MeiksinListSize; kM++)
     {
         if(igmLoopUseless_WavelengthRange)
         {
@@ -506,58 +506,24 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
     TInt32List MeiksinList;
     TInt32List EbmvList;
-    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
-    Int32 nIGMCoeffs = MeiksinList.size();
-    Int32 nISMCoeffs = EbmvList.size();
-/*    
-    Int32 nIGMCoeffs=1;
-    if(opt_extinction && !keepigmism)
-    {
-        nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
-    }
-    //create meikinList
-    TInt32List MeiksinList(nIGMCoeffs);
-    if(opt_extinction)
-    {
-        if(keepigmism)
-            MeiksinList[0] = FitMeiksinIdx;
-        else
-            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
-    }else{
-        MeiksinList[0] = -1;
-    }
-    Int32 nISMCoeffs = 1;
-    if(opt_dustFitting==-10)
-    {
-        nISMCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-    }
+    tpl.GetIsmIgmIdxList( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 MeiksinListSize = MeiksinList.size();
+    Int32 EbmvListSize = EbmvList.size();
 
-    TInt32List EbmvList(nISMCoeffs);
-    if(opt_dustFitting>-1){
-        if(keepigmism)
-            EbmvList[0] = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
-        else if(opt_dustFitting==-10)
-                std::iota(EbmvList.begin(), EbmvList.end(), 0);
-            else 
-                EbmvList[0] = opt_dustFitting;
-    }else{
-        EbmvList[0] = -1;
-    }
-*/
-    TFloat64List _chi2List(nIGMCoeffs, DBL_MAX);
-    TFloat64List _ismList(nIGMCoeffs, NAN);
-    TInt32List   _igmList(nIGMCoeffs, -1);
+    TFloat64List _chi2List(MeiksinListSize, DBL_MAX);
+    TFloat64List _ismList(MeiksinListSize, NAN);
+    TInt32List   _igmList(MeiksinListSize, -1);
 
     std::vector<TFloat64List> _chi2ListList, _ismListList;
     std::vector<TInt32List> _igmListList;
-    for(Int32 kism=0; kism<nISMCoeffs; kism++)
+    for(Int32 kism=0; kism<EbmvListSize; kism++)
     {
         _chi2ListList.push_back(_chi2List);
         _ismListList.push_back(_ismList);
         _igmListList.push_back(_igmList);
     } 
 
-    result->Init(sortedRedshifts.size(), nISMCoeffs, nIGMCoeffs);
+    result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
