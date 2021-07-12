@@ -1,15 +1,15 @@
 #ifndef _REDSHIFT_PROCESSFLOW_CONTEXT_
 #define _REDSHIFT_PROCESSFLOW_CONTEXT_
 
-#include <RedshiftLibrary/processflow/datastore.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/reader.h>
-#include <RedshiftLibrary/linemodel/calibrationconfig.h> 
+
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/io/reader.h"
+#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
 #include <gsl/gsl_errno.h>
 
@@ -25,7 +25,6 @@ class CTemplateCatalog;
 class CRayCatalog;
 class CParameterStore;
 class COperatorResultStore;
-class CDataStore;
 class CClassifierStore;
 class CInputContext;
 /**
@@ -42,18 +41,21 @@ public:
 
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> rayCatalog,
+            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
             const std::string& paramsJSONString
             );
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
-  std::shared_ptr<const CRayCatalog> GetRayCatalog() const {return m_inputContext->GetRayCatalog();}
+  std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const {return m_inputContext->GetRayCatalog(objectType);}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_inputContext->GetParameterStore();}
   std::shared_ptr<const CInputContext> GetInputContext() const {return m_inputContext;}
   std::shared_ptr<COperatorResultStore> GetResultStore(){return m_ResultStore;}
 
   TScopeStack                     m_ScopeStack;
+
+  void testResultStore(); 
 private:
 
     std::shared_ptr<COperatorResultStore>  m_ResultStore;

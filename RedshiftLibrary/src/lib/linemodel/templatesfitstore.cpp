@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/linemodel/templatesfitstore.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
 
 #include <float.h>
 

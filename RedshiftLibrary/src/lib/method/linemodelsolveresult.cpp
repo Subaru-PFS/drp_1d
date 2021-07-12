@@ -1,32 +1,32 @@
-#include <RedshiftLibrary/method/linemodelsolveresult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/extremum/extremum.h>
+#include "RedshiftLibrary/method/linemodelsolveresult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/extremum/extremum.h"
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/operator/pdfz.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 
 using namespace NSEpic;
 
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<const CLineModelExtremaResult> & ExtremaResult,
-                                             const std::string & opt_pdfcombination,
+CLineModelSolveResult::CLineModelSolveResult(const TCandidateZ& BestExtremumResult,
+                                             const std::string& opt_pdfcombination,
                                              Float64 evidence):
-    CPdfSolveResult( ExtremaResult, opt_pdfcombination, evidence),
-    ExtremaResult(ExtremaResult),
-    tplratioName(ExtremaResult->FittedTplratioName[0]),
-    tplcontinuumName(ExtremaResult->FittedTplName[0]),
-    sigma(ExtremaResult->DeltaZ(0)),
-    snrHa(ExtremaResult->snrHa[0]),
-    lfHa(ExtremaResult->lfHa[0]),
-    snrOII(ExtremaResult->snrOII[0]),
-    lfOII(ExtremaResult->lfOII[0])
+    CPdfSolveResult( BestExtremumResult, opt_pdfcombination, evidence)
+    //ExtremaResult(ExtremaResult)
+    /*    tplratioName(ExtremaResult->m_ranked_candidates[0].FittedTplratioName),
+    tplcontinuumName(ExtremaResult->m_ranked_candidates[0].FittedTplName),
+    sigma(ExtremaResult->m_ranked_candidates[0].DeltaZ),
+    snrHa(ExtremaResult->m_ranked_candidates[0].snrHa),
+    lfHa(ExtremaResult->m_ranked_candidates[0].lfHa),
+    snrOII(ExtremaResult->m_ranked_candidates[0].snrOII),
+    lfOII(ExtremaResult->m_ranked_candidates[0].lfOII) */// TODO are these copies really useful ?
 {}
 
 /**
@@ -201,10 +201,3 @@ Bool CLineModelSolveResult::GetBestRedshiftLogArea( Float64& redshift, Float64& 
     return true;
 }*/
 
-void CLineModelSolveResult::getData(const std::string& name, Float64& v) const
-{
-  if (name.compare("snrHa") == 0)  v = snrHa;
-  else if (name.compare("lfHa") == 0)  v = lfHa;
-  else if (name.compare("snrOII") == 0)  v = snrOII;
-  else if (name.compare("lfOII") == 0)  v = lfOII;
-}

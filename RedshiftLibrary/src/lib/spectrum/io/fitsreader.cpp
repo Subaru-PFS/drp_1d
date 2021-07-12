@@ -1,8 +1,8 @@
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
+#include "RedshiftLibrary/log/log.h"
 
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/axis.h>
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/axis.h"
 #include <limits>
 
 
@@ -59,17 +59,17 @@ Bool CSpectrumIOFitsReader::Read2( fitsfile* fptr, CSpectrum& spectrum )
         return false;
 
     length = (Int32) nbRows;
-    CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
-    CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-
-    spcFluxAxis.SetSize( length );
-    spcSpectralAxis.SetSize( length );
+    CSpectrumFluxAxis spcFluxAxis = CSpectrumFluxAxis(length); 
+    CSpectrumSpectralAxis spcSpectralAxis = CSpectrumSpectralAxis(length);
 
     if( fits_read_col( fptr, TDOUBLE, 1, 1, 1, length, &nullval, spcSpectralAxis.GetSamples(), &anynul, &status ) )
         return false;
 
+
     if( fits_read_col( fptr, TDOUBLE, 2, 1, 1, length, &nullval, spcFluxAxis.GetSamples(), &anynul, &status ) )
         return false;
+
+    spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
 
     return true;
 }
@@ -120,11 +120,10 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     length = naxiss[0];
 
     // Read data
-    CSpectrumAxis& spcFluxAxis = spectrum.GetFluxAxis();
+    CSpectrumFluxAxis spcFluxAxis(length);
 
     Float64 nullval = std::numeric_limits<Float64>::quiet_NaN();
     Int32 anynul = 0;
-    spcFluxAxis.SetSize( length );
     if( fits_read_img( fptr, TDOUBLE, 1, length, &nullval, spcFluxAxis.GetSamples(), &anynul, &status ) )
         return false;
 
@@ -147,9 +146,7 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     Log.LogDebug("    CSpectrumIOFitsReader: loaded CDELT1=%f", cdelt1);
 
     // wavelength array
-    CSpectrumAxis& spcSpectralAxis = spectrum.GetSpectralAxis();
-
-    spcSpectralAxis.SetSize( length );
+    CSpectrumSpectralAxis spcSpectralAxis( length );
     double wave_value = crval1 - cdelt1 * (crpix1-1);
     //double wave_value = crval1 + cdelt1 + crpix1*cdelt1; //Warning, modified from: wave_value = crval1 - cdelt1 * (crpix1-1);, to be further checked...
     spcSpectralAxis[0] = wave_value;
@@ -162,6 +159,9 @@ Bool CSpectrumIOFitsReader::Read1( fitsfile* fptr, CSpectrum& spectrum )
     }
 
     Log.LogDebug("    CSpectrumIOFitsReader: loaded spectral values first sample=%f", spcSpectralAxis.GetSamples()[0]);
+        
+    spectrum.SetSpectralAndFluxAxes(std::move(spcSpectralAxis),std::move(spcFluxAxis));
+
 
     return true;
 }

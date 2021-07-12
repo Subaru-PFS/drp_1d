@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/processflow/autoscope.h>
+#include "RedshiftLibrary/processflow/autoscope.h"
 
 using namespace NSEpic;
 CAutoScope::CAutoScope( TScopeStack &scopeStack, const std::string& name ):

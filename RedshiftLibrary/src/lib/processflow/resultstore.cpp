@@ -1,9 +1,17 @@
-#include <RedshiftLibrary/processflow/resultstore.h>
+#include "RedshiftLibrary/processflow/resultstore.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
+
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -11,9 +19,9 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 
@@ -135,6 +143,99 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
 }
 
 
+std::shared_ptr<const CClassificationResult> COperatorResultStore::GetClassificationResult( const std::string& objectType,
+                                                                            const std::string& method,
+                                                                            const std::string& name ) const
+{
+    std::ostringstream oss;
+    oss << objectType << "." << method << "." << name;
+    std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+    return std::dynamic_pointer_cast<const CClassificationResult>(GetGlobalResult(oss.str()).lock());
+}
+
+std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogResult( const std::string& objectType,
+                                                                            const std::string& method,
+                                                                            const std::string& name ) const
+{
+    std::ostringstream oss;
+    oss << objectType << "." << method << "." << name;
+    std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+    return std::dynamic_pointer_cast<const CPdfMargZLogResult>(GetGlobalResult(oss.str()).lock());
+}
+
+//std::shared_ptr<const CLineModelExtremaResult<TLineModelResult>>
+
+std::shared_ptr<const TLineModelResult> COperatorResultStore::GetLineModelResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const
+    
+{
+  std::shared_ptr<const COperatorResult> cop = GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model_parameters");
+  std::shared_ptr<const TLineModelResult> tlm = std::dynamic_pointer_cast<const TLineModelResult>(cop); 
+    return tlm;
+
+
+
+}
+
+std::shared_ptr<const TTplCombinationResult> COperatorResultStore::GetTplCombinationResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const
+    
+{
+  std::shared_ptr<const COperatorResult> cop = GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model_parameters");
+  std::shared_ptr<const TTplCombinationResult> ttc = std::dynamic_pointer_cast<const TTplCombinationResult>(cop); 
+  return ttc;
+}
+
+std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const
+    
+{
+  std::shared_ptr<const COperatorResult> cop = GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model_parameters");
+  std::shared_ptr<const TExtremaResult> tlm = std::dynamic_pointer_cast<const TExtremaResult>(cop); 
+    return tlm;
+}
+
+std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFittingResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name ,
+										       const int& rank
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
+}
+
+std::shared_ptr<const CSpectraFluxResult> COperatorResultStore::GetSpectraFluxResult(const std::string& objectType,
+										     const std::string& method,
+										     const std::string& name ,
+										     const int& rank
+										     ) const
+{
+  return std::dynamic_pointer_cast<const CSpectraFluxResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"continuum"));
+}
+
+std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectrumResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name ,
+										       const int& rank
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model"));
+}
+
+
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( const std::string& objectType,
                                                                             const std::string& method,
                                                                             const std::string& name ,
@@ -145,6 +246,43 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
     return GetGlobalResult(oss.str());
 }
 
+const std::string&  COperatorResultStore::GetGlobalResultType(const std::string& objectType,
+                                                              const std::string& method,
+                                                              const std::string& name ) const
+{
+  return GetGlobalResult(objectType,method,name).lock()->getType();
+}
+
+const std::string&  COperatorResultStore::GetCandidateResultType(const std::string& objectType,
+                                                              const std::string& method,
+								 const std::string& name ,
+								 const std::string& dataset) const
+{
+  return GetGlobalResult(objectType,method,name).lock()->getCandidateDatasetType(dataset);
+}
+
+bool COperatorResultStore::HasCandidateDataset(const std::string& objectType,
+						       const std::string& method,
+						       const std::string& name ,
+						       const std::string& dataset) const
+{
+  
+  bool ret = GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
+  return ret;
+}
+
+
+
+int COperatorResultStore::getNbRedshiftCandidates(const std::string& objectType,
+						  const std::string& method) const
+{
+  std::ostringstream oss;
+  oss << objectType << "." << method << ".candidatesresult" ;
+  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+  return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
+
+}
 
 
 /**
@@ -204,141 +342,6 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
     return n;
 }
 
-
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& v) const
-{
- std:weak_ptr<const COperatorResult> result;
-    if (method == "linemodelsolve")
-    {
-      result=GetGlobalResult(object_type,method,"linemodel_extrema");
-      return result.lock()->getCandidateData(rank,name,v);
-    }
-  else if(method.compare("templatefittingsolve") == 0)
-    {
-      if (name == "Redshift" || name == "RedshiftError" || name =="RedshiftProba")
-        {
-          result = GetGlobalResult(object_type,method,"candidatesresult");
-          return result.lock()->getCandidateData(rank,name,v);
-        }
-      else result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);      
-    }
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
-  result.lock()->getData(name,v);
-}
-
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& v) const
-{
- std:weak_ptr<const COperatorResult> result;
-  if (method == "linemodelsolve")
-    {
-      result=GetGlobalResult(object_type,method,"linemodel_extrema");
-      return result.lock()->getCandidateData(rank,name,v);
-    }
-  else if(method.compare("templatefittingsolve") == 0) result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
-  result.lock()->getData(name,v);
-}
-
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& v) const
-{
- std:weak_ptr<const COperatorResult> result;
-  if (name == "Rank") result= GetGlobalResult(object_type,method,"candidatesresult");
-  else if (method == "linemodelsolve")
-    {
-      result=GetGlobalResult(object_type,method,"linemodel_extrema");
-      return result.lock()->getCandidateData(rank,name,v);
-    }
-  else if(method.compare("templatefittingsolve") == 0) result=GetGlobalResult(object_type,method,"templatefitting_fitcontinuum_extrema_",rank);
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
-  if (name == "Rank") result.lock()->getCandidateData(rank,name,v);
-  else result.lock()->getData(name,v);
-}
-
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **data, int *size) const
-{
- std:weak_ptr<const COperatorResult> result;
-  if (name.find("Model") != std::string::npos)
-    {
-      if (method == "templatefittingsolve") result = GetGlobalResult(object_type,method,"templatefitting_spc_extrema_",rank);
-      else if(method == "linemodelsolve") result = GetGlobalResult(object_type,method,"linemodel_spc_extrema_",rank);
-      else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown method "<<method<< " for attribute" <<name );
-
-    }
-  else if (name.find("FittedRays") != std::string::npos) result = GetGlobalResult(object_type,method,  "linemodel_fit_extrema_", rank); 
-  else if (name.find("BestContinuum") != std::string::npos)  result = GetGlobalResult(object_type,method,"linemodel_continuum_extrema_", rank);
-  else if (name.compare("ContinuumIndexesColor") == 0 || name.compare("ContinuumIndexesBreak") == 0)
-    {
-      result = GetGlobalResult(object_type,method,"linemodel_extrema");
-      result.lock()->getCandidateData(rank,name,data,size);
-      return;
-    }
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);
-    
-  result.lock()->getData(name,data,size);
-}
-
-/*
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string *data, int *size) const
-{
- std:weak_ptr<const COperatorResult> result;
-  std::ostringstream oss;
-  if (name.find("model_") != std::string::npos)  oss << "linemodelsolve.linemodel_spc_extrema_"<< rank;
-  else if (name.find("fitted_rays_") != std::string::npos)  oss << "linemodelsolve.linemodel_fit_extrema_"<< rank;
-  else
-    {
-      Log.LogError("unknown data "<<name);
-    }
-  result = GetGlobalResult(oss.str());
-  result.lock()->getData(name,data,size);
-}
-*/
-
-
-void COperatorResultStore::getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **data, int *size) const 
-{
- std:weak_ptr<const COperatorResult> result; 
-
-  if (name.find("Model") != std::string::npos) result = GetGlobalResult(object_type,method,"templatefitting_spc_extrema_",rank);
-  else if (name.find("FittedRays") != std::string::npos) result = GetGlobalResult(object_type,method,  "linemodel_fit_extrema_", rank);
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown data "<<name);
-    
-  result.lock()->getData(name,data,size);
-}
-
-
-void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& v) const
-{
- std:weak_ptr<const COperatorResult> result = GetGlobalResult(object_type,method,"candidatesresult");
-  if (name == "NbCandidates") result.lock()->getData(name,v);
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown object_type "<<object_type);
-      
-}
-
-void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& v) const
-{
-  std:weak_ptr<const COperatorResult> result;
-  if(name.compare("snrHa") == 0 || name.compare("lfHa") == 0 ||
-     name.compare("snrOII") == 0 || name.compare("lfOII") == 0) result = GetGlobalResult("galaxy.result");
-  else if(object_type=="classification") result = GetGlobalResult("classification.result");
-  else result = GetGlobalResult(object_type,method,"candidatesresult");
-  result.lock()->getData(name,v);
-}
-
-void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& v) const
-{
-  std:weak_ptr<const COperatorResult> result;
-  if (object_type.compare("classification") == 0) result = GetGlobalResult("classification.result");
-  else if (object_type == "reliability") result = GetGlobalResult("reliability.result");
-  else result = GetGlobalResult(object_type,method,"candidatesresult");
-  result.lock()->getData(name,v);
-}
-
-void COperatorResultStore::getData(const std::string& object_type,const std::string& method,const std::string& name,double **data, int *size) const
-{
-  std:weak_ptr<const COperatorResult> result = GetGlobalResult(object_type,method,"pdf");
-  result.lock()->getData(name,data,size);
-}
-
 void COperatorResultStore::test()
 {
   std::shared_ptr<CPdfMargZLogResult> testResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
@@ -352,8 +355,9 @@ void COperatorResultStore::test()
   testResult->valProbaLog.push_back(67.8);
   testResult->valProbaLog.push_back(92.7);
   
-  StoreGlobalResult("","zPDF/logposterior.logMargP_Z_data",testResult);
+  StoreGlobalResult("","star.templatefittingsolve.solveResult",testResult);
 
+  std::shared_ptr<const COperatorResult> cor = GetSolveResult("star");
   
 }
 
@@ -374,3 +378,25 @@ void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shar
 }
 
 
+std::vector<std::string> COperatorResultStore::getProcessedObjectTypes() const
+{
+  std::vector<std::string> res;
+
+  return res;
+}
+
+std::shared_ptr<const COperatorResult> COperatorResultStore::GetSolveResult(const std::string& objectType) const
+{
+      TResultsMap::const_iterator it;
+    for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
+    {
+      std::string s = (*it).first;
+      std::size_t first_dot = s.find(".");
+      std::size_t second_dot = s.rfind(".");
+      std::string object_type = s.substr(0,first_dot);
+      std::string rs_name = s.substr(second_dot+1,s.size()-second_dot-1);
+      if(object_type == objectType && rs_name == "solveResult") 
+        return it->second;
+    }
+    throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "no solveResult found for objectType" <<objectType);
+}

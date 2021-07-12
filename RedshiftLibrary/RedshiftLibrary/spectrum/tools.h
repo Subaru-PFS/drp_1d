@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_SPECTRUM_TOOLS_
 #define _REDSHIFT_SPECTRUM_TOOLS_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 namespace NSEpic
 {

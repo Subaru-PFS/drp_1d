@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/method/solvedescription.h>
+#include "RedshiftLibrary/method/solvedescription.h"
 using namespace NSEpic;
 
 /**

@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/operator/linemodelresult.h>
+#include "RedshiftLibrary/operator/linemodelresult.h"
 
-#include <RedshiftLibrary/statistics/deltaz.h>
+#include "RedshiftLibrary/statistics/deltaz.h"
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -8,8 +8,8 @@
 #include <iomanip>      // std::setprecision
 
 #include <string>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/linetags.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 using namespace NSEpic;
 

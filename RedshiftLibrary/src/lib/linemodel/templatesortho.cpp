@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/linemodel/templatesortho.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
+#include "RedshiftLibrary/linemodel/templatesortho.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
 
 
 
@@ -12,14 +12,15 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                                          const CRayCatalog::TRayVector& restRayList,
                                                          const std::string& opt_fittingmethod,
                                                          const std::string& widthType,
-                                                         const std::string &opt_enable_LSF,
                                                          const Float64 opt_nsigmasupport,
                                                          const Float64 resolution,
                                                          const Float64 velocityEmission,
                                                          const Float64 velocityAbsorption,
                                                          const std::string& opt_rules,
                                                          const std::string& opt_rigidity,
-                                                         bool enableOrtho)
+                                                         std::shared_ptr<const CLSF> lsf,
+                                                         bool enableOrtho):
+m_LSF(lsf)                                                        
 {
 
     m_enableOrtho = enableOrtho;
@@ -49,7 +50,6 @@ CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog&
                                     restRayList,
                                     opt_fittingmethod,
                                     widthType,
-                                    opt_enable_LSF,
                                     opt_nsigmasupport,
                                     resolution,
                                     velocityEmission,
@@ -93,7 +93,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                             const CRayCatalog::TRayVector &restRayList,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_lineWidthType,
-                            const std::string &opt_enable_LSF,
                             const Float64 opt_nsigmasupport,
                             const Float64 opt_resolution,
                             const Float64 opt_velocityEmission,
@@ -102,7 +101,7 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                             const std::string &opt_rigidity)
 {
 
-    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate) );
+    std::shared_ptr<CTemplate> tplOrtho = std::make_shared<CTemplate>(inputTemplate);
 
     bool enableModelSubtraction = m_enableOrtho;
     if(enableModelSubtraction){
@@ -110,6 +109,8 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         std::string opt_continuumcomponent = "fromspectrum";
         Float64 opt_continuum_neg_threshold=-INFINITY; // not relevant in the "fromspectrum" case
         CSpectrum spectrum = inputTemplate;
+        spectrum.SetLSF(m_LSF);
+
         std::string saveContinuumEstimationMethod = spectrum.GetContinuumEstimationMethod();
         spectrum.SetContinuumEstimationMethod("zero");
 
@@ -126,7 +127,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
                                      opt_continuumcomponent,
                                      opt_continuum_neg_threshold,
                                      opt_lineWidthType,
-                                     opt_enable_LSF,
                                      opt_nsigmasupport,
                                      opt_resolution,
                                      opt_velocityEmission,
@@ -168,11 +168,13 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         fclose( f );
         //*/
 
-        CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
-        CSpectrumFluxAxis& continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
+        const CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
+        CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
         for(UInt32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
             continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
         }
+        tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));
+        
         /*//debug:
         FILE* f2 = fopen( "templatesortho_orthotemplate_dbg.txt", "w+" );
         for( Int32 t=0;t<modelSpc.GetSampleCount();t++)

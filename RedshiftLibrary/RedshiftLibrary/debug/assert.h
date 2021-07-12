@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_DEBUG_ASSERT_
 #define _REDSHIFT_DEBUG_ASSERT_
 
-#include <RedshiftLibrary/debug/debug.h>
+#include "RedshiftLibrary/debug/debug.h"
 
 #ifdef DEBUG_BUILD
 

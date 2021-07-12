@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_GAUSSIANFIT_GAUSSIANFIT_
 #define _REDSHIFT_GAUSSIANFIT_GAUSSIANFIT_
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>

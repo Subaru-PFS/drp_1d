@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/common/exception.h>
+#include "RedshiftLibrary/common/exception.h"
 
 using namespace NSEpic;
 

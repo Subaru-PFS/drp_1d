@@ -5,11 +5,11 @@
 #include <fstream>
 #include <cmath>
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/io/fitswriter.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/io/fitswriter.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 #include "RedshiftLibrary/tests/test-tools.h"
 
@@ -75,8 +75,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
         }
         break;
     }
-    spectrum.GetSpectralAxis() = spectralAxis;
-    spectrum.GetFluxAxis() = fluxAxis;
+    spectrum.SetSpectralAndFluxAxes(std::move(spectralAxis),std::move(fluxAxis));
 
 }
 
@@ -112,13 +111,13 @@ bfs::path CPFTest::generate_noise_fits(UInt32 size,
     }
 
     if (fits_write_col(fptr, TDOUBLE, 1, 1, 1, noise.GetSampleCount(),
-                       noise.GetSpectralAxis().GetSamples(), &status))
+                       const_cast<Float64*>(noise.GetSpectralAxis().GetSamples()), &status))
     {
         throw runtime_error("Can't fits_write_col");
     }
 
     if (fits_write_col(fptr, TDOUBLE, 2, 1, 1, noise.GetSampleCount(),
-                       noise.GetFluxAxis().GetSamples(), &status))
+                       const_cast<Float64*>(noise.GetFluxAxis().GetSamples()), &status))
     {
         throw runtime_error("Can't fits_write_col");
     }

@@ -1,10 +1,10 @@
 
-#include <RedshiftLibrary/linemodel/element.h>
-#include <RedshiftLibrary/linemodel/multiline.h>
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/multiline.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/log/log.h"
 
 #include <float.h>
 #include <algorithm>
@@ -16,34 +16,32 @@ using namespace NSEpic;
  **/
 CMultiLine::CMultiLine( std::vector<CRay> rs,
                         const std::string& widthType,
-                        const Float64 nsigmasupport,
-                        const Float64 resolution,
                         const Float64 velocityEmission,
                         const Float64 velocityAbsorption,
                         std::vector<Float64> nominalAmplitudes,
-                        Float64 nominalWidth,
-                        std::vector<UInt32> catalogIndexes ) : CLineModelElement ( widthType, nsigmasupport, resolution, velocityEmission, velocityAbsorption )
+                        Float64 nominalWidth,//corresponds to the lsf of type constant width
+                        std::vector<UInt32> catalogIndexes ) : 
+CLineModelElement ( widthType, velocityEmission, velocityAbsorption ),
+m_NominalAmplitudes(nominalAmplitudes)
 {
-    m_ElementType = "CMultiLine";
-
+    //TODO:below variables should be initialized throw CLineModelElt rather than here
     m_Rays = rs;
+    m_ElementType = "CMultiLine";
+    m_absLinesLimit=-1.0;//-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
+    m_sumCross = 0.;
+    m_sumGauss = 0.;
+    m_dtmFree = 0.;
+    m_NominalWidth = nominalWidth;
 
     Int32 nRays = m_Rays.size();
-
     m_SignFactors.resize(nRays);
     for(Int32 i=0; i<nRays; i++)
     {
         if( m_Rays[i].GetType()==CRay::nType_Emission )
-        {
             m_SignFactors[i] = 1.0;
-        }
         else
-        {
             m_SignFactors[i] = -1.0;
-        }
     }
-    m_NominalWidth = nominalWidth;
-    m_NominalAmplitudes = nominalAmplitudes;
 
     for(int i=0; i<catalogIndexes.size(); i++)
     {
@@ -54,22 +52,15 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
     {
         m_FittedAmplitudes.resize(nRays);
         m_FittedAmplitudeErrorSigmas.resize(nRays);
-
         m_profile.resize(nRays);
     }
     for(Int32 k2=0; k2<nRays; k2++)
     {
         m_profile[k2] = m_Rays[k2].GetProfile();
+        if(m_profile[k2]->isAsymFit())
+            m_asymLineIndices.push_back(k2);
     }
-
-    m_absLinesLimit = -1.0; //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
-
-    m_sumCross = 0.0;
-    m_sumGauss = 0.0;
-    m_dtmFree = 0.0;
-
     SetFittedAmplitude(-1.0, -1.0);
-
 }
 
 /**
@@ -137,8 +128,8 @@ Float64 CMultiLine::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSp
 TInt32Range CMultiLine::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
-    Float64 winsize = GetNSigmaSupport(m_profile[subeIdx])*c;
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    Float64 winsize = m_profile[subeIdx]->GetNSigmaSupport()*c;
 
     TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -428,7 +419,7 @@ TInt32Range CMultiLine::getTheoreticalSupportSubElt(Int32 subeIdx)
 Float64 CMultiLine::GetWidth(Int32 subeIdx, Float64 redshift)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift, false);
-    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
+    Float64 c = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
     return c;
 }
 
@@ -444,11 +435,8 @@ Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool do
     // deals with delta of asym profile
     if (doAsymfitdelta)
     {
-        CRay::TProfile profile = m_Rays[subeIdx].GetProfile();
-        if (profile==CRay::ASYMFIT || profile==CRay::ASYMFIXED)
-        {
-            mu -= m_asymfit_delta;
-        }
+        std::shared_ptr<CLineProfile> profile = m_Rays[subeIdx].GetProfile();
+        mu -= profile->GetAsymDelta();
     }
     return mu;
 }
@@ -459,8 +447,8 @@ Float64 CMultiLine::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool do
 Float64 CMultiLine::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift, false); // do not apply Lya asym offset
-    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission(), m_profile[subeIdx]);
-    return GetLineProfile(m_profile[subeIdx], x, mu, sigma);
+    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    return m_profile[subeIdx]->GetLineProfile(x, mu, sigma);
 }
 
 /**
@@ -560,7 +548,7 @@ void CMultiLine::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)
     if(m_SignFactors[subeIdx]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[subeIdx]>m_absLinesLimit){
         m_FittedAmplitudes[subeIdx]=m_absLinesLimit;
     }
-    //*/
+
     m_FittedAmplitudeErrorSigmas[subeIdx] = SNR*m_NominalAmplitudes[subeIdx]; //todo: check correct formulation for Error
 
 }
@@ -889,6 +877,11 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             Float64 lambda = spectral[i];
             Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
             flux[i] += Yi;
+            if(isnan(flux[i])){
+                Log.LogError("Ray %d: ContinuumFlux %f, ModelAtLambda Yi = %f for range [%d, %d]", k, continuumfluxAxis[i], Yi, m_StartNoOverlap[k], m_EndNoOverlap[k]);
+                Log.LogError("addToSpectrumModel has a NaN flux at index i %d ", i);
+                throw std::runtime_error("addToSpectrumModel has a NaN flux ");
+            }
         }
     }
     return;
@@ -916,7 +909,7 @@ void CMultiLine::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& modelsp
             Float64 x = spectral[i];
             Float64 A = m_FittedAmplitudes[k];
             Float64 mu = GetObservedPosition(k, redshift, false);
-            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission(), m_profile[k]);
+            Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k].GetIsEmission());
 
             if(m_SignFactors[k]==-1){
                 flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma, m_Rays[k].GetIsEmission());
@@ -954,12 +947,15 @@ Float64 CMultiLine::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 c
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        if(A>=0.0)
+        if(A>0.0)
         {
             if(m_SignFactors[k2]==-1){
                 Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfileAtRedshift(k2, redshift, x);
             }else{
                 Yi += m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
+            }
+            if(isnan(Yi)){
+                Log.LogError("Ray nb: %d adn GetLineProfileAtRedshift: %f", k2, GetLineProfileAtRedshift(k2, redshift, x));
             }
         }
     }
@@ -1037,12 +1033,12 @@ Float64 CMultiLine::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 re
         Float64 mu = GetObservedPosition(k2, redshift, false);
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
-        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }
     }
     return Yi;
@@ -1069,13 +1065,13 @@ Float64 CMultiLine::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Flo
         Float64 mu = GetObservedPosition(k2, redshift, false);
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
-        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission(), m_profile[k2]);
+        Float64 sigma = GetLineWidth(mu, redshift, m_Rays[k2].GetIsEmission());
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * GetLineProfileDerivZ(m_profile[k2], x, lamdba0, redshift, sigma)
-                  + m_SignFactors[k2] * A * continuumFluxDerivZ * GetLineProfile(m_profile[k2], x, mu, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma)
+                  + m_SignFactors[k2] * A * continuumFluxDerivZ * m_profile[k2]->GetLineProfile( x, mu, sigma);
         }
     }
     return Yi;
@@ -1095,19 +1091,13 @@ void CMultiLine::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpec
     for(Int32 k=0; k<m_Rays.size(); k++)
     { //loop on the interval
         if(m_OutsideLambdaRangeList[k])
-	{
             continue;
-	}
 
         if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
-        {
             continue;
-        }
 
         for(Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
-        {
             flux[i] = continuumfluxAxis[i];
-        }
     }
     return;
 }

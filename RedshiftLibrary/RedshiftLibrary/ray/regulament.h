@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_RAY_REGULAMENT_
 #define _REDSHIFT_RAY_REGULAMENT_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/rule.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/rule.h"
 
 #include <boost/format.hpp>
 

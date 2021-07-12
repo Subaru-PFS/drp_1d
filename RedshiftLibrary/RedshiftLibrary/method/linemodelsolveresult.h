@@ -1,10 +1,10 @@
 #ifndef _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMODELSOLVERESULT_
 
-#include <RedshiftLibrary/method/solveresult.h>
-#include <RedshiftLibrary/linemodel/linemodelextremaresult.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/catalog.h>
+#include "RedshiftLibrary/method/solveresult.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/catalog.h"
 
 #include <memory>
 #include <vector>
@@ -22,11 +22,12 @@ class CLineModelSolveResult : public CPdfSolveResult
 
 public:
 
-    CLineModelSolveResult(  const std::shared_ptr<const CLineModelExtremaResult> & ExtremaResult,
+  CLineModelSolveResult(  const TCandidateZ& BestExtremumResult,
                             const std::string & opt_pdfcombination,
                             Float64 evidence );
 
     virtual ~CLineModelSolveResult();
+
 
 /*    Bool GetBestRedshift(Float64& redshift,
                          Float64& merit ,
@@ -48,10 +49,8 @@ public:
     // Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
 
 /*    void preSave(const CDataStore& store);*/
-    void getData(const std::string& name, Float64& v) const;
-
-    //Extrema results
-    std::shared_ptr<const CLineModelExtremaResult> ExtremaResult;
+      //Extrema results
+  //  std::shared_ptr<const LineModelExtremaResult> ExtremaResult;
 
 private:
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.22.0 (2021-05-07)
+### Added
+* [5644] : Adding IGM convolution with LSF
+* [6469] : Add coverage option in CMakeLists
+* [6329] : Activate ISM/IGM on template combination method (PCA)
+* [6086] : Save spectrum model and corresponding parameters for template combination method
+* [6483] : Add qso linemodel, move `linecatalog` parameter inside `<qso|galaxy>.linemodelsolve.linemodel.linemodelcatalog`
+### Changed
+* [6343] : `ResultStore` getters changed in python API classes
+* [6481] : Disable reading `templatefittingsolve.extinction` parameter for stars
+### Deprecated
+* None
+### Removed
+* None
+### Fixed
+* [6535] : Make functional both template combination method and operator
+* [6512] : Fix bug on `tplfitauto` in second pass
+
+## 0.20.1 (2021-05-19)
+### Fixed
+* [6494] : Rebin only galaxy templates if enablestar is true
+
 ## 0.20.0 (2021-05-07)
 ### Added
 * [6061] : Add QSO section in HDF5 output 			

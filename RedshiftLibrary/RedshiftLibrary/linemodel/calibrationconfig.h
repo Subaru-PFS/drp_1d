@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
 #define _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <boost/format.hpp>
 

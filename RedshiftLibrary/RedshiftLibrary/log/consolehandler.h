@@ -1,8 +1,8 @@
 #ifndef _REDSHIFT_LOG_CONSOLEHANDLER_
 #define _REDSHIFT_LOG_CONSOLEHANDLER_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/handler.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/handler.h"
 
 namespace NSEpic
 {
@@ -15,9 +15,6 @@ class CLogConsoleHandler : public CLogHandler
 {
 
 public:
-
-    CLogConsoleHandler( CLog& logger );
-    ~CLogConsoleHandler();
 
     void LogEntry( UInt32 lvl, const char* header, const char* msg );
 

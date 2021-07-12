@@ -1,0 +1,5 @@
+[format="tsv", options="header"]
+|===
+include::pylibamazed/auxdir/pylibamazed/results_specifications.csv[]
+|===
+

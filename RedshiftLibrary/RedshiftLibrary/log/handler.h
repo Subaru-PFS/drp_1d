@@ -1,12 +1,11 @@
 #ifndef _REDSHIFT_LOG_HANDLER_
 #define _REDSHIFT_LOG_HANDLER_
 
-#include <RedshiftLibrary/common/datatypes.h>
-
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
 namespace NSEpic
 {
 
-class CLog;
 
 /**
  * \ingroup Redshift
@@ -17,7 +16,7 @@ class CLogHandler
 
 public:
 
-    CLogHandler( CLog& log );
+    CLogHandler();
     virtual ~CLogHandler();
 
     void    SetLevelMask( UInt32 mask );
@@ -28,7 +27,7 @@ public:
 private:
 
     UInt32      m_LevelMask;
-    CLog*       m_Logger;
+    CLog     &  m_Logger;
 
 };
 

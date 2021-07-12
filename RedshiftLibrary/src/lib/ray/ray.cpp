@@ -1,18 +1,15 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/ray.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/ray.h"
 
 using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
-CRay::CRay()
-{
-    m_Offset = 0.0;
-}
+CRay::CRay():m_Offset(0.){}
 
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
-           CRay::TProfile profile,
+           std::shared_ptr<CLineProfile> profile,
            UInt32 force,
            Float64 amp,
            Float64 width,
@@ -23,44 +20,26 @@ CRay::CRay(const string& name,
            const std::string& groupName,
            Float64 nominalAmp,
            const string &velGroupName,
-           TAsymParams asymParams,
-	   Int32 id)
+	       Int32 id):
+m_Name(name),
+m_Pos(pos),
+m_Type(type),
+m_Force(force),
+m_Amp(amp),
+m_Width(width),
+m_Cut(cut),
+m_Profile(profile),
+m_PosFitErr(posErr),
+m_SigmaFitErr(sigmaErr),
+m_AmpFitErr(ampErr),
+m_GroupName(groupName),
+m_NominalAmplitude(nominalAmp),
+m_VelGroupName(velGroupName),
+m_id(id),
+m_Offset(0.),
+m_OffsetFit(false)
 {
-    m_Name = name;
-    m_Pos = pos;
-    m_Type = type;
-    m_Force = force;
-
-    m_Profile = profile;
-
-    m_Amp = amp;
-    m_Width = width;
-    m_Cut = cut;
-
-    m_PosFitErr = posErr;
-    m_SigmaFitErr = sigmaErr;
-    m_AmpFitErr = ampErr;
-
-
-    m_GroupName = groupName;
-    m_NominalAmplitude = nominalAmp;
-
-    m_Offset = 0.0;
-    m_OffsetFit = false;
-
-    m_VelGroupName = velGroupName;
-
-    m_asymParams = asymParams;
-
-    m_id = id;
 }
-
-
-CRay::~CRay()
-{
-
-}
-
 
 bool CRay::operator < (const CRay& str) const
 {
@@ -80,6 +59,25 @@ bool CRay::operator != (const CRay& str) const
     }
 }
 
+void CRay::SetAsymParams(TAsymParams asymParams)
+{
+    if(!m_Profile)
+        throw runtime_error("CRay::SetAsymParams: lineprofile is not initialized");
+    m_Profile->SetAsymParams(asymParams);
+}
+void CRay::resetAsymFitParams()
+{
+    if(!m_Profile)
+        throw runtime_error("CRay::resetAsymParams: lineprofile is not initialized");
+    m_Profile->resetAsymFitParams();
+}
+const TAsymParams CRay::GetAsymParams()
+{
+    if(!m_Profile)
+        throw std::runtime_error("CRay::GetAsymParams: lineprofile is not initialized");
+    return m_Profile->GetAsymParams();
+}
+
 Bool CRay::GetIsStrong() const
 {
     return m_Force == nForce_Strong;
@@ -95,12 +93,15 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-CRay::TProfile CRay::GetProfile() const
+std::shared_ptr<CLineProfile> CRay::GetProfile() const
 {
+    if(!m_Profile)
+        throw runtime_error("Current Ray does not have a set profile ");
     return m_Profile;
+     
 }
 
-bool CRay::SetProfile(CRay::TProfile profile)
+bool CRay::SetProfile(const std::shared_ptr<CLineProfile>& profile)
 {
     m_Profile = profile;
     return true;

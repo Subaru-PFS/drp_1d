@@ -1,11 +1,11 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/io/fitsreader.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 
 #include <boost/filesystem.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include <RedshiftLibrary/tests/test-tools.h>
+#include "RedshiftLibrary/tests/test-tools.h"
 #include "test-config.h"
 
 using namespace NSEpic;

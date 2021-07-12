@@ -1,75 +1,24 @@
-#include <RedshiftLibrary/operator/extremaresult.h>
-
-#include <RedshiftLibrary/statistics/pdfcandidateszresult.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/common/exception.h>
-#include <RedshiftLibrary/common/formatter.h>
-
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <string>
-#include <fstream>
-#include <iomanip>      // std::setprecision
-#include <iostream>
-
+#include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
 using namespace NSEpic;
 
-CExtremaResult::CExtremaResult(Int32 n)
-{
-    Resize(n);
-}
+std::shared_ptr<const COperatorResult> ExtremaResult::getCandidate(const int& rank,const std::string& dataset) const{
+      if (dataset == "model_parameters")  return std::make_shared<const TExtremaResult>(this->m_ranked_candidates[rank].second);
+      else if (dataset == "model")  return this->m_savedModelSpectrumResults[rank];
+      // else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[rank];
 
-
-void CExtremaResult::Resize(Int32 size)
-{   
-    m_ranked_candidates.resize(size);
-    FittedTplName.resize(size);
-    FittedTplAmplitude.resize(size);
-    FittedTplAmplitudeError.resize(size);
-    FittedTplMerit.resize(size);
-    FittedTplEbmvCoeff.resize(size);
-    FittedTplMeiksinIdx.resize(size);
-    FittedTplDtm.resize(size);
-    FittedTplMtm.resize(size);
-    FittedTplLogPrior.resize(size);
-    FittedTplSNR.resize(size);
+      else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
+    }
     
-    m_savedModelSpectrumResults.resize(size);
-    m_savedModelContinuumFittingResults.resize(size);
-}
+const std::string& ExtremaResult::getCandidateDatasetType(const std::string& dataset) const {
+      if (dataset == "model_parameters")      return this->m_ranked_candidates[0].second.getType();
+      else if (dataset == "model")  return this->m_savedModelSpectrumResults[0]->getType();
+      //else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[0]->getType();
+      else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
+    }
 
-
-void CExtremaResult::getCandidateData(const int& rank,const std::string& name, Float64& v) const
+bool ExtremaResult::HasCandidateDataset(const std::string& dataset) const
 {
-    if (name.compare("ContinuumIsmCoeff") == 0 || name.compare("FirstpassContinuumIsmCoeff") == 0) v = FittedTplEbmvCoeff[rank];
-    else if (name.compare("FirstpassRedshift") == 0) v = m_ranked_candidates[rank].second.Redshift;
-    else if (name.compare("FirstpassMerit") == 0) v = m_ranked_candidates[rank].second.ValProba;
-    else if (name.compare("ContinuumAmplitude") == 0 || name.compare("FirstpassContinuumAmplitude") == 0) v = FittedTplAmplitude[rank];
-    else if (name.compare("FittedTemplateDtm") == 0 || name.compare("FirstpassFittedTemplateDtm") == 0) v = FittedTplDtm[rank];
-    else if (name.compare("FittedTemplateMtm") == 0 || name.compare("FirstpassFittedTemplateMtm") == 0) v = FittedTplMtm[rank];
-    else if (name.compare("ContinuumAmplitudeError") == 0 || name.compare("FirstpassContinuumAmplitudeError") == 0) v = FittedTplAmplitudeError[rank];
-    else if (name == "Redshift") v = Redshift(rank);
-    else if (name == "RedshiftProba") v = ValSumProba(rank);
-    else if (name == "RedshiftError") v = DeltaZ(rank);
-    else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "unknown candidate Float64 data " << name);
+  return (dataset == "model_parameters" || dataset == "model");
 }
-
-void CExtremaResult::getCandidateData(const int& rank,const std::string& name, Int32& v) const
-{
-  if (name.compare("ContinuumIgmIndex") == 0 || name.compare("FirstpassContinuumIgmIndex") == 0) v = FittedTplMeiksinIdx[rank];
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "unknown candidate integer data "<<name);
-}
-
-void CExtremaResult::getCandidateData(const int& rank,const std::string& name, std::string& v) const
-{
-  if (name.compare("TemplateName") == 0 || name.compare("FirstpassTemplateName") == 0) v = FittedTplName[rank];
-  else if (name.compare("ExtremaIds") == 0 || name.compare("FirstpassExtremaIds") == 0 ) v = m_ranked_candidates[rank].first;
-  else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() <<"unknown candidate string data "<<name);
-}
-
-void CExtremaResult::getCandidateData(const int& rank,const std::string& name, double **data, int *size) const {}
-void CExtremaResult::getData(const std::string& name, Int32& v) const {}
-void CExtremaResult::getData(const std::string& name, Float64& v) const {}
-void CExtremaResult::getData(const std::string& name, std::string& v) const {}
-void CExtremaResult::getData(const std::string& name, double **data, int *size) const {}
-

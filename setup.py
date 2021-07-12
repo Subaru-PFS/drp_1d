@@ -7,20 +7,25 @@ root_dir = os.path.dirname(__file__)
 version_file = os.path.join(root_dir, 'VERSION')
 version = open(version_file).read().strip()
 
+gitrevision_file = os.path.join(root_dir, 'RedshiftLibrary/RedshiftLibrary/version.h')
+gitrevision = open(gitrevision_file).readline().split()[2].replace('"','').replace("-",".").strip()
+if gitrevision: 
+    gitrevision_python="+git"+gitrevision 
+else:
+    gitrevision_python=''
+
+__version__ = version+gitrevision_python
+
+
 class CustomBuild(build):
     def run(self):
         self.run_command('build_ext')
         build.run(self)
 
+
 setup(
     name="pylibamazed",
-    version_config={
-        "count_commits_from_version_file": True,
-        "template": version,
-        "dev_template": version+".dev{sha}",
-        "dirty_template": version+".dev{sha}.dirty",
-        "version_file": version_file
-    },
+    version=__version__, 
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python library."),

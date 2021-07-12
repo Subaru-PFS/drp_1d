@@ -1,16 +1,16 @@
 #ifndef _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/solve.h>
-#include <RedshiftLibrary/processflow/resultstore.h>
-#include <RedshiftLibrary/processflow/inputcontext.h>
-#include <RedshiftLibrary/method/templatefittingsolveresult.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/operator/templatefittingBase.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/operator/pdfMargZLogResult.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/method/templatefittingsolveresult.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 
 namespace NSEpic
 {
@@ -76,7 +76,7 @@ private:
 
   ChisquareArray BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const;
 
-    std::shared_ptr<const CExtremaResult>  SaveExtremaResult(   shared_ptr<const COperatorResultStore> store,
+    std::shared_ptr<const ExtremaResult>  SaveExtremaResult(   shared_ptr<const COperatorResultStore> store,                        
                                                                 const std::string & scopeStr,
                                                                 const TCandidateZbyRank & ranked_zCandidates,
                                                                 const CSpectrum& spc,
@@ -86,7 +86,8 @@ private:
                                                                 Float64 overlapThreshold,
                                                                 std::string opt_interp);
 
-    void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore, std::shared_ptr<const CExtremaResult> & ExtremaResult) const ;
+    void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore,
+                             std::shared_ptr<const ExtremaResult> & ExtremaResult) const ;
     
     std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 

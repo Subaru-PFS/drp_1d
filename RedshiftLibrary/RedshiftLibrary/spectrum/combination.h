@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_SPECTRUM_COMBINATION_
 #define _REDSHIFT_SPECTRUM_COMBINATION_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 
 namespace NSEpic

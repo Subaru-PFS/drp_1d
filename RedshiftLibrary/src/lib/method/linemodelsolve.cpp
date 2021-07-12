@@ -1,17 +1,18 @@
-#include <RedshiftLibrary/method/linemodelsolve.h>
+#include "RedshiftLibrary/method/linemodelsolve.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
-#include <RedshiftLibrary/debug/assert.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/processflow/autoscope.h>
-#include <RedshiftLibrary/processflow/parameterstore.h>
+#include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/statistics/zprior.h>
-#include <RedshiftLibrary/statistics/deltaz.h>
-#include <RedshiftLibrary/operator/pdfLogresult.h>
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/statistics/zprior.h"
+#include "RedshiftLibrary/statistics/deltaz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/operator/pdfLogresult.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -108,10 +109,10 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }
     parameterStore->GetScopedParam( "linemodel.offsets_catalog", m_opt_offsets_reldirpath, "linecatalogs_offsets/offsetsCatalogs_20170410_m150" );
 
-	parameterStore->GetScopedParam( "linemodel.enableLSF", m_opt_enableLSF, "no" );    
 	parameterStore->GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     parameterStore->GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
-    parameterStore->GetScopedParam( "linemodel.instrumentresolution", m_opt_resolution, 2350.0 );
+    //instrumentResolution is now provided by LSF
+    parameterStore->Get( "LSF.resolution", m_opt_resolution, 2350.0 );
     parameterStore->GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     parameterStore->GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     parameterStore->GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
@@ -173,7 +174,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -linetypefilter: %s", m_opt_linetypefilter.c_str());
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
-    Log.LogInfo( "    -enableLSF: %s", m_opt_enableLSF.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
     if(m_opt_lineWidthType=="combined"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
@@ -183,15 +183,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     }else if(m_opt_lineWidthType=="instrumentdriven"){
         Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
     }else if(m_opt_lineWidthType=="velocitydriven"){
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispvsspsf201707"){
-        Log.LogInfo( "    -source size: hardcoded");
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="nispsim2016"){
         Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
@@ -240,8 +231,8 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
         Log.LogInfo( "      -tplfit_priors_betaZ:  %f", m_opt_tplfit_continuumprior_betaZ);
     }
     Log.LogInfo( "    -continuumreestimation: %s", m_opt_continuumreest.c_str());
-    Log.LogInfo( "    -extremacount: %.0f", m_opt_extremacount);
-    Log.LogInfo( "    -extremacount-firstpass B: %.0f", m_opt_extremacountB);
+    Log.LogInfo( "    -extremacount: %i", m_opt_extremacount);
+    Log.LogInfo( "    -extremacount-firstpass B: %i", m_opt_extremacountB);
     Log.LogInfo( "    -extrema cut proba-threshold: %.0f", m_opt_candidatesLogprobaCutThreshold);
     Log.LogInfo( "    -first pass:");
     Log.LogInfo( "      -largegridstepratio: %d", m_opt_firstpass_largegridstepRatio);
@@ -284,7 +275,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog().get());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
   PopulateParameters( inputContext->GetParameterStore() );
 
   bool retSolve = Solve( resultStore,
@@ -341,7 +332,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                         m_linemodel.m_secondpass_parameters_extremaResult.GetIDs()
                         ); 
     
-    std::shared_ptr<CPdfCandidateszResult> candidateResult = pdfz.Compute(chisquares);
+    std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> candidateResult = pdfz.Compute(chisquares);
 
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
@@ -351,7 +342,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     TFloat64Range clampedlambdaRange; 
     spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange );
     // Get linemodel results at extrema (recompute spectrum model etc.)
-    std::shared_ptr<const CLineModelExtremaResult> ExtremaResult =
+    std::shared_ptr<const LineModelExtremaResult> ExtremaResult =
         m_linemodel.SaveExtremaResults( spc, clampedlambdaRange, candidateResult->m_ranked_candidates, 
                                         m_opt_continuumreest);
 
@@ -363,11 +354,12 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
 
     // create the solveresult
     std::shared_ptr<CLineModelSolveResult> lmsolveresult = 
-        std::make_shared<CLineModelSolveResult>( ExtremaResult, 
+        std::make_shared<CLineModelSolveResult>( ExtremaResult->m_ranked_candidates[0].second, 
                                                  m_opt_pdfcombination,
                                                  pdfz.m_postmargZResult->valEvidenceLog);
 
 
+    
     return lmsolveresult;
 }
 
@@ -631,42 +623,16 @@ Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const
 /// \brief COperatorLineModel::storeGlobalModelResults
 /// stores the linemodel results as global results in the datastore
 ///
+
 void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore> resultStore,
-                                           std::shared_ptr<const CLineModelExtremaResult> ExtremaResult) const 
+                                           std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const 
 {
     std::string extremaResultsStr = "linemodel_extrema";
     Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
-    resultStore->StoreScopedGlobalResult( extremaResultsStr.c_str(), ExtremaResult );
+    resultStore->StoreScopedGlobalResult( "extrema_results", ExtremaResult );
 
     Int32 nResults = ExtremaResult->size();
-
-    for (Int32 k = 0; k < nResults; k++)
-    {
-        std::string fname_spc =
-            (boost::format("linemodel_spc_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_spc.c_str(),
-                                          ExtremaResult->m_savedModelSpectrumResults[k]);
-
-        std::string fname_fit =
-            (boost::format("linemodel_fit_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_fit.c_str(),
-                                          ExtremaResult->m_savedModelFittingResults[k]);
-
-        std::string fname_fitcontinuum =
-            (boost::format("linemodel_fitcontinuum_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_fitcontinuum.c_str(), 
-                                          ExtremaResult->m_savedModelContinuumFittingResults[k]);
-
-        std::string fname_rules =
-            (boost::format("linemodel_rules_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(fname_rules.c_str(),
-                                          ExtremaResult->m_savedModelRulesResults[k]);
-
-        std::string nameBaselineStr =
-            (boost::format("linemodel_continuum_extrema_%1%") % k).str();
-        resultStore->StoreScopedGlobalResult(nameBaselineStr.c_str(), 
-                                         ExtremaResult->m_savedModelContinuumSpectrumResults[k]);
-    }
+   
 }
 
 
@@ -858,6 +824,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     m_linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
+        Log.LogDetail("  method Linemodel wit tplfit: fitcontinuum_maxN set to %.0f", m_opt_continuumfitcount);
+
         m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
         m_linemodel.m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing_secondpass;
         m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
@@ -872,7 +840,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         m_linemodel.m_opt_continuum_neg_amp_threshold = m_opt_continuum_neg_amp_threshold;
     }
 
-    m_linemodel.m_opt_enableLSF=m_opt_enableLSF;
 
     m_linemodel.m_opt_lya_forcefit=m_opt_lya_forcefit;
     m_linemodel.m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;
@@ -956,7 +923,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                         extremacount,
                         "FPE");
 
-    std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+    std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
     
     m_linemodel.SetFirstPassCandidates(candResult->m_ranked_candidates);
  
@@ -982,6 +949,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
             linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
             linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
+	    Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
             linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
             linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
             linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
@@ -1047,7 +1015,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                             extremacount,
                             "FPB");
 
-        std::shared_ptr<CPdfCandidateszResult> candResult = pdfz.Compute(chisquares, false);
+        std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
         
         linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
 
@@ -1117,7 +1085,9 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         std::string firstpassExtremaResultsStr=scopeStr.c_str();
         firstpassExtremaResultsStr.append("_firstpass_extrema");
         //Log.LogError("Linemodel, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
-        resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
+
+            //TODO restore this after converting it from COperatorLineModelExtremaResult to LineModelExtremaResult
+        //resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
 
         //save linemodel firstpass extrema B results
         if(enableFirstpass_B)
@@ -1125,7 +1095,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
             std::string firstpassbExtremaResultsStr=scopeStr.c_str();
             firstpassbExtremaResultsStr.append("_firstpassb_extrema");
             //Log.LogError("Linemodel, saving firstpassb extrema results: %s", firstpassExtremaResultsStr.c_str());
-            resultStore->StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
+            //TODO restore this after converting it from COperatorLineModelExtremaResult to LineModelExtremaResult
+            //  resultStore->StoreScopedGlobalResult( firstpassbExtremaResultsStr.c_str(), linemodel_fpb.m_firstpass_extremaResult );
         }
 
     }

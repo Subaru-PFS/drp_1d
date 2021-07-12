@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/linemodel/templatesorthostore.h>
-#include <RedshiftLibrary/linemodel/elementlist.h>
+#include "RedshiftLibrary/linemodel/templatesorthostore.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
 
 
 

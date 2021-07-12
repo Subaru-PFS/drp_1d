@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_SPECTRUM_IO_WRITER_
 #define _REDSHIFT_SPECTRUM_IO_WRITER_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <vector>
 
@@ -18,7 +18,7 @@ public:
     CSpectrumIOWriter();
     virtual ~CSpectrumIOWriter();
 
-    virtual Bool Write( const char* path, CSpectrum& s ) = 0;
+    virtual Bool Write( const char* path, const  CSpectrum& s ) = 0;
 
 private:
 

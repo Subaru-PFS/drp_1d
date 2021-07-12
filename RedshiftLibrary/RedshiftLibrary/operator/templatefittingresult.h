@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
 #define _REDSHIFT_OPERATOR_TEMPLATEFITTINGRESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/operator/operator.h>
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/operator/operator.h"
 
 namespace NSEpic
 {
@@ -36,6 +36,7 @@ public:
     //TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed for correct prior use in marg. mode tplmodel method
 
     Float64                 CstLog;
+    TFloat64List            SNR;
     TFloat64List            Overlap;
     COperator::TStatusList  Status;
 

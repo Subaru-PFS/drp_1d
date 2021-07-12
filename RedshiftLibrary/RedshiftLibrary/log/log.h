@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_LOG_LOG_
 #define _REDSHIFT_LOG_LOG_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/singleton.h>
-#include <RedshiftLibrary/common/mutex.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/singleton.h"
+#include "RedshiftLibrary/common/mutex.h"
 
 #include <cstdarg>
 
@@ -38,8 +38,6 @@ public:
     nLevel_None = 0
   };
 
-    CLog( );
-    virtual ~CLog();
 
     void LogError( const char* format, ... );
     void LogWarning( const char* format, ... );
@@ -61,7 +59,13 @@ public:
 
 private:
 
+    friend class CSingleton<CLog>;
+
     friend class CLogHandler;
+
+    CLog();
+    ~CLog();
+
 
     void            LogEntry( ELevel lvl, const char*  format, va_list& args );
     void            AddHandler( CLogHandler& handler );

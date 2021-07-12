@@ -8,7 +8,13 @@ include(gitrevision)
 
 message(STATUS "Using git revision : " ${GIT_REVISION})
 
+option(BUILD_STATIC_LIBS OFF)
 option(BUILD_TESTING "Build testings" ON)
+option(CODE_COVERAGE "Test code coverage" OFF)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
+  set(CODE_COVERAGE ON)
+endif()
 
 if(BUILD_STATIC_LIBS)
   set(BUILD_SHARED_LIBS OFF)
@@ -17,10 +23,12 @@ else()
   set(BUILD_SHARED_LIBS ON)
 endif()
 
-message(STATUS "BUILD_STATIC_LIBS=" ${BUILD_STATIC_LIBS})
-message(STATUS "BUILD_TESTING=" ${BUILD_TESTING})
+message(STATUS "BUILD_STATIC_LIBS = " ${BUILD_STATIC_LIBS})
+message(STATUS "BUILD_TESTING = " ${BUILD_TESTING})
+message(STATUS "CODE_COVERAGE = " ${CODE_COVERAGE})
 
 if(BUILD_SHARED_LIBS)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
   set(Boost_USE_STATIC_LIBS OFF)
 else()
   set(Boost_USE_STATIC_LIBS ON)
@@ -161,17 +169,11 @@ endif()
 
 #--------------------------------------------------------
 # Parse version, this will be used later to configure
-# cpf-core-redshift-version.cmake with the appropriate version number
+# cpf-redshift-version.cmake with the appropriate version number
 #--------------------------------------------------------
 
 FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
 MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
-
-#SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wno-sign-compare -Wno-parentheses")
-IF(BUILD_SHARED_LIBS)
-  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-ENDIF()
-SET(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 #--------------------------------------------------------
 # Preprocessor and linker path
@@ -255,13 +257,75 @@ ENDFOREACH(TEST_SOURCE)
 ENDIF()
 
 #--------------------------------------------------------
+# Generate coverage data : HTML and XML output
+#--------------------------------------------------------
+if(CODE_COVERAGE)
+
+find_program(GCOVR_EXECUTABLE gcovr REQUIRED)
+if(GCOVR_EXECUTABLE)
+  message(STATUS "Found gcovr: ${GCOVR_EXECUTABLE}")
+else()
+  message(FATAL_ERROR "Gcovr not found!")
+endif()
+
+# Create a coverage report in xml format
+set(GCOVR_XML_COMMAND ${GCOVR_EXECUTABLE} --filter ../RedshiftLibrary/src/lib/ --xml
+    --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml
+    --root ${CMAKE_BINARY_DIR}
+)
+
+# Create a coverage report in html format
+set(GCOVR_HTML_COMMAND ${GCOVR_EXECUTABLE} --filter ../RedshiftLibrary/src/lib/ --html
+    --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html
+    --root ${CMAKE_BINARY_DIR}
+)
+
+# Target to run coverage tests with 'make coverage_xml' command
+add_custom_target(coverage_xml
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
+    COMMAND ${CMAKE_MAKE_PROGRAM} test
+    COMMAND ${GCOVR_XML_COMMAND}
+    COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM
+)
+
+# Target to run coverage tests with 'make coverage_html' command
+add_custom_target(coverage_html
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
+    COMMAND ${CMAKE_MAKE_PROGRAM} test
+    COMMAND ${GCOVR_HTML_COMMAND}
+    COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM
+)
+
+set(COVERAGE_REPORT_FILES
+ "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html"
+ "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml"
+)
+
+set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${COVERAGE_REPORT_FILES})
+
+# Target to clean the coverage repository as well as generated .gcda and .gcno files
+add_custom_target(clean_coverage
+    COMMAND rm -rf ${COVERAGE_REPORT_FILES}
+    COMMAND find . -name "*.gcda" -exec rm -f {} \;
+    COMMAND find . -name "*.gcno" -exec rm -f {} \;
+    COMMENT "Removing generated coverage files"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM
+)
+endif()
+
+#--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
 
 #INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
 #INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config.cmake DESTINATION share/cmake )
 #INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config-version.cmake DESTINATION share/cmake )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candidates_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/results_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv COPYONLY)
 
 #--------------------------------------------------------
 # Build python wrapper
@@ -270,22 +334,23 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/candid
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py.in
   ${CMAKE_CURRENT_SOURCE_DIR}/swig_ext.py
-  )
+)
 
 set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
   "${CMAKE_CURRENT_SOURCE_DIR}/dist"
-  "${CMAKE_CURRENT_SOURCE_DIR}/wheel")
+  "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
+)
 
 set(PYTHON_BUILD_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/redshift_wrap.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/redshift.py"
-  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/candidates_specifications.csv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv"
   "${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed.egg-info"
   "${CMAKE_CURRENT_SOURCE_DIR}/dist"
   "${CMAKE_CURRENT_SOURCE_DIR}/wheel"
@@ -307,10 +372,10 @@ INCLUDE ( CMakePackageConfigHelpers )
 
 # Configure config file (this is used by find_package to find where the library is)
 CONFIGURE_PACKAGE_CONFIG_FILE(
-       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake.in
-       ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake
-       INSTALL_DESTINATION share/cmake
-       PATH_VARS cpf-redshift_INCLUDE_DIR cpf-redshift_LINK_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpf-redshift-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config.cmake
+  INSTALL_DESTINATION share/cmake
+  PATH_VARS cpf-redshift_INCLUDE_DIR cpf-redshift_LINK_DIR
 )
 
 # Configure version file (this is used by find_package to determine a matching version)
@@ -318,11 +383,11 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
   ${CMAKE_CURRENT_BINARY_DIR}/cmake/cpf-redshift-config-version.cmake
   VERSION ${VERSION}
   COMPATIBILITY SameMajorVersion
-  )
+)
 
 CONFIGURE_FILE(
-	${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
-	${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
 )
 
 # Generate TAGS file if etags is installed

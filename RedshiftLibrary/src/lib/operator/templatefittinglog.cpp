@@ -1,16 +1,16 @@
-#include <RedshiftLibrary/operator/templatefittinglog.h>
+#include "RedshiftLibrary/operator/templatefittinglog.h"
 
-#include <RedshiftLibrary/common/mask.h>
-#include <RedshiftLibrary/common/indexing.h>
-#include <RedshiftLibrary/common/quicksort.h>
-#include <RedshiftLibrary/extremum/extremum.h>
-#include <RedshiftLibrary/operator/templatefittingresult.h>
-#include <RedshiftLibrary/spectrum/axis.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/tools.h>
+#include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/quicksort.h"
+#include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/operator/templatefittingresult.h"
+#include "RedshiftLibrary/spectrum/axis.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/tools.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
@@ -531,11 +531,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
         UInt32 izmin = zindexesFullLstSquare[0];
         for (Int32 k = 1; k < zindexesFullLstSquare.size(); k++)
         {
-            UInt32 izmax = zindexesFullLstSquare[k] + 1;
+            UInt32 izmax =  zindexesFullLstSquare[k];
             izrangelist.push_back(TInt32Range(izmin, izmax));
-            izmin = izmax; //setting min for next range (one value overlapping)        
+            izmin = izmax +1; //setting min for next range (one value overlapping)        
         }
-        if (izrangelist.size() == 0 || izrangelist[izrangelist.size() - 1].GetEnd() < result->Redshifts.size() - 1)
+        if (izrangelist.size() == 0)
             izrangelist.push_back(TInt32Range(izmin, result->Redshifts.size() - 1));
     } else
     {
@@ -793,15 +793,21 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     std::reverse(z_vect.begin(), z_vect.end());
     // prepare z array
     std::vector<Float64> z_vect_verif(nshifts, 0.0);
+    Float64 relative_zgrid_error_max = 0.;
     for (Int32 t = 0; t < nshifts; t++)
     {
         z_vect_verif[t] = (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[t + kstart]) /
                     tplRebinedLambdaGlobal[t + kstart];
         //compare with z_vect
-        if(std::abs(z_vect[t] - z_vect_verif[t])>1E-8){
+        Float64 relative_zgrid_error = std::abs(z_vect[t] - z_vect_verif[t])/(1+z_vect_verif[t]);
+        if (relative_zgrid_error > relative_zgrid_error_max) relative_zgrid_error_max = relative_zgrid_error;
+    }
+    if (verboseLogFitFitRangez)
+        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: max diff in zgrid=%e",relative_zgrid_error_max);
+    if (relative_zgrid_error_max>5E-7){
             throw runtime_error("z_vect and z_vect_verification do not correspond.");
         }
-    }
+    
     //check borders
     if(z_vect.size()!=z_vect_verif.size())
         throw runtime_error("z_vect size and z_vect_verification size do not match.");
@@ -853,8 +859,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
    //note that there is no need to copy the ism/igm cause they already exist in the rebinned template
     if(m_enableIGM || m_enableISM){
-        m_templateRebinedLog.InitIsmIgmConfig();
-        m_templateRebinedLog.SetIsmIgmLambdaRange(kstart, kend);
+        m_templateRebinedLog.InitIsmIgmConfig(kstart, kend, redshiftValueMeiksin);
     }
     for (Int32 kIGM = 0; kIGM < nIGM; kIGM++)
     {
@@ -866,7 +871,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
         if (enableIGM)
         {
             Int32 meiksinIdx = igmMeiksinCoeffs[kIGM];
-            m_templateRebinedLog.ApplyMeiksinCoeff(meiksinIdx, redshiftValueMeiksin);
+            m_templateRebinedLog.ApplyMeiksinCoeff(meiksinIdx);
         }
 
         for (Int32 kISM = 0; kISM < nISM; kISM++)
@@ -1284,7 +1289,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         TFloat64List mask_spc = rebinnedSpectrum.GetSpectralAxis().GetSubSamplingMask(ssRatio, lambdaRange);
         m_spectrumRebinedLog = CSpectrum(rebinnedSpectrum, mask_spc);
         // scale the variance by ssratio
-        m_spectrumRebinedLog.GetFluxAxis().GetError() *= 1./sqrt(ssRatio); 
+        CSpectrumNoiseAxis scaledNoise = m_spectrumRebinedLog.GetErrorAxis();
+        scaledNoise  *= 1./sqrt(ssRatio);
+        m_spectrumRebinedLog.SetErrorAxis(std::move(scaledNoise));
 
         TInt32Range ilbda = FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), rebinnedTpl.GetSpectralAxis(), TFloat64Range(redshifts));
         TFloat64List mask_tpl = rebinnedTpl.GetSpectralAxis().GetSubSamplingMask(ssRatio, ilbda);

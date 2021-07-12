@@ -1,11 +1,11 @@
 #ifndef _REDSHIFT_RAY_CATALOGSTPLSHAPE_
 #define _REDSHIFT_RAY_CATALOGSTPLSHAPE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/ray/ray.h>
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/operator/pdfz.h>
-#include <RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 #include <boost/format.hpp>
 
@@ -27,7 +27,8 @@ public:
     Bool Init(std::string calibrationPath, 
               std::string opt_tplratioCatRelPath, 
               Int32 enableISMCalzetti,
-              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti);
+              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+              Float64 nsigmasupport);
 
     Bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
@@ -44,7 +45,7 @@ public:
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
     Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
-    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting);
+    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting, const Float64 nsigmasupport);
     Bool InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList);
     Bool SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog);
 
@@ -63,6 +64,7 @@ private:
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;
+    Float64 m_nsigmasupport;
 };
 
 

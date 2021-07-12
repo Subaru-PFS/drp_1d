@@ -1,4 +1,4 @@
-#include <RedshiftLibrary/continuum/standard.h>
+#include "RedshiftLibrary/continuum/standard.h"
 
 using namespace NSEpic;
 using namespace std;

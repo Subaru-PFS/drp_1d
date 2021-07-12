@@ -1,7 +1,7 @@
-#include <RedshiftLibrary/linemodel/elementlist.h>
-#include <RedshiftLibrary/linemodel/lmfitcontroller.h>
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 namespace NSEpic
 {

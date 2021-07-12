@@ -1,13 +1,12 @@
-#include <RedshiftLibrary/log/filehandler.h>
+#include "RedshiftLibrary/log/filehandler.h"
 
-#include <RedshiftLibrary/log/handler.h>
+#include "RedshiftLibrary/log/handler.h"
 
 #include <stdio.h>
 
 using namespace NSEpic;
 
-CLogFileHandler::CLogFileHandler( CLog& logger, const char* filePath ) :
-    CLogHandler( logger )
+CLogFileHandler::CLogFileHandler( const char* filePath )
 {
     m_OutputStream.open( filePath, std::fstream::out );
 }

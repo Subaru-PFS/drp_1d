@@ -1,17 +1,17 @@
 #include <iostream>
 #include <memory>
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/ray/regulament.h>
-#include <RedshiftLibrary/ray/linetags.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/regulament.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 // To be removed once JSON code is in <--
-#include <RedshiftLibrary/ray/rule2singlelinesamplitude.h>
-#include <RedshiftLibrary/ray/ruleBalmerLinearSolver.h>
-#include <RedshiftLibrary/ray/ruleOIIRatioRange.h>
-#include <RedshiftLibrary/ray/ruleStrongHigherThanWeak.h>
-#include <RedshiftLibrary/ray/ruleSuperStrongHighest.h>
+#include "RedshiftLibrary/ray/rule2singlelinesamplitude.h"
+#include "RedshiftLibrary/ray/ruleBalmerLinearSolver.h"
+#include "RedshiftLibrary/ray/ruleOIIRatioRange.h"
+#include "RedshiftLibrary/ray/ruleStrongHigherThanWeak.h"
+#include "RedshiftLibrary/ray/ruleSuperStrongHighest.h"
 // -->
 
 using namespace NSEpic;

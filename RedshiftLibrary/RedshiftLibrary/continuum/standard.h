@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_CONTINUUM_STANDARD_
 #define _REDSHIFT_CONTINUUM_STANDARD_
 
-#include <RedshiftLibrary/continuum/continuum.h>
+#include "RedshiftLibrary/continuum/continuum.h"
 
 namespace NSEpic
 {

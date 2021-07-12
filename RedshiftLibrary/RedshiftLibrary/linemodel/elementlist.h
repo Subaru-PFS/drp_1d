@@ -1,36 +1,39 @@
 #ifndef _REDSHIFT_LINEMODEL_ELEMENTLIST_
 #define _REDSHIFT_LINEMODEL_ELEMENTLIST_
 
-#include <RedshiftLibrary/common/range.h>
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include <RedshiftLibrary/ray/catalog.h>
-#include <RedshiftLibrary/ray/catalogsTplShape.h>
-#include <RedshiftLibrary/ray/regulament.h>
-#include <RedshiftLibrary/spectrum/spectrum.h>
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/catalogsTplShape.h"
+#include "RedshiftLibrary/ray/regulament.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include <RedshiftLibrary/operator/templatefitting.h>
+#include "RedshiftLibrary/operator/templatefitting.h"
 
-#include <RedshiftLibrary/operator/linemodelresult.h>
-#include <RedshiftLibrary/operator/modelspectrumresult.h>
-#include <RedshiftLibrary/linemodel/element.h>
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/linemodel/element.h"
 
-#include <RedshiftLibrary/operator/pdfz.h>
+#include "RedshiftLibrary/operator/pdfz.h"
 
-#include <RedshiftLibrary/spectrum/template/catalog.h>
-#include <RedshiftLibrary/linemodel/templatesfitstore.h>
+#include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
 #include <boost/shared_ptr.hpp>
 
-#include <RedshiftLibrary/linemodel/lmfitcontroller.h>
+#include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 
 #include <memory>
 namespace NSEpic
 {
   static Int32 defaultIdx = -1;
+  //to avoid circular dependency
+  class CLineProfileASYM;
+  class CLineProfileASYMFIXED;
 
 class CLineModelElementList
 {
@@ -46,7 +49,6 @@ public:
                           const std::string &opt_continuumcomponent,
                           const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
-                          const std::string & opt_enable_LSF,
                           const Float64 nsigmasupport,
                           const Float64 resolution,
                           const Float64 velocityEmission,
@@ -86,20 +88,20 @@ public:
                         Float64& fitDtM,
                         Float64& fitMtM,
                         Float64 &fitLogprior);
-    const std::string & getFitContinuum_tplName();
-    Float64 getFitContinuum_tplAmplitude();
-    Float64 getFitContinuum_tplAmplitudeError();
-    Float64 getFitContinuum_snr();
-    Float64 getFitContinuum_tplMerit();
+    const std::string & getFitContinuum_tplName() const;
+    Float64 getFitContinuum_tplAmplitude() const;
+    Float64 getFitContinuum_tplAmplitudeError() const;
+    Float64 getFitContinuum_snr() const;
+    Float64 getFitContinuum_tplMerit() const;
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
-    Float64 getFitContinuum_tplIsmEbmvCoeff();
-    Float64 getFitContinuum_tplIgmMeiksinIdx();
+    Float64 getFitContinuum_tplIsmEbmvCoeff() const;
+    Float64 getFitContinuum_tplIgmMeiksinIdx() const;
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
     Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
-    Int32 GetFitContinuum_Option();
+    Int32 GetFitContinuum_Option() const;
     void SetFitContinuum_FitValues(std::string tplfit_name,
                                    Float64 tplfit_amp,
                                    Float64 tplfit_amperr,
@@ -123,18 +125,18 @@ public:
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
     Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul);
 
-    const std::string & getTplshape_bestTplName();
-    Float64 getTplshape_bestTplIsmCoeff();
-    Float64 getTplshape_bestAmplitude();
-    Float64 getTplshape_bestDtm();
-    Float64 getTplshape_bestMtm();
+    const std::string & getTplshape_bestTplName() const ;
+    Float64 getTplshape_bestTplIsmCoeff() const ;
+    Float64 getTplshape_bestAmplitude() const ;
+    Float64 getTplshape_bestDtm() const ;
+    Float64 getTplshape_bestMtm() const ;
     Int32 getTplshape_count();
     const std::vector<Float64> & getTplshape_priors();
-    const std::vector<Float64> & GetChisquareTplshape();
-    std::vector<Float64> GetPriorLinesTplshape();
-    const std::vector<Float64> & GetScaleMargTplshape();
-    const TBoolList & GetStrongELPresentTplshape();
-    const std::vector<Int32> & GetNLinesAboveSNRTplshape();
+    const std::vector<Float64> & GetChisquareTplshape() const ;
+    std::vector<Float64> GetPriorLinesTplshape() const ;
+    const std::vector<Float64> & GetScaleMargTplshape() const ;
+    const TBoolList & GetStrongELPresentTplshape() const ;
+    const std::vector<Int32> & GetNLinesAboveSNRTplshape() const ;
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
     Int32 GetNElements();
@@ -328,7 +330,12 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
-    void ActivateLSF();
+    TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
+                                    const Float64& redshift, 
+                                    const UInt32& idxLyaE,
+                                    const TUInt32List& filterEltsIdxLya, 
+                                    const UInt32& idxLineLyaE);
+    void SetLSF();
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);

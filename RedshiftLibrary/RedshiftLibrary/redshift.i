@@ -4,6 +4,7 @@
 %include std_string.i
 %include std_shared_ptr.i
 %include std_except.i
+%include std_vector.i
 %include exception.i
 
 %shared_ptr(CClassifierStore)
@@ -13,9 +14,8 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
-%shared_ptr(CSingleton<CLog>)
 %shared_ptr(CLSF)
-%shared_ptr(CLSFConstantGaussian)
+%shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -24,6 +24,15 @@
 %shared_ptr(CSpectrumSpectralAxis)
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
+%shared_ptr(CClassificationResult)
+%shared_ptr(CPdfMargZLogResult)
+%shared_ptr(TCandidateZ)
+%shared_ptr(TExtremaResult)
+%shared_ptr(TTplCombinationResult)
+%shared_ptr(TLineModelResult)
+%shared_ptr(CModelSpectrumResult)
+%shared_ptr(CModelFittingResult)
+%shared_ptr(CSpectraFluxResult)
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -31,6 +40,7 @@
 %{
 #define SWIG_FILE_WITH_INIT
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/pyconv.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
@@ -49,8 +59,18 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSFConstant.h"
+#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/method/solvedescription.h"
+#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/statistics/pdfcandidatesz.h"
+#include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/operator/extremaresult.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
+#include "RedshiftLibrary/linemodel/modelfittingresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 static PyObject* pParameterException;
 static PyObject* pGlobalException;
@@ -139,7 +159,8 @@ public:
      nLevel_Debug = 60,
      nLevel_None = 0
    };
-  CLog( );
+
+  static CLog& GetInstance();
 
   void LogError( const char* format, ... );
   void LogWarning( const char* format, ... );
@@ -148,17 +169,21 @@ public:
   void LogDebug( const char* format, ... );
   void Indent();
   void UnIndent();
+
+private:
+   CLog();
+   ~CLog();
 };
 
 class CLogConsoleHandler {
 public:
-  CLogConsoleHandler( CLog& logger );
+  CLogConsoleHandler();
   void SetLevelMask( UInt32 mask );
 };
 
 class CLogFileHandler {
 public:
-  CLogFileHandler( CLog& logger, const char* filePath );
+  CLogFileHandler( const char* filePath );
   void SetLevelMask( UInt32 mask );
 };
 
@@ -173,14 +198,26 @@ class CRange
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
+typedef std::vector<Float64> TFloat64List;
+typedef std::vector<Int32> TInt32List;
 
 %template(TFloat64Range) CRange<Float64>;
+%template(TFloat64List) std::vector<Float64>;
+%template(TInt32List) std::vector<Int32>;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
 %apply Float64 &OUTPUT { Float64& out_float };
 
+class PC
+{
+ public:
+  %rename(Get_Float64Array) get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_Int32Array) get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
+};
 
 class CRayCatalog
 {
@@ -199,14 +236,53 @@ public:
     void Add( std::shared_ptr<CTemplate> r);
 };
 
+
+class COperatorResult
+{
+
+public:
+
+    COperatorResult();
+    virtual ~COperatorResult();
+
+    const std::string& getType();
+
+};
+
+
+%include "method/classificationresult.i"
+%include "operator/pdfMargZLogResult.i"
+%include "statistics/pdfcandidatesz.i"
+%include "operator/extremaresult.i"
+%include "operator/tplCombinationExtremaResult.i"
+%include "linemodel/linemodelextremaresult.i"
+%include "linemodel/modelfittingresult.i"
+%include "operator/modelspectrumresult.i"
+
+
+class CSpectraFluxResult : public COperatorResult
+{
+
+public:
+
+    CSpectraFluxResult();
+    virtual ~CSpectraFluxResult();
+
+    TFloat64List   fluxes;
+    TFloat64List   wavel;
+
+};
+
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> rayCatalog,
+            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
             const std::string& paramsJSONString);
   std::shared_ptr<COperatorResultStore> GetResultStore();
+  void testResultStore();
 };
 
 
@@ -219,31 +295,70 @@ public:
 
 class COperatorResultStore
 {
-%rename(Get_StringCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, std::string& out_str);
-%rename(Get_Int32CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Int32& out_int);
-%rename(Get_Float64CandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& data, Float64& out_float);
-  
-%rename(Get_Int32Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Int32& out_int);
-%rename(Get_Float64Data) getData(const std::string& object_type,const std::string& method,const std::string& data, Float64& out_float);
-%rename(Get_StringData) getData(const std::string& object_type,const std::string& method,const std::string& data, std::string& out_str);
-
-%rename(Get_Float64ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1); 
-%rename(Get_Int32ArrayCandidateData) getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name,int ** ARGOUTVIEW_ARRAY1, int * DIM1); 
-%rename(Get_Float64ArrayData) getData(const std::string& object_type,const std::string& method,const std::string& name,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
-
 
  public:
   COperatorResultStore(const TScopeStack& scopeStack);
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Float64& out_float) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, Int32& out_int) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, std::string& out_str) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
-  void getCandidateData(const std::string& object_type,const std::string& method,const int& rank,const std::string& name, int **ARGOUTVIEW_ARRAY1, int *DIM1) ;
 
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, Int32& out_int) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, Float64& out_float) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, std::string& out_str) ;
-  void getData(const std::string& object_type,const std::string& method,const std::string& name, double **ARGOUTVIEW_ARRAY1, int *DIM1) ;
+  std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
+                                                                       const std::string& method,
+                                                                       const std::string& name ) const;
+  
+  std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
+								    const std::string& method,
+								    const std::string& name ) const;
+
+  std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
+							     const std::string& method,
+							     const std::string& name ,
+							     const int& rank
+							     ) const;
+  std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+										 ) const;
+  std::shared_ptr<const TExtremaResult> GetExtremaResult(const std::string& objectType,
+										 const std::string& method,
+										 const std::string& name ,
+										 const int& rank
+									       ) const;
+
+  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name ,
+								   const int& rank
+								   ) const  ;
+
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+								     const std::string& method,
+								     const std::string& name ,
+								     const int& rank
+								     ) const  ;
+
+  std::shared_ptr<const CSpectraFluxResult> GetSpectraFluxResult(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name ,
+								   const int& rank
+								   ) const  ;
+  
+  const std::string&  GetGlobalResultType(const std::string& objectType,
+                                          const std::string& method,
+                                          const std::string& name ) const;
+
+    const std::string&  GetCandidateResultType(const std::string& objectType,
+					     const std::string& method,
+					     const std::string& name ,
+					     const std::string& dataset) const;
+
+      bool HasCandidateDataset(const std::string& objectType,
+			   const std::string& method,
+			   const std::string& name ,
+			   const std::string& dataset) const;
+
+  int getNbRedshiftCandidates(const std::string& objectType,
+			      const std::string& method) const;
+
+  void test();
 
 };
 
@@ -254,8 +369,8 @@ class CSpectrum
  %rename(CSpectrum_default) CSpectrum();
  public:
   CSpectrum();
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis);
-  CSpectrum(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
   std::shared_ptr<const CLSF> GetLSF() const;
   void SetLSF(const std::shared_ptr<CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
@@ -314,8 +429,6 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
 };
 %clear (const Float64* samples, UInt32 n);
 
-
-
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
@@ -346,26 +459,31 @@ class CTemplate : public CSpectrum
 {
  public:
   CTemplate( const std::string& name, const std::string& category,
-	     CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& fluxAxis);
+	     CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
   bool Save( const char* filePath ) const;
 };
 
 class CLSF
 {
+ enum TLSFType {
+      GaussianConstantWidth,
+      GaussianConstantResolution,
+      GaussianNISPSIM2016,
+      GaussianNISPVSSPSF201707
+    };
  public:
+  CLSF(TLSFType name);
   virtual ~CLSF();
-  virtual Float64 GetSigma(Float64 lambda=-1.0) const=0;
-  virtual void SetSigma(const Float64 sigma)=0;
+  virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
   virtual bool IsValid() const=0;
 };
 
-class CLSFConstantGaussian : public CLSF
+class CLSFGaussianConstantWidth : public CLSF
 {
  public:
-  CLSFConstantGaussian(const Float64 sigma=0.0);
-  ~CLSFConstantGaussian();
-  Float64 GetSigma(Float64 lambda=-1.0) const;
-  void SetSigma(const Float64 sigma);
+  CLSFGaussianConstantWidth(const Float64 sigma=0.0);
+  ~CLSFGaussianConstantWidth();
+  Float64 GetWidth(Float64 lambda=-1.0) const;
   bool IsValid() const;
 };
 
@@ -433,3 +551,5 @@ class CSolveDescription
     
   static const std::string GetDescription(const std::string& method);
 };
+
+

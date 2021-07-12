@@ -1,10 +1,10 @@
-#include <RedshiftLibrary/method/reliabilityresult.h>
+#include "RedshiftLibrary/method/reliabilityresult.h"
 
-#include <RedshiftLibrary/processflow/context.h>
+#include "RedshiftLibrary/processflow/context.h"
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 
 using namespace NSEpic;
@@ -15,9 +15,4 @@ using namespace NSEpic;
 CReliabilityResult::CReliabilityResult():
   CSolveResult()
 {
-}
-
-void CReliabilityResult::getData(const std::string& name, std::string& v) const
-{
-  v = m_ReliabilityLabel;
 }

@@ -1,5 +1,5 @@
-#include <RedshiftLibrary/log/log.h>
-#include <RedshiftLibrary/statistics/priorhelpercontinuum.h>
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/statistics/priorhelpercontinuum.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -12,7 +12,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/log/log.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_COMMON_WEIGHTS_
 #define _REDSHIFT_COMMON_WEIGHTS_
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
 namespace NSEpic
 {

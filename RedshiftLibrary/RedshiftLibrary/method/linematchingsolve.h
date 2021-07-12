@@ -1,9 +1,9 @@
 #ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/method/linematchingsolveresult.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/linematchingsolveresult.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic
 {

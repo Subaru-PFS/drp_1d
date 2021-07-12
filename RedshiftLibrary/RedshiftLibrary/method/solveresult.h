@@ -1,21 +1,20 @@
 #ifndef _SOLVE_RESULT_
 #define _SOLVE_RESULT_
 
-#include <RedshiftLibrary/processflow/result.h>
+#include "RedshiftLibrary/processflow/result.h"
 
 #include <vector>
 
 namespace NSEpic
 {
-  class CExtremaResult;
 
+  class TCandidateZ;
 
   class CSolveResult: public COperatorResult
   {
   public:
     
     virtual ~CSolveResult()=0;
-
   };
   
   class CPdfSolveResult: public CSolveResult
@@ -23,9 +22,12 @@ namespace NSEpic
 
   public:
 
-    CPdfSolveResult(const std::shared_ptr<const CExtremaResult> & ExtremaResult,
+    CPdfSolveResult(const TCandidateZ& ExtremaResult,
                  const std::string & opt_pdfcombination,
                  Float64 evidence);
+    CPdfSolveResult( Float64 merit, Float64 redshift,
+                      const std::string & opt_pdfcombination,
+                      Float64 evidence);
     virtual ~CPdfSolveResult()=default;
     CPdfSolveResult(CPdfSolveResult const& other) = default;
     CPdfSolveResult& operator=(CPdfSolveResult const& other) = default;
@@ -40,7 +42,6 @@ namespace NSEpic
     inline Float64 getMerit() const {return m_merit;}  
     inline Float64 getEvidence() const {return m_evidence;} 
 
-    //    void getData(const std::string& name, std::string& v) const;
 
   protected:
     Float64 m_redshift;

@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
-#include <RedshiftLibrary/spectrum/template/catalog.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
 
 
 #include <boost/test/unit_test.hpp>

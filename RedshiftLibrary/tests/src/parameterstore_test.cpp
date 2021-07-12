@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/processflow/parameterstore.h>
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/common/range.h>
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 
 #include <time.h>
 #include <iostream>

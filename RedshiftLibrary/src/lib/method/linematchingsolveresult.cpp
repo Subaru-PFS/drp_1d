@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/method/linematchingsolveresult.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/operator/raymatchingresult.h>
+#include "RedshiftLibrary/method/linematchingsolveresult.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/operator/raymatchingresult.h"
 
 #include <float.h>
 
@@ -26,6 +26,7 @@ CLineMatchingSolveResult::~CLineMatchingSolveResult()
 /**
  * Wrapper around CRayMatchingResult::GetBestRedshift.
  */
+/*
 Bool CLineMatchingSolveResult::GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const
 {
     std::string scope = store.GetScope( *this ) + "linematchingsolve.raymatching";
@@ -44,3 +45,4 @@ Bool CLineMatchingSolveResult::GetBestResult( const CDataStore& store, Float64& 
     return true;
 }
 
+*/

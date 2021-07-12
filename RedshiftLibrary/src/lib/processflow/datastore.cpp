@@ -1,6 +1,6 @@
-#include <RedshiftLibrary/processflow/datastore.h>
+#include "RedshiftLibrary/processflow/datastore.h"
 
-#include <RedshiftLibrary/debug/assert.h>
+#include "RedshiftLibrary/debug/assert.h"
 
 using namespace NSEpic;
 

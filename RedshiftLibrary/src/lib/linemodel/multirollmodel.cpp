@@ -1,13 +1,13 @@
-#include <RedshiftLibrary/linemodel/multirollmodel.h>
+#include "RedshiftLibrary/linemodel/multirollmodel.h"
 
 #include <boost/filesystem.hpp>
-#include <RedshiftLibrary/spectrum/io/genericreader.h>
-#include <RedshiftLibrary/noise/fromfile.h>
-#include <RedshiftLibrary/spectrum/combination.h>
+#include "RedshiftLibrary/spectrum/io/genericreader.h"
+#include "RedshiftLibrary/noise/fromfile.h"
+#include "RedshiftLibrary/spectrum/combination.h"
 
-#include <RedshiftLibrary/continuum/median.h>
-#include <RedshiftLibrary/continuum/waveletsdf.h>
-#include <RedshiftLibrary/continuum/irregularsamplingmedian.h>
+#include "RedshiftLibrary/continuum/median.h"
+#include "RedshiftLibrary/continuum/waveletsdf.h"
+#include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -25,7 +25,6 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                  const std::string& opt_continuumcomponent,
                                  const Float64 opt_continuum_neg_threshold,
                                  const std::string& widthType,
-                                 const std::string& opt_enable_LSF,
                                  const Float64 resolution,
                                  const Float64 velocityEmission,
                                  const Float64 velocityAbsorption,
@@ -58,7 +57,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
         }
 
         // Estimate continuum spectrum
-        CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
+        const CSpectrumFluxAxis & ContinuumFluxAxis = spcCombined.GetContinuumFluxAxis(); //NB: could be set to an individual roll instead.
         for(Int32 km=0; km<nModels; km++)
         {
             spcRolls[km]->SetContinuumEstimationMethod(ContinuumFluxAxis);
@@ -78,7 +77,6 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              opt_continuumcomponent,
                                                                                              opt_continuum_neg_threshold,
                                                                                              widthType,
-                                                                                             opt_enable_LSF,
                                                                                              lines_nsigmasupport,
                                                                                              resolution,
                                                                                              velocityEmission,
