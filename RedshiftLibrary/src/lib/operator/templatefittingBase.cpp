@@ -1,6 +1,6 @@
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-
+#include <numeric>
 using namespace NSEpic;
 using namespace std;
 
@@ -159,4 +159,46 @@ Float64 COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbd
 {
     Float64 lbdarest_lya = 1216.;
     return spcLbda0/lbdarest_lya-1; //check the rounding thing     
+}
+
+void  COperatorTemplateFittingBase::SetupIsmIgm(Int32 opt_extinction,
+                                                Int32 opt_dustFitting,
+                                                TInt32List& MeiksinList, //return 
+                                                TInt32List& EbmvList, //return
+                                                Bool keepigmism,
+                                                Float64 FitEbmvCoeff,
+                                                Int32 FitMeiksinIdx)
+{
+    Int32 nIGMCoeffs=1;
+    if(opt_extinction && !keepigmism)
+    {
+        nIGMCoeffs = m_templateRebined_bf.m_igmCorrectionMeiksin->GetIdxCount();
+    }
+    MeiksinList.resize(nIGMCoeffs);
+    if(opt_extinction)
+    {
+        if(keepigmism)
+            MeiksinList[0] = FitMeiksinIdx;
+        else
+            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+    }else{
+        MeiksinList[0] = -1;
+    }
+    Int32 nISMCoeffs = 1;
+    if(opt_dustFitting==-10)
+    {
+        nISMCoeffs = m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    }
+
+    EbmvList.resize(nISMCoeffs);
+    if(opt_dustFitting>-1){
+        if(keepigmism)
+            EbmvList[0] = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
+        else if(opt_dustFitting==-10)
+                std::iota(EbmvList.begin(), EbmvList.end(), 0);
+            else 
+                EbmvList[0] = opt_dustFitting;
+    }else{
+        EbmvList[0] = -1;
+    } 
 }

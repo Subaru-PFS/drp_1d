@@ -504,7 +504,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
 
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
-    
+    TInt32List MeiksinList;
+    TInt32List EbmvList;
+    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 nIGMCoeffs = MeiksinList.size();
+    Int32 nISMCoeffs = EbmvList.size();
+/*    
     Int32 nIGMCoeffs=1;
     if(opt_extinction && !keepigmism)
     {
@@ -528,10 +533,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
 
     TInt32List EbmvList(nISMCoeffs);
-    if(opt_dustFitting>-1)
-    {
+    if(opt_dustFitting>-1){
         if(keepigmism)
-            EbmvList[0] = FitEbmvCoeff;
+            EbmvList[0] = tpl.m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
         else if(opt_dustFitting==-10)
                 std::iota(EbmvList.begin(), EbmvList.end(), 0);
             else 
@@ -539,7 +543,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }else{
         EbmvList[0] = -1;
     }
-
+*/
     TFloat64List _chi2List(nIGMCoeffs, DBL_MAX);
     TFloat64List _ismList(nIGMCoeffs, NAN);
     TInt32List   _igmList(nIGMCoeffs, -1);

@@ -555,12 +555,21 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
     Log.LogDebug("  Operator-tplcombination: prepare the results");
     std::shared_ptr<CTplCombinationResult> result = std::shared_ptr<CTplCombinationResult>( new CTplCombinationResult() );
-    Int32 nEbmvCoeffs = 1;
+
+    TInt32List MeiksinList;
+    TInt32List EbmvList;
+    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 nIGMCoeffs = MeiksinList.size();
+    Int32 nISMCoeffs = EbmvList.size();
+    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nISMCoeffs);
+    Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d", nIGMCoeffs);
+/*
+    Int32 nISMCoeffs = 1;
     if(opt_dustFitting && !keepigmism)
     {
-        nEbmvCoeffs = tplList.front()->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+        nISMCoeffs = tplList.front()->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
-    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nEbmvCoeffs);
+    Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d", nISMCoeffs);
     
     Int32 nIGMCoeffs = 1;
     if(opt_extinction && !keepigmism)
@@ -581,11 +590,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         MeiksinList[0] = -1;
     }
 
-    TInt32List EbmvList(nEbmvCoeffs);
+    TInt32List EbmvList(nISMCoeffs);
     if(opt_dustFitting>-1)
     {
         if(keepigmism)
-            EbmvList[0] = FitEbmvCoeff;
+            EbmvList[0] = m_templatesRebined_bf.front()->m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
         else if(opt_dustFitting==-10)
                 std::iota(EbmvList.begin(), EbmvList.end(), 0);
             else 
@@ -593,7 +602,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }else{
         EbmvList[0] = -1;
     }
-    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs, componentCount);
+*/
+    result->Init(sortedRedshifts.size(), nISMCoeffs, nIGMCoeffs, componentCount);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -648,8 +658,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
             fittingResults.EbmvCoeff = FitEbmvCoeff;
         }
         //init fittingResult intermediate values before passing to ::BasicFit
-        fittingResults.fittingAmplitudesInterm.resize(nEbmvCoeffs);
-        for(Int32 kism=0; kism<nEbmvCoeffs; kism++)
+        fittingResults.fittingAmplitudesInterm.resize(nISMCoeffs);
+        for(Int32 kism=0; kism<nISMCoeffs; kism++)
         {   
             fittingResults.ChiSquareInterm.push_back(_chi2List);
             fittingResults.IsmCalzettiCoeffInterm.push_back(_ismList);
@@ -911,4 +921,47 @@ Float64 COperatorTplcombination::ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis
         dtd += spcFluxAxis[k]*spcFluxAxis[k]/err2;
     }
     return dtd;
+}
+
+
+void  COperatorTplcombination::SetupIsmIgm(Int32 opt_extinction,
+                                            Int32 opt_dustFitting,
+                                            TInt32List& MeiksinList, //return 
+                                            TInt32List& EbmvList, //return
+                                            Bool keepigmism,
+                                            Float64 FitEbmvCoeff,
+                                            Int32 FitMeiksinIdx)
+{
+    Int32 nIGMCoeffs=1;
+    if(opt_extinction && !keepigmism)
+    {
+        nIGMCoeffs = m_templatesRebined_bf.front().m_igmCorrectionMeiksin->GetIdxCount();
+    }
+    MeiksinList.resize(nIGMCoeffs);
+    if(opt_extinction)
+    {
+        if(keepigmism)
+            MeiksinList[0] = FitMeiksinIdx;
+        else
+            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+    }else{
+        MeiksinList[0] = -1;
+    }
+    Int32 nISMCoeffs = 1;
+    if(opt_dustFitting==-10)
+    {
+        nISMCoeffs = m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    }
+
+    EbmvList.resize(nISMCoeffs);
+    if(opt_dustFitting>-1){
+        if(keepigmism)
+            EbmvList[0] = m_templatesRebined_bf.front().m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
+        else if(opt_dustFitting==-10)
+                std::iota(EbmvList.begin(), EbmvList.end(), 0);
+            else 
+                EbmvList[0] = opt_dustFitting;
+    }else{
+        EbmvList[0] = -1;
+    } 
 }

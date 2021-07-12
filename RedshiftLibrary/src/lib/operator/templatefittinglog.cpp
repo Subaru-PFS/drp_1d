@@ -1317,7 +1317,12 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
     // Optionally apply some IGM absorption
-    Int32 nIGMCoeffs = 1;
+    TInt32List MeiksinList;
+    TInt32List EbmvList;
+    SetupIsmIgm( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 nIGMCoeffs = MeiksinList.size();
+    Int32 nISMCoeffs = EbmvList.size();
+/*    Int32 nIGMCoeffs = 1;
     if(opt_extinction && !keepigmism)
     {
         nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
@@ -1336,7 +1341,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     // Optionally apply some ISM attenuation
     Int32 nISMCoeffs = 1;
-    if (opt_dustFitting==-10)//do we want to keep these options?
+    if(opt_dustFitting==-10)//do we want to keep these options?
     {
         nISMCoeffs = rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
@@ -1354,7 +1359,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         EbmvList[0] = -1;
         m_enableISM = 0;
     }
-
+*/
+    m_enableISM = (EbmvList[0] == -1)?0:1;
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
     result->Init(redshifts.size(), nISMCoeffs, nIGMCoeffs);
     result->Redshifts = redshifts;
