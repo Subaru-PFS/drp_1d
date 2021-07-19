@@ -59,7 +59,9 @@ public:
                               Float64 overlapThreshold,
                               std::shared_ptr<CModelSpectrumResult> & spc);
 
-  inline virtual bool IsFFTProcessing() {return false;}; 
+  inline virtual bool IsFFTProcessing() {return false;};
+
+  static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
 
 protected:
   Int32  RebinTemplate( const CSpectrum& spectrum,
