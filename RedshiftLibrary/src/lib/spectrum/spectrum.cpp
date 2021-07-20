@@ -813,12 +813,21 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         return false;
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
-
-    if( targetSpectralAxis[0]<m_SpectralAxis[0] || 
-        targetSpectralAxis[s-1]>m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1])
+    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
+        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
+        return false;
+    }
+    if(m_SpectralAxis.IsInLinearScale()){
+        currentRange = range;
+    }
+    //find start/end indexs for both axes
+    if( m_SpectralAxis[0]>currentRange.GetBegin()|| 
+        m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]<currentRange.GetEnd())
     {
-        Log.LogError("Problem: TargetSpectralAxis is not included in the current spectral axis" );
-        throw runtime_error("Cannot rebin spectrum: target spectral axis is not included in the current spectral axis");
+        Log.LogError("CSpectrum::Rebin: input spectral range is not included in spectral axis" );
+        throw runtime_error("CSpectrum::Rebin: input spectral range is not included in spectral axis");
     }
 
     if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )
@@ -831,19 +840,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         Log.LogError("Problem buffer couldnt be computed\n" );
         return false;
     }
-
-    //the spectral axis should be in the same scale
-    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
-    TFloat64Range currentRange = logIntersectedLambdaRange;
-    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
-        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
-        return false;
-
-    }
-    if(m_SpectralAxis.IsInLinearScale()){
-        currentRange = range;
-    }
-    
+  
     CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 
