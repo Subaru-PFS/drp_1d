@@ -2353,7 +2353,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   std::string opt_enableLSF = "no";
-  Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport");
+  Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
   Float64 opt_resolution = params->GetScoped<Float64>("instrumentresolution");
   Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");
   Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");
@@ -2387,10 +2387,12 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
-  const std::string opt_fittingmethod=params->GetScoped<std::string>("fittingmethod");
+  const std::string opt_fittingmethod= "hybrid";//params->GetScoped<std::string>("fittingmethod");
   const std::string& opt_continuumcomponent = params->GetScoped<std::string>("continuumcomponent");
   m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
-  
+
+
+    
   m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
                                                                              tplCatalog,
                                                                              tplCategoryList,
@@ -2410,7 +2412,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   m_model->SetSourcesizeDispersion(setssSizeInit);
   Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
               setssSizeInit);
-  m_model->setPassMode(3);
+
+
+  m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
   /*
   if (opt_rigidity == "tplshape")
     {
@@ -2432,7 +2436,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     }
   */
     // init catalog offsets
-  /*
+  
     Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
     try
     {
@@ -2445,7 +2449,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
         throw std::runtime_error("  Operator-Linemodel: Failed to init lambda offsets. "
                      "Continuing without offsets...");
     }
-  */
+  
     //commom between firstpass and secondpass processes
     m_phelperContinuum = std::make_shared<CPriorHelper>();
     m_phelperContinuum->Init(m_opt_tplfit_continuumprior_dirpath.c_str(), 0);
@@ -2454,7 +2458,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     m_phelperContinuum->SetBetaZ(m_opt_tplfit_continuumprior_betaZ);
     m_model->SetFitContinuum_PriorHelper(m_phelperContinuum);
 
-  
+    m_estimateLeastSquareFast = 0;
+    m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
+
+    
   Log.LogInfo("precompute continuum fit");
   PrecomputeContinuumFit(spc, rebinnedSpc,
                          *m_orthoTplCatalog,
@@ -2464,6 +2471,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                          redshiftsGrid,
                          opt_tplfit_ignoreLinesSupport);
 
+  TFloat64Range clampedlambdaRange;
+  spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+
+  m_model->initDtd(clampedlambdaRange);
   
   CLineModelSolution modelSolution;
   CContinuumModelSolution continuumModelSolution;
@@ -2488,7 +2499,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     }
 
     Log.LogInfo(Formatter()<<"best z="<<bestz);
-  
+
 
   return bestModelSolution;
   /*

@@ -255,9 +255,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceDisableLyaFitting = true;
         m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
         m_forcedisableMultipleContinuumfit = m_opt_firstpass_forcedisableMultipleContinuumfit;
-
         m_fittingmethod = m_opt_firstpass_fittingmethod;
-
         m_forceLyaFitting = false;
     }
     if(iPass==2)
@@ -273,7 +271,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
     if(iPass==3)
       {
         m_forceDisableLyaFitting =false;
-        m_forcedisableTplratioISMfit = false;
+
         m_forcedisableMultipleContinuumfit=false;
         m_enableAmplitudeOffsets = true;
       }
@@ -2915,7 +2913,7 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range la
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
-  const bool verbose=false;
+  const bool verbose=true;
   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<UInt32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -4847,6 +4845,7 @@ Float64 CLineModelElementList::getContinuumScaleMargCorrection()
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/
+//TODO rename this ! not a simple getter
 Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
 
@@ -4866,6 +4865,7 @@ Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
 /**
  * \brief Accumulates the squared differences between model and spectrum and returns the sum.
  **/
+
 Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
 {
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
@@ -6447,6 +6447,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
@@ -6461,6 +6462,7 @@ Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
