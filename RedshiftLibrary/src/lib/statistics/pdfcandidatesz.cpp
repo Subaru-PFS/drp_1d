@@ -11,7 +11,6 @@ using namespace std;
 #include <fstream>
 #include <iostream>
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit.h>
 #include <gsl/gsl_multifit_nlin.h>
 
 
@@ -529,7 +528,9 @@ Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     candidate.GaussSigma = abs(gsl_vector_get(s->x, 1));
     candidate.GaussSigmaErr = c * ERR(1);
 
+    gsl_multifit_fdfsolver_free (s);
+    gsl_matrix_free (covar);
+    gsl_matrix_free (J);
+
     return true;
 }
-
-

@@ -16,11 +16,9 @@
 #include <gsl/gsl_spline.h>
 #include <algorithm>    // std::sort
 #include <float.h>
-#include <gsl/gsl_fit.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_linalg.h>
-#include <gsl/gsl_multifit_nlin.h>
 #include <numeric>
 #include <sstream>
 #include <boost/filesystem.hpp>

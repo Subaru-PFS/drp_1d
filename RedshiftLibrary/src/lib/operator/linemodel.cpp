@@ -34,7 +34,6 @@
 #include <assert.h>
 #include <float.h>
 #include <gsl/gsl_interp.h>
-#include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 #include <math.h>
 #include <string>
