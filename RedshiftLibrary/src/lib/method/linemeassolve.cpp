@@ -28,14 +28,11 @@ namespace NSEpic
 
     
 }
-
   
   void CLineMeasSolve::Init()
   {
 
   }
-
-
 
   std::shared_ptr<CSolveResult> CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                         std::shared_ptr<COperatorResultStore> resultStore,
@@ -48,6 +45,8 @@ namespace NSEpic
 
       cms =m_linemodel.computeForLineMeas(inputContext,m_calibrationPath,m_redshifts);
     }
+    cms.fillRayIds();
+    /*
     const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
 
@@ -56,8 +55,10 @@ namespace NSEpic
                                                                                     1,
                                                                                     restRayList
                                                                                     );
-    
+    */
+    std::shared_ptr<CLineModelSolution> res = std::make_shared<CLineModelSolution>(cms);
     resultStore->StoreScopedGlobalResult("linemeas",res);
+    resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
     return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
   }
 

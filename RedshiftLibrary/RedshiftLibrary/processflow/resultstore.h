@@ -23,6 +23,7 @@ class TExtremaResult;
 class CModelFittingResult;
 class CModelSpectrumResult;
 class CSpectraFluxResult;
+class CLineModelSolution;
 template<class T=TLineModelResult>  class CLineModelExtremaResult;
 template<class T=TTplCombinationResult>  class CTplCombinationExtremaResult;
   //  class CLineModelExtremaResult<TLineModelResult>;
@@ -105,6 +106,11 @@ public:
 								   ) const  ;
 
   std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name 
+								   ) const  ;
+  
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								   const std::string& method,
 								   const std::string& name 
 								   ) const  ;

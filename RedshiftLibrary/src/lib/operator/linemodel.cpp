@@ -2436,12 +2436,13 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     }
   */
     // init catalog offsets
-  
+
+  /*
     Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
     try
     {
-    std::string opt_offsets_reldirpath = params->GetScoped<std::string>( "offsets_catalog");
-        m_model->initLambdaOffsets(opt_offsets_reldirpath);
+      std::string opt_offsets_reldirpath = params->GetScoped<std::string>( "offsets_catalog");
+      m_model->initLambdaOffsets(opt_offsets_reldirpath);
     } catch (std::exception const &e)
     {
         Log.LogError("  Operator-Linemodel: Failed to init lambda offsets. "
@@ -2449,6 +2450,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
         throw std::runtime_error("  Operator-Linemodel: Failed to init lambda offsets. "
                      "Continuing without offsets...");
     }
+  */
   
     //commom between firstpass and secondpass processes
     m_phelperContinuum = std::make_shared<CPriorHelper>();

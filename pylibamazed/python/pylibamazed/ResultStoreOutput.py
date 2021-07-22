@@ -54,14 +54,21 @@ class ResultStoreOutput(AbstractOutput):
                                             self.get_solve_method(object_type),
                                             ds):
                 ds_attributes = rs[rs["hdf5_dataset"] == ds]
-                # TODO handle case where attribute dimension != multi (here we only have pdf for now)
-                self.object_results[object_type][ds] = dict()
-                self.object_dataframes[object_type][ds] = pd.DataFrame()
-                for index, ds_row in ds_attributes.iterrows():
+                dimension = ds_attributes["dimension"].iat[0]
+                if dimension == "multi":
+                    self.object_results[object_type][ds] = dict()
+                    self.object_dataframes[object_type][ds] = pd.DataFrame()
+                    for index, ds_row in ds_attributes.iterrows():
                     #                if self.results_store.hasAttribute(object_type, ds, attr):
-                    self.object_results[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
-                    self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
+                        self.object_results[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
+                        self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
+                else:
+                    self.object_results[object_type][ds] = dict()
+                    for index, ds_row in ds_attributes.iterrows():
+                        self.object_results[object_type][ds][ds_row["hdf5_name"]]=self.get_attribute_from_result_store(ds_row,object_type)
 
+
+                    
     def load_candidate_level(self, object_type):
         rs = results_specifications
         rs = rs[rs["level"] == "candidate"]
@@ -132,7 +139,12 @@ class ResultStoreOutput(AbstractOutput):
                                                   self.object_dataframes[object_type][ds].to_records()
                                                   )
                 else:
-                    raise Exception("h5write : TODO handle dataset with of size 1 in object scope")
+                    object_results_node.create_group(ds)
+                    for index,ds_row in ds_attributes.iterrows():
+                        if self.has_attribute_in_result_store(ds_row, object_type, rank=None):
+                            object_results_node.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][ds_row["hdf5_name"]]
+                    
+
 
     def write_hdf5(self,hdf5_root,spectrum_id):
         obs = hdf5_root.create_group(spectrum_id)
@@ -190,14 +202,17 @@ class ResultStoreOutput(AbstractOutput):
                 return PC_Get_Int32Array(getattr(operator_result, data_spec.OperatorResult_name))
 
     def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
-        if self.results_store.HasCandidateDataset(object_type,
-                                                  self.get_solve_method(object_type),
-                                                  data_spec.ResultStore_key,
-                                                  data_spec.hdf5_dataset):
-            operator_result = self.get_operator_result(data_spec, object_type, rank)
-            return hasattr(operator_result, data_spec.OperatorResult_name)
+        if rank is not None:
+            if self.results_store.HasCandidateDataset(object_type,
+                                                      self.get_solve_method(object_type),
+                                                      data_spec.ResultStore_key,
+                                                      data_spec.hdf5_dataset):
+                operator_result = self.get_operator_result(data_spec, object_type, rank)
+            else:
+                return False
         else:
-            return False
+            operator_result = self.get_operator_result(data_spec, object_type, rank=None)
+        return hasattr(operator_result, data_spec.OperatorResult_name)
 
     def get_operator_result(self, data_spec, object_type, rank = None):
         if object_type is not None:
@@ -252,10 +267,10 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetPdfMargZLogResult(object_type,
                                                                self.get_solve_method(object_type),
                                                                data_spec.ResultStore_key)
-            elif or_type == "CModelFittingResult":
-                return self.results_store.GetModelFittingResult(object_type,
-                                                                self.get_solve_method(object_type),
-                                                                data_spec.ResultStore_key)
+            elif or_type == "CLineModelSolution":
+                return self.results_store.GetLineModelSolution(object_type,
+                                                               self.get_solve_method(object_type),
+                                                               data_spec.ResultStore_key)
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "candidate":

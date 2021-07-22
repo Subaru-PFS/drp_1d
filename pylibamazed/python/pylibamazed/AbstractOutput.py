@@ -95,9 +95,13 @@ class AbstractOutput:
         else:
             return False
 
+# TODO this method should not exit, dataset size should be inferred in an other way
     def get_dataset_size(self, object_type, dataset, rank = None):
         if rank is None:
-            return self.object_dataframes[object_type][dataset].index.size
+            if dataset in self.object_dataframes[object_type]:
+                return self.object_dataframes[object_type][dataset].index.size
+            else:
+                return 1
         else:
             if type(self.object_dataframes[object_type][dataset]) == pd.DataFrame:
                 return 1

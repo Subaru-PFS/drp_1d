@@ -227,6 +227,14 @@ std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFitting
   return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock());
 }
 
+std::shared_ptr<const CLineModelSolution> COperatorResultStore::GetLineModelSolution(const std::string& objectType,
+										     const std::string& method,
+										     const std::string& name 
+										     ) const
+{
+  return std::dynamic_pointer_cast<const CLineModelSolution>(GetGlobalResult(objectType,method,name).lock());
+}
+
 std::shared_ptr<const CSpectraFluxResult> COperatorResultStore::GetSpectraFluxResult(const std::string& objectType,
 										     const std::string& method,
 										     const std::string& name ,

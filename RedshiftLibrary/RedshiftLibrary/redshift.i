@@ -39,6 +39,7 @@
 %shared_ptr(TLSFGaussianConstantWidthArgs)
 %shared_ptr(TLSFGaussianConstantResolutionArgs)
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
+%shared_ptr(CLineModelSolution)
 
 
 %feature("director");
@@ -265,6 +266,7 @@ public:
 %include "linemodel/linemodelextremaresult.i"
 %include "linemodel/modelfittingresult.i"
 %include "operator/modelspectrumresult.i"
+%include "linemodel/linemodelsolution.i"
 
 
 class CSpectraFluxResult : public COperatorResult
@@ -350,6 +352,11 @@ class COperatorResultStore
 								   const std::string& method,
 								   const std::string& name 
 								   ) const  ;
+
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+								 const std::string& method,
+								 const std::string& name 
+								 ) const  ;
 
   std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
 								     const std::string& method,
