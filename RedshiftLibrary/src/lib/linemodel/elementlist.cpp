@@ -1273,7 +1273,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
     {
         m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
         //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-        m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
+        m_spcFluxAxisNoContinuum =  m_inputSpc.GetRawFluxAxis();//m_inputSpc.GetWithoutContinuumFluxAxis();
         m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
         m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
     }
