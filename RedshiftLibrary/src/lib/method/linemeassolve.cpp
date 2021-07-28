@@ -18,16 +18,15 @@ namespace NSEpic
   }
 
   void CLineMeasSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) 
-{
+  {
     //default is to read from the scoped paramStore
-  Float64 rangeCenter = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftref" );
-  Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "dzhalf" );
+    Float64 rangeCenter = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftref" );
+    Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "dzhalf" );
 
-  redshiftRange = TFloat64Range(rangeCenter-halfRange,rangeCenter+halfRange);
+    redshiftRange = TFloat64Range(rangeCenter-halfRange,rangeCenter+halfRange);
     redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
-
     
-}
+  }
   
   void CLineMeasSolve::Init()
   {
@@ -59,6 +58,7 @@ namespace NSEpic
     std::shared_ptr<CLineModelSolution> res = std::make_shared<CLineModelSolution>(cms);
     resultStore->StoreScopedGlobalResult("linemeas",res);
     resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
+    resultStore->StoreScopedGlobalResult("linemeas_model",res);
     return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
   }
 

@@ -2350,11 +2350,11 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
   TStringList tplCategoryList({"linemeas"});
-  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
+  //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   std::string opt_enableLSF = "no";
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
-  Float64 opt_resolution = params->GetScoped<Float64>("instrumentresolution");
+  Float64 opt_resolution = params->Get<Float64>("LSF.resolution");
   Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");
   Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");
   std::string opt_rules =params->GetScoped<std::string>("rules");
@@ -2362,8 +2362,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   bool velocityfit = params->GetScoped<std::string>("velocityfit")=="yes";
   if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
 
+  
   CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(-1,-1);
-
+  /*
   bool enableOrtho = true;
   CTemplatesOrthogonalization tplOrtho(tplCatalog,
                                        tplCategoryList,
@@ -2380,16 +2381,16 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 				       lsf,
                                        enableOrtho);
   CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
-   
+  
    Int32 ctlgIdx = 0; // only one ortho config for now
     m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
-   
+  */ 
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
-  bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
+  // bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
   const std::string opt_fittingmethod= "hybrid";//params->GetScoped<std::string>("fittingmethod");
   const std::string& opt_continuumcomponent = params->GetScoped<std::string>("continuumcomponent");
-  m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
+  // m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
 
 
     
@@ -2465,6 +2466,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 
     
   Log.LogInfo("precompute continuum fit");
+  /*
   PrecomputeContinuumFit(spc, rebinnedSpc,
                          *m_orthoTplCatalog,
                          tplCategoryList,
@@ -2472,7 +2474,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                          lambdaRange,
                          redshiftsGrid,
                          opt_tplfit_ignoreLinesSupport);
-
+  */
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
