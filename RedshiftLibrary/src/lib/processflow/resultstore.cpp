@@ -254,6 +254,15 @@ std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectr
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model"));
 }
 
+std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectrumResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock());
+}
+
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( const std::string& objectType,
                                                                             const std::string& method,

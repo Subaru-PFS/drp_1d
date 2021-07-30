@@ -374,6 +374,7 @@ public:
                            std::vector<Float64> zfitlist,
                            Int32 rayType);
 
+  std::shared_ptr<CModelSpectrumResult> getFittedModel();
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

@@ -66,8 +66,6 @@ class ResultStoreOutput(AbstractOutput):
                     self.object_results[object_type][ds] = dict()
                     for index, ds_row in ds_attributes.iterrows():
                         self.object_results[object_type][ds][ds_row["hdf5_name"]]=self.get_attribute_from_result_store(ds_row,object_type)
-
-
                     
     def load_candidate_level(self, object_type):
         rs = results_specifications
@@ -271,6 +269,11 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetLineModelSolution(object_type,
                                                                self.get_solve_method(object_type),
                                                                data_spec.ResultStore_key)
+            elif or_type == "CModelSpectrumResult":
+                return self.results_store.GetModelSpectrumResult(object_type,
+                                                                 self.get_solve_method(object_type),
+                                                                 data_spec.ResultStore_key)
+
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "candidate":

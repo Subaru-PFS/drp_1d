@@ -58,7 +58,7 @@ namespace NSEpic
     std::shared_ptr<CLineModelSolution> res = std::make_shared<CLineModelSolution>(cms);
     resultStore->StoreScopedGlobalResult("linemeas",res);
     resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
-    resultStore->StoreScopedGlobalResult("linemeas_model",res);
+    resultStore->StoreScopedGlobalResult("linemeas_model",m_linemodel.getFittedModel());
     return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
   }
 

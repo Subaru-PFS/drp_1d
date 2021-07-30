@@ -2520,3 +2520,8 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                      m_firstpass_extremaResult.FittedTplpCoeffs[i]);
   */
 }
+
+std::shared_ptr<CModelSpectrumResult> COperatorLineModel::getFittedModel()
+{
+  return std::make_shared<CModelSpectrumResult>(m_model->GetObservedSpectrumWithLinesRemoved(-1));  
+}

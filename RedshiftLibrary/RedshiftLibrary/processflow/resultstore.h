@@ -120,6 +120,10 @@ public:
 								     const std::string& name ,
 								     const int& rank
 								     ) const  ;
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+								     const std::string& method,
+								     const std::string& name 
+								     ) const  ;
 
   std::shared_ptr<const CSpectraFluxResult> GetSpectraFluxResult(const std::string& objectType,
 								   const std::string& method,
