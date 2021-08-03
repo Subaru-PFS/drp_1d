@@ -120,16 +120,13 @@ Int32 COperatorPdfz::CombinePDF(const ChisquareArray & chisquarearray)
 
     }
 
-    //check pdf sum=1
-    if(!checkPdfSum()){
-        Log.LogError("%s: Pdfz normalization failed", __func__);
-        throw std::runtime_error("Pdfz normalization failed");
-    }
+    //check pdf is ok
+    isPdfValid(); //will throw an error if not
 
     return retPdfz;    
 }
 
-Bool COperatorPdfz::checkPdfSum()
+Bool COperatorPdfz::checkPdfSum() const
 {
     Bool ret = true;
 
@@ -892,4 +889,57 @@ Int32 COperatorPdfz::BestChi2(const ChisquareArray & chisquarearray)
     }
 
     return 0;
+}
+
+/**
+ * @brief isPdfValid
+ * @return
+ */
+void COperatorPdfz::isPdfValid() const
+{
+    if(!m_postmargZResult)
+    {
+        Log.LogError("COperatorPdfz::isPdfValid: PDF ptr is null");
+        throw runtime_error("COperatorPdfz::isPdfValid: PDF ptr is null");
+    }
+
+    if(m_postmargZResult->Redshifts.size()<2)
+    {
+        Log.LogError("COperatorPdfz::isPdfValid: PDF has size less than 2");
+        throw runtime_error("COperatorPdfz::isPdfValid: PDF has size less than 2");
+    }
+
+    //is it completely flat ?
+    Float64 minVal=DBL_MAX;
+    Float64 maxVal=-DBL_MAX;
+    for(Int32 k=0; k<m_postmargZResult->valProbaLog.size(); k++)
+    {
+        if(m_postmargZResult->valProbaLog[k]<minVal)
+        {
+            minVal = m_postmargZResult->valProbaLog[k];
+        }
+        if(m_postmargZResult->valProbaLog[k]>maxVal)
+        {
+            maxVal = m_postmargZResult->valProbaLog[k];
+        }
+    }
+    if(minVal==maxVal){
+        Log.LogError("COperatorPdfz::isPdfValid: PDF is flat !");
+        throw runtime_error("COperatorPdfz::isPdfValid: PDF is flat !");
+    }
+
+    //is pdf any value nan ?
+    for(Int32 k=0; k<m_postmargZResult->valProbaLog.size(); k++)
+    {
+        if(m_postmargZResult->valProbaLog[k] != m_postmargZResult->valProbaLog[k])
+        {
+            Log.LogError("COperatorPdfz::isPdfValid: PDF has nan or invalid values !");
+            throw runtime_error("COperatorPdfz::isPdfValid: PDF has nan or invalid values !");
+        }
+    }
+
+    // is sum equal to 1
+    if (!checkPdfSum()){
+        throw runtime_error("COperatorPdfz::isPdfValid: Pdfz normalization failed");
+    };
 }

@@ -49,7 +49,7 @@ public:
 
 
 
-    Bool checkPdfSum();
+    Bool checkPdfSum() const;
 
     std::shared_ptr<CPdfMargZLogResult> m_postmargZResult;
 
@@ -72,6 +72,8 @@ private:
     Int32 Marginalize(const ChisquareArray & chisquarearray);
     Int32 BestProba(const ChisquareArray & chisquarearray);
     Int32 BestChi2(const ChisquareArray & chisquarearray);
+
+    void isPdfValid() const;
 
     TCandidateZbyID searchMaxPDFcandidates() const;
 
