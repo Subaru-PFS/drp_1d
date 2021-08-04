@@ -17,6 +17,7 @@
     std::vector<Float64> Fluxs;    //Flux for each line
     std::vector<Float64> FluxErrors;    //Flux error for each line
     std::vector<Float64> FluxDirectIntegration;    //Flux obtained by direct integration for each line
+    std::vector<Float64> FluxDirectIntegrationError;    //Flux obtained by direct integration for each line
     std::vector<Int32> rayId;
 
     Float64 snrHa;

@@ -256,22 +256,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     SetMedianWinsize(medianKernelWidth);
     SetDecompScales((Int32)nscales);
     SetWaveletsDFBinPath(dfBinPath);
-
-    //initialize the lsf depending on LSFType
-    std::string lsfType;
-    TLSFArguments args;
-    parameterStore.Get( "LSFType", lsfType );//todo: what is the default value?
-    if(lsfType=="FROMSPECTRUMDATA"){
-        //nothing to do here cause lsf already included in the spectrum
-    }else{ //create an LSF with arguments from param.json
-         //note that relevant arguments depend on the lsf type 
-        parameterStore.Get( "LSF.width", args.width, 13. );
-        parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
-        parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
-    }
-    Log.LogDebug(Formatter()<<"Create LSF of type " << lsfType);
-    m_LSF = LSFFactory.Create(lsfType, args);//using factoryClass
-    //m_LSF = CLSF::make_LSF(lsfType, args);
 }
 
 /**
@@ -769,7 +753,7 @@ void CSpectrum::SetMedianWinsize( Float64 winsize )
     m_medianWindowSize = winsize;
 }
 
-void CSpectrum::SetContinuumEstimationMethod( std::string method )
+void CSpectrum::SetContinuumEstimationMethod( std::string method ) const
 {
     if (m_estimationMethod != method){
         m_estimationMethod = method;

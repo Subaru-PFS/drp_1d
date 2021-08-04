@@ -643,7 +643,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     std::vector<std::string> chisquareResultsTplName;
 
     bool fftprocessing = m_model->GetPassNumber()==1 ? m_opt_tplfit_fftprocessing : m_opt_tplfit_fftprocessing_secondpass;
-    Log.LogInfo(Formatter()<<" redshtplfitsize "<<redshiftsTplFit.size());
+    Log.LogDebug(Formatter()<<" redshtplfitsize "<<redshiftsTplFit.size());
     const Int32 fftprocessing_min_sample_nb = 100; // warning arbitrary number of redshift samples threshold below which 
                                              // fftprocessing is considered slower
                                              // TB revised
@@ -2355,16 +2355,17 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   std::string opt_enableLSF = "no";
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
   Float64 opt_resolution = params->Get<Float64>("LSF.resolution");
-  Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");
-  Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");
+  Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");//set by client, not in parameters.json
+  Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");//set by client, not in parameters.json
   std::string opt_rules =params->GetScoped<std::string>("rules");
   std::string opt_rigidity =params->GetScoped<std::string>("rigidity");
   bool velocityfit = params->GetScoped<std::string>("velocityfit")=="yes";
   if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
 
-  
-  CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(-1,-1);
-  /*
+  // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
+  CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
+
+/*
   bool enableOrtho = true;
   CTemplatesOrthogonalization tplOrtho(tplCatalog,
                                        tplCategoryList,
@@ -2381,7 +2382,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 				       lsf,
                                        enableOrtho);
   CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
-  
    Int32 ctlgIdx = 0; // only one ortho config for now
     m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
   */ 
@@ -2389,10 +2389,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   // bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
   const std::string opt_fittingmethod= "hybrid";//params->GetScoped<std::string>("fittingmethod");
-  const std::string& opt_continuumcomponent = params->GetScoped<std::string>("continuumcomponent");
-  // m_opt_continuum_neg_amp_threshold = params->GetScoped<Float64>( "continuumfit.negativethreshold");
-
-
+  const std::string& opt_continuumcomponent = "nocontinuum";//params->GetScoped<std::string>("continuumcomponent");
+  spc.SetContinuumEstimationMethod("zero");
+  m_opt_continuum_neg_amp_threshold = -1;// unused params->GetScoped<Float64>( "continuumfit.negativethreshold");
     
   m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
                                                                              tplCatalog,
@@ -2404,7 +2403,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                                              m_opt_continuum_neg_amp_threshold,
                                                                              opt_lineWidthType,
                                                                              opt_nsigmasupport,
-                                                                             opt_resolution,
                                                                              opt_velocityEmission,
                                                                              opt_velocityAbsorption,
                                                                              opt_rules,
@@ -2465,8 +2463,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
 
     
-  Log.LogInfo("precompute continuum fit");
+
   /*
+  Log.LogInfo("precompute continuum fit");
   PrecomputeContinuumFit(spc, rebinnedSpc,
                          *m_orthoTplCatalog,
                          tplCategoryList,
@@ -2489,7 +2488,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   Float64 bestz=NAN;
   for (Float64 &z:redshiftsGrid)
     {
-      Log.LogInfo(Formatter()<<"test with z="<<z);
+      Log.LogDebug(Formatter()<<"test with z="<<z);
 
       Float64 score = m_model->fit(z,lambdaRange,modelSolution,continuumModelSolution,0,true);
       if (score > bestScore)
@@ -2498,7 +2497,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
           bestModelSolution = modelSolution;
           bestContinuumModelSolution = continuumModelSolution;
           bestz=z;
-          Log.LogInfo(Formatter()<<"solution size "<< modelSolution.ElementId.size());
         }
     }
 
