@@ -589,11 +589,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    TFloat64List _chi2List(MeiksinListSize, DBL_MAX);
-    TFloat64List _ismList(MeiksinListSize, NAN);
-    TInt32List   _igmList(MeiksinListSize, -1);
     TFloat64List _ampList(componentCount, NAN);
-    TFloat64List _covList(componentCount, NAN);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
         //default mask
@@ -620,16 +616,13 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
         //init fittingResult intermediate values before passing to ::BasicFit
         fittingResults.fittingAmplitudesInterm.resize(EbmvListSize);
-        for(Int32 kism=0; kism<EbmvListSize; kism++)
-        {   
-            fittingResults.ChiSquareInterm.push_back(_chi2List);
-            fittingResults.IsmCalzettiCoeffInterm.push_back(_ismList);
-            fittingResults.IgmMeiksinIdxInterm.push_back(_igmList);
 
-            fittingResults.fittingAmplitudesInterm[kism].resize(MeiksinListSize);
-            for(Int32 kigm = 0; kigm<MeiksinListSize; kigm++)
-                fittingResults.fittingAmplitudesInterm[kism][kigm]=_ampList;
-        }
+        fittingResults.ChiSquareInterm = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
+        fittingResults.IsmCalzettiCoeffInterm = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, NAN));
+        fittingResults.IgmMeiksinIdxInterm = std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
+        
+        fittingResults.fittingAmplitudesInterm = std::vector<std::vector<TFloat64List>>(EbmvListSize, std::vector<TFloat64List>(MeiksinListSize, _ampList));
+
         fittingResults.chisquare = boost::numeric::bounds<float>::highest();
         fittingResults.fittingAmplitudes = TFloat64List(componentCount, NAN);
         fittingResults.fittingAmplitudeErrors = TFloat64List(componentCount, NAN);
@@ -637,9 +630,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         fittingResults.overlapRate = 0.0;
         fittingResults.status = COperator::nStatus_DataError;
         fittingResults.COV.resize(componentCount);//MtM = COV-1
-        for(Int32 iddl = 0; iddl<componentCount; iddl++){
-            fittingResults.COV[iddl] = _covList;
-        }
+
+        fittingResults.COV = std::vector<TFloat64List>(componentCount, TFloat64List(componentCount, NAN));
 
         BasicFit( spectrum,
                   tplList,
@@ -809,16 +801,15 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
 
     const CSpectrumFluxAxis& extinction = identityTemplate.GetFluxAxis();
 
-    UInt32 modelSize = kEnd - kStart + 1;
-    //build the combined template model: spcmodel should have the same size as input spc
-    CSpectrumSpectralAxis modelSpcAxis; 
-    modelSpcAxis.extractFrom(spectrum.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
+    UInt32 modelSize = spectrum.GetSampleCount();
+    CSpectrumSpectralAxis modelSpcAxis = spectrum.GetSpectralAxis(); 
+
     CSpectrumFluxAxis modelFlux(modelSize, 0.0);
     for (Int32 iddl = 0; iddl < nddl; iddl++)
     {
         const CSpectrumFluxAxis & tmp = m_templatesRebined_bf[iddl].GetFluxAxis();       
         for(Int32 k = 0; k<modelSize; k++){
-            modelFlux[k]+= amplitudes[iddl]*tmp[k+kStart]*extinction[k+kStart];
+            modelFlux[k]+= amplitudes[iddl]*tmp[k]*extinction[k];
         }
     }
     modelSpcAxis.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;

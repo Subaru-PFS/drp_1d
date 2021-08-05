@@ -510,19 +510,6 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     Int32 MeiksinListSize = MeiksinList.size();
     Int32 EbmvListSize = EbmvList.size();
 
-    TFloat64List _chi2List(MeiksinListSize, DBL_MAX);
-    TFloat64List _ismList(MeiksinListSize, NAN);
-    TInt32List   _igmList(MeiksinListSize, -1);
-
-    std::vector<TFloat64List> _chi2ListList, _ismListList;
-    std::vector<TInt32List> _igmListList;
-    for(Int32 kism=0; kism<EbmvListSize; kism++)
-    {
-        _chi2ListList.push_back(_chi2List);
-        _ismListList.push_back(_ismList);
-        _igmListList.push_back(_igmList);
-    } 
-
     result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize);
     result->Redshifts = sortedRedshifts;
 
@@ -567,9 +554,9 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
         Float64 redshift = result->Redshifts[i];
 
-        result->ChiSquareIntermediate[i] = _chi2ListList;
-        result->IsmEbmvCoeffIntermediate[i] = _ismListList;
-        result->IgmMeiksinIdxIntermediate[i] = _igmListList;
+        result->ChiSquareIntermediate[i] = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
+        result->IsmEbmvCoeffIntermediate[i] = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, NAN));
+        result->IgmMeiksinIdxIntermediate[i] = std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
 
         BasicFit( spectrum,
                   tpl,

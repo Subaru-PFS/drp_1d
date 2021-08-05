@@ -343,17 +343,22 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
                             Bool keepigmism,
                             Float64 FitEbmvCoeff,
                             Int32 FitMeiksinIdx)const
-{//handling cas of star templates with no Meiksin object
-    if ((MeiksinInitFailed()&&opt_extinction)|| CalzettiInitFailed()){
-        Log.LogError("CTemplate::GetIsmIgmIdxList: try to apply dust extinction without ism initialization");
-        throw runtime_error("CTemplate::GetIsmIgmIdxList: try to apply dust extinction without ism initialization");
+{
+    if (MeiksinInitFailed() && opt_extinction){
+        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
+        throw runtime_error("CTemplate::GetIsmIgmIdxList: Meiksin is not initialized");
     }
-    Int32 nIGMCoeffs=1;
+    if(CalzettiInitFailed() && opt_dustFitting != -1){
+        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
+        throw runtime_error("CTemplate::GetIsmIgmIdxList: Calzetti is not initialized");
+    }
+
+    Int32 MeiksinListSize = 1;
     if(opt_extinction && !keepigmism)
     {
-        nIGMCoeffs = m_igmCorrectionMeiksin->GetIdxCount();
+        MeiksinListSize = m_igmCorrectionMeiksin->GetIdxCount();
     }
-    MeiksinList.resize(nIGMCoeffs);
+    MeiksinList.resize(MeiksinListSize);
     if(opt_extinction)
     {
         if(keepigmism)
@@ -363,13 +368,13 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
     }else{
         MeiksinList[0] = -1;
     }
-    Int32 nISMCoeffs = 1;
+    Int32 EbmvListSize = 1;
     if(opt_dustFitting==-10)
     {
-        nISMCoeffs = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+        EbmvListSize = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
 
-    EbmvList.resize(nISMCoeffs);
+    EbmvList.resize(EbmvListSize);
     if(opt_dustFitting!=-1){
         if(keepigmism)
             EbmvList[0] = m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
