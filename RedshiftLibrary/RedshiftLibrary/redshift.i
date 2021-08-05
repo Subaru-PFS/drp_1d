@@ -16,6 +16,7 @@
 %shared_ptr(CRayCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
+%shared_ptr(CLSFGaussianVariableWidth)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -33,6 +34,12 @@
 %shared_ptr(CModelSpectrumResult)
 %shared_ptr(CModelFittingResult)
 %shared_ptr(CSpectraFluxResult)
+%shared_ptr(TLSFArguments)
+%shared_ptr(TLSFGaussianVarWidthArgs)
+%shared_ptr(TLSFGaussianConstantWidthArgs)
+%shared_ptr(TLSFGaussianConstantResolutionArgs)
+%shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
+
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -134,7 +141,7 @@ static PyObject* pAmzException;
     }
 }
 
-%exceptionclass AmzException;
+%exceptionclass AmzException; 
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
 typedef long long Int64;
@@ -279,12 +286,22 @@ public:
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-            const std::string& paramsJSONString);
+            std::shared_ptr<CRayCatalog> qso_rayCatalog);
   std::shared_ptr<COperatorResultStore> GetResultStore();
+  std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();
 };
 
+
+class CParameterStore : public CScopeStore
+{
+  public:
+    CParameterStore(const TScopeStack& stack);
+    void FromString(const std::string& json);
+    template<typename T> T Get(const std::string& name) const;
+};
+
+%template(Get_string) CParameterStore::Get<std::string>;
 
 class CProcessFlow {
 public:
@@ -469,12 +486,13 @@ class CLSF
       GaussianConstantWidth,
       GaussianConstantResolution,
       GaussianNISPSIM2016,
-      GaussianNISPVSSPSF201707
+      GaussianNISPVSSPSF201707,
+      GaussianVariableWidth
     };
  public:
   CLSF(TLSFType name);
   virtual ~CLSF();
-  virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
+  virtual Float64 GetWidth(Float64 lambda) const=0;
   virtual bool IsValid() const=0;
 };
 
@@ -483,10 +501,31 @@ class CLSFGaussianConstantWidth : public CLSF
  public:
   CLSFGaussianConstantWidth(const Float64 sigma=0.0);
   ~CLSFGaussianConstantWidth();
-  Float64 GetWidth(Float64 lambda=-1.0) const;
+  Float64 GetWidth(Float64 lambda) const;
   bool IsValid() const;
 };
 
+class CLSFGaussianVariableWidth : public CLSF
+{
+ public:
+  CLSFGaussianVariableWidth(const std::shared_ptr<const TLSFGaussianVarWidthArgs>& args);
+  ~CLSFGaussianVariableWidth();
+  Float64 GetWidth(Float64 lambda) const;
+  bool IsValid() const;
+};
+
+class CLSFFactory : public CSingleton<CLSFFactory>
+{
+  public:
+    std::shared_ptr<CLSF> Create(const std::string &name,
+                                const std::shared_ptr<const TLSFArguments>& args);
+    static CLSFFactory& GetInstance();                              
+  private:
+      friend class CSingleton<CLSFFactory>;
+
+      CLSFFactory();
+      ~CLSFFactory() = default;
+};
   typedef enum ErrorCode
     {
       INVALID_SPECTRA_FLUX=	0,
@@ -503,6 +542,39 @@ class CLSFGaussianConstantWidth : public CLSF
       BAD_LINECATALOG
     } ErrorCode;
 
+typedef struct{
+    virtual ~TLSFArguments(){};
+    TLSFArguments()=default;
+    TLSFArguments(const TLSFArguments & other) = default; 
+    TLSFArguments(TLSFArguments && other) = default; 
+    TLSFArguments& operator=(const TLSFArguments& other) = default;  
+    TLSFArguments& operator=(TLSFArguments&& other) = default; 
+}TLSFArguments;
+
+struct TLSFGaussianVarWidthArgs : virtual TLSFArguments
+{
+  TFloat64List lambdas; 
+  TFloat64List width;
+  TLSFGaussianVarWidthArgs(TFloat64List _lambdas, TFloat64List _width);
+};
+
+struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments
+{
+  Float64 width;
+  TLSFGaussianConstantWidthArgs(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
+
+struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments
+{
+  Float64 resolution;
+  TLSFGaussianConstantResolutionArgs(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
+
+struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
+{
+  Float64 sourcesize;
+  TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
 
 class AmzException : public std::exception
 {

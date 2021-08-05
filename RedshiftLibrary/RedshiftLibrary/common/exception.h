@@ -21,7 +21,8 @@ namespace NSEpic {
       BAD_PARAMETER_VALUE,
       UNKNOWN_ATTRIBUTE ,
       BAD_LINECATALOG,
-      BAD_LOGSAMPLEDSPECTRUM
+      BAD_LOGSAMPLEDSPECTRUM,
+      BAD_COUNTMATCH
     } ErrorCode;
 
   class AmzException : public std::exception 

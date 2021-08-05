@@ -1,7 +1,7 @@
 #ifndef _REDSHIFT_SPECTRUM_LSFFACTORY_
 #define _REDSHIFT_SPECTRUM_LSFFACTORY_
 #define LSFFactory (CLSFFactory::GetInstance())
-
+//#define LSFArgsFactory (CLSFArgsFactory::GetInstance())
 #include "RedshiftLibrary/common/singleton.h"
 
 #include <map>
@@ -12,6 +12,8 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/spectrum/LSFVariableWidth.h"
 namespace NSEpic
 {
 class CLSF;
@@ -22,11 +24,11 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 
 public:
 
-    using CreateLSFFn = std::shared_ptr<CLSF> (*)(const TLSFArguments& args);
+    using CreateLSFFn = std::shared_ptr<CLSF> (*)(const std::shared_ptr<const TLSFArguments>& args);
 
     void Register(const std::string &name, CreateLSFFn fn_makeLSF);
     
-    std::shared_ptr<CLSF> Create(const std::string &name, TLSFArguments& args){return m_FactoryMap.at(name)(args);};
+    std::shared_ptr<CLSF> Create(const std::string &name, const std::shared_ptr<const TLSFArguments>& args=nullptr){return m_FactoryMap.at(name)(args);};
 
 private:
     friend class CSingleton<CLSFFactory>;
@@ -44,6 +46,7 @@ CLSFFactory::CLSFFactory()
   Register("GaussianConstantResolution", &CLSFGaussianConstantResolution::make_LSF);
   Register("GaussianNISPSIM2016",     &CLSFGaussianNISPSIM2016::make_LSF);
   Register("GaussianNISPVSSPSF201707",&CLSFGaussianNISPVSSPSF201707::make_LSF);
+  Register("GaussianVariableWidth", &CLSFGaussianVariableWidth::make_LSF);
 }
 
 inline

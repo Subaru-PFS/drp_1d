@@ -59,8 +59,11 @@ BOOST_AUTO_TEST_CASE(Constructor)
   noise.AddNoise(spectrum);
 
   std::string lsfType="GaussianConstantWidth";
-  TLSFArguments args; args.width = 13;
-  //std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
+  Float64 width = 13.;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.width", width );
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
   spectrum.SetLSF(lsf);
 

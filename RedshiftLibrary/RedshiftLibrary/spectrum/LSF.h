@@ -4,15 +4,56 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/ray/lineprofileSYM.h"
+#include "RedshiftLibrary/processflow/parameterstore.h"
 namespace NSEpic
 {
-class CLineProfile;
+  class CLineProfile;
 
-  typedef struct{
-    Float64 resolution; 
-    Float64 width;
-    Float64 sourcesize;
-  }TLSFArguments;
+  struct TLSFArguments
+  {
+    //std::string type;
+    virtual ~TLSFArguments(){};
+    TLSFArguments()=default;
+    TLSFArguments(const TLSFArguments & other) = default; 
+    TLSFArguments(TLSFArguments && other) = default; 
+    TLSFArguments& operator=(const TLSFArguments& other) = default;  
+    TLSFArguments& operator=(TLSFArguments&& other) = default; 
+ };
+
+ struct TLSFGaussianVarWidthArgs : virtual TLSFArguments
+ {
+   //std::string type = "GaussianVariableWidth";
+   TFloat64List lambdas; 
+   TFloat64List width;
+   TLSFGaussianVarWidthArgs(TFloat64List _lambdas, TFloat64List _width):lambdas(_lambdas), width(_width){}
+ };
+
+struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments
+ {
+   Float64 width;
+   TLSFGaussianConstantWidthArgs(const std::shared_ptr<const CParameterStore>& parameterStore)
+   {
+      width = parameterStore->GetScoped<Float64>("LSF.width");//13.
+   }
+ };
+
+struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments
+ {
+   Float64 resolution;
+   TLSFGaussianConstantResolutionArgs(const std::shared_ptr<const CParameterStore>& parameterStore)
+   {
+      resolution = parameterStore->GetScoped<Float64>("LSF.resolution");// 2350.0
+   }
+ };
+
+struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
+ {
+   Float64 sourcesize;
+   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore)
+   {
+      sourcesize = parameterStore->GetScoped<Float64>("LSF.sourcesize");//0.1
+   }
+ };
 /**
  * \ingroup Redshift
  */
@@ -24,7 +65,8 @@ public:
       GaussianConstantWidth,
       GaussianConstantResolution,
       GaussianNISPSIM2016,
-      GaussianNISPVSSPSF201707
+      GaussianNISPVSSPSF201707,
+      GaussianVariableWidth
     };
     CLSF(TLSFType name);
     CLSF(TLSFType name, CLineProfile_ptr profile);
@@ -35,7 +77,7 @@ public:
     CLSF& operator=(const CLSF& other) = default;  
     CLSF& operator=(CLSF&& other) = default; 
     //GetWidth requires observed wavelength, not restframe
-    virtual Float64             GetWidth(Float64 lambda=-1.0) const=0;
+    virtual Float64             GetWidth(Float64 lambda) const=0;
     virtual bool                IsValid() const = 0;
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
     Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;

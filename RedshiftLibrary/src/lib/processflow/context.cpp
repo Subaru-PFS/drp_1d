@@ -24,28 +24,28 @@ static void NewHandler(const char* reason,
 CProcessFlowContext::CProcessFlowContext()
 {
     gsl_set_error_handler(NewHandler);
+    m_parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
+    m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
 }
 
 CProcessFlowContext::~CProcessFlowContext()
 {
 
 }
+std::shared_ptr<const CParameterStore> CProcessFlowContext::LoadParameterStore(const std::string& paramsJSONString)
+{
+  m_parameterStore->FromString(paramsJSONString);
+  return m_parameterStore;
+}
 void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CTemplateCatalog> templateCatalog,
                                std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-                               std::shared_ptr<CRayCatalog> qso_rayCatalog,
-                               const std::string& paramsJSONString)
+                               std::shared_ptr<CRayCatalog> qso_rayCatalog)
 {
   Log.LogInfo("Processing context initialization");
 
-  std::shared_ptr<CParameterStore> parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
-  parameterStore->FromString(paramsJSONString);
-
 //  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
-  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,galaxy_rayCatalog,qso_rayCatalog,parameterStore);
-
-  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-
+  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,galaxy_rayCatalog,qso_rayCatalog,m_parameterStore);
 }
 
 void CProcessFlowContext::testResultStore() {
