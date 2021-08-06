@@ -1,10 +1,4 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/LSFFactory.h"
-#include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
-#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
-#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
-#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 #include "RedshiftLibrary/common/mask.h"
@@ -74,59 +68,6 @@ BOOST_AUTO_TEST_CASE(invert)
     BOOST_CHECK(object_CSpectrum.InvertFlux() == true);
     BOOST_TEST_MESSAGE("InvertFlux OK");
 
-}
-
-BOOST_AUTO_TEST_CASE(LSF)
-{
-
-    CSpectrumSpectralAxis SpectralAxis;
-    CSpectrumFluxAxis FluxAxis;
-    std::string lsfType = "GaussianConstantWidth";
-    TLSFArguments args;
-    args.width = 1.09;
-    std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
-    //std::shared_ptr<CLSF> LSF = CLSF::make_LSF(lsfType, args);
-
-    //Test constructor with spectralAxis, fluxAxis and LSF
-    CSpectrum object_CSpectrum = CSpectrum(SpectralAxis, FluxAxis, LSF);
-
-    BOOST_CHECK(object_CSpectrum.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum.GetLSF()->GetWidth() == 1.09);
-
-    //Test assignment copy constructor
-    CSpectrum object_CSpectrum1 = object_CSpectrum;
-
-    BOOST_CHECK(object_CSpectrum1.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum1.GetLSF()->GetWidth() == 1.09);
-
-    //Test copy constructor
-    CSpectrum object_CSpectrum1_bis(object_CSpectrum1);
-
-    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum1_bis.GetLSF()->GetWidth() == 1.09);
-    
-    
-    //Test constructor with spectralAxis and fluxAxis
-    CSpectrum object_CSpectrum2(SpectralAxis, FluxAxis);
-    BOOST_CHECK(object_CSpectrum2.GetLSF() == nullptr);
-    /*
-    //Test default constructor
-    CSpectrum object_CSpectrum3;
-    BOOST_CHECK(object_CSpectrum3.GetLSF() == nullptr);
-    
-    object_CSpectrum3.SetLSF(LSF);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 1.09);
-    /*object_CSpectrum3.GetLSF()->SetWidth(2.04e-60);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 2.04e-60); 
-    object_CSpectrum3.GetLSF()->SetWidth(0.0);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == false);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 0.0);
-    object_CSpectrum3.GetLSF()->SetWidth(DBL_MAX);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
-    BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == DBL_MAX);
-    BOOST_TEST_MESSAGE("LSF OK");
-    */
 }
 
 BOOST_AUTO_TEST_CASE(Calcul)
@@ -546,7 +487,6 @@ BOOST_AUTO_TEST_CASE(Calcul)
     delete object_CRange;
     delete object_CRangeb;
     delete object_CRangec;
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

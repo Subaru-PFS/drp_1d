@@ -42,9 +42,8 @@ public:
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-            const std::string& paramsJSONString
-            );
+            std::shared_ptr<CRayCatalog> qso_rayCatalog);
+  std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_inputContext->GetTemplateCatalog();}
@@ -58,8 +57,8 @@ public:
   void testResultStore(); 
 private:
 
-    std::shared_ptr<COperatorResultStore>  m_ResultStore;
-
+    std::shared_ptr<COperatorResultStore> m_ResultStore;
+    std::shared_ptr<CParameterStore>      m_parameterStore;
     std::shared_ptr<const CInputContext>  m_inputContext;
  
     //added below variables - to discuss if we only define them here (and no more in processflow)

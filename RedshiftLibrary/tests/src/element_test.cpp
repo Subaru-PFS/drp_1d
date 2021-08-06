@@ -79,9 +79,11 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
 
     //setLSF on multiLines
     std::string lsfType="GaussianConstantResolution"; //TBC
-    TLSFArguments args; args.resolution = 0.9; 
+    TScopeStack scopeStack;
+    std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+    store->Set( "LSF.resolution", 0.9 );
+    std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
     std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
-    //std::shared_ptr<CLSF> lsf = CLSF::make_LSF(lsfType, args);
 
     elementID.SetLSF(lsf);
     elementcombined.SetLSF(lsf);

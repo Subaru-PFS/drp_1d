@@ -213,8 +213,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test)
   Float64 z_center = 2 - (2-1.5)/2;
 
   std::string lsfType = "GaussianConstantWidth";
-  TLSFArguments args;
-  args.width = 1.09;
+  Float64 width = 1.09;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.width", width );
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj;
@@ -243,9 +246,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution)
   Float64 z_center = 2 - (2-1.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 2350;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 2350;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -275,9 +280,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -314,9 +321,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -350,10 +359,13 @@ BOOST_AUTO_TEST_CASE(correction_test)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
+
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
   Float64 lbdaStep=1;
