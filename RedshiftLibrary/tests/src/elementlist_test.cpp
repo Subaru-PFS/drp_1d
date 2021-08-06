@@ -35,7 +35,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   Int32 forceFilter = CRay::nForce_Strong;
   string opt_lineWidthType = "velocitydriven";
   Float64 opt_nsigmasupport = 8.;
-  Float64 opt_resolution = 2350; //unused with velocity driven linewidth
   Float64 initVelocity = 50.0;
   Float64 opt_velocityEmission = initVelocity;
   Float64 opt_velocityAbsorption = initVelocity;
@@ -80,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
                                           tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
 					                                "lmfit", "nocontinuum",-INFINITY,
-                                          opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+                                          opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
@@ -88,7 +87,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
                                            tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
 					                                 "lmfit", "fromspectrum", -INFINITY,
-                                           opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+                                           opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
 					                                 opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
@@ -99,7 +98,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
                                      tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
    				                           "lmfit", "tplfit", -5.0,
-                                     opt_lineWidthType, opt_nsigmasupport, opt_resolution, opt_velocityEmission,
+                                     opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
    				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*

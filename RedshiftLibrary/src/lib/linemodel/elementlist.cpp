@@ -55,7 +55,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const Float64 opt_continuum_neg_threshold,
                                              const std::string& widthType,
                                              const Float64 nsigmasupport,
-                                             const Float64 resolution,
                                              const Float64 velocityEmission,
                                              const Float64 velocityAbsorption,
                                              const std::string& opt_rules,
@@ -69,7 +68,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
     m_LineWidthType(widthType),
     m_NSigmaSupport(nsigmasupport),
-    m_resolution(resolution),
     m_velocityEmission(velocityEmission),
     m_velocityAbsorption(velocityAbsorption),
     m_velocityEmissionInit(m_velocityEmission),
@@ -462,10 +460,9 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(const TInt32List & eIdx_li
     {
         Int32 eIdx=eIdx_list[kl];
         Int32 subeIdx=subeIdx_list[kl];
-
         Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
-        Float64 instrumentSigma = mu/m_resolution;
-        Float64 winsizeAngstrom = instrumentSigma*nsigma;
+        Float64 LineWidth = m_Elements[eIdx]->GetLineWidth(mu, m_Redshift, m_Elements[eIdx]->m_Rays[subeIdx].GetIsEmission());
+        Float64 winsizeAngstrom = LineWidth*nsigma;
 
         TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
                                                                       mu,
@@ -6230,19 +6227,6 @@ Float64 CLineModelElementList::GetVelocityEmission()
 Float64 CLineModelElementList::GetVelocityAbsorption()
 {
     return m_velocityAbsorption;
-}
-
-Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
-{
-    static Float64 c = 300000.0;
-    static Float64 tolCoeff = 2.0;
-    Float64 vel = c/m_resolution/tolCoeff;
-    Float64 roundingVal = 10.0;
-    vel = Float64(Int32(vel/roundingVal))*roundingVal;
-//    if(vel<5.0){
-//        vel=5.0;
-//    }
-    return vel;
 }
 
 Float64 CLineModelElementList::GetRedshift()

@@ -50,7 +50,6 @@ public:
                           const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
                           const Float64 nsigmasupport,
-                          const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
                           const std::string &opt_rules,
@@ -155,7 +154,6 @@ public:
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
-    Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
     std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
@@ -376,7 +374,6 @@ private:
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_NSigmaSupport;
-    Float64 m_resolution;
     Float64 m_velocityEmission;
     Float64 m_velocityAbsorption;
     Float64 m_velocityEmissionInit;

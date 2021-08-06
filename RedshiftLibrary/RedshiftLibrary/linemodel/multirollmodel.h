@@ -34,7 +34,6 @@ public:
                     const std::string &opt_continuumcomponent,
                     const Float64 opt_continuum_neg_threshold,
                     const std::string& lineWidthType,
-                    const Float64 resolution,
                     const Float64 velocityEmission,
                     const Float64 velocityAbsorption,
                     const std::string &opt_rules,
