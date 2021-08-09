@@ -391,11 +391,11 @@ private:
 
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
-    std::string m_tplshapeBestTplName;
-    Float64 m_tplshapeBestTplIsmCoeff;
-    Float64 m_tplshapeBestTplAmplitude;
-    Float64 m_tplshapeBestTplDtm;
-    Float64 m_tplshapeBestTplMtm;
+    std::string m_tplshapeBestTplName = "None";
+    Float64 m_tplshapeBestTplIsmCoeff = NAN;
+    Float64 m_tplshapeBestTplAmplitude = NAN;
+    Float64 m_tplshapeBestTplDtm = NAN;
+    Float64 m_tplshapeBestTplMtm = NAN;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
     std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
 

@@ -2084,7 +2084,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Int32 modelSolutionLevel = Int32(enableLogging);
                 modelSolution = GetModelSolution(modelSolutionLevel);
                 continuumModelSolution = GetContinuumModelSolution();
-                m_tplshapeBestTplName = "None";
 
                 merit = getLeastSquareMerit(lambdaRange);
             }
