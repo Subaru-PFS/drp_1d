@@ -1350,18 +1350,17 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
 void CLineModelElementList::PrepareContinuum()
 {
     const CSpectrumSpectralAxis& targetSpectralAxis = m_SpectrumModel.GetSpectralAxis();
-    Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
+    TAxisSampleList & Yrebin = m_ContinuumFluxAxis.GetSamplesVector();
+
+    if (m_ContinuumComponent == "nocontinuum") 
+        return;
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || m_fittingmethod == "lmfit" )
     {
         m_templateFittingOperator = COperatorTemplateFitting();
         m_observeGridContinuumFlux.resize(m_SpectrumModel.GetSampleCount());
     }else{
-        UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
-        for ( UInt32 i = 0; i<nSamples; i++)
-        {
-            Yrebin[i] = m_inputSpc.GetContinuumFluxAxis()[i];
-        }
+        Yrebin = m_inputSpc.GetContinuumFluxAxis().GetSamplesVector();
     }
 }
 
