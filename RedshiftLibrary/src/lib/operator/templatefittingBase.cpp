@@ -154,3 +154,9 @@ Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
     }
     return 0;
 }
+//get z at which igm starts given that LyA starts at lbda_rest=1216
+Float64 COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbda0)
+{
+    Float64 lbdarest_lya = 1216.;
+    return spcLbda0/lbdarest_lya-1; //check the rounding thing     
+}

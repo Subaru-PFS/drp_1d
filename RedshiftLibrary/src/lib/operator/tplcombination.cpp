@@ -201,12 +201,17 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
         bool igmCorrectionAppliedOnce = false;
         //applyMeiksin on all templates
-        if(opt_extinction == 1 && !DisextinctData){
-            igmCorrectionAppliedOnce = true;//since we are multiplying the bools, rather init to true
-            for (Int32 iddl = 0; iddl <nddl; iddl++)
-            {
-                igmCorrectionAppliedOnce &= m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
-            } 
+        if(opt_extinction == 1 && !DisextinctData)
+        {
+            if(currentRange.GetBegin()/(1+redshift) > 1216)
+                igmCorrectionAppliedOnce = false;
+            else {
+                igmCorrectionAppliedOnce = true;//since we are multiplying the bools, rather init to true
+                for (Int32 iddl = 0; iddl <nddl; iddl++)
+                {
+                    igmCorrectionAppliedOnce &= m_templatesRebined_bf[iddl].ApplyMeiksinCoeff(meiksinIdx);
+                } 
+            }
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
         }

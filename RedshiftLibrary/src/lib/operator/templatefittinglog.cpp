@@ -505,13 +505,18 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
     TInt32RangeList izrangelist;
     TInt32List zindexesFullLstSquare;
     if (m_enableIGM && result->Redshifts.size() > 1)
-    {
+    { 
+        Float64 zmax_firstRange = GetIGMStartingRedshiftValue(m_spectrumRebinedLog.GetSpectralAxis()[0]);
         zindexesFullLstSquare.push_back(0); // first index is always a mandatory full Lstsq Calculation case
         TFloat64List zlistsegments = m_templateRebinedLog.m_igmCorrectionMeiksin->GetSegmentsStartRedshiftList();
         for (Int32 k = 0; k < zlistsegments.size(); k++)
         {
             Int32 i_min = -1;
-            bool b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
+            bool b;
+            if(zlistsegments[k]<zmax_firstRange) 
+                b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zmax_firstRange, i_min);
+            else 
+                b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
             if(b)
                 zindexesFullLstSquare.push_back(i_min);
         }

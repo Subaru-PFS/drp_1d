@@ -228,7 +228,12 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         //Meiksin IGM extinction
         if(opt_extinction)
         {
-            igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
+            //check if lya belongs to current range. If not, no
+            //zigm_min = GetIGMStartingRedshiftValue(currentRange.GetBegin())
+            if(currentRange.GetBegin()/(1+redshift) > 1216)
+                igmCorrectionAppliedOnce = false;
+            else
+                igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
         }
@@ -450,7 +455,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             {
                 chiSquare = fit;
                 fittingEbmvCoeff = coeffEBMV;
-                fittingMeiksinIdx = meiksinIdx;
+                fittingMeiksinIdx = igmCorrectionAppliedOnce==true?meiksinIdx:-1;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
                 fittingAmplitudeSigma = ampl_sigma;
