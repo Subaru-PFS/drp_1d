@@ -170,60 +170,6 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     }
 }
 
-
-/**
- * @brief isPdfValid
- * @return
- */
-Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
-{
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  ctx.GetResultStore()->GetGlobalResult( scope_res.c_str() );
-    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        return false;
-    }
-
-    if(logzpdf1d->Redshifts.size()<2)
-    {
-        return false;
-    }
-
-    //is it completely flat ?
-    Float64 minVal=DBL_MAX;
-    Float64 maxVal=-DBL_MAX;
-    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
-    {
-        if(logzpdf1d->valProbaLog[k]<minVal)
-        {
-            minVal = logzpdf1d->valProbaLog[k];
-        }
-        if(logzpdf1d->valProbaLog[k]>maxVal)
-        {
-            maxVal = logzpdf1d->valProbaLog[k];
-        }
-    }
-    if(minVal==maxVal){
-        Log.LogError("PDF is flat !");
-        return false;
-    }
-
-    //is pdf any value nan ?
-    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
-    {
-        if(logzpdf1d->valProbaLog[k] != logzpdf1d->valProbaLog[k])
-        {
-            Log.LogError("PDF has nan or invalid values !");
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
 /**
  * \brief
  * Retrieve the true-redshift from a catalog file path

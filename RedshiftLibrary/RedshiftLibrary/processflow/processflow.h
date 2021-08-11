@@ -22,7 +22,6 @@ public:
 
 private:
 
-    Bool isPdfValid(CProcessFlowContext &ctx) const;
     Int32 getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion );
 };
 
