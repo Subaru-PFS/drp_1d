@@ -112,7 +112,7 @@ public:
     void 			                SetFullPath(const char* nameP);
     void 			                SetDecompScales(Int32 decompScales);
     void 			                SetMedianWinsize(Float64 winsize);
-    void                            SetContinuumEstimationMethod(std::string method);
+    void                            SetContinuumEstimationMethod(std::string method) const;
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
     void                            SetWaveletsDFBinPath(std::string binPath);
 
@@ -150,8 +150,8 @@ protected:
 
     // Continuum removal parameters
     Int32                           m_nbScales;
-    Float64                         m_medianWindowSize;
-    std::string                     m_estimationMethod;
+    mutable Float64                         m_medianWindowSize;
+    mutable std::string                     m_estimationMethod;
     std::string                     m_dfBinPath;
 
     mutable EType                   m_spcType = nType_raw;

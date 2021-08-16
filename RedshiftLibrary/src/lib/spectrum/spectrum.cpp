@@ -753,7 +753,7 @@ void CSpectrum::SetMedianWinsize( Float64 winsize )
     m_medianWindowSize = winsize;
 }
 
-void CSpectrum::SetContinuumEstimationMethod( std::string method )
+void CSpectrum::SetContinuumEstimationMethod( std::string method ) const
 {
     if (m_estimationMethod != method){
         m_estimationMethod = method;

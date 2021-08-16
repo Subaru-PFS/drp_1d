@@ -9,7 +9,8 @@
 namespace NSEpic {
   typedef enum ErrorCode
     {
-      INVALID_SPECTRA_FLUX=	0,
+      INTERNAL_ERROR=0,
+      INVALID_SPECTRA_FLUX,
       INVALID_NOISE	,
       SMALL_WAVELENGTH_RANGE ,
       NEGATIVE_CONTINUUMFIT	,

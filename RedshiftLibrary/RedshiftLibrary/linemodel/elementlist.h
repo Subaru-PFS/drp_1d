@@ -152,6 +152,10 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
+
+  void setVelocity(Float64 vel,Int32 rayType);
+  void setVelocity(Float64 vel, Int32 idxElt,Int32 rayType);
+
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);

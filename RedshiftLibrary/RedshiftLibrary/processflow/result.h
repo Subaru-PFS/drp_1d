@@ -2,6 +2,7 @@
 #define _REDSHIFT_PROCESSFLOW_OPERATORRESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include <vector>
 #include <ostream>

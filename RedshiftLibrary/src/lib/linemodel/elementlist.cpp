@@ -18,6 +18,8 @@
 #include "RedshiftLibrary/spectrum/io/fitswriter.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/common/quicksort.h"
@@ -137,7 +139,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_Regulament.EnableRulesAccordingToParameters ( m_rulesoption );
 
     // Load the line catalog
-    Log.LogDebug( "About to load catalog." );
+    Log.LogDebug( "About to load line catalog." );
     if(m_rigidity != "tplshape")
     {
         //load the regular catalog
@@ -253,9 +255,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceDisableLyaFitting = true;
         m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
         m_forcedisableMultipleContinuumfit = m_opt_firstpass_forcedisableMultipleContinuumfit;
-
         m_fittingmethod = m_opt_firstpass_fittingmethod;
-
         m_forceLyaFitting = false;
     }
     if(iPass==2)
@@ -268,6 +268,13 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceLyaFitting = m_opt_lya_forcefit;
         Log.LogDetail("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
+    if(iPass==3)
+      {
+        m_forceDisableLyaFitting =false;
+
+        m_forcedisableMultipleContinuumfit=false;
+        m_enableAmplitudeOffsets = true;
+      }
 
     return true;
 }
@@ -1266,7 +1273,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
     {
         m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
         //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-        m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
+        m_spcFluxAxisNoContinuum =  m_inputSpc.GetRawFluxAxis();//m_inputSpc.GetWithoutContinuumFluxAxis();
         m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
         m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
     }
@@ -2261,6 +2268,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     m_tplshapeBestTplMtm = m_MtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                 }
             }
+	    else savedIdxContinuumFitted = 0;
 
             //if(m_rigidity=="tplcorr")
             //{
@@ -2289,6 +2297,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 {
                     autoselect = 1;
                 }
+		//TODO savedIdxContinuumFitted=-1 if rigidity!=tplshape 
                 LoadFitContinuum(lambdaRange, savedIdxContinuumFitted, autoselect);
             }
             if(m_fittingmethod=="svdlc")
@@ -2904,7 +2913,7 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range la
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
-  const bool verbose=false;
+  const bool verbose=true;
   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<UInt32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -4836,6 +4845,7 @@ Float64 CLineModelElementList::getContinuumScaleMargCorrection()
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/
+//TODO rename this ! not a simple getter
 Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
 
@@ -4855,6 +4865,7 @@ Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
 /**
  * \brief Accumulates the squared differences between model and spectrum and returns the sum.
  **/
+
 Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
 {
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
@@ -6191,6 +6202,39 @@ void CLineModelElementList::SetVelocityEmission(Float64 vel)
     }
 }
 
+void CLineModelElementList::setVelocity(Float64 vel,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->setVelocity(vel);
+    }
+}
+
+
+//TODO rayType may be useless, because element are homogeneous in rayType, but maybe m_velocityEmission and m_velocityAbsorption are useful ?
+void CLineModelElementList::setVelocity(Float64 vel,Int32 idxElt,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+  if(idxElt<m_Elements.size())
+    {
+        m_Elements[idxElt]->setVelocity(vel);
+    }
+  else throw GlobalException(INTERNAL_ERROR,Formatter()<<"Wrong index for line model element "<<idxElt);
+}
+
 void CLineModelElementList::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
 {
     m_velocityEmission = vel;
@@ -6403,6 +6447,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
@@ -6417,6 +6462,7 @@ Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )

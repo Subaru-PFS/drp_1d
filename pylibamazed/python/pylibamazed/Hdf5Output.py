@@ -19,11 +19,15 @@ class Hdf5Output(AbstractOutput):
         self.spectrum_id = hdf5_group.name[1:]
         self.parameters = parameters
         self.add_sup_columns = True
-        self.object_types = ["galaxy"]
+        self.object_types = []
+        if self.parameters["enablegalaxysolve"] == "yes":
+            self.object_types.append("galaxy")
         if self.parameters["enablestellarsolve"] == "yes":
             self.object_types.append("star")
         if self.parameters["enableqsosolve"] == "yes":
             self.object_types.append("qso")
+        if self.parameters["enablelinemeassolve"] == "yes":
+            self.object_types.append("linemeas")
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
@@ -34,21 +38,23 @@ class Hdf5Output(AbstractOutput):
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
         for ds in root_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"]==ds]
-            self.root_results[ds]=dict()
-            for index,ds_row in ds_attributes.iterrows():
-                if self.hdf5_group.get(ds).attrs.__contains__(ds_row["hdf5_name"]):
-                    self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_h5(ds_row)
+            if ds in self.hdf5_group.keys():
+                ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                self.root_results[ds]=dict()
+                for index,ds_row in ds_attributes.iterrows():
+                    if self.hdf5_group.get(ds).attrs.__contains__(ds_row["hdf5_name"]):
+                        self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_h5(ds_row)
 
     def load_object_level(self, object_type):
         rs = results_specifications
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"] == ds]
-            # TODO handle case where attribute dimension != multi (here we only have pdf for now)
-            self.object_results[object_type][ds] = dict()
-            self.object_dataframes[object_type][ds] = pd.DataFrame(np.array(self.hdf5_group.get(object_type).get(ds)))
+            if ds in self.hdf5_group.get(object_type).keys():
+                ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                # TODO handle case where attribute dimension != multi (here we only have pdf for now)
+                self.object_results[object_type][ds] = dict()
+                self.object_dataframes[object_type][ds] = pd.DataFrame(np.array(self.hdf5_group.get(object_type).get(ds)))
             
     def load_candidate_level(self, object_type):
         rs = results_specifications
@@ -135,7 +141,10 @@ class Hdf5Output(AbstractOutput):
        self.object_dataframes[object_type]["model_parameters"] =self.object_dataframes[object_type]["model_parameters"].append(pd.Series(manual_values),ignore_index=True)
 
     def has_candidate_dataset(self,object_type, dataset):
-        return dataset in self.hdf5_group.get(object_type).get("candidates").get("candidateA").keys()
+        if "candidateA" in self.hdf5_group.get(object_type).get("candidates").keys():
+            return dataset in self.hdf5_group.get(object_type).get("candidates").get("candidateA").keys()
+        else:
+            return False
 
     def get_nb_candidates(self, object_type):
         return len(self.hdf5_group.get(object_type).get("candidates"))
