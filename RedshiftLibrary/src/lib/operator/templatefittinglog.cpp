@@ -781,7 +781,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     }
 
     Int32 nshifts = nTpl - nSpc + 1;
-    m_nPaddedSamples = nTpl * 2.0;
+    m_nPaddedSamples = nTpl;
 
     Log.LogDetail("  Operator-TemplateFittingLog: Now fitting using the FFT on "
                   "nshifts=%d values, for Meiksin redshift=%f",
