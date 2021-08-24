@@ -173,7 +173,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    TTemplateConstRefList tplList = tplCatalog.GetTemplate(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();
@@ -399,7 +399,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    TTemplateConstRefList tplList = tplCatalog.GetTemplate(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
 
     std::shared_ptr<TplCombinationExtremaResult> extremaResult = make_shared<TplCombinationExtremaResult>(ranked_zCandidates);
     Int32 extremumCount = ranked_zCandidates.size();

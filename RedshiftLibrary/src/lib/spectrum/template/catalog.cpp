@@ -40,7 +40,7 @@ TTemplateConstRefList CTemplateCatalog::const_TTemplateRefList_cast(const TTempl
 /**
  * Returns a list containing all templates as enumerated in the categoryList input.
  */
-TTemplateRefList CTemplateCatalog::GetTemplate_( const TStringList& categoryList ) const
+TTemplateRefList CTemplateCatalog::GetTemplateList_( const TStringList& categoryList ) const
 {
     TTemplateRefList list;
 
@@ -104,15 +104,19 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
  * otherwise we will have to SetSampling ("lin") when we want to read the non-log template, and then call SetSampling("log")
  * when we want to add the log tpl
  */
-void CTemplateCatalog::Add( std::shared_ptr<CTemplate> r)
+void CTemplateCatalog::Add( const std::shared_ptr<CTemplate> & r)
 {
     if( r->GetCategory().empty() )
       throw runtime_error("Template has no category");
-    if(m_logsampling)
-        m_ListRebinned[r->GetCategory()].push_back( r );
-    else
-        m_List[r->GetCategory()].push_back( r );     
+        
+    GetList()[r->GetCategory()].push_back( r );
 }
+
+void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt32 i)
+{
+    GetList().at(tpl->GetCategory())[i] = tpl;
+}
+
 //adapt it to apply to all m_list
 void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath, 
                                   std::shared_ptr<const CParameterStore> parameterStore,
@@ -134,17 +138,16 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath,
     //push in all templates
     //backup current sampling
     Bool currentsampling = m_logsampling;
-    for(std::string s : GetCategoryList())
-    { 
-        for(Bool sampling : {0, 1}){
-            m_logsampling = sampling;
-            TTemplateRefList  TplList = GetTemplate(TStringList{s});
+    for(Bool sampling : {0, 1}){
+        m_logsampling = sampling;
+        for(auto it : GetList())
+        {             
+            const TTemplateRefList  & TplList = it.second;
             for (auto tpl : TplList)
-            {
                 tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-                if(s!="star")//no igm for stars
+            if(it.first != "star")//no igm for stars
+                for (auto tpl : TplList)
                     tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-            }   
         }
     }
     //put back the initial sampling:
