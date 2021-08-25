@@ -1,6 +1,5 @@
 #include "RedshiftLibrary/operator/templatefittingBase.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-
 using namespace NSEpic;
 using namespace std;
 
@@ -154,6 +153,7 @@ Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
     }
     return 0;
 }
+
 //get z at which igm starts given that LyA starts at lbda_rest=1216
 Float64 COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbda0)
 {

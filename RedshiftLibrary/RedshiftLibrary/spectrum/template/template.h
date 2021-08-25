@@ -74,7 +74,13 @@ public:
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-
+    void   GetIsmIgmIdxList( Int32 opt_extinction,
+                      Int32 opt_dustFitting,
+                      TInt32List& MeiksinList, //return 
+                      TInt32List& EbmvList, //return
+                      Bool keepigmism = 0,
+                      Float64 FitEbmvCoeff = NAN,
+                      Int32 FitMeiksinIdx = -1) const;
 private:
 
     std::string     m_Category;

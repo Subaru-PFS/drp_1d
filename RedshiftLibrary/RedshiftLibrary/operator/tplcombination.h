@@ -36,8 +36,8 @@ public:
                                              Int32 opt_dustFitting=0,
                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                              Bool keepigmism = false,
-                                             Float64 FitEbmvCoeff=-1,
-                                             Float64 FitMeiksinIdx=-1);
+                                             Float64 FitEbmvCoeff=-1.,
+                                             Int32 FitMeiksinIdx=-1);
 
     Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range& range); //could be also made static
     Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,
@@ -86,8 +86,8 @@ private:
                   Int32 opt_dustFitting=0, 
                   CMask spcMaskAdditional=CMask(),
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
-                  bool keepigmism=false,
-                  const TInt32List& MeiksinList=TInt32List(-1));
+                  const TInt32List& MeiksinList=TInt32List(-1),
+                  const TInt32List& EbmvList=TInt32List(-1));
     Int32 RebinTemplate(const CSpectrum& spectrum,
                         const TTemplateConstRefList& tplList,
                         Float64 redshift,

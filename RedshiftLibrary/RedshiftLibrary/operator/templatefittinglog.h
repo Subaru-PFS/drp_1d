@@ -43,8 +43,8 @@ public:
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
-                                              Float64 FitEbmvCoeff=-1,
-                                              Float64 FitMeiksinIdx=-1);
+                                              Float64 FitEbmvCoeff=-1.,
+                                              Int32 FitMeiksinIdx=-1);
 
     inline  bool IsFFTProcessing() override{return true;}; 
 
@@ -71,27 +71,27 @@ private:
 
     Int32 FitAllz(const TFloat64Range& lambdaRange,
                   std::shared_ptr<CTemplateFittingResult> result,
-                  std::vector<Int32> igmMeiksinCoeffs=std::vector<Int32>(1, 0),
-                  std::vector<Int32> ismEbmvCoeffs=std::vector<Int32>(1, 0),
+                  TInt32List MeiksinList=TInt32List(1, 0),
+                  TInt32List EbmvList=TInt32List(1, 0),
                   CMask spcMaskAdditional=CMask(),
                   CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
 
     Int32 FitRangez(const TFloat64List & inv_err2,
                     TInt32Range& range,
                     std::shared_ptr<CTemplateFittingResult> result,
-                    std::vector<Int32> igmMeiksinCoeffs,
-                    std::vector<Int32> ismEbmvCoeffs,
+                    TInt32List MeiksinList,
+                    TInt32List EbmvList,
                     const Float64& dtd);
 
-    Int32 EstimateXtY(const std::vector<Float64>& X, const std::vector<Float64>& Y,
-                      UInt32 nshifts, std::vector<Float64>& XtY, Int32 precomputedFFT=-1);
+    Int32 EstimateXtY(const TFloat64List& X, const TFloat64List& Y,
+                      UInt32 nshifts, TFloat64List& XtY, Int32 precomputedFFT=-1);
     Int32 InitFFT(Int32 n);
-    Int32 EstimateXtYSlow(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts,
-                          std::vector<Float64>& XtY);
-    Int32 EstimateMtMFast(const std::vector<Float64>& X, const std::vector<Float64>& Y, UInt32 nShifts, std::vector<Float64>& XtY);
+    Int32 EstimateXtYSlow(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts,
+                          TFloat64List& XtY);
+    Int32 EstimateMtMFast(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts, TFloat64List& XtY);
 
-    Int32 InterpolateResult(const std::vector<Float64>& in, std::vector<Float64>& inGrid,
-                            const std::vector<Float64>& tgtGrid, std::vector<Float64>& out, Float64 defaultValue);
+    Int32 InterpolateResult(const TFloat64List& in, TFloat64List& inGrid,
+                            const TFloat64List& tgtGrid, TFloat64List& out, Float64 defaultValue);
 
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();

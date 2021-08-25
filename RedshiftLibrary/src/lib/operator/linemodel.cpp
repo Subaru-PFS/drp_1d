@@ -715,7 +715,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         opt_tplfit_integer_chi2_ebmv=-10;
     }
 
-    Float64 meiksinIdx = -1, EbmvCoeff = -1;
+    Float64 EbmvCoeff = -1.; Int32 meiksinIdx = -1;
     Bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
