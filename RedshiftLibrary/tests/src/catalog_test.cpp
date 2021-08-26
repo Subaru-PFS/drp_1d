@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
                            "star_test_template_0.txt",
                            "star_test_template_1.txt"};
     bool found;
-    TTemplateRefList tplRef = catalog_r.GetTemplate(categories);
+    const TTemplateRefList tplRef = catalog_r.GetTemplateList(categories);
 
     //BOOST_CHECK(expected.size() == tplRef.size());
 

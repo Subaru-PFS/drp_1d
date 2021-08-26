@@ -31,7 +31,7 @@ m_LSF(lsf)
         {
             tplCatalog.m_logsampling = sampling;
             m_tplCatalogOrthogonal.m_logsampling = sampling; 
-            TTemplateConstRefList  TplList = tplCatalog.GetTemplate(TStringList{category});
+            TTemplateConstRefList  TplList = tplCatalog.GetTemplateList(TStringList{category});
             for(auto tpl:TplList )
             {
                 std::string rigidity = opt_rigidity.c_str();

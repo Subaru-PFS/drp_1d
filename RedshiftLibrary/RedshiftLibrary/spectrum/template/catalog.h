@@ -17,12 +17,14 @@ public:
 
     CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool sampling = 0 );
     
-    void                    Add( std::shared_ptr<CTemplate> tpl);
+    void                    Add( const std::shared_ptr<CTemplate> & tpl);
+
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
+    void                                    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
 
-    TTemplateConstRefList GetTemplate( const TStringList& categoryList ) const;
-    TTemplateRefList GetTemplate( const TStringList& categoryList );
+    TTemplateConstRefList GetTemplateList( const TStringList& categoryList ) const;
+    TTemplateRefList GetTemplateList( const TStringList& categoryList );
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
 
@@ -35,11 +37,11 @@ public:
 
 private:
     // this const version must stay private, since it returns non const templates.
-    TTemplateRefList GetTemplate_( const TStringList& categoryList ) const; 
+    TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
 
     //Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
-    const TTemplatesRefDict &    GetList() const;//using m_sampling
-
+          TTemplatesRefDict &    GetList();//using m_sampling
+    const TTemplatesRefDict &    GetList() const;
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListRebinned;
@@ -62,16 +64,16 @@ std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::strin
 
 // non const getter returning mutable templates
 inline 
-TTemplateRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList )
+TTemplateRefList CTemplateCatalog::GetTemplateList( const TStringList& categoryList )
 {
-    return GetTemplate_(categoryList);
+    return GetTemplateList_(categoryList);
 }
 
 //  const getter returning const templates
 inline
-TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& categoryList ) const
+TTemplateConstRefList CTemplateCatalog::GetTemplateList( const TStringList& categoryList ) const
 {
-    return const_TTemplateRefList_cast( GetTemplate_(categoryList)); 
+    return const_TTemplateRefList_cast( GetTemplateList_(categoryList)); 
 }
 
 
@@ -79,10 +81,13 @@ TTemplateConstRefList CTemplateCatalog::GetTemplate( const TStringList& category
 inline 
 const TTemplatesRefDict & CTemplateCatalog::GetList() const
 {
-    if(!m_logsampling)
-        return m_List;
-    else
-        return m_ListRebinned;       
+    return const_cast<CTemplateCatalog*>(this)->GetList();
+}
+
+inline 
+TTemplatesRefDict & CTemplateCatalog::GetList()
+{
+    return m_logsampling? m_ListRebinned : m_List;
 }
 
 }

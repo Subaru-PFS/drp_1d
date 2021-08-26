@@ -53,19 +53,22 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     inputContext.m_redshiftStepFFT = m_logGridStep;
     //rebin templates using previously identified parameters,
     // rebin only if rebinning parameters are different from previously used ones
-    for(std::string s : inputContext.GetTemplateCatalog()->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
+    std::shared_ptr<CTemplateCatalog> tplcat = inputContext.GetTemplateCatalog();
+    const TStringList categoryList = tplcat->GetCategoryList();
+    tplcat->m_logsampling = true;
+    for(std::string category : categoryList ) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
     { 
         //rebin only galaxy templates
-        if(s!="galaxy")
+        if(category!="galaxy")
             continue;
+
         // check existence of already  & correctly logsampled templates
-        inputContext.GetTemplateCatalog()->m_logsampling = true;
-        TTemplateRefList  TplList = inputContext.GetTemplateCatalog()->GetTemplate(TStringList{s});
-        inputContext.GetTemplateCatalog()->m_logsampling = false;
-        if (!TplList.empty())
-        {            
-            for (auto tpl : TplList)
-            {   
+        const UInt32 ntpl = tplcat->GetTemplateCount(category);
+        if (ntpl>0)
+        {        
+            for (UInt32 i=0; i<ntpl; i++)
+            {
+                std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(category, i);
                 Bool needrebinning = false;
                 if( !tpl->GetSpectralAxis().IsLogSampled(m_logGridStep) )
                     needrebinning = true;
@@ -79,23 +82,25 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                 if (needrebinning)
                 {
                     Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName().c_str());
-                    std::shared_ptr<const CTemplate> input_tpl = inputContext.GetTemplateCatalog()->GetTemplateByName(TStringList{s}, tpl->GetName());  
-                    tpl = LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
+                    tplcat->m_logsampling = false;
+                    std::shared_ptr<const CTemplate> input_tpl = tplcat->GetTemplateByName(TStringList{category}, tpl->GetName());
+                    tplcat->m_logsampling = true;
+                    tplcat->SetTemplate(LoglambdaRebinTemplate(input_tpl), i);// assigin the tpl pointer to a new rebined template
                 }
-            } 
-            continue; // next category
+            }            
+        } else {
+            // no rebined templates in the category: rebin all templates
+            tplcat->m_logsampling = false;
+            const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplcat)->GetTemplateList(TStringList{category});
+            tplcat->m_logsampling = true;
+            for (auto tpl : TplList)
+            {   
+                std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
+                tplcat->Add(rebinnedTpl);
+            }
         }
-
-        // no rebined templates in the category: rebin all templates
-        TplList = inputContext.GetTemplateCatalog()->GetTemplate(TStringList{s});
-        inputContext.GetTemplateCatalog()->m_logsampling = true;
-        for (auto tpl : TplList)
-        {   
-            std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
-            inputContext.GetTemplateCatalog()->Add(rebinnedTpl);
-        }
-        inputContext.GetTemplateCatalog()->m_logsampling = false;
     }  
+    tplcat->m_logsampling = false;
 }
 
 /**
