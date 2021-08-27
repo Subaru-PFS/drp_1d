@@ -47,8 +47,6 @@ public:
 
     Int32 CombinePDF(const ChisquareArray & chisquares);
 
-
-
     Bool checkPdfSum() const;
 
     std::shared_ptr<CPdfMargZLogResult> m_postmargZResult;
@@ -61,10 +59,8 @@ public:
     static Int32 ComputePdf(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
 
     static Float64 getSumTrapez(const TRedshiftList &redshifts, const TFloat64List &valprobalog);
- 
-    static Float64 getSumRect(const TRedshiftList &redshifts, const TFloat64List &valprobalog);
-     
-    static Float64 logSumExpTrick(const TFloat64List & valproba, const TFloat64List & redshifts, Int32 sumMethod);
+      
+    static Float64 logSumExpTrick(const TFloat64List & valproba, const TFloat64List & redshifts);
 
 
 private:

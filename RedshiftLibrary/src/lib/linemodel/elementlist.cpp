@@ -797,7 +797,7 @@ void CLineModelElementList::LogCatalogInfos()
 
 
 void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
-  Float64 merit = DBL_MAX;
+  Float64 merit = INFINITY;
 
   Float64 fitContinuumAmplitude = -1.0;
   Float64 fitContinuumAmplitudeError = -1.0;
@@ -1594,9 +1594,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
     }
 
 
-    Float64 merit = DBL_MAX; //initializing 'on the fly' best-merit
+    Float64 merit = INFINITY; //initializing 'on the fly' best-merit
     Float64 meritprior = 0.0; //initializing 'on the fly' best-merit-prior
-    std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
+    std::vector<Float64> meritTplratio(nfitting, INFINITY); //initializing 'on the fly' best-merit per tplratio
     std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
@@ -1749,7 +1749,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 SetVelocityEmission(m_velocityEmissionInit);
                 SetVelocityAbsorption(m_velocityAbsorptionInit);
                 m_Redshift = redshift;
-                Float64 bestMerit = DBL_MAX;
+                Float64 bestMerit = INFINITY;
                 std::shared_ptr<CLmfitController> bestController;// at each run of lmfit we create a controller, we keep the best evaluation
                 std::vector<CLmfitController*> controllers = createLmfitControllers(lambdaRange);
                 if(controllers.size() == 0){
@@ -1836,7 +1836,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 }else{
                   Log.LogError("LineModel LMfit: not able to fit values at z %f", m_Redshift);
                   //continue;
-                  return DBL_MAX;
+                  return INFINITY;
                 }
             }
 
@@ -1874,7 +1874,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                 std::vector<Float64> ampsfitted;
                 std::vector<Float64> errorsfitted;
-                Float64 chi2_cl = DBL_MAX;
+                Float64 chi2_cl = INFINITY;
                 Int32 fitc_polyOrder = -1;
                 if(m_fittingmethod=="svdlcp2")
                 {
@@ -1909,7 +1909,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //2. loop on the continuum templates from catalog
                 /*
                 bool stop_loop_tpl = false;
-                Float64 bestChi2 = DBL_MAX;
+                Float64 bestChi2 = INFINITY;
                 Float64 bestAmp = 1.0;
                 std::string bestTplName = "-1";
                 for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -1940,7 +1940,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                         std::vector<Float64> ampsfitted;
                         std::vector<Float64> errorsfitted;
-                        Float64 chi2_cl = DBL_MAX;
+                        Float64 chi2_cl = INFINITY;
                         fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx,
                                                                lambdaRange,
                                                                spectralAxis,
@@ -3449,7 +3449,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
         outputStatus = 0;
     }else{
         Log.LogDetail("LineModel LMfit: Result dump");
-        controller->setMerit(DBL_MAX);
+        controller->setMerit(INFINITY);
 
         if(controller->isEmissionVelocityFitted()){
           controller->setVelocityEmission(m_velocityEmissionInit, 0);

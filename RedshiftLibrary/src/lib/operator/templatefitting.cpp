@@ -93,7 +93,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
 {
     bool verbose = false;
     bool amplForcePositive=true;
-    chiSquare = boost::numeric::bounds<float>::highest();
+    chiSquare = INFINITY;
     bool status_chisquareSetAtLeastOnce = false;
 
     fittingAmplitude = -1.0;

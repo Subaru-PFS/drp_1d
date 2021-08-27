@@ -453,11 +453,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         }
 
         //correct chi2 if necessary
-        TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-        {
-            logLikelihoodCorrected[k] = result->ChiSquare[k];
-        }
+        TFloat64List logLikelihoodCorrected = result->ChiSquare;
         if(false && m_opt_pdf_margAmpCorrection=="yes") //maybe there should not be a scalemarg correction for the bestchi2 option ? Todo: raise warning then...
         {
             for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
@@ -508,11 +504,9 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            chisquarearray.chisquares.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            chisquarearray.chisquares.push_back(result->ChiSquareTplshapes[k]);
             TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
             
-            logLikelihoodCorrected = result->ChiSquareTplshapes[k];
-
             if(m_opt_pdf_margAmpCorrection=="yes") //nb: this is experimental.
             {
                 //find max scalemargcorr

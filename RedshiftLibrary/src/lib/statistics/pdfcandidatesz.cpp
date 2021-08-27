@@ -226,8 +226,7 @@ Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
     candidate.ValSumProbaZmax = ZinRange.back();
     TFloat64List valprobainRange = TFloat64List(valprobalog.begin()+kmin, valprobalog.begin()+kmax+1);
 
-    Int32 sumMethod = 1;
-    Float64 logSum = COperatorPdfz::logSumExpTrick( valprobainRange, ZinRange, sumMethod);
+    Float64 logSum = COperatorPdfz::logSumExpTrick( valprobainRange, ZinRange);
     candidate.ValSumProba = exp(logSum);
     
     return true;

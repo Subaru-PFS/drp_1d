@@ -11,7 +11,6 @@
 #include  "RedshiftLibrary/processflow/datastore.h"
 #include  "RedshiftLibrary/log/log.h"
 
-#include <boost/numeric/conversion/bounds.hpp>
 #include <math.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
@@ -153,7 +152,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
 
     Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
     Bool igmLoopUseless_WavelengthRange = false;
-    fittingResults.chisquare = boost::numeric::bounds<float>::highest();//final best Xi2 value
+    fittingResults.chisquare = INFINITY;//final best Xi2 value
     Float64 chisq;
     Float64 dtd_complement = 0.;//value mainly relevant with DisextinctData method
     /**
@@ -617,13 +616,13 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         //init fittingResult intermediate values before passing to ::BasicFit
         fittingResults.fittingAmplitudesInterm.resize(EbmvListSize);
 
-        fittingResults.ChiSquareInterm = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
+        fittingResults.ChiSquareInterm = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, INFINITY));
         fittingResults.IsmCalzettiCoeffInterm = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, NAN));
         fittingResults.IgmMeiksinIdxInterm = std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
         
         fittingResults.fittingAmplitudesInterm = std::vector<std::vector<TFloat64List>>(EbmvListSize, std::vector<TFloat64List>(MeiksinListSize, _ampList));
 
-        fittingResults.chisquare = boost::numeric::bounds<float>::highest();
+        fittingResults.chisquare = INFINITY;
         fittingResults.fittingAmplitudes = TFloat64List(componentCount, NAN);
         fittingResults.fittingAmplitudeErrors = TFloat64List(componentCount, NAN);
         fittingResults.fittingAmplitudeSigmas = TFloat64List(componentCount, NAN);
