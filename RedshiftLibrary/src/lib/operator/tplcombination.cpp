@@ -153,7 +153,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
     Bool igmLoopUseless_WavelengthRange = false;
     fittingResults.chisquare = INFINITY;//final best Xi2 value
-    Float64 chisq;
+    Float64 chisq, SNR;
     Float64 dtd_complement = 0.;//value mainly relevant with DisextinctData method
     /**
      * there are two ways to apply extinction:
@@ -331,7 +331,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 sA += a*a;
                 sE += err2;
             }
-            fittingResults.SNR = std::sqrt(sA/sE);
+            SNR = std::sqrt(sA/sE);
             fittingResults.fittingAmplitudesInterm[kEbmv_][kigm] = fittingResults.fittingAmplitudes;//saving 
 
             //save covariance matrix into MtM
@@ -350,6 +350,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             if(chisq < fittingResults.chisquare)
             {
                 fittingResults.chisquare = chisq;
+                fittingResults.SNR = SNR;
                 fittingResults.IGMIdx = igmCorrectionAppliedOnce?meiksinIdx:-1;
                 fittingResults.EbmvCoeff = coeffEBMV;
                 status_chisquareSetAtLeastOnce = true;
@@ -368,8 +369,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }//end iterating over IGM
 
     //fittingResults.modelSpectrum = CSpectrum(CSpectrumSpectralAxis(std::move(spc_extract)), CSpectrumFluxAxis(std::move(modelFlux)));
-
-    fittingResults.SNR = -1.0;
 
     gsl_matrix_free (X);
     gsl_vector_free (y);
