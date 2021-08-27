@@ -346,25 +346,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
             {
                 Log.LogDebug("  Operator-Tplcombination: Found nfittedamps(=%d) different than nddl(=%d)", fittingResults.fittingAmplitudes.size(), nddl);
             }
-            UInt32 modelSize = kEnd - kStart_model + 1;
-            //build the combined template model: spcmodel should have the same size as input spc
-            TFloat64List spc_extract = TFloat64List(spcSpectralAxis.GetSamplesVector().begin() + kStart_model, 
-                                                    spcSpectralAxis.GetSamplesVector().begin() + kEnd + 1);
-            TFloat64List modelFlux(modelSize, 0.0);
-            for (Int32 iddl = 0; iddl < nddl; iddl++){
-                const CSpectrumFluxAxis & tmp = m_templatesRebined_bf[iddl].GetFluxAxis(); 
-                const CSpectrumFluxAxis & ext = identityTemplate.GetFluxAxis(); //works for both cases
-                
-                Float32 a = fittingResults.fittingAmplitudes[iddl];
-                for(Int32 k = 0; k<n; k++){
-                    modelFlux[k]+= a*tmp[k+kStart]*ext[k+kStart];
-                }
-            }
-            //TODO: optimize the below
-            CSpectrumSpectralAxis xAxis(std::move(spc_extract), n);
-            CSpectrumFluxAxis yAxis(std::move(modelFlux));
-            CTemplate modelSpec("combination", "", std::move(xAxis), std::move(yAxis));//m_templatesRebined_bf cant be used, thus we create a new CTemplate to apply corrections
-            fittingResults.modelSpectrum = modelSpec;
 
             if(chisq < fittingResults.chisquare)
             {

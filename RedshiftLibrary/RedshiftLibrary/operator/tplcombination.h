@@ -57,7 +57,6 @@ private:
         COperator::EStatus status;
         Float64     overlapRate;
         Float64     chisquare;
-        CSpectrum   modelSpectrum;
         TFloat64List    fittingAmplitudes;
         TFloat64List    fittingAmplitudeErrors;
         TFloat64List    fittingAmplitudeSigmas;
