@@ -131,13 +131,10 @@ Bool COperatorPdfz::checkPdfSum() const
     Bool ret = true;
 
     //check pdf sum=1
-    Float64 sumRect = getSumRect(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog);
     Float64 sumTrapez = getSumTrapez(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog);
-    Log.LogDetail("    COperatorPdfz: Pdfz normalization - sum rect. = %e", sumRect);
     Log.LogDetail("    COperatorPdfz: Pdfz normalization - sum trapz. = %e", sumTrapez);
-    Bool pdfSumCheck = abs(sumRect-1.0)<1e-1 || abs(sumTrapez-1.0)<1e-1;
-    if(!pdfSumCheck){
-        Log.LogError("    COperatorPdfz: Pdfz normalization failed (rectsum = %f, trapzesum = %f)", sumRect, sumTrapez);
+    if(abs(sumTrapez-1.0)>1e-1){
+        Log.LogError("    COperatorPdfz: Pdfz normalization failed (trapzesum = %f)", sumTrapez);
         ret = false;
     }
 
@@ -197,11 +194,11 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const
 
 /**
  * Use the log sum exp trick to sum up small numbers while avoiding underflows
- *   * ------------------------------------------------------------------
+ *   * ----------------------------------------------------------------------
      * NOTE: this uses the LOG-SUM-EXP trick originally suggested by S. Jamal
-     * ------------------------------------------------------------------  *
+     * ----------------------------------------------------------------------
 */
-Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloat64List & redshifts, Int32 sumMethod)
+Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloat64List & redshifts)
 {
 
     Float64 logfactor = -DBL_MAX;
@@ -214,7 +211,6 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloa
     {
        
         Float64 zstep;
-        // here, using rect. approx. (enough precision for maxi estimation)
         if (k == 0)
         {
             zstep = (redshifts[k + 1] - redshifts[k]) * 0.5;
@@ -223,8 +219,7 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloa
             zstep = (redshifts[k] - redshifts[k - 1]) * 0.5;
         } else
         {
-            zstep = (redshifts[k + 1] + redshifts[k]) * 0.5 -
-                    (redshifts[k] + redshifts[k - 1]) * 0.5;
+            zstep = (redshifts[k + 1] - redshifts[k - 1]) * 0.5;
         }
         if (logfactor < valproba[k] + log(zstep))
         {
@@ -236,43 +231,16 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List & valproba, const TFloa
     Log.LogDebug("Pdfz: Pdfz computation: using common factor value for log-sum-exp trick=%e", logfactor);
 
     Float64 sumModifiedExp = 0.0;
-    if (sumMethod == 0)
-    {
-        Log.LogDebug("Pdfz: Pdfz computation: summation method option = RECTANGLES");
-        for (UInt32 k = 0; k < redshifts.size(); k++)
-        {
-            Float64 modifiedEXPO = exp(valproba[k] - logfactor);
-            Float64 area = (modifiedEXPO);
-            Float64 zstep;
-            if (k == 0)
-            {
-                zstep = (redshifts[k + 1] - redshifts[k]);
-            } else if (k == redshifts.size() - 1)
-            {
-                zstep = (redshifts[k] - redshifts[k - 1]);
-            } else
-            {
-                zstep = (redshifts[k + 1] - redshifts[k - 1]) * 0.5;
-            }
-            area *= zstep;
-            sumModifiedExp += area;
-        }
-    } else if (sumMethod == 1)
-    {
-        Log.LogDebug("Pdfz: Pdfz computation: summation method option = TRAPEZOID");
         Float64 modifiedEXPO_previous = exp(valproba[0] - logfactor);
-        for (UInt32 k = 1; k < redshifts.size(); k++)
-        {
-            Float64 modifiedEXPO = exp(valproba[k] - logfactor);
-            Float64 trapezArea = (modifiedEXPO + modifiedEXPO_previous) / 2.0;
-            trapezArea *= (redshifts[k] - redshifts[k - 1]);
-            sumModifiedExp += trapezArea;
-            modifiedEXPO_previous = modifiedEXPO;
-        }
-    } else
+    for (UInt32 k = 1; k < redshifts.size(); k++)
     {
-        Log.LogError("Pdfz: Pdfz computation: unable to parse summation method option");
+        Float64 modifiedEXPO = exp(valproba[k] - logfactor);
+        Float64 trapezArea = (modifiedEXPO + modifiedEXPO_previous) / 2.0;
+        trapezArea *= (redshifts[k] - redshifts[k - 1]);
+        sumModifiedExp += trapezArea;
+        modifiedEXPO_previous = modifiedEXPO;
     }
+
     Float64 sum = logfactor + log(sumModifiedExp);
 
     return sum;
@@ -292,7 +260,6 @@ Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List 
                                         TFloat64List &logPdf, Float64 &logEvidence)
 {
     Bool verbose = true;
-    Int32 sumMethod = 1; // 0=rect, 1=trapez
     logPdf.clear();
 
     if (verbose)
@@ -314,38 +281,7 @@ Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List 
         Log.LogDebug("Pdfz: Pdfz computation: using merit max=%e", meritmax);
     }
 
-    //
-    //    //check if the z step is constant. If not, pdf cannot be estimated by
-    //    the current method. Float64 reldzThreshold = 0.05; //relative
-    //    difference accepted bool constantdz = true; Float64 mindz = DBL_MAX;
-    //    Float64 maxdz = -DBL_MAX;
-    //    for ( UInt32 k=1; k<redshifts.size(); k++)
-    //    {
-    //        Float64 diff = redshifts[k]-redshifts[k-1];
-    //        if(mindz > diff)
-    //        {
-    //            mindz = diff;
-    //        }
-    //        if(maxdz < diff)
-    //        {
-    //            maxdz = diff;
-    //        }
-    //    }
-    //    Float64 zstep_mean = (maxdz+mindz)/2.0;
-    //    if(abs(maxdz-mindz)/zstep_mean>reldzThreshold)
-    //    {
-    //        constantdz = false;
-    //        return 2;
-    //    }
-    //
-
-    // deactivate logPrior just to see...
-    //    for ( UInt32 k=0; k<redshifts.size(); k++)
-    //    {
-    //        logZPrior[k] = 0;
-    //    }
-
-    // check if there is at least 1 redshifts values
+    // check if there is at least 1 redshift value
     if (redshifts.size() == 1) // consider this as a success
     {
         logPdf.resize(redshifts.size());
@@ -383,7 +319,7 @@ Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List 
     }
 
     // renormalize zprior to 1
-    Float64 logsumZPrior = logSumExpTrick(logZPrior, redshifts, sumMethod);
+    Float64 logsumZPrior = logSumExpTrick(logZPrior, redshifts);
 
     logPdf.resize(redshifts.size());
     TFloat64List Xi2_2withPrior;
@@ -391,7 +327,7 @@ Int32 COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List 
         Xi2_2withPrior.push_back(-0.5*merits[i] + logZPrior[i] - logsumZPrior);
     }
     // prepare logLikelihood and LogEvidence
-    Float64 logsumexp = logSumExpTrick( Xi2_2withPrior, redshifts, sumMethod);
+    Float64 logsumexp = logSumExpTrick( Xi2_2withPrior, redshifts);
     logEvidence = cstLog + logsumexp;
 
     if (verbose)
@@ -444,20 +380,9 @@ Float64 COperatorPdfz::getSumTrapez(const TRedshiftList & redshifts,
 
     // prepare LogEvidence
     Int32 sumMethod = 1;
-    Float64 logSum = logSumExpTrick( valprobalog, redshifts, sumMethod);
+    Float64 logSum = logSumExpTrick( valprobalog, redshifts);
     sum = exp(logSum);
 
-    return sum;
-}
-
-Float64 COperatorPdfz::getSumRect(const TRedshiftList & redshifts,
-                          const TFloat64List & valprobalog)
-{
-    Float64 sum = 0.0;
-    // prepare LogEvidence
-    Int32 sumMethod = 0;
-    Float64 logSum = logSumExpTrick( valprobalog, redshifts, sumMethod);
-    sum = exp(logSum);
     return sum;
 }
 
