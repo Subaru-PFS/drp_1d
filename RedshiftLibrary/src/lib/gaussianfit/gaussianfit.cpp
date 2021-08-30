@@ -213,7 +213,7 @@ CGaussianFit::EStatus CGaussianFit::Compute( const CSpectrum& spectrum, const TI
     }
     while( status==GSL_CONTINUE && iter<500 );
     }else{
-        /* solve the system with a maximum of 50 iterations */
+        /* solve the system with a maximum of 500 iterations */
         int info;
         gsl_multifit_fdfsolver_driver(multifitSolver, 500, m_RelTol, m_RelTol, 0.0, &info);
     }
