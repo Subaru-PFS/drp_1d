@@ -138,9 +138,15 @@ bool CRay::GetOffsetFitEnabled() const
     return m_OffsetFit;
 }
 
-bool CRay::EnableOffsetFit(bool val)
+bool CRay::EnableOffsetFit()
 {
-    m_OffsetFit = val;
+    m_OffsetFit = true;
+    return true;
+}
+
+bool CRay::DisableOffsetFit()
+{
+    m_OffsetFit = false;
     return true;
 }
 

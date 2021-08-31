@@ -67,8 +67,9 @@ public:
     Float64             GetOffset() const;
     bool                SetOffset(Float64 val);
     bool                GetOffsetFitEnabled() const;
-    bool                EnableOffsetFit(bool val);
-
+    bool                EnableOffsetFit();
+    bool                DisableOffsetFit();
+    
     Float64             GetAmplitude() const;
     Float64             GetWidth() const;
     Float64             GetCut() const;

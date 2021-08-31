@@ -186,8 +186,9 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList *LineModelEleme
     {
         Int32 nRays = LineModelElementList->m_Elements[iElts]->GetSize();
         for(UInt32 j=0; j<nRays; j++){
+            LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(); // temporary, just to allow offset setting at zero.
             LineModelElementList->m_Elements[iElts]->m_Rays[j].SetOffset(0.0);
-            LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(false); //default is to not fit the offset
+            LineModelElementList->m_Elements[iElts]->m_Rays[j].DisableOffsetFit(); //default is to not fit the offset
         }
     }
 
@@ -206,8 +207,9 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList *LineModelEleme
 
                 if(LineModelElementList->m_Elements[iElts]->m_Rays[j].GetName() == name)
                 {
+                    LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(); // temporary, just to allow offset setting
                     LineModelElementList->m_Elements[iElts]->m_Rays[j].SetOffset(offset);
-                    LineModelElementList->m_Elements[iElts]->m_Rays[j].EnableOffsetFit(enableOffsetFit);
+                    if (!enableOffsetFit) LineModelElementList->m_Elements[iElts]->m_Rays[j].DisableOffsetFit();
                     Log.LogDetail( "    CatalogsOffsets - setting line: %s\t offset:%.1f\t fitMode:%s\t fitEnabled:%d ", name.c_str(), offset, m_OffsetsCatalog[index].FittingMode[kL].c_str(), enableOffsetFit);
 
                 }
