@@ -6,7 +6,7 @@
 * [gcc](https://gcc.gnu.org/)
 * [python](https://www.python.org/) >=3.6
 * [cmake](https://cmake.org/) >=3.12
-* [swig](http://www.swig.org/) >=2.0
+* [swig](http://www.swig.org/) >=4.0
 
 ## Dependencies
 
