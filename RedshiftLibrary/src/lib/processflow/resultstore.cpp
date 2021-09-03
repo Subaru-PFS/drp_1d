@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
@@ -190,6 +191,17 @@ std::shared_ptr<const CClassificationResult> COperatorResultStore::GetClassifica
     std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
     return std::dynamic_pointer_cast<const CClassificationResult>(GetGlobalResult(oss.str()).lock());
+}
+
+std::shared_ptr<const CReliabilityResult> COperatorResultStore::GetReliabilityResult( const std::string& objectType,
+                                                                            const std::string& method,
+                                                                            const std::string& name ) const
+{
+    std::ostringstream oss;
+    oss << objectType << "." << method << "." << name;
+    std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+    return std::dynamic_pointer_cast<const CReliabilityResult>(GetGlobalResult(oss.str()).lock());
 }
 
 std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogResult( const std::string& objectType,

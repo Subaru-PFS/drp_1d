@@ -56,3 +56,4 @@ LinemeasLfOII	linemeas_parameters	f8	linemeas	mono	False	object	lfOII	double	0.0
 LinemeasLfHa	linemeas_parameters	f8	linemeas	mono	False	object	lfHa	double	0.000e+0
 ModelLambda	linemeas_model	f8	linemeas_model	multi	False	object	ModelLambda	list[double]	
 ModelFlux	linemeas_model	f8	linemeas_model	multi	False	object	ModelFlux	list[double]	
+Reliability	reliability	S2	solveResult	mono	False	root	m_ReliabilityLabel	string	

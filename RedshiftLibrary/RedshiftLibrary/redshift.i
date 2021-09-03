@@ -64,6 +64,7 @@
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
 %shared_ptr(CClassificationResult)
+%shared_ptr(CReliabilityResult)
 %shared_ptr(CPdfMargZLogResult)
 %shared_ptr(TCandidateZ)
 %shared_ptr(TExtremaResult)
@@ -108,6 +109,7 @@
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -297,6 +299,7 @@ public:
 
 
 %include "method/classificationresult.i"
+%include "method/reliabilityresult.i"
 %include "operator/pdfMargZLogResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/extremaresult.i"
@@ -359,7 +362,11 @@ class COperatorResultStore
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                        const std::string& method,
                                                                        const std::string& name ) const;
-  
+
+  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+									 const std::string& method,
+                                                                       const std::string& name ) const;
+
   std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;

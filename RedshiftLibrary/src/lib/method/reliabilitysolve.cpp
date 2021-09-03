@@ -61,11 +61,13 @@ std::shared_ptr<CSolveResult> CReliabilitySolve::compute(std::shared_ptr<const C
 
   if(inputContext->GetParameterStore()->Get<std::string>("enablegalaxysolve") == "yes")    
     galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
+  /*
   if(inputContext->GetParameterStore()->Get<std::string>("enablestellarsolve") == "yes")
     starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("star"));
   if(inputContext->GetParameterStore()->Get<std::string>("enableqsosolve") == "yes")
     qsoResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("qso"));
-
+  */
+  
   Float64 galaxyLogEvidence = -INFINITY;
   Float64 qsoLogEvidence = -INFINITY ;
   Float64 stellarLogEvidence = -INFINITY;
@@ -82,6 +84,7 @@ std::shared_ptr<CSolveResult> CReliabilitySolve::compute(std::shared_ptr<const C
       merit = galaxyResult->getMerit();
     }
   }
+  /*
   if(starResult){
     stellarLogEvidence = starResult->getEvidence();
     Log.LogInfo( "Found stellar LogEvidence: %e", stellarLogEvidence);
@@ -99,12 +102,16 @@ std::shared_ptr<CSolveResult> CReliabilitySolve::compute(std::shared_ptr<const C
 	merit = qsoResult->getMerit();
       }
   }
-
-  if (std::isnan(merit)) reliabResult->m_ReliabilityLabel="C6";                                           else {
+  */
+  if (std::isnan(merit)) reliabResult->m_ReliabilityLabel="C6";
+  else if (merit == 0) reliabResult->m_ReliabilityLabel="";
+  else {
     int reliability = 6 - floor(merit*6);
     if (reliability == 0) reliability = 1;
-    std::ostringstream os;                                                                                  os << "C" << reliability;
-    reliabResult->m_ReliabilityLabel=os.str();                                                                 }                                     
+    std::ostringstream os;
+    os << "C" << reliability;
+    reliabResult->m_ReliabilityLabel=os.str();
+  }                                     
 
 
   return reliabResult;
