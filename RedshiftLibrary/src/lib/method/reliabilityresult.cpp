@@ -53,4 +53,5 @@ using namespace NSEpic;
 CReliabilityResult::CReliabilityResult():
   CSolveResult()
 {
+  this->m_type="CReliabilityResult";
 }

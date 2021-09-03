@@ -54,6 +54,7 @@ namespace NSEpic
 
 class CTemplate;
 class CClassificationResult;
+class CReliabilityResult;
 class CPdfMargZLogResult;
 class TLineModelResult;
 class TTplCombinationResult;
@@ -117,6 +118,10 @@ public:
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                             const std::string& method,
                                                                             const std::string& name ) const;
+    std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+                                                                            const std::string& method,
+                                                                            const std::string& name ) const;
+
   std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;

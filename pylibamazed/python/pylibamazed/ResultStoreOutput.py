@@ -292,6 +292,10 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetClassificationResult(data_spec.hdf5_dataset,
                                                                   data_spec.hdf5_dataset,
                                                                   data_spec.ResultStore_key)
+            elif or_type == "CReliabilityResult":
+                return self.results_store.GetReliabilityResult(data_spec.hdf5_dataset,
+                                                                  data_spec.hdf5_dataset,
+                                                                  data_spec.ResultStore_key)
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "object":

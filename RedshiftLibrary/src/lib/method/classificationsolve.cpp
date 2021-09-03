@@ -59,7 +59,8 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
   std::shared_ptr<const CPdfSolveResult> starResult=std::shared_ptr<const CPdfSolveResult>(nullptr);//std::make_shared<const CPdfSolveResult>();
   std::shared_ptr<const CPdfSolveResult> qsoResult=std::shared_ptr<const CPdfSolveResult>(nullptr);
 
-  galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
+  if(inputContext->GetParameterStore()->Get<std::string>("enablegalaxysolve") == "yes")
+    galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
   if(inputContext->GetParameterStore()->Get<std::string>("enablestellarsolve") == "yes")
     starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("star"));
   if(inputContext->GetParameterStore()->Get<std::string>("enableqsosolve") == "yes")
