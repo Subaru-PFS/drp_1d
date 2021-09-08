@@ -77,8 +77,6 @@ public:
     const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
 
     void Sort();
-    void ConvertVacuumToAir();
-
 
 private:
 

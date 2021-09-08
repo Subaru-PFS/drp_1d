@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/ray/airvacuum.h"
 #include <cmath>
 using namespace NSEpic;
 using namespace std;
@@ -69,25 +70,40 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale, std::string AirVacuum) :
     CSpectrumAxis(samples)
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
+    if (AirVacuum != "")
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);        
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);
+    }
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(  TFloat64List && samples, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale, std::string AirVacuum) :
     CSpectrumAxis(std::move(samples))
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
+    if (AirVacuum != "") 
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);   
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);
+    }     
 }
 
 //only used by client
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
 {
+    if (AirVacuum != "")
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);        
+    }
 }
 
 /**
