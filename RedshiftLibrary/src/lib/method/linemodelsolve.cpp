@@ -306,9 +306,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
   PopulateParameters( inputContext->GetParameterStore() );
+  bool lmlogrebinning = inputContext->GetParameterStore()->GetScoped<bool>("linemodel.fftprocessing");
 
   bool retSolve = Solve( resultStore,
-                         spc, rebinnedSpc,
+                         lmlogrebinning?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
                          restraycatalog,
