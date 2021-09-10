@@ -182,35 +182,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
-    //tpl orthogonalization obligatory when doing Full-model
-    //Two methods for orthogonalisation: using line masks or line-free orthogonalisation
-    //               m_opt_tplfit_ignoreLinesSupport = (yes, no) defines which method should be used
-    bool enableOrtho = !m_opt_tplfit_ignoreLinesSupport && (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto");
-    Log.LogInfo("  Operator-Linemodel: TemplatesOrthogonalization enabled = %d", enableOrtho);
-    
-    // prepare continuum templates catalog
-    std::string opt_fittingmethod_ortho="hybrid";
-    CTemplatesOrthogonalization tplOrtho(
-                tplCatalog,
-                tplCategoryList,
-                opt_calibrationPath,
-                restRayList,
-                opt_fittingmethod_ortho,
-                opt_lineWidthType,
-                m_linesmodel_nsigmasupport,
-                opt_velocityEmission,
-                opt_velocityAbsorption,
-                opt_rules,
-                opt_rigidity,
-                spectrum.GetLSF(),
-                enableOrtho);
-
-    //tplCatalog.m_logsampling = currentsampling;
-    // CTemplateCatalog orthoTplCatalog = tplOrtho.getOrthogonalTplCatalog();
-    CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
-    Int32 ctlgIdx = 0; // only one ortho config for now
-    m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
-    Log.LogInfo("  Operator-Linemodel: Templates store prepared.");
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
                                                          tplCatalog,
@@ -417,7 +388,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     if (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
     {
         PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
-                    *m_orthoTplCatalog,
+                    m_orthoTplCatalog,
                     tplCategoryList,
                     opt_calibrationPath,
                     lambdaRange,
@@ -1146,7 +1117,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
                 PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
-                                *m_orthoTplCatalog,
+                                m_orthoTplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
                                 lambdaRange,
@@ -2069,6 +2040,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
 }
 
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
+                               const CTemplateCatalog& orthotplcatalog, 
                                const TFloat64List &redshifts,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
@@ -2094,6 +2066,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
     m_linesmodel_nsigmasupport = nsigmasupport;
     m_secondPass_halfwindowsize = halfwdwsize;
     m_extremaRedshiftSeparation = radius; 
+    m_orthoTplCatalog = orthotplcatalog;
 
     return 0;
 }

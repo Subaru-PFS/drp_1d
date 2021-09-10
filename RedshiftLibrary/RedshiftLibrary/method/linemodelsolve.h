@@ -78,9 +78,11 @@ public:
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
+               const CTemplateCatalog& orthotplCatalog,
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
+
 private:
 
     void GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;

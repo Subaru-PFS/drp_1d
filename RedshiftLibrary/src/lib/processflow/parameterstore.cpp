@@ -376,12 +376,25 @@ template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& 
 Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 {
     Bool fft_processing = false;
+    if(Get<std::string>("enable"+objectType+"solve") == "no" ) return false;
     if(Has<std::string>(objectType + ".templatefittingsolve.fftprocessing"))
         fft_processing |= Get<std::string>(objectType + ".templatefittingsolve.fftprocessing") == "yes";
     if(Has<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
         fft_processing |= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
 
     return fft_processing;
+}
+
+Bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
+{  
+    Bool enableOrtho = 0;
+    if(Get<std::string>("enable"+objectType+"solve") == "yes" && Get<std::string>(objectType + ".method") == "linemodel")
+    {
+        enableOrtho &= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.ignorelinesupport") == "no";
+        std::string continuumComponent = Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumcomponent");
+        enableOrtho &= (continuumComponent == "tplfit" || continuumComponent == "tplfitauto" );
+    }
+    return enableOrtho;
 }
 
 }

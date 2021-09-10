@@ -50,6 +50,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CRayCatalog> gal_rayCatalog,
                              std::shared_ptr<CRayCatalog> qso_rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
+
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
   m_gal_RayCatalog(std::move(gal_rayCatalog)),
@@ -75,7 +76,8 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
-
+    //orthog only if rebinned happens
+    OrthogonalizeTemplates(calibrationPath); //possibly we want the client to do this
 }
 /*
 Two cases exist:
@@ -165,4 +167,72 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
     }else{
       Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
+}
+//ideally this should be done on the client side
+void CInputContext::OrthogonalizeTemplates(const std::string& calibrationPath)
+{
+    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates("galaxy"); 
+    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates("qso");
+    if(!orthog_gal && ! orthog_qso) return;
+
+    std::string  opt_lineWidthType;
+    std::string  opt_rules;
+    std::string  opt_rigidity;
+    std::string  opt_linetypefilter;
+    std::string  opt_lineforcefilter;
+
+    Float64 opt_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption;
+    //loop over galaxy and qso solvers and orthogolize their associated templates
+
+    std::vector<std::string> solverList;
+    if(orthog_gal) solverList.push_back("galaxy");
+    if(orthog_qso) solverList.push_back("qso");
+
+    for(std::string object : solverList)
+    {
+
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.linewidthtype", opt_lineWidthType, "velocitydriven" );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.nsigmasupport", opt_nsigmasupport, 8.0 );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.velocityemission", opt_velocityEmission, 200.0 );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.velocityabsorption", opt_velocityAbsorption, 300.0 );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.rules", opt_rules, "all" );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.rigidity", opt_rigidity, "rules" );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.linetypefilter", opt_linetypefilter, "no" );
+      m_ParameterStore->Get( object + "linemodelsolve.linemodel.lineforcefilter", opt_lineforcefilter, "no" );
+
+      Int32 typeFilter = -1;
+      if (opt_linetypefilter == "A") typeFilter = CRay::nType_Absorption;
+      else if (opt_linetypefilter == "E")typeFilter = CRay::nType_Emission;
+      Int32 forceFilter = -1; // CRay::nForce_Strong;
+      if (opt_lineforcefilter == "S")
+      forceFilter = CRay::nForce_Strong;
+
+      CRayCatalog::TRayVector restRayList_gal = m_gal_RayCatalog->GetFilteredList(typeFilter, forceFilter);
+      CRayCatalog::TRayVector restRayList_qso = m_qso_RayCatalog->GetFilteredList(typeFilter, forceFilter);
+      // prepare continuum templates catalog
+      std::string opt_fittingmethod_ortho="hybrid";
+//TODO: remove orthoStore and keep only tplCatalog
+
+      //we d better create one tplStore joining all objects together
+      CTemplatesOrthogonalization tplOrtho(*m_TemplateCatalog,
+                                          {object},
+                                          calibrationPath,
+                                          restRayList_gal,
+                                          opt_fittingmethod_ortho,
+                                          opt_lineWidthType,
+                                          opt_nsigmasupport,
+                                          opt_velocityEmission,
+                                          opt_velocityAbsorption,
+                                          opt_rules,
+                                          opt_rigidity,
+                                          m_Spectrum->GetLSF(),
+                                          enableOrtho);
+
+      //save orthogonal template
+      CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
+      Int32 ctlgIdx = 0; // only one ortho config for now
+//we'd better keep non-ortho and ortho templates in one catalog to maintain the control over logrebinning-Orthog
+      m_orthogonalTemplateCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
+    }
+    return;
 }

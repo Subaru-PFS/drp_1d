@@ -251,6 +251,7 @@ public:
 
 
     Int32 Init( const CSpectrum& spectrum, 
+                const CTemplateCatalog& orthotplcatalog,
                 const TFloat64List& redshifts, 
                 const std::string &opt_continuumcomponent,
                 const Float64 nsigmasupport, 
@@ -418,7 +419,7 @@ private:
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
-    std::shared_ptr<CTemplateCatalog> m_orthoTplCatalog;
+    CTemplateCatalog m_orthoTplCatalog;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
     Float64 m_extremaCount;
