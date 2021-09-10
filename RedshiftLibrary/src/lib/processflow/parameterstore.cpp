@@ -380,8 +380,6 @@ Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
         fft_processing |= Get<std::string>(objectType + ".templatefittingsolve.fftprocessing") == "yes";
     if(Has<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
         fft_processing |= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing")=="yes";
-    if(Has<std::string>(objectType + ".linemodelsolve.linemodel.fftprocessing"))
-        fft_processing |= Get<std::string>(objectType + ".linemodelsolve.linemodel.fftprocessing")=="yes";
 
     return fft_processing;
 }

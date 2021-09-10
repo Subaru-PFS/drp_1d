@@ -73,10 +73,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     if(m_use_LogLambaSpectrum)
     {
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
-        //pass lsf to the logrebinned spectrum: shouldnt we adapt the lsf?
-        //note that additional challenge can be presented in case of a width-dependent lsf ?!
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
-
     }
 
 }
