@@ -48,7 +48,7 @@ using namespace std;
 
 
 BOOST_AUTO_TEST_SUITE(Convolve_test)
-
+TFloat64Range _lbdaRange = {200., 1299.};
 TFloat64List fluxcorr =  {//2.0_1
   0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 
   0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 
@@ -259,6 +259,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj;
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -292,6 +293,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -326,6 +328,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -367,6 +371,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -406,6 +412,8 @@ BOOST_AUTO_TEST_CASE(correction_test)
 
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(200, 210);
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 

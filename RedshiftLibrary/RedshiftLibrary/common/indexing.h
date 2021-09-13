@@ -101,7 +101,18 @@ template <typename T> class CIndexing
       Int32 i_min = it - ordered_values.begin();
       return i_min;
     }
+    //value[index] can be equal or higher than Z
+    static bool getClosestUpperIndex(const std::vector<T>& ordered_values, const T& value, Int32& i) 
+    {
+      if(value > ordered_values.back())
+      {
+        return false;
+      }
+      typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
 
+      i = it - ordered_values.begin();
+      return true;
+    }
 };
 typedef CIndexing<Int32> TInt32Index;
 typedef CIndexing<Float64> TFloat64Index;

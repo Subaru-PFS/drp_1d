@@ -170,8 +170,9 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath,
     auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
     ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
     //IGM
+    TFloat64Range lambdaRange = parameterStore->Get<TFloat64Range>("lambdarange");
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
-    igmCorrectionMeiksin->Init(calibrationPath, lsf);
+    igmCorrectionMeiksin->Init(calibrationPath, lsf, lambdaRange);
 
     //push in all templates
     //backup current sampling
