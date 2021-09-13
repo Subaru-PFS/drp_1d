@@ -305,7 +305,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
-  const CTemplateCatalog& orthotplCatalog=*(inputContext->GetOrthogonalTemplateCatalog().get());
+
   PopulateParameters( inputContext->GetParameterStore() );
 
   //useloglambdasampling param is relevant only if linemodel.continuumfit is set to use fftprocessing
@@ -317,7 +317,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                          useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
-                         orthotplCatalog,
                          restraycatalog,
                          m_lambdaRange,
                          m_redshifts );
@@ -820,7 +819,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
-                             const CTemplateCatalog& orthotplCatalog,
                              const CRayCatalog& restraycatalog,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts )
@@ -846,7 +844,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //    }
 
     // Compute with linemodel operator
-    Int32 retInit = m_linemodel.Init(spc, orthotplCatalog, redshifts, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = m_linemodel.Init(spc, redshifts, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         Log.LogError( "Linemodel, init failed. Aborting" );
@@ -963,7 +961,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
     std::string fpb_opt_continuumcomponent = "fromspectrum";//Note: this is hardocoded! given that condition for FPB relies on having "tplfit"
-    Int32 retInitB = linemodel_fpb.Init(spc, orthotplCatalog, redshifts, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
@@ -974,12 +972,11 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         Log.LogInfo( "Linemodel FIRST PASS B enabled. Computing now." );
 
         linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
-        //
 
         if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
             linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
             linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
-	    Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
+	        Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
             linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
             linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
             linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;

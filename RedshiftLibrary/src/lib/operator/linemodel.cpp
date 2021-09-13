@@ -387,14 +387,15 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     ////////////////////
     if (m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
     {
+        tplCatalog.m_orthogonal = 1;
         PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
-                    m_orthoTplCatalog,
+                    tplCatalog,
                     tplCategoryList,
                     opt_calibrationPath,
                     lambdaRange,
                     largeGridRedshifts,
                     m_opt_tplfit_ignoreLinesSupport);
-
+        tplCatalog.m_orthogonal = 0;
     }else{
         if(m_opt_continuumcomponent == "tplfit" || m_opt_continuumcomponent == "tplfitauto")
         {
@@ -1115,9 +1116,10 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
         //precompute only whenever required and whenever the result can be a tplfitStore
         if(m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3){
             m_tplfitStore_secondpass.resize(m_firstpass_extremaResult->size());
+            tplCatalog.m_orthogonal = 1;
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
                 PrecomputeContinuumFit(spectrum, rebinnedSpectrum,
-                                m_orthoTplCatalog,
+                                tplCatalog,
                                 tplCategoryList,
                                 opt_calibrationPath,
                                 lambdaRange,
@@ -1126,8 +1128,8 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                 i);
                 if (m_opt_continuumcomponent == "fromspectrum")
                     break; // when set to "fromspectrum" by PrecomputeContinuumFit because negative continuum with tplfitauto
-
             }
+            tplCatalog.m_orthogonal = 0; //finish using orthogTemplates
         }else{
             //since precompute is not called all the time, secondpass candidates do not have systematically a tplfitstore_secondpass
             //copy the firstpass tplfitstore into the secondpass tplfitstore
@@ -2039,8 +2041,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
     return 0;
 }
 
-Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
-                               const CTemplateCatalog& orthotplcatalog, 
+Int32 COperatorLineModel::Init(const CSpectrum &spectrum, 
                                const TFloat64List &redshifts,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
@@ -2066,7 +2067,6 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
     m_linesmodel_nsigmasupport = nsigmasupport;
     m_secondPass_halfwindowsize = halfwdwsize;
     m_extremaRedshiftSeparation = radius; 
-    m_orthoTplCatalog = orthotplcatalog;
 
     return 0;
 }
@@ -2373,28 +2373,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
 
   // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
-  CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
-
-/*
-  bool enableOrtho = true;
-  CTemplatesOrthogonalization tplOrtho(tplCatalog,
-                                       tplCategoryList,
-                                       calibrationDir,
-                                       restRayList,
-                                       opt_fittingmethod_ortho,
-                                       opt_lineWidthType,
-                                       opt_nsigmasupport,
-                                       opt_resolution,
-                                       opt_velocityEmission,
-                                       opt_velocityAbsorption,
-                                       opt_rules,
-                                       opt_rigidity,
-				       lsf,
-                                       enableOrtho);
-  CTemplatesOrthoStore orthoTplStore = tplOrtho.getOrthogonalTplStore();
-   Int32 ctlgIdx = 0; // only one ortho config for now
-    m_orthoTplCatalog = orthoTplStore.getTplCatalog(ctlgIdx);
-  */ 
+  CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(CRay::nType_Emission,-1); 
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   // bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
@@ -2472,18 +2451,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
     m_estimateLeastSquareFast = 0;
     m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
 
-    
-
-  /*
-  Log.LogInfo("precompute continuum fit");
-  PrecomputeContinuumFit(spc, rebinnedSpc,
-                         *m_orthoTplCatalog,
-                         tplCategoryList,
-                         calibrationDir,
-                         lambdaRange,
-                         redshiftsGrid,
-                         opt_tplfit_ignoreLinesSupport);
-  */
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 

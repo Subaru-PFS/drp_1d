@@ -66,7 +66,6 @@ class CInputContext
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_TemplateCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
-  std::shared_ptr<const CTemplateCatalog> GetOrthogonalTemplateCatalog() const {return m_orthogonalTemplateCatalog;};
   void RebinInputs();
 
   // mutable getters
@@ -75,7 +74,6 @@ class CInputContext
   std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {return m_TemplateCatalog;}
   std::shared_ptr<CRayCatalog>  GetRayCatalog(const std::string &objectType);
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
-  std::shared_ptr<CTemplateCatalog> GetOrthogonalTemplateCatalog() {return m_orthogonalTemplateCatalog;};
 
   void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc){m_rebinnedSpectrum = rebinnedSpc;}
   TFloat64Range   m_lambdaRange;    
@@ -91,7 +89,7 @@ private:
   std::shared_ptr<CRayCatalog> m_gal_RayCatalog;
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
-  std::shared_ptr<CTemplateCatalog> m_orthogonalTemplateCatalog;
+
   void OrthogonalizeTemplates(const std::string& calibrationPath);
   void RebinInputWrapper();
   void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 

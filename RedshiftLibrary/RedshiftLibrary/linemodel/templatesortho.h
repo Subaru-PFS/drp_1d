@@ -55,7 +55,7 @@
 
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/linemodel/templatesorthostore.h"
-
+#include "RedshiftLibrary/processflow/inputcontext.h"
 #include <boost/shared_ptr.hpp>
 
 #include <memory>
@@ -63,26 +63,15 @@
 
 namespace NSEpic
 {  
+class CInputContext;
 class CTemplatesOrthogonalization
 {
 
 public:
 
-    CTemplatesOrthogonalization(const CTemplateCatalog &tplCatalog,
-                                const TStringList &tplCategoryList,
-                                const std::string calibrationPath,
-                                const CRayCatalog::TRayVector &restRayList,
-                                const std::string &opt_fittingmethod,
-                                const std::string &widthType,
-                                const Float64 opt_nsigmasupport,
-                                const Float64 velocityEmission,
-                                const Float64 velocityAbsorption,
-                                const std::string &opt_rules,
-                                const std::string &opt_rigidity,
-                                std::shared_ptr<const CLSF> lsf,
-                                bool enableOrtho=false);
-
-    ~CTemplatesOrthogonalization();
+    //Rule of zero applies here
+    void Orthogonalize(CInputContext& inputContext, const std::string category, 
+                       const std::string calibrationPath);
 
     CTemplateCatalog getOrthogonalTplCatalog();
     CTemplatesOrthoStore getOrthogonalTplStore();
@@ -91,7 +80,7 @@ private:
 
     bool m_enableOrtho;
     std::shared_ptr<const CLSF> m_LSF = nullptr;
-    Int32 OrthogonalizeTemplate(const CTemplate& inputTemplate,
+    std::shared_ptr<CTemplate> OrthogonalizeTemplate(const CTemplate& inputTemplate,
                                 const std::string calibrationPath,
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
@@ -104,8 +93,6 @@ private:
 
 
     CTemplateCatalog m_tplCatalogOrthogonal = CTemplateCatalog("zero"); //note: no need to estimate continuum free templates here, //note2: todo: bound to disappear when the tplorthostore is fully implemented
-    CTemplatesOrthoStore m_tplOrthoStore;
-
 };
 
 }

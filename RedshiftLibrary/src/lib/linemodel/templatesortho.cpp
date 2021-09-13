@@ -38,83 +38,89 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/spectrum/logrebinning.h"
 
 
 
 using namespace NSEpic;
-
-
-CTemplatesOrthogonalization::CTemplatesOrthogonalization(const CTemplateCatalog& tplCatalog,
-                                                         const TStringList& tplCategoryList,
-                                                         const std::string calibrationPath,
-                                                         const CRayCatalog::TRayVector& restRayList,
-                                                         const std::string& opt_fittingmethod,
-                                                         const std::string& widthType,
-                                                         const Float64 opt_nsigmasupport,
-                                                         const Float64 velocityEmission,
-                                                         const Float64 velocityAbsorption,
-                                                         const std::string& opt_rules,
-                                                         const std::string& opt_rigidity,
-                                                         std::shared_ptr<const CLSF> lsf,
-                                                         bool enableOrtho):
-m_LSF(lsf)                                                        
+void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext, 
+                                                const std::string category, 
+                                                const std::string calibrationPath)
 {
+    //retrieve params from InputContext
+    m_LSF = inputContext.GetSpectrum()->GetLSF();
+    m_enableOrtho = inputContext.GetParameterStore()->EnableTemplateOrthogonalization(category);
+    
 
-    m_enableOrtho = enableOrtho;
-    Bool currentsampling = tplCatalog.m_logsampling; 
-    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    Float64 opt_nsigmasupport;
+    Float64 velocityEmission, velocityAbsorption;
+
+    std::string widthType;
+    std::string opt_rules, opt_rigidity;
+    std::string opt_lineforcefilter, opt_linetypefilter;
+
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.linewidthtype", widthType, "velocitydriven" );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.nsigmasupport", opt_nsigmasupport, 8.0 );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.velocityemission", velocityEmission, 200.0 );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.velocityabsorption", velocityAbsorption, 300.0 );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.rules", opt_rules, "all" );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.rigidity", opt_rigidity, "rules" );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.linetypefilter", opt_linetypefilter, "no" );
+    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.lineforcefilter", opt_lineforcefilter, "no" );
+
+    std::string rigidity = opt_rigidity.c_str();
+    std::string rules = opt_rules.c_str();
+    //temporary options override to be removed when full tpl ortho is implemented
+    Bool enableOverride = true;
+    if(enableOverride){
+        rigidity = "rules";
+        rules = "no";
+    }
+
+    Int32 typeFilter = -1;
+    if (opt_linetypefilter == "A") typeFilter = CRay::nType_Absorption;
+    else if (opt_linetypefilter == "E")typeFilter = CRay::nType_Emission;
+    Int32 forceFilter = -1; // CRay::nForce_Strong;
+    if (opt_lineforcefilter == "S")
+    forceFilter = CRay::nForce_Strong;
+
+    CRayCatalog::TRayVector restRayList = inputContext.GetRayCatalog(category)->GetFilteredList(typeFilter, forceFilter);
+    // prepare continuum templates catalog
+    std::string opt_fittingmethod="hybrid";
+
+    //retrieve templateCatalog
+    std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
+    Bool currentsampling = tplCatalog->m_logsampling; 
+
+    for(Bool sampling:{0, 1})
     {
-        std::string category = tplCategoryList[i];
-        for(Bool sampling:{0, 1})
+        tplCatalog->m_logsampling = sampling;//TBR
+        tplCatalog->m_orthogonal = 0;//to read non orthog
+        //TTemplateConstRefList  TplList = tplCatalog->GetTemplateList(TStringList{category});
+        UInt32 n = tplCatalog->GetTemplateCount(category);
+        for(UInt32 i = 0; i<n; i++)
         {
-            tplCatalog.m_logsampling = sampling;
-            m_tplCatalogOrthogonal.m_logsampling = sampling; 
-            TTemplateConstRefList  TplList = tplCatalog.GetTemplateList(TStringList{category});
-            for(auto tpl:TplList )
-            {
-                std::string rigidity = opt_rigidity.c_str();
-                std::string rules = opt_rules.c_str();
-                //temporary options override to be removed when full tpl ortho is implemented
-                Bool enableOverride = true;
-                if(enableOverride){
-                    rigidity = "rules";
-                    rules = "no";
-                }
-
-                Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
-                Int32 ret = OrthogonalizeTemplate(*tpl,
-                                    calibrationPath,
-                                    restRayList,
-                                    opt_fittingmethod,
-                                    widthType,
-                                    opt_nsigmasupport,
-                                    velocityEmission,
-                                    velocityAbsorption,
-                                    rules,
-                                    rigidity);
-            if(ret!=0)
-            {
-              Log.LogError("error in orthogonalization");
-                //do something...
-            }
-            }
+            std::shared_ptr<const CTemplate> tpl = tplCatalog->GetTemplate(category, i);
+            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
+            std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(*tpl,
+                                                                        calibrationPath,
+                                                                        restRayList,
+                                                                        opt_fittingmethod,
+                                                                        widthType,
+                                                                        opt_nsigmasupport,
+                                                                        velocityEmission,
+                                                                        velocityAbsorption,
+                                                                        rules,
+                                                                        rigidity);
+            //add up orthogo template
+            tplCatalog->m_orthogonal = 1;//say we are writing into m_list_ortho
+            tplCatalog->SetTemplate(_orthoTpl, i);
         }
     }
-    tplCatalog.m_logsampling = currentsampling;
-    m_tplCatalogOrthogonal.m_logsampling = currentsampling; 
-    std::shared_ptr<CTemplateCatalog> tplCatalogPtr = std::shared_ptr<CTemplateCatalog>( new CTemplateCatalog(m_tplCatalogOrthogonal) );
-//    std::shared_ptr<CTemplate> tplOrtho = std::shared_ptr<CTemplate>( new CTemplate( inputTemplate.GetName().c_str(), inputTemplate.GetCategory() ) );
-
-    m_tplOrthoStore.Add(tplCatalogPtr);
-
-}
-
-/**
- * \brief Empty destructor.
- **/
-CTemplatesOrthogonalization::~CTemplatesOrthogonalization()
-{
-
+    
+    tplCatalog->m_logsampling = currentsampling;
+    tplCatalog->m_orthogonal = 0; 
+    return;
 }
 
 /**
@@ -125,7 +131,7 @@ CTemplatesOrthogonalization::~CTemplatesOrthogonalization()
  * - add the newly created template to the tplCatalogOrtho member
  * @return
  */
-Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputTemplate,
+std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputTemplate,
                             const std::string opt_calibrationPath,
                             const CRayCatalog::TRayVector &restRayList,
                             const std::string &opt_fittingmethod,
@@ -220,19 +226,6 @@ Int32 CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputT
         //*/
 
     }
-
-
-    m_tplCatalogOrthogonal.Add(tplOrtho);
-    return 0;
-}
-
-CTemplateCatalog CTemplatesOrthogonalization::getOrthogonalTplCatalog()
-{
-    return m_tplCatalogOrthogonal;
-}
-
-CTemplatesOrthoStore CTemplatesOrthogonalization::getOrthogonalTplStore()
-{
-    return m_tplOrthoStore;
+    return tplOrtho;
 }
 

@@ -95,7 +95,7 @@ public:
 
   Bool HasFFTProcessing(const std::string &objectType) const;  
   Bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
-  
+  Bool EnableTemplateOrthogonalization(const std::string &objectType) const;
   template<typename T> T Get(const std::string& name) const
   {
     boost::optional<T> property = m_PropertyTree.get_optional<T>( name );

@@ -387,8 +387,13 @@ Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 
 Bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
 {  
+    Bool orthogonalize = Get<std::string>("enable"+objectType+"solve") == "yes" && Get<std::string>(objectType + ".method") == "linemodelsolve";
+    return orthogonalize;
+}
+Bool CParameterStore::EnableTemplateOrthogonalization(const std::string &objectType) const
+{  
     Bool enableOrtho = 0;
-    if(Get<std::string>("enable"+objectType+"solve") == "yes" && Get<std::string>(objectType + ".method") == "linemodel")
+    if(HasToOrthogonalizeTemplates(objectType))
     {
         enableOrtho &= Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.ignorelinesupport") == "no";
         std::string continuumComponent = Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumcomponent");
@@ -396,5 +401,4 @@ Bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType)
     }
     return enableOrtho;
 }
-
 }

@@ -72,7 +72,7 @@ public:
                                        std::shared_ptr<const CParameterStore> parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
     mutable Bool            m_logsampling = 0;//non-log by default
-
+    mutable Bool            m_orthogonal = 0;//non-log by default
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
@@ -83,6 +83,8 @@ private:
 
     TTemplatesRefDict        m_List;
     TTemplatesRefDict        m_ListRebinned;
+    TTemplatesRefDict        m_ListOrthog; // m_List templates orthogonalized
+    TTemplatesRefDict        m_ListRebinnedOrthog; //m_ListRebinned templates orthogonalized
 
     std::string m_continuumRemovalMethod;
     Float64 m_continuumRemovalMedianKernelWidth;
@@ -125,7 +127,7 @@ const TTemplatesRefDict & CTemplateCatalog::GetList() const
 inline 
 TTemplatesRefDict & CTemplateCatalog::GetList()
 {
-    return m_logsampling? m_ListRebinned : m_List;
+    return m_logsampling? (m_orthogonal?m_ListRebinnedOrthog:m_ListRebinned): (m_orthogonal? m_ListOrthog:m_List);
 }
 
 }
