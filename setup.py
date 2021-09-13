@@ -29,7 +29,7 @@ setup(
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python library."),
-    license="GPLv3+",
+    license="CeCILL-C",
     url="http://www.lam.fr",
     packages=['pylibamazed'],
     package_dir = {'':'pylibamazed/python'},
@@ -44,8 +44,7 @@ setup(
         "Development Status :: 2 - Pre-Alpha",
         "Topic :: Scientific/Engineering",
         "Programming Language :: Python",
-        "License :: OSI Approved :: GNU General Public License v3 or "
-        "later (GPLv3+)",
+        "License :: OSI Approved :: CeCILL-C",
     ],
     cmdclass={'build': CustomBuild},
     ext_modules=[swig_ext],

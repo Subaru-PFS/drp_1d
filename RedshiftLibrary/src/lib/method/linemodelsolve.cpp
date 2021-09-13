@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/method/linemodelsolve.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -111,8 +149,6 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
 
 	parameterStore->GetScopedParam( "linemodel.linewidthtype", m_opt_lineWidthType, "velocitydriven" );
     parameterStore->GetScopedParam( "linemodel.nsigmasupport", m_opt_nsigmasupport, 8.0 );
-    //instrumentResolution is now provided by LSF
-    parameterStore->Get( "LSF.resolution", m_opt_resolution, 2350.0 );
     parameterStore->GetScopedParam( "linemodel.velocityemission", m_opt_velocity_emission, 200.0 );
     parameterStore->GetScopedParam( "linemodel.velocityabsorption", m_opt_velocity_absorption, 300.0 );
     parameterStore->GetScopedParam( "linemodel.velocityfit", m_opt_velocityfit, "yes" );
@@ -175,14 +211,7 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     Log.LogInfo( "    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
     Log.LogInfo( "    -fittingmethod: %s", m_opt_fittingmethod.c_str());
     Log.LogInfo( "    -linewidthtype: %s", m_opt_lineWidthType.c_str());
-    if(m_opt_lineWidthType=="combined"){
-        Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
-        Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
-        Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
-        Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
-    }else if(m_opt_lineWidthType=="instrumentdriven"){
-        Log.LogInfo( "    -instrumentresolution: %.2f", m_opt_resolution);
-    }else if(m_opt_lineWidthType=="velocitydriven"){
+    if(m_opt_lineWidthType=="combined" || m_opt_lineWidthType=="velocitydriven" ){
         Log.LogInfo( "    -velocity emission: %.2f", m_opt_velocity_emission);
         Log.LogInfo( "    -velocity absorption: %.2f", m_opt_velocity_absorption);
         Log.LogInfo( "    -velocity fit: %s", m_opt_velocityfit.c_str());
@@ -462,11 +491,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         }
 
         //correct chi2 if necessary
-        TFloat64List logLikelihoodCorrected(result->ChiSquare.size(), DBL_MAX);
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-        {
-            logLikelihoodCorrected[k] = result->ChiSquare[k];
-        }
+        TFloat64List logLikelihoodCorrected = result->ChiSquare;
         if(false && m_opt_pdf_margAmpCorrection=="yes") //maybe there should not be a scalemarg correction for the bestchi2 option ? Todo: raise warning then...
         {
             for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
@@ -517,11 +542,9 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         std::vector<TFloat64List> ChiSquareTplshapesCorrected;
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
-            chisquarearray.chisquares.emplace_back(result->ChiSquareTplshapes[k].size(), DBL_MAX);
+            chisquarearray.chisquares.push_back(result->ChiSquareTplshapes[k]);
             TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
             
-            logLikelihoodCorrected = result->ChiSquareTplshapes[k];
-
             if(m_opt_pdf_margAmpCorrection=="yes") //nb: this is experimental.
             {
                 //find max scalemargcorr
@@ -884,7 +907,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     lambdaRange,
                                                     m_opt_fittingmethod,
                                                     m_opt_lineWidthType,
-                                                    m_opt_resolution,
                                                     m_opt_velocity_emission,
                                                     m_opt_velocity_absorption,
                                                     m_opt_continuumreest,
@@ -976,7 +998,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             lambdaRange,
                                                             m_opt_fittingmethod,
                                                             m_opt_lineWidthType,
-                                                            m_opt_resolution,
                                                             m_opt_velocity_emission,
                                                             m_opt_velocity_absorption,
                                                             m_opt_continuumreest,
@@ -1043,7 +1064,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                           lambdaRange,
                                                           m_opt_fittingmethod,
                                                           m_opt_lineWidthType,
-                                                          m_opt_resolution,
                                                           m_opt_velocity_emission,
                                                           m_opt_velocity_absorption,
                                                           m_opt_continuumreest,

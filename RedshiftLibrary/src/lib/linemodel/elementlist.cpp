@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/lmfitfunctions.h"
 #include "RedshiftLibrary/linemodel/multiline.h"
@@ -18,6 +56,8 @@
 #include "RedshiftLibrary/spectrum/io/fitswriter.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/common/quicksort.h"
@@ -55,7 +95,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
                                              const Float64 opt_continuum_neg_threshold,
                                              const std::string& widthType,
                                              const Float64 nsigmasupport,
-                                             const Float64 resolution,
                                              const Float64 velocityEmission,
                                              const Float64 velocityAbsorption,
                                              const std::string& opt_rules,
@@ -69,7 +108,6 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
     m_LineWidthType(widthType),
     m_NSigmaSupport(nsigmasupport),
-    m_resolution(resolution),
     m_velocityEmission(velocityEmission),
     m_velocityAbsorption(velocityAbsorption),
     m_velocityEmissionInit(m_velocityEmission),
@@ -139,7 +177,7 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_Regulament.EnableRulesAccordingToParameters ( m_rulesoption );
 
     // Load the line catalog
-    Log.LogDebug( "About to load catalog." );
+    Log.LogDebug( "About to load line catalog." );
     if(m_rigidity != "tplshape")
     {
         //load the regular catalog
@@ -255,9 +293,7 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceDisableLyaFitting = true;
         m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
         m_forcedisableMultipleContinuumfit = m_opt_firstpass_forcedisableMultipleContinuumfit;
-
         m_fittingmethod = m_opt_firstpass_fittingmethod;
-
         m_forceLyaFitting = false;
     }
     if(iPass==2)
@@ -270,6 +306,13 @@ Int32 CLineModelElementList::setPassMode(Int32 iPass)
         m_forceLyaFitting = m_opt_lya_forcefit;
         Log.LogDetail("    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d", m_forceLyaFitting);
     }
+    if(iPass==3)
+      {
+        m_forceDisableLyaFitting =false;
+
+        m_forcedisableMultipleContinuumfit=false;
+        m_enableAmplitudeOffsets = true;
+      }
 
     return true;
 }
@@ -462,10 +505,9 @@ Int32 CLineModelElementList::GetFluxDirectIntegration(const TInt32List & eIdx_li
     {
         Int32 eIdx=eIdx_list[kl];
         Int32 subeIdx=subeIdx_list[kl];
-
         Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
-        Float64 instrumentSigma = mu/m_resolution;
-        Float64 winsizeAngstrom = instrumentSigma*nsigma;
+        Float64 LineWidth = m_Elements[eIdx]->GetLineWidth(mu, m_Redshift, m_Elements[eIdx]->m_Rays[subeIdx].GetIsEmission());
+        Float64 winsizeAngstrom = LineWidth*nsigma;
 
         TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
                                                                       mu,
@@ -793,7 +835,7 @@ void CLineModelElementList::LogCatalogInfos()
 
 
 void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
-  Float64 merit = DBL_MAX;
+  Float64 merit = INFINITY;
 
   Float64 fitContinuumAmplitude = -1.0;
   Float64 fitContinuumAmplitudeError = -1.0;
@@ -1269,7 +1311,7 @@ void CLineModelElementList::SetContinuumComponent(std::string component)
     {
         m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
         //the continuum is set to zero and the observed spectrum is the spectrum without continuum
-        m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
+        m_spcFluxAxisNoContinuum =  m_inputSpc.GetRawFluxAxis();//m_inputSpc.GetWithoutContinuumFluxAxis();
         m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
         m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
     }
@@ -1353,18 +1395,17 @@ void CLineModelElementList::SetFitContinuum_FitValues(std::string tplfit_name,
 void CLineModelElementList::PrepareContinuum()
 {
     const CSpectrumSpectralAxis& targetSpectralAxis = m_SpectrumModel.GetSpectralAxis();
-    Float64* Yrebin = m_ContinuumFluxAxis.GetSamples();
+    TAxisSampleList & Yrebin = m_ContinuumFluxAxis.GetSamplesVector();
+
+    if (m_ContinuumComponent == "nocontinuum") 
+        return;
 
     if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" || m_fittingmethod == "lmfit" )
     {
         m_templateFittingOperator = COperatorTemplateFitting();
         m_observeGridContinuumFlux.resize(m_SpectrumModel.GetSampleCount());
     }else{
-        UInt32 nSamples = targetSpectralAxis.GetSamplesCount();
-        for ( UInt32 i = 0; i<nSamples; i++)
-        {
-            Yrebin[i] = m_inputSpc.GetContinuumFluxAxis()[i];
-        }
+        Yrebin = m_inputSpc.GetContinuumFluxAxis().GetSamplesVector();
     }
 }
 
@@ -1591,9 +1632,9 @@ Float64 CLineModelElementList::fit(Float64 redshift,
     }
 
 
-    Float64 merit = DBL_MAX; //initializing 'on the fly' best-merit
+    Float64 merit = INFINITY; //initializing 'on the fly' best-merit
     Float64 meritprior = 0.0; //initializing 'on the fly' best-merit-prior
-    std::vector<Float64> meritTplratio(nfitting, DBL_MAX); //initializing 'on the fly' best-merit per tplratio
+    std::vector<Float64> meritTplratio(nfitting, INFINITY); //initializing 'on the fly' best-merit per tplratio
     std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
@@ -1746,7 +1787,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 SetVelocityEmission(m_velocityEmissionInit);
                 SetVelocityAbsorption(m_velocityAbsorptionInit);
                 m_Redshift = redshift;
-                Float64 bestMerit = DBL_MAX;
+                Float64 bestMerit = INFINITY;
                 std::shared_ptr<CLmfitController> bestController;// at each run of lmfit we create a controller, we keep the best evaluation
                 std::vector<CLmfitController*> controllers = createLmfitControllers(lambdaRange);
                 if(controllers.size() == 0){
@@ -1833,7 +1874,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 }else{
                   Log.LogError("LineModel LMfit: not able to fit values at z %f", m_Redshift);
                   //continue;
-                  return DBL_MAX;
+                  return INFINITY;
                 }
             }
 
@@ -1871,7 +1912,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                 std::vector<Float64> ampsfitted;
                 std::vector<Float64> errorsfitted;
-                Float64 chi2_cl = DBL_MAX;
+                Float64 chi2_cl = INFINITY;
                 Int32 fitc_polyOrder = -1;
                 if(m_fittingmethod=="svdlcp2")
                 {
@@ -1906,7 +1947,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 //2. loop on the continuum templates from catalog
                 /*
                 bool stop_loop_tpl = false;
-                Float64 bestChi2 = DBL_MAX;
+                Float64 bestChi2 = INFINITY;
                 Float64 bestAmp = 1.0;
                 std::string bestTplName = "-1";
                 for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -1937,7 +1978,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                         std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
                         std::vector<Float64> ampsfitted;
                         std::vector<Float64> errorsfitted;
-                        Float64 chi2_cl = DBL_MAX;
+                        Float64 chi2_cl = INFINITY;
                         fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx,
                                                                lambdaRange,
                                                                spectralAxis,
@@ -2087,7 +2128,6 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 Int32 modelSolutionLevel = Int32(enableLogging);
                 modelSolution = GetModelSolution(modelSolutionLevel);
                 continuumModelSolution = GetContinuumModelSolution();
-                m_tplshapeBestTplName = "None";
 
                 merit = getLeastSquareMerit(lambdaRange);
             }
@@ -2266,6 +2306,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                     m_tplshapeBestTplMtm = m_MtmTplshape[savedIdxFitted][0]; //Should be only 1 elt in tpl ratio mode...
                 }
             }
+	    else savedIdxContinuumFitted = 0;
 
             //if(m_rigidity=="tplcorr")
             //{
@@ -2294,6 +2335,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
                 {
                     autoselect = 1;
                 }
+		//TODO savedIdxContinuumFitted=-1 if rigidity!=tplshape 
                 LoadFitContinuum(lambdaRange, savedIdxContinuumFitted, autoselect);
             }
             if(m_fittingmethod=="svdlc")
@@ -2909,7 +2951,7 @@ Float64 CLineModelElementList::getOutsideLinesSTD( Int32 which, TFloat64Range la
  **/
 Int32 CLineModelElementList::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
-  const bool verbose=false;
+  const bool verbose=true;
   std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
   std::vector<UInt32> indexesFitted;
   for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
@@ -3445,7 +3487,7 @@ Int32 CLineModelElementList::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAx
         outputStatus = 0;
     }else{
         Log.LogDetail("LineModel LMfit: Result dump");
-        controller->setMerit(DBL_MAX);
+        controller->setMerit(INFINITY);
 
         if(controller->isEmissionVelocityFitted()){
           controller->setVelocityEmission(m_velocityEmissionInit, 0);
@@ -4841,6 +4883,7 @@ Float64 CLineModelElementList::getContinuumScaleMargCorrection()
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/
+//TODO rename this ! not a simple getter
 Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
 
@@ -4860,6 +4903,7 @@ Int32 CLineModelElementList::getSpcNSamples(const TFloat64Range& lambdaRange){
 /**
  * \brief Accumulates the squared differences between model and spectrum and returns the sum.
  **/
+
 Float64 CLineModelElementList::getLeastSquareMeritUnderElements()
 {
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
@@ -6196,6 +6240,39 @@ void CLineModelElementList::SetVelocityEmission(Float64 vel)
     }
 }
 
+void CLineModelElementList::setVelocity(Float64 vel,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+    for(Int32 j=0; j<m_Elements.size(); j++)
+    {
+        m_Elements[j]->setVelocity(vel);
+    }
+}
+
+
+//TODO rayType may be useless, because element are homogeneous in rayType, but maybe m_velocityEmission and m_velocityAbsorption are useful ?
+void CLineModelElementList::setVelocity(Float64 vel,Int32 idxElt,Int32 rayType)
+{
+  if (rayType == CRay::nType_Absorption) m_velocityEmission = vel;
+  else if(rayType == CRay::nType_Emission) m_velocityAbsorption = vel;
+  else
+    {
+      m_velocityAbsorption=vel;
+      m_velocityEmission = vel;
+    }
+  if(idxElt<m_Elements.size())
+    {
+        m_Elements[idxElt]->setVelocity(vel);
+    }
+  else throw GlobalException(INTERNAL_ERROR,Formatter()<<"Wrong index for line model element "<<idxElt);
+}
+
 void CLineModelElementList::SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt)
 {
     m_velocityEmission = vel;
@@ -6230,19 +6307,6 @@ Float64 CLineModelElementList::GetVelocityEmission()
 Float64 CLineModelElementList::GetVelocityAbsorption()
 {
     return m_velocityAbsorption;
-}
-
-Float64 CLineModelElementList::GetVelocityInfFromInstrumentResolution()
-{
-    static Float64 c = 300000.0;
-    static Float64 tolCoeff = 2.0;
-    Float64 vel = c/m_resolution/tolCoeff;
-    Float64 roundingVal = 10.0;
-    vel = Float64(Int32(vel/roundingVal))*roundingVal;
-//    if(vel<5.0){
-//        vel=5.0;
-//    }
-    return vel;
 }
 
 Float64 CLineModelElementList::GetRedshift()
@@ -6421,6 +6485,7 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )
@@ -6435,6 +6500,7 @@ Float64 CLineModelElementList::getDTransposeD(const TFloat64Range& lambdaRange)
  * \brief this function returns the dtd value withing the wavelength range for a given spcComponent
  *
  **/
+//TODO rename this ! not a simple getter
 Float64 CLineModelElementList::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
 {
     if(! (m_dTransposeDLambdaRange.GetBegin()==lambdaRange.GetBegin() && m_dTransposeDLambdaRange.GetEnd()==lambdaRange.GetEnd() ) )

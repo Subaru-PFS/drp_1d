@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/processflow/resultstore.h"
 
 #include "RedshiftLibrary/debug/assert.h"
@@ -5,6 +43,7 @@
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
@@ -154,6 +193,17 @@ std::shared_ptr<const CClassificationResult> COperatorResultStore::GetClassifica
     return std::dynamic_pointer_cast<const CClassificationResult>(GetGlobalResult(oss.str()).lock());
 }
 
+std::shared_ptr<const CReliabilityResult> COperatorResultStore::GetReliabilityResult( const std::string& objectType,
+                                                                            const std::string& method,
+                                                                            const std::string& name ) const
+{
+    std::ostringstream oss;
+    oss << objectType << "." << method << "." << name;
+    std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+    return std::dynamic_pointer_cast<const CReliabilityResult>(GetGlobalResult(oss.str()).lock());
+}
+
 std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogResult( const std::string& objectType,
                                                                             const std::string& method,
                                                                             const std::string& name ) const
@@ -166,6 +216,8 @@ std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogRe
 }
 
 //std::shared_ptr<const CLineModelExtremaResult<TLineModelResult>>
+
+//TODO AA those getters should have an argument std::string dataset, rather than hard coded values
 
 std::shared_ptr<const TLineModelResult> COperatorResultStore::GetLineModelResult(const std::string& objectType,
 										 const std::string& method,
@@ -216,6 +268,23 @@ std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFitting
   return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
 }
 
+std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFittingResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name 
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock());
+}
+
+std::shared_ptr<const CLineModelSolution> COperatorResultStore::GetLineModelSolution(const std::string& objectType,
+										     const std::string& method,
+										     const std::string& name 
+										     ) const
+{
+  return std::dynamic_pointer_cast<const CLineModelSolution>(GetGlobalResult(objectType,method,name).lock());
+}
+
 std::shared_ptr<const CSpectraFluxResult> COperatorResultStore::GetSpectraFluxResult(const std::string& objectType,
 										     const std::string& method,
 										     const std::string& name ,
@@ -233,6 +302,15 @@ std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectr
     
 {
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model"));
+}
+
+std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectrumResult(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock());
 }
 
 
@@ -266,9 +344,21 @@ bool COperatorResultStore::HasCandidateDataset(const std::string& objectType,
 						       const std::string& name ,
 						       const std::string& dataset) const
 {
-  
-  bool ret = GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
-  return ret;
+  if (HasDataset(objectType,method,name))
+    {
+      return  GetGlobalResult(objectType,method,name).lock()->HasCandidateDataset(dataset);
+    }
+  else return false;
+}
+
+bool COperatorResultStore::HasDataset(const std::string& objectType,
+                                      const std::string& method,
+                                      const std::string& name ) const
+{
+  std::ostringstream oss;
+  oss << objectType << "." << method << "." << name;
+  TResultsMap::const_iterator it = m_GlobalResults.find( oss.str() );
+  return (it != m_GlobalResults.end());
 }
 
 
@@ -278,9 +368,14 @@ int COperatorResultStore::getNbRedshiftCandidates(const std::string& objectType,
 {
   std::ostringstream oss;
   oss << objectType << "." << method << ".candidatesresult" ;
-  std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+  TResultsMap::const_iterator it = m_GlobalResults.find( oss.str() );
+  if (it != m_GlobalResults.end())
+    {
+      std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
 
-  return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
+      return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
+    }
+  else return 0;
 
 }
 

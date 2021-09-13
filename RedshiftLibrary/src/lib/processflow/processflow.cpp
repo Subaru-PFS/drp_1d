@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 
@@ -15,6 +53,7 @@
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/method/linemeassolve.h"
 #include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
@@ -98,8 +137,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Galaxy method
 
-
-    if(true)
+    if(ctx.GetParameterStore()->Get<std::string>( "enablegalaxysolve")=="yes")
       {
         std::string methodName;
         ctx.GetParameterStore()->Get( "galaxy.method", methodName );
@@ -155,74 +193,31 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-
-    {
-      CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
-      classifier.Compute(ctx.GetInputContext(),
-                         ctx.GetResultStore(),
-                         ctx.m_ScopeStack);
-    }
-    {
-      CReliabilitySolve reliability(ctx.m_ScopeStack,"reliability");
-      reliability.Compute(ctx.GetInputContext(),
+    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="no")
+      {
+        {
+          CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
+          classifier.Compute(ctx.GetInputContext(),
+                             ctx.GetResultStore(),
+                             ctx.m_ScopeStack);
+        }
+        {
+          CReliabilitySolve reliability(ctx.m_ScopeStack,"reliability");
+          reliability.Compute(ctx.GetInputContext(),
+                              ctx.GetResultStore(),
+                              ctx.m_ScopeStack);
+        }
+      }
+    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="yes")
+      {
+        CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas");
+        solve.Compute(ctx.GetInputContext(),
                           ctx.GetResultStore(),
                           ctx.m_ScopeStack);
-    }
+
+      }
+    
 }
-
-
-/**
- * @brief isPdfValid
- * @return
- */
-Bool CProcessFlow::isPdfValid(CProcessFlowContext& ctx) const
-{
-    std::string scope_res = "zPDF/logposterior.logMargP_Z_data";
-    auto results_pdf =  ctx.GetResultStore()->GetGlobalResult( scope_res.c_str() );
-    auto logzpdf1d = std::dynamic_pointer_cast<const CPdfMargZLogResult>( results_pdf.lock() );
-
-    if(!logzpdf1d)
-    {
-        return false;
-    }
-
-    if(logzpdf1d->Redshifts.size()<2)
-    {
-        return false;
-    }
-
-    //is it completely flat ?
-    Float64 minVal=DBL_MAX;
-    Float64 maxVal=-DBL_MAX;
-    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
-    {
-        if(logzpdf1d->valProbaLog[k]<minVal)
-        {
-            minVal = logzpdf1d->valProbaLog[k];
-        }
-        if(logzpdf1d->valProbaLog[k]>maxVal)
-        {
-            maxVal = logzpdf1d->valProbaLog[k];
-        }
-    }
-    if(minVal==maxVal){
-        Log.LogError("PDF is flat !");
-        return false;
-    }
-
-    //is pdf any value nan ?
-    for(Int32 k=0; k<logzpdf1d->valProbaLog.size(); k++)
-    {
-        if(logzpdf1d->valProbaLog[k] != logzpdf1d->valProbaLog[k])
-        {
-            Log.LogError("PDF has nan or invalid values !");
-            return false;
-        }
-    }
-
-    return true;
-}
-
 
 /**
  * \brief

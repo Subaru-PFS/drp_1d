@@ -1,3 +1,41 @@
+# ============================================================================
+# 
+# This file is part of: AMAZED
+# 
+# Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+# 
+# https://www.lam.fr/
+# 
+# This software is a computer program whose purpose is to estimate the
+# spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+# from there 1D spectrum.
+# 
+# This software is governed by the CeCILL-C license under French law and
+# abiding by the rules of distribution of free software.  You can  use, 
+# modify and/ or redistribute the software under the terms of the CeCILL-C
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# "http://www.cecill.info". 
+# 
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability. 
+# 
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security. 
+# 
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-C license and that you accept its terms.
+# ============================================================================
 from .AbstractOutput import AbstractOutput
 from .OutputSpecifications import results_specifications
 import numpy as np
@@ -16,23 +54,29 @@ class ResultStoreOutput(AbstractOutput):
         self.results_store = result_store
         self.parameters = parameters
         self.operator_results = dict()
-
-        self.object_types = ["galaxy"]
+        
+        self.object_types = []
+        if self.parameters["enablegalaxysolve"] == "yes":
+            self.object_types.append("galaxy")
         if self.parameters["enablestellarsolve"] == "yes":
             self.object_types.append("star")
         if self.parameters["enableqsosolve"] == "yes":
             self.object_types.append("qso")
-
+        if self.parameters["enablelinemeassolve"] == "yes":
+            self.object_types.append("linemeas")
+            
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
             self.operator_results[object_type] = dict()
         self.load_all()
-
+        
     def load_root(self):
         rs = results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
+        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"] == "yes":
+            root_datasets =[]
         for ds in root_datasets:
             ds_attributes = rs[rs["hdf5_dataset"] == ds]
             self.root_results[ds]=dict()
@@ -44,15 +88,23 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"] == ds]
-            # TODO handle case where attribute dimension != multi (here we only have pdf for now)
-            self.object_results[object_type][ds] = dict()
-            self.object_dataframes[object_type][ds] = pd.DataFrame()
-            for index, ds_row in ds_attributes.iterrows():
-#                if self.results_store.hasAttribute(object_type, ds, attr):
-                self.object_results[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
-                self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
-
+            if self.results_store.HasDataset(object_type,
+                                            self.get_solve_method(object_type),
+                                            ds):
+                ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                dimension = ds_attributes["dimension"].iat[0]
+                if dimension == "multi":
+                    self.object_results[object_type][ds] = dict()
+                    self.object_dataframes[object_type][ds] = pd.DataFrame()
+                    for index, ds_row in ds_attributes.iterrows():
+                    #                if self.results_store.hasAttribute(object_type, ds, attr):
+                        self.object_results[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
+                        self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
+                else:
+                    self.object_results[object_type][ds] = dict()
+                    for index, ds_row in ds_attributes.iterrows():
+                        self.object_results[object_type][ds][ds_row["hdf5_name"]]=self.get_attribute_from_result_store(ds_row,object_type)
+                    
     def load_candidate_level(self, object_type):
         rs = results_specifications
         rs = rs[rs["level"] == "candidate"]
@@ -98,12 +150,13 @@ class ResultStoreOutput(AbstractOutput):
         root_datasets = list(rs["hdf5_dataset"].unique())
                                    
         for ds in root_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"]==ds]
-            dsg = hdf5_spectrum_node.create_group(ds)
-            for index, ds_row in ds_attributes.iterrows():
-                if ds_row["hdf5_name"] in self.root_results[ds]:
-                    # we know we only have dimension = mono here
-                    dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
+            if ds in self.root_results:
+                ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                dsg = hdf5_spectrum_node.create_group(ds)
+                for index, ds_row in ds_attributes.iterrows():
+                    if ds_row["hdf5_name"] in self.root_results[ds]:
+                        # we know we only have dimension = mono here
+                        dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
 
     def write_hdf5_object_level(self, object_type, object_results_node):
         rs = results_specifications
@@ -122,7 +175,12 @@ class ResultStoreOutput(AbstractOutput):
                                                   self.object_dataframes[object_type][ds].to_records()
                                                   )
                 else:
-                    raise Exception("h5write : TODO handle dataset with of size 1 in object scope")
+                    object_results_node.create_group(ds)
+                    for index,ds_row in ds_attributes.iterrows():
+                        if self.has_attribute_in_result_store(ds_row, object_type, rank=None):
+                            object_results_node.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][ds_row["hdf5_name"]]
+                    
+
 
     def write_hdf5(self,hdf5_root,spectrum_id):
         obs = hdf5_root.create_group(spectrum_id)
@@ -180,14 +238,17 @@ class ResultStoreOutput(AbstractOutput):
                 return PC_Get_Int32Array(getattr(operator_result, data_spec.OperatorResult_name))
 
     def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
-        if self.results_store.HasCandidateDataset(object_type,
-                                                  self.get_solve_method(object_type),
-                                                  data_spec.ResultStore_key,
-                                                  data_spec.hdf5_dataset):
-            operator_result = self.get_operator_result(data_spec, object_type, rank)
-            return hasattr(operator_result, data_spec.OperatorResult_name)
+        if rank is not None:
+            if self.results_store.HasCandidateDataset(object_type,
+                                                      self.get_solve_method(object_type),
+                                                      data_spec.ResultStore_key,
+                                                      data_spec.hdf5_dataset):
+                operator_result = self.get_operator_result(data_spec, object_type, rank)
+            else:
+                return False
         else:
-            return False
+            operator_result = self.get_operator_result(data_spec, object_type, rank=None)
+        return hasattr(operator_result, data_spec.OperatorResult_name)
 
     def get_operator_result(self, data_spec, object_type, rank = None):
         if object_type is not None:
@@ -231,6 +292,10 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetClassificationResult(data_spec.hdf5_dataset,
                                                                   data_spec.hdf5_dataset,
                                                                   data_spec.ResultStore_key)
+            elif or_type == "CReliabilityResult":
+                return self.results_store.GetReliabilityResult(data_spec.hdf5_dataset,
+                                                                  data_spec.hdf5_dataset,
+                                                                  data_spec.ResultStore_key)
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "object":
@@ -240,8 +305,17 @@ class ResultStoreOutput(AbstractOutput):
 
             if or_type == "CPdfMargZLogResult":
                 return self.results_store.GetPdfMargZLogResult(object_type,
-                                                           self.get_solve_method(object_type),
-                                                           data_spec.ResultStore_key)
+                                                               self.get_solve_method(object_type),
+                                                               data_spec.ResultStore_key)
+            elif or_type == "CLineModelSolution":
+                return self.results_store.GetLineModelSolution(object_type,
+                                                               self.get_solve_method(object_type),
+                                                               data_spec.ResultStore_key)
+            elif or_type == "CModelSpectrumResult":
+                return self.results_store.GetModelSpectrumResult(object_type,
+                                                                 self.get_solve_method(object_type),
+                                                                 data_spec.ResultStore_key)
+
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "candidate":

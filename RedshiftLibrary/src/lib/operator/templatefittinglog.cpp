@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/operator/templatefittinglog.h"
 
 #include "RedshiftLibrary/common/mask.h"
@@ -57,10 +95,10 @@ COperatorTemplateFittingLog::~COperatorTemplateFittingLog()
     freeFFTPlans();
 }
 
-Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const std::vector<Float64>& X,
-                                                   const std::vector<Float64>& Y,
+Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List& X,
+                                                   const TFloat64List& Y,
                                                    UInt32 nShifts,
-                                                   std::vector<Float64> &XtY)
+                                                   TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
@@ -79,10 +117,10 @@ Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const std::vector<Float64>& X
 }
 
 // only works for mtm, Y=model^2, X=1.
-Int32 COperatorTemplateFittingLog::EstimateMtMFast(const std::vector<Float64> &X,
-                                                   const std::vector<Float64> &Y,
+Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
+                                                   const TFloat64List &Y,
                                                    UInt32 nShifts,
-                                                   std::vector<Float64> &XtY)
+                                                   TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
@@ -105,10 +143,10 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const std::vector<Float64> &X
     return 0;
 }
 
-Int32 COperatorTemplateFittingLog::EstimateXtY(const std::vector<Float64> &X,
-                                               const std::vector<Float64> &Y,
+Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
+                                               const TFloat64List &Y,
                                                UInt32 nshifts,
-                                               std::vector<Float64> &XtY,
+                                               TFloat64List &XtY,
                                                Int32 precomputedFFT)
 {
     // Processing the FFT
@@ -493,8 +531,8 @@ void COperatorTemplateFittingLog::freeFFTPlans()
  */
 Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                                            std::shared_ptr<CTemplateFittingResult> result,
-                                           std::vector<Int32> igmMeiksinCoeffs,
-                                           std::vector<Int32> ismEbmvCoeffs,
+                                           TInt32List MeiksinList,
+                                           TInt32List EbmvList,
                                            CMask spcMaskAdditional,
                                            CPriorHelper::TPriorZEList logpriorze)
 {
@@ -505,13 +543,18 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
     TInt32RangeList izrangelist;
     TInt32List zindexesFullLstSquare;
     if (m_enableIGM && result->Redshifts.size() > 1)
-    {
+    { 
+        Float64 zmax_firstRange = GetIGMStartingRedshiftValue(m_spectrumRebinedLog.GetSpectralAxis()[0]);
         zindexesFullLstSquare.push_back(0); // first index is always a mandatory full Lstsq Calculation case
         TFloat64List zlistsegments = m_templateRebinedLog.m_igmCorrectionMeiksin->GetSegmentsStartRedshiftList();
         for (Int32 k = 0; k < zlistsegments.size(); k++)
         {
             Int32 i_min = -1;
-            bool b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
+            bool b;
+            if(zlistsegments[k]<zmax_firstRange) 
+                b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zmax_firstRange, i_min);
+            else 
+                b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,zlistsegments[k], i_min);
             if(b)
                 zindexesFullLstSquare.push_back(i_min);
         }
@@ -579,13 +622,13 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
             TFloat64List::const_iterator first = result->Redshifts.begin() + izrangelist[k].GetBegin(),
                                          last = result->Redshifts.begin() + izrangelist[k].GetEnd()+1;
             TFloat64List subRedshifts(first, last);
-            subresult->Init(subRedshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
+            subresult->Init(subRedshifts.size(), EbmvList.size(), MeiksinList.size());
             subresult->Redshifts = subRedshifts;
             // slice the template
             redshiftStep = log((subRedshifts[1]+1.)/(subRedshifts[0]+1.));          
         } else{       
             redshiftStep = log((result->Redshifts[1]+1.)/(result->Redshifts[0]+1.));
-            subresult->Init(result->Redshifts.size(), ismEbmvCoeffs.size(), igmMeiksinCoeffs.size());
+            subresult->Init(result->Redshifts.size(), EbmvList.size(), MeiksinList.size());
             subresult->Redshifts = result->Redshifts;
         }
         TInt32Range ilbda = FindTplSpectralIndex(zrange);
@@ -608,7 +651,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                          tplRebinedLambdaGlobal[ilbda.GetEnd()] * (1.0 + zrange.GetBegin()));*/
         }
 
-        FitRangez(inv_err2, ilbda, subresult, igmMeiksinCoeffs, ismEbmvCoeffs, dtd);
+        FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
         // copy subresults into global results
         for (UInt32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++)
@@ -737,15 +780,15 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
  * @param nSpc
  * @param nTpl
  * @param result
- * @param igmMeiksinCoeffs
- * @param ismEbmvCoeffs
+ * @param MeiksinList
+ * @param EbmvList
  * @return
  */
 Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
                                              TInt32Range& currentRange,
                                              std::shared_ptr<CTemplateFittingResult> result,
-                                             std::vector<Int32> igmMeiksinCoeffs,
-                                             std::vector<Int32> ismEbmvCoeffs,
+                                             TInt32List MeiksinList,
+                                             TInt32List EbmvList,
                                              const Float64& dtd)
 {
     const TAxisSampleList & spectrumRebinedLambda = m_spectrumRebinedLog.GetSpectralAxis().GetSamplesVector();
@@ -776,7 +819,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     }
 
     Int32 nshifts = nTpl - nSpc + 1;
-    m_nPaddedSamples = nTpl * 2.0;
+    m_nPaddedSamples = nTpl;
 
     Log.LogDetail("  Operator-TemplateFittingLog: Now fitting using the FFT on "
                   "nshifts=%d values, for Meiksin redshift=%f",
@@ -789,10 +832,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     }
     InitFFT(m_nPaddedSamples);
 
-    std::vector<Float64> z_vect = result->Redshifts;
+    TFloat64List z_vect = result->Redshifts;
     std::reverse(z_vect.begin(), z_vect.end());
     // prepare z array
-    std::vector<Float64> z_vect_verif(nshifts, 0.0);
+    TFloat64List z_vect_verif(nshifts, 0.0);
     Float64 relative_zgrid_error_max = 0.;
     for (Int32 t = 0; t < nshifts; t++)
     {
@@ -811,8 +854,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     //check borders
     if(z_vect.size()!=z_vect_verif.size())
         throw runtime_error("z_vect size and z_vect_verification size do not match.");
-    Int32 nISM = ismEbmvCoeffs.size();
-    Int32 nIGM = igmMeiksinCoeffs.size();
+    Int32 nISM = EbmvList.size();
+    Int32 nIGM = MeiksinList.size();
 
     // disable IGM if the redshift range and lambda range do not make the IGM
     // wavelength appear
@@ -837,7 +880,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     TFloat64List bestFitDtm(nshifts, -1.0);
     TFloat64List bestFitMtm(nshifts, -1.0);
     TFloat64List bestISMCoeff(nshifts, -1.0);
-    TFloat64List bestIGMIdx(nshifts, -1.0);
+    TInt32List   bestIGMIdx(nshifts, -1);
 
     // prepare intermediate fit data buffer
     std::vector<std::vector<TFloat64List>> intermediateChi2;
@@ -870,7 +913,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
         if (enableIGM)
         {
-            Int32 meiksinIdx = igmMeiksinCoeffs[kIGM];
+            Int32 meiksinIdx = MeiksinList[kIGM];
             m_templateRebinedLog.ApplyMeiksinCoeff(meiksinIdx);
         }
 
@@ -883,7 +926,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
             if (m_enableISM)
             {
-                Int32 kDust = ismEbmvCoeffs[kISM];
+                Int32 kDust = EbmvList[kISM];
                 m_templateRebinedLog.ApplyDustCoeff(kDust);
             }
 
@@ -905,9 +948,9 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
 
             if (verboseExportFitRangez_model)
             {
-                if ((m_enableISM && exportISMIdx == ismEbmvCoeffs[kISM]) ||(!m_enableISM))
+                if ((m_enableISM && exportISMIdx == EbmvList[kISM]) ||(!m_enableISM))
                 {
-                    if ((enableIGM && exportIGMIdx == igmMeiksinCoeffs[kIGM]) || (!enableIGM))
+                    if ((enableIGM && exportIGMIdx == MeiksinList[kIGM]) || (!enableIGM))
                     {
                         // save chi2 data
                         FILE *f = fopen("loglbda_model_dbg.txt", "w+");
@@ -921,7 +964,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             }
 
             // Estimate DtM: sumCross
-            std::vector<Float64> dtm_vec;
+            TFloat64List dtm_vec;
             EstimateXtY(spcRebinedFluxOverErr2, tplRebinedFluxcorr_cropped, nshifts, dtm_vec, 0);
             
 	        Int32 dtm_vec_size = dtm_vec.size();
@@ -937,7 +980,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             }
 
             // Estimate MtM: sumT
-            std::vector<Float64> mtm_vec;
+            TFloat64List mtm_vec;
             EstimateXtY(inv_err2, tpl2RebinedFlux, nshifts, mtm_vec, 1);
 
             if (verboseExportFitRangez)
@@ -964,10 +1007,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
                 throw std::runtime_error("  Operator-TemplateFittingLog: FitRangez: xty vectors sizes don't match");
             }
             //Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
-            std::vector<Float64> chi2(dtm_vec_size, DBL_MAX);
-            std::vector<Float64> amp(dtm_vec_size, DBL_MAX);
+            TFloat64List chi2(dtm_vec_size, DBL_MAX);
+            TFloat64List amp(dtm_vec_size, DBL_MAX);
             TFloat64List amp_sigma(dtm_vec_size);
-            std::vector<Float64> amp_err(dtm_vec_size, DBL_MAX);
+            TFloat64List amp_err(dtm_vec_size, DBL_MAX);
             for (Int32 k = 0; k < dtm_vec_size; k++)
             {
                 if (mtm_vec[k] == 0.0)
@@ -1009,8 +1052,8 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
                     bestFitAmpSigma[k] = amp_sigma[k];
                     bestFitDtm[k] = dtm_vec[k];
                     bestFitMtm[k] = mtm_vec[k];
-                    bestISMCoeff[k] = m_enableISM ? m_templateRebinedLog.m_ismCorrectionCalzetti->GetEbmvValue(ismEbmvCoeffs[kISM]) : -1;
-                    bestIGMIdx[k] = enableIGM ? igmMeiksinCoeffs[kIGM] : -1;
+                    bestISMCoeff[k] = m_enableISM ? m_templateRebinedLog.m_ismCorrectionCalzetti->GetEbmvValue(EbmvList[kISM]) : -1;
+                    bestIGMIdx[k] = enableIGM ? MeiksinList[kIGM] : -1;
                 }
             }
 
@@ -1069,10 +1112,10 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     return 0;
 }
 
-Int32 COperatorTemplateFittingLog::InterpolateResult(const std::vector<Float64>& in,
-                                                     std::vector<Float64>& inGrid,
-                                                     const std::vector<Float64>& tgtGrid,
-                                                     std::vector<Float64> &out,
+Int32 COperatorTemplateFittingLog::InterpolateResult(const TFloat64List& in,
+                                                     TFloat64List& inGrid,
+                                                     const TFloat64List& tgtGrid,
+                                                     TFloat64List &out,
                                                      Float64 defaultValue)
 {
     bool debug = 0;
@@ -1229,7 +1272,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
                                                                     CPriorHelper::TPriorZEList logpriorze,
                                                                     Bool keepigmism,
                                                                     Float64 FitEbmvCoeff,
-                                                                    Float64 FitMeiksinIdx)
+                                                                    Int32 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFittingLog: starting computation for template: %s", rebinnedTpl.GetName().c_str());
 
@@ -1312,38 +1355,14 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     //**************** Fitting at all redshifts ****************//
     //Note: below corresponds to ::BasicFit code except that redshift loop belongs to ::compute 
     // Optionally apply some IGM absorption
-    std::vector<Int32> igmMeiksinCoeffs;
-    Int32 nIGMCoeffs = 1;
-    if (opt_extinction)
-    {
-        nIGMCoeffs = rebinnedTpl.m_igmCorrectionMeiksin->GetIdxCount();
-        igmMeiksinCoeffs.resize(nIGMCoeffs);
-        std::iota(igmMeiksinCoeffs.begin(), igmMeiksinCoeffs.end(), 0);
-    } else
-    {
-        igmMeiksinCoeffs.push_back(-1);
-        m_enableIGM = 0;
-    }
+    TInt32List MeiksinList;
+    TInt32List EbmvList;
+    rebinnedTpl.GetIsmIgmIdxList( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 nIGMCoeffs = MeiksinList.size();
+    Int32 nISMCoeffs = EbmvList.size();
 
-    // Optionally apply some ISM attenuation
-    std::vector<Int32> ismEbmvCoeffs;
-    Int32 nISMCoeffs = 1;
-    if (opt_dustFitting==-10)
-    {
-        nISMCoeffs = rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-        ismEbmvCoeffs.resize(nISMCoeffs);
-        std::iota(ismEbmvCoeffs.begin(), ismEbmvCoeffs.end(), 0);
-    }else if (opt_dustFitting>-1)
-    {
-        nISMCoeffs = 1;
-        ismEbmvCoeffs.resize(nISMCoeffs);
-        ismEbmvCoeffs[0] = opt_dustFitting;
-    }else
-    {
-        ismEbmvCoeffs.push_back(-1);
-        m_enableISM = 0;
-    }
-
+    m_enableIGM = (MeiksinList[0] == -1)?0:1;
+    m_enableISM = (EbmvList[0] == -1)?0:1;
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>(new CTemplateFittingResult());
     result->Init(redshifts.size(), nISMCoeffs, nIGMCoeffs);
     result->Redshifts = redshifts;
@@ -1365,7 +1384,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     TFloat64Range clampedlambdaRange;
     m_spectrumRebinedLog.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
-    Int32 retFit = FitAllz(clampedlambdaRange, result, igmMeiksinCoeffs, ismEbmvCoeffs, CMask(), logpriorze);
+    Int32 retFit = FitAllz(clampedlambdaRange, result, MeiksinList, EbmvList, CMask(), logpriorze);
     
     if (retFit != 0)
     {
