@@ -307,8 +307,13 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
   PopulateParameters( inputContext->GetParameterStore() );
 
+  //useloglambdasampling param is relevant only if linemodel.continuumfit is set to use fftprocessing
+  //below we explicit this check on this condition
+  bool useloglambdasampling = inputContext->GetParameterStore()->GetScoped<std::string>("linemodel.useloglambdasampling") == "yes";
+  useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<std::string>("linemodel.continuumfit.fftprocessing") == "yes";
+
   bool retSolve = Solve( resultStore,
-                         spc, rebinnedSpc,
+                         useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
                          restraycatalog,
