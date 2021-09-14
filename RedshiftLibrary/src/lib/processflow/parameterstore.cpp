@@ -376,7 +376,7 @@ template<> TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& 
 Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 {
     Bool fft_processing = false;
-    if(Get<std::string>("enable"+ CorrectObjectName(objectType) +"solve") == "no" ) return false;
+    if(Get<std::string>("enable"+objectType+"solve") == "no" ) return false;
     if(Has<std::string>(objectType + ".templatefittingsolve.fftprocessing"))
         fft_processing |= Get<std::string>(objectType + ".templatefittingsolve.fftprocessing") == "yes";
     if(Has<std::string>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
@@ -387,7 +387,7 @@ Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 
 Bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
 {  
-    Bool orthogonalize = Get<std::string>("enable"+ CorrectObjectName(objectType) +"solve") == "yes" && Get<std::string>(objectType + ".method") == "linemodelsolve";
+    Bool orthogonalize = Get<std::string>("enable"+ objectType +"solve") == "yes" && Get<std::string>(objectType + ".method") == "linemodelsolve";
     if(orthogonalize){
         std::string continuumComponent = Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumcomponent");
         orthogonalize &= (continuumComponent == "tplfit" || continuumComponent == "tplfitauto" );
@@ -404,10 +404,4 @@ Bool CParameterStore::EnableTemplateOrthogonalization(const std::string &objectT
     return enableOrtho;
 }
 
-std::string CParameterStore::CorrectObjectName(const std::string &objectType)const
-{
-    std::string _objectType = objectType;
-    if(objectType == "star") _objectType = "stellar";
-    return _objectType;
-}
 }

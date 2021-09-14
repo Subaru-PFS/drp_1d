@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/spectrum/logrebinning.h"
+#include <float.h>
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
@@ -107,23 +107,38 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputWrapper() 
 {
-    //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
     Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
     Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
     Bool fft_processing_star = m_ParameterStore->HasFFTProcessing("star");
     
-    if(fft_processing_qso || fft_processing_star)
+    if(fft_processing_star)
     {
-        Log.LogError("FFT processing is not yet supported for stars or qso");
-        throw std::runtime_error("FFT processing is not yet supported for star or qso");
+        Log.LogError("FFT processing is not yet supported for stars");
+        throw std::runtime_error("FFT processing is not yet supported for stars");
     }
 
     m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
 
     if(!m_use_LogLambaSpectrum) return;
 
+    Float64 logGridStep = NAN;
+    if(GetSpectrum()->GetSpectralAxis().IsLogSampled()){
+      logGridStep = m_Spectrum->GetSpectralAxis().GetlogGridStep();
+    }else{
+      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( "galaxy.redshiftstep" ):DBL_MAX;
+      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( "qso.redshiftstep" ):DBL_MAX;        
+      logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
+    }
+    
     CSpectrumLogRebinning logReb;
-    logReb.RebinInputs(*this);
+    if(fft_processing_gal){
+      logReb.RebinInputs(*this, "galaxy", logGridStep);
+      m_logRebin.insert({"galaxy", std::move(logReb)});
+    }
+    if(fft_processing_qso){
+      logReb.RebinInputs(*this, "qso", logGridStep);
+      m_logRebin.insert({"qso", std::move(logReb)});
+    }
 
     return;
 }

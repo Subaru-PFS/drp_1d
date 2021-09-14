@@ -52,18 +52,15 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-
-void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
+void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext, std::string category, Float64 redshiftStep)
 {
-    // we have a probem here, cause only considering redshift range of galaxies
-    //if we want to rebin stars we should call again computlogstep with stars redshiftrange!! same for qso
+    m_logGridStep = redshiftStep;
     std::string errorRebinMethod = "rebinVariance";//rebin error axis as well
 
-    TFloat64Range   redshiftRange = inputContext.GetParameterStore()->Get<TFloat64Range>("galaxy.redshiftrange");
-    Float64         redshiftStep = inputContext.GetParameterStore()->Get<Float64>( "galaxy.redshiftstep" );
+    TFloat64Range   redshiftRange = inputContext.GetParameterStore()->Get<TFloat64Range>(category + ".redshiftrange");
     UInt32          SSratio = 1;
-    if(inputContext.GetParameterStore()->Has<UInt32>( "galaxy.linemodelsolve.linemodel.firstpass.largegridstepratio"))
-        SSratio = inputContext.GetParameterStore()->Get<UInt32>( "galaxy.linemodelsolve.linemodel.firstpass.largegridstepratio");
+    if(inputContext.GetParameterStore()->Has<UInt32>( category + ".linemodelsolve.linemodel.firstpass.largegridstepratio"))
+        SSratio = inputContext.GetParameterStore()->Get<UInt32>( category + ".linemodelsolve.linemodel.firstpass.largegridstepratio");
 
     std::shared_ptr<CSpectrum> spc;
 
@@ -77,8 +74,7 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     }
 
     SetupRebinning(*spc, 
-                   inputContext.m_lambdaRange, 
-                   redshiftStep, 
+                   inputContext.m_lambdaRange,
                    redshiftRange,
                    SSratio);
                    
@@ -87,18 +83,11 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     }else
         inputContext.SetRebinnedSpectrum(LoglambdaRebinSpectrum(inputContext.GetSpectrum(), errorRebinMethod));        
     
-    inputContext.m_redshiftRangeFFT = m_zrange;
-    inputContext.m_redshiftStepFFT = m_logGridStep;
     //rebin templates using previously identified parameters,
     // rebin only if rebinning parameters are different from previously used ones
     std::shared_ptr<CTemplateCatalog> tplcat = inputContext.GetTemplateCatalog();
     const TStringList categoryList = tplcat->GetCategoryList();
     tplcat->m_logsampling = true;
-    for(std::string category : categoryList ) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
-    { 
-        //rebin only galaxy templates
-        if(category!="galaxy")
-            continue;
 
         // check existence of already  & correctly logsampled templates
         const UInt32 ntpl = tplcat->GetTemplateCount(category);
@@ -137,7 +126,7 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                 tplcat->Add(rebinnedTpl);
             }
         }
-    }  
+
     tplcat->m_logsampling = false;
 }
 
@@ -151,16 +140,12 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
 */
 void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
                                             const TFloat64Range &lambdaRange, 
-                                            Float64 zInputStep,
                                             const TFloat64Range & zInputRange,
                                             UInt32 SubSamplingRatio)
 {   
     TFloat64Range lambdaRange_ref;
-
     if(spectrum.GetSpectralAxis().IsLogSampled() )
     { 
-        m_logGridStep = spectrum.GetSpectralAxis().GetlogGridStep();
- 
         // compute reference lambda range
         // (the effective lambda range of log-sampled spectrum when initial spectrum overlaps lambdaRange 
         // assuming all spectra are aligned (this to avoid rebining the template several times)
@@ -176,8 +161,6 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
         // no need to compute m_lambdaRange_spc (used only for resampling input spectra)
 
     }else{
-        m_logGridStep = zInputStep;
-
         // compute reference lambda range (the effective lambda range of rebinned spectrum when initial spectrum overlaps lambdaRange)
         Int32 loglambda_count_ref;
         Float64 loglambda_start_ref = log(lambdaRange.GetBegin());

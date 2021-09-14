@@ -41,11 +41,12 @@
 
 #include <memory>
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 namespace NSEpic
 {
-
+class CSpectrumLogRebinning;//forward declaration
 class CSpectrum;
 class CTemplateCatalog;
 class CRayCatalog;
@@ -66,7 +67,6 @@ class CInputContext
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_TemplateCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
-  void RebinInputs();
 
   // mutable getters
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
@@ -81,6 +81,7 @@ class CInputContext
   Float64         m_redshiftStepFFT; 
   Bool            m_use_LogLambaSpectrum = 0;
 
+  std::map<std::string, CSpectrumLogRebinning> m_logRebin;
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;

@@ -50,20 +50,19 @@
 
 namespace NSEpic
 {
-
+class CInputContext;
 class CSpectrumLogRebinning 
 {
 
 public:
     //applying Rule of zero
-    void  RebinInputs(CInputContext& inputContext); 
+    void  RebinInputs(CInputContext& inputContext, std::string category, Float64 logGridStep); 
     TFloat64Range m_zrange;
     Float64 m_logGridStep; 
     TFloat64Range m_lambdaRange_spc, m_lambdaRange_tpl;
 private:
     void  SetupRebinning( CSpectrum &spectrum,
-                        const TFloat64Range &lambdaRange, 
-                        Float64 zInputStep,
+                        const TFloat64Range &lambdaRange,
                         const TFloat64Range & zInputRange,
                         UInt32 SSratio);
     std::shared_ptr<CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
