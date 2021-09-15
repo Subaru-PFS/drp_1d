@@ -152,7 +152,52 @@ void CTemplateCatalog::Add( const std::shared_ptr<CTemplate> & r)
 
 void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt32 i)
 {
-    GetList().at(tpl->GetCategory())[i] = tpl;
+    const std::string category = tpl->GetCategory();
+
+    // first clear given template
+    ClearTemplates(category, m_orthogonal, m_logsampling, i);
+
+    // assign new template
+    GetList().at(category)[i] = tpl;
+}
+
+// clear all templates in a category
+void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_ortho, Bool opt_logsampling)
+{
+    ClearTemplates(category, opt_ortho, opt_logsampling, 0, true);
+}
+
+// clear one template in a category
+void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
+{
+    TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
+    if( tplList.find( category ) != tplList.end()) return;
+    
+    if (alltemplates)
+        tplList.at(category).clear(); //clear the list
+
+        if (opt_ortho){ // reset LSFWidth if the 2 ortho list are empty
+            auto & otherOrthoList = GetList(opt_ortho, !opt_logsampling);
+            if (otherOrthoList.find(category) == otherOrthoList.end())
+                m_ortho_LSFWidth = NAN;         
+    } 
+    else {
+        tplList.at(category)[i] = nullptr; // clear one element in the list
+    
+        // clear the list if all nullptr
+        UInt32 count = 0;
+        for (auto tpl:tplList.at(category)) if (tpl) count++;
+        if (!count)
+            ClearTemplates(category, opt_ortho, opt_logsampling, 0, true);
+    }
+
+    // Other templates clearing rules
+    if(!opt_ortho) //if not ortho clear associated ortho
+        ClearTemplates(category, 1, opt_logsampling, i, alltemplates);
+    if (!opt_logsampling && !opt_ortho){ //if original, clear log-sampled
+        ClearTemplates(category, 0, 1, i, alltemplates); // clear log-sampled (will clear log-sampled ortho recursively)
+    }
+
 }
 
 //adapt it to apply to all m_list
@@ -177,18 +222,23 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath,
     //push in all templates
     //backup current sampling
     Bool currentsampling = m_logsampling;
+    Bool currentOrthog = m_orthogonal;
     for(Bool sampling : {0, 1}){
         m_logsampling = sampling;
-        for(auto it : GetList())
-        {             
-            const TTemplateRefList  & TplList = it.second;
-            for (auto tpl : TplList)
-                tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-            if(it.first != "star")//no igm for stars
+        for (Bool ortho :{0, 1}){
+            m_orthogonal = ortho;
+            for(auto it : GetList())
+            {             
+                const TTemplateRefList  & TplList = it.second;
                 for (auto tpl : TplList)
-                    tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+                    tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+                if(it.first != "star")//no igm for stars
+                    for (auto tpl : TplList)
+                        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+            }
         }
     }
     //put back the initial sampling:
     m_logsampling = currentsampling;
+    m_orthogonal = currentOrthog; 
 }

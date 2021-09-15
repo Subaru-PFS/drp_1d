@@ -45,13 +45,13 @@
 using namespace NSEpic;
 void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext, 
                                                 const std::string category, 
-                                                const std::string calibrationPath)
+                                                const std::string calibrationPath,
+                                                std::shared_ptr<const CLSF> lsf)
 {
     //retrieve params from InputContext
-    m_LSF = inputContext.GetSpectrum()->GetLSF();
+    m_LSF = lsf;
     m_enableOrtho = inputContext.GetParameterStore()->EnableTemplateOrthogonalization(category);
     
-
     Float64 opt_nsigmasupport;
     Float64 velocityEmission, velocityAbsorption;
 
@@ -92,16 +92,40 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
     Bool currentsampling = tplCatalog->m_logsampling; 
 
-    for(Bool sampling:{0, 1})
+    tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
+    Bool rebinning = tplCatalog->GetTemplateCount(category) > 0;//is rebinning is true, ortho-log tpls are cleared obligatory
+
+    //check if LSF has changed, if yes reorthog all
+    bool differentLSF = false;
+    std::vector<Bool> samplingList {0,1};
+    Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
+    if(std::isnan(tplCatalog->m_ortho_LSFWidth)){
+        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); //first time orthogonalizing - do it for all
+        differentLSF = true;
+    }else{
+        if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
+        {   
+            differentLSF = true;
+            tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
+            tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
+            tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
+        }else{
+            if(rebinning) //ortho setting is the same but rebinning happened, only log-ortho templates are concerned
+                samplingList = {1};
+        }
+    }
+    Bool needOrthogonalization = rebinning | differentLSF;
+    if(!needOrthogonalization) return;
+
+    for(Bool sampling:samplingList)
     {
-        tplCatalog->m_logsampling = sampling;//TBR
-        tplCatalog->m_orthogonal = 0;//to read non orthog
-        //TTemplateConstRefList  TplList = tplCatalog->GetTemplateList(TStringList{category});
-        UInt32 n = tplCatalog->GetTemplateCount(category);
-        for(UInt32 i = 0; i<n; i++)
-        {
-            std::shared_ptr<const CTemplate> tpl = tplCatalog->GetTemplate(category, i);
-            Log.LogDetail("    tplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
+        tplCatalog->m_logsampling = sampling;
+        //orthogonalize all templates
+        tplCatalog->m_orthogonal = 0;
+        const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplCatalog)->GetTemplateList(TStringList{category});
+        tplCatalog->m_orthogonal = 1;
+        for (auto tpl : TplList)
+        {   Log.LogDetail("    TplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
             std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(*tpl,
                                                                         calibrationPath,
                                                                         restRayList,
@@ -112,12 +136,9 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
                                                                         velocityAbsorption,
                                                                         rules,
                                                                         rigidity);
-            //add up orthogo template
-            tplCatalog->m_orthogonal = 1;//say we are writing into m_list_ortho
-            tplCatalog->SetTemplate(_orthoTpl, i);
+            tplCatalog->Add(_orthoTpl);
         }
-    }
-    
+    }    
     tplCatalog->m_logsampling = currentsampling;
     tplCatalog->m_orthogonal = 0; 
     return;

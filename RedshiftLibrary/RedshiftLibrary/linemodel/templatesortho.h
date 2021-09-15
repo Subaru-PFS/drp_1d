@@ -71,7 +71,8 @@ public:
 
     //Rule of zero applies here
     void Orthogonalize(CInputContext& inputContext, const std::string category, 
-                       const std::string calibrationPath);
+                       const std::string calibrationPath,
+                       std::shared_ptr<const CLSF> lsf);
 
     CTemplateCatalog getOrthogonalTplCatalog();
     CTemplatesOrthoStore getOrthogonalTplStore();
@@ -91,8 +92,6 @@ private:
                                 const std::string &opt_rules,
                                 const std::string &opt_rigidity);
 
-
-    CTemplateCatalog m_tplCatalogOrthogonal = CTemplateCatalog("zero"); //note: no need to estimate continuum free templates here, //note2: todo: bound to disappear when the tplorthostore is fully implemented
 };
 
 }

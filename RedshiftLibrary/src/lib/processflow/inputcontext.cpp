@@ -76,8 +76,8 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
-    //orthog only if rebinned happens
-    OrthogonalizeTemplates(calibrationPath); //possibly we want the client to do this
+    //orthog only if rebinning happens
+    OrthogonalizeTemplates(calibrationPath);
 }
 /*
 Two cases exist:
@@ -174,15 +174,17 @@ void CInputContext::OrthogonalizeTemplates(const std::string& calibrationPath)
     Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates("galaxy"); 
     Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates("qso");
 
+    std::shared_ptr<const CLSF> lsf = m_Spectrum->GetLSF(); //to be changed in #6680
+    
     if(orthog_gal)
     {
       CTemplatesOrthogonalization tplOrtho;
-      tplOrtho.Orthogonalize(*this,"galaxy",calibrationPath);
+      tplOrtho.Orthogonalize(*this,"galaxy",calibrationPath, lsf);
     }
     if(orthog_qso)
     {
       CTemplatesOrthogonalization tplOrtho_;//tplOrtho could be reused..TBC
-      tplOrtho_.Orthogonalize(*this,"qso",calibrationPath);
+      tplOrtho_.Orthogonalize(*this,"qso",calibrationPath, lsf);
     }
     return;
 }
