@@ -127,8 +127,6 @@ public:
     void                Save( std::ostream& stream ) const;
     void                SaveDescription( std::ostream& stream ) const;
 
-    void                ConvertVacuumToAir();
-
 private:
     Int32           m_id = -1;
     Int32           m_Type = 0;

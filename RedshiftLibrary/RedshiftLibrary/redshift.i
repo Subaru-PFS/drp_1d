@@ -99,6 +99,7 @@
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/io/reader.h"
 #include "RedshiftLibrary/spectrum/io/genericreader.h"
@@ -272,7 +273,6 @@ class CRayCatalog
 public:
     void Load( const char* filePath );
     bool Save( const char* filePath );
-    void ConvertVacuumToAir();
 };
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
@@ -508,9 +508,21 @@ class CSpectrumAxis
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
-  CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
+  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="" );
 };
 %clear (const Float64* samples, UInt32 n);
+class CAirVacuum
+{
+public:
+    CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2);
+    virtual TFloat64List AirToVac(const TFloat64List & waveAir) const;
+    virtual TFloat64List VacToAir(const TFloat64List & waveVac) const;
+};
+class CAirVacuumConverter
+{
+public:
+    static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
+};
 
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 

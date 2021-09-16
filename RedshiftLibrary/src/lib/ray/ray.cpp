@@ -243,26 +243,6 @@ Int32 CRay::GetID() const
     return m_id;
 }
 
-/**
- * This function converts lambda vacuum to lambda air
- *
- * see. Morton 2000 ApJS, 130, 403-436 (https://iopscience.iop.org/article/10.1086/317349)
- * 
- * Accomodate the equation to PFS by setting s to cte = 0.8,  i.e., average factor for PFS wavelength.
- * By doing so, we zero out the variability in wavelength caused by the vacuum-to-air conversion.
- * This allows the conversion on the input line-catalog and then the redshift 
- * (if not, we would have to apply the conversion after redshifting) 
- */
-void CRay::ConvertVacuumToAir()
-{
-    Float64 s = 0.8; //(1e4)/m_Pos;
-    Float64 coeff = 1 + 8.34254*1e-5 + (2.406147*1e-2)/(130-s*s) + (1.5998*1e-4)/(38.9-s*s) ;
-
-    m_Pos = m_Pos/coeff;
-
-    return;
-}
-
 void CRay::Save(  std::ostream& stream ) const
 {
     stream << GetName() << "\t" << GetPosition() << "\t";
