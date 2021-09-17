@@ -211,8 +211,10 @@ void CInputContext::OrthogonalizeTemplates()
     Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
     Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
 
-    std::shared_ptr<const CLSF> lsf = m_Spectrum->GetLSF(); //to be changed in #6680
-    
+    Float64 lambda = (m_lambdaRange.GetBegin() + m_lambdaRange.GetEnd())/2;
+    std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(m_Spectrum->GetLSF()->GetWidth(lambda));
+    std::shared_ptr<const CLSF> lsf = LSFFactory.Create("GaussianConstantWidth", args);
+
     if(orthog_gal)
     {
       CTemplatesOrthogonalization tplOrtho;
