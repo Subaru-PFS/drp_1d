@@ -91,7 +91,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //************************************
     // Stellar method
 
-    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve");
+    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestarsolve");
     Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
 
     if(enableStarFitting=="yes"){

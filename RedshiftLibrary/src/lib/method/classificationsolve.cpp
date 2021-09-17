@@ -61,7 +61,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
 
   if(inputContext->GetParameterStore()->Get<std::string>("enablegalaxysolve") == "yes")
     galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
-  if(inputContext->GetParameterStore()->Get<std::string>("enablestellarsolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<std::string>("enablestarsolve") == "yes")
     starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("star"));
   if(inputContext->GetParameterStore()->Get<std::string>("enableqsosolve") == "yes")
     qsoResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("qso"));

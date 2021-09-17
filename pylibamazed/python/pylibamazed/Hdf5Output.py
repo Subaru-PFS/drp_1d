@@ -60,7 +60,7 @@ class Hdf5Output(AbstractOutput):
         self.object_types = []
         if self.parameters["enablegalaxysolve"] == "yes":
             self.object_types.append("galaxy")
-        if self.parameters["enablestellarsolve"] == "yes":
+        if self.parameters["enablestarsolve"] == "yes":
             self.object_types.append("star")
         if self.parameters["enableqsosolve"] == "yes":
             self.object_types.append("qso")

@@ -52,16 +52,13 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumLogRebinning::CSpectrumLogRebinning(/*const*/ CInputContext& inputContext, Float64 redshiftStep, std::shared_ptr<CSpectrum> spc):
+CSpectrumLogRebinning::CSpectrumLogRebinning(/*const*/ CInputContext& inputContext, Float64 redshiftStep):
 m_inputContext(inputContext)
 {
     m_logGridStep = redshiftStep;
-
+    std::shared_ptr<CSpectrum> spc;
     if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
-        spc = make_shared<CSpectrum>(m_inputContext.GetSpectrum()->GetName());
-        CSpectrumSpectralAxis  spcWav = m_inputContext.GetSpectrum()->GetSpectralAxis();
-        spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
-        spc->SetSpectralAndFluxAxes(std::move(spcWav), m_inputContext.GetSpectrum()->GetFluxAxis());
+        spc = m_inputContext.GetRebinnedSpectrum();//retrieve the corrected rebinned spectrum
     }else{
         spc = m_inputContext.GetSpectrum();
     } 

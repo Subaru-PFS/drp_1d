@@ -107,9 +107,10 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
-    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
-    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
-    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing("star");
+    std::vector<std::string> categories{"galaxy", "qso", "star"};
+    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(categories[0]); 
+    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(categories[1]);
+    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing(categories[2]);
     
     if(fft_processing_star)
     {
@@ -122,32 +123,35 @@ void CInputContext::RebinInputs()
     if(!m_use_LogLambaSpectrum) return;
 
     Float64 logGridStep;
-    if(GetSpectrum()->GetSpectralAxis().IsLogSampled()){
-      logGridStep = m_Spectrum->GetSpectralAxis().GetlogGridStep();
-    }else{
-      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( "galaxy.redshiftstep" ):DBL_MAX;
-      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( "qso.redshiftstep" ):DBL_MAX;        
+    if(m_Spectrum->GetSpectralAxis().IsLogSampled())
+    {
+        m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
+        CSpectrumSpectralAxis  spcWav = m_Spectrum->GetSpectralAxis();
+        spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
+        //save into the rebinnedSpectrum
+        m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav), m_Spectrum->GetFluxAxis());
+        logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
+    }else
+    {
+      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( categories[0]+".redshiftstep" ):DBL_MAX;
+      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( categories[1]+".redshiftstep" ):DBL_MAX;        
       logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
     }
     std::string category;
-    std::shared_ptr<CSpectrum> spc;
     std::string errorRebinMethod = "rebinVariance";
-    CSpectrumLogRebinning logReb(*this, logGridStep, spc);
+    CSpectrumLogRebinning logReb(*this, logGridStep);
 
-    if(m_Spectrum->GetSpectralAxis().IsLogSampled()){
-      SetRebinnedSpectrum(spc);
-    }else
-      SetRebinnedSpectrum(logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod));        
+    if(!m_Spectrum->GetSpectralAxis().IsLogSampled())
+      m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
+
     TFloat64Range zrange;
-    if(fft_processing_gal){ 
-      category = "galaxy";
-      zrange = logReb.LogRebinTemplateCatalog(category);
-      m_logRebin.insert({category, std::move(SRebinResults{zrange, logGridStep})});
+    if(fft_processing_gal){
+      zrange = logReb.LogRebinTemplateCatalog(categories[0]);
+      m_logRebin.insert({categories[0], std::move(SRebinResults{zrange, logGridStep})});
     }
     if(fft_processing_qso){
-      category = "qso";
-      zrange = logReb.LogRebinTemplateCatalog(category);
-      m_logRebin.insert({category, std::move(SRebinResults{zrange, logGridStep})});
+      zrange = logReb.LogRebinTemplateCatalog(categories[1]);
+      m_logRebin.insert({categories[1], std::move(SRebinResults{zrange, logGridStep})});
     }
 
     return;
