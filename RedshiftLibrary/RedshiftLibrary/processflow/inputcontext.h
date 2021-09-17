@@ -77,11 +77,13 @@ class CInputContext
 
   void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc){m_rebinnedSpectrum = rebinnedSpc;}
   TFloat64Range   m_lambdaRange;    
-  TFloat64Range   m_redshiftRangeFFT;//computed with logRebinning 
-  Float64         m_redshiftStepFFT; 
   Bool            m_use_LogLambaSpectrum = 0;
-
-  std::map<std::string, CSpectrumLogRebinning> m_logRebin;
+  typedef struct{
+    //SRebinResults(TFloat64Range range, Float64 step):zrange(zrange),logGridStep(step){};
+    TFloat64Range zrange;
+    Float64 logGridStep;
+    }SRebinResults;
+  std::map<std::string, SRebinResults> m_logRebin;
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;
@@ -92,7 +94,7 @@ private:
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
   void OrthogonalizeTemplates(const std::string& calibrationPath);
-  void RebinInputWrapper();
+  void RebinInput();
   void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
                         TFloat64Range lambdaRange, 
                         Bool enableInputSpcCorrect);

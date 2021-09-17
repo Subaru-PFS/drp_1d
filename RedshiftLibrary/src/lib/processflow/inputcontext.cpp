@@ -61,7 +61,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     
-    RebinInputWrapper();
+    RebinInputs();
 
     // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
     std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
@@ -105,7 +105,7 @@ Template rebinning:
 
 Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus the client has the responsibility to add these info to each spectrum
 */
-void CInputContext::RebinInputWrapper() 
+void CInputContext::RebinInputs() 
 {
     Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
     Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
@@ -121,7 +121,7 @@ void CInputContext::RebinInputWrapper()
 
     if(!m_use_LogLambaSpectrum) return;
 
-    Float64 logGridStep = NAN;
+    Float64 logGridStep;
     if(GetSpectrum()->GetSpectralAxis().IsLogSampled()){
       logGridStep = m_Spectrum->GetSpectralAxis().GetlogGridStep();
     }else{
@@ -129,15 +129,25 @@ void CInputContext::RebinInputWrapper()
       Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( "qso.redshiftstep" ):DBL_MAX;        
       logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
     }
-    
-    CSpectrumLogRebinning logReb;
-    if(fft_processing_gal){
-      logReb.RebinInputs(*this, "galaxy", logGridStep);
-      m_logRebin.insert({"galaxy", std::move(logReb)});
+    std::string category;
+    std::shared_ptr<CSpectrum> spc;
+    std::string errorRebinMethod = "rebinVariance";
+    CSpectrumLogRebinning logReb(*this, logGridStep, spc);
+
+    if(m_Spectrum->GetSpectralAxis().IsLogSampled()){
+      SetRebinnedSpectrum(spc);
+    }else
+      SetRebinnedSpectrum(logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod));        
+    TFloat64Range zrange;
+    if(fft_processing_gal){ 
+      category = "galaxy";
+      zrange = logReb.LogRebinTemplateCatalog(category);
+      m_logRebin.insert({category, std::move(SRebinResults{zrange, logGridStep})});
     }
     if(fft_processing_qso){
-      logReb.RebinInputs(*this, "qso", logGridStep);
-      m_logRebin.insert({"qso", std::move(logReb)});
+      category = "qso";
+      zrange = logReb.LogRebinTemplateCatalog(category);
+      m_logRebin.insert({category, std::move(SRebinResults{zrange, logGridStep})});
     }
 
     return;

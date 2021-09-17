@@ -56,25 +56,23 @@ class CSpectrumLogRebinning
 
 public:
     //applying Rule of zero
-    void  RebinInputs(CInputContext& inputContext, std::string category, Float64 logGridStep); 
-    TFloat64Range m_zrange;
+    CSpectrumLogRebinning(/*const*/ CInputContext& inputContext,  Float64 redshiftStep, std::shared_ptr<CSpectrum> spc);
+    std::shared_ptr<CSpectrum>  LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
+                                                        std::string errorRebinMethod="rebinVariance") const;
+    std::shared_ptr<CTemplate>  LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl, 
+                                                        TFloat64Range& lambdaRange_tpl, 
+                                                        const UInt32  loglambda_count_tpl) const;
+    TFloat64Range LogRebinTemplateCatalog(const std::string& category) const;                                                    
     Float64 m_logGridStep; 
-    TFloat64Range m_lambdaRange_spc, m_lambdaRange_tpl;
+    TFloat64Range m_lambdaRange_ref;
 private:
-    void  SetupRebinning( CSpectrum &spectrum,
-                        const TFloat64Range &lambdaRange,
-                        const TFloat64Range & zInputRange,
-                        UInt32 SSratio);
-    std::shared_ptr<CSpectrum>   LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
-                                                            std::string errorRebinMethod="rebinVariance") const;
-    std::shared_ptr<CTemplate>         LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl) const;
-
+    void  SetupRebinning( CSpectrum &spectrum, const TFloat64Range &lambdaRange);
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 gridCount) const;
-    void InferTemplateRebinningSetup(const TFloat64Range & lambdaRange_Ref);
-    Bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl) const;
+    UInt32 InferTemplateRebinningSetup(const TFloat64Range& z_range, TFloat64Range& lambdaRange_tpl) const;
+    Bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl, const TFloat64Range& lambdaRange_tpl) const;
     const std::string m_rebinMethod = "lin";
 
-    UInt32 m_loglambda_count_spc, m_loglambda_count_tpl;
+    /*const*/ CInputContext& m_inputContext;
 };
 
 }
