@@ -52,10 +52,10 @@ namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumLogRebinning::CSpectrumLogRebinning(/*const*/ CInputContext& inputContext, Float64 redshiftStep):
+CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext& inputContext):
 m_inputContext(inputContext)
 {
-    m_logGridStep = redshiftStep;
+    m_logGridStep = m_inputContext.m_logGridStep;
     std::shared_ptr<CSpectrum> spc;
     if(inputContext.GetSpectrum()->GetSpectralAxis().IsLogSampled()){
         spc = m_inputContext.GetRebinnedSpectrum();//retrieve the corrected rebinned spectrum
@@ -224,7 +224,8 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
         throw runtime_error(" Last elements of the target spectral axis are not valid. Template count is not well computed due to exp/conversions");
 
     auto templateRebinedLog = make_shared<CTemplate>(tpl->GetName(), tpl->GetCategory());
-
+    templateRebinedLog->m_ismCorrectionCalzetti = tpl->m_ismCorrectionCalzetti;
+    templateRebinedLog->m_igmCorrectionMeiksin = tpl->m_igmCorrectionMeiksin;
     CMask mskRebinedLog;
     
     TFloat64Range tplLbdaRange(targetSpectralAxis[0] - 0.5 * m_logGridStep,

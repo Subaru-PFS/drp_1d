@@ -210,16 +210,14 @@ void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ort
 }
 
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath, 
-                                  std::shared_ptr<const CParameterStore> parameterStore,
+void CTemplateCatalog::InitIsmIgm(std::shared_ptr<const CParameterStore> parameterStore,
                                   const std::shared_ptr<const CLSF>& lsf)
 {
-    Float64 ebmv_start=0.0;
-    Float64 ebmv_step=0.1;
-    UInt32 ebmv_n=10;
-    parameterStore->Get( "ebmv.start", ebmv_start, 0. );
-    parameterStore->Get( "ebmv.step", ebmv_step, 0.1 );
-    parameterStore->Get( "ebmv.count", ebmv_n, 10 );
+    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");;
+    Float64 ebmv_step  = parameterStore->Get<Float64>( "ebmv.step");
+    UInt32  ebmv_n     = parameterStore->Get<UInt32>( "ebmv.count");
+    std::string calibrationPath = parameterStore->Get<std::string>( "calibrationDir");
+
     //ISM
     auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
     ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
@@ -228,26 +226,13 @@ void CTemplateCatalog::InitIsmIgm(const std::string & calibrationPath,
     auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
     igmCorrectionMeiksin->Init(calibrationPath, lsf, lambdaRange);
 
-    //push in all templates
-    //backup current sampling
-    Bool currentsampling = m_logsampling;
-    Bool currentOrthog = m_orthogonal;
-    for(Bool sampling : {0, 1}){
-        m_logsampling = sampling;
-        for (Bool ortho :{0, 1}){
-            m_orthogonal = ortho;
-            for(auto it : GetList())
-            {             
-                const TTemplateRefList  & TplList = it.second;
-                for (auto tpl : TplList)
-                    tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-                if(it.first != "star")//no igm for stars
-                    for (auto tpl : TplList)
-                        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
-            }
-        }
+    for(auto it : GetList(0,0))
+    {             
+        const TTemplateRefList  & TplList = it.second;
+        for (auto tpl : TplList)
+            tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+        if(it.first != "star")//no igm for stars
+            for (auto tpl : TplList)
+                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
     }
-    //put back the initial sampling:
-    m_logsampling = currentsampling;
-    m_orthogonal = currentOrthog; 
 }

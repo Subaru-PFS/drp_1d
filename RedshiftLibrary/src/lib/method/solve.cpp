@@ -56,7 +56,7 @@ void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputConte
     if(searchLogRebin!=inputContext->m_logRebin.end())
     {
         redshiftRange = searchLogRebin->second.zrange;
-        redshiftStep = searchLogRebin->second.logGridStep;
+        redshiftStep = inputContext->m_logGridStep;
         if(m_redshiftSampling=="lin"){
                 m_redshiftSampling = "log";
                 Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");

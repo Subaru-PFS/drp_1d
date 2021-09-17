@@ -61,11 +61,20 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     
-    RebinInputs();
+    // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
+    //only when lsf changes notably when LSFType is fromspectrumdata
+    //or the first time InitIsmIgm is called
+    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())    
+    {
+        m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
+    }else{
+      if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
+      {
+        m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());
+      }
+    }
 
-    // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
-    std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
-    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore, m_Spectrum->GetLSF());
+    RebinInputs();
 
     std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
     Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
@@ -76,7 +85,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
-    //orthog only if rebinning happens
+
     OrthogonalizeTemplates(calibrationPath);
 }
 /*
@@ -122,7 +131,6 @@ void CInputContext::RebinInputs()
 
     if(!m_use_LogLambaSpectrum) return;
 
-    Float64 logGridStep;
     if(m_Spectrum->GetSpectralAxis().IsLogSampled())
     {
         m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
@@ -130,16 +138,16 @@ void CInputContext::RebinInputs()
         spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
         //save into the rebinnedSpectrum
         m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav), m_Spectrum->GetFluxAxis());
-        logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
+        m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {
       Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( categories[0]+".redshiftstep" ):DBL_MAX;
       Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( categories[1]+".redshiftstep" ):DBL_MAX;        
-      logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
+      m_logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
     }
     std::string category;
     std::string errorRebinMethod = "rebinVariance";
-    CSpectrumLogRebinning logReb(*this, logGridStep);
+    CSpectrumLogRebinning logReb(*this);
 
     if(!m_Spectrum->GetSpectralAxis().IsLogSampled())
       m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
@@ -147,11 +155,11 @@ void CInputContext::RebinInputs()
     TFloat64Range zrange;
     if(fft_processing_gal){
       zrange = logReb.LogRebinTemplateCatalog(categories[0]);
-      m_logRebin.insert({categories[0], std::move(SRebinResults{zrange, logGridStep})});
+      m_logRebin.insert({categories[0], SRebinResults{zrange}});
     }
     if(fft_processing_qso){
       zrange = logReb.LogRebinTemplateCatalog(categories[1]);
-      m_logRebin.insert({categories[1], std::move(SRebinResults{zrange, logGridStep})});
+      m_logRebin.insert({categories[1], SRebinResults{zrange}});
     }
 
     return;

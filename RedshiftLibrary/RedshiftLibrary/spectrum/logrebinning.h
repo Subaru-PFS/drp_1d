@@ -56,7 +56,7 @@ class CSpectrumLogRebinning
 
 public:
     //applying Rule of zero
-    CSpectrumLogRebinning(/*const*/ CInputContext& inputContext,  Float64 redshiftStep);
+    CSpectrumLogRebinning(CInputContext& inputContext);
     std::shared_ptr<CSpectrum>  LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
                                                         std::string errorRebinMethod="rebinVariance") const;
     std::shared_ptr<CTemplate>  LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl, 
@@ -72,7 +72,7 @@ private:
     Bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl, const TFloat64Range& lambdaRange_tpl) const;
     const std::string m_rebinMethod = "lin";
 
-    /*const*/ CInputContext& m_inputContext;
+    CInputContext& m_inputContext;
 };
 
 }

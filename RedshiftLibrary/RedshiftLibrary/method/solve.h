@@ -58,7 +58,7 @@ namespace NSEpic
                                                 TScopeStack &scope)=0;
 
     void InitRanges(std::shared_ptr<const CInputContext> inputContext);
-    void GetRedshiftSampling(std::shared_ptr<const CInputContext>, TFloat64Range& redshiftRange, Float64& redshiftStep);
+    virtual void GetRedshiftSampling(std::shared_ptr<const CInputContext>, TFloat64Range& redshiftRange, Float64& redshiftStep);
 
     virtual void saveToResultStore(std::shared_ptr<CSolveResult>,std::shared_ptr<COperatorResultStore> resultStore) const;
 

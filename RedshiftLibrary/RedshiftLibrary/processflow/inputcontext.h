@@ -78,10 +78,9 @@ class CInputContext
   void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc){m_rebinnedSpectrum = rebinnedSpc;}
   TFloat64Range   m_lambdaRange;    
   Bool            m_use_LogLambaSpectrum = 0;
+  Float64         m_logGridStep;
   typedef struct{
-    //SRebinResults(TFloat64Range range, Float64 step):zrange(zrange),logGridStep(step){};
     TFloat64Range zrange;
-    Float64 logGridStep;
     }SRebinResults;
   std::map<std::string, SRebinResults> m_logRebin;
 private:
