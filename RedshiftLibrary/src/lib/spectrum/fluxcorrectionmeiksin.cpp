@@ -277,10 +277,9 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     TFloat64Range convRange_rest(m_convolRange.GetBegin()/(1+z_center), m_convolRange.GetEnd()/(1+z_center));//conv range in restframe
     Int32 i_min = -1, i_max = -1; 
     bool ret = convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max); 
-    if(i_min == -1 || i_max == -1)
+    if(i_min == -1 && i_max == -1)
     {
-        Log.LogError("Convolution range and Meiksin range do no correspond");
-        throw std::runtime_error("Convolution range and Meiksin range do no correspond");
+        return convolvedArr;
     }
     Float64 tmp;
     for(Int32 i = i_min; i <= i_max; i++){
