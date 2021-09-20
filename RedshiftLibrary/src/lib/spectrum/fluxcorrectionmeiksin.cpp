@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 
 #include <algorithm>    // std::sort
@@ -67,9 +68,9 @@ CSpectrumFluxCorrectionMeiksin::~CSpectrumFluxCorrectionMeiksin()
 
 }
 
-Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf )
+Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
 {
-
+    m_convolRange = convolRange;
     bfs::path calibrationFolder( calibrationPath.c_str() );
     std::vector<std::string> fileNamesList;
     fileNamesList.push_back("Meiksin_Var_curves_2.0.txt");
@@ -270,10 +271,18 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     }
 
     Int32 n = arr.size(), Nhalf=-1;
-    TFloat64List convolvedArr(n);
-    
+    TFloat64List convolvedArr(arr);
+
+    //determine the restframe convolution range, i.e., convolRange/(1+z_center)
+    TFloat64Range convRange_rest(m_convolRange.GetBegin()/(1+z_center), m_convolRange.GetEnd()/(1+z_center));//conv range in restframe
+    Int32 i_min = -1, i_max = -1; 
+    bool ret = convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max); 
+    if(i_min == -1 && i_max == -1)
+    {
+        return convolvedArr;
+    }
     Float64 tmp;
-    for(Int32 i = 0; i < n; i++){
+    for(Int32 i = i_min; i <= i_max; i++){
         Float64 lambda0 = lambdas[i];//lambda restframe
         //compute the adpative kernel at lambda0
         GetLSFProfileVector(lambda0, z_center, lsf);//resulting kernel saved in m_kernel
@@ -301,6 +310,9 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     }
     return convolvedArr;
 }
+/**
+ * convolve only on m_convolRange/(1+zbin_meiksin), while keeping vector size
+*/
 void CSpectrumFluxCorrectionMeiksin::ConvolveAll(const std::shared_ptr<const CLSF>& lsf)
 {
     //to be decided if we create two objects or we keep one m_correction

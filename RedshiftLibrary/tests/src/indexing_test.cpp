@@ -127,6 +127,22 @@ BOOST_AUTO_TEST_CASE(LowerIndex_outsideBorders)
     i_min = CIndexing<Float64>::getCloserIndex(myVector,target);
     BOOST_CHECK( i_min == 0);
 }
+BOOST_AUTO_TEST_CASE(higherIndex)
+{
+    TFloat64List myVector = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
+    Int32 i_max = -1;  
+    Float64 target = 2.019999999;
+    bool ret = CIndexing<Float64>::getClosestUpperIndex(myVector,target, i_max);
+    BOOST_CHECK( i_max == 2);
 
+    target = 2.0;
+    ret = CIndexing<Float64>::getClosestUpperIndex(myVector,target, i_max);
+    BOOST_CHECK( i_max == 1);
+
+    target = -2.0;
+    ret = CIndexing<Float64>::getClosestUpperIndex(myVector,target, i_max);
+    std::cout<<i_max;
+    BOOST_CHECK( i_max == 0);
+}
 /////
 }
