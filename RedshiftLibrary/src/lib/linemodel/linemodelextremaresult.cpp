@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 

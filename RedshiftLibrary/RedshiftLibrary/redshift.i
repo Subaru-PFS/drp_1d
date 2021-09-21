@@ -72,7 +72,6 @@
 %shared_ptr(TTplCombinationResult)
 %shared_ptr(TLineModelResult)
 %shared_ptr(CModelSpectrumResult)
-%shared_ptr(CModelFittingResult)
 %shared_ptr(CSpectraFluxResult)
 %shared_ptr(TLSFArguments)
 %shared_ptr(TLSFGaussianVarWidthArgs)
@@ -118,7 +117,6 @@
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
@@ -304,7 +302,6 @@ public:
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"
-%include "linemodel/modelfittingresult.i"
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
 
@@ -386,18 +383,14 @@ class COperatorResultStore
 										 const int& rank
 									       ) const;
 
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name ,
-								   const int& rank
-								   ) const  ;
-
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name 
-								   ) const  ;
 
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+								 const std::string& method,
+								 const std::string& name,
+								     const int& rank 
+								 ) const  ;
+
+    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name 
 								 ) const  ;

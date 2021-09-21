@@ -56,7 +56,7 @@
 namespace NSEpic
 {
 class CModelSpectrumResult;
-class CModelFittingResult;
+class CLineModelSolution;
 class CModelContinuumFittingResult;
 class CModelRulesResult;
 class CSpectraFluxResult;
@@ -70,7 +70,7 @@ class CLineModelElementList;
   public:
     std::vector<TFloat64List> ExtendedRedshifts;    // z range around extrema
 
-    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<const CLineModelSolution>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 

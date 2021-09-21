@@ -1098,7 +1098,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
     //init lmfit variables
     mlmfit_modelInfoSave = false;
     mlmfit_savedModelSpectrumResults_lmfit.clear();
-    mlmfit_savedModelFittingResults_lmfit.clear();
+    // mlmfit_savedModelFittingResults_lmfit.clear();
     mlmfit_savedModelRulesResults_lmfit.clear();
     mlmfit_savedBaselineResult_lmfit.clear();
 
@@ -1377,6 +1377,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
         {
             if (mlmfit_modelInfoSave)
             {
+	      /*
                 Log.LogInfo("Save model store during lm_fit");
                 ExtremaResult->m_savedModelSpectrumResults[i] = mlmfit_savedModelSpectrumResults_lmfit[i_2pass];
                 ExtremaResult->m_savedModelFittingResults[i] = mlmfit_savedModelFittingResults_lmfit[i_2pass];
@@ -1385,6 +1386,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                 {
                     ExtremaResult->m_savedModelContinuumSpectrumResults[i] = mlmfit_savedBaselineResult_lmfit[i_2pass];
                 }
+	      */
             } else
             {
                 // CModelSpectrumResult
@@ -1414,16 +1416,8 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
 
                 ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
-                // CModelFittingResult
-                std::shared_ptr<CModelFittingResult> resultfitmodel =
-                    make_shared<CModelFittingResult>(
-                            m_result->LineModelSolutions[idx],
-                            m_result->Redshifts[idx], m_result->ChiSquare[idx],
-                            m_result->restRayList,
-                            m_model->GetVelocityEmission(),
-                            m_model->GetVelocityAbsorption());
-                ExtremaResult->m_savedModelFittingResults[i] = resultfitmodel;
-
+		m_result->LineModelSolutions[idx].fillRayIds();
+                ExtremaResult->m_savedModelFittingResults[i] = std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
                 // CModelContinuumFittingResult : mira: below is the content of output files _fitcontinuum_extrema
                 std::shared_ptr<CModelContinuumFittingResult>
                     resultfitcontinuummodel =
@@ -1616,6 +1610,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
                 mlmfit_savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
                 // CModelFittingResult
+		/*
                 std::shared_ptr<CModelFittingResult> resultfitmodel =
                         std::shared_ptr<CModelFittingResult>(
                             new CModelFittingResult(
@@ -1625,6 +1620,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 m_model->GetVelocityEmission(),
                                 m_model->GetVelocityAbsorption()));
                 mlmfit_savedModelFittingResults_lmfit.push_back(resultfitmodel);
+		*/
                 // CModelRulesResult
                 std::shared_ptr<CModelRulesResult> resultrulesmodel =
                         std::shared_ptr<CModelRulesResult>(
