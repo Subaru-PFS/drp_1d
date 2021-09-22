@@ -407,7 +407,7 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
         MeiksinList[0] = -1;
     }
     Int32 EbmvListSize = 1;
-    if(opt_dustFitting==-10)
+    if(!keepigmism && (opt_dustFitting==-10 || opt_dustFitting!=-1))//==-10 for TF and !=-1 for PCA
     {
         EbmvListSize = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
     }
@@ -416,7 +416,7 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
     if(opt_dustFitting!=-1){
         if(keepigmism)
             EbmvList[0] = m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
-        else if(opt_dustFitting==-10)
+        else if(opt_dustFitting==-10 || !keepigmism)
                 std::iota(EbmvList.begin(), EbmvList.end(), 0);
             else 
                 EbmvList[0] = opt_dustFitting;
