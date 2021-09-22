@@ -561,7 +561,7 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
         if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
             continue;
 
-        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
+        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile()->Clone());
         
         if(forceLyaFitting)
             targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
