@@ -43,6 +43,7 @@
 %include std_shared_ptr.i
 %include std_except.i
 %include std_vector.i
+%include std_map.i
 %include exception.i
 
 %shared_ptr(CClassifierStore)
@@ -120,6 +121,9 @@
 #include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
+#include "RedshiftLibrary/photometry/photometricband.h"
+
 using namespace NSEpic;
 static PyObject* pParameterException;
 static PyObject* pGlobalException;
@@ -189,11 +193,6 @@ typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
 typedef unsigned int UInt32;
-
-namespace NSEpic {
-}
-
-using namespace NSEpic;
 
 const char* get_version();
 
@@ -652,6 +651,43 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
 {
   Float64 sourcesize;
   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
+
+typedef std::vector<std::string> TStringList;
+
+%template(TStringList) std::vector<std::string>;
+
+class CPhotometricData
+{
+public:
+    CPhotometricData(const TStringList & name,  const TFloat64List & flux, const TFloat64List & fluxerr);
+
+    Float64 GetFlux(const std::string &name) const;
+    Float64 GetFluxErr(const std::string &name) const;
+    Float64 GetFluxOverErr2(const std::string & name) const;
+    TStringList GetNameList() const;
+};
+
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64 * trans, Int32 n1),(const Float64 * lambda, Int32 n2 )}
+class CPhotometricBand
+{
+public:
+    CPhotometricBand() = default;
+    CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
+
+    TFloat64List m_transmission;
+    TFloat64List m_lambda;
+};
+%clear (const Float64 * trans, Int32 n1);
+%clear (const Float64 * lambda, Int32 n2);
+
+%template(TMapPhotBand) std::map<std::string, CPhotometricBand>;
+
+class CPhotBandCatalog : public std::map<std::string, CPhotometricBand> 
+{
+public:
+    void Add(const std::string & name, const CPhotometricBand & filter);
+    TStringList GetNameList() const;
 };
 
 class AmzException : public std::exception
