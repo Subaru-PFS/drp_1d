@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 #include "RedshiftLibrary/common/datatypes.h"
@@ -335,4 +373,54 @@ void CTemplate::ScaleFluxAxis(Float64 amplitude){
     CSpectrum::ScaleFluxAxis(amplitude);
     if (CheckIsmIgmEnabled()) 
         m_NoIsmIgmFluxAxis *= amplitude;
+}
+void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
+                            Int32 opt_dustFitting,
+                            TInt32List& MeiksinList, //return 
+                            TInt32List& EbmvList, //return
+                            Bool keepigmism,
+                            Float64 FitEbmvCoeff,
+                            Int32 FitMeiksinIdx)const
+{
+    if (MeiksinInitFailed() && opt_extinction){
+        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
+        throw runtime_error("CTemplate::GetIsmIgmIdxList: Meiksin is not initialized");
+    }
+    if(CalzettiInitFailed() && opt_dustFitting != -1){
+        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
+        throw runtime_error("CTemplate::GetIsmIgmIdxList: Calzetti is not initialized");
+    }
+
+    Int32 MeiksinListSize = 1;
+    if(opt_extinction && !keepigmism)
+    {
+        MeiksinListSize = m_igmCorrectionMeiksin->GetIdxCount();
+    }
+    MeiksinList.resize(MeiksinListSize);
+    if(opt_extinction)
+    {
+        if(keepigmism)
+            MeiksinList[0] = FitMeiksinIdx;
+        else
+            std::iota(MeiksinList.begin(), MeiksinList.end(), 0);
+    }else{
+        MeiksinList[0] = -1;
+    }
+    Int32 EbmvListSize = 1;
+    if(opt_dustFitting==-10)
+    {
+        EbmvListSize = m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
+    }
+
+    EbmvList.resize(EbmvListSize);
+    if(opt_dustFitting!=-1){
+        if(keepigmism)
+            EbmvList[0] = m_ismCorrectionCalzetti->GetEbmvIndex(FitEbmvCoeff);
+        else if(opt_dustFitting==-10)
+                std::iota(EbmvList.begin(), EbmvList.end(), 0);
+            else 
+                EbmvList[0] = opt_dustFitting;
+    }else{
+        EbmvList[0] = -1;
+    } 
 }

@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #ifndef _REDSHIFT_OPERATOR_LINEMODEL_
 #define _REDSHIFT_OPERATOR_LINEMODEL_
 
@@ -199,6 +237,7 @@ public:
 
 
   
+class CInputContext;
 /**
  * \ingroup Redshift
  */
@@ -241,7 +280,6 @@ public:
                            const TFloat64Range& lambdaRange,
                            const std::string &opt_fittingmethod,
                            const std::string& opt_lineWidthType,
-                           const Float64 opt_resolution,
                            const Float64 opt_velocityEmission,
                            const Float64 opt_velocityAbsorption,
                            const std::string &opt_continuumreest="no",
@@ -269,7 +307,6 @@ public:
                             const TFloat64Range& lambdaRange,
                             const std::string &opt_fittingmethod,
                             const std::string& opt_lineWidthType,
-                            const Float64 opt_resolution,
                             const Float64 opt_velocityEmission,
                             const Float64 opt_velocityAbsorption,
                             const std::string &opt_continuumreest="no",
@@ -301,6 +338,9 @@ public:
                                     const std::string &opt_continuumreest,
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
+  CLineModelSolution computeForLineMeas(std::shared_ptr<const CInputContext> context,
+                          std::string calibrationDir,
+                          TFloat64List& redshiftsGrid);
 
   std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,
@@ -367,6 +407,12 @@ public:
   std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
     COperatorLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
+  CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
+  void fitVelocityByGroups(std::vector<Float64> velfitlist,
+                           std::vector<Float64> zfitlist,
+                           Int32 rayType);
+
+  std::shared_ptr<CModelSpectrumResult> getFittedModel();
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

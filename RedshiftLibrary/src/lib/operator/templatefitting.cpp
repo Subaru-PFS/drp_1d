@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/operator/templatefitting.h"
 
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -28,7 +66,7 @@
 #include "RedshiftLibrary/processflow/datastore.h"
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
-
+#include <numeric>
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
@@ -77,7 +115,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    Float64& fittingMtM,
                                    Float64& fittingLogprior,
                                    Float64 &fittingEbmvCoeff,
-                                   Float64 &fittingMeiksinIdx,
+                                   Int32 &fittingMeiksinIdx,
                                    EStatus& status,
                                    std::vector<TFloat64List>& ChiSquareInterm,
                                    std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
@@ -88,22 +126,14 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                                    Int32 opt_dustFitting,
                                    CMask spcMaskAdditional,
                                    CPriorHelper::TPriorEList logpriore,
-                                   bool keepigmism)
+                                   const TInt32List& MeiksinList,
+                                   const TInt32List& EbmvList)
 {
     bool verbose = false;
     bool amplForcePositive=true;
-    chiSquare = boost::numeric::bounds<float>::highest();
+    chiSquare = INFINITY;
     bool status_chisquareSetAtLeastOnce = false;
 
-    for(Int32 kism=0; kism<ChiSquareInterm.size(); kism++)
-    {
-        for(Int32 kigm=0; kigm<ChiSquareInterm[kism].size(); kigm++)
-        {
-            ChiSquareInterm[kism][kigm] = boost::numeric::bounds<float>::highest();
-            IsmCalzettiCoeffInterm[kism][kigm] = -1.0;
-            IgmMeiksinIdxInterm[kism][kigm] = -1;
-        }
-    }
     fittingAmplitude = -1.0;
     fittingAmplitudeError = -1.0;
     fittingAmplitudeSigma = 0.;
@@ -151,56 +181,19 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         return;
     }
 
-    // Optionally Apply some Calzetti Extinction for DUST
-    Int32 nEbmvCoeffs=1;
-    Int32 iEbmvCoeffMin = 0;
-    Int32 iEbmvCoeffMax = iEbmvCoeffMin+1;
-    if(apply_ism)
-    {
-        if(opt_dustFitting>0)
-        {
-            nEbmvCoeffs = 1;
-            iEbmvCoeffMin = opt_dustFitting;
-            iEbmvCoeffMax = iEbmvCoeffMin;
-        }else if(opt_dustFitting==-10)
-        {
-            nEbmvCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-            iEbmvCoeffMin = 0;
-            iEbmvCoeffMax = iEbmvCoeffMin+nEbmvCoeffs-1;
-        }
-    }else{
-        nEbmvCoeffs = 1;
-        iEbmvCoeffMin = -1;
-        iEbmvCoeffMax = iEbmvCoeffMin;
-    }
+    Int32 EbmvListSize = ChiSquareInterm.size();
+    Int32 MeiksinListSize = ChiSquareInterm[0].size();
 
-    //Optionally apply some IGM absorption
-    Int32 nIGMCoeffs=1;
-    TInt32List MeiksinList;
-    if(opt_extinction)
-    {
-        if(keepigmism){
-            nIGMCoeffs = 1;
-            MeiksinList.push_back(fittingMeiksinIdx);//fill it with only the index passed as argument   
-        }
-        else{
-            nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
-            for(Int32 mk = 0; mk<nIGMCoeffs; mk++){
-                MeiksinList.push_back(mk);
-            }
-        }
-    }else{//at least have one element
-        MeiksinList.push_back(-1);
-    }
+    Int32 iEbmvCoeffMin = EbmvList[0];
+    Int32 iEbmvCoeffMax = EbmvList[EbmvListSize-1];
 
     Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true);
-    std::vector<Float64> sumCross_outsideIGM(nEbmvCoeffs, 0.0);
-    std::vector<Float64>  sumT_outsideIGM(nEbmvCoeffs, 0.0);
-    std::vector<Float64>  sumS_outsideIGM(nEbmvCoeffs, 0.0);
-    
+    TFloat64List  sumCross_outsideIGM(EbmvListSize, 0.0);
+    TFloat64List  sumT_outsideIGM(EbmvListSize, 0.0);
+    TFloat64List  sumS_outsideIGM(EbmvListSize, 0.0);
     //Loop on the meiksin Idx
     Bool igmLoopUseless_WavelengthRange = false;
-    for(Int32 kM=0; kM<nIGMCoeffs; kM++)
+    for(Int32 kM=0; kM<MeiksinListSize; kM++)
     {
         if(igmLoopUseless_WavelengthRange)
         {
@@ -228,7 +221,12 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         //Meiksin IGM extinction
         if(opt_extinction)
         {
-            igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
+            //check if lya belongs to current range. If not, no
+            //zigm_min = GetIGMStartingRedshiftValue(currentRange.GetBegin())
+            if(currentRange.GetBegin()/(1+redshift) > 1216)
+                igmCorrectionAppliedOnce = false;
+            else
+                igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
         }
@@ -241,10 +239,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             if (apply_ism)
             {
                 coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-                //check that we got the same coeff:
-                /*if(keepigmism && (coeffEBMV - fittingEbmvCoeff)< DBL_EPSILON){//comparing floats
-                    Log.LogDebug("Keepigmism: coeffEBMW corresponds to passed param: %f vs %f", coeffEBMV, fittingEbmvCoeff);
-                }*/
                 m_templateRebined_bf.ApplyDustCoeff(kEbmv);
             }
  
@@ -450,7 +444,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
             {
                 chiSquare = fit;
                 fittingEbmvCoeff = coeffEBMV;
-                fittingMeiksinIdx = meiksinIdx;
+                fittingMeiksinIdx = igmCorrectionAppliedOnce==true?meiksinIdx:-1;
                 fittingAmplitude = ampl;
                 fittingAmplitudeError = ampl_err;
                 fittingAmplitudeSigma = ampl_sigma;
@@ -491,7 +485,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                                                               CPriorHelper::TPriorZEList logpriorze,
                                                               Bool keepigmism,
                                                               Float64 FitEbmvCoeff,
-                                                              Float64 FitMeiksinIdx)
+                                                              Int32 FitMeiksinIdx)
 {
     Log.LogDetail("  Operator-TemplateFitting: starting computation for template: %s", tpl.GetName().c_str());
 
@@ -548,18 +542,13 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
 
     std::shared_ptr<CTemplateFittingResult> result = std::shared_ptr<CTemplateFittingResult>( new CTemplateFittingResult() );
-    Int32 nEbmvCoeffs=1;
-    if(opt_dustFitting==-10)
-    {
-        nEbmvCoeffs = tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs();
-    }
-    Int32 nIGMCoeffs=1;
-    if(opt_extinction && !keepigmism)
-    { 
-        nIGMCoeffs = tpl.m_igmCorrectionMeiksin->GetIdxCount();
-    }
+    TInt32List MeiksinList;
+    TInt32List EbmvList;
+    tpl.GetIsmIgmIdxList( opt_extinction, opt_dustFitting, MeiksinList, EbmvList, keepigmism, FitEbmvCoeff, FitMeiksinIdx);
+    Int32 MeiksinListSize = MeiksinList.size();
+    Int32 EbmvListSize = EbmvList.size();
 
-    result->Init(sortedRedshifts.size(), nEbmvCoeffs, nIGMCoeffs);
+    result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize);
     result->Redshifts = sortedRedshifts;
 
     CMask additional_spcMask(spectrum.GetSampleCount());
@@ -602,11 +591,11 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
         }
 
         Float64 redshift = result->Redshifts[i];
-        if( keepigmism /*&& opt_extinction && opt_dustFitting>-1 */){
-            result->FitEbmvCoeff[i] = FitEbmvCoeff;
-            result->FitMeiksinIdx[i] = FitMeiksinIdx;
-        }
-        //TODO: reinitialize m_fluxAxisIsmIgm prior to calling BasicFit
+
+        result->ChiSquareIntermediate[i] = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
+        result->IsmEbmvCoeffIntermediate[i] = std::vector<TFloat64List>(EbmvListSize, TFloat64List(MeiksinListSize, NAN));
+        result->IgmMeiksinIdxIntermediate[i] = std::vector<TInt32List>(EbmvListSize, TInt32List(MeiksinListSize, -1));
+
         BasicFit( spectrum,
                   tpl,
                   clampedlambdaRange,
@@ -632,7 +621,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
                   opt_dustFitting,
                   additional_spcMask,
                   logp,
-                  keepigmism);
+                  MeiksinList,
+                  EbmvList);
 
         if(result->Status[i]==nStatus_InvalidProductsError)
         {

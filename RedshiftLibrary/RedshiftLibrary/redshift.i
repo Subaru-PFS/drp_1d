@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 %module(directors="1") redshift
 
 %include typemaps.i
@@ -16,6 +54,7 @@
 %shared_ptr(CRayCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
+%shared_ptr(CLSFGaussianVariableWidth)
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
@@ -25,6 +64,7 @@
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
 %shared_ptr(CClassificationResult)
+%shared_ptr(CReliabilityResult)
 %shared_ptr(CPdfMargZLogResult)
 %shared_ptr(TCandidateZ)
 %shared_ptr(TExtremaResult)
@@ -33,6 +73,13 @@
 %shared_ptr(CModelSpectrumResult)
 %shared_ptr(CModelFittingResult)
 %shared_ptr(CSpectraFluxResult)
+%shared_ptr(TLSFArguments)
+%shared_ptr(TLSFGaussianVarWidthArgs)
+%shared_ptr(TLSFGaussianConstantWidthArgs)
+%shared_ptr(TLSFGaussianConstantResolutionArgs)
+%shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
+%shared_ptr(CLineModelSolution)
+
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -62,6 +109,7 @@
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -134,7 +182,7 @@ static PyObject* pAmzException;
     }
 }
 
-%exceptionclass AmzException;
+%exceptionclass AmzException; 
 // %include "../RedshiftLibrary/RedshiftLibrary/common/datatypes.h"
 typedef double Float64;
 typedef long long Int64;
@@ -251,6 +299,7 @@ public:
 
 
 %include "method/classificationresult.i"
+%include "method/reliabilityresult.i"
 %include "operator/pdfMargZLogResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/extremaresult.i"
@@ -258,6 +307,7 @@ public:
 %include "linemodel/linemodelextremaresult.i"
 %include "linemodel/modelfittingresult.i"
 %include "operator/modelspectrumresult.i"
+%include "linemodel/linemodelsolution.i"
 
 
 class CSpectraFluxResult : public COperatorResult
@@ -279,12 +329,22 @@ public:
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-            const std::string& paramsJSONString);
+            std::shared_ptr<CRayCatalog> qso_rayCatalog);
   std::shared_ptr<COperatorResultStore> GetResultStore();
+  std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();
 };
 
+
+class CParameterStore : public CScopeStore
+{
+  public:
+    CParameterStore(const TScopeStack& stack);
+    void FromString(const std::string& json);
+    template<typename T> T Get(const std::string& name) const;
+};
+
+%template(Get_string) CParameterStore::Get<std::string>;
 
 class CProcessFlow {
 public:
@@ -302,7 +362,11 @@ class COperatorResultStore
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                        const std::string& method,
                                                                        const std::string& name ) const;
-  
+
+  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+									 const std::string& method,
+                                                                       const std::string& name ) const;
+
   std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;
@@ -329,10 +393,25 @@ class COperatorResultStore
 								   const int& rank
 								   ) const  ;
 
+  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name 
+								   ) const  ;
+
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+								 const std::string& method,
+								 const std::string& name 
+								 ) const  ;
+
   std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
 								     const std::string& method,
 								     const std::string& name ,
 								     const int& rank
+								     ) const  ;
+
+  std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
+								     const std::string& method,
+								     const std::string& name 
 								     ) const  ;
 
   std::shared_ptr<const CSpectraFluxResult> GetSpectraFluxResult(const std::string& objectType,
@@ -354,6 +433,10 @@ class COperatorResultStore
 			   const std::string& method,
 			   const std::string& name ,
 			   const std::string& dataset) const;
+
+      bool HasDataset(const std::string& objectType,
+			   const std::string& method,
+			   const std::string& name ) const;
 
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;
@@ -469,12 +552,13 @@ class CLSF
       GaussianConstantWidth,
       GaussianConstantResolution,
       GaussianNISPSIM2016,
-      GaussianNISPVSSPSF201707
+      GaussianNISPVSSPSF201707,
+      GaussianVariableWidth
     };
  public:
   CLSF(TLSFType name);
   virtual ~CLSF();
-  virtual Float64 GetWidth(Float64 lambda=-1.0) const=0;
+  virtual Float64 GetWidth(Float64 lambda) const=0;
   virtual bool IsValid() const=0;
 };
 
@@ -483,10 +567,31 @@ class CLSFGaussianConstantWidth : public CLSF
  public:
   CLSFGaussianConstantWidth(const Float64 sigma=0.0);
   ~CLSFGaussianConstantWidth();
-  Float64 GetWidth(Float64 lambda=-1.0) const;
+  Float64 GetWidth(Float64 lambda) const;
   bool IsValid() const;
 };
 
+class CLSFGaussianVariableWidth : public CLSF
+{
+ public:
+  CLSFGaussianVariableWidth(const std::shared_ptr<const TLSFGaussianVarWidthArgs>& args);
+  ~CLSFGaussianVariableWidth();
+  Float64 GetWidth(Float64 lambda) const;
+  bool IsValid() const;
+};
+
+class CLSFFactory : public CSingleton<CLSFFactory>
+{
+  public:
+    std::shared_ptr<CLSF> Create(const std::string &name,
+                                const std::shared_ptr<const TLSFArguments>& args);
+    static CLSFFactory& GetInstance();                              
+  private:
+      friend class CSingleton<CLSFFactory>;
+
+      CLSFFactory();
+      ~CLSFFactory() = default;
+};
   typedef enum ErrorCode
     {
       INVALID_SPECTRA_FLUX=	0,
@@ -503,6 +608,39 @@ class CLSFGaussianConstantWidth : public CLSF
       BAD_LINECATALOG
     } ErrorCode;
 
+typedef struct{
+    virtual ~TLSFArguments(){};
+    TLSFArguments()=default;
+    TLSFArguments(const TLSFArguments & other) = default; 
+    TLSFArguments(TLSFArguments && other) = default; 
+    TLSFArguments& operator=(const TLSFArguments& other) = default;  
+    TLSFArguments& operator=(TLSFArguments&& other) = default; 
+}TLSFArguments;
+
+struct TLSFGaussianVarWidthArgs : virtual TLSFArguments
+{
+  TFloat64List lambdas; 
+  TFloat64List width;
+  TLSFGaussianVarWidthArgs(TFloat64List _lambdas, TFloat64List _width);
+};
+
+struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments
+{
+  Float64 width;
+  TLSFGaussianConstantWidthArgs(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
+
+struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments
+{
+  Float64 resolution;
+  TLSFGaussianConstantResolutionArgs(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
+
+struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
+{
+  Float64 sourcesize;
+  TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
+};
 
 class AmzException : public std::exception
 {

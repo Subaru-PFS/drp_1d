@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_spline.h>
@@ -53,19 +91,22 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
     inputContext.m_redshiftStepFFT = m_logGridStep;
     //rebin templates using previously identified parameters,
     // rebin only if rebinning parameters are different from previously used ones
-    for(std::string s : inputContext.GetTemplateCatalog()->GetCategoryList()) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
+    std::shared_ptr<CTemplateCatalog> tplcat = inputContext.GetTemplateCatalog();
+    const TStringList categoryList = tplcat->GetCategoryList();
+    tplcat->m_logsampling = true;
+    for(std::string category : categoryList ) //should retstrict to galaxy templates for now... (else depends on the fftprocessing by object type)
     { 
         //rebin only galaxy templates
-        if(s!="galaxy")
+        if(category!="galaxy")
             continue;
+
         // check existence of already  & correctly logsampled templates
-        inputContext.GetTemplateCatalog()->m_logsampling = true;
-        TTemplateRefList  TplList = inputContext.GetTemplateCatalog()->GetTemplate(TStringList{s});
-        inputContext.GetTemplateCatalog()->m_logsampling = false;
-        if (!TplList.empty())
-        {            
-            for (auto tpl : TplList)
-            {   
+        const UInt32 ntpl = tplcat->GetTemplateCount(category);
+        if (ntpl>0)
+        {        
+            for (UInt32 i=0; i<ntpl; i++)
+            {
+                std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(category, i);
                 Bool needrebinning = false;
                 if( !tpl->GetSpectralAxis().IsLogSampled(m_logGridStep) )
                     needrebinning = true;
@@ -79,23 +120,25 @@ void CSpectrumLogRebinning::RebinInputs(CInputContext& inputContext)
                 if (needrebinning)
                 {
                     Log.LogDetail(" CInputContext::RebinInputs: need to rebin again the template: %s", tpl->GetName().c_str());
-                    std::shared_ptr<const CTemplate> input_tpl = inputContext.GetTemplateCatalog()->GetTemplateByName(TStringList{s}, tpl->GetName());  
-                    tpl = LoglambdaRebinTemplate(input_tpl); // assigin the tpl pointer to a new rebined template
+                    tplcat->m_logsampling = false;
+                    std::shared_ptr<const CTemplate> input_tpl = tplcat->GetTemplateByName(TStringList{category}, tpl->GetName());
+                    tplcat->m_logsampling = true;
+                    tplcat->SetTemplate(LoglambdaRebinTemplate(input_tpl), i);// assigin the tpl pointer to a new rebined template
                 }
-            } 
-            continue; // next category
+            }            
+        } else {
+            // no rebined templates in the category: rebin all templates
+            tplcat->m_logsampling = false;
+            const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplcat)->GetTemplateList(TStringList{category});
+            tplcat->m_logsampling = true;
+            for (auto tpl : TplList)
+            {   
+                std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
+                tplcat->Add(rebinnedTpl);
+            }
         }
-
-        // no rebined templates in the category: rebin all templates
-        TplList = inputContext.GetTemplateCatalog()->GetTemplate(TStringList{s});
-        inputContext.GetTemplateCatalog()->m_logsampling = true;
-        for (auto tpl : TplList)
-        {   
-            std::shared_ptr<CTemplate> rebinnedTpl = LoglambdaRebinTemplate(tpl);
-            inputContext.GetTemplateCatalog()->Add(rebinnedTpl);
-        }
-        inputContext.GetTemplateCatalog()->m_logsampling = false;
     }  
+    tplcat->m_logsampling = false;
 }
 
 /**

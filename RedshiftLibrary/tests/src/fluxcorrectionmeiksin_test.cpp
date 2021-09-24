@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include <boost/test/unit_test.hpp>
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
@@ -213,8 +251,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test)
   Float64 z_center = 2 - (2-1.5)/2;
 
   std::string lsfType = "GaussianConstantWidth";
-  TLSFArguments args;
-  args.width = 1.09;
+  Float64 width = 1.09;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.width", width );
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj;
@@ -243,9 +284,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution)
   Float64 z_center = 2 - (2-1.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 2350;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 2350;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -275,9 +318,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -314,9 +359,11 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
@@ -350,10 +397,13 @@ BOOST_AUTO_TEST_CASE(correction_test)
   Float64 z_center = 2.5 - (0.5)/2;
 
   std::string lsfType = "GaussianConstantResolution";
-  TLSFArguments args;
-  args.resolution = 4300;
-  //args.sourcesize = 0.1 ;
+  Float64 resolution = 4300;
+  TScopeStack scopeStack;
+  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
+  store->Set( "LSF.resolution", resolution);
+  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
+
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
   Float64 lbdaStep=1;

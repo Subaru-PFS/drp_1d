@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.24.0 (2021-09-01)
+### Added
+* [6520] : Add a new class for LSF with wavelength dependent width
+* [5905] : Add line measurement feature
+### Changed
+* [6123] : Set default meiksinIdx to -1 when IGM does not apply
+* [6659] : Set required minimum swif version to 4.0
+### Deprecated
+* None
+### Removed
+* None
+### Fixed
+* [6657] : Fix SNR of best model fitted in `templatecombination` method
+* [6627] : Fix lambda offsets activation
+* Miscellaneous bug fixes and code quality improvement
+
 ## 0.22.0 (2021-05-07)
 ### Added
 * [5644] : Adding IGM convolution with LSF

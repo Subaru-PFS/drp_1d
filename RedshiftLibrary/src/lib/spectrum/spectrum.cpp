@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/noise/flat.h"
@@ -256,21 +294,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     SetMedianWinsize(medianKernelWidth);
     SetDecompScales((Int32)nscales);
     SetWaveletsDFBinPath(dfBinPath);
-
-    //initialize the lsf depending on LSFType
-    std::string lsfType;
-    TLSFArguments args;
-    parameterStore.Get( "LSFType", lsfType );//todo: what is the default value?
-    if(lsfType=="FROMSPECTRUMDATA"){
-        //nothing to do here cause lsf already included in the spectrum
-    }else{ //create an LSF with arguments from param.json
-         //note that relevant arguments depend on the lsf type 
-        parameterStore.Get( "LSF.width", args.width, 13. );
-        parameterStore.Get( "LSF.resolution", args.resolution,  2350.0 );//default value ??
-        parameterStore.Get( "LSF.sourcesize", args.sourcesize, 0.1 );
-    }
-    m_LSF = LSFFactory.Create(lsfType, args);//using factoryClass
-    //m_LSF = CLSF::make_LSF(lsfType, args);
 }
 
 /**
@@ -768,7 +791,7 @@ void CSpectrum::SetMedianWinsize( Float64 winsize )
     m_medianWindowSize = winsize;
 }
 
-void CSpectrum::SetContinuumEstimationMethod( std::string method )
+void CSpectrum::SetContinuumEstimationMethod( std::string method ) const
 {
     if (m_estimationMethod != method){
         m_estimationMethod = method;
@@ -828,12 +851,21 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         return false;
     }
     UInt32 s = targetSpectralAxis.GetSamplesCount();
-
-    if( targetSpectralAxis[0]<m_SpectralAxis[0] || 
-        targetSpectralAxis[s-1]>m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1])
+    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
+    TFloat64Range currentRange = logIntersectedLambdaRange;
+    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
+        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
+        return false;
+    }
+    if(m_SpectralAxis.IsInLinearScale()){
+        currentRange = range;
+    }
+    //find start/end indexs for both axes
+    if( m_SpectralAxis[0]>currentRange.GetBegin()|| 
+        m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]<currentRange.GetEnd())
     {
-        Log.LogError("Problem: TargetSpectralAxis is not included in the current spectral axis" );
-        throw runtime_error("Cannot rebin spectrum: target spectral axis is not included in the current spectral axis");
+        Log.LogError("CSpectrum::Rebin: input spectral range is not included in spectral axis" );
+        throw runtime_error("CSpectrum::Rebin: input spectral range is not included in spectral axis");
     }
 
     if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )
@@ -846,19 +878,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
         Log.LogError("Problem buffer couldnt be computed\n" );
         return false;
     }
-
-    //the spectral axis should be in the same scale
-    TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
-    TFloat64Range currentRange = logIntersectedLambdaRange;
-    if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){
-        Log.LogError("Problem spectral axis and target spectral axis are not in the same scale\n");
-        return false;
-
-    }
-    if(m_SpectralAxis.IsInLinearScale()){
-        currentRange = range;
-    }
-    
+  
     CSpectrumFluxAxis rebinedFluxAxis = std::move(rebinedSpectrum.m_RawFluxAxis);
     rebinedFluxAxis.SetSize(s);  // does not re-allocate if already allocated
 

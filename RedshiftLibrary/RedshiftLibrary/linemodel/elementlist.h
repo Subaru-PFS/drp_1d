@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+// 
+// https://www.lam.fr/
+// 
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+// 
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use, 
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info". 
+// 
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability. 
+// 
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or 
+// data to be ensured and,  more generally, to use and operate it in the 
+// same conditions as regards security. 
+// 
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #ifndef _REDSHIFT_LINEMODEL_ELEMENTLIST_
 #define _REDSHIFT_LINEMODEL_ELEMENTLIST_
 
@@ -50,7 +88,6 @@ public:
                           const Float64 opt_continuum_neg_threshold,
                           const std::string& lineWidthType,
                           const Float64 nsigmasupport,
-                          const Float64 resolution,
                           const Float64 velocityEmission,
                           const Float64 velocityAbsorption,
                           const std::string &opt_rules,
@@ -153,9 +190,12 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
+
+  void setVelocity(Float64 vel,Int32 rayType);
+  void setVelocity(Float64 vel, Int32 idxElt,Int32 rayType);
+
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
-    Float64 GetVelocityInfFromInstrumentResolution();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
     void SetSourcesizeDispersion(Float64 sizeArcsec);
     std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
@@ -376,7 +416,6 @@ private:
     std::string m_ContinuumComponent;
     std::string m_LineWidthType;
     Float64 m_NSigmaSupport;
-    Float64 m_resolution;
     Float64 m_velocityEmission;
     Float64 m_velocityAbsorption;
     Float64 m_velocityEmissionInit;
@@ -394,11 +433,11 @@ private:
 
     CTemplateCatalog m_tplCatalog;
     TStringList m_tplCategoryList;
-    std::string m_tplshapeBestTplName;
-    Float64 m_tplshapeBestTplIsmCoeff;
-    Float64 m_tplshapeBestTplAmplitude;
-    Float64 m_tplshapeBestTplDtm;
-    Float64 m_tplshapeBestTplMtm;
+    std::string m_tplshapeBestTplName = "None";
+    Float64 m_tplshapeBestTplIsmCoeff = NAN;
+    Float64 m_tplshapeBestTplAmplitude = NAN;
+    Float64 m_tplshapeBestTplDtm = NAN;
+    Float64 m_tplshapeBestTplMtm = NAN;
     Int32 m_tplshapeLeastSquareFast = 0;    //for rigidity=tplshape: switch to use fast least square estimation
     std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
 
