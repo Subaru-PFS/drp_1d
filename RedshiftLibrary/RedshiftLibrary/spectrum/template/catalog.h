@@ -69,6 +69,8 @@ public:
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
+    UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
+
     void                    InitIsmIgm(const std::string & calibrationPath, 
                                        std::shared_ptr<const CParameterStore> parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
@@ -78,6 +80,8 @@ public:
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
+
+    UInt32 GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const;
 
           TTemplatesRefDict &    GetList();
     const TTemplatesRefDict &    GetList() const;
@@ -142,6 +146,12 @@ inline
 TTemplatesRefDict & CTemplateCatalog::GetList()
 {
     return m_ListMatrix[m_orthogonal][m_logsampling];
+}
+
+inline
+UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category) const
+{
+    return GetNonNullTemplateCount(category, m_orthogonal, m_logsampling);
 }
 
 }

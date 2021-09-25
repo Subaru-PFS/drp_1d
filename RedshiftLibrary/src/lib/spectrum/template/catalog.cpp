@@ -127,7 +127,6 @@ TStringList CTemplateCatalog::GetCategoryList() const
 UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {   
     UInt32 l; 
-    auto ret = GetList().find( category );
 
     if( GetList().find( category ) == GetList().end() )
         return 0;
@@ -136,6 +135,18 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
     return l;
 }
 
+
+UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const
+{   
+    if (!GetTemplateCount(category)) return 0;
+
+    const TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
+    UInt32 count = 0;
+    for (auto tpl:tplList.at(category)) if (tpl) count++;
+    
+    return count;
+}
+ 
 /**
  * Adds the input to the list of templates, under its category. If the input doesn't have a category, function returns false. Also computes the template without continuum and adds it to the list of templates without continuum. Returns true.
  * @sampling here is relevant here especially for when rebinning
@@ -185,9 +196,7 @@ void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ort
         tplList.at(category)[i] = nullptr; // clear one element in the list
     
         // clear the list if all nullptr
-        UInt32 count = 0;
-        for (auto tpl:tplList.at(category)) if (tpl) count++;
-        if (!count)
+        if (!GetNonNullTemplateCount(category, opt_ortho, opt_logsampling))
             ClearTemplates(category, opt_ortho, opt_logsampling, 0, true);
     }
 

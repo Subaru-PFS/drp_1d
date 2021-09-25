@@ -51,22 +51,15 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     //retrieve params from InputContext
     m_LSF = lsf;
     m_enableOrtho = inputContext.GetParameterStore()->EnableTemplateOrthogonalization(category);
-    
-    Float64 opt_nsigmasupport;
-    Float64 velocityEmission, velocityAbsorption;
 
-    std::string widthType;
-    std::string opt_rules, opt_rigidity;
-    std::string opt_lineforcefilter, opt_linetypefilter;
-
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.linewidthtype", widthType, "velocitydriven" );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.nsigmasupport", opt_nsigmasupport, 8.0 );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.velocityemission", velocityEmission, 200.0 );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.velocityabsorption", velocityAbsorption, 300.0 );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.rules", opt_rules, "all" );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.rigidity", opt_rigidity, "rules" );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.linetypefilter", opt_linetypefilter, "no" );
-    inputContext.GetParameterStore()->Get( category + "linemodelsolve.linemodel.lineforcefilter", opt_lineforcefilter, "no" );
+    std::string widthType = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linewidthtype"); 
+    Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.nsigmasupport");
+    Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityemission");
+    Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityabsorption");
+    std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rules");
+    std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rigidity");
+    std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linetypefilter");
+    std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.lineforcefilter");
 
     std::string rigidity = opt_rigidity.c_str();
     std::string rules = opt_rules.c_str();
@@ -92,29 +85,48 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
     Bool currentsampling = tplCatalog->m_logsampling; 
 
-    tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
-    Bool rebinning = tplCatalog->GetTemplateCount(category) > 0;//is rebinning is true, ortho-log tpls are cleared obligatory
-
     //check if LSF has changed, if yes reorthog all
     bool differentLSF = false;
     std::vector<Bool> samplingList {0,1};
     Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
-    if(std::isnan(tplCatalog->m_ortho_LSFWidth)){
-        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); //first time orthogonalizing - do it for all
+    if(std::isnan(tplCatalog->m_ortho_LSFWidth)){ //first time orthogonalizing - do it for all
+        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); 
         differentLSF = true;
-    }else{
+    }else{ // not first time
         if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
         {   
             differentLSF = true;
             tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
             tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
             tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
-        }else{
-            if(rebinning) //ortho setting is the same but rebinning happened, only log-ortho templates are concerned
-                samplingList = {1};
         }
     }
-    Bool needOrthogonalization = rebinning | differentLSF;
+
+    // check if log-sampled templates have changed and need ortho 
+    Bool need_ortho_logsampling = true;
+    if (!differentLSF){    
+        
+        tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
+        need_ortho_logsampling = tplCatalog->GetTemplateCount(category) > 0;// orig log list is not empty
+        if (need_ortho_logsampling){//log sampling is there       
+            // check if logsampling has changed and thus need orthogonalization  
+            // has it changed for all or some templates ? (if changed, the orthog template will be cleared)
+            tplCatalog->m_orthogonal = 1;
+            UInt32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category); 
+            if ( tpl_log_ortho_count> 0) //log-ortho list still there
+            {
+                // check if ortho missing for some templates only
+                UInt32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
+                if (nonNullCount == tpl_log_ortho_count) need_ortho_logsampling = false; //no need to recompute ortho
+            }
+        }
+              
+        if (need_ortho_logsampling) { // need ortho recompute,  
+            samplingList = {1};
+        }
+    }
+
+    Bool needOrthogonalization = need_ortho_logsampling | differentLSF;
     if(!needOrthogonalization) return;
 
     for(Bool sampling:samplingList)
@@ -124,9 +136,13 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
         tplCatalog->m_orthogonal = 0;
         const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplCatalog)->GetTemplateList(TStringList{category});
         tplCatalog->m_orthogonal = 1;
-        for (auto tpl : TplList)
-        {   Log.LogDetail("    TplOrthogonalization: now processing tpl=%s", tpl->GetName().c_str() );
-            std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(*tpl,
+        Bool partial = (sampling && tplCatalog->GetTemplateCount(category)) ? true :false; //need to replace only some of the ortho
+        for (Int32 i=0; i< TplList.size(); i++)
+        {
+            const CTemplate tpl = *TplList[i];
+            if (partial && tplCatalog->GetTemplate(category, i)) break; //ortho template  is already there  
+            Log.LogDetail(Formatter()<<"    TplOrthogonalization: now processing tpl"<<tpl.GetName() );
+            std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(tpl,
                                                                         calibrationPath,
                                                                         restRayList,
                                                                         opt_fittingmethod,
@@ -136,7 +152,10 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
                                                                         velocityAbsorption,
                                                                         rules,
                                                                         rigidity);
-            tplCatalog->Add(_orthoTpl);
+            if (partial)
+                tplCatalog->SetTemplate(_orthoTpl, i);
+            else
+                tplCatalog->Add(_orthoTpl);
         }
     }    
     tplCatalog->m_logsampling = currentsampling;
@@ -166,8 +185,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
     std::shared_ptr<CTemplate> tplOrtho = std::make_shared<CTemplate>(inputTemplate);
 
-    bool enableModelSubtraction = m_enableOrtho;
-    if(enableModelSubtraction){
+
+    if(m_enableOrtho){
 
         std::string opt_continuumcomponent = "fromspectrum";
         Float64 opt_continuum_neg_threshold=-INFINITY; // not relevant in the "fromspectrum" case
