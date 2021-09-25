@@ -44,16 +44,10 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-
-#include "RedshiftLibrary/spectrum/LSFFactory.h"
-//TODO: check if below are still required
-#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
-#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
-#include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
-#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
-
 #include "RedshiftLibrary/continuum/continuum.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
+
 #include <unordered_map>
 #include <stdexcept>
 #include <string>
@@ -110,6 +104,7 @@ public:
     const CSpectrumFluxAxis&        GetWithoutContinuumFluxAxis() const;
     const CSpectrumNoiseAxis&       GetErrorAxis() const;
     const std::shared_ptr<const CLSF>     GetLSF() const;
+    const std::shared_ptr<const CPhotometricData> GetPhotData() const;
 
     virtual void                    SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis);
     virtual void                    SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis);
@@ -125,6 +120,7 @@ public:
     void                            ValidateSpectrum(TFloat64Range lambdaRange, 
                                                     Bool enableInputSpcCorrect);
     void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
+    void                            SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
 
     UInt32                          GetSampleCount() const;
     Float64                         GetResolution() const;
@@ -171,6 +167,7 @@ protected:
 
     CSpectrumSpectralAxis           m_SpectralAxis;
     std::shared_ptr<const CLSF>           m_LSF;
+    std::shared_ptr<const CPhotometricData> m_photData;
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
@@ -346,10 +343,23 @@ bool CSpectrum::IsNoiseEmpty()const
 {
     return GetErrorAxis().isEmpty();
 }
+
 inline 
 void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 {
     m_LSF = lsf;
+}
+
+inline 
+const std::shared_ptr<const CPhotometricData> CSpectrum::GetPhotData() const
+{
+    return m_photData;
+}
+
+inline
+void CSpectrum::SetPhotData(const std::shared_ptr<const CPhotometricData>& photData)
+{
+    m_photData = photData;
 }
 
 inline

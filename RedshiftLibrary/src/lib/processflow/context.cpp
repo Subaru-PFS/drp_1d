@@ -70,27 +70,35 @@ CProcessFlowContext::~CProcessFlowContext()
 {
 
 }
+
 std::shared_ptr<const CParameterStore> CProcessFlowContext::LoadParameterStore(const std::string& paramsJSONString)
 {
   m_parameterStore->FromString(paramsJSONString);
   return m_parameterStore;
 }
+
 void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CTemplateCatalog> templateCatalog,
                                std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-                               std::shared_ptr<CRayCatalog> qso_rayCatalog)
+                               std::shared_ptr<CRayCatalog> qso_rayCatalog,
+                               std::shared_ptr<CPhotBandCatalog> photBandCatalog
+                               )
 {
   Log.LogInfo("Processing context initialization");
   try
     {
-//  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
-  m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,galaxy_rayCatalog,qso_rayCatalog,m_parameterStore);
+      m_inputContext = std::make_shared<const CInputContext>( spectrum,
+                                                              templateCatalog,
+                                                              galaxy_rayCatalog,
+                                                              qso_rayCatalog,
+                                                              photBandCatalog,
+                                                              m_parameterStore);
     }
   catch(GlobalException const&e)
     {
       throw e;
     }    
-    catch(ParameterException const&e)
+  catch(ParameterException const&e)
     {
       throw e;
     }    
@@ -98,6 +106,7 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
     {
       throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
     }    
+
 }
 
 void CProcessFlowContext::testResultStore() {
