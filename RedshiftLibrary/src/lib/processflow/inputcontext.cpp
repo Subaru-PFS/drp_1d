@@ -50,6 +50,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CRayCatalog> gal_rayCatalog,
                              std::shared_ptr<CRayCatalog> qso_rayCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
+
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
   m_gal_RayCatalog(std::move(gal_rayCatalog)),
@@ -75,7 +76,8 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
-
+    //orthog only if rebinning happens
+    OrthogonalizeTemplates(calibrationPath);
 }
 /*
 Two cases exist:
@@ -165,4 +167,24 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
     }else{
       Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
+}
+
+void CInputContext::OrthogonalizeTemplates(const std::string& calibrationPath)
+{
+    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates("galaxy"); 
+    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates("qso");
+
+    std::shared_ptr<const CLSF> lsf = m_Spectrum->GetLSF(); //to be changed in #6680
+    
+    if(orthog_gal)
+    {
+      CTemplatesOrthogonalization tplOrtho;
+      tplOrtho.Orthogonalize(*this,"galaxy",calibrationPath, lsf);
+    }
+    if(orthog_qso)
+    {
+      CTemplatesOrthogonalization tplOrtho_;//tplOrtho could be reused..TBC
+      tplOrtho_.Orthogonalize(*this,"qso",calibrationPath, lsf);
+    }
+    return;
 }

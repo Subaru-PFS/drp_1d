@@ -59,30 +59,38 @@ public:
 
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
-    void                                    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
+    void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
+    void    ClearTemplates(const std::string & category,  Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates=false);
+    void    ClearTemplateList(const std::string & category,  Bool opt_ortho, Bool opt_logsampling);
 
     TTemplateConstRefList GetTemplateList( const TStringList& categoryList ) const;
     TTemplateRefList GetTemplateList( const TStringList& categoryList );
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
-
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
+    UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
+
     void                    InitIsmIgm(const std::string & calibrationPath, 
                                        std::shared_ptr<const CParameterStore> parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
     mutable Bool            m_logsampling = 0;//non-log by default
-
+    mutable Bool            m_orthogonal = 0;//non-log by default
+    Float64                 m_ortho_LSFWidth = NAN;
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
 
-    //Bool                    LoadCategory( const boost::filesystem::path& dirPath, const std::string& category );
-          TTemplatesRefDict &    GetList();//using m_sampling
+    UInt32 GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const;
+
+          TTemplatesRefDict &    GetList();
     const TTemplatesRefDict &    GetList() const;
 
-    TTemplatesRefDict        m_List;
-    TTemplatesRefDict        m_ListRebinned;
+          TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling);
+    const TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling) const;
+
+    typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
+    TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
 
     std::string m_continuumRemovalMethod;
     Float64 m_continuumRemovalMedianKernelWidth;
@@ -117,15 +125,33 @@ TTemplateConstRefList CTemplateCatalog::GetTemplateList( const TStringList& cate
 
  //below functions aim at avoid using if..else to access the right categoryList
 inline 
+const TTemplatesRefDict & CTemplateCatalog::GetList( Bool opt_ortho, Bool opt_logsampling) const
+{
+    return const_cast<CTemplateCatalog*>(this)->GetList(opt_ortho, opt_logsampling);
+}
+
+inline 
 const TTemplatesRefDict & CTemplateCatalog::GetList() const
 {
     return const_cast<CTemplateCatalog*>(this)->GetList();
 }
 
 inline 
+TTemplatesRefDict & CTemplateCatalog::GetList( Bool opt_ortho, Bool opt_logsampling)
+{
+    return m_ListMatrix[opt_ortho][opt_logsampling];
+}
+
+inline 
 TTemplatesRefDict & CTemplateCatalog::GetList()
 {
-    return m_logsampling? m_ListRebinned : m_List;
+    return m_ListMatrix[m_orthogonal][m_logsampling];
+}
+
+inline
+UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category) const
+{
+    return GetNonNullTemplateCount(category, m_orthogonal, m_logsampling);
 }
 
 }

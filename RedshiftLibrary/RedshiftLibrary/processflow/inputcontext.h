@@ -42,6 +42,7 @@
 #include <memory>
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/linemodel/templatesortho.h"
 namespace NSEpic
 {
 
@@ -89,6 +90,7 @@ private:
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
+  void OrthogonalizeTemplates(const std::string& calibrationPath);
   void RebinInputWrapper();
   void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
                         TFloat64Range lambdaRange, 

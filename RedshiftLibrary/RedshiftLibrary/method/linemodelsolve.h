@@ -81,6 +81,7 @@ public:
                const CRayCatalog& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
+
 private:
 
     void GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;

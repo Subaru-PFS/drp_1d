@@ -305,6 +305,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CSpectrum& spc=*(inputContext->GetSpectrum().get());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
+
   PopulateParameters( inputContext->GetParameterStore() );
 
   //useloglambdasampling param is relevant only if linemodel.continuumfit is set to use fftprocessing
@@ -971,12 +972,11 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         Log.LogInfo( "Linemodel FIRST PASS B enabled. Computing now." );
 
         linemodel_fpb.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
-        //
 
         if(fpb_opt_continuumcomponent=="tplfit" || fpb_opt_continuumcomponent=="tplfitauto"){
             linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit=="yes");
             linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit=="yes");
-	    Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
+	        Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d", m_opt_continuumfitcount);
             linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
             linemodel_fpb.m_opt_tplfit_ignoreLinesSupport = Int32(m_opt_tplfit_ignoreLinesSupport=="yes");
             linemodel_fpb.m_opt_secondpasslcfittingmethod = m_opt_secondpasslcfittingmethod;
