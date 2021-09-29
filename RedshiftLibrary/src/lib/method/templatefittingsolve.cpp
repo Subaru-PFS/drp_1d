@@ -549,7 +549,7 @@ void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperator
                                                        std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
-  Log.LogInfo("Linemodel, saving extrema results");
+  Log.LogInfo("Templatefitting, saving extrema results");
    
   return;
 }
