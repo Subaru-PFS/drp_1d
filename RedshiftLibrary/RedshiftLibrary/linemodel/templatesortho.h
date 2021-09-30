@@ -70,8 +70,8 @@ class CTemplatesOrthogonalization
 public:
 
     //Rule of zero applies here
-    void Orthogonalize(CInputContext& inputContext, const std::string category, 
-                       const std::string calibrationPath,
+    void Orthogonalize(CInputContext& inputContext, 
+                       const std::string category,
                        std::shared_ptr<const CLSF> lsf);
 
     CTemplateCatalog getOrthogonalTplCatalog();

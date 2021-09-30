@@ -83,6 +83,8 @@ class CInputContext
     TFloat64Range zrange;
     }SRebinResults;
   std::map<std::string, SRebinResults> m_logRebin;
+  
+  std::vector<std::string> m_categories{"galaxy", "qso", "star"};
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;
@@ -92,8 +94,8 @@ private:
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
-  void OrthogonalizeTemplates(const std::string& calibrationPath);
-  void RebinInput();
+  void OrthogonalizeTemplates();
+  void RebinInputs();
   void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
                         TFloat64Range lambdaRange, 
                         Bool enableInputSpcCorrect);

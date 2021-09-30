@@ -86,7 +86,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
 
-    OrthogonalizeTemplates(calibrationPath);
+    OrthogonalizeTemplates();
 }
 /*
 Two cases exist:
@@ -116,10 +116,9 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
-    std::vector<std::string> categories{"galaxy", "qso", "star"};
-    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(categories[0]); 
-    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(categories[1]);
-    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing(categories[2]);
+    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
+    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
+    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
     
     if(fft_processing_star)
     {
@@ -141,8 +140,8 @@ void CInputContext::RebinInputs()
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {
-      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( categories[0]+".redshiftstep" ):DBL_MAX;
-      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( categories[1]+".redshiftstep" ):DBL_MAX;        
+      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( m_categories[0]+".redshiftstep" ):DBL_MAX;
+      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( m_categories[1]+".redshiftstep" ):DBL_MAX;        
       m_logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
     }
     std::string category;
@@ -154,12 +153,12 @@ void CInputContext::RebinInputs()
 
     TFloat64Range zrange;
     if(fft_processing_gal){
-      zrange = logReb.LogRebinTemplateCatalog(categories[0]);
-      m_logRebin.insert({categories[0], SRebinResults{zrange}});
+      zrange = logReb.LogRebinTemplateCatalog(m_categories[0]);
+      m_logRebin.insert({m_categories[0], SRebinResults{zrange}});
     }
     if(fft_processing_qso){
-      zrange = logReb.LogRebinTemplateCatalog(categories[1]);
-      m_logRebin.insert({categories[1], SRebinResults{zrange}});
+      zrange = logReb.LogRebinTemplateCatalog(m_categories[1]);
+      m_logRebin.insert({m_categories[1], SRebinResults{zrange}});
     }
 
     return;
@@ -206,22 +205,22 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
     }
 }
 
-void CInputContext::OrthogonalizeTemplates(const std::string& calibrationPath)
+void CInputContext::OrthogonalizeTemplates()
 {
-    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates("galaxy"); 
-    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates("qso");
+    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
+    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
 
     std::shared_ptr<const CLSF> lsf = m_Spectrum->GetLSF(); //to be changed in #6680
     
     if(orthog_gal)
     {
       CTemplatesOrthogonalization tplOrtho;
-      tplOrtho.Orthogonalize(*this,"galaxy",calibrationPath, lsf);
+      tplOrtho.Orthogonalize(*this, m_categories[0],lsf);
     }
     if(orthog_qso)
     {
       CTemplatesOrthogonalization tplOrtho_;//tplOrtho could be reused..TBC
-      tplOrtho_.Orthogonalize(*this,"qso",calibrationPath, lsf);
+      tplOrtho_.Orthogonalize(*this, m_categories[1],lsf);
     }
     return;
 }
