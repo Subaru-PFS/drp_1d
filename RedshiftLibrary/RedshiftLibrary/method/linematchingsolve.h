@@ -48,7 +48,8 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
+class COperatorResultStore;
+class CParameterStore;
 
 /**
  * \ingroup Redshift
@@ -63,7 +64,8 @@ public:
     CMethodLineMatchingSolve();
     ~CMethodLineMatchingSolve();
 
-    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore,
+    std::shared_ptr<CLineMatchingSolveResult> Compute(COperatorResultStore& resultStore,
+						      CParameterStore& paramStore,
                                                        const CSpectrum& spc, 
                                                        const TFloat64Range& lambdaRange, 
                                                        const TFloat64Range& redshiftsRange, 

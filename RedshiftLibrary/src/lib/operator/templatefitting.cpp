@@ -63,7 +63,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <assert.h>
-#include "RedshiftLibrary/processflow/datastore.h"
+
 #define NOT_OVERLAP_VALUE NAN
 #include <stdio.h>
 #include <numeric>

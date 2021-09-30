@@ -54,7 +54,6 @@
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
-#include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
