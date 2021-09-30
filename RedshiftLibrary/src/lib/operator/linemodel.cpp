@@ -137,7 +137,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const Float64 opt_velocityAbsorption,
                                            const std::string &opt_continuumreest,
                                            const std::string &opt_rules,
-                                           const std::string &opt_velocityFitting,
+                                           const bool &opt_velocityFitting,
                                            const UInt32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
                                            const std::string &opt_rigidity,
@@ -307,8 +307,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //passing the ignorelinesSupport option to the secondpass; //before it was hardcoded to 0
     m_model->SetSecondpassContinuumFitPrms(opt_tplfit_integer_chi2_ebmv, m_opt_tplfit_extinction, m_opt_tplfit_ignoreLinesSupport, observedFrame);
 
-    m_model->m_opt_lya_forcefit=m_opt_lya_forcefit=="yes";
-    m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit=="yes";
+    m_model->m_opt_lya_forcefit=m_opt_lya_forcefit;
+    m_model->m_opt_lya_forcedisablefit=m_opt_lya_forcedisablefit;
     m_model->m_opt_lya_fit_asym_min=m_opt_lya_fit_asym_min;
     m_model->m_opt_lya_fit_asym_max=m_opt_lya_fit_asym_max;
     m_model->m_opt_lya_fit_asym_step=m_opt_lya_fit_asym_step;
@@ -320,7 +320,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model->m_opt_lya_fit_delta_step=m_opt_lya_fit_delta_step;
 
 
-    m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit=="yes";
+    m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
 
     if (opt_rigidity == "tplshape")
     {
@@ -1076,7 +1076,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const Float64 opt_velocityAbsorption,
                                             const std::string &opt_continuumreest,
                                             const std::string &opt_rules,
-                                            const std::string &opt_velocityFitting,
+                                            const bool &opt_velocityFitting,
                                             const std::string &opt_rigidity,
                                             const Float64 &opt_emvelocityfitmin,
                                             const Float64 &opt_emvelocityfitmax,
@@ -1482,7 +1482,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                                        const std::string &opt_continuumreest,
                                                        const std::string &opt_fittingmethod,
                                                        const string &opt_rigidity,
-                                                       const std::string &opt_velocityFitting,
+                                                       const bool &opt_velocityFitting,
                                                        const Float64 &opt_emvelocityfitmin,
                                                        const Float64 &opt_emvelocityfitmax,
                                                        const Float64 &opt_emvelocityfitstep,
@@ -1501,7 +1501,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
     // HARDCODED - override: no-velocityfitting for abs
     // velfitMinA = opt_velocityAbsorption;
     // velfitMaxA = opt_velocityAbsorption;
-    if (opt_velocityFitting != "yes")
+    if (!opt_velocityFitting)
     {
         enableVelocityFitting = false;
     } else
@@ -1871,7 +1871,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 }
 
 Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaRange,
-                                                    const string &opt_continuumreest,
+                                                    const std::string &opt_continuumreest,
                                                     const Int32 tplfit_option,
                                                     const bool overrideRecomputeOnlyOnTheCandidate)
 {
@@ -2343,21 +2343,20 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   TStringList tplCategoryList({"linemeas"});
   //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
-  std::string opt_enableLSF = "no";
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
   Float64 opt_resolution = params->Get<Float64>("LSF.resolution");
   Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");//set by client, not in parameters.json
   Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");//set by client, not in parameters.json
-  std::string opt_rules =params->GetScoped<std::string>("rules");
-  std::string opt_rigidity =params->GetScoped<std::string>("rigidity");
-  bool velocityfit = params->GetScoped<std::string>("velocityfit")=="yes";
+  std::string opt_rules = params->GetScoped<std::string>("rules");
+  std::string opt_rigidity = params->GetScoped<std::string>("rigidity");
+  bool velocityfit = params->GetScoped<bool>("velocityfit");
   if (velocityfit) throw GlobalException(INTERNAL_ERROR,"Linemeas does not handle velocityfit for now");
 
   // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
   CRayCatalog::TRayVector restRayList =  restraycatalog.GetFilteredList(CRay::nType_Emission,-1); 
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
-  // bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport")=="yes";
+  // bool opt_tplfit_ignoreLinesSupport = params->GetScoped<std::string>("continuumfit.ignorelinesupport");
   const std::string opt_fittingmethod= "hybrid";//params->GetScoped<std::string>("fittingmethod");
   const std::string& opt_continuumcomponent = "nocontinuum";//params->GetScoped<std::string>("continuumcomponent");
   spc.SetContinuumEstimationMethod("zero");
@@ -2388,7 +2387,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   if (opt_rigidity == "tplshape")
     {
     std::string opt_tplratio_reldirpath = params->GetScoped<std::string>( "tplratio_catalog");
-  m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit") == "yes";
+  m_opt_tplratio_ismFit = params->GetScoped<std::string>( "tplratio_ismfit");
       // init catalog tplratios
       Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
       bool tplratioInitRet =

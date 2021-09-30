@@ -56,13 +56,13 @@ class ResultStoreOutput(AbstractOutput):
         self.operator_results = dict()
         
         self.object_types = []
-        if self.parameters["enablegalaxysolve"] == "yes":
+        if self.parameters["enablegalaxysolve"]:
             self.object_types.append("galaxy")
-        if self.parameters["enablestarsolve"] == "yes":
+        if self.parameters["enablestarsolve"]:
             self.object_types.append("star")
-        if self.parameters["enableqsosolve"] == "yes":
+        if self.parameters["enableqsosolve"]:
             self.object_types.append("qso")
-        if self.parameters["enablelinemeassolve"] == "yes":
+        if self.parameters["enablelinemeassolve"]:
             self.object_types.append("linemeas")
             
         for object_type in self.object_types:
@@ -75,7 +75,7 @@ class ResultStoreOutput(AbstractOutput):
         rs = results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
-        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"] == "yes":
+        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"]:
             root_datasets =[]
         for ds in root_datasets:
             ds_attributes = rs[rs["hdf5_dataset"] == ds]

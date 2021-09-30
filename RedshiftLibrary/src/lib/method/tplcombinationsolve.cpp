@@ -72,11 +72,10 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination = inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
     std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
-    std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
+    bool opt_dustFit = inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
     Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
-    std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
+    bool opt_extinction = inputContext->GetParameterStore()->GetScoped<bool>("extinction");
  
-    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
     std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
 
     std::vector<CMask> maskList;    
@@ -96,13 +95,6 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
       _type = nType_all;
     }
 
-    if(m_opt_saveintermediateresults=="yes")
-    {
-        m_opt_enableSaveIntermediateChisquareResults = true;
-    }else{
-        m_opt_enableSaveIntermediateChisquareResults = false;
-    }
-
     //for now interp must be 'lin'. pfg not availbale for now...
     if(opt_interp!="lin")
     {
@@ -114,10 +106,9 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     Log.LogInfo( "    -interpolation: %s", opt_interp.c_str());
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", opt_spcComponent.c_str());
-    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction?"true":"false");
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit?"true":"false");
     //Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
-    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
 
@@ -185,8 +176,8 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
                                        std::vector<CMask> maskList,
                                        EType spctype,
                                        std::string opt_interp,
-                                       std::string opt_extinction,
-                                       std::string opt_dustFitting)
+                                       bool opt_extinction,
+                                       bool opt_dustFitting)
 {
     std::string scopeStr = "tplcombination";
     Int32 _ntype = 1;
@@ -194,12 +185,12 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-    if(opt_extinction=="yes")
+    if(opt_extinction)
     {
         enable_extinction = 1;
     }
     Int32 enable_dustFitting = 0;
-    if(opt_dustFitting=="yes")
+    if(opt_dustFitting)
     {
         enable_dustFitting = 1;//here we dont distinguish between using on single ismCoeff or iterating over all coeffs. Default to all!
     }

@@ -59,12 +59,12 @@ std::shared_ptr<CSolveResult> CReliabilitySolve::compute(std::shared_ptr<const C
   std::shared_ptr<const CPdfSolveResult> starResult=std::shared_ptr<const CPdfSolveResult>(nullptr);//std::make_shared<const CPdfSolveResult>();
   std::shared_ptr<const CPdfSolveResult> qsoResult=std::shared_ptr<const CPdfSolveResult>(nullptr);
 
-  if(inputContext->GetParameterStore()->Get<std::string>("enablegalaxysolve") == "yes")    
+  if(inputContext->GetParameterStore()->Get<bool>("enablegalaxysolve"))    
     galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
   /*
-  if(inputContext->GetParameterStore()->Get<std::string>("enablestarsolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<bool>("enablestarsolve"))
     starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("star"));
-  if(inputContext->GetParameterStore()->Get<std::string>("enableqsosolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<bool>("enableqsosolve"))
     qsoResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("qso"));
   */
   
