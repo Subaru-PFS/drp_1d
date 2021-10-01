@@ -149,15 +149,15 @@ Bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( cons
             }
         }
         file.close();
-        _correction.fluxcorr.push_back(fluxcorr0);
-        _correction.fluxcorr.push_back(fluxcorr1);
-        _correction.fluxcorr.push_back(fluxcorr2);
-        _correction.fluxcorr.push_back(fluxcorr3);
-        _correction.fluxcorr.push_back(fluxcorr4);
-        _correction.fluxcorr.push_back(fluxcorr5);
-        _correction.fluxcorr.push_back(fluxcorr6);
+        _correction.fluxcorr.push_back(std::move(fluxcorr0));
+        _correction.fluxcorr.push_back(std::move(fluxcorr1));
+        _correction.fluxcorr.push_back(std::move(fluxcorr2));
+        _correction.fluxcorr.push_back(std::move(fluxcorr3));
+        _correction.fluxcorr.push_back(std::move(fluxcorr4));
+        _correction.fluxcorr.push_back(std::move(fluxcorr5));
+        _correction.fluxcorr.push_back(std::move(fluxcorr6));
 
-        m_rawCorrections.push_back(_correction);
+        m_rawCorrections.push_back(std::move(_correction));
     }
 
     return loadSuccess;

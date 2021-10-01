@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/spectrum/logrebinning.h"
+#include <float.h>
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
@@ -61,11 +61,20 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
     
-    RebinInputWrapper();
+    // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
+    //only when lsf changes notably when LSFType is fromspectrumdata
+    //or the first time InitIsmIgm is called
+    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())    
+    {
+        m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
+    }else{
+      if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
+      {
+        m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());
+      }
+    }
 
-    // Calzetti ISM & Meiksin IGM initialization, for both rebinned and original templates
-    std::string calibrationPath =  m_ParameterStore->Get<std::string>( "calibrationDir");  
-    m_TemplateCatalog->InitIsmIgm(calibrationPath, m_ParameterStore, m_Spectrum->GetLSF());
+    RebinInputs();
 
     std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
     Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
@@ -76,8 +85,8 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
         validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
-    //orthog only if rebinning happens
-    OrthogonalizeTemplates(calibrationPath);
+
+    OrthogonalizeTemplates();
 }
 /*
 Two cases exist:
@@ -105,25 +114,52 @@ Template rebinning:
 
 Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus the client has the responsibility to add these info to each spectrum
 */
-void CInputContext::RebinInputWrapper() 
+void CInputContext::RebinInputs() 
 {
-    //TODO: It could be relevant to add a new function, ::hasFFTProcessing containing the below code, to the paramStore
-    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing("galaxy"); 
-    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing("qso");
-    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing("star");
+    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
+    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
+    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
     
-    if(fft_processing_qso || fft_processing_star)
+    if(fft_processing_star)
     {
-        Log.LogError("FFT processing is not yet supported for stars or qso");
-        throw std::runtime_error("FFT processing is not yet supported for star or qso");
+        Log.LogError("FFT processing is not yet supported for stars");
+        throw std::runtime_error("FFT processing is not yet supported for stars");
     }
 
     m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
 
     if(!m_use_LogLambaSpectrum) return;
 
-    CSpectrumLogRebinning logReb;
-    logReb.RebinInputs(*this);
+    if(m_Spectrum->GetSpectralAxis().IsLogSampled())
+    {
+        m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
+        CSpectrumSpectralAxis  spcWav = m_Spectrum->GetSpectralAxis();
+        spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
+        //save into the rebinnedSpectrum
+        m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav), m_Spectrum->GetFluxAxis());
+        m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
+    }else
+    {
+      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( m_categories[0]+".redshiftstep" ):DBL_MAX;
+      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( m_categories[1]+".redshiftstep" ):DBL_MAX;        
+      m_logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
+    }
+    std::string category;
+    std::string errorRebinMethod = "rebinVariance";
+    CSpectrumLogRebinning logReb(*this);
+
+    if(!m_Spectrum->GetSpectralAxis().IsLogSampled())
+      m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
+
+    TFloat64Range zrange;
+    if(fft_processing_gal){
+      zrange = logReb.LogRebinTemplateCatalog(m_categories[0]);
+      m_logRebin.insert({m_categories[0], SRebinResults{zrange}});
+    }
+    if(fft_processing_qso){
+      zrange = logReb.LogRebinTemplateCatalog(m_categories[1]);
+      m_logRebin.insert({m_categories[1], SRebinResults{zrange}});
+    }
 
     return;
 }
@@ -169,22 +205,22 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
     }
 }
 
-void CInputContext::OrthogonalizeTemplates(const std::string& calibrationPath)
+void CInputContext::OrthogonalizeTemplates()
 {
-    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates("galaxy"); 
-    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates("qso");
+    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
+    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
 
     std::shared_ptr<const CLSF> lsf = m_Spectrum->GetLSF(); //to be changed in #6680
     
     if(orthog_gal)
     {
       CTemplatesOrthogonalization tplOrtho;
-      tplOrtho.Orthogonalize(*this,"galaxy",calibrationPath, lsf);
+      tplOrtho.Orthogonalize(*this, m_categories[0],lsf);
     }
     if(orthog_qso)
     {
       CTemplatesOrthogonalization tplOrtho_;//tplOrtho could be reused..TBC
-      tplOrtho_.Orthogonalize(*this,"qso",calibrationPath, lsf);
+      tplOrtho_.Orthogonalize(*this, m_categories[1],lsf);
     }
     return;
 }

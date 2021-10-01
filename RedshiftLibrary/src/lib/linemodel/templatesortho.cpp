@@ -45,7 +45,6 @@
 using namespace NSEpic;
 void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext, 
                                                 const std::string category, 
-                                                const std::string calibrationPath,
                                                 std::shared_ptr<const CLSF> lsf)
 {
     //retrieve params from InputContext
@@ -60,7 +59,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rigidity");
     std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linetypefilter");
     std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.lineforcefilter");
-
+    const std::string calibrationPath = inputContext.GetParameterStore()->Get<std::string>("calibrationDir");
     std::string rigidity = opt_rigidity.c_str();
     std::string rules = opt_rules.c_str();
     //temporary options override to be removed when full tpl ortho is implemented

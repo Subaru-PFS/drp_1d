@@ -84,8 +84,6 @@ public:
 
 private:
 
-    void GetRedshiftSampling(std::shared_ptr<const CInputContext>  inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
-
     ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
                                         std::string opt_rigidity,
                                         std::string opt_combine,

@@ -98,7 +98,6 @@ private:
                                                    std::string opt_extinction="no",
                                                    std::string opt_dustFit="no");
   */ 
-  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,

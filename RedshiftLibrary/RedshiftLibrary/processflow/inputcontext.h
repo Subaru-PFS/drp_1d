@@ -41,11 +41,12 @@
 
 #include <memory>
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/spectrum/logrebinning.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
 namespace NSEpic
 {
-
+class CSpectrumLogRebinning;//forward declaration
 class CSpectrum;
 class CTemplateCatalog;
 class CRayCatalog;
@@ -66,7 +67,6 @@ class CInputContext
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {return m_TemplateCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
-  void RebinInputs();
 
   // mutable getters
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
@@ -77,10 +77,14 @@ class CInputContext
 
   void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc){m_rebinnedSpectrum = rebinnedSpc;}
   TFloat64Range   m_lambdaRange;    
-  TFloat64Range   m_redshiftRangeFFT;//computed with logRebinning 
-  Float64         m_redshiftStepFFT; 
   Bool            m_use_LogLambaSpectrum = 0;
-
+  Float64         m_logGridStep;
+  typedef struct{
+    TFloat64Range zrange;
+    }SRebinResults;
+  std::map<std::string, SRebinResults> m_logRebin;
+  
+  std::vector<std::string> m_categories{"galaxy", "qso", "star"};
 private:
 
   std::shared_ptr<CSpectrum> m_Spectrum;
@@ -90,8 +94,8 @@ private:
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
 
-  void OrthogonalizeTemplates(const std::string& calibrationPath);
-  void RebinInputWrapper();
+  void OrthogonalizeTemplates();
+  void RebinInputs();
   void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
                         TFloat64Range lambdaRange, 
                         Bool enableInputSpcCorrect);

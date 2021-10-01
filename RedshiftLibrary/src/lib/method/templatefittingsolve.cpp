@@ -60,23 +60,6 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
 {
 }
 
-void CMethodTemplateFittingSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
-{
-    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
-    {
-       redshiftRange = inputContext->m_redshiftRangeFFT;
-       redshiftStep = inputContext->m_redshiftStepFFT;
-       if(m_redshiftSampling=="lin"){
-            m_redshiftSampling = "log";
-            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
-       }
-    }else
-    {        
-        //default is to read from the scoped paramStore
-        CSolve::GetRedshiftSampling(inputContext, redshiftRange, redshiftStep );
-    }
-}
-
 std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
