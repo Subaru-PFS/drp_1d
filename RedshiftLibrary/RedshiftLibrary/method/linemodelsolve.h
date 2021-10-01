@@ -56,7 +56,6 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
 
 /**
  * \ingroup Redshift
@@ -71,7 +70,7 @@ public:
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
-                                          TScopeStack &scopeCDataStore) override;
+                                          TScopeStack &scope) override;
 
     Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
@@ -92,8 +91,7 @@ private:
                                         Float64 opt_euclidNHaEmittersPriorStrength,
                                         Float64 opt_modelPriorZStrength) const;
 
-    //Int32 SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result);
-
+   
       void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
                              std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 

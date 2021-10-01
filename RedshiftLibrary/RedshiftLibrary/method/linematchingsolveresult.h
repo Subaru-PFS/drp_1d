@@ -55,12 +55,6 @@ class CProcessFlowContext;
 class CLineMatchingSolveResult : public CSolveResult
 {
   // rule of five zeros
-  /*
-public:
-
-  CLineMatchingSolveResult()=default;
-  virtual ~CLineMatchingSolveResult()=default;
-  */
 
 };
 

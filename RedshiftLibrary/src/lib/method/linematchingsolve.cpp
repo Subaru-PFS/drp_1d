@@ -130,13 +130,11 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
                                                                                const TFloat64Range& redshiftsRange,
                                                                                const CRayCatalog& restRayCatalog )
 {
-  Log.LogDebug ( "std::shared_ptr<const CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
 
   Int32 lineType = CRay::nType_Emission;
   std::string linetypeStr = "E";
 
-  //CDataStore::CAutoScope resultScope ( resultStore, "linematchingsolve" );
-
+  
   Log.LogDebug ( "Attempting to load parameters from parameter JSON." );
   {
     paramStore->GetScopedParam( "linematching.cut", m_cut, 5.0 );

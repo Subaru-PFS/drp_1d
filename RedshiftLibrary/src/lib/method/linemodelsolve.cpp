@@ -580,56 +580,6 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
 
 }
 
-/*
-Int32 CLineModelSolve::SaveContinuumPDF(CDataStore& store, std::shared_ptr<const CLineModelResult> result)
-{
-    Log.LogInfo("Linemodel: continuum Pdfz computation");
-    std::shared_ptr<CPdfMargZLogResult> postmargZResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-    COperatorPdfz pdfz;
-    CZPrior zpriorhelper;
-    Float64 cstLog = result->cstLog;
-    TFloat64List logProba;
-    Float64 logEvidence;
-
-    Int32 retPdfz=-1;
-
-    std::shared_ptr<CPdfLogResult> zPrior = std::shared_ptr<CPdfLogResult>(new CPdfLogResult());
-    zPrior->SetSize(result->Redshifts.size());
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-    {
-        zPrior->Redshifts[k] = result->Redshifts[k];
-    }
-
-    zPrior->valProbaLog = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
-
-
-    //correct chi2 if necessary: todo add switch
-    TFloat64List logLikelihoodCorrected(result->ChiSquareContinuum.size(), DBL_MAX);
-    for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-    {
-        logLikelihoodCorrected[k] = result->ChiSquareContinuum[k];// + result->ScaleMargCorrectionContinuum[k];
-    }
-    retPdfz = pdfz.ComputePdf(logLikelihoodCorrected, result->Redshifts, cstLog, zPrior->valProbaLog, logProba, logEvidence);
-    if(retPdfz==0){
-        store.StoreGlobalResult( "zPDF/logpriorcontinuum.logP_Z_data", zPrior);
-
-        postmargZResult->countTPL = result->Redshifts.size(); // assumed 1 model per z
-        postmargZResult->Redshifts.resize(result->Redshifts.size());
-        postmargZResult->valProbaLog.resize(result->Redshifts.size());
-        for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-        {
-            postmargZResult->Redshifts[k] = result->Redshifts[k] ;
-            postmargZResult->valProbaLog[k] = logProba[k];
-        }
-
-        store.StoreGlobalResult( "zPDF/logposteriorcontinuum.logMargP_Z_data", postmargZResult);
-    }else{
-        Log.LogError("Linemodel: Pdfz computation for continuum FAILED!");
-    }
-
-    return 0;
-}
-*/
 
 
 ///
