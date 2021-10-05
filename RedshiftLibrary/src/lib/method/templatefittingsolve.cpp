@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -513,15 +512,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
-        extremaResult->m_savedModelContinuumFittingResults[i] = 
-                        std::make_shared<CModelContinuumFittingResult>( z,
-                                                                        tplName,
-                                                                        ChiSquare,
-                                                                        TplFitResult->FitAmplitude[idx],
-                                                                        TplFitResult->FitAmplitudeError[idx],
-                                                                        TplFitResult->FitEbmvCoeff[idx],
-                                                                        TplFitResult->FitMeiksinIdx[idx],
-                                                                        FitSNR );          
+     
     }
 
     return extremaResult;

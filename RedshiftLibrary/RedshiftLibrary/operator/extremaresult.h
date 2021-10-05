@@ -50,7 +50,7 @@
 namespace NSEpic
 {
 class CModelSpectrumResult;
-class CModelContinuumFittingResult;
+
 
 #include "RedshiftLibrary/operator/extremaresult.i"
 
@@ -65,8 +65,7 @@ class CModelContinuumFittingResult;
   {
   public:
     std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
-
+  
 
     CExtremaResult<TExtremaResult>(const TCandidateZbyRank& zCandidates)
     {
@@ -77,7 +76,6 @@ class CModelContinuumFittingResult;
 											 TExtremaResult(cand.second)
 											 ));
         }
-      this->m_savedModelContinuumFittingResults.resize(this->m_ranked_candidates.size());
       this->m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
     }
 
