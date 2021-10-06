@@ -110,7 +110,7 @@ CTemplate::CTemplate( const CTemplate& other, const TFloat64List& mask):
 {
     if(other.CheckIsmIgmEnabled()){
         TFloat64Range otherRange(other.m_SpectralAxis[other.m_IsmIgm_kstart], other.m_SpectralAxis[other.m_Ism_kend]);
-        bool ret = otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_Ism_kend);
+        bool ret = otherRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), m_IsmIgm_kstart, m_Ism_kend, false);
         if(!ret)//complete range is masked
         {
             m_IsmIgm_kstart = -1; m_Ism_kend = -1; m_Igm_kend = -1;//not necessary but for security
@@ -318,7 +318,11 @@ void CTemplate::InitIsmIgmConfig( const TFloat64Range & lbdaRange, Float64 redsh
                                   const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
 {
     Int32 kstart, kend;
-    lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
+    bool ret = lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
+    if (!ret){
+        Log.LogError("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
+        throw std::runtime_error("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
+    }
     InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
 }
 
@@ -337,6 +341,15 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
         throw runtime_error("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
     }
     
+    if (kstart<0 || kstart>=m_SpectralAxis.GetSamplesCount()){
+        Log.LogError("CTemplate::InitIsmIgmConfig: kstart outside range");
+        throw runtime_error("CTemplate::InitIsmIgmConfig: kstart outside range");
+    }
+    if (kend<0 || kend>=m_SpectralAxis.GetSamplesCount()){
+        Log.LogError("CTemplate::InitIsmIgmConfig: kend outside range");
+        throw runtime_error("CTemplate::InitIsmIgmConfig: kend outside range");
+    }
+
     m_kDust = -1;
     m_meiksinIdx = -1;
 

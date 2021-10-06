@@ -909,7 +909,11 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
     const Float64 halfwindowsize_z = m_secondPass_halfwindowsize*(1.+z);
     TFloat64Range secondpass_window = {z - halfwindowsize_z, z + halfwindowsize_z};
     Int32 i_min, i_max;
-    secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
+    bool ret = secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
+    if (!ret){
+        Log.LogError("COperatorLineModel::SpanRedshiftWindow: second pass window outside z range");
+        throw std::runtime_error("COperatorLineModel::SpanRedshiftWindow: second pass window outside z range");
+    }
     for (Int32 i=i_min; i<=i_max; ++i)
     {
         extendedList.push_back( m_result->Redshifts[i]);

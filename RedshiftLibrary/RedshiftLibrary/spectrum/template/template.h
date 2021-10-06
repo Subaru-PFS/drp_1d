@@ -204,8 +204,11 @@ void CTemplate::SetType(const CSpectrum::EType type) const
 inline
 void CTemplate::DisableIsmIgm() 
 {
-    GetFluxAxis_() = m_NoIsmIgmFluxAxis;
-    m_NoIsmIgmFluxAxis.clear();
+    // check if not already disabled
+    if (!m_NoIsmIgmFluxAxis.isEmpty()){
+        GetFluxAxis_() = m_NoIsmIgmFluxAxis;
+        m_NoIsmIgmFluxAxis.clear();
+    }
 }
 
 inline
