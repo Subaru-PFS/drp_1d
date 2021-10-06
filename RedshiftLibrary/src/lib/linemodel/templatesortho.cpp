@@ -126,7 +126,11 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     }
 
     Bool needOrthogonalization = need_ortho_logsampling | differentLSF;
-    if(!needOrthogonalization) return;
+    if(!needOrthogonalization) {
+        tplCatalog->m_logsampling = currentsampling;
+        tplCatalog->m_orthogonal = 0; 
+        return;
+    }
 
     for(Bool sampling:samplingList)
     {

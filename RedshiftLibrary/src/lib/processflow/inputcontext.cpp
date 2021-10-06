@@ -64,6 +64,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
     //only when lsf changes notably when LSFType is fromspectrumdata
     //or the first time InitIsmIgm is called
+    m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
     if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())    
     {
         m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
