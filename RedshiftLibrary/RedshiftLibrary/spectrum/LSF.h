@@ -73,6 +73,10 @@ struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments
    {
       width = parameterStore->GetScoped<Float64>("LSF.width");//13.
    }
+    TLSFGaussianConstantWidthArgs(Float64 _width)
+   {
+      width = _width;
+   }
  };
 
 struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments
