@@ -122,8 +122,7 @@ void CInputContext::RebinInputs()
     
     if(fft_processing_star)
     {
-        Log.LogError("FFT processing is not yet supported for stars");
-        throw std::runtime_error("FFT processing is not yet supported for stars");
+        throw GlobalException(INTERNAL_ERROR,"FFT processing is not yet supported for stars");
     }
 
     m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
@@ -189,17 +188,13 @@ void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum,
   }
 
    if( !spectrum->IsFluxValid( lmin, lmax ) ){
-      Log.LogError("Failed to validate spectrum flux on wavelength range (%.1f ; %.1f)",
-                   lmin, lmax );
-      throw std::runtime_error("Failed to validate spectrum flux");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate spectrum flux on wavelength range"<<lmin<<";"<<lmax<<")");
     }else{
       Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }
 	//Check if the noise is valid in the clampedlambdaRange
     if( !spectrum->IsNoiseValid( lmin, lmax ) ){
-      Log.LogError("Failed to validate noise on wavelength range (%.1f ; %.1f)",
-                   lmin, lmax );
-      throw std::runtime_error("Failed to validate noise from spectrum");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate noise on wavelength range"<<lmin<<";"<<lmax<<")");
     }else{
       Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
     }

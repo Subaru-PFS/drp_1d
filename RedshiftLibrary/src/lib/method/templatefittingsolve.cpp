@@ -335,8 +335,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
             Log.LogInfo("templatefittingsolve: using cstLog = %f", chisquarearray.cstLog);
         }else if ( chisquarearray.cstLog != meritResult->CstLog)
         {
-            Log.LogError("templatefittingsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, meritResult->CstLog);
-            throw runtime_error("templatefittingsolve: Found different cstLog values in results");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"templatefittingsolve: Found different cstLog values in results... val-1="<<chisquarearray.cstLog <<" != val-2="<< meritResult->CstLog);
         }
         if(chisquarearray.redshifts.size()==0)
         {
@@ -356,8 +355,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
             }
             if(foundBadStatus)
             {
-                Log.LogError("templatefittingsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
-                throw runtime_error("templatefittingsolve: Found bad status result");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"templatefittingsolve: Found bad status result... for tpl="<< (*it).first.c_str());
             }
         }
 
@@ -416,8 +414,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
     {
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( r.second );
         if(TplFitResult->ChiSquare.size() != redshifts.size()){
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl=%s) has wrong size", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult, one templatefitting results has wrong size");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
         }
 
         Bool foundBadStatus = false;
@@ -437,13 +434,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         }
         if(foundBadStatus)
         {
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl=%s", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
         }
         if(foundBadRedshift)
         {
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl=%s", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult: Found different redshift vector");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
         }
 
     }

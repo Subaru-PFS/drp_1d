@@ -898,7 +898,7 @@ CMask CMultiRollModel::getOutsideLinesMask()
     }
     else
     {
-      throw runtime_error("getOutsideLinesMask: Invalid size");
+      throw GlobalException(INTERNAL_ERROR,"getOutsideLinesMask: Invalid size");
     }
 }
 

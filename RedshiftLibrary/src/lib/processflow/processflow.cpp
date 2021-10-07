@@ -73,11 +73,13 @@ namespace bfs = boost::filesystem;
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
 
-    Log.LogInfo("=====================================================================");
-    std::ostringstream oss;
-    oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
-    Log.LogInfo(oss.str());
-    Log.LogInfo("=====================================================================");
+  try
+    {
+      Log.LogInfo("=====================================================================");
+      std::ostringstream oss;
+      oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
+      Log.LogInfo(oss.str());
+      Log.LogInfo("=====================================================================");
 
     Float64       maxCount; 
     Float64       redshiftseparation = 2*0.005;
@@ -100,8 +102,8 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                       ctx.GetResultStore(),
                       ctx.m_ScopeStack);
    
-    }
-
+      }
+   
     // Quasar method
     //    std::shared_ptr<CSolveResult> qsoResult;
     bool enableQsoFitting = ctx.GetParameterStore()->Get<bool>( "enableqsosolve");
@@ -130,7 +132,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                            ctx.GetResultStore(),
                            ctx.m_ScopeStack);
         }else{
-            throw std::runtime_error("Problem found while parsing the qso method parameter");
+            throw GlobalException(INTERNAL_ERROR,"Problem found while parsing the qso method parameter");
         }
     }
 
@@ -184,7 +186,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         */
         else{
-          throw std::runtime_error("Problem found while parsing the method parameter");
+          throw GlobalException(INTERNAL_ERROR,"Problem found while parsing the method parameter");
         }
       }
     
@@ -214,107 +216,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                           ctx.m_ScopeStack);
 
       }
-    
-}
-
-/**
- * \brief
- * Retrieve the true-redshift from a catalog file path
- *
- * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
- * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
- **/
-Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion )
-{
-    int colID = -1;
-
-    ifstream file;
-
-    file.open( filePath, std::ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-        return false;
-
-    string line;
-
-    // Read file line by line
-    while( getline( file, line ) )
+ }
+  catch(std::exception const&e)
     {
-        // remove comments
-        if(line.compare(0,1,"#",1)==0){
-            continue;
-        }
-        char_separator<char> sep(" \t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-        ttokenizer::iterator it;
-
-        if (colID == -1) {
-            int count = 0;
-            for ( it = tok.begin(); it != tok.end() ; ++count, ++it );
-            switch (count) {
-            case 2:
-                // Two-columns style redshift reference catalog
-                colID = 2;
-                break;
-            case 13:
-                // redshift.csv style redshift reference catalog
-                colID = 3;
-                break;
-            default:
-                Log.LogError("Invalid number of columns in reference catalog (%d)", count);
-                throw std::runtime_error("Invalid number of columns in reference catalog");
-            }
-        }
-        it = tok.begin();
-
-        // Check if it's not a comment
-        if( it != tok.end() && *it != "#" )
-        {
-            string name;
-            if( it != tok.end() )
-            {
-                name = *it;
-            }
-
-            if(reverseInclusion==0)
-            {
-                std::size_t foundstr = name.find(spcid.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }else{
-                std::size_t foundstr = spcid.find(name.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }
-
-            // Found the correct spectrum ID: now read the ref values
-            Int32 nskip = colID-1;
-            for(Int32 i=0; i<nskip; i++)
-            {
-                ++it;
-            }
-            if( it != tok.end() )
-            {
-
-                zref = 0.0;
-                try
-                {
-                    zref = lexical_cast<double>(*it);
-                    return true;
-                }
-                catch (bad_lexical_cast&)
-                {
-                    zref = 0.0;
-                    return false;
-                }
-            }
-
-        }
-    }
-    file.close();
-    return true;
+      throw new GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
+    }    
 }
+

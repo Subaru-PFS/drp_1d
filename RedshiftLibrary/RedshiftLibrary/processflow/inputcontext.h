@@ -115,8 +115,7 @@ std::shared_ptr<CRayCatalog> CInputContext::GetRayCatalog(const std::string &obj
   else if (objectType=="qso")
     return m_qso_RayCatalog;
   else {
-      Log.LogError("CInputContext::GetRayCatalog: invalid object type");
-      throw std::runtime_error("CInputContext::GetRayCatalog: invalid object type");
+      throw GlobalException(INTERNAL_ERROR,"CInputContext::GetRayCatalog: invalid object type");
   }
 }
 

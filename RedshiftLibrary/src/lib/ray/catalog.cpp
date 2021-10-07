@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/ray/catalog.h"
 
 #include <algorithm>    // std::sort
@@ -160,7 +162,7 @@ static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
 
     end = profileString.find("_", start);
     if (profileString.substr(start, end-start+1) != "ASYMFIXED_") {
-        throw std::runtime_error("XXX");
+        throw GlobalException(INTERNAL_ERROR,"XXX");
     }
     start = end + 1;
     end = profileString.find("_", start);
@@ -191,13 +193,12 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
     m_List.clear();
 
     if ( !exists( filePath ) ) {
-      Log.LogError("Can't load line catalog : %s does not exist.", filePath);
-      throw runtime_error("Can't load line catalog");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Can't load line catalog : "<< filePath<<" does not exist.");
     }
 
     file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ) {
-      throw runtime_error("file cannot be opened");
+      throw GlobalException(INTERNAL_ERROR,"file cannot be opened");
     }
 
     string line;
@@ -223,8 +224,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
 
         if(ver!=0.4)
         {
-            Log.LogError("Line catalog version (found ver=%.3f) is not supported", ver);
-            throw runtime_error("Line catalog version is not supported");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Line catalog version (found ver="<<ver<<") is not supported");
         }
 
         // remove comments
@@ -247,8 +247,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
                 pos = lexical_cast<double>(*it);
             }catch (const bad_lexical_cast& e)
             {
-                Log.LogError("Bad file format : %s [%s]", filePath, e.what());
-                throw runtime_error("Bad file format");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad file format : "<<filePath <<" : "<< e.what());
             }
 
             // Parse name
@@ -257,8 +256,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
             if( it != tok.end() )
                 name = *it;
             else{
-                Log.LogError("Bad name in : %s", + filePath);
-                throw runtime_error("Bad name");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad name in : "<< filePath);
             }
 
             // Parse type
@@ -283,8 +281,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
             else if( strcmp(strong.c_str(),"S")==0 )
                 Eforce = 2;
             else{
-                Log.LogError("Bad force in : %s", + filePath);
-                throw runtime_error("Bad force");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad force in :" << filePath);
             }
 
             std::string profileName = "SYM";
@@ -353,8 +350,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
 		        id = lexical_cast<int>(*it);
             }catch (const bad_lexical_cast& e)
             {
-                Log.LogError("Bad file format : %s [%s]", filePath, e.what());
-                throw runtime_error("Bad file format");
+                throw GlobalException(INTERNAL_ERROR,"Bad file format");
             }
         }
 	    
@@ -366,8 +362,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
 
     if(ver<0.0)
     {
-        Log.LogError("Invalid line catalog file (found ver=%.3f)", ver);
-        throw runtime_error("Invalid line catalog file");
+        throw GlobalException(INTERNAL_ERROR,"Invalid line catalog file (found ver");
     }
 }
 

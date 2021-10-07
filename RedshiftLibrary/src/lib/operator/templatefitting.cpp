@@ -507,21 +507,16 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
 
     if( (opt_dustFitting==-10 || opt_dustFitting>-1) && tpl.CalzettiInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no calzetti calib. file loaded in template... aborting");
-        throw std::runtime_error("  Operator-TemplateFitting: no calzetti calib. file in template");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFitting: no calzetti calib. file in template");
     }
     if( opt_dustFitting>-1 && opt_dustFitting>tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
-        Log.LogError("  Operator-TemplateFitting: calzetti index overflow (opt=%d, while NPrecomputedEbmvCoeffs=%d)... aborting",
-                     opt_dustFitting,
-                     tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
-        throw std::runtime_error("  Operator-TemplateFitting: calzetti index overflow");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: calzetti index overflow (dustfitting="<<opt_dustFitting<<",while NPrecomputedEbmvCoeffs="<<tpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()<<")");
     }
 
     if( opt_extinction && tpl.MeiksinInitFailed())
     {
-        Log.LogError("  Operator-TemplateFitting: no meiksin calib. file loaded in template... aborting");
-        throw std::runtime_error("  Operator-TemplateFitting: no meiksin calib. file in template");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFitting: no meiksin calib. file in template");
     }
 
     if( spectrum.GetSpectralAxis().IsInLinearScale() == false || tpl.GetSpectralAxis().IsInLinearScale() == false )
@@ -573,8 +568,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const CSpectr
     }
     if(logpriorze.size()>0 && logpriorze.size()!=sortedRedshifts.size())
     {
-        Log.LogError("  Operator-TemplateFitting: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), sortedRedshifts.size());
-        throw std::runtime_error("  Operator-TemplateFitting: prior list size didn't match the input redshift-list size");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< sortedRedshifts.size());
     }
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );

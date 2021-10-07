@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
@@ -57,8 +58,7 @@ std::shared_ptr<CAirVacuum> CAirVacuumConverter::Get(const std::string & convert
        return(std::make_shared<CAirVacMorton2000>());
     else 
     {
-        Log.LogError(Formatter()<<"CAirVacuum::GetConverter, unknown air->vacuum conversion: "<<converterName);
-        throw runtime_error("CAirVacuum::GetConverter, unknown air->vacuum conversion");
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"CAirVacuum::GetConverter, unknown air->vacuum conversion: "<<converterName);
         return nullptr;
     }
 }
@@ -160,8 +160,7 @@ void CAirVacEdlen1953::CheckWaveRange(const TFloat64List & wave) const
 {
     if (*std::min_element(wave.begin(), wave.end()) < 2000.0)
     {
-        Log.LogError("CAirVacEdlen1953::CheckWaveRange: some wavelengths are below 2000 Angstroem");
-        throw runtime_error("CAirVacEdlen1953::CheckWaveRange: some wavelengths are below 2000 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacEdlen1953::CheckWaveRange: some wavelengths are below 2000 Angstroem");
     }
 }
 
@@ -169,8 +168,7 @@ void CAirVacEdlen1966::CheckWaveRange(const TFloat64List & wave) const
 {
     if (*std::min_element(wave.begin(), wave.end()) < 2000.0)
     {
-        Log.LogError("CAirVacEdlen1966::CheckWaveRange: some wavelengths are below 2000 Angstroem");
-        throw runtime_error("CAirVacEdlen1966::CheckWaveRange: some wavelengths are below 2000 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacEdlen1966::CheckWaveRange: some wavelengths are below 2000 Angstroem");
     }
 }
 
@@ -178,14 +176,12 @@ void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List & wave) const
 {
     if (*std::min_element(wave.begin(), wave.end()) < 2300.0)
     {
-        Log.LogError("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
-        throw runtime_error("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
     }
 
     if (*std::max_element(wave.begin(), wave.end()) > 16900.)
     {
-        Log.LogError("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
-        throw runtime_error("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
 }
 
@@ -193,14 +189,12 @@ void CAirVacCiddor1996::CheckWaveRange(const TFloat64List & wave) const
 {
     if (*std::min_element(wave.begin(), wave.end()) < 3000.0)
     {
-        Log.LogError("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
-        throw runtime_error("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
     if (*std::max_element(wave.begin(), wave.end()) > 16900.)
     {
-        Log.LogError("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
-        throw runtime_error("CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
 }
 
@@ -208,14 +202,12 @@ void CAirVacMorton2000::CheckWaveRange(const TFloat64List & wave) const
 {
     if (*std::min_element(wave.begin(), wave.end()) < 3000.0)
     {
-        Log.LogError("CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
-        throw runtime_error("CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
     if (*std::max_element(wave.begin(), wave.end()) > 16900.)
     {
-        Log.LogError("CAirVacMorton2000::CheckWaveRange: some wavelengths are above 16900 Angstroem");
-        throw runtime_error("CAirVacMorton2000::CheckWaveRange: some wavelengths are above 16900 Angstroem");
+        throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
 }
 

@@ -98,8 +98,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     //for now interp must be 'lin'. pfg not availbale for now...
     if(opt_interp!="lin")
     {
-        Log.LogError("Tplcombinationsolve: interp. parameter must be 'lin'");
-        throw runtime_error("Tplcombinationsolve: interpolation parameter must be lin");
+        throw GlobalException(INTERNAL_ERROR,"Tplcombinationsolve: interp. parameter must be 'lin'");
     }
 
     Log.LogInfo( "Method parameters:");
@@ -197,8 +196,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
 
     //prepare the list of components/templates
     if(tplCategoryList.size()>1){
-        Log.LogError("Multiple categories are passed for tplcombinationsolve");
-        throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
+        throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
@@ -211,15 +209,13 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl]->GetSpectralAxis();
         if(axisSize != tplList[ktpl]->GetSampleCount())
         {
-            Log.LogError("  Method-tplcombination: templates dont have same size");
-            throw std::runtime_error("  Method-tplcombination: templates dont have same size");
+            throw GlobalException(INTERNAL_ERROR,"  Method-tplcombination: templates dont have same size");
         }
         for (Int32 i = 0; i<axisSize; i++)
         {
             if(std::abs(refSpcAxis[i]-currentSpcAxis[i])>1E-8)
             {
-                Log.LogError("  Method-tplcombination: templates dont have same spectralAxis");
-                throw std::runtime_error("  Method-tplcombination: templates dont have same spectralAxis");
+                throw GlobalException(INTERNAL_ERROR,"  Method-tplcombination: templates dont have same spectralAxis");
             }
         }
     }
@@ -309,7 +305,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
     auto results = store->GetGlobalResult( scope.c_str() );
     if(results.expired())
     {
-        throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
+        throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
     std::shared_ptr<const CTplCombinationResult> result = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock() );
 
@@ -333,8 +329,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
             Log.LogInfo("tplcombinationsolve: using cstLog = %f", chisquarearray.cstLog);
         }else if ( chisquarearray.cstLog != result->CstLog)
         {
-            Log.LogError("tplcombinationsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, result->CstLog);
-            throw runtime_error("tplcombinationsolve: Found different cstLog values in results");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"tplcombinationsolve: Found different cstLog values in results... val-1="<<chisquarearray.cstLog<<" != val-2="<< result->CstLog);
         }
         if(chisquarearray.redshifts.size()==0)
         {
@@ -354,8 +349,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
             }
             if(foundBadStatus)
             {
-                Log.LogError("tplcombinationsolve: Found bad status result...");
-                throw runtime_error("tplcombinationsolve: Found bad status result");
+                throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: Found bad status result...");
             }
         }
 
@@ -401,7 +395,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     auto results = store->GetGlobalResult(scope.c_str());
     if(results.expired())
     {
-        throw runtime_error("tplcombinationsolve: SaveExtremaResult - Unable to retrieve tplcombination results");
+        throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: SaveExtremaResult - Unable to retrieve tplcombination results");
     }
     auto TplFitResult = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock());
     const TFloat64List & redshifts = TplFitResult->Redshifts;
@@ -409,22 +403,19 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     Bool foundRedshiftAtLeastOnce = false;
 
     if(TplFitResult->ChiSquare.size() != redshifts.size()){
-        Log.LogError("CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
-        throw runtime_error("CTplCombinationSolve::SaveExtremaResult, results has wrong size");
+        throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
     }
 
     Bool foundBadStatus = false;
 
     if(foundBadStatus)
     {
-        Log.LogError("CTplCombinationSolve::SaveExtremaResult: Found bad status result");
-        throw runtime_error("CTplCombinationSolve::SaveExtremaResult: Found bad status result");
+        throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult: Found bad status result");
     }
 
     //prepare the list of components/templates
     if(tplCategoryList.size()>1){
-        Log.LogError("Multiple categories are passed for tplcombinationsolve");
-        throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
+      throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);

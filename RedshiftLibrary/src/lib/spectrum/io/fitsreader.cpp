@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -226,8 +228,7 @@ void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
                 if( !Read1( fptr, spectrum ) )
 		  {
 		    fits_close_file( fptr, &status );
-		    Log.LogError("error in Read1 : %s", filePath);
-		    throw runtime_error("error in Read1");
+		    throw GlobalException(INTERNAL_ERROR,Formatter()<<"error in Read1 : "<< filePath);
 		  }
             }
             else if( hdunum == 2 )
@@ -236,27 +237,23 @@ void CSpectrumIOFitsReader::Read( const char* filePath, CSpectrum& spectrum )
                 if( !Read2( fptr, spectrum ) )
 		  {
 		    fits_close_file( fptr, &status );
-		    Log.LogError("error in Read2 : %s", filePath);
-		    throw runtime_error("error in Read2 ");
+		    throw GlobalException(INTERNAL_ERROR,Formatter()<<"error in Read2 : "<< filePath);
 		  }
             }
             else
             {
 	      fits_close_file( fptr, &status );
-	      Log.LogError("bad hdu count : %s", filePath);
-	      throw runtime_error("bad hdu count");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"bad hdu count : "<< filePath);
             }
         } else {
 	  fits_close_file( fptr, &status );
-	  Log.LogError("bad hdu count : %s", filePath);
-	  throw runtime_error("bad hdu count");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"bad hdu count : "<<filePath);
 	}
     }
     else
     {
       fits_close_file( fptr, &status );
-      Log.LogError("error opening fits file : %s", filePath);
-      throw runtime_error("error opening fits file");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"error opening fits file : "<< filePath);
     }
     fits_close_file( fptr, &status );
 }

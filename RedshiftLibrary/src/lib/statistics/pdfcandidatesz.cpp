@@ -136,8 +136,7 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
             c[Id].Redshift<= ranges[Id].GetEnd()){
             continue;
         }else{
-            Log.LogError("CPdfCandidatesZ::SetIntegrationWindows: Failed to identify a range including the candidate %f", c[Id].Redshift);
-            throw runtime_error("CPdfCandidatesZ::SetIntegrationWindows: Failed to identify a range including the candidate! Aborting");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPdfCandidatesZ::SetIntegrationWindows: Failed to identify a range including the candidate "<< c[Id].Redshift);
         }
     } 
     return b; 
@@ -242,8 +241,7 @@ Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
     {
         if (redshifts[k] < redshifts[k - 1])
         {
-            Log.LogError("    CPdfCandidatesZ::getCandidateSumTrapez - redshifts are not sorted for (at least) index={}", k);
-            throw runtime_error("CPdfCandidatesZ::getCandidateSumTrapez - redshifts are not sorted");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPdfCandidatesZ::getCandidateSumTrapez - redshifts are not sorted for (at least) index="<< k);
         }
     }
 
@@ -254,8 +252,7 @@ Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
     bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate.Redshift, kmin, kmax);
 
     if(!ok || kmin==-1 || kmax==-1){
-        Log.LogError("CPdfCandidatesZ::getCandidateSumTrapez could not find enclosing interval"); 
-        throw runtime_error("CPdfCandidatesZ::getCandidateSumTrapez could not find enclosing interval");
+        throw GlobalException(INTERNAL_ERROR,"CPdfCandidatesZ::getCandidateSumTrapez could not find enclosing interval");
     }
         
     TFloat64List ZinRange = TFloat64List(redshifts.begin()+kmin, redshifts.begin()+kmax+1);
@@ -384,8 +381,7 @@ Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     {
         if (redshifts[k] < redshifts[k - 1])
         {
-            Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - redshifts are not sorted for (at least) index={}", k);
-            throw runtime_error("CPdfCandidatesZ::getCandidateSumGaussFit - redshifts are not sorted");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPdfCandidatesZ::getCandidateSumGaussFit - redshifts are not sorted for (at least) index="<< k);
             return false;
         }
     }
@@ -397,8 +393,7 @@ Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate.Redshift, kmin, kmax);
 
     if(!ok || kmin==-1 || kmax==-1){
-        Log.LogError("CPdfCandidatesZ::getCandidateSumGaussFit could not find enclosing interval"); 
-        throw runtime_error("CPdfCandidatesZ::getCandidateSumGaussFit could not find enclosing interval");
+        throw GlobalException(INTERNAL_ERROR,"CPdfCandidatesZ::getCandidateSumGaussFit could not find enclosing interval");
     }
 
     if (verbose)
@@ -508,8 +503,7 @@ Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     s = gsl_multifit_fdfsolver_alloc(T, n, p);
     if (s == 0)
     {
-        Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to allocate the multifit solver");
-        throw runtime_error("CPdfCandidatesZ::getCandidateSumGaussFit - Unable to allocate the multifit solver");
+        throw GlobalException(INTERNAL_ERROR,"    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to allocate the multifit solver");
         return false;
     }
 

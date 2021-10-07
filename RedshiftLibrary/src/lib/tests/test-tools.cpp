@@ -139,30 +139,30 @@ bfs::path CPFTest::generate_noise_fits(UInt32 size,
     if (fits_create_file(&fptr, tempfile.c_str(), &status))
     {
         cerr << "Can't fits_create_file : " << status;
-        throw runtime_error("Can't fits_create_file");
+        throw GlobalException(INTERNAL_ERROR,"Can't fits_create_file");
     }
 
     if (fits_create_tbl(fptr, BINARY_TBL, noise.GetSampleCount(), 2,
                         (char **)ttype, (char **)tform, NULL, NULL, &status))
     {
-        throw runtime_error("Can't fits_create_tbl");
+        throw GlobalException(INTERNAL_ERROR,"Can't fits_create_tbl");
     }
 
     if (fits_write_col(fptr, TDOUBLE, 1, 1, 1, noise.GetSampleCount(),
                        const_cast<Float64*>(noise.GetSpectralAxis().GetSamples()), &status))
     {
-        throw runtime_error("Can't fits_write_col");
+        throw GlobalException(INTERNAL_ERROR,"Can't fits_write_col");
     }
 
     if (fits_write_col(fptr, TDOUBLE, 2, 1, 1, noise.GetSampleCount(),
                        const_cast<Float64*>(noise.GetFluxAxis().GetSamples()), &status))
     {
-        throw runtime_error("Can't fits_write_col");
+        throw GlobalException(INTERNAL_ERROR,"Can't fits_write_col");
     }
 
     if (fits_close_file(fptr, &status))
     {
-        throw runtime_error("Can't fits_close_file");
+        throw GlobalException(INTERNAL_ERROR,"Can't fits_close_file");
     }
 
     return tempfile;
@@ -184,7 +184,7 @@ bfs::path CPFTest::generate_spectrum_fits(UInt32 size, Float64 lambda_min,
 
     if (!writer.Write(temp.c_str(), spectrum))
     {
-        throw runtime_error("Can't create temporary fits file");
+        throw GlobalException(INTERNAL_ERROR,"Can't create temporary fits file");
     }
 
     return temp;

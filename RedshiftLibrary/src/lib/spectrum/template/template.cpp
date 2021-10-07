@@ -211,8 +211,7 @@ Bool CTemplate::Save( const char* filePath ) const
 bool CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     if (!CheckIsmIgmEnabled() || CalzettiInitFailed()){
-        Log.LogError("CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
-        throw runtime_error("CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
     }
 
     if(m_kDust == kDust)
@@ -239,8 +238,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
 bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
 {
     if (!CheckIsmIgmEnabled() || MeiksinInitFailed()){
-        Log.LogError("CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
-        throw runtime_error("CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
     }
 
     if(m_meiksinIdx == meiksinIdx)
@@ -337,8 +335,7 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
         m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
     if (MeiksinInitFailed() && CalzettiInitFailed() ) {
-        Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: Cannot init ismigm");
     }
     
     if (kstart<0 || kstart>=m_SpectralAxis.GetSamplesCount()){
@@ -396,12 +393,10 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
                             Int32 FitMeiksinIdx)const
 {
     if (MeiksinInitFailed() && opt_extinction){
-        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
-        throw runtime_error("CTemplate::GetIsmIgmIdxList: Meiksin is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
     }
     if(CalzettiInitFailed() && opt_dustFitting != -1){
-        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
-        throw runtime_error("CTemplate::GetIsmIgmIdxList: Calzetti is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
     }
 
     Int32 MeiksinListSize = 1;

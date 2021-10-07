@@ -194,8 +194,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
 TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0_rest, Float64 z_bin_meiksin, const std::shared_ptr<const CLSF>& lsf )
 {
     if(!lsf->IsValid()){
-        Log.LogError("LSF is not valid");
-        throw std::runtime_error("LSF is not valid");
+        throw GlobalException(INTERNAL_ERROR,"LSF is not valid");
     }
     Float64 lambda0_obs = lambda0_rest*(1+z_bin_meiksin);
     Float64 sigma_obs = lsf->GetWidth(lambda0_obs);
@@ -235,7 +234,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::Convolve(const TFloat64List& arr, c
 {
     if(!arr.size() || !kernel.size())
     {
-        throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+        throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
     }
     Int32 n = arr.size(), Nhalf = int(kernel.size()/2);
     TFloat64List convolvedArr(n);
@@ -266,8 +265,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
                                                                  const TFloat64List& lambdas)
 {
     if(!arr.size()){
-        Log.LogError("Cannot convolve: either kernel or array is empty. ");
-        throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+        throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
     }
 
     Int32 n = arr.size(), Nhalf=-1;
@@ -288,8 +286,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
         GetLSFProfileVector(lambda0, z_center, lsf);//resulting kernel saved in m_kernel
         Nhalf = int(m_kernel.size()/2);
         if(!m_kernel.size()){
-            Log.LogError("Cannot convolve: either kernel or array is empty. ");  
-            throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+            throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
         }
 
         tmp = 0.0;//sum over the intersection area

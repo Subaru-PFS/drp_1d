@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/ray/lineprofileASYM.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 using namespace NSEpic;
 using namespace std;
@@ -77,7 +78,7 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc)
         delta = 0.; //reset it cause no centering here
 
         if(m_asym_delta)//temporary check
-            throw std::runtime_error("Problem in configuring ASYM lineprofile: asym_delta should be null");
+            throw GlobalException(INTERNAL_ERROR,"Problem in configuring ASYM lineprofile: asym_delta should be null");
     }else if(m_centeringMethod == "mean")//ASYMFIT, ASYMFIXED
     {//correction in order to have the line shifted on the mean: from https://en.wikipedia.org/wiki/Skew_normal_distribution
         m0 = muz;
@@ -100,8 +101,7 @@ Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
 {
     if(!isValid())
     {
-        Log.LogError("LineProfile is not valid");
-        throw std::runtime_error("LineProfile is not valid");
+        throw GlobalException(INTERNAL_ERROR,"LineProfile is not valid");
     }
     Float64 xsurc;
     GetXSurc(x-x0, sigma, xsurc);
@@ -123,8 +123,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 re
 {
     if(!isValid())
     {
-        Log.LogError("LineProfile is not valid");
-        throw std::runtime_error("LineProfile is not valid");
+        throw GlobalException(INTERNAL_ERROR,"LineProfile is not valid");
     }
     Float64 xsurc;
     Float64 alpha2 = m_asym_alpha*m_asym_alpha;
@@ -142,8 +141,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float6
 {
     if(!isValid())
     {
-        Log.LogError("LineProfile is not valid");
-        throw std::runtime_error("LineProfile is not valid");
+        throw GlobalException(INTERNAL_ERROR,"LineProfile is not valid");
     }
     Float64 alpha2 = m_asym_alpha*m_asym_alpha;
 
@@ -158,7 +156,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float6
     if(m_centeringMethod == "none"){
         //temporary: double check muz == 0
         if(muz)
-            throw std::runtime_error("Problem: mu is not null for ASYM profile!");
+            throw GlobalException(INTERNAL_ERROR,"Problem: mu is not null for ASYM profile!");
     }
     valSymD  = m_asym_sigma_coeff * (xsurc2/sigma - muz*xsurc/sigma)*exp(-0.5*xsurc2); 
     valAsymD = m_asym_sigma_coeff * m_asym_alpha*sqrt(2)/(sigma*sqrt(M_PI))*(muz - xsurc)*exp(-0.5*xsurc2*alpha2);

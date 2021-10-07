@@ -67,12 +67,12 @@ void CNoiseFromFile::AddNoise( CSpectrum& s1 ) const
 {
     if( !m_initialized )
     {
-        throw runtime_error("Noise wasn't initialized");
+        throw GlobalException(INTERNAL_ERROR,"Noise wasn't initialized");
     }
 
     if( s1.GetSampleCount() != m_NoiseSpectrum.GetSampleCount() )
     {
-        throw runtime_error("Sample counts don't match");
+        throw GlobalException(INTERNAL_ERROR,"Sample counts don't match");
     }
 
     CSpectrumNoiseAxis dstError = CSpectrumNoiseAxis(m_NoiseSpectrum.GetFluxAxis().GetSamplesVector());

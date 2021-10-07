@@ -522,8 +522,7 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const
 {   
     if (!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
-        throw runtime_error("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
     }
 
     return m_regularLogSamplingStep;
@@ -547,7 +546,7 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TIn
 {
     if(!IsLogSampled())
     {
-        throw runtime_error("Cannot subsample spectrum!");
+        throw GlobalException(INTERNAL_ERROR,"Cannot subsample spectrum!");
     }
     UInt32 s = GetSamplesCount();
     if(ssratio==1) return TFloat64List(s, 1.);
@@ -570,8 +569,7 @@ UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float6
 {
     if(!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
-        throw runtime_error("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
     }
 
     UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
@@ -583,8 +581,7 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
 {
     if (!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
-        throw runtime_error("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
     }
 
     TFloat64Range lrange = GetLambdaRange();

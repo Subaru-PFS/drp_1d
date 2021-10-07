@@ -41,6 +41,8 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <cmath>
 #include <float.h>
@@ -130,8 +132,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     Int32 n = xAxis.size();
     
     if( n == 0 ){
-      Log.LogError("CExtremum::Find, input X vector is empty");
-      throw runtime_error("CExtremum::Find, input vector is empty");
+      throw GlobalException(INTERNAL_ERROR,"CExtremum::Find, input X vector is empty");
     }
 
     if ( n != yAxis.size()){
@@ -150,7 +151,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
         if (!rangeok){
           Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]", 
               m_XRange.GetBegin(), m_XRange.GetEnd(), xAxis.front(), xAxis.back());
-          throw runtime_error("CExtremum::Find, bad range");
+          throw GlobalException(INTERNAL_ERROR,"CExtremum::Find, bad range");
         }
     }
     
@@ -223,8 +224,7 @@ Bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
     overlap = windowh.GetBegin() - windowl.GetEnd();
     if(overlap < 0){
       verified = false;
-      Log.LogError("  CExtremum::verifyPeakSeparation: Peaks %f and %f are not enough separated.", maxX[i], maxX[i+1]);
-      throw runtime_error("  CExtremum::verifyPeakSeparation: two consecutive peaks are not enough separated. Abort");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CExtremum::verifyPeakSeparation: Peaks " <<maxX[i]<<" and "<<maxX[i+1] <<" are not enough separated.");
     }
   }
   return verified;
@@ -263,8 +263,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& 
   Log.LogDebug("CExtremum::Find: setting prominenceCut to %d and normalization value to %d \n", prominence_thresh, ref_prominence);
 
   if(maxX.size() == 0){
-    Log.LogError("    CExtremum::Cut_Prominence_Merit:empty MaxX");
-    throw runtime_error("CExtremum::Cut_Prominence_Merit:empty MaxX");
+    throw GlobalException(INTERNAL_ERROR,"    CExtremum::Cut_Prominence_Merit:empty MaxX");
   }
 
   TFloat64List prominence(maxX.size()), tmpX, tmpY; 
@@ -313,8 +312,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& 
       j--;
     }
     if(rangex_low == -1 || rangex_high == -1){
-      Log.LogError("Problem in range determination %d", i);
-      throw runtime_error("Problem in range determination");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Problem in range determination "<< i);
     }
     //look into minX for key_col within rangex
     //key_col is the highest minima between the lowest minimum to the right and left of the peak
@@ -380,8 +378,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& 
 Bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const
 {
   if(maxX.size() == 0){
-        Log.LogError("      CExtremum::Cut_threshold: empty MaxX arg");
-        throw runtime_error(" CExtremum::Cut_threshold: empty MaxX arg");
+        throw GlobalException(INTERNAL_ERROR,"      CExtremum::Cut_threshold: empty MaxX arg");
   }
   if(maxX.size()<=keepMinN){
     return true; 
@@ -469,8 +466,7 @@ Bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yA
 
   // check at least 3 points left (to get an extrema)
   if ( (EndIndex - BeginIndex) <2 ){
-    Log.LogError("CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
-    throw runtime_error("CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
+    throw GlobalException(INTERNAL_ERROR,"CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
   }
 
   bool plank = false; Int32 cnt_plk = 0; 

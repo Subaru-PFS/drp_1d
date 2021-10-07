@@ -125,8 +125,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
     m_LSF(lsf)
 {
     if (m_SpectralAxis.GetSamplesCount() != m_RawFluxAxis.GetSamplesCount()){
-        Log.LogError("CSpectrum: FluxAxis and SpectralAxis do not have same length");
-        throw runtime_error("CSpectrum: FluxAxis and SpectralAxis do not have same length");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum: FluxAxis and SpectralAxis do not have same length");
     }
 }
 
@@ -218,8 +217,7 @@ CSpectrum& CSpectrum::operator=(CSpectrum&& other)
 void CSpectrum::SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis)
 {
     if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()){
-        Log.LogError("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
-        throw runtime_error("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
     }
     m_SpectralAxis  = spectralaxis;
 }
@@ -227,8 +225,7 @@ void CSpectrum::SetSpectralAxis(const CSpectrumSpectralAxis & spectralaxis)
 void CSpectrum::SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis)
 {
     if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()){
-        Log.LogError("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
-        throw runtime_error("CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetSpectralAxis: new spectral axis has not the same size than flux axis");
     }
     m_SpectralAxis  = std::move(spectralaxis);
 }
@@ -236,8 +233,7 @@ void CSpectrum::SetSpectralAxis(CSpectrumSpectralAxis && spectralaxis)
 void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis & fluxaxis)
 {
     if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
-        throw runtime_error("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
     }
     
     ResetContinuum();
@@ -249,8 +245,7 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis & fluxaxis)
 void CSpectrum::SetFluxAxis(CSpectrumFluxAxis && fluxaxis)
 {
     if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
-        throw runtime_error("CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetFluxAxis: new flux axis has not the same size than spectral axis");
     }
 
     ResetContinuum();
@@ -262,8 +257,7 @@ void CSpectrum::SetFluxAxis(CSpectrumFluxAxis && fluxaxis)
 void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumFluxAxis fluxaxis)
 {
     if (fluxaxis.GetSamplesCount() != spcaxis.GetSamplesCount()){
-        Log.LogError("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
-        throw runtime_error("CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetSpectralAndFluxAxes: new flux axis has not the same size than new spectral axis");
     }
 
     ResetContinuum();
@@ -377,8 +371,7 @@ void CSpectrum::EstimateContinuum() const
         Bool ret = RemoveContinuum( continuum );
         if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
         {
-          Log.LogError("Failed to apply continuum substraction for spectrum: %s", this->GetName().c_str());
-          throw std::runtime_error("Failed to apply continuum substraction");
+          throw GlobalException(INTERNAL_ERROR,"Failed to apply continuum substraction");
         }
     }else if( m_estimationMethod == "raw" )
     {
@@ -398,8 +391,7 @@ void CSpectrum::EstimateContinuum() const
     }
     else
     {
-        Log.LogError("CSpectrum::EstimateContinuum Estimation method undefined or unknown");
-        throw runtime_error("CSpectrum::EstimateContinuum Estimation method undefined or unknown");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::EstimateContinuum Estimation method undefined or unknown");
     }
 
     Log.LogDetail("===============================================");
@@ -710,8 +702,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
     }
     if(maxNoise==-DBL_MAX)
     {
-        Log.LogError("    CSpectrum::correctSpectrum - unable to set maxNoise value.");
-        throw std::runtime_error("    CSpectrum::correctSpectrum - impossible to correct input spectrum.");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::correctSpectrum - unable to set maxNoise value");
     }
 
     for(Int32 i=iMin; i<iMax; i++){
@@ -809,8 +800,7 @@ void CSpectrum::SetContinuumEstimationMethod(const CSpectrumFluxAxis & Continuum
 
     if (ContinuumFluxAxis.GetSamplesCount() != GetSampleCount())
     {
-        Log.LogError("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
-        throw runtime_error("CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::SetContinuumEstimationMethod, manual setting of the continuum with a wrong continuum size");
     }
 
     m_ContinuumFluxAxis = ContinuumFluxAxis;
@@ -864,8 +854,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     if( m_SpectralAxis[0]>currentRange.GetBegin()|| 
         m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]<currentRange.GetEnd())
     {
-        Log.LogError("CSpectrum::Rebin: input spectral range is not included in spectral axis" );
-        throw runtime_error("CSpectrum::Rebin: input spectral range is not included in spectral axis");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrum::Rebin: input spectral range is not included in spectral axis" );
     }
 
     if( opt_interp=="precomputedfinegrid" && m_FineGridInterpolated == false )

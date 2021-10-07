@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include "RedshiftLibrary/spectrum/io/asciireader.h"
 
@@ -75,8 +77,7 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
   Log.LogDebug ( "Parsing ASCII file %s.", filePath );
   if( !bfs::exists( filePath ) )
     {
-      Log.LogError("Read: Path for spectrum file does not exist. : %s", filePath);
-      throw runtime_error("Read: Path for spectrum file does not exist");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Read: Path for spectrum file does not exist. : "<< filePath);
     }
 
   bfs::ifstream file;
@@ -84,15 +85,13 @@ void CSpectrumIOAsciiReader::Read( const char* filePath, CSpectrum& spectrum )
 
   if( !IsAsciiDataFile( file ) )
     {
-      Log.LogError("Read: file is not ASCII : %s", filePath);
-      throw runtime_error("Read: file is not ASCII");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Read: file is not ASCII : "<<filePath);
     }
 
   Int32 length = GetAsciiDataLength( file );
   if( length == -1 )
     {
-      Log.LogError("Read: file length == -1 : %s", filePath);
-      throw runtime_error("Read: file length == -1");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Read: file length == -1 : "<< filePath);
     }
 
   CSpectrumFluxAxis spcFluxAxis(length);

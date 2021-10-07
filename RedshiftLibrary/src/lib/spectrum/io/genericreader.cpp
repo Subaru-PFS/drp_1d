@@ -42,6 +42,8 @@
 #include "RedshiftLibrary/noise/flat.h"
 #include "RedshiftLibrary/noise/fromfile.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <boost/filesystem.hpp>
 
@@ -98,8 +100,7 @@ void CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
 
     if( !bfs::exists( path ) )
     {
-      Log.LogError("File doesn't exist : %s", filePath);
-      throw runtime_error("File doesn't exist");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"File doesn't exist : "<< filePath);
     }
 
     if( fileExtension == ".fits" )
@@ -112,7 +113,6 @@ void CSpectrumIOGenericReader::Read( const char* filePath, CSpectrum& spectrum )
         CSpectrumIOAsciiReader reader;
         reader.Read( filePath, spectrum );
     } else {
-      Log.LogError("%s : Unknown file type", filePath);
-      throw runtime_error("Unknown file type");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<filePath<<": Unknown file type");
     }
 }

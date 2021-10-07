@@ -48,6 +48,7 @@ namespace NSEpic {
   typedef enum ErrorCode
     {
       INTERNAL_ERROR=0,
+      EXTERNAL_LIB_ERROR,
       INVALID_SPECTRA_FLUX,
       INVALID_NOISE	,
       SMALL_WAVELENGTH_RANGE ,
