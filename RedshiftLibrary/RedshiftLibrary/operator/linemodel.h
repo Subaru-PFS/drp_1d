@@ -282,7 +282,7 @@ public:
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
-  Int32 Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b);
+    Int32 Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b);
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
@@ -329,7 +329,8 @@ public:
   CLineModelSolution computeForLineMeas(std::shared_ptr<const CInputContext> context,
                           std::string calibrationDir,
                           TFloat64List& redshiftsGrid);
-
+  
+  std::shared_ptr<const LineModelExtremaResult> saveFirstPassExtremaResults(const TCandidateZbyRank & zCandidates); 
   std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,
                                                          const TCandidateZbyRank & zCandidates,

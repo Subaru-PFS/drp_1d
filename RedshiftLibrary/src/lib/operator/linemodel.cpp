@@ -878,23 +878,17 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
 }
 
 
-/**
- * @brief COperatorLineModel::ComputeCandidates
- * @param opt_extremacount
- * @param meritCut: optionally cut the number of candidates by merit (-1=disabled)
- * @return
- */
-Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candidatesz)
+Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & zCandidates)
 {
-    m_firstpass_extremaResult = std::make_shared<COperatorLineModelExtremaResult>(candidatesz.size());
+    m_firstpass_extremaResult = std::make_shared<COperatorLineModelExtremaResult>(zCandidates.size());
 
-    m_firstpass_extremaResult->m_ranked_candidates = candidatesz;
+    m_firstpass_extremaResult->m_ranked_candidates = zCandidates;
 
     // extend z around the extrema
-    for (Int32 j = 0; j < candidatesz.size(); j++)
+    for (Int32 j = 0; j < zCandidates.size(); j++)
     {
-        std::string Id = candidatesz[j].first;
-        const TCandidateZ & cand = candidatesz[j].second;
+        std::string Id = zCandidates[j].first;
+        const TCandidateZ & cand = zCandidates[j].second;
 
         Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
                     cand.Redshift, cand.ValProba);
@@ -908,7 +902,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
     for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
     {
         // find the index in the zaxis results
-        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, candidatesz[i].second.Redshift);
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, zCandidates[i].second.Redshift);
 
         //save basic fitting info from first pass
         m_firstpass_extremaResult->Elv[i] = m_result->LineModelSolutions[idx].EmissionVelocity;
@@ -929,10 +923,33 @@ Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & candi
         m_firstpass_extremaResult->FittedTplpCoeffs[i] = m_result->ContinuumModelSolutions[idx].pCoeffs;
 
         //... TODO: more first pass results can be saved here if needed
-    }
-
+	}
 
     return 0;
+}
+
+//TODO:double check all data are well filled
+std::shared_ptr<const LineModelExtremaResult> COperatorLineModel::saveFirstPassExtremaResults(const TCandidateZbyRank & zCandidates)
+{
+    std::shared_ptr<LineModelExtremaResult> ExtremaResult = make_shared<LineModelExtremaResult>(zCandidates);
+    
+    for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++)
+    {
+        // find the index in the zaxis results
+        Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, zCandidates[i].second.Redshift);
+
+        CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[idx];
+        ExtremaResult->m_ranked_candidates[i].second.updateFromContinuumModelSolution(csolution,true);
+        //ExtremaResult->setCandidateFromContinuumSolution(i, csolution);
+	    
+        //for saving velocities: use CLineModelSolution
+        ExtremaResult->m_ranked_candidates[i].second.updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
+        
+        m_result->LineModelSolutions[idx].fillRayIds();
+        ExtremaResult->m_savedModelFittingResults[i] = std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
+    }
+
+    return ExtremaResult;
 }
 
 Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b)
