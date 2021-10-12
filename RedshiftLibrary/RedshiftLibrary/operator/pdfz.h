@@ -83,7 +83,7 @@ public:
     
   std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(const ChisquareArray & chisquares, Bool integ=true);
 
-    Int32 CombinePDF(const ChisquareArray & chisquares);
+    void CombinePDF(const ChisquareArray & chisquares);
 
     Bool checkPdfSum() const;
 
@@ -94,7 +94,7 @@ public:
 
     static Int32 getIndex( const std::vector<Float64> & redshifts, Float64 z );
 
-    static Int32 ComputePdf(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
+    static void ComputePdf(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
 
     static Float64 getSumTrapez(const TRedshiftList &redshifts, const TFloat64List &valprobalog);
       
@@ -103,9 +103,9 @@ public:
 
 private:
 
-    Int32 Marginalize(const ChisquareArray & chisquarearray);
-    Int32 BestProba(const ChisquareArray & chisquarearray);
-    Int32 BestChi2(const ChisquareArray & chisquarearray);
+    void Marginalize(const ChisquareArray & chisquarearray);
+    void BestProba(const ChisquareArray & chisquarearray);
+    void BestChi2(const ChisquareArray & chisquarearray);
 
     void isPdfValid() const;
 

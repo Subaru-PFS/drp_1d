@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/statistics/zprior.h"
+#include "RedshiftLibrary/operator/pdfz.h"
 
 #include <float.h>
 #include "RedshiftLibrary/log/log.h"
@@ -44,104 +45,79 @@
 using namespace NSEpic;
 using namespace std;
 
-
-CZPrior::CZPrior() {}
-
-CZPrior::~CZPrior() {}
-
+void CZPrior::NormalizePrior(TFloat64List & logzPrior) const
+{
+    Float64 logSum = COperatorPdfz::logSumExpTrick(logzPrior, m_redshifts);
+    for (Float64 & zp:logzPrior) zp -= logSum;
+}
 
 // setting cte priors for all redshift values
-TFloat64List CZPrior::GetConstantLogZPrior(UInt32 nredshifts)
+TFloat64List CZPrior::GetConstantLogZPrior(UInt32 nredshifts) const
 {
     TFloat64List logzPrior(nredshifts, 0.0);
+
+    if (m_normalizePrior) NormalizePrior(logzPrior);
 
     return logzPrior;
 }
 
 TFloat64List CZPrior::GetStrongLinePresenceLogZPrior(const TBoolList & linePresence,
-                                      const Float64 penalization_factor)
+                                      const Float64 penalization_factor) const
 {
-    Float64 probaPresent = 1.0;
-    Float64 probaAbsent = penalization_factor;
-    TFloat64List logzPrior(linePresence.size(), probaAbsent);
-    Float64 sum = 0.0;
+    Float64 logprobaPresent = 0.0;
+    Float64 logprobaAbsent = log(penalization_factor);
+    TFloat64List logzPrior(linePresence.size(), logprobaAbsent);
     for (UInt32 kz = 0; kz < linePresence.size(); kz++)
     {
         if (linePresence[kz])
         {
-            logzPrior[kz] = probaPresent;
+            logzPrior[kz] = logprobaPresent;
         } else
         {
-            logzPrior[kz] = probaAbsent;
-        }
-        sum += logzPrior[kz];
-    }
-
-    if (sum > 0.0)
-    {
-        for (UInt32 kz = 0; kz < linePresence.size(); kz++)
-        {
-            logzPrior[kz] /= sum;
+            logzPrior[kz] = logprobaAbsent;
         }
     }
 
-    // switch to log
-    for (UInt32 kz = 0; kz < linePresence.size(); kz++)
-    {
-        logzPrior[kz] = log(logzPrior[kz]);
-    }
+    if (m_normalizePrior) NormalizePrior(logzPrior);
 
     return logzPrior;
 }
 
 TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(const TInt32List &  nlinesAboveSNR,
-                                                  const Float64 penalization_factor)
+                                                  const Float64 penalization_factor) const
 {
     Int32 nz = nlinesAboveSNR.size();
     Int32 nlinesThres = 2;
-    Float64 probaPresent = 1.0;
-    Float64 probaAbsent = penalization_factor;
-    TFloat64List zPrior(nz, probaAbsent);
-    Float64 sum = 0.0;
+    Float64 logprobaPresent = 0.0;
+    Float64 logprobaAbsent = log(penalization_factor);
+    TFloat64List logzPrior(nz, logprobaAbsent);
     for (UInt32 kz = 0; kz < nz; kz++)
     {
         if (nlinesAboveSNR[kz] >= nlinesThres)
         {
-            zPrior[kz] = probaPresent;
+            logzPrior[kz] = logprobaPresent;
             //Log.LogDetail("ZPrior: Prior: nlinesAboveSNR[kz] >= nlinesThres for kz=%d", kz);
         } else
         {
-            zPrior[kz] = probaAbsent;
-        }
-        sum += zPrior[kz];
-    }
-
-    if (sum > 0.0)
-    {
-        for (UInt32 kz = 0; kz < nz; kz++)
-        {
-            zPrior[kz] /= sum;
+            logzPrior[kz] = logprobaAbsent;
         }
     }
 
-    // switch to log
-    TFloat64List logzPrior(nz, probaAbsent);
-    for (UInt32 kz = 0; kz < nz; kz++)
-    {
-        logzPrior[kz] = log(zPrior[kz]);
-    }
+    if (m_normalizePrior) NormalizePrior(logzPrior);
 
     return logzPrior;
 }
 
-TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, const Float64 aCoeff)
+TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, const Float64 aCoeff) const
 {
     if(aCoeff <= 0.0)
     {
         Log.LogError( "    CZPrior::GetEuclidNhaLogZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
         throw std::runtime_error("    CZPrior::GetEuclidNhaLogZPrior: problem found aCoeff<=0");
     }
+
     TFloat64List zPrior(redshifts.size(), 0.0);
+    TFloat64List logzPrior(redshifts.size(), -INFINITY);
 
     Float64 maxP = -DBL_MAX;
     Float64 minP = DBL_MAX;
@@ -170,53 +146,34 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
         }else if(zPrior[kz]<0){
             zPrior[kz]=DBL_MIN;
         }
-        //apply strength
-        zPrior[kz] = pow(zPrior[kz], aCoeff);
 
-        if (zPrior[kz] > maxP)
-        {
-            maxP = zPrior[kz];
-        }
-        if (zPrior[kz] < minP)
-        {
-            minP = zPrior[kz];
-        }
-    }
+        //apply strength & switch to log
+        logzPrior[kz] = log(zPrior[kz])*aCoeff;
 
-    Log.LogDebug("Pdfz: zPrior: using HalphaZPrior min=%e", minP);
-    Log.LogDebug("Pdfz: zPrior: using HalphaZPrior max=%e", maxP);
-    Float64 dynamicCut = 1e12;
-    if (maxP > 0.0)
-    {
-        for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+        if (logzPrior[kz] > maxP)
         {
-            zPrior[kz] /= maxP;
-            if (zPrior[kz] < 1. / dynamicCut)
-            {
-                zPrior[kz] = 1. / dynamicCut;
-            }
+            maxP = logzPrior[kz];
+        }
+        if (logzPrior[kz] < minP)
+        {
+            minP = logzPrior[kz];
         }
     }
 
-    Float64 sum = 0.0;
-    for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+    Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior min=%e", minP);
+    Log.LogDebug("Pdfz: log zPrior: using HalphaZPrior max=%e", maxP);
+
+    Float64 log_dynamicCut = -log(1e12);
+    if (maxP == maxP && maxP != -INFINITY) // test NAN & -inf
     {
-        sum += zPrior[kz];
-    }
-    if (sum > 0.0)
-    {
-        for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+        for (Float64 & zP:logzPrior)
         {
-            zPrior[kz] /= sum;
+            zP -= maxP;
+            if (zP < log_dynamicCut) zP = log_dynamicCut;
         }
     }
 
-    // switch to log
-    std::vector<Float64> logzPrior(redshifts.size(), 0.0);
-    for (UInt32 kz = 0; kz < redshifts.size(); kz++)
-    {
-        logzPrior[kz] = log(zPrior[kz]);
-    }
+    if (m_normalizePrior) NormalizePrior(logzPrior);
 
     return logzPrior;
 }
@@ -229,51 +186,31 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
  * @param logprior2
  * @return
  */
-TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1,
-                                     const TFloat64List & logprior2)
+TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1, const TFloat64List & logprior2) const
 {
-    bool normalizePrior=true;
-    TFloat64List logzPriorCombined;
     if (logprior1.size() != logprior2.size())
     {
-        return logzPriorCombined;
+        Log.LogError("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+        throw std::runtime_error("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+
     }
     Int32 n = logprior1.size();
+
+    TFloat64List logzPriorCombined(n);
 
     Float64 maxi = DBL_MIN;
     for (UInt32 k = 0; k < n; k++)
     {
         Float64 val = logprior1[k] + logprior2[k];
+        logzPriorCombined[k] = val;
         if (maxi < val)
         {
             maxi = val;
         }
     }
-    std::vector<Float64> zPrior_modif(n, 0.0);
-    for (UInt32 k = 0; k < n; k++)
-    {
-        zPrior_modif[k] = logprior1[k] + logprior2[k] - maxi;
-    }
 
-    Float64 sumExpModif = 0.0;
-    for (UInt32 k = 0; k < n; k++)
-    {
-        sumExpModif += exp(zPrior_modif[k]);
-    }
-
-    Float64 logSum = log(exp(maxi)) * sumExpModif;
-    Float64 lognormterm = 0.0;
-    if(normalizePrior)
-    {
-        lognormterm=logSum;
-    }
-
-    logzPriorCombined.resize(n);
-    for (Int32 k = 0; k < n; k++)
-    {
-        logzPriorCombined[k] = logprior1[k] + logprior2[k] - lognormterm;
-    }
-
+    if (m_normalizePrior) NormalizePrior(logzPriorCombined);
+ 
     return logzPriorCombined;
 }
 
