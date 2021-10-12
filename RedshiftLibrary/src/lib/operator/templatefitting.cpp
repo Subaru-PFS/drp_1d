@@ -165,7 +165,11 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
     Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
-    currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
+    bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
+    if (!kStartEnd_ok){
+        Log.LogError("COperatorTemplateFitting::BasicFit: impossible to get valid kstart or kend");
+        throw std::runtime_error("COperatorTemplateFitting::BasicFit: impossible to get valid kstart or kend");
+    }
     if (apply_ism || opt_extinction){          
         m_templateRebined_bf.InitIsmIgmConfig(kStart, kEnd, redshift, tpl.m_ismCorrectionCalzetti, tpl.m_igmCorrectionMeiksin);
     }

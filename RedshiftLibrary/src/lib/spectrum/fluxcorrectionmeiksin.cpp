@@ -276,8 +276,8 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     //determine the restframe convolution range, i.e., convolRange/(1+z_center)
     TFloat64Range convRange_rest(m_convolRange.GetBegin()/(1+z_center), m_convolRange.GetEnd()/(1+z_center));//conv range in restframe
     Int32 i_min = -1, i_max = -1; 
-    bool ret = convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max); 
-    if(i_min == -1 && i_max == -1)
+    bool ret = convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max, false); 
+    if(!ret)
     {
         return convolvedArr;
     }

@@ -174,16 +174,16 @@ template <typename T> class CRange
  }
 
   //enclosed refers to having i_max referring to m_End or higher and i_min referring to m_Begin or lower
-  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max) const
+  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,const T& value, Int32& i_min,Int32& i_max, bool warning=true) const
   {
     if (value < m_Begin || value > m_End)
       {
-        Log.LogError("%.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
+        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: value %.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
         return false;
       }
     else if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
     typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
@@ -197,11 +197,11 @@ template <typename T> class CRange
     return true;
   }
 
-  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  bool getEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
     
@@ -215,11 +215,11 @@ template <typename T> class CRange
     return true;
   }
 
-    bool getExactEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+    bool getExactEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
     
@@ -228,12 +228,12 @@ template <typename T> class CRange
 
     if(*it_min != m_Begin)
       {
-        Log.LogError("Cannot find %.5f in ordered_values",m_Begin);
+        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_Begin);
         return false;
       }
     if(*it_max != m_End)
      {
-        Log.LogError("Cannot find %.5f in ordered_values",m_End);
+        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_End);
         return false;
       }
 
@@ -242,11 +242,11 @@ template <typename T> class CRange
     return true;
   }
   //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
-  bool getClosedIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max) const
+  bool getClosedIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
   {
     if(m_End < ordered_values.front() || m_Begin > ordered_values.back())
       {
-        Log.LogError("]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
         return false;
       }
     
@@ -259,7 +259,7 @@ template <typename T> class CRange
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if(i_min>i_max){
-        Log.LogError("There is no sample inside range (min,max indices=[%d,%d]",i_min, i_max);
+        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: There is no sample inside range (min,max indices=[%d,%d]",i_min, i_max);
         return false;
     }
     return true;

@@ -537,8 +537,8 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
 
 TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
 {
-    Int32 imin, imax;
-    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
+    Int32 imin=-1, imax=m_Samples.size();
+    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
     return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
 }
 
