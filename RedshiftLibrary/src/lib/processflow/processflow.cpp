@@ -217,9 +217,17 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
       }
  }
+    catch(GlobalException const&e)
+    {
+      throw e;
+    }    
+    catch(ParameterException const&e)
+    {
+      throw e;
+    }    
   catch(std::exception const&e)
     {
-      throw new GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
+      throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
     }    
 }
 
