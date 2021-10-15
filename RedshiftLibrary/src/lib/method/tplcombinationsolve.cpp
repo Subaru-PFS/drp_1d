@@ -200,6 +200,10 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    if (tplCatalog.GetTemplateCount(tplCategoryList[0]))
+      {
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< tplCategoryList[0] <<" is empty");
+      }
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();

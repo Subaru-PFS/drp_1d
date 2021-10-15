@@ -131,6 +131,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     Log.LogInfo( "");
 
     Log.LogInfo( "Iterating over %d tplCategories", m_categoryList.size());
+    if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0)
+      {
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
+      }
+    
     for( UInt32 i=0; i<m_categoryList.size(); i++ )
     {
         std::string category = m_categoryList[i];
