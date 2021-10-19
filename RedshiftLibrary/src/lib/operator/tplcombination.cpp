@@ -46,7 +46,6 @@
 #include  "RedshiftLibrary/extremum/extremum.h"
 #include  "RedshiftLibrary/common/quicksort.h"
 #include  "RedshiftLibrary/common/indexing.h"
-#include  "RedshiftLibrary/processflow/datastore.h"
 #include  "RedshiftLibrary/log/log.h"
 
 #include <math.h>

@@ -73,7 +73,6 @@ namespace NSEpic
     CPdfSolveResult& operator=(CPdfSolveResult&& other) = default;
 
 
-    //virtual void preSave(const CDataStore& store) = 0;
     Int32 m_bestRedshiftMethod = 2; //0:best chi2 or proba, 2: best marg proba
 
 

@@ -64,14 +64,6 @@ public:
                                 const TCandidateZ& ExtremaResult,
                                 const std::string & opt_pdfcombination,
                                 Float64 evidence );
-    //CTemplateFittingSolveResult(const EType type=nType_raw, const std::string scope="templatefittingsolve");
-
-/*    Bool GetBestRedshift(const CDataStore& store);
-    Bool GetBestRedshiftPerTemplateString( const CDataStore& store, std::string& output ) const;
-    Bool GetBestRedshiftFromPdf(const CDataStore& store);
-    Int32 GetBestModel(const CDataStore& store, Float64 z);*/
-    
-/*  void preSave(const CDataStore& store);*/
 
 
 

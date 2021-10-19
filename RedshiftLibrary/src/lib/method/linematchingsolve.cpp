@@ -47,8 +47,8 @@
 #include "RedshiftLibrary/operator/raydetectionresult.h"
 #include "RedshiftLibrary/operator/raymatching.h"
 #include "RedshiftLibrary/operator/raymatchingresult.h"
-#include "RedshiftLibrary/processflow/datastore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
+#include "RedshiftLibrary/processflow/resultstore.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -57,7 +57,8 @@ using namespace std;
 /**
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
-CMethodLineMatchingSolve::CMethodLineMatchingSolve()
+CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType):
+  CSolve("linematchingsolve",scope,objectType)
 {    
   Log.LogDebug ( "CMethodLineMatchingSolve::CMethodLineMatchingSolve()" );
 
@@ -88,6 +89,21 @@ CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
   Log.LogDebug ( "CMethodLineMatchingSolve::~CMethodLineMatchingSolve()" );
 }
 
+
+std::shared_ptr<CSolveResult> CMethodLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+								std::shared_ptr<COperatorResultStore> resultStore,
+								TScopeStack &scope)
+{
+  return Compute(*(resultStore.get()),
+		 inputContext->GetParameterStore(),
+		 *(inputContext->GetSpectrum().get()),
+		 m_lambdaRange,
+		 m_redshifts,
+		 *(inputContext->GetRayCatalog(m_objectType).get()));
+		   
+}
+
+
 /**
  * \brief Attempts to find a matching line using the input parameters.
  * This algorithm will create and run a CPeakDetection object, using the parameters as input.
@@ -107,35 +123,33 @@ CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
  * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( CDataStore& resultStore,
+std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COperatorResultStore& resultStore,
+									     std::shared_ptr<const CParameterStore> paramStore,
                                                                                const CSpectrum& spc,
                                                                                const TFloat64Range& lambdaRange,
                                                                                const TFloat64Range& redshiftsRange,
-                                                                               Float64 redshiftStep,
                                                                                const CRayCatalog& restRayCatalog )
 {
-  Log.LogDebug ( "std::shared_ptr<const CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( CDataStore& resultStore, const CSpectrum& spc, const TFloat64Range& lambdaRange, const TFloat64Range& redshiftsRange, Float64 redshiftStep, const CRayCatalog& restRayCatalog )" );
 
   Int32 lineType = CRay::nType_Emission;
   std::string linetypeStr = "E";
 
-  CDataStore::CAutoScope resultScope ( resultStore, "linematchingsolve" );
-
+  
   Log.LogDebug ( "Attempting to load parameters from parameter JSON." );
   {
-    resultStore.GetScopedParam( "linematching.cut", m_cut, 5.0 );
-    resultStore.GetScopedParam( "linematching.detectioncut", m_detectioncut, 5.0 );
-    resultStore.GetScopedParam( "linematching.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
-    resultStore.GetScopedParam( "linematching.disablegaussianfitqualitycheck", m_disablegaussianfitqualitycheck, 0 );
-    resultStore.GetScopedParam( "linematching.dynamicLinematching", m_dynamicLinematching, 0 );
-    resultStore.GetScopedParam( "linematching.enlargeRate", m_enlargeRate, 2.0 );
-    resultStore.GetScopedParam( "linematching.linetype", linetypeStr, "Emission" );
-    resultStore.GetScopedParam( "linematching.maxsize", m_maxsize, 70.0 );
-    resultStore.GetScopedParam( "linematching.minMatchNum", m_minMatchNum, 1.0 );
-    resultStore.GetScopedParam( "linematching.minsize", m_minsize, 3.0 );
-    resultStore.GetScopedParam( "linematching.strongcut", m_strongcut, 2.0 );
-    resultStore.GetScopedParam( "linematching.tol", m_tol, 0.002 );
-    resultStore.GetScopedParam( "linematching.winsize", m_winsize, 250.0 );
+    paramStore->GetScopedParam( "linematching.cut", m_cut, 5.0 );
+    paramStore->GetScopedParam( "linematching.detectioncut", m_detectioncut, 5.0 );
+    paramStore->GetScopedParam( "linematching.detectionnoiseoffset", m_detectionnoiseoffset, 0.0 );
+    paramStore->GetScopedParam( "linematching.disablegaussianfitqualitycheck", m_disablegaussianfitqualitycheck, 0 );
+    paramStore->GetScopedParam( "linematching.dynamicLinematching", m_dynamicLinematching, 0 );
+    paramStore->GetScopedParam( "linematching.enlargeRate", m_enlargeRate, 2.0 );
+    paramStore->GetScopedParam( "linematching.linetype", linetypeStr, "Emission" );
+    paramStore->GetScopedParam( "linematching.maxsize", m_maxsize, 70.0 );
+    paramStore->GetScopedParam( "linematching.minMatchNum", m_minMatchNum, 1.0 );
+    paramStore->GetScopedParam( "linematching.minsize", m_minsize, 3.0 );
+    paramStore->GetScopedParam( "linematching.strongcut", m_strongcut, 2.0 );
+    paramStore->GetScopedParam( "linematching.tol", m_tol, 0.002 );
+    paramStore->GetScopedParam( "linematching.winsize", m_winsize, 250.0 );
     lineType = CRay::nType_All;
     if( linetypeStr == "Absorption" )
       {

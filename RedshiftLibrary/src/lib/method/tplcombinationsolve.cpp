@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/processflow/datastore.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/zprior.h"
 

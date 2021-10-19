@@ -55,7 +55,6 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
 
 /**
  * \ingroup Redshift
@@ -82,22 +81,6 @@ private:
                                         std::shared_ptr<COperatorResultStore> resultStore,
                                         TScopeStack &scope) override;
 
-  /*
-    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
-                                                   const CSpectrum& spc,
-                                                   const CTemplateCatalog& tplCatalog,
-                                                   const TStringList& tplCategoryList,
-                                                   const TFloat64Range& lambdaRange,
-                                                   const TFloat64List& redshifts,
-                                                   Float64 overlapThreshold,
-                                                   std::vector<CMask> maskList,
-                                                   const std::string outputPdfRelDir,
-                                                   const Float64 redshiftSeparation,
-                                                   std::string spcComponent="raw" ,
-                                                   std::string opt_interp="lin",
-                                                   std::string opt_extinction="no",
-                                                   std::string opt_dustFit="no");
-  */ 
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,

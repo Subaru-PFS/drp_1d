@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/linemodel/modelfittingresult.h"
-#include "RedshiftLibrary/processflow/datastore.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 
@@ -66,7 +65,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   TScopeStack scopeStack;
   COperatorResultStore resultStore = COperatorResultStore(scopeStack);
   CParameterStore parameStore = CParameterStore(scopeStack);
-  CDataStore store(resultStore, parameStore);
+  
 
   boost::filesystem::path temp = boost::filesystem::unique_path();
 

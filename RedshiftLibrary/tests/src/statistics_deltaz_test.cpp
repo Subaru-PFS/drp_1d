@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
-#include "RedshiftLibrary/processflow/datastore.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
