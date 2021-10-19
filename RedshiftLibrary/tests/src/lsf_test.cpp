@@ -64,7 +64,7 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(LSF)
 
-bool correctMessage(const std::exception& ex)
+bool correctMessage(const GlobalException& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("Size do not match "));
     return true;
@@ -143,9 +143,9 @@ BOOST_AUTO_TEST_CASE(LSF_VariableWidth)
 
     TFloat64List widthList2(n+1, 0.5);
     std::shared_ptr<TLSFArguments> args2 = std::make_shared<TLSFGaussianVarWidthArgs>(widthList2,spcAxis);
-    BOOST_CHECK_EXCEPTION( LSFFactory.Create(lsfType, args2);,
-                        std::exception, correctMessage);
-
+    //    BOOST_CHECK_EXCEPTION( LSFFactory.Create(lsfType, args2);,
+    //                    GlobalException, correctMessage);
+    BOOST_CHECK_THROW(LSFFactory.Create(lsfType, args2);,GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(LSFArgsPolymorphism)

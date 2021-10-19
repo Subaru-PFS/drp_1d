@@ -39,6 +39,7 @@
 
 #include "RedshiftLibrary/photometry/photometricband.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
 
 #include <stdexcept>
 
@@ -49,8 +50,7 @@ CPhotometricBand::CPhotometricBand(const Float64 * trans, Int32 n1, const Float6
 {
     // check all sizes are the same
     if (n1!=n2){
-        Log.LogError("CPhotometryBand::CPhotometryBand: transmission and wavelength have not the same size");
-        throw std::runtime_error("CPhotometryBand::CPhotometryBand: transmission and wavelength have not the same size");
+        throw GlobalException(INTERNAL_ERROR,"CPhotometryBand::CPhotometryBand: transmission and wavelength have not the same size");
     }
 }
 

@@ -312,15 +312,13 @@ void COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List &
         return ;
     } else if (redshifts.size() < 1)
     {
-        Log.LogError("COperatorPdfz::ComputePdf, redshifts is empty");
-        throw runtime_error("COperatorPdfz::ComputePdf, redshifts is empty");
+        throw GlobalException(INTERNAL_ERROR,"COperatorPdfz::ComputePdf, redshifts is empty");
     }
 
     // check that the zPrior is size-compatible
     if (logZPrior.size() != redshifts.size())
     {
-        Log.LogError("COperatorPdfz::ComputePdf, redshifts and logZPrior have different sizes");
-        throw runtime_error("COperatorPdfz::ComputePdf, redshifts and logZPrior have different sizes");
+        throw GlobalException(INTERNAL_ERROR,"COperatorPdfz::ComputePdf, redshifts and logZPrior have different sizes");
     }
 
     if (verbose)
@@ -434,13 +432,11 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
 
     if (meritResults.size() != zPriors.size())
     {
-        Log.LogError("COperatorPdfz::Marginalize: merit.size (%d) != prior.size (%d)", meritResults.size(), zPriors.size());
-        throw runtime_error("COperatorPdfz::Marginalize: merit.size != prior.size ");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz::Marginalize: merit.size ("<<meritResults.size()<<") != prior.size ("<<zPriors.size()<<")");
     }
     if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1)
     {
-        Log.LogError("COperatorPdfz::Marginalize: merit.size (%d), prior.size (%d), or redshifts.size (%d) is zero !", meritResults.size(), zPriors.size(), redshifts.size());
-        throw runtime_error("COperatorPdfz::Marginalize: merit.size, prior.size or redshifts.size is zero !");
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz::Marginalize: merit.size("<<meritResults.size()<<"), prior.size("<<zPriors.size()<<") or redshifts.size("<<redshifts.size()<<") is zero !");
     }
 
     // check merit curves. Maybe this should be assert stuff ?
@@ -449,8 +445,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
         {
             if (m != m) // test NAN value
             {
-                Log.LogError("COperatorPdfz::Marginalize - merit result has at least one nan value");
-                throw runtime_error("COperatorPdfz::Marginalize - merit result has at least one nan value");
+                throw GlobalException(INTERNAL_ERROR,"COperatorPdfz::Marginalize - merit result has at least one nan value");
             }
         }
 
@@ -671,8 +666,7 @@ void COperatorPdfz::BestProba(const ChisquareArray & chisquarearray)
     Float64 zstep = (maxdz + mindz) / 2.0;
     if (abs(maxdz - mindz) / zstep > reldzThreshold)
     {
-        Log.LogError("COperatorPdfz::BestProba: zstep is not constant, cannot normalize");
-        throw runtime_error("COperatorPdfz::BestProba: zstep is not constant, cannot normalize");
+        throw GlobalException(INTERNAL_ERROR,"COperatorPdfz::BestProba: zstep is not constant, cannot normalize");
     }
 
     // 2. prepare LogEvidence

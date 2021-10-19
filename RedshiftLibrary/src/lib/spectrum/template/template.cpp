@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include <fstream>
@@ -318,8 +319,7 @@ void CTemplate::InitIsmIgmConfig( const TFloat64Range & lbdaRange, Float64 redsh
     Int32 kstart, kend;
     bool ret = lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
     if (!ret){
-        Log.LogError("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
-        throw std::runtime_error("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
     }
     InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
 }
@@ -339,12 +339,10 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
     }
     
     if (kstart<0 || kstart>=m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CTemplate::InitIsmIgmConfig: kstart outside range");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: kstart outside range");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: kstart outside range");
     }
     if (kend<0 || kend>=m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CTemplate::InitIsmIgmConfig: kend outside range");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: kend outside range");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: kend outside range");
     }
 
     m_kDust = -1;

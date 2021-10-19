@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/common/range.h" 
 
+#include "RedshiftLibrary/common/exception.h"
 #include <cstdio>
 using namespace NSEpic;
 using namespace std;
@@ -201,7 +202,7 @@ TFloat64List fluxcorr_25_4 ={
 ,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1};
 
 //-----------------------------------------------------------------------------
-bool correctMessage(const std::runtime_error& ex)
+bool correctMessage(const GlobalException& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("Cannot convolve: either kernel or array is empty. "));
     return true;
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(Convolve_test_empty)
 {
   TFloat64List arr = {}, kernel = {3, 4, 1}, conv;
   CSpectrumFluxCorrectionMeiksin spc;
-  BOOST_CHECK_EXCEPTION(spc.Convolve(arr, kernel), std::runtime_error, correctMessage);
+  BOOST_CHECK_EXCEPTION(spc.Convolve(arr, kernel), GlobalException, correctMessage);
 }
 
 BOOST_AUTO_TEST_CASE(Convolve_test_identity)

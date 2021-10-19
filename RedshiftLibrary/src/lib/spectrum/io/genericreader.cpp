@@ -40,7 +40,6 @@
 #include "RedshiftLibrary/spectrum/io/asciireader.h"
 #include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include "RedshiftLibrary/noise/flat.h"
-#include "RedshiftLibrary/noise/fromfile.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"

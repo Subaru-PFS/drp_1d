@@ -39,7 +39,7 @@
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
 
-#include <exception>
+#include "RedshiftLibrary/common/exception.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(photometricdata)
     BOOST_CHECK_NO_THROW(CPhotometricData phdat(name,flux,fluxErr));
 
     const TStringList name1 = {"band1"};
-    BOOST_CHECK_THROW(CPhotometricData phdat(name1,flux,fluxErr),std::runtime_error);
+    BOOST_CHECK_THROW(CPhotometricData phdat(name1,flux,fluxErr),GlobalException);
     
     CPhotometricData phdat(name,flux,fluxErr);
     BOOST_CHECK(phdat.GetFlux("band1") == 1e-15);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(photometricbands)
     const Int32 n = sizeof(trans)/sizeof(trans[0]);
     
     BOOST_CHECK_NO_THROW(CPhotometricBand(trans,n,lambda,n));
-    BOOST_CHECK_THROW(CPhotometricBand(trans,n,lambda,n+1), std::runtime_error);
+    BOOST_CHECK_THROW(CPhotometricBand(trans,n,lambda,n+1), GlobalException);
 
     CPhotometricBand band(trans,n,lambda,n);
     BOOST_CHECK(band.m_transmission==TFloat64List(trans,trans+n));

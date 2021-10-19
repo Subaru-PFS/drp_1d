@@ -345,9 +345,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         m_model->initLambdaOffsets(opt_offsetCatRelPath);
     } catch (std::exception const &e)
     {
-        Log.LogError("  Operator-Linemodel: Failed to init lambda offsets. "
-                     "Continuing without offsets...");
-        throw std::runtime_error("  Operator-Linemodel: Failed to init lambda offsets. "
+      throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: Failed to init lambda offsets. "
                      "Continuing without offsets...");
     }
 
@@ -904,8 +902,7 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
     Int32 i_min, i_max;
     bool ret = secondpass_window.getClosedIntervalIndices(m_result->Redshifts, i_min, i_max);
     if (!ret){
-        Log.LogError("COperatorLineModel::SpanRedshiftWindow: second pass window outside z range");
-        throw std::runtime_error("COperatorLineModel::SpanRedshiftWindow: second pass window outside z range");
+        throw GlobalException(INTERNAL_ERROR,"COperatorLineModel::SpanRedshiftWindow: second pass window outside z range");
     }
     for (Int32 i=i_min; i<=i_max; ++i)
     {

@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/noise/flat.h"
-#include "RedshiftLibrary/noise/fromfile.h"
 
 #include "RedshiftLibrary/continuum/waveletsdf.h"
 #include "RedshiftLibrary/continuum/median.h"

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 
 #include <boost/test/unit_test.hpp>
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(Extremum1)
     check_points(maxPoint, TPointList({ {0.4,9}, {0.8,8} }));
   
     maxPoint.clear();
-    BOOST_CHECK_THROW( peaks1.Find( x_empty, y, maxPoint), runtime_error);
+    BOOST_CHECK_THROW( peaks1.Find( x_empty, y, maxPoint), GlobalException);
     print_point(maxPoint);
 
 

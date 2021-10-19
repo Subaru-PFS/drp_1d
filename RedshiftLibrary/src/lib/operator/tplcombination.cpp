@@ -138,8 +138,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     //I consider here that all templates share the same spectralAxis
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
     if (!kStartEnd_ok){
-        Log.LogError("COperatorTplcombination::BasicFit: impossible to get valid kstart or kend");
-        throw std::runtime_error("COperatorTplcombination::BasicFit: impossible to get valid kstart or kend");
+        throw GlobalException(INTERNAL_ERROR,"COperatorTplcombination::BasicFit: impossible to get valid kstart or kend");
     }
     Int32 kStart_model = kStart; //mainly used at high redshifts, when desextincting spectrum is happenning with null coeffs
     Int32 nddl = tplList.size();
@@ -788,8 +787,7 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
 
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
     if (!kStartEnd_ok){
-        Log.LogError("COperatorTplcombination::ComputeSpectrumModel: impossible to get valid kstart or kend");
-        throw std::runtime_error("COperatorTplcombination::ComputeSpectrumModel: impossible to get valid kstart or kend");
+        throw GlobalException(INTERNAL_ERROR,"COperatorTplcombination::ComputeSpectrumModel: impossible to get valid kstart or kend");
     }
 
     //create identityTemplate on which we apply meiksin and ism, once for all tpllist

@@ -59,7 +59,6 @@ std::shared_ptr<CAirVacuum> CAirVacuumConverter::Get(const std::string & convert
     else 
     {
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"CAirVacuum::GetConverter, unknown air->vacuum conversion: "<<converterName);
-        return nullptr;
     }
 }
 

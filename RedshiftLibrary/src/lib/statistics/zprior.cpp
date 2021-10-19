@@ -191,8 +191,7 @@ TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1, const TFl
 {
     if (logprior1.size() != logprior2.size())
     {
-        Log.LogError("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
-        throw std::runtime_error("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+        throw GlobalException(INTERNAL_ERROR,"CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
 
     }
     Int32 n = logprior1.size();

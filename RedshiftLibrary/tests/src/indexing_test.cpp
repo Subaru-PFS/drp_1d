@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/common/exception.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/test/execution_monitor.hpp>  
 #include <vector>
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float)
     BOOST_CHECK( myVector[idx] == target);
 }
 
-bool correctMessage(const std::runtime_error& ex)
+bool correctMessage(const GlobalException& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("Could not find index for 2.000000"));
     return true;
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float_erro)
 {
     TFloat64List myVector = {0.0, 2.2, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5};
     const Float64 target = 2.0;
-    BOOST_CHECK_EXCEPTION(CIndexing<Float64>::getIndex(myVector,target), std::runtime_error, correctMessage);
+    BOOST_CHECK_EXCEPTION(CIndexing<Float64>::getIndex(myVector,target), GlobalException, correctMessage);
 }
 
 

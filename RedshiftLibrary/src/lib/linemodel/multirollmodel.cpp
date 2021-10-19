@@ -40,7 +40,7 @@
 
 #include <boost/filesystem.hpp>
 #include "RedshiftLibrary/spectrum/io/genericreader.h"
-#include "RedshiftLibrary/noise/fromfile.h"
+
 #include "RedshiftLibrary/spectrum/combination.h"
 
 #include "RedshiftLibrary/continuum/median.h"
@@ -180,13 +180,14 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     //
 
     //Read the fits data
+    /*
     CSpectrumIOGenericReader reader;
 
     reader.Read( newSpcRollPath.c_str(), *spc );
     CNoiseFromFile noise;
     noise.SetNoiseFilePath( newNoiseRollPath.c_str(), reader );
     noise.AddNoise( *spc );
-
+    */
     return spc;
 }
 
