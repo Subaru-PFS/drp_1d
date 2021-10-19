@@ -357,7 +357,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     Log.LogInfo("%s: Storing PDF results", __func__);
 
     resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-    resultStore->StoreScopedGlobalResult("candidatesresult", candidateResult);
+
     TFloat64Range clampedlambdaRange; 
     spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange );
     // Get linemodel results at extrema (recompute spectrum model etc.)

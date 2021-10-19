@@ -46,8 +46,6 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -87,8 +85,7 @@ public:
     FittedTplLogPrior.resize(size);
     FittedTplSNR.resize(size);
     
-    m_savedModelSpectrumResults.resize(size);
-    m_savedModelContinuumFittingResults.resize(size);
+    
         MeritContinuum.resize(size);
 
     mTransposeM.resize(size);
@@ -133,9 +130,6 @@ public:
     FittedTplratioMtm.resize(size);
     FittedTplratioIsmCoeff.resize(size);
     
-    m_savedModelFittingResults.resize(size);
-    m_savedModelRulesResults.resize(size);
-    m_savedModelContinuumSpectrumResults.resize(size);
   }
   TFloat64List GetRedshifts() const
   {
@@ -178,9 +172,6 @@ public:
   TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
   TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
   TFloat64List      FittedTplSNR; 
-
-  std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
-  std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
 
 
     //Extrema results
@@ -229,9 +220,6 @@ public:
     mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
     mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
     
-    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
-    std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
-    std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
 };
 
@@ -437,7 +425,7 @@ private:
 
     bool mlmfit_modelInfoSave = false;
     std::vector<std::shared_ptr<CModelSpectrumResult>> mlmfit_savedModelSpectrumResults_lmfit;
-    std::vector<std::shared_ptr<CModelFittingResult>> mlmfit_savedModelFittingResults_lmfit;
+   std::vector<std::shared_ptr<CLineModelSolution>> mlmfit_savedModelFittingResults_lmfit;
     std::vector<std::shared_ptr<CModelRulesResult>> mlmfit_savedModelRulesResults_lmfit;
     std::vector<std::shared_ptr<CSpectraFluxResult>> mlmfit_savedBaselineResult_lmfit;
 

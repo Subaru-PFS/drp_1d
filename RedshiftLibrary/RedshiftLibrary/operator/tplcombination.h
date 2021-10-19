@@ -44,7 +44,6 @@
 #include "RedshiftLibrary/operator/operator.h"
 
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 
@@ -52,6 +51,7 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
 #include <gsl/gsl_matrix_double.h>
 namespace NSEpic
 {

@@ -1,59 +1,58 @@
 hdf5_name	hdf5_dataset	hdf5_type	ResultStore_key	dimension	debug	level	OperatorResult_name	c_type	format
-Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double	0.0000
-RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double	0.000e+0
-RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double	0.000e+0
-RedshiftLogProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double	0.000
-RedshiftProbaZmin	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmin	double	0.000e+0
-RedshiftProbaZmax	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmax	double	0.000e+0
+Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double	0
+RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double	0
+RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double	0
+RedshiftLogProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double	0
+RedshiftProbaZmin	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmin	double	0
+RedshiftProbaZmax	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmax	double	0
 ContinuumName	model_parameters	S40	extrema_results	mono	False	candidate	FittedTplName	string	
-ContinuumIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplEbmvCoeff	double	0.000e+0
+ContinuumIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplEbmvCoeff	double	0
 ContinuumIgmIndex	model_parameters	i	extrema_results	mono	False	candidate	FittedTplMeiksinIdx	int	0
-ContinuumAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitude	double	0.000e+0
-ContinuumAmplitudeUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitudeError	double	0.000e+0
-ContinuumMtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMtm	double	0.000e+0
-ContinuumDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDtm	double	0.000e+0
+ContinuumAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitude	double	0
+ContinuumAmplitudeUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitudeError	double	0
+ContinuumMtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMtm	double	0
+ContinuumDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDtm	double	0
 ContinuumLeastSquare	model_parameters	f8	extrema_results	mono		candidate	FittedTplMerit		
 ContinuumLogPrior	model_parameters	f8	extrema_results	mono		candidate	FittedTplLogPrior		
 LinesRatioName	model_parameters	S60	extrema_results	mono	False	candidate	FittedTplratioName	string	
-VelocityEmission	model_parameters	f8	extrema_results	mono	False	candidate	Elv	double	0.000e+0
-VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	double	0.000e+0
-StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double	0.000e+0
-LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double	0.000e+0
-LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double	0.000e+0
-FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	FittedRaysLambda	list[double]	
-FittedRaysLambdaRest	fitted_rays	f8	extrema_results	multi	False	candidate	rayLambdaRest	list[double]	
+VelocityEmission	model_parameters	f8	extrema_results	mono	False	candidate	Elv	double	0
+VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	double	0
+StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double	0
+LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double	0
+LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double	0
+FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]	
 FittedRaysID	fitted_rays	i	extrema_results	multi	False	candidate	rayId	list[int]	
-FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	FittedRaysFlux	list[double]	
+FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	Fluxs	list[double]	
 ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]	
 ModelFlux	model	f8	extrema_results	multi	False	candidate	ModelFlux	list[double]	
 BestContinuumLambda	continuum	f8	extrema_results	multi	False	candidate	wavel	list[double]	
 BestContinuumFlux	continuum	f8	extrema_results	multi	False	candidate	fluxes	list[double]	
-GaussianPDFAmp	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmp	double	0.000e+0
-GaussianPDFAmpErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmpErr	double	0.000e+0
-GaussianPDFSigma	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigma	double	0.000e+0
-GaussianPDFSigmaErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigmaErr	double	0.000e+0
-lfOII	model_parameters	f9	extrema_results	mono	False	candidate	lfOII	double	0.000e+0
-snrOII	model_parameters	f10	extrema_results	mono	False	candidate	snrOII	double	0.000e+0
-lfHa	model_parameters	f11	extrema_results	mono	False	candidate	lfHa	double	0.000e+0
-snrHa	model_parameters	f12	extrema_results	mono	False	candidate	snrHa	double	0.000e+0
-GalaxyEvidence	classification	f8	solveResult	mono	False	root	m_evidence_galaxy	double	0.000e+0
-StarEvidence	classification	f8	solveResult	mono	False	root	m_evidence_star	double	0.000e+0
-QSOEvidence	classification	f8	solveResult	mono	False	root	m_evidence_qso	double	0.000e+0
-GalaxyProba	classification	f8	solveResult	mono	False	root	m_prob_galaxy	double	0.000e+0
-StarProba	classification	f8	solveResult	mono	False	root	m_prob_star	double	0.000e+0
-QSOProba	classification	f8	solveResult	mono	False	root	m_prob_qso	double	0.000e+0
+GaussianPDFAmp	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmp	double	0
+GaussianPDFAmpErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmpErr	double	0
+GaussianPDFSigma	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigma	double	0
+GaussianPDFSigmaErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigmaErr	double	0
+lfOII	model_parameters	f9	extrema_results	mono	False	candidate	lfOII	double	0
+snrOII	model_parameters	f10	extrema_results	mono	False	candidate	snrOII	double	0
+lfHa	model_parameters	f11	extrema_results	mono	False	candidate	lfHa	double	0
+snrHa	model_parameters	f12	extrema_results	mono	False	candidate	snrHa	double	0
+GalaxyEvidence	classification	f8	solveResult	mono	False	root	m_evidence_galaxy	double	0
+StarEvidence	classification	f8	solveResult	mono	False	root	m_evidence_star	double	0
+QSOEvidence	classification	f8	solveResult	mono	False	root	m_evidence_qso	double	0
+GalaxyProba	classification	f8	solveResult	mono	False	root	m_prob_galaxy	double	0
+StarProba	classification	f8	solveResult	mono	False	root	m_prob_star	double	0
+QSOProba	classification	f8	solveResult	mono	False	root	m_prob_qso	double	0
 Type	classification	S1	solveResult	mono	False	root	m_TypeLabel	string	
 PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts	list[double]	
 PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]	
-ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]	0.00E+00
-ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]	0.00E+00
+ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]	0
+ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]	0
 LinemeasRaysLambda	linemeas	f8	linemeas	multi	True	object	LambdaObs	list[double]	
 LinemeasRaysID	linemeas	i	linemeas	multi	False	object	rayId	list[int]	
 LinemeasRaysFlux	linemeas	f8	linemeas	multi	False	object	Fluxs	list[double]	
 LinemeasRaysFluxDirectIntegration	linemeas	f8	linemeas	multi	False	object	FluxDirectIntegration	list[double]	
 LinemeasRaysFluxError	linemeas	f8	linemeas	multi	False	object	FluxErrors	list[double]	
-LinemeasLfOII	linemeas_parameters	f8	linemeas	mono	False	object	lfOII	double	0.000e+0
-LinemeasLfHa	linemeas_parameters	f8	linemeas	mono	False	object	lfHa	double	0.000e+0
+LinemeasLfOII	linemeas_parameters	f8	linemeas	mono	False	object	lfOII	double	0
+LinemeasLfHa	linemeas_parameters	f8	linemeas	mono	False	object	lfHa	double	0
 ModelLambda	linemeas_model	f8	linemeas_model	multi	False	object	ModelLambda	list[double]	
 ModelFlux	linemeas_model	f8	linemeas_model	multi	False	object	ModelFlux	list[double]	
 Reliability	reliability	S2	solveResult	mono	False	root	m_ReliabilityLabel	string	

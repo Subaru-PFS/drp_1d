@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/lmfitfunctions.h"
 #include "RedshiftLibrary/linemodel/multiline.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/ray/regulament.h"
 #include "RedshiftLibrary/ray/catalogsTplShape.h"
 #include "RedshiftLibrary/ray/catalogsOffsets.h"

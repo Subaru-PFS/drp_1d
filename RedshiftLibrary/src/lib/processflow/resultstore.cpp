@@ -47,7 +47,6 @@
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 
@@ -258,24 +257,6 @@ std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(con
     return tlm;
 }
 
-std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFittingResult(const std::string& objectType,
-										       const std::string& method,
-										       const std::string& name ,
-										       const int& rank
-										       ) const
-    
-{
-  return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
-}
-
-std::shared_ptr<const CModelFittingResult> COperatorResultStore::GetModelFittingResult(const std::string& objectType,
-										       const std::string& method,
-										       const std::string& name 
-										       ) const
-    
-{
-  return std::dynamic_pointer_cast<const CModelFittingResult>(GetGlobalResult(objectType,method,name).lock());
-}
 
 std::shared_ptr<const CLineModelSolution> COperatorResultStore::GetLineModelSolution(const std::string& objectType,
 										     const std::string& method,
@@ -302,6 +283,16 @@ std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectr
     
 {
   return std::dynamic_pointer_cast<const CModelSpectrumResult>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"model"));
+}
+
+std::shared_ptr<const CLineModelSolution> COperatorResultStore::GetLineModelSolution(const std::string& objectType,
+										       const std::string& method,
+										       const std::string& name ,
+										       const int& rank
+										       ) const
+    
+{
+  return std::dynamic_pointer_cast<const CLineModelSolution>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
 }
 
 std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectrumResult(const std::string& objectType,
@@ -367,14 +358,15 @@ int COperatorResultStore::getNbRedshiftCandidates(const std::string& objectType,
 						  const std::string& method) const
 {
   std::ostringstream oss;
-  oss << objectType << "." << method << ".candidatesresult" ;
-  TResultsMap::const_iterator it = m_GlobalResults.find( oss.str() );
-  if (it != m_GlobalResults.end())
-    {
-      std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+  oss << objectType << "." << method << ".extrema_results" ;
+  std::shared_ptr<const COperatorResult> cor = GetGlobalResult(oss.str()).lock();
+    std::string type = cor->getType();
+    if (type == "PdfCandidatesZResult")  return std::dynamic_pointer_cast<const PdfCandidatesZResult>(cor)->size();
+    else if (type == "ExtremaResult") return std::dynamic_pointer_cast<const ExtremaResult>(cor)->size(); 
+    else if( type == "LineModelExtremaResult") return std::dynamic_pointer_cast<const LineModelExtremaResult>(cor)->size();
+    else if (type == "TplCombinationExtremaResult")  return std::dynamic_pointer_cast<const TplCombinationExtremaResult>(cor)->size();
+    
 
-      return std::dynamic_pointer_cast<const PdfCandidatesZResult>(GetGlobalResult(oss.str()).lock())->size();
-    }
   else return 0;
 
 }

@@ -59,7 +59,6 @@ class CPdfMargZLogResult;
 class TLineModelResult;
 class TTplCombinationResult;
 class TExtremaResult;
-class CModelFittingResult;
 class CModelSpectrumResult;
 class CSpectraFluxResult;
 class CLineModelSolution;
@@ -142,20 +141,16 @@ public:
 										 const int& rank
 									       ) const;
 
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name ,
-								   const int& rank
-								   ) const  ;
-
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name 
-								   ) const  ;
   
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								   const std::string& method,
 								   const std::string& name 
+								   ) const  ;
+
+    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+								   const std::string& method,
+								   const std::string& name,
+								   const int& rank 
 								   ) const  ;
 
   std::shared_ptr<const CModelSpectrumResult> GetModelSpectrumResult(const std::string& objectType,
