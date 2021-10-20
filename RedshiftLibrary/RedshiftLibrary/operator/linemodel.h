@@ -248,7 +248,7 @@ public:
     std::shared_ptr<COperatorResult> getResult();
 
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
-                                const CSpectrum &rebinnedSpectrum,
+                                const CSpectrum &logSampledSpectrum,
                                 const CTemplateCatalog &tplCatalog,
                                 const TStringList &tplCategoryList,
                                 const std::string opt_calibrationPath,
@@ -258,7 +258,7 @@ public:
                                 Int32 candidateIdx = -1);
 
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
-                           const CSpectrum& rebinnedSpc,
+                           const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
@@ -283,7 +283,7 @@ public:
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
-                            const CSpectrum &rebinnedSpectrum,
+                            const CSpectrum &logSampledSpectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,

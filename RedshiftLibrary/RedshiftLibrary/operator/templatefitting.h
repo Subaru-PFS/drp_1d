@@ -51,20 +51,47 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+
+#include <numeric>
 namespace NSEpic
 {
+struct TFittingResult {
+    Float64 chiSquare = INFINITY;
+    Float64 ampl = NAN;
+    Float64 ampl_err = NAN;
+    Float64 ampl_sigma = NAN;
+    Float64 sumCross = 0.;
+    Float64 sumT = 0.;
+    Float64 sumS = 0.;
+    Float64 logprior = 0.;
+};
+
+struct TFittingIsmIgmResult : TFittingResult{
+    TFittingIsmIgmResult(Int32 EbmvListSize, Int32 MeiksinListSize):
+            ChiSquareInterm(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX)),
+            IsmCalzettiCoeffInterm(EbmvListSize, TFloat64List(MeiksinListSize, NAN)),
+            IgmMeiksinIdxInterm(EbmvListSize, TInt32List(MeiksinListSize, -1)) {}
+
+    Float64 overlapRate = NAN;
+    Float64 EbmvCoeff = NAN;
+    Int32 MeiksinIdx = -1;
+    std::vector<TFloat64List> ChiSquareInterm;
+    std::vector<TFloat64List> IsmCalzettiCoeffInterm;
+    std::vector<TInt32List> IgmMeiksinIdxInterm;
+    COperator::EStatus status = COperator::EStatus::nStatus_DataError;
+};
 
 class COperatorTemplateFitting : public COperatorTemplateFittingBase
 {
 
 public:
-    explicit COperatorTemplateFitting() = default;
-    ~COperatorTemplateFitting() = default;
 
-     std::shared_ptr<COperatorResult> Compute(const CSpectrum& spectrum,
-                                              const CTemplate& tpl,
-                                              const TFloat64Range& lambdaRange,
-                                              const TFloat64List& redshifts,
+    COperatorTemplateFitting(const CSpectrum & spectrum, const TFloat64Range& lambdaRange, const TFloat64List & redshifts=TFloat64List()):
+        COperatorTemplateFittingBase(spectrum, lambdaRange, redshifts) {};
+    COperatorTemplateFitting(const CSpectrum && spectrum, const TFloat64Range& lambdaRange, const TFloat64List & redshifts) = delete;
+    virtual ~COperatorTemplateFitting() = default;
+    
+    std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & tpl,
                                               Float64 overlapThreshold,
                                               std::vector<CMask> additional_spcMasks,
                                               std::string opt_interp,
@@ -73,50 +100,36 @@ public:
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
-                                              Int32 FitMeiksinIdx=-1);
+                                              Int32 FitMeiksinIdx=-1) override;
 
-    const COperatorResult* ExportChi2versusAZ( const CSpectrum& spectrum, const CTemplate& tpl,
-                                    const TFloat64Range& lambdaRange, const TFloat64List& redshifts,
-                                    Float64 overlapThreshold );
+protected:
 
-
-private:
-
-    void BasicFit(const CSpectrum& spectrum,
-                  const CTemplate& tpl,
-                  const TFloat64Range& lambdaRange,
+    TFittingIsmIgmResult BasicFit(const std::shared_ptr<const CTemplate>& tpl,
                   Float64 redshift,
                   Float64 overlapThreshold,
-                  Float64& overlapRate,
-                  Float64& chiSquare,
-                  Float64 &fittingAmplitude,
-                  Float64& fittingAmplitudeError,
-                  Float64& fittingAmplitudeSigma,
-                  Float64& fittingDtM,
-                  Float64& fittingMtM,
-                  Float64 &fittingLogprior,
-                  Float64 &fittingEbmvCoeff,
-                  Int32 &fittingMeiksinIdx,
-                  EStatus& status,
-                  std::vector<TFloat64List>& ChiSquareInterm,
-                  std::vector<TFloat64List>& IsmCalzettiCoeffInterm,
-                  std::vector<TInt32List>& IgmMeiksinIdxInterm,
                   std::string opt_interp,
                   Float64 forcedAmplitude=-1,
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),
-                  CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
+                  const CPriorHelper::TPriorEList & logpriore=CPriorHelper::TPriorEList(),
                   const TInt32List& MeiksinList=TInt32List(-1),
                   const TInt32List& EbmvList=TInt32List(-1));
 
+    virtual TFittingResult ComputeLeastSquare(  Int32 kM,
+                                                Int32 kEbmv,
+                                                const CPriorHelper::SPriorTZE & logprior,
+                                                const CMask & spcMaskAdditional);
 
-    Int32    GetSpcSampleLimits(const TAxisSampleList & Xspc,  Float64 lbda_min, Float64 lbda_max, Int32& kStart, Int32& kEnd);
+    Bool m_option_igmFastProcessing;
+    Int32 m_kStart, m_kEnd, m_kIgmEnd;
+    Float64 m_forcedAmplitude;
 
-    // buffers for the interpolated axis (template & spectrum)
+    TFloat64List m_sumCross_outsideIGM;
+    TFloat64List m_sumT_outsideIGM;
+    TFloat64List m_sumS_outsideIGM;
 
-
-
+    bool m_amplForcePositive=true;
 
 };
 

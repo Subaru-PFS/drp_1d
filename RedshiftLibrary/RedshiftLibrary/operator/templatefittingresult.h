@@ -42,16 +42,22 @@
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
+//#include "RedshiftLibrary/operator/templatefitting.h"
 
 namespace NSEpic
 {
 
+class TFittingIsmIgmResult;
 class CTemplateFittingResult : public COperatorResult
 {
 
 public:
 
-    void Init( UInt32 n, Int32 nISM, Int32 nIGM);
+    void Init( UInt32 n);
+    void Init( UInt32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
+    void InitIntermediate(Int32 EbmvListSize, Int32 MeiksinListSize);
+
+    void set_at_redshift(const UInt32 i, const TFittingIsmIgmResult val);
 
     TFloat64List            Redshifts;
 

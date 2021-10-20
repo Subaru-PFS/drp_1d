@@ -82,7 +82,7 @@ public:
     CSpectrum(const CSpectrum& other, const TFloat64List & mask);
     CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
     CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
-    ~CSpectrum();
+    virtual ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
     CSpectrum& operator=(CSpectrum&& other);
@@ -153,9 +153,9 @@ public:
     void                            ScaleFluxAxis(Float64 scale);
 
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                                           CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
-                                           const std::string opt_error_interp="no" ) const;
-    CSpectrum                       extract(Int32 startIdx, Int32 endIdx)const;
+                                           CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string & opt_interp = "lin",
+                                           const std::string & opt_error_interp="no" ) const;
+    CSpectrum                       extract(Int32 startIdx, Int32 endIdx) const;
 
 protected:
 

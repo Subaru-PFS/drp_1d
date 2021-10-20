@@ -61,18 +61,14 @@ class COperatorTemplateFittingLog : public COperatorTemplateFittingBase
 {
 
 public:
-    COperatorTemplateFittingLog();
+    COperatorTemplateFittingLog(const CSpectrum & spectrum, const CSpectrum & logSampledSpectrum, 
+                                const TFloat64Range& lambdaRange, const TFloat64List& redshifts);
     ~COperatorTemplateFittingLog();
 
-    COperatorTemplateFittingLog(const COperatorTemplateFittingLog & other) = delete; 
-    COperatorTemplateFittingLog(COperatorTemplateFittingLog && other) = delete; 
-    COperatorTemplateFittingLog& operator=(const COperatorTemplateFittingLog& other) = delete;  
-    COperatorTemplateFittingLog& operator=(COperatorTemplateFittingLog&& other) = delete; 
+    void SetRedshifts(TFloat64List redshifts) override;
+    void CheckRedshifts();
 
-    std::shared_ptr<COperatorResult> Compute( const CSpectrum& rebinnedSpectrum,
-                                              const CTemplate& rebinnedTpl,
-                                              const TFloat64Range& lambdaRange,
-                                              const TFloat64List& redshifts,
+    std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & logSampledTpl,
                                               Float64 overlapThreshold,
                                               std::vector<CMask> additional_spcMasks,
                                               std::string opt_interp,
@@ -90,11 +86,18 @@ public:
     TInt32Range FindTplSpectralIndex( const CSpectrumSpectralAxis & spcSpectrailAxis, 
                                       const CSpectrumSpectralAxis& tplSpectralAxis,
                                       const TFloat64Range & redshiftrange) const;
-    //log grid data
-    CTemplate       m_templateRebinedLog;
-    CSpectrum       m_spectrumRebinedLog;
 
 private:
+
+    //log grid data
+    CSpectrum       m_logSampledSpectrum;
+    TFloat64Range   m_logSampledLambdaRange;
+    CSpectrum       m_ssSpectrum;
+    TFloat64Range   m_ssLambdaRange;
+
+    Float64 m_logstep;
+    UInt32 m_ssRatio;
+
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
     bool verboseExportFitRangez = false;
@@ -136,19 +139,19 @@ private:
     Bool m_enableIGM = 1; 
 
     //buffers for fft computation
-    Int32 m_nPaddedSamples;
-    Float64 *inSpc;
-    fftw_complex *outSpc;
-    fftw_plan pSpc;
-    Float64 *inTpl;
-    Float64 *inTpl_padded;
-    fftw_complex *outTpl;
-    fftw_plan pTpl;
-    fftw_complex* outCombined;
-    Float64* inCombined;
-    fftw_plan pBackward ;
-    fftw_complex* precomputedFFT_spcFluxOverErr2;
-    fftw_complex* precomputedFFT_spcOneOverErr2;
+    Int32 m_nPaddedSamples =0;
+    Float64 *inSpc = nullptr;
+    fftw_complex *outSpc = nullptr;
+    fftw_plan pSpc = nullptr;
+    Float64 *inTpl = nullptr;
+    Float64 *inTpl_padded = nullptr;
+    fftw_complex *outTpl = nullptr;
+    fftw_plan pTpl = nullptr;
+    fftw_complex* outCombined = nullptr;
+    Float64* inCombined = nullptr;
+    fftw_plan pBackward = nullptr;
+    fftw_complex* precomputedFFT_spcFluxOverErr2 = nullptr;
+    fftw_complex* precomputedFFT_spcOneOverErr2 = nullptr;
 
 };
 

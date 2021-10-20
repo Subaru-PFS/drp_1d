@@ -781,7 +781,7 @@ void CSpectrum::ClearFineGrid() const
  * targetSpectralAxis should be expressed in same frame as source SpetralAxis
 */
 Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                       CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
+                       CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string & opt_interp, const std::string & opt_error_interp ) const
 {
     
     if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");

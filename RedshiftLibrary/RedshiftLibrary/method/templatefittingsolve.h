@@ -84,9 +84,7 @@ private:
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
-               const CTemplate& tpl,
-               const TFloat64Range& lambdaRange,
-               const TFloat64List& redshifts,
+               const std::shared_ptr<const CTemplate> & tpl,
                Float64 overlapThreshold,
                std::vector<CMask> maskList,
                EType spctype=nType_raw,
@@ -96,15 +94,13 @@ private:
 
   ChisquareArray BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const;
 
-    std::shared_ptr<const ExtremaResult>  SaveExtremaResult(   shared_ptr<const COperatorResultStore> store,                        
-                                                                const std::string & scopeStr,
-                                                                const TCandidateZbyRank & ranked_zCandidates,
-                                                                const CSpectrum& spc,
-                                                                const CTemplateCatalog& tplCatalog,
-                                                                const TStringList& tplCategoryList,
-                                                                const TFloat64Range& lambdaRange,
-                                                                Float64 overlapThreshold,
-                                                                std::string opt_interp);
+  std::shared_ptr<const ExtremaResult>  SaveExtremaResult(  shared_ptr<const COperatorResultStore> store,                        
+                                                            const std::string & scopeStr,
+                                                            const TCandidateZbyRank & ranked_zCandidates,
+                                                            const CTemplateCatalog& tplCatalog,
+                                                            const TStringList& tplCategoryList,
+                                                            Float64 overlapThreshold,
+                                                            std::string opt_interp);
 
     void StoreExtremaResults(std::shared_ptr<COperatorResultStore> dataStore,
                              std::shared_ptr<const ExtremaResult> & ExtremaResult) const ;

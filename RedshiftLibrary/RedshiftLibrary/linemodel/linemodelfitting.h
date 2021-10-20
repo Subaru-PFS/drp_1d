@@ -80,7 +80,7 @@ class CLineModelFitting
 public:
 
     CLineModelFitting(const CSpectrum& spectrum,
-		      const TFloat64Range& range,
+		      const TFloat64Range& lambdaRange,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
@@ -104,12 +104,11 @@ public:
     void PrepareContinuum();
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
-    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const std::shared_ptr<const CTemplate> & tpl);
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum);
-    Bool SolveContinuum(const CTemplate& tpl,
-                        const TFloat64Range& lambdaRange,
+    Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate>& tpl, Float64 zcontinuum);
+    Bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
                         const TFloat64List& redshifts,
                         Float64 overlapThreshold,
                         std::vector<CMask> maskList,
@@ -394,7 +393,7 @@ private:
 
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
-    CTemplate m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
+    std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
     CSpectrumNoiseAxis& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;

@@ -83,12 +83,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   
   if(fft_processing)
     {
-      //  std::string opt_interp="lin";//this is important for creating the spectrum model//moved from processflow
-      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog());
+      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(spc, rebinnedSpc, m_lambdaRange, m_redshifts));
       tplCatalog.m_logsampling = true; 
     }
   else{
-       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting());
+       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting(spc, m_lambdaRange, m_redshifts));
        tplCatalog.m_logsampling = false;
   }
 
@@ -145,7 +144,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         {
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
-            Solve(resultStore, fft_processing?rebinnedSpc:spc, *tpl, m_lambdaRange, m_redshifts, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
+            Solve(resultStore, fft_processing?rebinnedSpc:spc, tpl, overlapThreshold, maskList, _type, opt_interp, opt_extinction, opt_dustFit);
 
             storeResult = true;
         }
@@ -167,16 +166,15 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
         //for each extrema, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
-        //using clamped lambdaRange:
-        TFloat64Range clampedLbdaRange;
-        spc.GetSpectralAxis().ClampLambdaRange( m_lambdaRange, clampedLbdaRange );
-        std::shared_ptr<const ExtremaResult> extremaResult = 
+        if (fft_processing){ // go back to normal templatefitting operator
+            m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting(spc, m_lambdaRange, m_redshifts));
+            tplCatalog.m_logsampling = false;
+        }
+        std::shared_ptr<const ExtremaResult> extremaResult =    
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
-                                               spc,
                                                tplCatalog,
                                                m_categoryList,
-                                               clampedLbdaRange,
                                                overlapThreshold,
                                                opt_interp);
 
@@ -198,9 +196,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
 Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                    const CSpectrum& spc,
-                                   const CTemplate& tpl,
-                                   const TFloat64Range& lambdaRange,
-                                   const TFloat64List& redshifts,
+                                   const std::shared_ptr<const CTemplate> & tpl,
                                    Float64 overlapThreshold,
                                    std::vector<CMask> maskList,
                                    EType spctype,
@@ -232,7 +228,7 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     }
 
     const CSpectrum::EType save_spcType = spc.GetType();
-    const CSpectrum::EType save_tplType = tpl.GetType();
+    const CSpectrum::EType save_tplType = tpl->GetType();
 
     for( Int32 i=0; i<_ntype; i++){
         if(spctype == nType_all){
@@ -241,7 +237,7 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
             _spctype = static_cast<CSpectrum::EType>(spctype);
         }
         spc.SetType(_spctype);
-        tpl.SetType(_spctype);
+        tpl->SetType(_spctype);
 
         if(_spctype == CSpectrum::nType_continuumOnly){
             // use continuum only
@@ -259,8 +255,7 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
         }
 
         // Compute merit function
-        //CRef<CTemplateFittingResult>  templateFittingResult = (CTemplateFittingResult*)templatefitting.ExportChi2versusAZ( _spc, _tpl, lambdaRange, redshifts, overlapThreshold );
-        auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator->Compute( spc, tpl,lambdaRange,redshifts,
+        auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator->Compute( tpl,
                                                                                                                              overlapThreshold, maskList, opt_interp,
                                                                                                                              enable_extinction, option_dustFitting ) );
         
@@ -302,7 +297,7 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     }
 
     spc.SetType(save_spcType);
-    tpl.SetType(save_tplType);
+    tpl->SetType(save_tplType);
 
     return true;
 }
@@ -391,10 +386,8 @@ std::shared_ptr<const ExtremaResult>
 CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
-                                               const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
                                                const TStringList& tplCategoryList,
-                                               const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
                                                std::string opt_interp)
 {
@@ -494,15 +487,16 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         tplCatalog.m_logsampling=false;
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = 
-                            m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
+                            m_templateFittingOperator->ComputeSpectrumModel(tpl, 
                                                                             z,
                                                                             TplFitResult->FitEbmvCoeff[idx],
                                                                             TplFitResult->FitMeiksinIdx[idx],
                                                                             TplFitResult->FitAmplitude[idx],
-                                                                            opt_interp, lambdaRange, overlapThreshold);
+                                                                            opt_interp, 
+                                                                            overlapThreshold);
         
         if(spcmodelPtr==nullptr)
-            throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");
+            throw GlobalException(INTERNAL_ERROR,"CMethodTemplateFittingSolve::SaveExtremaResult: Couldnt compute spectrum model");
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
@@ -517,7 +511,7 @@ void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperator
                                                        std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
-  Log.LogInfo("Templatefitting, saving extrema results");
+  Log.LogInfo("CMethodTemplateFittingSolve::StoreExtremaResults: Templatefitting, saving extrema results");
    
   return;
 }

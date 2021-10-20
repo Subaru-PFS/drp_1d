@@ -80,10 +80,10 @@ public:
 
     COperatorResultStore(const TScopeStack& scopeStack);
 
-    void                    StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
+    void                    StorePerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
     void                    StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );
 
-    std::weak_ptr<const COperatorResult> GetPerTemplateResult( const CTemplate& t, const std::string& name ) const;
+    std::weak_ptr<const COperatorResult> GetPerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& name ) const;
     TOperatorResultMap      GetPerTemplateResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>  GetGlobalResult( const std::string& name ) const;
     std::weak_ptr<const COperatorResult>  GetScopedGlobalResult( const std::string& name ) const;
@@ -117,7 +117,8 @@ public:
   std::shared_ptr<const CClassificationResult> GetClassificationResult(const std::string& objectType,
                                                                             const std::string& method,
                                                                             const std::string& name ) const;
-    std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
+
+  std::shared_ptr<const CReliabilityResult> GetReliabilityResult(const std::string& objectType,
                                                                             const std::string& method,
                                                                             const std::string& name ) const;
 
@@ -147,7 +148,7 @@ public:
 								   const std::string& name 
 								   ) const  ;
 
-    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+  std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								   const std::string& method,
 								   const std::string& name,
 								   const int& rank 
@@ -177,13 +178,12 @@ public:
   
   
   //From DataStore, above should be removed and integrated into these
-      void                    StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result );
+  void StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result );
 
-    void                            StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
-    void                            StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+  void StoreScopedPerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
+  void StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
   
-  
-    std::string             GetScope( const COperatorResult&  result) const;
+  std::string GetScope( const COperatorResult&  result) const;
   
   void test();
 
