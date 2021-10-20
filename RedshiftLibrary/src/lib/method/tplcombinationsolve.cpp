@@ -200,7 +200,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
-    if (tplCatalog.GetTemplateCount(tplCategoryList[0]))
+    if (tplList.empty())
       {
 	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< tplCategoryList[0] <<" is empty");
       }

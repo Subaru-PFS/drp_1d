@@ -56,7 +56,6 @@
 #include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/spectrum/io/fitswriter.h"
 
 #include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
@@ -64,7 +63,6 @@
 //#include <boost/progress.hpp>
 
 #include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 
 

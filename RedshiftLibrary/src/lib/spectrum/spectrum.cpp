@@ -37,10 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/noise/flat.h"
 
-#include "RedshiftLibrary/continuum/waveletsdf.h"
 #include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/common/indexing.h"
@@ -286,7 +284,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     SetContinuumEstimationMethod(medianRemovalMethod);
     SetMedianWinsize(medianKernelWidth);
     SetDecompScales((Int32)nscales);
-    SetWaveletsDFBinPath(dfBinPath);
 }
 
 /**
@@ -364,15 +361,8 @@ void CSpectrum::EstimateContinuum() const
         continuum.SetMedianKernelWidth( m_medianWindowSize );
         RemoveContinuum( continuum );
         Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
-    }else if( m_estimationMethod == "waveletsDF" )
-    {
-        CContinuumDF continuum(m_dfBinPath);
-        Bool ret = RemoveContinuum( continuum );
-        if( !ret ) //doesn't seem to work. TODO: check that the df errors lead to a ret=false value
-        {
-          throw GlobalException(INTERNAL_ERROR,"Failed to apply continuum substraction");
-        }
-    }else if( m_estimationMethod == "raw" )
+    }
+    else if( m_estimationMethod == "raw" )
     {
         Int32 nbSamples = this->GetSampleCount();
         m_WithoutContinuumFluxAxis.SetSize(nbSamples);
@@ -751,10 +741,6 @@ const std::string & CSpectrum::GetContinuumEstimationMethod() const
       return m_estimationMethod;
 }
 
-const std::string & CSpectrum::GetWaveletsDFBinPath() const
-{
-      return m_dfBinPath;
-}
 
 void CSpectrum::SetFullPath(const char* nameP)
 {
@@ -805,13 +791,6 @@ void CSpectrum::SetContinuumEstimationMethod(const CSpectrumFluxAxis & Continuum
     m_ContinuumFluxAxis = ContinuumFluxAxis;
 }
 
-void CSpectrum::SetWaveletsDFBinPath(std::string binPath)
-{
-    if (m_dfBinPath!=binPath && m_estimationMethod=="waveletsDF"){
-        ResetContinuum();
-    }
-    m_dfBinPath = binPath;
-}
 
 
 void CSpectrum::ClearFineGrid() const

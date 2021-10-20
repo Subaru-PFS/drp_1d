@@ -44,7 +44,6 @@
 #include <cmath>
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/spectrum/io/fitswriter.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
@@ -168,27 +167,6 @@ bfs::path CPFTest::generate_noise_fits(UInt32 size,
     return tempfile;
 }
 
-/**
- * Generate a spectrum file
- */
-bfs::path CPFTest::generate_spectrum_fits(UInt32 size, Float64 lambda_min,
-                                          Float64 lambda_max,
-                                          Float64 mean,
-                                          TGenerationKind kind)
-{
-    CSpectrum spectrum;
-    CSpectrumIOFitsWriter writer;
-    bfs::path temp = bfs::unique_path("tst_%%%%%%%%%%.fits");
-
-    generate_spectrum(spectrum, size, lambda_min, lambda_max, mean, kind);
-
-    if (!writer.Write(temp.c_str(), spectrum))
-    {
-        throw GlobalException(INTERNAL_ERROR,"Can't create temporary fits file");
-    }
-
-    return temp;
-}
 
 /**
  * Generate a bogus fits file

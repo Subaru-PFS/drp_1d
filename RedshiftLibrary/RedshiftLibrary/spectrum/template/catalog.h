@@ -53,7 +53,7 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="", Bool sampling = 0 );
+    CTemplateCatalog(  Bool sampling = 0 );
     
     void                    Add( const std::shared_ptr<CTemplate> & tpl);
 
@@ -90,10 +90,6 @@ private:
     typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
     TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
 
-    std::string m_continuumRemovalMethod;
-    Float64 m_continuumRemovalMedianKernelWidth;
-    Float64 m_continuumRemovalWaveletsNScales;
-    std::string m_continuumRemovalWaveletsBinPath;
 
 };
 

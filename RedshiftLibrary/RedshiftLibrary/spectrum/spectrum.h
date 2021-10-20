@@ -145,14 +145,12 @@ public:
     const Int32                     GetDecompScales() const;
     const Float64                   GetMedianWinsize() const;
     const std::string&              GetContinuumEstimationMethod() const;
-    const std::string&              GetWaveletsDFBinPath() const;
 
     void 			                SetFullPath(const char* nameP);
     void 			                SetDecompScales(Int32 decompScales);
     void 			                SetMedianWinsize(Float64 winsize);
     void                            SetContinuumEstimationMethod(std::string method) const;
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
-    void                            SetWaveletsDFBinPath(std::string binPath);
 
     void                            ScaleFluxAxis(Float64 scale);
 

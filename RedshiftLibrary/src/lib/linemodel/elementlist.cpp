@@ -46,13 +46,10 @@
 #include "RedshiftLibrary/ray/ray.h"
 
 #include <gsl/gsl_multifit.h>
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
-#include "RedshiftLibrary/continuum/waveletsdf.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/spectrum/io/fitswriter.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/exception.h"
@@ -6406,11 +6403,13 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
         continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
     }else
     {
+      /*
         Int64 nscales = 6;
         std::string dfBinPath="/home/aschmitt/gitlab/amazed/extern/df_linux/";
         CContinuumDF continuum(dfBinPath);
         spcCorrectedUnderLines.SetDecompScales(nscales);
         continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
+      */
     }
 
 

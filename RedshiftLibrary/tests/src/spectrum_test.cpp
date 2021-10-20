@@ -55,7 +55,6 @@
 
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;

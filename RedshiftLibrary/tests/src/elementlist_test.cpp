@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/noise/flat.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/common/exception.h"
@@ -84,7 +83,6 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CTemplateCatalog tplCatalog;
   TStringList tplCategories;
   CRayCatalog lineCatalog;
-  CSpectrumIOGenericReader reader;
   TFloat64Range range(12500,18500);
   CLineModelSolution solution;
   CContinuumModelSolution c_solution;

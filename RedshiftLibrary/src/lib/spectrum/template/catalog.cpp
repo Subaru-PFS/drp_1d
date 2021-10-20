@@ -37,11 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/continuum/waveletsdf.h"
 
 #include "RedshiftLibrary/log/log.h"
 
@@ -57,12 +55,8 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath, Bool sampling )
+CTemplateCatalog::CTemplateCatalog( Bool sampling )
 {
-    m_continuumRemovalMethod = cremovalmethod;
-    m_continuumRemovalMedianKernelWidth = mediankernelsize;
-    m_continuumRemovalWaveletsNScales = waveletsScales;
-    m_continuumRemovalWaveletsBinPath = waveletsDFBinPath;
     m_logsampling = sampling;
 }
 

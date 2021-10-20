@@ -39,12 +39,10 @@
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 
 #include <boost/filesystem.hpp>
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 
 #include "RedshiftLibrary/spectrum/combination.h"
 
 #include "RedshiftLibrary/continuum/median.h"
-#include "RedshiftLibrary/continuum/waveletsdf.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 namespace bfs = boost::filesystem;
