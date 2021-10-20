@@ -75,11 +75,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
   //disable extinction for stars
-  const std::string opt_extinction = (m_objectType == "star")? "no":inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
-  std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
+  const bool opt_extinction = (m_objectType == "star")? false:inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+  bool opt_dustFit = inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
 
   //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
+  bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
   
   if(fft_processing)
     {
@@ -116,15 +116,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination=inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
-    /*
-    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
-    if(m_opt_saveintermediateresults=="yes")
-    {
-        m_opt_enableSaveIntermediateTemplateFittingResults = true;
-    }else{
-        m_opt_enableSaveIntermediateTemplateFittingResults = false;
-    }
-    */
+
     //TODO totaly remove this option ?
     m_opt_enableSaveIntermediateTemplateFittingResults = false;
 
@@ -132,8 +124,8 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "    -interp: %s", opt_interp.c_str());
-    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction?"true":"false");
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit?"true":"false");
     Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateTemplateFittingResults);
     Log.LogInfo( "");
@@ -208,8 +200,8 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
                                    std::vector<CMask> maskList,
                                    EType spctype,
                                    std::string opt_interp,
-                                   std::string opt_extinction,
-                                   std::string opt_dustFitting)
+                                   bool opt_extinction,
+                                   bool opt_dustFitting)
 {
 
     std::string scopeStr = "templatefitting";
@@ -218,13 +210,13 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-    if(opt_extinction=="yes")
+    if(opt_extinction)
     {
         enable_extinction = 1;
     }
 
     Int32 option_dustFitting = -1;
-    if(opt_dustFitting=="yes")
+    if(opt_dustFitting)
     {
         option_dustFitting = -10;
     }

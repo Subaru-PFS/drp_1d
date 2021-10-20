@@ -77,8 +77,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
 
     RebinInputs();
 
-    std::string enableInputSpcCorrectStr = m_ParameterStore->Get<std::string>( "autocorrectinput");
-    Bool enableInputSpcCorrect = enableInputSpcCorrectStr == "yes";
+    Bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
     //we should replace spectrum with m_inputContext->
     validateSpectrum(m_Spectrum, m_lambdaRange, enableInputSpcCorrect);
     if(m_use_LogLambaSpectrum)

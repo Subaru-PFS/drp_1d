@@ -80,9 +80,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     Log.LogInfo("=====================================================================");
 
     Float64       maxCount; 
-    Float64       redshiftseparation;
-
-    ctx.GetParameterStore()->Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
+    Float64       redshiftseparation = 2*0.005;
+    if(ctx.GetParameterStore()->Has<Float64>( "extremaredshiftseparation"))
+      redshiftseparation = ctx.GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: decide on the default values using latest analyses plots
 
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
@@ -90,10 +90,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //************************************
     // Stellar method
 
-    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestarsolve");
-    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
+    bool enableStarFitting = ctx.GetParameterStore()->Get<bool>( "enablestarsolve");
+    Log.LogInfo( "Stellar solve enabled : %d", enableStarFitting);
 
-    if(enableStarFitting=="yes"){
+    if(enableStarFitting){
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         solve.Compute(ctx.GetInputContext(),
@@ -104,10 +104,10 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Quasar method
     //    std::shared_ptr<CSolveResult> qsoResult;
-    std::string enableQsoFitting = ctx.GetParameterStore()->Get<std::string>( "enableqsosolve");
-    Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
+    bool enableQsoFitting = ctx.GetParameterStore()->Get<bool>( "enableqsosolve");
+    Log.LogInfo( "QSO solve enabled : %d", enableQsoFitting);
 
-    if(enableQsoFitting=="yes"){
+    if(enableQsoFitting){
         Log.LogInfo("Processing QSO fitting");
         std::string qso_method = ctx.GetParameterStore()->Get<std::string>( "qso.method");
         boost::algorithm::to_lower(qso_method);
@@ -136,10 +136,9 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
     // Galaxy method
 
-    if(ctx.GetParameterStore()->Get<std::string>( "enablegalaxysolve")=="yes")
+    if(ctx.GetParameterStore()->Get<bool>( "enablegalaxysolve"))
       {
-        std::string methodName;
-        ctx.GetParameterStore()->Get( "galaxy.method", methodName );
+        std::string methodName = ctx.GetParameterStore()->Get<std::string>( "galaxy.method");
         boost::algorithm::to_lower(methodName);
 
         std::string galaxy_method_pdf_reldir = "zPDF";
@@ -192,7 +191,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="no")
+    if(!ctx.GetParameterStore()->Get<bool>( "enablelinemeassolve"))
       {
         {
           CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
@@ -207,7 +206,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                               ctx.m_ScopeStack);
         }
       }
-    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="yes")
+    if(ctx.GetParameterStore()->Get<bool>( "enablelinemeassolve"))
       {
         CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas");
         solve.Compute(ctx.GetInputContext(),

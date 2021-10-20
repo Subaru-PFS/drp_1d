@@ -272,7 +272,7 @@ public:
                            const Float64 opt_velocityAbsorption,
                            const std::string &opt_continuumreest="no",
                            const std::string &opt_rules="all",
-                           const std::string &opt_velocityFitting="no",
+                           const bool &opt_velocityFitting=false,
                            const UInt32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
                            const std::string &opt_rigidity="rules",
@@ -299,7 +299,7 @@ public:
                             const Float64 opt_velocityAbsorption,
                             const std::string &opt_continuumreest="no",
                             const std::string &opt_rules="all",
-                            const std::string &opt_velocityFitting="no",
+                            const bool &opt_velocityFitting=false,
                             const std::string &opt_rigidity="rules",
                             const Float64 &opt_emvelocityfitmin=20.,
                             const Float64 &opt_emvelocityfitmax=500.,
@@ -311,10 +311,10 @@ public:
 
     Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
                                        const TFloat64Range &lambdaRange,
-                                       const string &opt_continuumreest,
+                                       const std::string &opt_continuumreest,
                                        const string &opt_fittingmethod,
                                        const std::string &opt_rigidity,
-                                       const string &opt_velocityFitting,
+                                       const bool &opt_velocityFitting,
                                        const Float64 &opt_emvelocityfitmin,
                                        const Float64 &opt_emvelocityfitmax,
                                        const Float64 &opt_emvelocityfitstep,
@@ -377,8 +377,8 @@ public:
     std::string m_opt_continuumcomponent;
     Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
 
-    std::string m_opt_lya_forcefit;
-    std::string m_opt_lya_forcedisablefit;
+    bool m_opt_lya_forcefit;
+    bool m_opt_lya_forcedisablefit;
     Float64 m_opt_lya_fit_asym_min;
     Float64 m_opt_lya_fit_asym_max;
     Float64 m_opt_lya_fit_asym_step;
@@ -389,10 +389,10 @@ public:
     Float64 m_opt_lya_fit_delta_max;
     Float64 m_opt_lya_fit_delta_step;
 
-    std::string m_opt_enableImproveBalmerFit;
+    bool m_opt_enableImproveBalmerFit;
     Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
-  std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
+    std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
     COperatorLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
   CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);

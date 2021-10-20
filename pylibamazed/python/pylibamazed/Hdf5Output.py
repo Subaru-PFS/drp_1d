@@ -58,13 +58,13 @@ class Hdf5Output(AbstractOutput):
         self.parameters = parameters
         self.add_sup_columns = True
         self.object_types = []
-        if self.parameters["enablegalaxysolve"] == "yes":
+        if self.parameters["enablegalaxysolve"]:
             self.object_types.append("galaxy")
-        if self.parameters["enablestarsolve"] == "yes":
+        if self.parameters["enablestarsolve"]:
             self.object_types.append("star")
-        if self.parameters["enableqsosolve"] == "yes":
+        if self.parameters["enableqsosolve"]:
             self.object_types.append("qso")
-        if self.parameters["enablelinemeassolve"] == "yes":
+        if self.parameters["enablelinemeassolve"]:
             self.object_types.append("linemeas")
         for object_type in self.object_types:
             self.object_results[object_type] = dict()

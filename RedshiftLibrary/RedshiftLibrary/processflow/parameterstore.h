@@ -70,6 +70,7 @@ public:
     void Get( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
     void Get( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
     void Get( const std::string& name, Bool& v, Bool defaultValue = true ) const;
+
     void Get( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range( 0.0, 0.0 ) ) const;
     void Get( const std::string& name, std::string& v, const std::string& defaultValue = "" ) const;
 
