@@ -96,9 +96,6 @@ private:
 
   void OrthogonalizeTemplates();
   void RebinInputs();
-  void validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
-                        TFloat64Range lambdaRange, 
-                        Bool enableInputSpcCorrect);
 };
 
 inline

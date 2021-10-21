@@ -119,7 +119,11 @@ public:
     void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 
-    //std::shared_ptr<CLSF>           GetLSF();
+    bool                            IsNoiseEmpty()const;
+    bool                            IsEmpty() const;
+    bool                            IsValid()const;
+    void                            ValidateSpectrum(TFloat64Range lambdaRange, 
+                                                    Bool enableInputSpcCorrect);
     void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
@@ -324,14 +328,24 @@ const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
 {
     return m_LSF;
 }
-/*
+
 inline
-std::shared_ptr<CLSF> CSpectrum::GetLSF()
+bool CSpectrum::IsEmpty()const
 {
-    return m_LSF;
+    return m_SpectralAxis.isEmpty() || GetFluxAxis().isEmpty();
+}
 
-}*/
+inline
+bool CSpectrum::IsValid()const
+{
+    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty();
+}
 
+inline
+bool CSpectrum::IsNoiseEmpty()const
+{
+    return GetErrorAxis().isEmpty();
+}
 inline 
 void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 {

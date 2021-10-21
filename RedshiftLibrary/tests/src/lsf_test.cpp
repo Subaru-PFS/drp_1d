@@ -72,9 +72,9 @@ bool correctMessage(const GlobalException& ex)
 
 BOOST_AUTO_TEST_CASE(LSF_ConstantWidth)
 {
-
-    CSpectrumSpectralAxis SpectralAxis;
-    CSpectrumFluxAxis FluxAxis;
+    Int32 n = 10;
+    CSpectrumFluxAxis FluxAxis(n, 1);
+    CSpectrumSpectralAxis SpectralAxis(n);
     std::string lsfType = "GaussianConstantWidth";
     Float64 width = 1.09;
     TScopeStack scopeStack;
