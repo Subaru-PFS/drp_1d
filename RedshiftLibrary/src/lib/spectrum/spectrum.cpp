@@ -254,12 +254,10 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumF
 //called from context
 void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 {
-    Int64 smoothWidth;
-    std::string medianRemovalMethod;
-    Float64 medianKernelWidth;
-    parameterStore.Get( "smoothWidth", smoothWidth, 0 );
-    parameterStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
-    parameterStore.Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
+    Float64 smoothWidth = parameterStore.Get<Float64>( "smoothWidth");
+    std::string medianRemovalMethod =parameterStore.Get<std::string>( "continuumRemoval.method");
+    Float64 medianKernelWidth = parameterStore.Get<Float64>( "continuumRemoval.medianKernelWidth");
+    Float64 nscales = parameterStore.Get<Float64>( "continuumRemoval.decompScales");
     SetType(EType::nType_raw);
     if( smoothWidth > 0 ){
         m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
