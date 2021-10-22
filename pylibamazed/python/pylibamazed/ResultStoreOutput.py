@@ -193,6 +193,8 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
             object_results = obs.create_group(object_type) #h5
             self.write_hdf5_object_level(object_type, object_results)
+            if object_type == "linemeas":
+                continue
             candidates = object_results.create_group("candidates")
             rs = results_specifications
             rs = rs[rs["level"] == "candidate"]
