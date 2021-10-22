@@ -61,8 +61,6 @@ using namespace std;
 CSpectrum::CSpectrum():
     m_estimationMethod(""),
     m_medianWindowSize(-1),
-    m_nbScales(-1),
-    m_dfBinPath(""),
     m_Name("")
 {
 
@@ -72,9 +70,7 @@ CSpectrum::CSpectrum(const std::string& name):m_Name(name){};
 
 CSpectrum::CSpectrum(const CSpectrum& other, const TFloat64List& mask):
     m_estimationMethod(other.m_estimationMethod),
-    m_dfBinPath(other.m_dfBinPath),
     m_medianWindowSize(other.m_medianWindowSize),
-    m_nbScales(other.m_nbScales),
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
@@ -116,8 +112,6 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
     m_RawFluxAxis(std::move(fluxAxis)),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
-    m_nbScales(-1),
-    m_dfBinPath(""),
     m_Name(""),
     m_LSF(lsf)
 {
@@ -131,9 +125,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
 // and const members (m_dLambdaFineGrid &m_method2baseline)
 CSpectrum::CSpectrum(const CSpectrum& other):
     m_estimationMethod(other.m_estimationMethod),
-    m_dfBinPath(other.m_dfBinPath),
     m_medianWindowSize(other.m_medianWindowSize),
-    m_nbScales(other.m_nbScales),
     m_SpectralAxis(other.m_SpectralAxis),
     m_RawFluxAxis(other.m_RawFluxAxis),
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
@@ -148,9 +140,7 @@ CSpectrum::CSpectrum(const CSpectrum& other):
 
 CSpectrum::CSpectrum(CSpectrum&& other):
     m_estimationMethod(std::move(other.m_estimationMethod)),
-    m_dfBinPath(std::move(other.m_dfBinPath)),
     m_medianWindowSize(other.m_medianWindowSize),
-    m_nbScales(other.m_nbScales),
     m_SpectralAxis(std::move(other.m_SpectralAxis)),
     m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
     m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
@@ -182,9 +172,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
     m_LSF = other.m_LSF;
 
     m_estimationMethod = other.m_estimationMethod;
-    m_dfBinPath = other.m_dfBinPath;
     m_medianWindowSize = other.m_medianWindowSize;
-    m_nbScales = other.m_nbScales;
     m_Name = other.m_Name;
     alreadyRemoved = other.alreadyRemoved;
     return *this;
@@ -202,9 +190,7 @@ CSpectrum& CSpectrum::operator=(CSpectrum&& other)
     m_LSF = std::move(other.m_LSF);
 
     m_estimationMethod = std::move(other.m_estimationMethod);
-    m_dfBinPath = std::move(other.m_dfBinPath);
     m_medianWindowSize = other.m_medianWindowSize;
-    m_nbScales = other.m_nbScales;
     m_Name = std::move(other.m_Name);
     alreadyRemoved = other.alreadyRemoved;
 
@@ -269,13 +255,11 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumF
 void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 {
     Int64 smoothWidth;
-    std::string medianRemovalMethod, dfBinPath;
-    Float64 medianKernelWidth,nscales;
+    std::string medianRemovalMethod;
+    Float64 medianKernelWidth;
     parameterStore.Get( "smoothWidth", smoothWidth, 0 );
     parameterStore.Get( "continuumRemoval.method", medianRemovalMethod, "IrregularSamplingMedian" );
     parameterStore.Get( "continuumRemoval.medianKernelWidth", medianKernelWidth, 75.0 );
-    parameterStore.Get( "continuumRemoval.decompScales", nscales, 6.0 );
-    parameterStore.Get( "continuumRemoval.binPath", dfBinPath, "absolute_path_to_df_binaries_here" );
     SetType(EType::nType_raw);
     if( smoothWidth > 0 ){
         m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
@@ -283,7 +267,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     ResetContinuum();
     SetContinuumEstimationMethod(medianRemovalMethod);
     SetMedianWinsize(medianKernelWidth);
-    SetDecompScales((Int32)nscales);
 }
 
 /**
@@ -726,11 +709,6 @@ const std::string& CSpectrum::GetFullPath() const
       return m_FullPath;
 }
 
-const Int32 CSpectrum::GetDecompScales() const
-{
-      return m_nbScales;
-}
-
 const Float64 CSpectrum::GetMedianWinsize() const
 {
       return m_medianWindowSize;
@@ -741,20 +719,9 @@ const std::string & CSpectrum::GetContinuumEstimationMethod() const
       return m_estimationMethod;
 }
 
-
 void CSpectrum::SetFullPath(const char* nameP)
 {
     m_FullPath = nameP;
-}
-
-void CSpectrum::SetDecompScales( Int32 decompScales )
-{
-    if (m_nbScales!=decompScales &&
-            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
-    {
-        ResetContinuum();
-    }
-    m_nbScales = decompScales;
 }
 
 void CSpectrum::SetMedianWinsize( Float64 winsize )

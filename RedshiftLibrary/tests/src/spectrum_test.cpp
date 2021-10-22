@@ -86,18 +86,6 @@ BOOST_AUTO_TEST_CASE(path)
 
 }
 
-BOOST_AUTO_TEST_CASE(decompScales)
-{
-
-    CSpectrum object_CSpectrum;
-
-    Int32 decompScales=10;
-    object_CSpectrum.SetDecompScales(decompScales);
-    BOOST_CHECK(object_CSpectrum.GetDecompScales()==decompScales);
-    BOOST_TEST_MESSAGE("GetDecompScales OK");
-
-}
-
 BOOST_AUTO_TEST_CASE(invert)
 {
 

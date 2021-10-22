@@ -6395,23 +6395,10 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
     // TODO: use the continuum remover defined in the CSpectrum continuum member, with params defined in the smae place
     // Remove continuum
     CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    if(1)
-    {
-        CContinuumIrregularSamplingMedian continuum;
-        Float64 opt_medianKernelWidth = m_inputSpc.GetMedianWinsize();
-        continuum.SetMedianKernelWidth(opt_medianKernelWidth);
-        continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
-    }else
-    {
-      /*
-        Int64 nscales = 6;
-        std::string dfBinPath="/home/aschmitt/gitlab/amazed/extern/df_linux/";
-        CContinuumDF continuum(dfBinPath);
-        spcCorrectedUnderLines.SetDecompScales(nscales);
-        continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
-      */
-    }
-
+    CContinuumIrregularSamplingMedian continuum;
+    Float64 opt_medianKernelWidth = m_inputSpc.GetMedianWinsize();
+    continuum.SetMedianKernelWidth(opt_medianKernelWidth);
+    continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
 
 
     CSpectrumFluxAxis fluxAxisNewContinuum(spcCorrectedUnderLines.GetSampleCount());
