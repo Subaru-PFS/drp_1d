@@ -203,8 +203,22 @@ void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ort
 
 }
 
+void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore)
+{
+    std::string ContinuumRemovalMethod = parameterStore->Get<std::string>("templateCatalog.continuumRemoval.method");
+    Float64 medianKernelWidth = parameterStore->Get<Float64>("templateCatalog.continuumRemoval.medianKernelWidth");
+    for(auto it : GetList(0,0))
+    {             
+        const TTemplateRefList  & TplList = it.second;
+        for (auto tpl : TplList){
+            tpl->SetContinuumEstimationMethod(ContinuumRemovalMethod);
+            tpl->SetMedianWinsize(medianKernelWidth);
+        }
+    }
+}
+
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(std::shared_ptr<const CParameterStore> parameterStore,
+void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                   const std::shared_ptr<const CLSF>& lsf)
 {
     Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");;

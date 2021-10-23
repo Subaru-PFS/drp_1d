@@ -64,6 +64,9 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     m_Spectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
     m_Spectrum->InitSpectrum(*m_ParameterStore); 
     
+    // set template continuum removal parameters
+    m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
+  
     // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
     //only when lsf changes notably when LSFType is fromspectrumdata
     //or the first time InitIsmIgm is called
