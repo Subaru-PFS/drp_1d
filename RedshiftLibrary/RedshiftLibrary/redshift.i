@@ -669,7 +669,7 @@ class AmzException : public std::exception
 
  public:
   AmzException(ErrorCode ec,std::string message);
-  ~AmzException();
+  virtual ~AmzException();
  
   const char* getStackTrace() const;
   ErrorCode getErrorCode();
@@ -682,7 +682,7 @@ class GlobalException: public AmzException
  public:
   GlobalException(ErrorCode ec,std::string message);
   GlobalException(const GlobalException& e);
-  ~GlobalException();
+  virtual ~GlobalException();
 };
 
 
@@ -691,7 +691,7 @@ class SolveException: public AmzException
  public:
   SolveException(ErrorCode ec,std::string message);
   SolveException(const SolveException& e);
-  ~SolveException();
+  virtual ~SolveException();
 };
 
 
@@ -700,7 +700,7 @@ class ParameterException: public AmzException
  public:
   ParameterException(ErrorCode ec,std::string message);
   ParameterException(const ParameterException& e);
-  ~ParameterException();  
+  virtual ~ParameterException();  
 };
 
 class CSolveDescription

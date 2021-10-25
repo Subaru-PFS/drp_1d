@@ -62,3 +62,18 @@ const char* AmzException::getStackTrace() const {
   return stacktrace.c_str();
 }
 
+AmzException::~AmzException()
+{
+}
+GlobalException::~GlobalException()
+{
+}
+SolveException::~SolveException()
+{
+}
+ParameterException::~ParameterException()
+{
+}
+InternalException::~InternalException()
+{
+}
