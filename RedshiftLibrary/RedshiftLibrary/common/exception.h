@@ -78,7 +78,7 @@ namespace NSEpic {
 
     AmzException(const AmzException& e);
     
-    ~AmzException(){}
+    virtual ~AmzException();
     virtual const char* what() const noexcept override
     {
       return _msg.c_str();
@@ -110,7 +110,7 @@ namespace NSEpic {
       AmzException(e){
     }
 
-    ~GlobalException(){}
+    virtual ~GlobalException();
 
   };
 
@@ -126,7 +126,7 @@ namespace NSEpic {
     SolveException(const SolveException& e):
       AmzException(e){}
 
-    ~SolveException(){}
+    virtual ~SolveException();
   };
 
     // This exception is for now reserved for the unknown parameter exception
@@ -142,7 +142,7 @@ namespace NSEpic {
     ParameterException(const ParameterException& e):
       AmzException(e){}
 
-    ~ParameterException(){}
+    virtual ~ParameterException();
     void getMessage(std::string &msg)
     {
       msg = _msg;
@@ -160,7 +160,7 @@ namespace NSEpic {
     InternalException(const InternalException& e):
       AmzException(e){}
 
-    ~InternalException(){}
+    virtual ~InternalException();
 
   };
 
