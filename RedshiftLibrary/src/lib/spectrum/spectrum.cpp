@@ -257,7 +257,6 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     Float64 smoothWidth = parameterStore.Get<Float64>( "smoothWidth");
     std::string medianRemovalMethod =parameterStore.Get<std::string>( "continuumRemoval.method");
     Float64 medianKernelWidth = parameterStore.Get<Float64>( "continuumRemoval.medianKernelWidth");
-    Float64 nscales = parameterStore.Get<Float64>( "continuumRemoval.decompScales");
     SetType(EType::nType_raw);
     if( smoothWidth > 0 ){
         m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);

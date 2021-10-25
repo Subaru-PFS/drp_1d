@@ -95,6 +95,8 @@ class Hdf5Output(AbstractOutput):
                 self.object_dataframes[object_type][ds] = pd.DataFrame(np.array(self.hdf5_group.get(object_type).get(ds)))
             
     def load_candidate_level(self, object_type):
+        if object_type == "linemeas":
+            return
         rs = results_specifications
         rs = rs[rs["level"] == "candidate"]
         candidate_datasets = list(rs["hdf5_dataset"].unique())
