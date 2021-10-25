@@ -37,11 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/continuum/waveletsdf.h"
 
 #include "RedshiftLibrary/log/log.h"
 
@@ -57,12 +55,8 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( std::string cremovalmethod, Float64 mediankernelsize, Float64 waveletsScales, std::string waveletsDFBinPath, Bool sampling )
+CTemplateCatalog::CTemplateCatalog( Bool sampling )
 {
-    m_continuumRemovalMethod = cremovalmethod;
-    m_continuumRemovalMedianKernelWidth = mediankernelsize;
-    m_continuumRemovalWaveletsNScales = waveletsScales;
-    m_continuumRemovalWaveletsBinPath = waveletsDFBinPath;
     m_logsampling = sampling;
 }
 
@@ -105,7 +99,7 @@ std::shared_ptr<const CTemplate>  CTemplateCatalog::GetTemplateByName(const TStr
             }
         }
     }
-    throw std::runtime_error("Could not find template with name");
+    throw GlobalException(INTERNAL_ERROR,Formatter()<<"Could not find template with name "<<tplName);
 }
 
 
@@ -156,7 +150,7 @@ UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, B
 void CTemplateCatalog::Add( const std::shared_ptr<CTemplate> & r)
 {
     if( r->GetCategory().empty() )
-      throw runtime_error("Template has no category");
+      throw GlobalException(INTERNAL_ERROR,"Template has no category");
         
     GetList()[r->GetCategory()].push_back( r );
 }

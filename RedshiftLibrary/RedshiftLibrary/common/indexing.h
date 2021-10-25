@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 #include <vector>
 #include<iostream>
@@ -62,7 +63,7 @@ template <typename T> class CIndexing
             std::unique_ptr<char[]> buf( new char[ size ] );                                                        
             snprintf( buf.get(), size, "Could not find index for %f", z);                          
             std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-            throw std::runtime_error(_msg.c_str());
+            throw GlobalException(INTERNAL_ERROR,_msg.c_str());
         }
         return (itr - list.begin()); 
     }

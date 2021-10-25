@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/statistics/zprior.h"
 #include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <float.h>
 #include "RedshiftLibrary/log/log.h"
@@ -112,8 +114,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
 {
     if(aCoeff <= 0.0)
     {
-        Log.LogError( "    CZPrior::GetEuclidNhaLogZPrior: problem found aCoeff<=0: aCoeff=%f", aCoeff);
-        throw std::runtime_error("    CZPrior::GetEuclidNhaLogZPrior: problem found aCoeff<=0");
+      throw GlobalException(INTERNAL_ERROR, Formatter()<<"CZPrior::GetEuclidNhaLogZPrior: problem found aCoeff<=0: aCoeff="<< aCoeff);
     }
 
     TFloat64List zPrior(redshifts.size(), 0.0);
@@ -190,8 +191,7 @@ TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1, const TFl
 {
     if (logprior1.size() != logprior2.size())
     {
-        Log.LogError("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
-        throw std::runtime_error("CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+        throw GlobalException(INTERNAL_ERROR,"CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
 
     }
     Int32 n = logprior1.size();

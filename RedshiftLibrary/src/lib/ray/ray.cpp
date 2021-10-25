@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/common/exception.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -100,19 +101,19 @@ bool CRay::operator != (const CRay& str) const
 void CRay::SetAsymParams(TAsymParams asymParams)
 {
     if(!m_Profile)
-        throw runtime_error("CRay::SetAsymParams: lineprofile is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CRay::SetAsymParams: lineprofile is not initialized");
     m_Profile->SetAsymParams(asymParams);
 }
 void CRay::resetAsymFitParams()
 {
     if(!m_Profile)
-        throw runtime_error("CRay::resetAsymParams: lineprofile is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CRay::resetAsymParams: lineprofile is not initialized");
     m_Profile->resetAsymFitParams();
 }
 const TAsymParams CRay::GetAsymParams()
 {
     if(!m_Profile)
-        throw std::runtime_error("CRay::GetAsymParams: lineprofile is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CRay::GetAsymParams: lineprofile is not initialized");
     return m_Profile->GetAsymParams();
 }
 
@@ -134,7 +135,7 @@ Int32 CRay::GetType() const
 std::shared_ptr<CLineProfile> CRay::GetProfile() const
 {
     if(!m_Profile)
-        throw runtime_error("Current Ray does not have a set profile ");
+        throw GlobalException(INTERNAL_ERROR,"Current Ray does not have a set profile ");
     return m_Profile;
      
 }

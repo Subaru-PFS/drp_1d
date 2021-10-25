@@ -193,8 +193,7 @@ void CTemplate::SetType(const CSpectrum::EType type) const
             CSpectrum::SetType(type);
         else
         {
-            Log.LogError("CTemplate::SetType: cannot change component type when ism/igm enabled on a const CTemplate");
-            throw std::runtime_error("CTemplate::SetType: cannot change component type");
+            throw GlobalException(INTERNAL_ERROR,"CTemplate::SetType: cannot change component type when ism/igm enabled on a const CTemplate");
         }   
     }
 }
@@ -215,8 +214,7 @@ inline
 Int32 CTemplate::GetIsmCoeff() const
 {
     if (!CheckIsmIgmEnabled()){
-        Log.LogError("CTemplate::GetIsmCoeff:  ismigm initialization not done");
-        throw std::runtime_error("CTemplate::GetIsmCoeff:  ismigm initialization not done");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmCoeff:  ismigm initialization not done");
     }
     return m_kDust;
 }
@@ -225,8 +223,7 @@ inline
 Int32 CTemplate::GetIgmCoeff() const
 {
     if (!CheckIsmIgmEnabled()){
-        Log.LogError("CTemplate::GetIgmCoeff:  ismigm initialization not done");
-        throw std::runtime_error("CTemplate::GetIgmCoeff:  ismigm initialization not done");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIgmCoeff:  ismigm initialization not done");
     }
     return m_meiksinIdx;
 }
@@ -235,8 +232,7 @@ inline
 void CTemplate::GetIsmIgmRangeIndex(Int32& begin, Int32& ismend) const
 {
     if (!CheckIsmIgmEnabled()){
-        Log.LogError("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
-        throw std::runtime_error("CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
     }    
     begin = m_IsmIgm_kstart;
     ismend = m_Ism_kend;
@@ -246,8 +242,7 @@ inline
 Int32 CTemplate::GetIgmEndIndex() const
 {
     if (!CheckIsmIgmEnabled() || MeiksinInitFailed()){
-        Log.LogError("CTemplate::GetIgmEndIndex: igm initialization not done");
-        throw std::runtime_error("CTemplate::GetIgmEndIndex: igm initialization not done");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIgmEndIndex: igm initialization not done");
     }
     return m_Igm_kend;
 }

@@ -38,10 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/noise/flat.h"
-#include "RedshiftLibrary/noise/fromfile.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/tests/test-tools.h"
 
 #include <time.h>
@@ -80,21 +79,21 @@ BOOST_AUTO_TEST_CASE(Constructor)
   string opt_rigidity = "rules";
 
   CSpectrum spectrum;
-  CNoiseFromFile noise;
+
   CTemplateCatalog tplCatalog;
   TStringList tplCategories;
   CRayCatalog lineCatalog;
-  CSpectrumIOGenericReader reader;
   TFloat64Range range(12500,18500);
   CLineModelSolution solution;
   CContinuumModelSolution c_solution;
   int iterations = 1;
 
   generate_spectrum(spectrum, 1000, 3500, 12500);
-  noisePath = generate_noise_fits(1000, 3500, 12500);
+  /*  noisePath = generate_noise_fits(1000, 3500, 12500);
   noise.SetNoiseFilePath(noisePath.c_str(), reader);
   noise.AddNoise(spectrum);
-
+  */
+  
   std::string lsfType="GaussianConstantWidth";
   Float64 width = 13.;
   TScopeStack scopeStack;

@@ -761,8 +761,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     Int32 retInit = m_linemodel.Init(spc, redshifts, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
-        Log.LogError( "Linemodel, init failed. Aborting" );
-        throw std::runtime_error( "Linemodel, init failed. Aborting" );
+        throw GlobalException(INTERNAL_ERROR, "Linemodel, init failed. Aborting" );
     }
     m_linemodel.m_opt_firstpass_fittingmethod=m_opt_firstpass_fittingmethod;
     //
@@ -839,8 +838,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     m_opt_offsets_reldirpath);
     if( retFirstPass!=0 )
     {
-        Log.LogError( "Linemodel, first pass failed. Aborting" );
-        throw runtime_error("Linemodel, first pass failed. Aborting");
+        throw GlobalException(INTERNAL_ERROR, "Linemodel, first pass failed. Aborting" );
         return false;
     }
 
@@ -1009,8 +1007,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
 
     if( !result )
     {
-        Log.LogError("%s: Failed to get linemodel result",__func__);
-        throw runtime_error("Failed to get linemodel result");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<__func__<<": Failed to get linemodel result");
     }else{
         //save linemodel chisquare results
         resultStore->StoreScopedGlobalResult( scopeStr.c_str(), result );

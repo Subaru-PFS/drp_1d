@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include <fstream>
@@ -211,8 +212,7 @@ Bool CTemplate::Save( const char* filePath ) const
 bool CTemplate::ApplyDustCoeff(Int32 kDust)
 {
     if (!CheckIsmIgmEnabled() || CalzettiInitFailed()){
-        Log.LogError("CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
-        throw runtime_error("CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::ApplyDustCoeff: try to apply dust extinction without ism initialization");
     }
 
     if(m_kDust == kDust)
@@ -239,8 +239,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
 bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
 {
     if (!CheckIsmIgmEnabled() || MeiksinInitFailed()){
-        Log.LogError("CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
-        throw runtime_error("CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::ApplyMeiksinCoeff: try to apply igm extinction without igm initialization");
     }
 
     if(m_meiksinIdx == meiksinIdx)
@@ -320,8 +319,7 @@ void CTemplate::InitIsmIgmConfig( const TFloat64Range & lbdaRange, Float64 redsh
     Int32 kstart, kend;
     bool ret = lbdaRange.getClosedIntervalIndices(m_SpectralAxis.GetSamplesVector(), kstart, kend);
     if (!ret){
-        Log.LogError("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
-        throw std::runtime_error("CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
     }
     InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
 }
@@ -337,17 +335,14 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
         m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
     if (MeiksinInitFailed() && CalzettiInitFailed() ) {
-        Log.LogError("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: Cannot init ismigm");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: Cannot init ismigm");
     }
     
     if (kstart<0 || kstart>=m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CTemplate::InitIsmIgmConfig: kstart outside range");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: kstart outside range");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: kstart outside range");
     }
     if (kend<0 || kend>=m_SpectralAxis.GetSamplesCount()){
-        Log.LogError("CTemplate::InitIsmIgmConfig: kend outside range");
-        throw runtime_error("CTemplate::InitIsmIgmConfig: kend outside range");
+      throw GlobalException(INTERNAL_ERROR,"CTemplate::InitIsmIgmConfig: kend outside range");
     }
 
     m_kDust = -1;
@@ -396,12 +391,10 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
                             Int32 FitMeiksinIdx)const
 {
     if (MeiksinInitFailed() && opt_extinction){
-        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
-        throw runtime_error("CTemplate::GetIsmIgmIdxList: Meiksin is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
     }
     if(CalzettiInitFailed() && opt_dustFitting != -1){
-        Log.LogError("CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
-        throw runtime_error("CTemplate::GetIsmIgmIdxList: Calzetti is not initialized");
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
     }
 
     Int32 MeiksinListSize = 1;

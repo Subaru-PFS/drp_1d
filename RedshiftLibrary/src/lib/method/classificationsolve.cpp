@@ -122,8 +122,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
     }
     
     if(sum<=0){
-        Log.LogError( "%s: Classification G/S/Q, all probabilities undefined.", __func__);
-        throw std::runtime_error("Classification G/S/Q, all probabilities undefined");
+        throw GlobalException(INTERNAL_ERROR,"Classification G/S/Q, all probabilities undefined");
     }   
 
     Pgal /= sum;

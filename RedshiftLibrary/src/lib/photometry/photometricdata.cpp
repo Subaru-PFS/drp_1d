@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/photometry/photometricdata.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 
 #include <stdexcept>
@@ -48,7 +49,7 @@ CPhotometricData::CPhotometricData(const TStringList & name,  const TFloat64List
     // check all sizes are the same
     if (name.size() != flux.size() || name.size() != fluxerr.size()){
         Log.LogError("CPhotometryData::CPhotometryData name, flux or fluxerr have not the same size");
-        throw std::runtime_error("CPhotometryData::CPhotometryData name, flux or fluxerr have not the same size");
+        throw GlobalException(INTERNAL_ERROR,"CPhotometryData::CPhotometryData name, flux or fluxerr have not the same size");
     }
 
     for (Int32 i=0; i<name.size(); i++){

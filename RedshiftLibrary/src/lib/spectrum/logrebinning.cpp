@@ -135,8 +135,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
         loglambda_count_spc = round(count_) + 1; 
 
         if(loglambda_count_spc<2){
-            Log.LogError("   Operator-TemplateFittingLog: logGridCount = %d <2", loglambda_count_spc);
-            throw runtime_error("   Operator-TemplateFittingLog: logGridCount <2. Abort");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: logGridCount = "<< loglambda_count_spc<< "<2");
         }
     }/*else{
         // no need to compute lambdaRange_spc (used only for resampling input spectra)
@@ -156,7 +155,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
                     *spectrumRebinedLog,
                     mskRebinedLog, m_rebinMethod, errorRebinMethod);
     if(!ret){
-        throw runtime_error("Cant rebin spectrum");
+        throw GlobalException(INTERNAL_ERROR,"Cant rebin spectrum");
     }
     //spectrumRebinedLog->GetSpectralAxis().SetLogScale(); //we need to do a convertScale before setting scale
     spectrumRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);//double make sure that sampling is well done
@@ -178,8 +177,7 @@ UInt32 CSpectrumLogRebinning::InferTemplateRebinningSetup(const TFloat64Range& z
     Float64 _neat = (loglbdamax - loglbdamin)/m_logGridStep + 1;//we expect to get an int value with no need to any rounding
     if( std::abs(_round - _neat)>1E-8)
     {
-        Log.LogError("Problem in logrebinning setup");
-        throw runtime_error("Problem in logrebinning setup!");
+        throw GlobalException(INTERNAL_ERROR,"Problem in logrebinning setup");
     }
     UInt32 loglambda_count_tpl = std::round((loglbdamax - loglbdamin)/m_logGridStep) + 1;
 
@@ -213,15 +211,14 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
         overlapFull = false;
     if (!overlapFull)
     {
-        Log.LogError(" CSpectrumLogRebinning::LoglambdaRebinTemplate: overlap found to be lower than 1.0 for the template %s", tpl->GetName().c_str());
-        throw std::runtime_error("CInputContext::RebinInputs: overlap found to be lower than 1.0");
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"CSpectrumLogRebinning::LoglambdaRebinTemplate overlap found to be lower than 1.0 for the template "<< tpl->GetName().c_str());
     }
 
     CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(lambdaRange_tpl,
                                                                             loglambda_count_tpl);
 
     if(targetSpectralAxis[loglambda_count_tpl-1]< targetSpectralAxis[0])
-        throw runtime_error(" Last elements of the target spectral axis are not valid. Template count is not well computed due to exp/conversions");
+        throw GlobalException(INTERNAL_ERROR," Last elements of the target spectral axis are not valid. Template count is not well computed due to exp/conversions");
 
     auto templateRebinedLog = make_shared<CTemplate>(tpl->GetName(), tpl->GetCategory());
     templateRebinedLog->m_ismCorrectionCalzetti = tpl->m_ismCorrectionCalzetti;
@@ -236,7 +233,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
                 *templateRebinedLog,
                 mskRebinedLog);
     if(!ret){
-        throw runtime_error("Cant rebin template");
+        throw GlobalException(INTERNAL_ERROR,"Cant rebin template");
     }
 
     templateRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);
@@ -249,8 +246,7 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(const 
     TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
     if(axis.size()!= count)
     {
-        Log.LogError("  CSpectrumLogRebinning::computeTargetLogSpectralAxis: computed axis has not expected samples number");
-        throw runtime_error("  CSpectrumLogRebinning::computeTargetLogSpectralAxis: computed axis has not expected samples number");
+        throw GlobalException(INTERNAL_ERROR,"  CSpectrumLogRebinning::computeTargetLogSpectralAxis: computed axis has not expected samples number");
     }
     CSpectrumSpectralAxis targetSpectralAxis(std::move(axis));
     return targetSpectralAxis;

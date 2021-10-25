@@ -101,8 +101,6 @@
 #include "RedshiftLibrary/ray/catalog.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/io/reader.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
@@ -277,7 +275,7 @@ public:
 class CTemplateCatalog
 {
 public:
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
+    CTemplateCatalog();
     void Add( std::shared_ptr<CTemplate> r);
 };
 
@@ -461,23 +459,6 @@ class CSpectrum
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
-%catches(std::string, ...) CSpectrumIOReader::Read;
-
-class CSpectrumIOReader
-{
- public:
-  CSpectrumIOReader();
-  virtual ~CSpectrumIOReader();
-  virtual void Read(const char* filePath, CSpectrum& s) = 0;
-};
-
-class CSpectrumIOGenericReader : public CSpectrumIOReader
-{
- public:
-  CSpectrumIOGenericReader();
-  virtual ~CSpectrumIOGenericReader();
-  virtual void Read( const char* filePath, CSpectrum& s );
-};
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
 %rename(CSpectrumAxis_empty) CSpectrumAxis(UInt32 n);

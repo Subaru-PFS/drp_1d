@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
 
 
@@ -154,7 +155,7 @@ BOOST_AUTO_TEST_CASE(Morton2000)
 
 BOOST_AUTO_TEST_CASE(Converter)
 {
-  BOOST_CHECK_THROW(CAirVacuumConverter::Get(""), std::runtime_error);
+  BOOST_CHECK_THROW(CAirVacuumConverter::Get(""), GlobalException);
   BOOST_CHECK_NO_THROW(CAirVacuumConverter::Get("Morton2000"));
 
   auto converter1=CAirVacuumConverter::Get("Morton2000"); 

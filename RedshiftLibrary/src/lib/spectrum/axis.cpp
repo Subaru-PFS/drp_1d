@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
 #include <numeric>
 #include <algorithm>
 
@@ -97,8 +98,7 @@ void CSpectrumAxis::MaskAxis(const TFloat64List& mask, CSpectrumAxis& maskedAxis
 void CSpectrumAxis::maskVector(const TFloat64List& mask, const TFloat64List& inputVector, TFloat64List& outputVector)
 {
     if(mask.size()!=inputVector.size()){
-        Log.LogError("CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
-        throw runtime_error("CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
     }
     UInt32 sum = UInt32(std::count(mask.begin(), mask.end(), 1));
     outputVector.clear();

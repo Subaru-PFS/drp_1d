@@ -46,7 +46,6 @@
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/spectrum/io/reader.h"
 #include "RedshiftLibrary/linemodel/calibrationconfig.h"
 
 #include <gsl/gsl_errno.h>

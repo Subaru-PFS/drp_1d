@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/linemodel/calibrationconfig.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -78,8 +80,7 @@ void CCalibrationConfigHelper::Load( const char* filePath )
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
     if( file.rdstate() & ios_base::failbit ){
-      Log.LogError("Can't load calibration config file [%s]", filePath);
-      throw runtime_error("Can't load calibration config file");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Can't load calibration config file "<< filePath);
     }
     string line;
 
@@ -110,8 +111,7 @@ void CCalibrationConfigHelper::Load( const char* filePath )
     file.close();
     if(readNums!=2) //reading 1.starstemplates, 2.qsotemplates, ...
     {
-      Log.LogError("Invalid calibration config file [%s]", filePath);
-      throw runtime_error("Invalid calibration config file");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Invalid calibration config file "<< filePath);
     }
 }
 

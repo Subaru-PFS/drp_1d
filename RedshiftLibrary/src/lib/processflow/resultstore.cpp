@@ -122,8 +122,7 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
         }
     }
     
-    Log.LogError("COperatorResultStore::GetPerTemplateResult, per template result %s not found",name.c_str());
-    //throw runtime_error("COperatorResultStore::GetPerTemplateResult, global result not found");
+    throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorResultStore::GetPerTemplateResult, per template result "<<name<<" not found");
     return std::weak_ptr<const COperatorResult>();
 }
 
@@ -161,8 +160,6 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult( cons
       return (*it).second;
     }
     else throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter()<<"Unknown global result:"<<name);
-    //Log.LogError("COperatorResultStore::GetGlobalResult, global result %s not found",name.c_str());
-    //throw runtime_error("COperatorResultStore::GetGlobalResult, global result not found");
 
 }
 
