@@ -56,10 +56,13 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_gal_RayCatalog(std::move(gal_rayCatalog)),
   m_qso_RayCatalog(std::move(qso_rayCatalog)),
   m_ParameterStore(std::move(paramStore))
-{
-    m_Spectrum->InitSpectrum(*m_ParameterStore);
+{ 
+    Bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+
+    m_Spectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
+    m_Spectrum->InitSpectrum(*m_ParameterStore); 
     
     // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
     //only when lsf changes notably when LSFType is fromspectrumdata
@@ -77,12 +80,9 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
 
     RebinInputs();
 
-    Bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
-    //we should replace spectrum with m_inputContext->
-    validateSpectrum(m_Spectrum, m_lambdaRange, enableInputSpcCorrect);
     if(m_use_LogLambaSpectrum)
     {
-        validateSpectrum(m_rebinnedSpectrum, m_lambdaRange, enableInputSpcCorrect);
+        m_rebinnedSpectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
         m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
     }
 
@@ -161,43 +161,6 @@ void CInputContext::RebinInputs()
     }
 
     return;
-}
-
-
-void CInputContext::validateSpectrum(std::shared_ptr<CSpectrum> spectrum, 
-                                                TFloat64Range lambdaRange, 
-                                                Bool enableInputSpcCorrect)
-{
-  TFloat64Range clampedlambdaRange;
-  spectrum->GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  Log.LogInfo( "Validate spectrum: (CLambdaRange: %f-%f:%f)",
-               clampedlambdaRange.GetBegin(),
-               clampedlambdaRange.GetEnd(),
-               spectrum->GetResolution());
-
-  Float64 lmin = clampedlambdaRange.GetBegin();
-  Float64 lmax = clampedlambdaRange.GetEnd();
-
-  if(enableInputSpcCorrect)
-  {
-      //Check if the Spectrum is valid on the lambdarange
-      //correctInputSpectrum(ctx.GetInputContext()->m_lambdaRange);
-
-      if( spectrum->correctSpectrum( lmin,lmax ))
-        Log.LogInfo( "Successfully corrected noise on wavelength range (%.1f ; %.1f)",  lmin, lmax );
-  }
-
-   if( !spectrum->IsFluxValid( lmin, lmax ) ){
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate spectrum flux on wavelength range"<<lmin<<";"<<lmax<<")");
-    }else{
-      Log.LogDetail( "Successfully validated spectrum flux, on wavelength range (%.1f ; %.1f)", lmin, lmax );
-    }
-	//Check if the noise is valid in the clampedlambdaRange
-    if( !spectrum->IsNoiseValid( lmin, lmax ) ){
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate noise on wavelength range"<<lmin<<";"<<lmax<<")");
-    }else{
-      Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
-    }
 }
 
 void CInputContext::OrthogonalizeTemplates()

@@ -63,7 +63,8 @@ namespace NSEpic {
       BAD_LINECATALOG,
       BAD_LOGSAMPLEDSPECTRUM,
       BAD_COUNTMATCH,
-      BAD_TEMPLATECATALOG
+      BAD_TEMPLATECATALOG,
+      INVALID_SPECTRUM
     } ErrorCode;
 
   class AmzException : public std::exception 
