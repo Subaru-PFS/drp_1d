@@ -70,7 +70,8 @@ public:
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
     UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
-    void                    InitIsmIgm(std::shared_ptr<const CParameterStore> parameterStore,
+    void                    InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore);
+    void                    InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
     mutable Bool            m_logsampling = 0;//non-log by default
     mutable Bool            m_orthogonal = 0;//non-log by default

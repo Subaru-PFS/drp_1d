@@ -6389,66 +6389,11 @@ void CLineModelElementList::EstimateSpectrumContinuum( Float64 opt_enhance_lines
         fluxAxisNothingUnderLines[t] -= spcmodel4linefittingFluxAxis[t];
     }
 
-    CSpectrum spcCorrectedUnderLines=CSpectrum(spectralAxis ,std::move(fluxAxisNothingUnderLines));
+    // evaluate contiuum
+    CSpectrum spcCorrectedUnderLines(m_inputSpc);
+    spcCorrectedUnderLines.SetFluxAxis(std::move(fluxAxisNothingUnderLines));
+    m_ContinuumFluxAxis = spcCorrectedUnderLines.GetContinuumFluxAxis();
 
-
-    // TODO: use the continuum remover defined in the CSpectrum continuum member, with params defined in the smae place
-    // Remove continuum
-    CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-    CContinuumIrregularSamplingMedian continuum;
-    Float64 opt_medianKernelWidth = m_inputSpc.GetMedianWinsize();
-    continuum.SetMedianKernelWidth(opt_medianKernelWidth);
-    continuum.RemoveContinuum( spcCorrectedUnderLines, fluxAxisWithoutContinuumCalc );
-
-
-    CSpectrumFluxAxis fluxAxisNewContinuum(spcCorrectedUnderLines.GetSampleCount());
-    const CSpectrumFluxAxis & fluxAxisNothingUnderLines_ = spcCorrectedUnderLines.GetFluxAxis(); 
-
-    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-    {
-        fluxAxisNewContinuum[t] = fluxAxisNothingUnderLines_[t];
-    }
-    fluxAxisNewContinuum.Subtract(fluxAxisWithoutContinuumCalc);
-
-    /*
-    // export for debug
-    FILE* f = fopen( "continuum_estimated_dbg.txt", "w+" );
-    Float64 coeffSave = 1e16;
-    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-    {
-        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_SpcFluxAxis[t])*coeffSave, (fluxAxisNewContinuum[t])*coeffSave);
-    }
-    fclose( f );
-    //*/
-
-    /*
-    // export for debug
-    FILE* f = fopen( "continuumfree_estimated_dbg.txt", "w+" );
-    Float64 coeffSave = 1e16;
-    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-    {
-        fprintf( f, "%f %f %f\n", t, spectralAxis[t], (m_SpcFluxAxis[t]-m_inputSpc->GetContinuumFluxAxis()[t])*coeffSave, (m_SpcFluxAxis[t]-fluxAxisNewContinuum[t])*coeffSave);
-    }
-    fclose( f );
-    //*/
-
-//    //modify m_SpcFluxAxis
-//    CSpectrumFluxAxis& fluxAxisModified = m_SpcFluxAxis;
-//    Float64* Y2 = fluxAxisModified.GetSamples();
-//    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-//    {
-//        Y2[t] = m_SpcFluxAxis[t]-fluxAxisNewContinuum[t];
-//        //Y2[t] = m_SpcFluxAxis[t]-m_inputSpc->GetContinuumFluxAxis()[t];
-//    }
-
-    //modify m_ContinuumFluxAxis
-    CSpectrumFluxAxis& fluxAxisModified = m_ContinuumFluxAxis;
-    Float64* Y2 = fluxAxisModified.GetSamples();
-    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
-    {
-        Y2[t] = fluxAxisNewContinuum[t];
-        //Y2[t] = m_inputSpc->GetContinuumFluxAxis()[t];
-    }
 }
 
 
