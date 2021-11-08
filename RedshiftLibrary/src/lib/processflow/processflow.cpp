@@ -54,7 +54,6 @@
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/method/linemeassolve.h"
-#include "RedshiftLibrary/reliability/zqual.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -74,16 +73,18 @@ namespace bfs = boost::filesystem;
 void CProcessFlow::Process( CProcessFlowContext& ctx )
 {
 
-    Log.LogInfo("=====================================================================");
-    std::ostringstream oss;
-    oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
-    Log.LogInfo(oss.str());
-    Log.LogInfo("=====================================================================");
+  try
+    {
+      Log.LogInfo("=====================================================================");
+      std::ostringstream oss;
+      oss << "Processing Spectrum: " << ctx.GetSpectrum()->GetName();
+      Log.LogInfo(oss.str());
+      Log.LogInfo("=====================================================================");
 
     Float64       maxCount; 
-    Float64       redshiftseparation;
-
-    ctx.GetParameterStore()->Get( "extremaredshiftseparation", redshiftseparation, 2*0.005);//todo: decide on the default values using latest analyses plots
+    Float64       redshiftseparation = 2*0.005;
+    if(ctx.GetParameterStore()->Has<Float64>( "extremaredshiftseparation"))
+      redshiftseparation = ctx.GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: decide on the default values using latest analyses plots
 
     //retrieve the calibration dir path
     std::string calibrationDirPath = ctx.GetParameterStore()->Get<std::string>( "calibrationDir");
@@ -91,24 +92,24 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
     //************************************
     // Stellar method
 
-    std::string enableStarFitting = ctx.GetParameterStore()->Get<std::string>( "enablestellarsolve");
-    Log.LogInfo( "Stellar solve enabled : %s", enableStarFitting.c_str());
+    bool enableStarFitting = ctx.GetParameterStore()->Get<bool>( "enablestarsolve");
+    Log.LogInfo( "Stellar solve enabled : %d", enableStarFitting);
 
-    if(enableStarFitting=="yes"){
+    if(enableStarFitting){
         Log.LogInfo("Processing stellar fitting");
         CMethodTemplateFittingSolve solve(ctx.m_ScopeStack,"star");
         solve.Compute(ctx.GetInputContext(),
                       ctx.GetResultStore(),
                       ctx.m_ScopeStack);
    
-    }
-
+      }
+   
     // Quasar method
     //    std::shared_ptr<CSolveResult> qsoResult;
-    std::string enableQsoFitting = ctx.GetParameterStore()->Get<std::string>( "enableqsosolve");
-    Log.LogInfo( "QSO solve enabled : %s", enableQsoFitting.c_str());
+    bool enableQsoFitting = ctx.GetParameterStore()->Get<bool>( "enableqsosolve");
+    Log.LogInfo( "QSO solve enabled : %d", enableQsoFitting);
 
-    if(enableQsoFitting=="yes"){
+    if(enableQsoFitting){
         Log.LogInfo("Processing QSO fitting");
         std::string qso_method = ctx.GetParameterStore()->Get<std::string>( "qso.method");
         boost::algorithm::to_lower(qso_method);
@@ -131,16 +132,15 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                            ctx.GetResultStore(),
                            ctx.m_ScopeStack);
         }else{
-            throw std::runtime_error("Problem found while parsing the qso method parameter");
+            throw GlobalException(INTERNAL_ERROR,"Problem found while parsing the qso method parameter");
         }
     }
 
     // Galaxy method
 
-    if(ctx.GetParameterStore()->Get<std::string>( "enablegalaxysolve")=="yes")
+    if(ctx.GetParameterStore()->Get<bool>( "enablegalaxysolve"))
       {
-        std::string methodName;
-        ctx.GetParameterStore()->Get( "galaxy.method", methodName );
+        std::string methodName = ctx.GetParameterStore()->Get<std::string>( "galaxy.method");
         boost::algorithm::to_lower(methodName);
 
         std::string galaxy_method_pdf_reldir = "zPDF";
@@ -186,14 +186,14 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
 
         */
         else{
-          throw std::runtime_error("Problem found while parsing the method parameter");
+          throw GlobalException(INTERNAL_ERROR,"Problem found while parsing the method parameter");
         }
       }
     
     
     //estimate star/galaxy/qso classification
     Log.LogInfo("===============================================");
-    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="no")
+    if(!ctx.GetParameterStore()->Get<bool>( "enablelinemeassolve"))
       {
         {
           CClassificationSolve classifier(ctx.m_ScopeStack,"classification");
@@ -208,7 +208,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                               ctx.m_ScopeStack);
         }
       }
-    if(ctx.GetParameterStore()->Get<std::string>( "enablelinemeassolve")=="yes")
+    if(ctx.GetParameterStore()->Get<bool>( "enablelinemeassolve"))
       {
         CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas");
         solve.Compute(ctx.GetInputContext(),
@@ -216,107 +216,18 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
                           ctx.m_ScopeStack);
 
       }
-    
-}
-
-/**
- * \brief
- * Retrieve the true-redshift from a catalog file path
- *
- * reverseInclusion=0 (default): spcId is searched to be included in the Ref-File-Id
- * reverseInclusion=1 : Ref-File-Id is searched to be included in the spcId
- **/
-Int32 CProcessFlow::getValueFromRefFile( const char* filePath, std::string spcid, Float64& zref, Int32 reverseInclusion )
-{
-    int colID = -1;
-
-    ifstream file;
-
-    file.open( filePath, std::ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-        return false;
-
-    string line;
-
-    // Read file line by line
-    while( getline( file, line ) )
+ }
+    catch(GlobalException const&e)
     {
-        // remove comments
-        if(line.compare(0,1,"#",1)==0){
-            continue;
-        }
-        char_separator<char> sep(" \t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-        ttokenizer::iterator it;
-
-        if (colID == -1) {
-            int count = 0;
-            for ( it = tok.begin(); it != tok.end() ; ++count, ++it );
-            switch (count) {
-            case 2:
-                // Two-columns style redshift reference catalog
-                colID = 2;
-                break;
-            case 13:
-                // redshift.csv style redshift reference catalog
-                colID = 3;
-                break;
-            default:
-                Log.LogError("Invalid number of columns in reference catalog (%d)", count);
-                throw std::runtime_error("Invalid number of columns in reference catalog");
-            }
-        }
-        it = tok.begin();
-
-        // Check if it's not a comment
-        if( it != tok.end() && *it != "#" )
-        {
-            string name;
-            if( it != tok.end() )
-            {
-                name = *it;
-            }
-
-            if(reverseInclusion==0)
-            {
-                std::size_t foundstr = name.find(spcid.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }else{
-                std::size_t foundstr = spcid.find(name.c_str());
-                if (foundstr==std::string::npos){
-                    continue;
-                }
-            }
-
-            // Found the correct spectrum ID: now read the ref values
-            Int32 nskip = colID-1;
-            for(Int32 i=0; i<nskip; i++)
-            {
-                ++it;
-            }
-            if( it != tok.end() )
-            {
-
-                zref = 0.0;
-                try
-                {
-                    zref = lexical_cast<double>(*it);
-                    return true;
-                }
-                catch (bad_lexical_cast&)
-                {
-                    zref = 0.0;
-                    return false;
-                }
-            }
-
-        }
-    }
-    file.close();
-    return true;
+      throw e;
+    }    
+    catch(ParameterException const&e)
+    {
+      throw e;
+    }    
+  catch(std::exception const&e)
+    {
+      throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
+    }    
 }
+

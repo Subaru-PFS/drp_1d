@@ -45,7 +45,6 @@
 
 //#include "RedshiftLibrary/operator/modelspectrumresult.h>
 //#include "RedshiftLibrary/linemodel/modelfittingresult.h>
-//#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h>
 //#include "RedshiftLibrary/linemodel/modelrulesresult.h>
 //#include "RedshiftLibrary/operator/spectraFluxResult.h>
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
@@ -56,8 +55,7 @@
 namespace NSEpic
 {
 class CModelSpectrumResult;
-class CModelFittingResult;
-class CModelContinuumFittingResult;
+class CLineModelSolution;
 class CModelRulesResult;
 class CSpectraFluxResult;
 class CLineModelElementList;
@@ -70,13 +68,12 @@ class CLineModelElementList;
   public:
     std::vector<TFloat64List> ExtendedRedshifts;    // z range around extrema
 
-    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
+    std::vector<std::shared_ptr<const CLineModelSolution>  > m_savedModelFittingResults;
     std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
     std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
     //Yes there is a repetition of CExtremaResult<TExtremaResult> variables, because we inherit from CExtremaResult<TLineModelResult>, TODO find a more satisfactory solution
     std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
-    std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
 
 
     CExtremaResult<TLineModelResult>() = default;
@@ -100,7 +97,6 @@ class CLineModelElementList;
       m_savedModelRulesResults.resize(size);
       m_savedModelContinuumSpectrumResults.resize(size);
       m_savedModelSpectrumResults.resize(size);
-      m_savedModelContinuumFittingResults.resize(size);
     }
 
     void setCandidateFromContinuumSolution(int rank,CContinuumModelSolution cms)

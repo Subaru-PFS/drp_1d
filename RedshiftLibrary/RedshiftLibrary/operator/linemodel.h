@@ -46,8 +46,6 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -87,8 +85,7 @@ public:
     FittedTplLogPrior.resize(size);
     FittedTplSNR.resize(size);
     
-    m_savedModelSpectrumResults.resize(size);
-    m_savedModelContinuumFittingResults.resize(size);
+    
         MeritContinuum.resize(size);
 
     mTransposeM.resize(size);
@@ -133,9 +130,6 @@ public:
     FittedTplratioMtm.resize(size);
     FittedTplratioIsmCoeff.resize(size);
     
-    m_savedModelFittingResults.resize(size);
-    m_savedModelRulesResults.resize(size);
-    m_savedModelContinuumSpectrumResults.resize(size);
   }
   TFloat64List GetRedshifts() const
   {
@@ -178,9 +172,6 @@ public:
   TFloat64List      FittedTplMtm;    //MTM for the best template fitted for continuum
   TFloat64List      FittedTplLogPrior;    //log prior for the best template fitted for continuum
   TFloat64List      FittedTplSNR; 
-
-  std::vector<std::shared_ptr<const CModelSpectrumResult>  > m_savedModelSpectrumResults;
-  std::vector<std::shared_ptr<const CModelContinuumFittingResult>  > m_savedModelContinuumFittingResults;
 
 
     //Extrema results
@@ -229,9 +220,6 @@ public:
     mutable std::map<int,TFloat64List> continuumIndexesColorCopy;
     mutable std::map<int,TFloat64List> continuumIndexesBreakCopy;
     
-    std::vector<std::shared_ptr<const CModelFittingResult>  > m_savedModelFittingResults;
-    std::vector<std::shared_ptr<const CModelRulesResult>  > m_savedModelRulesResults;
-    std::vector<std::shared_ptr<const CSpectraFluxResult>  > m_savedModelContinuumSpectrumResults;
 
 };
 
@@ -250,7 +238,7 @@ public:
     virtual ~COperatorLineModel();
 
 
-    Int32 Init( const CSpectrum& spectrum, 
+    Int32 Init( const CSpectrum& spectrum,
                 const TFloat64List& redshifts, 
                 const std::string &opt_continuumcomponent,
                 const Float64 nsigmasupport, 
@@ -284,7 +272,7 @@ public:
                            const Float64 opt_velocityAbsorption,
                            const std::string &opt_continuumreest="no",
                            const std::string &opt_rules="all",
-                           const std::string &opt_velocityFitting="no",
+                           const bool &opt_velocityFitting=false,
                            const UInt32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
                            const std::string &opt_rigidity="rules",
@@ -311,7 +299,7 @@ public:
                             const Float64 opt_velocityAbsorption,
                             const std::string &opt_continuumreest="no",
                             const std::string &opt_rules="all",
-                            const std::string &opt_velocityFitting="no",
+                            const bool &opt_velocityFitting=false,
                             const std::string &opt_rigidity="rules",
                             const Float64 &opt_emvelocityfitmin=20.,
                             const Float64 &opt_emvelocityfitmax=500.,
@@ -323,10 +311,10 @@ public:
 
     Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
                                        const TFloat64Range &lambdaRange,
-                                       const string &opt_continuumreest,
+                                       const std::string &opt_continuumreest,
                                        const string &opt_fittingmethod,
                                        const std::string &opt_rigidity,
-                                       const string &opt_velocityFitting,
+                                       const bool &opt_velocityFitting,
                                        const Float64 &opt_emvelocityfitmin,
                                        const Float64 &opt_emvelocityfitmax,
                                        const Float64 &opt_emvelocityfitstep,
@@ -389,8 +377,8 @@ public:
     std::string m_opt_continuumcomponent;
     Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
 
-    std::string m_opt_lya_forcefit;
-    std::string m_opt_lya_forcedisablefit;
+    bool m_opt_lya_forcefit;
+    bool m_opt_lya_forcedisablefit;
     Float64 m_opt_lya_fit_asym_min;
     Float64 m_opt_lya_fit_asym_max;
     Float64 m_opt_lya_fit_asym_step;
@@ -401,10 +389,10 @@ public:
     Float64 m_opt_lya_fit_delta_max;
     Float64 m_opt_lya_fit_delta_step;
 
-    std::string m_opt_enableImproveBalmerFit;
+    bool m_opt_enableImproveBalmerFit;
     Int32 m_continnuum_fit_option = 0;//default to "retryall" templates
     //candidates
-  std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
+    std::shared_ptr<COperatorLineModelExtremaResult> m_firstpass_extremaResult;
     COperatorLineModelExtremaResult m_secondpass_parameters_extremaResult;
 
   CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
@@ -418,7 +406,6 @@ private:
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelElementList> m_model;
     TFloat64List m_sortedRedshifts;
-    std::shared_ptr<CTemplateCatalog> m_orthoTplCatalog;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
     Float64 m_extremaCount;
@@ -438,7 +425,7 @@ private:
 
     bool mlmfit_modelInfoSave = false;
     std::vector<std::shared_ptr<CModelSpectrumResult>> mlmfit_savedModelSpectrumResults_lmfit;
-    std::vector<std::shared_ptr<CModelFittingResult>> mlmfit_savedModelFittingResults_lmfit;
+   std::vector<std::shared_ptr<CLineModelSolution>> mlmfit_savedModelFittingResults_lmfit;
     std::vector<std::shared_ptr<CModelRulesResult>> mlmfit_savedModelRulesResults_lmfit;
     std::vector<std::shared_ptr<CSpectraFluxResult>> mlmfit_savedBaselineResult_lmfit;
 

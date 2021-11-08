@@ -36,41 +36,33 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
-#define _REDSHIFT_RELIABILITY_PDFZPREDICTRESULT_
+#ifndef _REDSHIFT_PHOTOMETRY_PHOTOMETRICBAND_
+#define _REDSHIFT_PHOTOMETRY_PHOTOMETRICBAND_
 
-#include "RedshiftLibrary/processflow/result.h"
-#include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_statistics.h>
-#include <boost/unordered_map.hpp>
+#include <map>
 
-using namespace std;
 namespace NSEpic
 {
 
-class CPdfzPredictResult : public COperatorResult
+class CPhotometricBand
 {
-
 public:
+    CPhotometricBand() = default;
+    CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
 
-	CPdfzPredictResult();
-	virtual ~CPdfzPredictResult();
-
-
-	TStringList m_Labels;
-
-	gsl_vector* m_score = nullptr;
-	gsl_vector* m_posterior = nullptr;
-
-	Float64 m_predProba;
-	std::string m_predLabel;
-
+    TFloat64List m_transmission;
+    TFloat64List m_lambda;
 };
 
+class CPhotBandCatalog : public std::map<std::string, CPhotometricBand> 
+{
+public:
+    void Add(const std::string & name, const CPhotometricBand & filter){insert({name, filter});};
+    TStringList GetNameList() const;
+};
 
 }
 

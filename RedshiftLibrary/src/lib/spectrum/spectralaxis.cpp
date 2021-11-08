@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/ray/airvacuum.h"
 #include <cmath>
 using namespace NSEpic;
 using namespace std;
@@ -69,25 +70,40 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale, std::string AirVacuum) :
     CSpectrumAxis(samples)
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
+    if (AirVacuum != "")
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);        
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);
+    }
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis(  TFloat64List && samples, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale, std::string AirVacuum) :
     CSpectrumAxis(std::move(samples))
 {
     if( isLogScale )
         m_SpectralFlags |= nFLags_LogScale;
+    if (AirVacuum != "") 
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);   
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);
+    }     
 }
 
 //only used by client
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum) :
     CSpectrumAxis( samples, n ),
     m_SpectralFlags( 0 )
 {
+    if (AirVacuum != "")
+    {
+        m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
+        Log.LogInfo(Formatter()<<"SpectralAxis converted from air to vacuum using translation from: "<<AirVacuum);        
+    }
 }
 
 /**
@@ -506,8 +522,7 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const
 {   
     if (!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
-        throw runtime_error("CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
     }
 
     return m_regularLogSamplingStep;
@@ -521,8 +536,8 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
 
 TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
 {
-    Int32 imin, imax;
-    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax);
+    Int32 imin=-1, imax=m_Samples.size();
+    lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
     return GetSubSamplingMask(ssratio, TInt32Range(imin, imax));
 }
 
@@ -531,7 +546,7 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TIn
 {
     if(!IsLogSampled())
     {
-        throw runtime_error("Cannot subsample spectrum!");
+        throw GlobalException(INTERNAL_ERROR,"Cannot subsample spectrum!");
     }
     UInt32 s = GetSamplesCount();
     if(ssratio==1) return TFloat64List(s, 1.);
@@ -554,8 +569,7 @@ UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float6
 {
     if(!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
-        throw runtime_error("CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
     }
 
     UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
@@ -567,8 +581,7 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
 {
     if (!IsLogSampled())
     {
-        Log.LogError("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
-        throw runtime_error("CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::RecomputePreciseLoglambda: axis is not logsampled");
     }
 
     TFloat64Range lrange = GetLambdaRange();

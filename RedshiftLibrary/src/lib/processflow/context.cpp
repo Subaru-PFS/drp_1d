@@ -42,6 +42,8 @@
 
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/debug/assert.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <boost/filesystem.hpp>
 
@@ -53,9 +55,7 @@ static void NewHandler(const char* reason,
                        const char* file,
                        int line,
                        int gsl_errno){
-
-    Log.LogError(" gsl: %s:%d: ERROR: %s (Errtype: %s)",file, line, reason, gsl_strerror(gsl_errno));
-    throw std::runtime_error("GSL Error");
+    throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"GSL Error : "<<" gsl: "<< file<<":"<<line<<": ERROR:"<< reason<<" (Errtype: "<<gsl_strerror(gsl_errno)<<")");
     return ;
 }
 
@@ -81,9 +81,23 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CRayCatalog> qso_rayCatalog)
 {
   Log.LogInfo("Processing context initialization");
-
+  try
+    {
 //  CInputContext *ic = new CInputContext(spectrum,templateCatalog,rayCatalog,parameterStore) ; 
   m_inputContext = std::make_shared<const CInputContext>(spectrum,templateCatalog,galaxy_rayCatalog,qso_rayCatalog,m_parameterStore);
+    }
+  catch(GlobalException const&e)
+    {
+      throw e;
+    }    
+    catch(ParameterException const&e)
+    {
+      throw e;
+    }    
+  catch(std::exception const&e)
+    {
+      throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
+    }    
 }
 
 void CProcessFlowContext::testResultStore() {

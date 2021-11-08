@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/common/exception.h"
 #include <time.h>
 #include <iostream>
 #include <stdlib.h>
@@ -63,10 +64,10 @@ BOOST_AUTO_TEST_CASE(Instance){
   catalogIndexes.push_back(0);
 
   BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
-		    std::runtime_error);
+		    GlobalException);
 
     BOOST_CHECK_THROW(CMultiLine(rs,  "fixed",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
-		    std::runtime_error);
+		    GlobalException);
   /*
   CMultiLine element = CMultiLine(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
   BOOST_CHECK_CLOSE( 1.0, element.GetVelocityEmission(), 0.01 );

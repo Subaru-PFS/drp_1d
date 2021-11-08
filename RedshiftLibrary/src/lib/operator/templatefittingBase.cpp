@@ -166,7 +166,7 @@ Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
     //m_templateRebined_bf.ResetNoIsmIgmFlux();//reset 
     Bool b = tpl.Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, m_templateRebined_bf, m_mskRebined_bf, opt_interp);   
-    if(!b) throw runtime_error("problems rebinning tpl");
+    if(!b) throw GlobalException(INTERNAL_ERROR,"problems rebinning tpl");
     //overlapRate
     overlapRate = m_spcSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate( lambdaRange_restframe, m_mskRebined_bf );
 

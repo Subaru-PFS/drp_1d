@@ -399,13 +399,11 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded)
     pSpc = fftw_plan_dft_r2c_1d(nPadded, inSpc, outSpc, FFTW_ESTIMATE);
     if (inSpc == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inSpc");
-         throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inSpc");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate inSpc");
     }
     if (outSpc == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outSpc");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outSpc");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate outSpc");
     }
 
     inTpl_padded = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
@@ -414,18 +412,15 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded)
     pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
     if (inTpl_padded == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl_padded");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl_padded");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl_padded");
     }
     if (inTpl == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl");
     }
     if (outTpl == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outTpl");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outTpl");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate outTpl");
     }
 
     outCombined = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
@@ -433,13 +428,11 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded)
     pBackward = fftw_plan_dft_c2r_1d(nPadded, outCombined, inCombined, FFTW_ESTIMATE);
     if (outCombined == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outCombined");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate outCombined");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate outCombined");
     }
     if (inCombined == 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inCombined");
-        throw std::runtime_error("  Operator-TemplateFittingLog: InitFFT: Unable to allocate inCombined");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: InitFFT: Unable to allocate inCombined");
     }
 
     // reinit fft precomputed buffers
@@ -721,8 +714,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                     Float64 logPa = pTZE.betaA*(ampl-pTZE.A_mean)*(ampl-pTZE.A_mean)/(pTZE.A_sigma*pTZE.A_sigma);
                     if(std::isnan(logPa) || logPa!=logPa || std::isinf(logPa))
                     {
-                        Log.LogError("  Operator-TemplateFittingLog: logPa is NAN (a_mean=%e, a_sigma=%e)", pTZE.A_mean, pTZE.A_sigma);
-                        throw std::runtime_error("  Operator-TemplateFittingLog: logPa is NAN or inf, or invalid");
+		      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: logPa is NAN (a_mean="<<pTZE.A_mean<<", a_sigma="<< pTZE.A_sigma);
                     }
                     logprior += logPa;
                 }else{
@@ -735,11 +727,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
                 }
                 if(std::isnan(logprior) || logprior!=logprior || std::isinf(logprior))
                 {
-                    Log.LogError("  Operator-TemplateFittingLog: logPa is NAN (a_mean=%e, a_sigma=%e, precompA=%e)",
-                                 pTZE.A_mean,
-                                 pTZE.A_sigma,
-                                 pTZE.logprior_precompA);
-                    throw std::runtime_error("  Operator-TemplateFittingLog: logPrior is NAN or inf, or invalid");
+		  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: logPa is NAN (a_mean="<<pTZE.A_mean<<", a_sigma="<<pTZE.A_sigma<<", precompA="<<pTZE.logprior_precompA);
                 }
                 result->ChiSquare[fullResultIdx] += logprior;
             }
@@ -848,12 +836,12 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
     if (verboseLogFitFitRangez)
         Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: max diff in zgrid=%e",relative_zgrid_error_max);
     if (relative_zgrid_error_max>5E-7){
-            throw runtime_error("z_vect and z_vect_verification do not correspond.");
+            throw GlobalException(INTERNAL_ERROR,"z_vect and z_vect_verification do not correspond.");
         }
     
     //check borders
     if(z_vect.size()!=z_vect_verif.size())
-        throw runtime_error("z_vect size and z_vect_verification size do not match.");
+        throw GlobalException(INTERNAL_ERROR,"z_vect size and z_vect_verification size do not match.");
     Int32 nISM = EbmvList.size();
     Int32 nIGM = MeiksinList.size();
 
@@ -938,7 +926,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             TAxisSampleList tpl2RebinedFlux(nTpl);
 
             if(tplRebinedFluxcorr_cropped.size()!=nTpl){
-                throw runtime_error("prob with retrieved vector size");
+                throw GlobalException(INTERNAL_ERROR,"prob with retrieved vector size");
             }
             //compute the square of the corrected flux
             for (Int32 j = 0; j < nTpl; j++)
@@ -1003,8 +991,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
             if (mtm_vec.size() != dtm_vec_size)
             {
                 freeFFTPlans();
-                Log.LogError("  Operator-TemplateFittingLog: FitRangez: xty vectors sizes don't match: dtm size = %d, mtm size = %d", dtm_vec_size, mtm_vec.size());
-                throw std::runtime_error("  Operator-TemplateFittingLog: FitRangez: xty vectors sizes don't match");
+                throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: FitRangez: xty vectors sizes don't match: dtm size = "<< dtm_vec_size <<", mtm size ="<< mtm_vec.size());
             }
             //Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: kISM = %d, kIGM = %d", kISM, kIGM);
             TFloat64List chi2(dtm_vec_size, DBL_MAX);
@@ -1151,8 +1138,7 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const TFloat64List& in,
         }
         else
         {
-            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) < x[0](%f)", tgtGrid[0], inGrid[0]);
-            throw runtime_error("Error while interpolating loglambda chi2 result.");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Error while interpolating loglambda chi2 result : xrebin("<< tgtGrid[0] <<") < x[0]("<< inGrid[0] <<")");
         }
     }
     if (tgtGrid[tgtn-1] > inGrid[n-1])
@@ -1163,8 +1149,7 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const TFloat64List& in,
         }
         else
         {
-            Log.LogError("Error while interpolating loglambda chi2 result : xrebin(%f) > x[n-1](%f)", tgtGrid[tgtn-1], inGrid[n-1]);
-            throw runtime_error("Error while interpolating loglambda chi2 result.");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Error while interpolating loglambda chi2 result : xrebin("<< tgtGrid[tgtn-1] <<") > x[n-1]("<< inGrid[n-1] << ")");
         }
     }
 
@@ -1188,14 +1173,14 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const TFloat64List& in,
                                    &out[j]); // lin
 
         if (status != GSL_SUCCESS) {
-          Log.LogError("   Operator-TemplateFittingLog: InterpolateError: GSL code = %d, %s ; see file: %s at line: %d", status, gsl_strerror(status), __FILENAME__, __LINE__);
-          throw std::runtime_error("GSL Error during the interpolation evaluation");
+	  throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"Operator-TemplateFittingLog: InterpolateError: GSL Error : "<<" gsl: "<< __FILENAME__<<":"<<__LINE__<<": ERROR:"<< status<<" (Errtype: "<<gsl_strerror(status)<<")");
         }
         // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
         // Log.LogInfo("  Operator-TemplateFittingLog: FitAllz: interpolating
         // gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
     }
 
+    //TODO why should there be an old gsl_error_handler ?
     gsl_set_error_handler(gsl_error_handler_old);
 
     gsl_interp_free(interpolation);
@@ -1234,12 +1219,11 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
     UInt32 ilbdamax = tplsize- 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
     if( ilbdamax>=tplsize || ilbdamin < 0)
-        throw runtime_error("FindTplSpectralIndex failed to find indexes");
+        throw GlobalException(INTERNAL_ERROR,"FindTplSpectralIndex failed to find indexes");
     
     if (ilbdamin > ilbdamax)
     {
-        Log.LogError("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamin=%d > ilbdamax=%d", ilbdamin, ilbdamax);
-        throw runtime_error("  Operator-TemplateFittingLog: Problem with tpl indexes for zranges");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"  Operator-TemplateFittingLog: Problem with tpl indexes for zranges, found ilbdamin="<< ilbdamin<<" > ilbdamax="<< ilbdamax);
     }
 
     return TInt32Range(ilbdamin, ilbdamax);
@@ -1278,34 +1262,30 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     if(redshifts.size()<2)
     {
-        Log.LogError("       Operator-TemplateFittingLog::Compute: Cannot compute on a redshift array %d <2", redshifts.size());
-        throw runtime_error("Operator-TemplateFittingLog::Compute: Cannot compute on a redshift array <2");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog::Compute: Cannot compute on a redshift array " <<redshifts.size()<<" <2" );
     }
     if ((opt_dustFitting==-10 || opt_dustFitting>-1) && rebinnedTpl.CalzettiInitFailed())
     {
-        Log.LogError("  Operator-TemplateFittingLog: no calzetti calib. file loaded... aborting");
-        throw std::runtime_error("  Operator-TemplateFittingLog: no calzetti calib. file in template");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: no calzetti calib. file loaded... aborting");
     }
     if( opt_dustFitting>-1 && opt_dustFitting>rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()-1)
     {
         Log.LogError("  Operator-TemplateFittingLog: calzetti index overflow (opt=%d, while NPrecomputedDustCoeffs=%d)... aborting",
                      opt_dustFitting,
                      rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
-        throw std::runtime_error("  Operator-TemplateFittingLog: calzetti index overflow");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: calzetti index overflow (dustfitting="<<opt_dustFitting<<",while NPrecomputedEbmvCoeffs="<<rebinnedTpl.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()<<")");
     }
 
     if (opt_extinction && rebinnedTpl.MeiksinInitFailed())
     {
-        Log.LogError("  Operator-TemplateFittingLog: no meiksin calib. file loaded... aborting");
-        throw std::runtime_error("  Operator-TemplateFittingLog: no meiksin calib. file in template");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: no meiksin calib. file loaded... aborting");
     }
     //TODO: Avoid copying spc and tpl
     //For this end, we have to change the signature of ::compute to pass non-const spectra (by ref or ptr)
     if (!rebinnedSpectrum.GetSpectralAxis().IsLogSampled() ||
         !rebinnedTpl.GetSpectralAxis().IsLogSampled())
     {
-        Log.LogError("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale with the redshift step");
-        throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale");
+        throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale with the redshift step");
     }
 
     //check is spc/tpl steps are multiple of the redshift step:
@@ -1313,7 +1293,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     //check if spc step is a multiple of stepratio_spc
     const Float64 epsilon = 1E-8;
     if(std::abs(rebinnedSpectrum.GetSpectralAxis().GetlogGridStep() - rebinnedTpl.GetSpectralAxis().GetlogGridStep())>epsilon)
-        throw runtime_error("TFLogOperator: tpl and spc are not rebinned with the same step");
+        throw GlobalException(INTERNAL_ERROR,"TFLogOperator: tpl and spc are not rebinned with the same step");
     //computing as integers
     Float64 logstep = log((redshifts[1]+1)/(redshifts[0]+1));
     Float64 rebinlogstep = rebinnedSpectrum.GetSpectralAxis().GetlogGridStep();
@@ -1321,7 +1301,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     UInt32 ssRatio = rebinnedSpectrum.GetSpectralAxis().GetLogSamplingIntegerRatio(logstep, modulo);
  
     if(std::abs(modulo)>1E-12)
-        throw runtime_error("TFLogOperator: spc and tpl do not have a lambdastep multiple of redshift step");
+        throw GlobalException(INTERNAL_ERROR,"TFLogOperator: spc and tpl do not have a lambdastep multiple of redshift step");
 
     //subsample spectrum if necessary
 
@@ -1344,8 +1324,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
         if (!m_spectrumRebinedLog.GetSpectralAxis().IsLogSampled() ||
             !m_templateRebinedLog.GetSpectralAxis().IsLogSampled())
         {
-            Log.LogError("  Operator-TemplateFittingLog: subsampled spectrum or template are not in expected log scale with the redshift step");
-            throw std::runtime_error("  Operator-TemplateFittingLog: input spectrum or template are not in expected log scale");
+            throw GlobalException(INTERNAL_ERROR,"  Operator-TemplateFittingLog: subsampled spectrum or template are not in expected log scale with the redshift step");
         }
         Float64 loglambdaStep_spc = log(m_spectrumRebinedLog.GetSpectralAxis()[1]/m_spectrumRebinedLog.GetSpectralAxis()[0]);
         Float64 loglambdaStep_tpl = log(m_templateRebinedLog.GetSpectralAxis()[1]/m_templateRebinedLog.GetSpectralAxis()[0]);
@@ -1378,8 +1357,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     if(logpriorze.size()>0 && logpriorze.size()!=redshifts.size())
     {
-        Log.LogError("  Operator-TemplateFittingLog: prior list size (%d) didn't match the input redshift-list (%d) !)", logpriorze.size(), redshifts.size());
-        throw std::runtime_error("  Operator-TemplateFittingLog: prior list size didn't match the input redshift-list size");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< redshifts.size());
     }
 
     TFloat64Range clampedlambdaRange;
@@ -1388,8 +1366,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
     
     if (retFit != 0)
     {
-        Log.LogError("  Operator-TemplateFittingLog: FitAllz failed with error %d", retFit);
-        throw std::runtime_error("  Operator-TemplateFittingLog: FitAllz failed. ");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: FitAllz failed with error "<<retFit);
     }
 
     //**************** End Fitting at all redshifts ****************//

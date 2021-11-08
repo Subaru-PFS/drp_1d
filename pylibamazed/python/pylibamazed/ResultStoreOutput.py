@@ -37,7 +37,7 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from .AbstractOutput import AbstractOutput
-from .OutputSpecifications import results_specifications
+from .r_specifications import rspecifications
 import numpy as np
 import pandas as pd
 import resource
@@ -49,20 +49,24 @@ zlog = CLog.GetInstance()
 
 class ResultStoreOutput(AbstractOutput):
 
-    def __init__(self, input_manager, result_store, parameters):
+    def __init__(self, input_manager, result_store, parameters, results_specifications=rspecifications):
         AbstractOutput.__init__(self, input_manager)
         self.results_store = result_store
         self.parameters = parameters
         self.operator_results = dict()
+        self.results_specifications = pd.read_csv(results_specifications,
+                                     sep='\t',
+                                     dtype={'format': object}
+                                     )
         
         self.object_types = []
-        if self.parameters["enablegalaxysolve"] == "yes":
+        if self.parameters["enablegalaxysolve"]:
             self.object_types.append("galaxy")
-        if self.parameters["enablestellarsolve"] == "yes":
+        if self.parameters["enablestarsolve"]:
             self.object_types.append("star")
-        if self.parameters["enableqsosolve"] == "yes":
+        if self.parameters["enableqsosolve"]:
             self.object_types.append("qso")
-        if self.parameters["enablelinemeassolve"] == "yes":
+        if self.parameters["enablelinemeassolve"]:
             self.object_types.append("linemeas")
             
         for object_type in self.object_types:
@@ -70,12 +74,12 @@ class ResultStoreOutput(AbstractOutput):
             self.object_dataframes[object_type] = dict()
             self.operator_results[object_type] = dict()
         self.load_all()
-        
+
     def load_root(self):
-        rs = results_specifications
+        rs = self.results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
-        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"] == "yes":
+        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"]:
             root_datasets =[]
         for ds in root_datasets:
             ds_attributes = rs[rs["hdf5_dataset"] == ds]
@@ -84,7 +88,7 @@ class ResultStoreOutput(AbstractOutput):
                 self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row)
 
     def load_object_level(self, object_type):
-        rs = results_specifications
+        rs = self.results_specifications
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
@@ -106,7 +110,7 @@ class ResultStoreOutput(AbstractOutput):
                         self.object_results[object_type][ds][ds_row["hdf5_name"]]=self.get_attribute_from_result_store(ds_row,object_type)
                     
     def load_candidate_level(self, object_type):
-        rs = results_specifications
+        rs = self.results_specifications
         rs = rs[rs["level"] == "candidate"]
         candidate_datasets = list(rs["hdf5_dataset"].unique())
         for ds in candidate_datasets:
@@ -145,7 +149,7 @@ class ResultStoreOutput(AbstractOutput):
                 self.object_dataframes[object_type][ds]["Rank"] = range(nb_candidates)
 
     def write_hdf5_root(self, hdf5_spectrum_node):
-        rs = results_specifications
+        rs = self.results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
                                    
@@ -159,7 +163,7 @@ class ResultStoreOutput(AbstractOutput):
                         dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
 
     def write_hdf5_object_level(self, object_type, object_results_node):
-        rs = results_specifications
+        rs = self.results_specifications
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
@@ -193,8 +197,10 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
             object_results = obs.create_group(object_type) #h5
             self.write_hdf5_object_level(object_type, object_results)
+            if object_type == "linemeas":
+                continue
             candidates = object_results.create_group("candidates")
-            rs = results_specifications
+            rs = self.results_specifications
             rs = rs[rs["level"] == "candidate"]
             candidate_datasets = list(rs["hdf5_dataset"].unique())
             nb_candidates = self.results_store.getNbRedshiftCandidates(object_type,self.get_solve_method(object_type))
@@ -352,7 +358,12 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetTplCombinationResult(object_type,
                                                                 self.get_solve_method(object_type),
                                                                 data_spec.ResultStore_key,
-                                                                rank)	
+                                                                rank)
+            elif or_type == "CLineModelSolution":
+                return self.results_store.GetLineModelSolution(object_type,
+                                                               self.get_solve_method(object_type),
+                                                               data_spec.ResultStore_key,
+                                                               rank)
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
 

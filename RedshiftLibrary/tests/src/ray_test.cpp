@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/ray/catalog.h"
 #include "RedshiftLibrary/operator/raymatching.h"
 #include "RedshiftLibrary/operator/raymatchingresult.h"
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 
     BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
     BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ),
-		      std::runtime_error);
+		      GlobalException);
 
 }
 

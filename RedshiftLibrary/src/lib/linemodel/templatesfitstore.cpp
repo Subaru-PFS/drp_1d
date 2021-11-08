@@ -220,18 +220,17 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Int32 id
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) >= n_continuum_candidates (%d)",
                      continuumCandidateRank,
                      n_continuum_candidates);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
     }else if(continuumCandidateRank<0)
     {
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) <0",
                      continuumCandidateRank);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
     }
 
     if ( (idxz<0) || (idxz > redshiftgrid.size()-1))
     {
-        Log.LogError("CTemplatesFitStore::GetFitValues - redshift idx %d is outside range", idxz);        
-        throw runtime_error("CTemplatesFitStore::GetFitValues - redshift idx is outside range");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplatesFitStore::GetFitValues - redshift idx "<<idxz<<" is outside range");
     }
  
     return m_fitValues[idxz][continuumCandidateRank];
@@ -245,13 +244,13 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) >= n_continuum_candidates (%d)",
                      continuumCandidateRank,
                      n_continuum_candidates);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
 
     }else if(continuumCandidateRank<0)
     {
         Log.LogError("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum: candidateRank (%d) <0",
                      continuumCandidateRank);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - cannot find the correct pre-computed continuum");
     }
 
     if(redshiftVal<redshiftgrid[0])
@@ -259,14 +258,14 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
         Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but lt redshiftgrid[0]=%f",
                      redshiftVal,
                      redshiftgrid[0]);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
     }
     if(redshiftVal>redshiftgrid[redshiftgrid.size()-1])
     {
         Log.LogError("CTemplatesFitStore - GetFitValues, looking for redshiftVal=%f, but ht redshiftgrid[redshiftgrid.size()-1]=%f",
                      redshiftVal,
                      redshiftgrid[redshiftgrid.size()-1]);
-        throw runtime_error("CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - looking for outside range redshiftVal");
     }
 
 
@@ -292,7 +291,7 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
                          redshiftgrid[k]);
         }
         
-        throw runtime_error("CTemplatesFitStore::GetFitValues - cannot find redshiftVal");
+        throw GlobalException(INTERNAL_ERROR,"CTemplatesFitStore::GetFitValues - cannot find redshiftVal");
     }
     
     return m_fitValues[idxz][continuumCandidateRank];

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.26.0 (2021-10-25)
+### Added*
+* [5994] : Add option to logrebin input spectra for linemodel processing
+* [5775] : Add Air to Vacuum conversion in `spectralAxis`
+* [6489] : Activate fftprocessing for qso
+* [6687] : Add `photometricdata` and `photometricband` classes
+### Changed
+* [6701] : Replace `yes` / `no` with `True` / `False` booleans for amazed params
+* [6379] : Replace runtime_exception with throw GlobalException
+* [6773] : Reactivate the template continuum removal feature
+### Deprecated
+* None
+### Removed
+* [6686] : Remove `CDataStore` and `zqual` reliability classes
+* [6684] : Remove saving `CPdfCandidateszResult` from `ResultStore` & unnecessary operator result `CModelFittingResult`
+### Fixed
+* [6695] : Use all ISM coefficients when fitting ISM
+* [6765] : Fix crash with empty spectrum
+* Miscellaneous bug fixes and code quality improvement
+
 ## 0.24.0 (2021-09-01)
 ### Added
 * [6520] : Add a new class for LSF with wavelength dependent width

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/ray/lineprofileLOR.h"
+#include "RedshiftLibrary/common/exception.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -68,12 +69,10 @@ Float64 CLineProfileLOR::GetLineFlux( Float64 A , Float64 sigma)
  
 Float64 CLineProfileLOR::GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)
 {
-      Log.LogError("Deriv for Z not IMPLEMENTED for profile LOR");
-      throw std::runtime_error("Deriv for Z not IMPLEMENTED for profile LOR");
+      throw GlobalException(INTERNAL_ERROR,"Deriv for Z not IMPLEMENTED for profile LOR");
 }
  
 Float64 CLineProfileLOR::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)
 {
-      Log.LogError("No derivate sigma for LOR profile");
-      throw std::runtime_error("No derivate sigma for LOR profile");
+      throw GlobalException(INTERNAL_ERROR,"No derivate sigma for LOR profile");
 }

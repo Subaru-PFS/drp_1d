@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/exception.h"
 
 #include <math.h>
 #include "RedshiftLibrary/log/log.h"
@@ -91,8 +92,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
     m_StdError( error, m )
 {
     if(m!=n){
-        Log.LogError("FluxAxis and NoiseAxis do not have equal size.");
-        throw runtime_error("FluxAxis and NoiseAxis do not have equal size.");
+        throw GlobalException(INTERNAL_ERROR,"FluxAxis and NoiseAxis do not have equal size.");
     }
 }
 

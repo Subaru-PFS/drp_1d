@@ -61,27 +61,7 @@ class CParameterStore : public CScopeStore
 
 public:
 
-    CParameterStore(const TScopeStack& stack);
-
-    void Get( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
-    void Get( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
-    void Get( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
-    void Get( const std::string& name, TStringList& v, const TStringList& defaultValue = TStringList() ) const;
-    void Get( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
-    void Get( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
-    void Get( const std::string& name, Bool& v, Bool defaultValue = true ) const;
-    void Get( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range( 0.0, 0.0 ) ) const;
-    void Get( const std::string& name, std::string& v, const std::string& defaultValue = "" ) const;
-
-    void GetScopedParam( const std::string& name, TFloat64Range& v, const TFloat64Range& defaultValue = TFloat64Range() ) const;
-    void GetScopedParam( const std::string& name, TFloat64List& v, const TFloat64List& defaultValue = TFloat64List() ) const;
-    void GetScopedParam( const std::string& name, TInt64List& v, const TInt64List& defaultValue = TInt64List() ) const;
-    void GetScopedParam( const std::string& name, TBoolList& v, const TBoolList& defaultValue = TBoolList() ) const;
-    void GetScopedParam( const std::string& name, Float64& v, Float64 defaultValue  = 0 ) const;
-    void GetScopedParam( const std::string& name, Int64& v, Int64 defaultValue = 0 ) const;
-    void GetScopedParam( const std::string& name, Bool& v, Bool defaultValue = true ) const;
-    void GetScopedParam( const std::string& name, std::string& v, std::string defaultValue = "" ) const;
-
+  CParameterStore(const TScopeStack& stack);
   template<typename T> bool Has(const std::string& name) const
   {
     boost::optional<T> property = m_PropertyTree.get_optional<T>( name );
@@ -94,21 +74,23 @@ public:
   }
 
   Bool HasFFTProcessing(const std::string &objectType) const;  
-  
+  Bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
+  Bool EnableTemplateOrthogonalization(const std::string &objectType) const;
+    
   template<typename T> T Get(const std::string& name) const
   {
     boost::optional<T> property = m_PropertyTree.get_optional<T>( name );
     if(!property.is_initialized()) throw GlobalException(UNKNOWN_PARAMETER,Formatter()<<"unknown parameter "<<name);
     return *property;
   }
-  
+
   template<typename T> T GetScoped(const std::string& name) const
   {
     if (Has<T>(GetScopedName(name)))    return Get<T>(GetScopedName(name));    
     else return Get<T>(name);
   }
 
-  
+
   template<typename T> std::vector<T> GetList(const std::string& name) const
   {
     boost::optional<bpt::ptree &> property = m_PropertyTree.get_child_optional( name );
@@ -122,15 +104,13 @@ public:
     }
     return ret;  
   }
-  
+
   template<typename T> T GetListScoped(const std::string& name) const
   {
     if (Has<T>(GetScopedName(name)))    return GetList<T>(GetScopedName(name));
     else return GetList<T>(name);
   }
 
-
-    
     void Set( const std::string& name, const TFloat64List& v );
     void Set( const std::string& name, const TInt64List& v );
     void Set( const std::string& name, const TBoolList& v );
@@ -149,6 +129,14 @@ private:
   
 };
 
+
+template<> 
+inline
+TFloat64Range CParameterStore::Get<TFloat64Range>(const std::string& name) const
+{
+    TFloat64List fl = GetList<Float64>(name);
+    return TFloat64Range(fl[0],fl[1]);
+}
 
 }
 

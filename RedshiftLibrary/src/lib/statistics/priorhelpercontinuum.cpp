@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/statistics/priorhelpercontinuum.h"
 
 #include <algorithm>    // std::sort
@@ -101,8 +103,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         bfs::path agaussfpath = rootFolder/"prior_continuum_gaussmean_Ac_Z"/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelperContinuum: AgaussMean path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelperContinuum: AgaussMean path does not exist");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: AgaussMean path does not exist: "<< agaussfpath.string());
         }
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
@@ -117,8 +118,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         bfs::path agaussfpath = rootFolder/"prior_continuum_gausssigma_Ac_Z"/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelperContinuum: AgaussSigma path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelperContinuum: AgaussSigma path does not exist");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: AgaussSigma path does not exist: "<<agaussfpath.string());
         }
         AGaussSigmafilesPathList.push_back(agaussfpath.string());
     }
@@ -228,8 +228,7 @@ bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
 {
     if(k>=m_tplnames.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetTNameData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad tname index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetTNameData failed for k="<< k);
     }
     m_tplnames[k] = tname;
     return true;
@@ -239,8 +238,7 @@ bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetEZTData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetEZTData failed for k="<<k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -258,8 +256,7 @@ bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetAgaussmeanData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgaussmeanData failed for k="<< k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -277,8 +274,7 @@ bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelperContinuum: SetAgausssigmaData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelperContinuum: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgausssigmaData failed for k="<<k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -332,8 +328,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
                 }
                 if(lineVals.size()!=m_nEbv)
                 {
-                    Log.LogError("    CPriorHelperContinuum: read n=%d cols, instead of %d", lineVals.size(), m_nEbv);
-                    throw std::runtime_error("    CPriorHelperContinuum: read bad number of cols");
+		  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: read n="<< lineVals.size()<<" cols, instead of "<< m_nEbv);
                 }
                 nlinesRead++;
                 data.push_back(lineVals);

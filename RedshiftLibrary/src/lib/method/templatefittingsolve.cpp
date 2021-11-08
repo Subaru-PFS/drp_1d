@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/method/templatefittingsolve.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -60,23 +59,6 @@ CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,stri
 {
 }
 
-void CMethodTemplateFittingSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep)
-{
-    if(m_objectType == "galaxy" && inputContext->m_use_LogLambaSpectrum)
-    {
-       redshiftRange = inputContext->m_redshiftRangeFFT;
-       redshiftStep = inputContext->m_redshiftStepFFT;
-       if(m_redshiftSampling=="lin"){
-            m_redshiftSampling = "log";
-            Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
-       }
-    }else
-    {        
-        //default is to read from the scoped paramStore
-        CSolve::GetRedshiftSampling(inputContext, redshiftRange, redshiftStep );
-    }
-}
-
 std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
@@ -93,11 +75,11 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
   //disable extinction for stars
-  const std::string opt_extinction = (m_objectType == "star")? "no":inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
-  std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
+  const bool opt_extinction = (m_objectType == "star")? false:inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+  bool opt_dustFit = inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
 
   //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
-  bool fft_processing = inputContext->GetParameterStore()->GetScoped<std::string>("fftprocessing") == "yes";
+  bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
   
   if(fft_processing)
     {
@@ -134,15 +116,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination=inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
-    /*
-    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
-    if(m_opt_saveintermediateresults=="yes")
-    {
-        m_opt_enableSaveIntermediateTemplateFittingResults = true;
-    }else{
-        m_opt_enableSaveIntermediateTemplateFittingResults = false;
-    }
-    */
+
     //TODO totaly remove this option ?
     m_opt_enableSaveIntermediateTemplateFittingResults = false;
 
@@ -150,13 +124,18 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", opt_spcComponent.c_str());
     Log.LogInfo( "    -interp: %s", opt_interp.c_str());
-    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction?"true":"false");
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit?"true":"false");
     Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
     Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateTemplateFittingResults);
     Log.LogInfo( "");
 
     Log.LogInfo( "Iterating over %d tplCategories", m_categoryList.size());
+    if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0)
+      {
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
+      }
+    
     for( UInt32 i=0; i<m_categoryList.size(); i++ )
     {
         std::string category = m_categoryList[i];
@@ -226,8 +205,8 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
                                    std::vector<CMask> maskList,
                                    EType spctype,
                                    std::string opt_interp,
-                                   std::string opt_extinction,
-                                   std::string opt_dustFitting)
+                                   bool opt_extinction,
+                                   bool opt_dustFitting)
 {
 
     std::string scopeStr = "templatefitting";
@@ -236,13 +215,13 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-    if(opt_extinction=="yes")
+    if(opt_extinction)
     {
         enable_extinction = 1;
     }
 
     Int32 option_dustFitting = -1;
-    if(opt_dustFitting=="yes")
+    if(opt_dustFitting)
     {
         option_dustFitting = -10;
     }
@@ -361,8 +340,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
             Log.LogInfo("templatefittingsolve: using cstLog = %f", chisquarearray.cstLog);
         }else if ( chisquarearray.cstLog != meritResult->CstLog)
         {
-            Log.LogError("templatefittingsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, meritResult->CstLog);
-            throw runtime_error("templatefittingsolve: Found different cstLog values in results");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"templatefittingsolve: Found different cstLog values in results... val-1="<<chisquarearray.cstLog <<" != val-2="<< meritResult->CstLog);
         }
         if(chisquarearray.redshifts.size()==0)
         {
@@ -382,8 +360,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
             }
             if(foundBadStatus)
             {
-                Log.LogError("templatefittingsolve: Found bad status result... for tpl=%s", (*it).first.c_str());
-                throw runtime_error("templatefittingsolve: Found bad status result");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"templatefittingsolve: Found bad status result... for tpl="<< (*it).first.c_str());
             }
         }
 
@@ -442,8 +419,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
     {
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( r.second );
         if(TplFitResult->ChiSquare.size() != redshifts.size()){
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl=%s) has wrong size", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult, one templatefitting results has wrong size");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
         }
 
         Bool foundBadStatus = false;
@@ -463,13 +439,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         }
         if(foundBadStatus)
         {
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl=%s", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
         }
         if(foundBadRedshift)
         {
-            Log.LogError("CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl=%s", r.first.c_str());
-            throw runtime_error("CMethodTemplateFittingSolve::SaveExtremaResult: Found different redshift vector");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
         }
 
     }
@@ -530,15 +504,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
-        extremaResult->m_savedModelContinuumFittingResults[i] = 
-                        std::make_shared<CModelContinuumFittingResult>( z,
-                                                                        tplName,
-                                                                        ChiSquare,
-                                                                        TplFitResult->FitAmplitude[idx],
-                                                                        TplFitResult->FitAmplitudeError[idx],
-                                                                        TplFitResult->FitEbmvCoeff[idx],
-                                                                        TplFitResult->FitMeiksinIdx[idx],
-                                                                        FitSNR );          
+     
     }
 
     return extremaResult;
@@ -549,7 +515,7 @@ void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperator
                                                        std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
-  Log.LogInfo("Linemodel, saving extrema results");
+  Log.LogInfo("Templatefitting, saving extrema results");
    
   return;
 }

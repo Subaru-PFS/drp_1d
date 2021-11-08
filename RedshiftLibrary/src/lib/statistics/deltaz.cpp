@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -104,7 +106,7 @@ Int32 CDeltaz::GetIndices(const TFloat64List & redshifts, const Float64 redshift
     if( *iiz !=redshift ){
         Log.LogError("  Deltaz: Impossible to get redshift index %f (%d)",
                      redshift, iz);
-        throw runtime_error("Deltaz: impossible to get redshift indices!");
+        throw GlobalException(INTERNAL_ERROR,"Deltaz: impossible to get redshift indices!");
     }
 
     izmin = max(iz - HalfNbSamples, 0);
@@ -119,8 +121,7 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
     TFloat64Range effectiveRange = TFloat64Range(redshifts.front(), redshifts.back());
     bool ret = effectiveRange.IntersectWith(redshiftRange);
     if(!ret){
-        Log.LogError("  Deltaz: Deltaz range for candidate %f is outside the redshift range", redshift);
-        throw runtime_error("Deltaz: Candidate is outside range!");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Deltaz: Deltaz range for candidate"<< redshift<<" is outside the redshift range");
     }
     
     //find indexes: iz, izmin and izmax
@@ -131,7 +132,7 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
     if( !ok || iz == -1 ){
         Log.LogError("  Deltaz: Impossible to get redshift index %f (%d) or redshift range indices %f,%f (%d,%d)",
                      redshift, iz, effectiveRange.GetBegin(), effectiveRange.GetEnd(), izmin, izmax);
-        throw runtime_error("Deltaz: impossible to get redshift indices!");
+        throw GlobalException(INTERNAL_ERROR,"Deltaz: impossible to get redshift indices!");
     }
     return 0;
 }

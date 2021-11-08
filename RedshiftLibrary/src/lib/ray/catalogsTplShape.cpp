@@ -69,7 +69,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath,
     //here we should only copy the ism instead of loading it
     if(opt_tplratioCatRelPath.size()<1)
     {
-      throw runtime_error("Unable to init the tpl-ratio catalog. Found empty relative path.");
+      throw GlobalException(INTERNAL_ERROR,"Unable to init the tpl-ratio catalog. Found empty relative path.");
     }
 
     bfs::path calibrationFolder( calibrationPath.c_str() );
@@ -198,8 +198,7 @@ Bool CRayCatalogsTplShape::Load( const char* dirPath )
             }
             catch (std::string& e)
             {
-                Log.LogError("    CatalogsTplShape - Failed to load tplshape catalog: %s", e.c_str());
-                throw runtime_error("    CatalogsTplShape - Failed to load tplshape catalog");
+	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CatalogsTplShape - Failed to load tplshape catalog: "<< e);
             }
 
             m_RayCatalogList.push_back(lineCatalog);

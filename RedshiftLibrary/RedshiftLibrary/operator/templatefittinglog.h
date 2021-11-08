@@ -51,7 +51,6 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
-#include "RedshiftLibrary/operator/modelcontinuumfittingresult.h"
 
 #include <fftw3.h>
 

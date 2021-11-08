@@ -119,7 +119,11 @@ public:
     void                            SetErrorAxis(const CSpectrumNoiseAxis & noiseaxis);
     void                            SetErrorAxis(CSpectrumNoiseAxis && noiseaxis);
 
-    //std::shared_ptr<CLSF>           GetLSF();
+    bool                            IsNoiseEmpty()const;
+    bool                            IsEmpty() const;
+    bool                            IsValid()const;
+    void                            ValidateSpectrum(TFloat64Range lambdaRange, 
+                                                    Bool enableInputSpcCorrect);
     void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
 
     UInt32                          GetSampleCount() const;
@@ -142,17 +146,13 @@ public:
     Bool                            correctSpectrum(Float64 LambdaMin, Float64 LambdaMax, Float64 coeffCorr=10.0);
 
     const std::string&       	    GetFullPath() const;
-    const Int32                     GetDecompScales() const;
     const Float64                   GetMedianWinsize() const;
     const std::string&              GetContinuumEstimationMethod() const;
-    const std::string&              GetWaveletsDFBinPath() const;
 
     void 			                SetFullPath(const char* nameP);
-    void 			                SetDecompScales(Int32 decompScales);
     void 			                SetMedianWinsize(Float64 winsize);
     void                            SetContinuumEstimationMethod(std::string method) const;
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
-    void                            SetWaveletsDFBinPath(std::string binPath);
 
     void                            ScaleFluxAxis(Float64 scale);
 
@@ -187,10 +187,8 @@ protected:
     std::string                     m_FullPath;
 
     // Continuum removal parameters
-    Int32                           m_nbScales;
     mutable Float64                         m_medianWindowSize;
     mutable std::string                     m_estimationMethod;
-    std::string                     m_dfBinPath;
 
     mutable EType                   m_spcType = nType_raw;
     CSpectrumFluxAxis               m_RawFluxAxis;
@@ -204,7 +202,6 @@ protected:
     const std::unordered_map<std::string, std::string> m_method2baseline = {
         {"IrregularSamplingMedian", "baselineISMedian"},
         {"Median",                  "baselineMedian"},
-        {"waveletsDF",              "baselineDF"},
         {"raw",                     "baselineRAW"},
         {"zero",                    "baselineZERO"},
         {"manual",                  "baselineMANUAL"}
@@ -331,14 +328,24 @@ const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const
 {
     return m_LSF;
 }
-/*
+
 inline
-std::shared_ptr<CLSF> CSpectrum::GetLSF()
+bool CSpectrum::IsEmpty()const
 {
-    return m_LSF;
+    return m_SpectralAxis.isEmpty() || GetFluxAxis().isEmpty();
+}
 
-}*/
+inline
+bool CSpectrum::IsValid()const
+{
+    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty();
+}
 
+inline
+bool CSpectrum::IsNoiseEmpty()const
+{
+    return GetErrorAxis().isEmpty();
+}
 inline 
 void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 {

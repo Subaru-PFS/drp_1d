@@ -40,6 +40,7 @@
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/method/solve.h"
 #include "RedshiftLibrary/method/linematchingsolveresult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -48,26 +49,31 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
+class COperatorResultStore;
+class CParameterStore;
 
 /**
  * \ingroup Redshift
  * \class CMethodLineMatchingSolve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-class CMethodLineMatchingSolve
+  class CMethodLineMatchingSolve: public CSolve
 {
 
 public:
 
-    CMethodLineMatchingSolve();
+    CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType);
     ~CMethodLineMatchingSolve();
 
-    std::shared_ptr<CLineMatchingSolveResult> Compute(CDataStore& resultStore,
+  std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
+					std::shared_ptr<COperatorResultStore> resultStore,
+					TScopeStack &scope) override;
+
+    std::shared_ptr<CLineMatchingSolveResult> Compute(COperatorResultStore& resultStore,
+						      std::shared_ptr<const CParameterStore> paramStore,
                                                        const CSpectrum& spc, 
                                                        const TFloat64Range& lambdaRange, 
                                                        const TFloat64Range& redshiftsRange, 
-                                                       Float64 redshiftStep, 
                                                        const CRayCatalog& restRayCatalog);
 
     const std::string GetDescription();

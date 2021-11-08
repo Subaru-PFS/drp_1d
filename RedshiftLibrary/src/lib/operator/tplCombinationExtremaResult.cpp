@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
@@ -48,7 +47,7 @@ std::shared_ptr<const COperatorResult> TplCombinationExtremaResult::getCandidate
 { 
   if (dataset == "model_parameters" || dataset == "modeltplCombination_parameters")  return std::make_shared<const TTplCombinationResult>(this->m_ranked_candidates[rank].second);
   else if (dataset == "model")  return this->m_savedModelSpectrumResults[rank];
-  else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
+  else throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
 }
     
 const std::string& TplCombinationExtremaResult::getCandidateDatasetType(const std::string& dataset) const 

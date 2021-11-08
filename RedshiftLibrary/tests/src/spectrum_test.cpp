@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 #include "RedshiftLibrary/common/mask.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/debug/assert.h"
 
 #include <algorithm>
@@ -54,7 +55,6 @@
 
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/spectrum/io/fitsreader.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -83,18 +83,6 @@ BOOST_AUTO_TEST_CASE(path)
     object_CSpectrum.SetFullPath(test_path);
     BOOST_CHECK(object_CSpectrum.GetFullPath()==test_path);
     BOOST_TEST_MESSAGE("GetFullPath OK");
-
-}
-
-BOOST_AUTO_TEST_CASE(decompScales)
-{
-
-    CSpectrum object_CSpectrum;
-
-    Int32 decompScales=10;
-    object_CSpectrum.SetDecompScales(decompScales);
-    BOOST_CHECK(object_CSpectrum.GetDecompScales()==decompScales);
-    BOOST_TEST_MESSAGE("GetDecompScales OK");
 
 }
 
@@ -328,7 +316,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
     //cas où toutes les valeurs du flux et de l'erreur sont valides
     BOOST_CHECK(object_CSpectrum4->correctSpectrum(1,11.2)==false);
     //cas où toutes les valeurs de l'erreur sont nulles, et le flux valide
-    BOOST_CHECK_THROW(object_CSpectrum5->correctSpectrum(1,11.2), std::runtime_error);
+    BOOST_CHECK_THROW(object_CSpectrum5->correctSpectrum(1,11.2), GlobalException);
     //cas où toutes les valeurs du flux sont nulles, et l'erreur valide
     BOOST_CHECK(object_CSpectrum6->correctSpectrum(1,11.2)==false);
 
@@ -352,7 +340,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     //cas dans l'intervalle 1 à 5 avec 0.0
     CSpectrum object_CSpectrum2copy = object_CSpectrum2;
-    BOOST_CHECK_THROW(object_CSpectrum2copy.correctSpectrum(1,5.4), std::runtime_error);
+    BOOST_CHECK_THROW(object_CSpectrum2copy.correctSpectrum(1,5.4), GlobalException);
 
     //cas dans l'intervalle 1 à 6
     CSpectrum object_CSpectrum9=object_CSpectrum;

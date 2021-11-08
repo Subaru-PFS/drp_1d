@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 
 #include <algorithm>    // std::sort
@@ -67,9 +68,9 @@ CSpectrumFluxCorrectionMeiksin::~CSpectrumFluxCorrectionMeiksin()
 
 }
 
-Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf )
+Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
 {
-
+    m_convolRange = convolRange;
     bfs::path calibrationFolder( calibrationPath.c_str() );
     std::vector<std::string> fileNamesList;
     fileNamesList.push_back("Meiksin_Var_curves_2.0.txt");
@@ -148,15 +149,15 @@ Bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( cons
             }
         }
         file.close();
-        _correction.fluxcorr.push_back(fluxcorr0);
-        _correction.fluxcorr.push_back(fluxcorr1);
-        _correction.fluxcorr.push_back(fluxcorr2);
-        _correction.fluxcorr.push_back(fluxcorr3);
-        _correction.fluxcorr.push_back(fluxcorr4);
-        _correction.fluxcorr.push_back(fluxcorr5);
-        _correction.fluxcorr.push_back(fluxcorr6);
+        _correction.fluxcorr.push_back(std::move(fluxcorr0));
+        _correction.fluxcorr.push_back(std::move(fluxcorr1));
+        _correction.fluxcorr.push_back(std::move(fluxcorr2));
+        _correction.fluxcorr.push_back(std::move(fluxcorr3));
+        _correction.fluxcorr.push_back(std::move(fluxcorr4));
+        _correction.fluxcorr.push_back(std::move(fluxcorr5));
+        _correction.fluxcorr.push_back(std::move(fluxcorr6));
 
-        m_rawCorrections.push_back(_correction);
+        m_rawCorrections.push_back(std::move(_correction));
     }
 
     return loadSuccess;
@@ -193,8 +194,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
 TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0_rest, Float64 z_bin_meiksin, const std::shared_ptr<const CLSF>& lsf )
 {
     if(!lsf->IsValid()){
-        Log.LogError("LSF is not valid");
-        throw std::runtime_error("LSF is not valid");
+        throw GlobalException(INTERNAL_ERROR,"LSF is not valid");
     }
     Float64 lambda0_obs = lambda0_rest*(1+z_bin_meiksin);
     Float64 sigma_obs = lsf->GetWidth(lambda0_obs);
@@ -234,7 +234,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::Convolve(const TFloat64List& arr, c
 {
     if(!arr.size() || !kernel.size())
     {
-        throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+        throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
     }
     Int32 n = arr.size(), Nhalf = int(kernel.size()/2);
     TFloat64List convolvedArr(n);
@@ -265,22 +265,28 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
                                                                  const TFloat64List& lambdas)
 {
     if(!arr.size()){
-        Log.LogError("Cannot convolve: either kernel or array is empty. ");
-        throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+        throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
     }
 
     Int32 n = arr.size(), Nhalf=-1;
-    TFloat64List convolvedArr(n);
-    
+    TFloat64List convolvedArr(arr);
+
+    //determine the restframe convolution range, i.e., convolRange/(1+z_center)
+    TFloat64Range convRange_rest(m_convolRange.GetBegin()/(1+z_center), m_convolRange.GetEnd()/(1+z_center));//conv range in restframe
+    Int32 i_min = -1, i_max = -1; 
+    bool ret = convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max, false); 
+    if(!ret)
+    {
+        return convolvedArr;
+    }
     Float64 tmp;
-    for(Int32 i = 0; i < n; i++){
+    for(Int32 i = i_min; i <= i_max; i++){
         Float64 lambda0 = lambdas[i];//lambda restframe
         //compute the adpative kernel at lambda0
         GetLSFProfileVector(lambda0, z_center, lsf);//resulting kernel saved in m_kernel
         Nhalf = int(m_kernel.size()/2);
         if(!m_kernel.size()){
-            Log.LogError("Cannot convolve: either kernel or array is empty. ");  
-            throw std::runtime_error("Cannot convolve: either kernel or array is empty. ");
+            throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
         }
 
         tmp = 0.0;//sum over the intersection area
@@ -301,6 +307,9 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     }
     return convolvedArr;
 }
+/**
+ * convolve only on m_convolRange/(1+zbin_meiksin), while keeping vector size
+*/
 void CSpectrumFluxCorrectionMeiksin::ConvolveAll(const std::shared_ptr<const CLSF>& lsf)
 {
     //to be decided if we create two objects or we keep one m_correction
