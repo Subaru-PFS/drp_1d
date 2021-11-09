@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_COMMON_INDEX_
 #define _REDSHIFT_COMMON_INDEX_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 #include <vector>
 #include<iostream>
@@ -62,7 +63,7 @@ template <typename T> class CIndexing
             std::unique_ptr<char[]> buf( new char[ size ] );                                                        
             snprintf( buf.get(), size, "Could not find index for %f", z);                          
             std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-            throw std::runtime_error(_msg.c_str());
+            throw GlobalException(INTERNAL_ERROR,_msg.c_str());
         }
         return (itr - list.begin()); 
     }
@@ -101,7 +102,18 @@ template <typename T> class CIndexing
       Int32 i_min = it - ordered_values.begin();
       return i_min;
     }
+    //value[index] can be equal or higher than Z
+    static bool getClosestUpperIndex(const std::vector<T>& ordered_values, const T& value, Int32& i) 
+    {
+      if(value > ordered_values.back())
+      {
+        return false;
+      }
+      typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(), ordered_values.end(), value);
 
+      i = it - ordered_values.begin();
+      return true;
+    }
 };
 typedef CIndexing<Int32> TInt32Index;
 typedef CIndexing<Float64> TFloat64Index;

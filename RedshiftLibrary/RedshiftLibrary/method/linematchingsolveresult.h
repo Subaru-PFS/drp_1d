@@ -39,9 +39,8 @@
 #ifndef _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVERESULT_
 
-#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/method/solveresult.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/catalog.h"
 
 #include <vector>
 
@@ -53,15 +52,9 @@ class CProcessFlowContext;
 /**
  * \ingroup Redshift
  */
-  class CLineMatchingSolveResult : public COperatorResult
+class CLineMatchingSolveResult : public CSolveResult
 {
-
-public:
-
-    CLineMatchingSolveResult();
-    virtual ~CLineMatchingSolveResult();
-
-  //    Bool GetBestResult( const CDataStore& store, Float64& redshift, Float64& merit ) const;
+  // rule of five zeros
 
 };
 

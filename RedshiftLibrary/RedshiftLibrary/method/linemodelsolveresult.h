@@ -67,28 +67,6 @@ public:
     virtual ~CLineModelSolveResult();
 
 
-/*    Bool GetBestRedshift(Float64& redshift,
-                         Float64& merit ,
-                         Float64 &sigma,
-                         Float64 &snrHa,
-                         Float64 &lfHa,
-                         Float64 &snrOII,
-                         Float64 &lfOII) const;*/
-/*    Bool GetBestRedshiftLogArea( Float64& redshift, Float64& merit ) const;*/
-/*    Bool GetBestRedshiftFromPdf(Float64& redshift,
-                                Float64& merit,
-                                Float64& sigma,
-                                Float64 &snrHa,
-                                Float64 &lfHa,
-                                Float64 &snrOII,
-                                Float64 &lfOII,
-                                std::string &modelTplratio,
-                                std::string &modelTplContinuum) const;*/
-    // Bool GetRedshiftCandidates( const CDataStore& store,  std::vector<Float64>& redshiftcandidates) const;
-
-/*    void preSave(const CDataStore& store);*/
-      //Extrema results
-  //  std::shared_ptr<const LineModelExtremaResult> ExtremaResult;
 
 private:
 

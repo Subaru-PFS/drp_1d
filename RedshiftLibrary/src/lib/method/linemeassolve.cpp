@@ -39,7 +39,6 @@
 #include <RedshiftLibrary/method/linemeassolve.h>
 #include <RedshiftLibrary/log/log.h>
 #include "RedshiftLibrary/processflow/parameterstore.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 
 namespace NSEpic
 {

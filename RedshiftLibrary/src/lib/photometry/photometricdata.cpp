@@ -36,43 +36,34 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_CONTINUUM_WAVELETSDF_
-#define  _REDSHIFT_CONTINUUM_WAVELETSDF_
+#include "RedshiftLibrary/photometry/photometricdata.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/log/log.h"
 
-#include "RedshiftLibrary/continuum/continuum.h"
+#include <stdexcept>
 
-#include "RedshiftLibrary/common/datatypes.h"
+using namespace NSEpic;
 
-namespace NSEpic
+CPhotometricData::CPhotometricData(const TStringList & name,  const TFloat64List & flux, const TFloat64List & fluxerr)
 {
+    // check all sizes are the same
+    if (name.size() != flux.size() || name.size() != fluxerr.size()){
+        Log.LogError("CPhotometryData::CPhotometryData name, flux or fluxerr have not the same size");
+        throw GlobalException(INTERNAL_ERROR,"CPhotometryData::CPhotometryData name, flux or fluxerr have not the same size");
+    }
 
-class CSpectrumFluxAxis;
-
-class CContinuumDF : public CContinuum
-{
-
-public:
-	explicit CContinuumDF( std::string binPath );
-	CContinuumDF();
-	~CContinuumDF();
-
-	Bool RemoveContinuum ( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis);
-
-	Bool m_optclus = false;
-
-private:
-
-   float* estimatedBaseline;
-   float* estimatedBaseline_extd;
-   float* extendedData_;
-
-
-   void mirror_( const CSpectrum& s, UInt32 nb, float*  array);
-   std::string temporaryPath ( const CSpectrum& s, UInt32 nall);
-   std::string m_dfBinPath;
-
-};
-
+    for (Int32 i=0; i<name.size(); i++){
+        m_flux[name[i]] = flux[i];
+        m_fluxErr[name[i]] = fluxerr[i];
+        m_fluxOverErr2[name[i]] = flux[i]*flux[i]/(fluxerr[i]*fluxerr[i]);
+    }
 }
 
-#endif
+TStringList  CPhotometricData::GetNameList() const
+{
+    TStringList names;
+    for (auto const & flux:m_flux){
+        names.push_back(flux.first);
+    }
+    return (names);
+}

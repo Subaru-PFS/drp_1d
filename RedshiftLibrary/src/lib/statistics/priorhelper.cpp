@@ -37,6 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 #include <algorithm>    // std::sort
@@ -127,8 +129,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         bfs::path agaussfpath = rootFolder/a_dirpath.c_str()/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelper: AgaussMean path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelper: AgaussMean path does not exist");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: AgaussMean path does not exist: "<< agaussfpath.string());
         }
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
@@ -159,8 +160,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         bfs::path agaussfpath = rootFolder/a_dirpath.c_str()/bfs::path(fNameStr);
         if(!bfs::exists(agaussfpath))
         {
-            Log.LogError("    CPriorHelper: AgaussSigma path does not exist: %s", agaussfpath.string().c_str());
-            throw std::runtime_error("    CPriorHelper: AgaussSigma path does not exist");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: AgaussSigma path does not exist: "<<agaussfpath.string());
         }
         AGaussSigmafilesPathList.push_back(agaussfpath.string());
     }
@@ -247,8 +247,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
     bfs::path pz_fpath = rootFolder/z_dirpath.c_str()/z_filepath.c_str();
     if(!bfs::exists(pz_fpath))
     {
-        Log.LogError("    CPriorHelper: Pz path does not exist: %s", pz_fpath.string().c_str());
-        throw std::runtime_error("    CPriorHelper: Pz path does not exist");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: Pz path does not exist: "<<pz_fpath.string());
     }else{
         std::vector<Float64> read_buffer;
         bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
@@ -319,8 +318,7 @@ bool CPriorHelper::SetTNameData(UInt32 k, std::string tname)
 {
     if(k>=m_tplnames.size())
     {
-        Log.LogError("    CPriorHelper: SetTNameData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelper: set bad tname index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: SetTNameData failed for k="<<k);
     }
     m_tplnames[k] = tname;
     return true;
@@ -330,8 +328,7 @@ bool CPriorHelper::SetEZTData(UInt32 k, const std::vector<std::vector<Float64>> 
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelper: SetEZTData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelper: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: SetEZTData failed for k="<< k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -349,8 +346,7 @@ bool CPriorHelper::SetAGaussmeanData(UInt32 k, const  std::vector<std::vector<Fl
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelper: SetAgaussmeanData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelper: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: SetAgaussmeanData failed for k="<< k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -368,8 +364,7 @@ bool CPriorHelper::SetAGausssigmaData(UInt32 k, const std::vector<std::vector<Fl
 {
     if(k>=m_data.size())
     {
-        Log.LogError("    CPriorHelper: SetAgausssigmaData failed for k=%d", k);
-        throw std::runtime_error("    CPriorHelper: set bad data index");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: SetAgausssigmaData failed for k="<< k);
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -387,8 +382,7 @@ bool CPriorHelper::SetPzData(const std::vector<Float64> & z_data)
 {
     if(z_data.size()!=m_data_pz.size())
     {
-        Log.LogError("    CPriorHelper: SetPzData failed for bad data size" );
-        throw std::runtime_error("    CPriorHelper: set pz bad data size");
+        throw GlobalException(INTERNAL_ERROR,"    CPriorHelper: SetPzData failed for bad data size" );
     }
 
     for(UInt32 kz=0; kz<m_nZ; kz++)
@@ -403,7 +397,7 @@ bool CPriorHelper::SetPzData(const std::vector<Float64> & z_data)
 bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
 {
     bool verboseRead=false;
-    Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
+    Log.LogDetail(Formatter()<<"CPriorHelper: start load prior file: "<<filePath);
     bool loadSuccess=true;
     std::ifstream file;
     file.open( filePath, std::ifstream::in );
@@ -440,8 +434,7 @@ bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Flo
                 }
                 if(lineVals.size()!=m_nEbv)
                 {
-                    Log.LogError("    CPriorHelper: read n=%d cols, instead of %d", lineVals.size(), m_nEbv);
-                    throw std::runtime_error("    CPriorHelper: read bad number of cols");
+		  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: read n="<<lineVals.size()<<" cols, instead of "<<m_nEbv);
                 }
                 nlinesRead++;
                 data.push_back(lineVals);
@@ -499,8 +492,7 @@ bool CPriorHelper::LoadFileZ(const char* filePath , std::vector<Float64>& data)
 
         if(nlinesRead!=m_nZ)
         {
-            Log.LogError("    CPriorHelper: read n=%d lines", nlinesRead);
-            throw std::runtime_error("    CPriorHelper: read bad number of lines");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: read n="<<nlinesRead<<" lines" );
         }
     }
     return loadSuccess;
@@ -609,12 +601,12 @@ bool CPriorHelper::GetTplPriorData(const std::string & tplname,
                    Log.LogError("    CPriorHelper: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
                                 dataz[icol].priorTZE,
                                 logPTE);
-                   throw std::runtime_error("    CPriorHelper: logP_TZE is NAN or inf, or invalid");
+                   throw GlobalException(INTERNAL_ERROR,"    CPriorHelper: logP_TZE is NAN or inf, or invalid");
                }
            }else{
                Log.LogError("    CPriorHelper: P_TZE is 0 (priorTZE=%e) which is forbidden",
                             dataz[icol].priorTZE);
-               throw std::runtime_error("    CPriorHelper: P_TZE is 0, which is forbidden");
+               throw GlobalException(INTERNAL_ERROR,"    CPriorHelper: P_TZE is 0, which is forbidden");
            }
 
            if(m_data_pz[idz]>0.0)
@@ -650,8 +642,7 @@ bool CPriorHelper::GetTZEPriorData(const std::string & tplname,
 {
     if(EBVIndexfilter<0 || EBVIndexfilter>m_nEbv-1)
     {
-        Log.LogError("    CPriorHelper: Bad EBV index requested =%d (nEBV=%d)", EBVIndexfilter, m_nEbv);
-        throw std::runtime_error("    CPriorHelper: Bad EBV index requested");
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: Bad EBV index requested =" << EBVIndexfilter  <<" nEBV="<< m_nEbv);
     }
     std::vector<Float64> redshifts(1, redshift);
     TPriorZEList zePriorData;

@@ -43,6 +43,7 @@
 %include std_shared_ptr.i
 %include std_except.i
 %include std_vector.i
+%include std_map.i
 %include exception.i
 
 %shared_ptr(CClassifierStore)
@@ -71,7 +72,6 @@
 %shared_ptr(TTplCombinationResult)
 %shared_ptr(TLineModelResult)
 %shared_ptr(CModelSpectrumResult)
-%shared_ptr(CModelFittingResult)
 %shared_ptr(CSpectraFluxResult)
 %shared_ptr(TLSFArguments)
 %shared_ptr(TLSFGaussianVarWidthArgs)
@@ -99,9 +99,8 @@
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/spectrum/io/reader.h"
-#include "RedshiftLibrary/spectrum/io/genericreader.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
@@ -116,9 +115,11 @@
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
-#include "RedshiftLibrary/linemodel/modelfittingresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/photometry/photometricdata.h"
+#include "RedshiftLibrary/photometry/photometricband.h"
+
 using namespace NSEpic;
 static PyObject* pParameterException;
 static PyObject* pGlobalException;
@@ -188,11 +189,6 @@ typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
 typedef unsigned int UInt32;
-
-namespace NSEpic {
-}
-
-using namespace NSEpic;
 
 const char* get_version();
 
@@ -272,7 +268,6 @@ class CRayCatalog
 public:
     void Load( const char* filePath );
     bool Save( const char* filePath );
-    void ConvertVacuumToAir();
 };
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
@@ -280,7 +275,7 @@ public:
 class CTemplateCatalog
 {
 public:
-    CTemplateCatalog( std::string cremovalmethod="Median", Float64 mediankernelsize=75.0, Float64 waveletsScales=8.0, std::string waveletsDFBinPath="" );
+    CTemplateCatalog();
     void Add( std::shared_ptr<CTemplate> r);
 };
 
@@ -305,7 +300,6 @@ public:
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
 %include "linemodel/linemodelextremaresult.i"
-%include "linemodel/modelfittingresult.i"
 %include "operator/modelspectrumresult.i"
 %include "linemodel/linemodelsolution.i"
 
@@ -387,18 +381,14 @@ class COperatorResultStore
 										 const int& rank
 									       ) const;
 
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name ,
-								   const int& rank
-								   ) const  ;
-
-  std::shared_ptr<const CModelFittingResult> GetModelFittingResult(const std::string& objectType,
-								   const std::string& method,
-								   const std::string& name 
-								   ) const  ;
 
   std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
+								 const std::string& method,
+								 const std::string& name,
+								     const int& rank 
+								 ) const  ;
+
+    std::shared_ptr<const CLineModelSolution> GetLineModelSolution(const std::string& objectType,
 								 const std::string& method,
 								 const std::string& name 
 								 ) const  ;
@@ -469,23 +459,6 @@ class CSpectrum
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange,  Float64& mean, Float64 &std) const;
 };
 
-%catches(std::string, ...) CSpectrumIOReader::Read;
-
-class CSpectrumIOReader
-{
- public:
-  CSpectrumIOReader();
-  virtual ~CSpectrumIOReader();
-  virtual void Read(const char* filePath, CSpectrum& s) = 0;
-};
-
-class CSpectrumIOGenericReader : public CSpectrumIOReader
-{
- public:
-  CSpectrumIOGenericReader();
-  virtual ~CSpectrumIOGenericReader();
-  virtual void Read( const char* filePath, CSpectrum& s );
-};
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
 %rename(CSpectrumAxis_empty) CSpectrumAxis(UInt32 n);
@@ -508,9 +481,21 @@ class CSpectrumAxis
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
-  CSpectrumSpectralAxis( const Float64* samples, UInt32 n );
+  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="" );
 };
 %clear (const Float64* samples, UInt32 n);
+class CAirVacuum
+{
+public:
+    CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2);
+    virtual TFloat64List AirToVac(const TFloat64List & waveAir) const;
+    virtual TFloat64List VacToAir(const TFloat64List & waveVac) const;
+};
+class CAirVacuumConverter
+{
+public:
+    static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
+};
 
 //%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
 
@@ -642,12 +627,49 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
 };
 
+typedef std::vector<std::string> TStringList;
+
+%template(TStringList) std::vector<std::string>;
+
+class CPhotometricData
+{
+public:
+    CPhotometricData(const TStringList & name,  const TFloat64List & flux, const TFloat64List & fluxerr);
+
+    Float64 GetFlux(const std::string &name) const;
+    Float64 GetFluxErr(const std::string &name) const;
+    Float64 GetFluxOverErr2(const std::string & name) const;
+    TStringList GetNameList() const;
+};
+
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64 * trans, Int32 n1),(const Float64 * lambda, Int32 n2 )}
+class CPhotometricBand
+{
+public:
+    CPhotometricBand() = default;
+    CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
+
+    TFloat64List m_transmission;
+    TFloat64List m_lambda;
+};
+%clear (const Float64 * trans, Int32 n1);
+%clear (const Float64 * lambda, Int32 n2);
+
+%template(TMapPhotBand) std::map<std::string, CPhotometricBand>;
+
+class CPhotBandCatalog : public std::map<std::string, CPhotometricBand> 
+{
+public:
+    void Add(const std::string & name, const CPhotometricBand & filter);
+    TStringList GetNameList() const;
+};
+
 class AmzException : public std::exception
 {
 
  public:
   AmzException(ErrorCode ec,std::string message);
-  ~AmzException();
+  virtual ~AmzException();
  
   const char* getStackTrace() const;
   ErrorCode getErrorCode();
@@ -660,7 +682,7 @@ class GlobalException: public AmzException
  public:
   GlobalException(ErrorCode ec,std::string message);
   GlobalException(const GlobalException& e);
-  ~GlobalException();
+  virtual ~GlobalException();
 };
 
 
@@ -669,7 +691,7 @@ class SolveException: public AmzException
  public:
   SolveException(ErrorCode ec,std::string message);
   SolveException(const SolveException& e);
-  ~SolveException();
+  virtual ~SolveException();
 };
 
 
@@ -678,7 +700,7 @@ class ParameterException: public AmzException
  public:
   ParameterException(ErrorCode ec,std::string message);
   ParameterException(const ParameterException& e);
-  ~ParameterException();  
+  virtual ~ParameterException();  
 };
 
 class CSolveDescription

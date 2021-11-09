@@ -36,55 +36,37 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_MODELCONTINUUMFITTINGRESULT_
-#define _REDSHIFT_LINEMODEL_MODELCONTINUUMFITTINGRESULT_
+#ifndef _REDSHIFT_PHOTOMETRY_PHOTOMETRICDATA_
+#define _REDSHIFT_PHOTOMETRY_PHOTOMETRICDATA_
 
-
-#include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/operator/operator.h"
 
-#include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/operator/linemodelresult.h"
-
+#include <map>
 
 namespace NSEpic
 {
 
-  /**
-   * \ingroup Redshift
-   */
-class CModelContinuumFittingResult : public COperatorResult
+typedef std::map<std::string, Float64> TPhotVal;
+
+class CPhotometricData
 {
 
 public:
+    CPhotometricData(const TStringList & name,  const TFloat64List & flux, const TFloat64List & fluxerr);
 
-    CModelContinuumFittingResult(Float64 _redshift,
-                                 std::string _name,
-                                 Float64 _merit,
-                                 Float64 _amp,
-                                 Float64 _amp_err,
-                                 Float64 _ismCoeff,
-                                 Int32 _igmIndex,
-                                 Float64 _fitting_snr);
+    Float64 GetFlux(const std::string &name) const {return m_flux.at(name);};
+    Float64 GetFluxErr(const std::string &name) const {return m_fluxErr.at(name);};
+    Float64 GetFluxOverErr2(const std::string & name) const {return m_fluxOverErr2.at(name);};
+    TStringList GetNameList() const;
 
-    virtual ~CModelContinuumFittingResult();
+private:
 
-protected:
-
-    Float64 Redshift;
-    std::string Name;
-    Float64 Merit;
-    Float64 Amp;
-    Float64 AmpErr;
-    Float64 IsmCoeff;
-    Int32   IgmIndex;
-
-    //fitting info
-    Float64 Fitting_snr;
+    TPhotVal m_flux;
+    TPhotVal m_fluxErr;
+    TPhotVal m_fluxOverErr2; // (flux/Err)^2
 };
+
 
 }
 
 #endif
-

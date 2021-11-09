@@ -48,6 +48,7 @@ namespace NSEpic {
   typedef enum ErrorCode
     {
       INTERNAL_ERROR=0,
+      EXTERNAL_LIB_ERROR,
       INVALID_SPECTRA_FLUX,
       INVALID_NOISE	,
       SMALL_WAVELENGTH_RANGE ,
@@ -61,7 +62,9 @@ namespace NSEpic {
       UNKNOWN_ATTRIBUTE ,
       BAD_LINECATALOG,
       BAD_LOGSAMPLEDSPECTRUM,
-      BAD_COUNTMATCH
+      BAD_COUNTMATCH,
+      BAD_TEMPLATECATALOG,
+      INVALID_SPECTRUM
     } ErrorCode;
 
   class AmzException : public std::exception 
@@ -76,7 +79,7 @@ namespace NSEpic {
 
     AmzException(const AmzException& e);
     
-    ~AmzException(){}
+    virtual ~AmzException();
     virtual const char* what() const noexcept override
     {
       return _msg.c_str();
@@ -108,7 +111,7 @@ namespace NSEpic {
       AmzException(e){
     }
 
-    ~GlobalException(){}
+    virtual ~GlobalException();
 
   };
 
@@ -124,7 +127,7 @@ namespace NSEpic {
     SolveException(const SolveException& e):
       AmzException(e){}
 
-    ~SolveException(){}
+    virtual ~SolveException();
   };
 
     // This exception is for now reserved for the unknown parameter exception
@@ -140,7 +143,7 @@ namespace NSEpic {
     ParameterException(const ParameterException& e):
       AmzException(e){}
 
-    ~ParameterException(){}
+    virtual ~ParameterException();
     void getMessage(std::string &msg)
     {
       msg = _msg;
@@ -158,7 +161,7 @@ namespace NSEpic {
     InternalException(const InternalException& e):
       AmzException(e){}
 
-    ~InternalException(){}
+    virtual ~InternalException();
 
   };
 

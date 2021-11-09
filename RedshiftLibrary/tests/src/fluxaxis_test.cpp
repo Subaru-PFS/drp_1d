@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
@@ -58,7 +59,7 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Spectrum)
 
-bool correctMessage(const std::runtime_error& ex)
+bool correctMessage(const GlobalException& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("CSpectrum::Rebin: cannot interpolate outside input spectral range"));
     return true;
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrum object_CSpectrum4( sourceSpectralAxis4, sourceFluxAxis);
   CSpectrum rebinnedSpectrum4;
  /* BOOST_CHECK_EXCEPTION( object_CSpectrum4.Rebin(object_Range4,targetSpectralAxis4,rebinnedSpectrum4,(rebinedMask2)),
-                        std::runtime_error, correctMessage);
+                        GlobalException, correctMessage);
 */
   //----------//
   // test rbin2

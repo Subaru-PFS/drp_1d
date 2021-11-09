@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/processflow/datastore.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/zprior.h"
 
@@ -73,11 +72,10 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination = inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
     std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
-    std::string opt_dustFit = inputContext->GetParameterStore()->GetScoped<std::string>("dustfit");
+    bool opt_dustFit = inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
     Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
-    std::string opt_extinction = inputContext->GetParameterStore()->GetScoped<std::string>("extinction");
+    bool opt_extinction = inputContext->GetParameterStore()->GetScoped<bool>("extinction");
  
-    m_opt_saveintermediateresults = inputContext->GetParameterStore()->GetScoped<std::string>( "saveintermediateresults");
     std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
 
     std::vector<CMask> maskList;    
@@ -97,28 +95,19 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
       _type = nType_all;
     }
 
-    if(m_opt_saveintermediateresults=="yes")
-    {
-        m_opt_enableSaveIntermediateChisquareResults = true;
-    }else{
-        m_opt_enableSaveIntermediateChisquareResults = false;
-    }
-
     //for now interp must be 'lin'. pfg not availbale for now...
     if(opt_interp!="lin")
     {
-        Log.LogError("Tplcombinationsolve: interp. parameter must be 'lin'");
-        throw runtime_error("Tplcombinationsolve: interpolation parameter must be lin");
+        throw GlobalException(INTERNAL_ERROR,"Tplcombinationsolve: interp. parameter must be 'lin'");
     }
 
     Log.LogInfo( "Method parameters:");
     Log.LogInfo( "    -interpolation: %s", opt_interp.c_str());
     Log.LogInfo( "    -overlapThreshold: %.3f", overlapThreshold);
     Log.LogInfo( "    -component: %s", opt_spcComponent.c_str());
-    Log.LogInfo( "    -IGM extinction: %s", opt_extinction.c_str());
-    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit.c_str());
+    Log.LogInfo( "    -IGM extinction: %s", opt_extinction?"true":"false");
+    Log.LogInfo( "    -ISM dust-fit: %s", opt_dustFit?"true":"false");
     //Log.LogInfo( "    -pdfcombination: %s", m_opt_pdfcombination.c_str());
-    Log.LogInfo( "    -saveintermediateresults: %d", (int)m_opt_enableSaveIntermediateChisquareResults);
     Log.LogInfo( "");
 
 
@@ -186,8 +175,8 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
                                        std::vector<CMask> maskList,
                                        EType spctype,
                                        std::string opt_interp,
-                                       std::string opt_extinction,
-                                       std::string opt_dustFitting)
+                                       bool opt_extinction,
+                                       bool opt_dustFitting)
 {
     std::string scopeStr = "tplcombination";
     Int32 _ntype = 1;
@@ -195,23 +184,26 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     CSpectrum::EType _spctypetab[3] = {CSpectrum::nType_raw, CSpectrum::nType_noContinuum, CSpectrum::nType_continuumOnly};
 
     Int32 enable_extinction = 0; //TODO: extinction should be deactivated for nocontinuum anyway ? TBD
-    if(opt_extinction=="yes")
+    if(opt_extinction)
     {
         enable_extinction = 1;
     }
     Int32 enable_dustFitting = 0;
-    if(opt_dustFitting=="yes")
+    if(opt_dustFitting)
     {
         enable_dustFitting = 1;//here we dont distinguish between using on single ismCoeff or iterating over all coeffs. Default to all!
     }
 
     //prepare the list of components/templates
     if(tplCategoryList.size()>1){
-        Log.LogError("Multiple categories are passed for tplcombinationsolve");
-        throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
+        throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    if (tplList.empty())
+      {
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< tplCategoryList[0] <<" is empty");
+      }
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();
@@ -221,15 +213,13 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
         const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl]->GetSpectralAxis();
         if(axisSize != tplList[ktpl]->GetSampleCount())
         {
-            Log.LogError("  Method-tplcombination: templates dont have same size");
-            throw std::runtime_error("  Method-tplcombination: templates dont have same size");
+            throw GlobalException(INTERNAL_ERROR,"  Method-tplcombination: templates dont have same size");
         }
         for (Int32 i = 0; i<axisSize; i++)
         {
             if(std::abs(refSpcAxis[i]-currentSpcAxis[i])>1E-8)
             {
-                Log.LogError("  Method-tplcombination: templates dont have same spectralAxis");
-                throw std::runtime_error("  Method-tplcombination: templates dont have same spectralAxis");
+                throw GlobalException(INTERNAL_ERROR,"  Method-tplcombination: templates dont have same spectralAxis");
             }
         }
     }
@@ -319,7 +309,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
     auto results = store->GetGlobalResult( scope.c_str() );
     if(results.expired())
     {
-        throw runtime_error("tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
+        throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: CombinePDF - Unable to retrieve tplcombination results");
     }
     std::shared_ptr<const CTplCombinationResult> result = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock() );
 
@@ -343,8 +333,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
             Log.LogInfo("tplcombinationsolve: using cstLog = %f", chisquarearray.cstLog);
         }else if ( chisquarearray.cstLog != result->CstLog)
         {
-            Log.LogError("tplcombinationsolve: Found different cstLog values in results... val-1=%f != val-2=%f", chisquarearray.cstLog, result->CstLog);
-            throw runtime_error("tplcombinationsolve: Found different cstLog values in results");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"tplcombinationsolve: Found different cstLog values in results... val-1="<<chisquarearray.cstLog<<" != val-2="<< result->CstLog);
         }
         if(chisquarearray.redshifts.size()==0)
         {
@@ -364,8 +353,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
             }
             if(foundBadStatus)
             {
-                Log.LogError("tplcombinationsolve: Found bad status result...");
-                throw runtime_error("tplcombinationsolve: Found bad status result");
+                throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: Found bad status result...");
             }
         }
 
@@ -411,7 +399,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     auto results = store->GetGlobalResult(scope.c_str());
     if(results.expired())
     {
-        throw runtime_error("tplcombinationsolve: SaveExtremaResult - Unable to retrieve tplcombination results");
+        throw GlobalException(INTERNAL_ERROR,"tplcombinationsolve: SaveExtremaResult - Unable to retrieve tplcombination results");
     }
     auto TplFitResult = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock());
     const TFloat64List & redshifts = TplFitResult->Redshifts;
@@ -419,22 +407,19 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     Bool foundRedshiftAtLeastOnce = false;
 
     if(TplFitResult->ChiSquare.size() != redshifts.size()){
-        Log.LogError("CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
-        throw runtime_error("CTplCombinationSolve::SaveExtremaResult, results has wrong size");
+        throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
     }
 
     Bool foundBadStatus = false;
 
     if(foundBadStatus)
     {
-        Log.LogError("CTplCombinationSolve::SaveExtremaResult: Found bad status result");
-        throw runtime_error("CTplCombinationSolve::SaveExtremaResult: Found bad status result");
+        throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult: Found bad status result");
     }
 
     //prepare the list of components/templates
     if(tplCategoryList.size()>1){
-        Log.LogError("Multiple categories are passed for tplcombinationsolve");
-        throw std::runtime_error("Multiple categories are passed for tplcombinationsolve. Only one is required");
+      throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
     const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);

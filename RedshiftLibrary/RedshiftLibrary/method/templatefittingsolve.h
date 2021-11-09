@@ -55,7 +55,6 @@ namespace NSEpic
 
 class CSpectrum;
 class CTemplateCatalog;
-class CDataStore;
 
 /**
  * \ingroup Redshift
@@ -82,23 +81,6 @@ private:
                                         std::shared_ptr<COperatorResultStore> resultStore,
                                         TScopeStack &scope) override;
 
-  /*
-    std::shared_ptr<CTemplateFittingSolveResult> Compute(CDataStore& resultStore,
-                                                   const CSpectrum& spc,
-                                                   const CTemplateCatalog& tplCatalog,
-                                                   const TStringList& tplCategoryList,
-                                                   const TFloat64Range& lambdaRange,
-                                                   const TFloat64List& redshifts,
-                                                   Float64 overlapThreshold,
-                                                   std::vector<CMask> maskList,
-                                                   const std::string outputPdfRelDir,
-                                                   const Float64 redshiftSeparation,
-                                                   std::string spcComponent="raw" ,
-                                                   std::string opt_interp="lin",
-                                                   std::string opt_extinction="no",
-                                                   std::string opt_dustFit="no");
-  */ 
-  void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) override;
 
   Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
@@ -109,8 +91,8 @@ private:
                std::vector<CMask> maskList,
                EType spctype=nType_raw,
                std::string opt_interp="lin",
-               std::string opt_extinction="no",
-               std::string opt_dustFitting="no");
+               bool opt_extinction=false,
+               bool opt_dustFitting=false);
 
   ChisquareArray BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const;
 
@@ -132,7 +114,6 @@ private:
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
-    std::string m_opt_saveintermediateresults;
     Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
 
 };

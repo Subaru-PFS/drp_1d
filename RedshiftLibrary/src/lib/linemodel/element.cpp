@@ -72,8 +72,7 @@ CLineModelElement::CLineModelElement(const std::string& widthType, const Float64
     } else if( widthType == "velocitydriven"){
         m_LineWidthType = VELOCITYDRIVEN;
     }else {
-        Log.LogError("Unknown LineWidthType %s", widthType.c_str());
-        throw std::runtime_error("Unknown LineWidthType");
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Unknown LineWidthType"<<widthType);
     }
 
     //LoadDataExtinction(); //uncomment if this line profile is used
@@ -123,7 +122,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     const Float64 pfsSimuCompensationFactor = 1.0;
 
     if(!m_LSF)
-        throw std::runtime_error("LSF object is not initailized.");
+        throw GlobalException(INTERNAL_ERROR,"LSF object is not initailized.");
     Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
    
     Float64 velocitySigma = pfsSimuCompensationFactor*v/c*redshiftedlambda;//, useless /(1+z)*(1+z);
@@ -138,8 +137,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
         case COMBINED://combination of the two
             break;
         default:
-            Log.LogError("Invalid LSFType %d", m_LineWidthType);
-            throw std::runtime_error("Unknown mode");
+	  //TODO this should not happen here, but at parameter setting stage
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Invalid LSF type "<<m_LineWidthType);
     }
 
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
@@ -164,8 +163,7 @@ Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>&
         case VELOCITYDRIVEN:
             return v_to_sigma * profile->GetLineProfileDerivSigma( x, x0, sigma);
         default:
-            Log.LogError("Invalid LineWidthType : %d", m_LineWidthType);
-            throw std::runtime_error("Unknown LineWidthType");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Invalid LineWidthType : "<< m_LineWidthType);
     }
     return 0.0;
 }

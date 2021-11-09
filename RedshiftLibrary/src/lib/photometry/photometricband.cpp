@@ -36,53 +36,31 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/reliability/pdfzFeatureResult.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <string>
-#include <fstream>
+#include "RedshiftLibrary/photometry/photometricband.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/exception.h"
 
-#include <iostream>
-#include <iomanip>
+#include <stdexcept>
 
-using namespace std;
 using namespace NSEpic;
 
-
-CPdfzFeatureResult::CPdfzFeatureResult()
+CPhotometricBand::CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ):
+    m_transmission(trans, trans+n1), m_lambda(lambda, lambda+n2)
 {
-
+    // check all sizes are the same
+    if (n1!=n2){
+        throw GlobalException(INTERNAL_ERROR,"CPhotometryBand::CPhotometryBand: transmission and wavelength have not the same size");
+    }
 }
 
-CPdfzFeatureResult::~CPdfzFeatureResult()
+TStringList  CPhotBandCatalog::GetNameList() const
 {
-
+    TStringList names;
+    names.reserve(size());
+    for (auto const & band:*this){
+        names.push_back(band.first);
+    }
+    return (names);
 }
-
-
-void CPdfzFeatureResult::Save(std::ostream& stream ) const
-{
-	std::setprecision(20);
-    stream << "#zPDF_descriptors \tValue" << std::endl;
-
-	boost::unordered_map<const std::string , Float64>::const_iterator it = mapzfeatures.begin();
-	for ( it=mapzfeatures.begin(); it!=mapzfeatures.end(); ++it) {
-		std::string map_key = (it->first);
-		Float64 map_content = (it->second);
-        //std::cout
-        //         << " \t map_key: " << map_key << "\n"
-        //        << " \t map_content: " << map_content << "\n";
-
-		stream << map_key << "\t" << map_content << std::endl;
-	}
-
-}
-
-
-void CPdfzFeatureResult::SaveLine(std::ostream& stream ) const
-{
-	//stream.precision(20);
-	//stream << "CPdfzFeatureResult" << "\t" << mapzfeatures.size() << std::endl;
-
-}
+    

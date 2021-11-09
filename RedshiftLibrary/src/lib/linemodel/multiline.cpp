@@ -916,9 +916,7 @@ void CMultiLine::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralA
             Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
             flux[i] += Yi;
             if(isnan(flux[i])){
-                Log.LogError("Ray %d: ContinuumFlux %f, ModelAtLambda Yi = %f for range [%d, %d]", k, continuumfluxAxis[i], Yi, m_StartNoOverlap[k], m_EndNoOverlap[k]);
-                Log.LogError("addToSpectrumModel has a NaN flux at index i %d ", i);
-                throw std::runtime_error("addToSpectrumModel has a NaN flux ");
+                throw GlobalException(INTERNAL_ERROR,Formatter()<<"addToSpectrumModel has a NaN flux Ray"<< k<<": ContinuumFlux "<< continuumfluxAxis[i]<<", ModelAtLambda Yi = "<< Yi<<" for range ["<<m_StartNoOverlap[k]<<", "<< m_EndNoOverlap[k]<<"]");
             }
         }
     }

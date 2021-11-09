@@ -59,11 +59,11 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
   std::shared_ptr<const CPdfSolveResult> starResult=std::shared_ptr<const CPdfSolveResult>(nullptr);//std::make_shared<const CPdfSolveResult>();
   std::shared_ptr<const CPdfSolveResult> qsoResult=std::shared_ptr<const CPdfSolveResult>(nullptr);
 
-  if(inputContext->GetParameterStore()->Get<std::string>("enablegalaxysolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<bool>("enablegalaxysolve"))
     galaxyResult = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("galaxy"));
-  if(inputContext->GetParameterStore()->Get<std::string>("enablestellarsolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<bool>("enablestarsolve"))
     starResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("star"));
-  if(inputContext->GetParameterStore()->Get<std::string>("enableqsosolve") == "yes")
+  if(inputContext->GetParameterStore()->Get<bool>("enableqsosolve"))
     qsoResult =  std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult("qso"));
 
     std::shared_ptr<CClassificationResult> classifResult = std::make_shared<CClassificationResult>();
@@ -122,8 +122,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
     }
     
     if(sum<=0){
-        Log.LogError( "%s: Classification G/S/Q, all probabilities undefined.", __func__);
-        throw std::runtime_error("Classification G/S/Q, all probabilities undefined");
+        throw GlobalException(INTERNAL_ERROR,"Classification G/S/Q, all probabilities undefined");
     }   
 
     Pgal /= sum;

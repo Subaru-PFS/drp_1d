@@ -67,7 +67,7 @@ public:
     ~CSpectrumFluxCorrectionMeiksin();
 
     Bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
-    Bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf);
+    Bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
     TFloat64List Convolve(const TFloat64List& arr, const TFloat64List& kernel);
     TFloat64List ApplyAdaptativeKernel(const TFloat64List& arr, 
                                         const Float64 z_center, 
@@ -84,9 +84,8 @@ public:
                                              const std::shared_ptr<const CLSF>& lsf);//for convolution
     Float64 GetLambdaMin() const;
     Float64 GetLambdaMax() const;
-
     bool meiksinInitFailed = false;
-
+    TFloat64Range m_convolRange;
     std::vector<MeiksinCorrection> m_corrections;
 private:
     std::vector<MeiksinCorrection> m_rawCorrections;

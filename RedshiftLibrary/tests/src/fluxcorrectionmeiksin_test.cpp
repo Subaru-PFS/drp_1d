@@ -42,13 +42,14 @@
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/common/range.h" 
 
+#include "RedshiftLibrary/common/exception.h"
 #include <cstdio>
 using namespace NSEpic;
 using namespace std;
 
 
 BOOST_AUTO_TEST_SUITE(Convolve_test)
-
+TFloat64Range _lbdaRange = {200., 1299.};
 TFloat64List fluxcorr =  {//2.0_1
   0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 
   0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 0.285125, 
@@ -201,7 +202,7 @@ TFloat64List fluxcorr_25_4 ={
 ,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1};
 
 //-----------------------------------------------------------------------------
-bool correctMessage(const std::runtime_error& ex)
+bool correctMessage(const GlobalException& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("Cannot convolve: either kernel or array is empty. "));
     return true;
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(Convolve_test_empty)
 {
   TFloat64List arr = {}, kernel = {3, 4, 1}, conv;
   CSpectrumFluxCorrectionMeiksin spc;
-  BOOST_CHECK_EXCEPTION(spc.Convolve(arr, kernel), std::runtime_error, correctMessage);
+  BOOST_CHECK_EXCEPTION(spc.Convolve(arr, kernel), GlobalException, correctMessage);
 }
 
 BOOST_AUTO_TEST_CASE(Convolve_test_identity)
@@ -259,6 +260,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj;
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -292,6 +294,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -326,6 +329,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -367,6 +372,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(fluxMeiksinObj.GetLambdaMin(), fluxMeiksinObj.GetLambdaMax());//200..1299
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 
@@ -406,6 +413,8 @@ BOOST_AUTO_TEST_CASE(correction_test)
 
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj; //fluxcorr_25_4
+  fluxMeiksinObj.m_convolRange = _lbdaRange;
+
   Float64 lbdaStep=1;
   CRange<Float64> lbdaRange(200, 210);
   TFloat64List igmLambdas = lbdaRange.SpreadOver(lbdaStep); 

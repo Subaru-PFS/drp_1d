@@ -94,8 +94,8 @@ private:
                std::vector<CMask> maskList,
                EType spctype=nType_raw,
                std::string opt_interp="lin",
-               std::string opt_extinction="no",
-               std::string opt_dustFitting="no");
+               bool opt_extinction=false,
+               bool opt_dustFitting=false);
     
     ChisquareArray BuildChisquareArray(std::shared_ptr<COperatorResultStore> store, const std::string & scopeStr) const;
     void StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
@@ -116,7 +116,6 @@ private:
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
     std::string m_opt_saveintermediateresults;
-    Bool m_opt_enableSaveIntermediateChisquareResults=false;
 };
 
 
