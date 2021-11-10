@@ -315,6 +315,8 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
                 else if (profileName == "ASYMFIT"){
                     asymParams =  _asymFitParams; //using default values
                     profile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFitParams, "mean");
+                }else{
+                    throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
                 }
             }
 
