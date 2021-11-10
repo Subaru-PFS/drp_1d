@@ -1497,7 +1497,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    m_CatalogTplShape.SetLyaProfile(*this, itplshape, m_forceLyaFitting, m_NSigmaSupport);
+    SetLyaProfileInTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
     m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, itplshape );
 
@@ -4318,6 +4318,52 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( const std::
     return sameSign;
 }
 
+/**
+ * SetLyaProfile should be part of ClineModelElementList, and rather takes a CRayCatalogsTplShape as argument.
+ * This is mainly because no ch
+*/
+Bool CLineModelElementList::SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
+                                        bool forceLyaFitting,
+                                        const Float64 nsigmasupport)
+{
+    if(iCatalog<0)
+        return false;
+    
+    linetags ltags;
+    std::string lyaTag = ltags.lya_em;
+
+    //loop the amplitudes in the iLine_st catalog in order to find Lya 
+    CRayCatalog::TRayVector currentCatalogLineList = m_CatalogTplShape.GetCatalog(iCatalog).GetList();
+    Int32 nLines = currentCatalogLineList.size();
+
+    for(Int32 kL=0; kL<nLines; kL++)
+    {
+        if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
+            continue;
+
+        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile()->Clone());
+        
+        if(forceLyaFitting)
+            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
+
+        //find line Lya in the elementList
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++)
+            {
+                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
+                {
+                    m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
+                    break;
+                }
+            }
+        }
+
+    }
+    return true;
+}
 
 /**
 * @brief CLineModelElementList::setLyaProfile

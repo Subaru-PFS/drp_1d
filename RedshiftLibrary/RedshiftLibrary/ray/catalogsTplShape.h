@@ -86,7 +86,7 @@ public:
     Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting, const Float64 nsigmasupport);
     Bool InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList);
     Bool SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog);
-
+    const CRayCatalog& GetCatalog(Int32 icatlog);
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
 

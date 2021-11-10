@@ -540,7 +540,16 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
     }
     return true;
 }
+const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog)
+{
+    return m_RayCatalogList[iCatalog];
+}
 
+/**
+ * SetLyaProfile should be part of ClineModelElementList, and rather takes a CRayCatalogsTplShape as argument.
+ * This is mainly because no ch
+*/
+/*
 Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, 
                                         Int32 iCatalog, 
                                         bool forceLyaFitting,
@@ -584,7 +593,7 @@ Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElement
     }
     return true;
 }
-
+*/
 
 /**
  * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs: (for lm-rigidity=tplcorr)

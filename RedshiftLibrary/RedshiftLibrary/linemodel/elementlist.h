@@ -369,6 +369,10 @@ private:
 
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
+
+    Bool SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
+                                        bool forceLyaFitting,
+                                        const Float64 nsigmasupport);
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
     TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
                                     const Float64& redshift, 
