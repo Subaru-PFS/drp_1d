@@ -408,23 +408,15 @@ Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 }
 
 
-Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList)
+Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
     for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
     {
-        std::vector<std::vector<Float64>> thisElementLinesCorresp;
-
         Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        TFloat64List thisCatLinesCorresp(nRays, 0.0); //is nRays cte among Elts?
+        std::vector<TFloat64List> thisElementLinesCorresp(GetCatalogsCount(), thisCatLinesCorresp);
 
-        for(Int32 k=0; k<GetCatalogsCount(); k++)
-        {
-            std::vector<Float64> thisCatLinesCorresp;
-            for(UInt32 j=0; j<nRays; j++){
-                thisCatLinesCorresp.push_back(0.0);
-            }
-            thisElementLinesCorresp.push_back(thisCatLinesCorresp);
-        }
         m_RayCatalogLinesCorrespondingNominalAmp.push_back(thisElementLinesCorresp);
 
         //now set the non-zero amp correspondences
@@ -476,6 +468,7 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
  * @param iCatalog
  * @return
  */
+/*
 Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog)
 {
     if(iCatalog<0){
@@ -491,7 +484,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementLi
         }
     }
     return true;
-}
+}*/
 
 /**
  * @brief CRayCatalogsTplShape::SetMultilineNominalAmplitudes
@@ -501,6 +494,7 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementLi
  * @param iCatalog
  * @return
  */
+/*
 Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &LineModelElementList, Int32 iCatalog)
 {
     //first set all amplitudes to 0.0
@@ -539,7 +533,8 @@ Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &
 
     }
     return true;
-}
+}*/
+
 const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog)
 {
     return m_RayCatalogList[iCatalog];

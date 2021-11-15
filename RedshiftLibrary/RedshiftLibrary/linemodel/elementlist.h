@@ -373,6 +373,10 @@ private:
     Bool SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
                                         bool forceLyaFitting,
                                         const Float64 nsigmasupport);
+
+    Bool SetMultilineNominalAmplitudes(Int32 iLine);
+    Bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+   
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
     TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
                                     const Float64& redshift, 

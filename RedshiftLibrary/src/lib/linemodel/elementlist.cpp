@@ -225,7 +225,7 @@ void CLineModelElementList::initLambdaOffsets(std::string offsetsCatalogsRelPath
 Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
 {
     //tplshape catalog initialization : used for rigidities tplcorr and tplshape
-    //m_CatalogTplShape = new CRayCatalogsTplShape();
+    //m_CatalogTplShape = new CLineModelElementList();
 
     bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
                                       opt_tplratioCatRelPath, 
@@ -238,7 +238,7 @@ Bool CLineModelElementList::initTplratioCatalogs(std::string opt_tplratioCatRelP
         return false;
     }
     m_CatalogTplShape.InitLineCorrespondingAmplitudes(*this);
-    m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, 0 );
+    SetMultilineNominalAmplitudesFast( 0 );
     //m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, 0 );
     //m_RestRayList = m_CatalogTplShape.GetRestLinesList(0);
     //LoadCatalog(m_RestRayList);
@@ -1499,7 +1499,7 @@ Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelo
 {
     SetLyaProfileInTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
-    m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, itplshape );
+    SetMultilineNominalAmplitudesFast(itplshape );
 
     if(enableSetVelocity)
     {
@@ -2340,7 +2340,7 @@ Float64 CLineModelElementList::fit(Float64 redshift,
         if(m_rigidity=="tplshape")
         {
             //m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, savedIdxFitted );
-            bool retSetMultiAmplFast = m_CatalogTplShape.SetMultilineNominalAmplitudesFast( *this, savedIdxFitted );
+            bool retSetMultiAmplFast = SetMultilineNominalAmplitudesFast( savedIdxFitted );
             if( !retSetMultiAmplFast ){
                 Log.LogError( "Linemodel: tplshape, Unable to set Multiline NominalAmplitudes from Tplshape !");
             }
@@ -4319,7 +4319,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( const std::
 }
 
 /**
- * SetLyaProfile should be part of ClineModelElementList, and rather takes a CRayCatalogsTplShape as argument.
+ * SetLyaProfile should be part of ClineModelElementList, and rather takes a CLineModelElementList as argument.
  * This is mainly because no ch
 */
 Bool CLineModelElementList::SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
@@ -6594,4 +6594,74 @@ Float64 CLineModelElementList::EstimateLikelihoodCstLog(const TFloat64Range& lam
     cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
 
     return cstLog;
+}
+
+/**
+ * @brief CLineModelElementList::SetMultilineNominalAmplitudesFast
+ * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
+ * INFO: fast method, InitLineCorrespondence() should have been called previously with the same LineModelElementList arg.
+ * @param iCatalog
+ * @return
+ */
+Bool CLineModelElementList::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
+{
+    if(iCatalog<0){
+        return false;
+    }
+    Float64 nominalAmp = 0.0;
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        Int32 nRays = m_Elements[iElts]->GetSize();
+        for(UInt32 j=0; j<nRays; j++){
+            nominalAmp = m_CatalogTplShape.getNominalAmplitudeCorrespondance()[iElts][iCatalog][j];
+            m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief CLineModelElementList::SetMultilineNominalAmplitudes
+ * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
+ * INFO: slow method
+ * @param iCatalog
+ * @return
+ */
+Bool CLineModelElementList::SetMultilineNominalAmplitudes(Int32 iCatalog)
+{
+    //first set all amplitudes to 0.0
+    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    {
+        //get the max nominal amplitude
+        Int32 nRays = m_Elements[iElts]->GetSize();
+        for(UInt32 j=0; j<nRays; j++){
+            m_Elements[iElts]->SetNominalAmplitude(j, 0.0);
+        }
+    }
+    //loop the amplitudes in the iLine_st catalog
+    CRayCatalog::TRayVector currentCatalogLineList = m_CatalogTplShape.GetCatalog(iCatalog).GetList();
+    Int32 nLines = currentCatalogLineList.size();
+    for(Int32 kL=0; kL<nLines; kL++)
+    {
+        Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
+        Float64 restLambda = currentCatalogLineList[kL].GetPosition();
+        Float64 dustCoeff = m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti->GetDustCoeff( m_CatalogTplShape.GetIsmIndex(iCatalog), restLambda);
+        nominalAmp*=dustCoeff;
+        //find line in the elementList
+        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        {
+            //get the max nominal amplitude
+            Int32 nRays = m_Elements[iElts]->GetSize();
+            for(UInt32 j=0; j<nRays; j++){
+
+                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                {
+                    m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
+                }
+
+            }
+        }
+
+    }
+    return true;
 }
