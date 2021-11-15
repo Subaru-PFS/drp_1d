@@ -59,7 +59,7 @@ namespace NSEpic
             void    SetAsymParams(TAsymParams params) override;
             void resetAsymFitParams() override;
         private:
-            virtual CLineProfile* CloneImplementation() const { return new CLineProfileASYMFIT(*this);}
+            CLineProfile* CloneImplementation() const override { return new CLineProfileASYMFIT(*this);}
     };
 }
 #endif

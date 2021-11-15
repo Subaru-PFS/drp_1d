@@ -75,7 +75,7 @@ namespace NSEpic
             CLineProfileASYM& operator=(const CLineProfileASYM& other) = default;  
             CLineProfileASYM& operator=(CLineProfileASYM&& other) = default;
         private:
-            virtual CLineProfile* CloneImplementation() const { return new CLineProfileASYM(*this);}
+            virtual CLineProfile* CloneImplementation() const override { return new CLineProfileASYM(*this);}
             Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
         protected: 
             Bool isValid();
