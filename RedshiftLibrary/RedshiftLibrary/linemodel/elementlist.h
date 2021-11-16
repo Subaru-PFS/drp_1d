@@ -370,7 +370,7 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
 
-    Bool SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
+    Bool setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
                                         bool forceLyaFitting,
                                         const Float64 nsigmasupport);
 

@@ -62,11 +62,11 @@ namespace NSEpic
       CRay RestRay;
       Float64 Redshift;
 
-      SSolution( CRay detectedRay, CRay restRay, Float64 redshift )
+      SSolution( const CRay& detectedRay, const CRay& restRay, Float64 redshift )
       {
-	DetectedRay = detectedRay;
-	RestRay = restRay;
-	Redshift = redshift;
+        DetectedRay = detectedRay.clone();
+        RestRay = restRay.clone();
+        Redshift = redshift;
       }
 
       bool operator<( const SSolution& str ) const

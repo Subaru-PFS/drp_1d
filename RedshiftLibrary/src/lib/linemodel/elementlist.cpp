@@ -1497,7 +1497,7 @@ Bool CLineModelElementList::initModelAtZ(Float64 redshift, const TFloat64Range& 
 
 Bool CLineModelElementList::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
 {
-    SetLyaProfileInTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
+    setLyaProfileFromTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
     SetMultilineNominalAmplitudesFast(itplshape );
 
@@ -3599,7 +3599,7 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElementsBySupport( UInt
         return indexes;
       }
     TInt32RangeList refsupport = m_Elements[ind]->getSupport();
-    CRay ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
+    const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
     std::shared_ptr<CLineProfile> profile = ray.GetProfile();
@@ -4322,7 +4322,7 @@ Int32 CLineModelElementList::fitAmplitudesLinesAndContinuumLinSolve( const std::
  * SetLyaProfile should be part of ClineModelElementList, and rather takes a CLineModelElementList as argument.
  * This is mainly because no ch
 */
-Bool CLineModelElementList::SetLyaProfileInTplShapeCatalog(Int32 iCatalog, 
+Bool CLineModelElementList::setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
                                         bool forceLyaFitting,
                                         const Float64 nsigmasupport)
 {
@@ -5738,7 +5738,8 @@ CLineModelSolution CLineModelElementList::GetModelSolution(Int32 opt_level)
 {
     CLineModelSolution modelSolution;
     modelSolution.nDDL = GetModelNonZeroElementsNDdl();
-    modelSolution.Rays = m_RestRayList;
+    std::transform (m_RestRayList.begin(), m_RestRayList.end(), std::back_inserter(modelSolution.Rays), 
+                                                         [](CRay &c){return c.clone();});
     modelSolution.ElementId.resize(m_RestRayList.size());
     modelSolution.snrHa = NAN;
     modelSolution.lfHa = NAN;

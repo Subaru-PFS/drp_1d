@@ -80,92 +80,12 @@ m_OffsetFit(false)
 {
 }
 
-CRay::CRay(const CRay & other):
-m_Name(other.m_Name),
-m_Pos(other.m_Pos),
-m_Type(other.m_Type),
-m_Force(other.m_Force),
-m_Amp(other.m_Amp),
-m_Width(other.m_Width),
-m_Cut(other.m_Cut),
-m_Profile(other.m_Profile->Clone()),
-m_PosFitErr(other.m_PosFitErr),
-m_SigmaFitErr(other.m_SigmaFitErr),
-m_AmpFitErr(other.m_AmpFitErr),
-m_GroupName(other.m_GroupName),
-m_NominalAmplitude(other.m_NominalAmplitude),
-m_VelGroupName(other.m_VelGroupName),
-m_id(other.m_id),
-m_Offset(other.m_Offset),
-m_OffsetFit(other.m_OffsetFit){}
-
-CRay::CRay(CRay && other):
-m_Name(other.m_Name),
-m_Pos(other.m_Pos),
-m_Type(other.m_Type),
-m_Force(other.m_Force),
-m_Amp(other.m_Amp),
-m_Width(other.m_Width),
-m_Cut(other.m_Cut),
-m_Profile(other.m_Profile->Clone()),
-m_PosFitErr(other.m_PosFitErr),
-m_SigmaFitErr(other.m_SigmaFitErr),
-m_AmpFitErr(other.m_AmpFitErr),
-m_GroupName(other.m_GroupName),
-m_NominalAmplitude(other.m_NominalAmplitude),
-m_VelGroupName(other.m_VelGroupName),
-m_id(other.m_id),
-m_Offset(other.m_Offset),
-m_OffsetFit(other.m_OffsetFit){}
-
-CRay& CRay::operator=(const CRay& other)
+CRay CRay::clone() const
 {
-    m_Name = other.m_Name;
-    m_Pos = other.m_Pos;
-    m_Type = other.m_Type;
-    m_Force = other.m_Force;
-    m_Amp = other.m_Amp;
-    m_Width = other.m_Width;
-    m_Cut = other.m_Cut;
-
-    m_PosFitErr = other.m_PosFitErr;
-    m_SigmaFitErr = other.m_SigmaFitErr;
-    m_AmpFitErr = other.m_AmpFitErr;
-    m_GroupName = other.m_GroupName;
-    m_NominalAmplitude = other.m_NominalAmplitude;
-    m_VelGroupName = other.m_VelGroupName;
-    m_id = other.m_id;
-    m_Offset = other.m_Offset;
-    m_OffsetFit = other.m_OffsetFit;
-
-    //deep copy for m_Profile
-    m_Profile = other.m_Profile->Clone();
-    return *this;
-} 
-CRay& CRay::operator=(CRay&& other)
-{
-    m_Name = other.m_Name;
-    m_Pos = other.m_Pos;
-    m_Type = other.m_Type;
-    m_Force = other.m_Force;
-    m_Amp = other.m_Amp;
-    m_Width = other.m_Width;
-    m_Cut = other.m_Cut;
-
-    m_PosFitErr = other.m_PosFitErr;
-    m_SigmaFitErr = other.m_SigmaFitErr;
-    m_AmpFitErr = other.m_AmpFitErr;
-    m_GroupName = other.m_GroupName;
-    m_NominalAmplitude = other.m_NominalAmplitude;
-    m_VelGroupName = other.m_VelGroupName;
-    m_id = other.m_id;
-    m_Offset = other.m_Offset;
-    m_OffsetFit = other.m_OffsetFit;
-
-    //deep copy for m_Profile
-    m_Profile = other.m_Profile->Clone();
-    return *this;
-} 
+   CRay this_copy = *this; //shallow copy
+   this_copy.m_Profile = this_copy.m_Profile->Clone();// deep-copy
+   return this_copy;
+}
 
 bool CRay::operator < (const CRay& str) const
 {

@@ -90,10 +90,7 @@ public:
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
 
-    CRay(const CRay & other); 
-    CRay(CRay && other); 
-    CRay& operator=(const CRay& other);  
-    CRay& operator=(CRay&& other); 
+    CRay clone() const;
 
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
