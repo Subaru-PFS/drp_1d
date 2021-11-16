@@ -97,7 +97,7 @@ public:
     TLambdaRange        GetLambdaRange() const;
     Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
-    Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  CMask& omask ) const;
+    Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  const CMask& omask ) const;
     void                SetLogScale();
     Bool                CheckLoglambdaSampling()const;
     Bool                IsLogSampled(Float64 logGridstep)const;

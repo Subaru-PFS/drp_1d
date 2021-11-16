@@ -515,4 +515,34 @@ BOOST_AUTO_TEST_CASE(Calcul)
     delete object_CRangec;
 }
 
+BOOST_AUTO_TEST_CASE(ExtractTest)
+{
+    CSpectrumSpectralAxis spcAxis({1.,2.,3.,4.,5.});
+    CSpectrumNoiseAxis noiseAxis({-1.,-2.,-3.,-4.,-5.});
+    CSpectrumFluxAxis fluxAxis(CSpectrumAxis({2.,4.,6.,8.,10.}), noiseAxis);
+    CSpectrum spc(spcAxis,fluxAxis);
+
+    Int32 istart = 1;
+    Int32 iend = 3;
+    CSpectrum extractedSpc = spc.extractFrom(istart,iend);
+
+    //read results 
+    Int32 s = iend-istart+1;
+    TFloat64List extractedSpcAxis = extractedSpc.GetSpectralAxis().GetSamplesVector();
+    TFloat64List extractedFluxAxis = extractedSpc.GetFluxAxis().GetSamplesVector();
+    TFloat64List extractedNoiseAxis = extractedSpc.GetFluxAxis().GetError().GetSamplesVector();
+
+    //check results
+    //check size is correct
+    BOOST_CHECK(extractedSpcAxis.size() == s); 
+    BOOST_CHECK(extractedFluxAxis.size() == s); 
+    BOOST_CHECK(extractedNoiseAxis.size() == s); 
+
+    TFloat64List correctSpcAxis{2.,3.,4.};
+    TFloat64List correctFluxAxis{4.,6.,8};
+    TFloat64List correctNoiseAxis{-2.,-3.,-4.};
+    BOOST_CHECK_EQUAL_COLLECTIONS(extractedSpcAxis.begin(), extractedSpcAxis.end(), correctSpcAxis.begin(), correctSpcAxis.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(extractedFluxAxis.begin(), extractedFluxAxis.end(), correctFluxAxis.begin(), correctFluxAxis.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(extractedNoiseAxis.begin(), extractedNoiseAxis.end(), correctNoiseAxis.begin(), correctNoiseAxis.end());
+}
 BOOST_AUTO_TEST_SUITE_END()

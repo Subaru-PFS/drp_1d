@@ -80,7 +80,7 @@ public:
     UInt32                   GetSamplesCount();
     virtual void             SetSize( UInt32 s );
     void                     clear();
-    Int32 extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx);
+    TFloat64List extractFrom(Int32 startIdx, Int32 endIdx) const;
     Bool isEmpty() const ;
 protected:
 
