@@ -64,7 +64,7 @@ namespace NSEpic
             Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) override;
             Float64 GetNSigmaSupport() const override;
 
-            Float64 GetAsymDelta();
+            Float64 GetAsymDelta() override;
             const TAsymParams  GetAsymParams() override;
             virtual Bool    isAsymFixed() override;
             virtual Bool    isAsymFit()   override;
