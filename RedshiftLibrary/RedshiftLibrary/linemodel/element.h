@@ -62,86 +62,92 @@ class CLineModelElement
     VELOCITYDRIVEN
   };
 
-
-
-  public:
-    CLineModelElement(const std::string &widthType,
-                      const Float64 velocityEmission,
-                      const Float64 velocityAbsorption);
+public:
+    CLineModelElement(std::vector<CRay> rs, 
+               const std::string& widthType,
+               const Float64 velocityEmission, 
+               const Float64 velocityAbsorption, 
+               TFloat64List nominalAmplitudes, 
+               Float64 nominalWidth, 
+               TUInt32List catalogIndexes);
     ~CLineModelElement();
 
+    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) const;
+    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
+    Float64 GetWidth(Int32 subeIdx, Float64 redshift) const;
     std::string GetElementTypeTag();
 
-    virtual void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
+    void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                                 Float64 redshift,
-                                const TFloat64Range &lambdaRange) = 0;
-    virtual TInt32RangeList getSupport() = 0;
-    virtual TInt32RangeList getTheoreticalSupport() = 0;
-    virtual TInt32Range getSupportSubElt(Int32 subeIdx) = 0;
-    virtual TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) = 0;
+                                const TFloat64Range &lambdaRange);
+    TInt32RangeList getSupport();
+    TInt32RangeList getTheoreticalSupport();
+    TInt32Range EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
+    TInt32Range getSupportSubElt(Int32 subeIdx);
+    TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 
-    virtual TInt32Range
+    TInt32Range
     EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis,
                        Float64 mu, const TFloat64Range &lambdaRange,
-                       Float64 winsizeAngstrom) = 0;
+                       Float64 winsizeAngstrom);
 
-    virtual Float64 GetContinuumAtCenterProfile(
+    Float64 GetContinuumAtCenterProfile(
         Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
-        Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis) = 0;
+        Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis);
 
-    virtual void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
+    void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
                               const CSpectrumFluxAxis &continuumfluxAxis,
-                              Float64 redshift, Int32 lineIdx = -1) = 0;
-    virtual void fitAmplitudeAndLambdaOffset(
+                              Float64 redshift, Int32 lineIdx = -1);
+    void fitAmplitudeAndLambdaOffset(
         const CSpectrumSpectralAxis &spectralAxis,
         const CSpectrumFluxAxis &fluxAxis,
         const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
         Int32 lineIdx = -1, bool enableOffsetFitting = true, Float64 step = 25.,
-        Float64 min = -400., Float64 max = 400.) = 0;
-    virtual Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
+        Float64 min = -400., Float64 max = 400.);
+    Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                                      Float64 continuumFlux,
-                                     Int32 kRaySupport = -1) = 0;
-    virtual Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
+                                     Int32 kRaySupport = -1);
+    Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
                                                    Float64 redshift,
-                                                   Float64 continuumFlux) = 0;
-    virtual Float64
+                                                   Float64 continuumFlux) const;
+    Float64
     GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
-                                      Float64 continuumFluxUnscale) = 0;
-    virtual Float64
+                                      Float64 continuumFluxUnscale);
+    Float64
     GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                      Float64 continuumFlux) = 0;
-    virtual Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
+                                      Float64 continuumFlux);
+    Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                            Float64 continuumFlux,
-                                           Float64 continuumFluxDerivZ) = 0;
+                                           Float64 continuumFluxDerivZ);
 
-    virtual void
+    void
     addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                        CSpectrumFluxAxis &modelfluxAxis,
                        CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-                       Int32 lineIdx = -1) = 0;
-    virtual void
+                       Int32 lineIdx = -1);
+    void
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
                                CSpectrumFluxAxis &continuumFluxAxis,
-                               Float64 redshift, bool emissionRay) = 0;
+                               Float64 redshift, bool emissionRay);
 
-    virtual void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
+    void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Int32 lineIdx = -1) = 0;
+                                   Int32 lineIdx = -1);
 
-    virtual Float64 GetNominalAmplitude(Int32 subeIdx) = 0;
-    virtual bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp) = 0;
-    virtual Float64 GetFittedAmplitude(Int32 subeIdx) = 0;
-    virtual Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) = 0;
-    virtual Float64 GetElementAmplitude() = 0;
-    virtual Float64 GetElementError() = 0;
+    Float64 GetNominalAmplitude(Int32 subeIdx);
+    bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
+    Float64 GetFittedAmplitude(Int32 subeIdx);
+    Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
+    Float64 GetElementAmplitude();
+    Float64 GetElementError();
 
-    virtual void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR) = 0;
-    virtual void SetFittedAmplitude(Float64 A, Float64 SNR) = 0;
-    virtual void LimitFittedAmplitude(Int32 subeIdx, Float64 limit) = 0;
+    void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
+    void SetFittedAmplitude(Float64 A, Float64 SNR);
+    void LimitFittedAmplitude(Int32 subeIdx, Float64 limit);
 
-    virtual bool SetAbsLinesLimit(Float64 limit) = 0;
+    bool SetAbsLinesLimit(Float64 limit);
 
     void SetVelocityEmission(Float64 vel);
     Float64 GetVelocityEmission();
@@ -157,20 +163,20 @@ class CLineModelElement
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
     const TAsymParams GetAsymfitParams(UInt32 asymIdx=0);
     void resetAsymfitParams();
-
-    virtual Float64 GetSignFactor(Int32 subeIdx) = 0;
-    virtual Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) = 0;
-    virtual Float64 GetWidth(Int32 subeIdx, Float64 redshift) = 0;
-    Int32 GetSize();
-    virtual std::vector<CRay> GetRays() = 0;
-    virtual std::string GetRayName(Int32 subeIdx) = 0;
-    bool IsOutsideLambdaRange();
-    virtual bool IsOutsideLambdaRange(Int32 subeIdx) = 0;
     Int32 FindElementIndex(Int32 LineCatalogIndex);
-    virtual Int32 FindElementIndex(std::string LineTagStr) = 0;
+  Int32 FindElementIndex(std::string LineTagStr);
+
+    Float64 GetSignFactor(Int32 subeIdx);
+
+    Int32 GetSize();
+    std::vector<CRay> GetRays();
+    std::string GetRayName(Int32 subeIdx);
+    bool IsOutsideLambdaRange();
+    Float64 GetLineWidth(Float64 lambda, Float64 z = 0., Bool isEmission=0) const;
+    bool IsOutsideLambdaRange(Int32 subeIdx);
 
     std::vector<Int32> m_LineCatalogIndexes;
-    Float64 GetLineWidth(Float64 lambda, Float64 z = 0., Bool isEmission=0);
+   
     Float64 GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0,
                                    Float64 sigma, Bool isEmission);
 
@@ -187,7 +193,6 @@ class CLineModelElement
     std::string m_fittingGroupInfo;
 
   protected:
-    Bool LoadDataExtinction();
 
     TLineWidthType m_LineWidthType;
     Float64 m_NominalWidth;//relevant only for LSF GaussianConstantWidth
@@ -215,7 +220,27 @@ class CLineModelElement
 
     std::shared_ptr<const CLSF> m_LSF;
 
-  private:
+  std::vector<TInt32List>     m_RayIsActiveOnSupport;
+  TFloat64List        m_SignFactors;
+  TFloat64List        m_FittedAmplitudes;
+  TFloat64List        m_FittedAmplitudeErrorSigmas;
+  TFloat64List        m_NominalAmplitudes;
+
+  Float64 m_absLinesLimit;
+
+  TProfileList  m_profile;
+
+
+  TInt32List          m_StartNoOverlap;
+  TInt32List          m_EndNoOverlap;
+  TInt32List          m_StartTheoretical;
+  TInt32List          m_EndTheoretical;
+
+  TBoolList           m_OutsideLambdaRangeList;
+
+  const bool m_verbose=false;
+
+  
 };
 
 } // namespace NSEpic

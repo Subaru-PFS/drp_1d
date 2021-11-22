@@ -66,7 +66,7 @@ void CRuleBalmerLinearSolver::SetUp( Bool EnabledArgument, ... )
   //va_start ( Arguments, EnabledArgument );
 }
 
-Bool CRuleBalmerLinearSolver::Check( CLineModelElementList& LineModelElementList )
+Bool CRuleBalmerLinearSolver::Check( CElements& LineModelElementList )
 {
   return false;
 }
@@ -74,10 +74,15 @@ Bool CRuleBalmerLinearSolver::Check( CLineModelElementList& LineModelElementList
 /**
  * \brief Check for and correct if necessary the Balmer rule on the m_Elements.
  **/
-void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementList )
+void CRuleBalmerLinearSolver::Correct( CElements& LineModelElementList )
 {
     linetags ltags;
+    /*
     const CSpectrumSpectralAxis& spectralAxis = LineModelElementList.m_SpectrumModel.GetSpectralAxis();
+    const CSpectrumFluxAxis& spectrumFlux = LineModelElementList.m_SpcFluxAxis;
+    const CSpectrumFluxAxis& modelFlux = LineModelElementList.m_SpectrumModel.GetFluxAxis();
+    */
+    
     std::vector<Float64> lambdax;
     std::vector<Float64> continuumx;
     std::vector<Float64> datax;
@@ -122,13 +127,13 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
             Log.LogDebug( "Rule %s: no element with name %s.", Name.c_str(), tagA.c_str() );
             continue;
         }
-        Float64 ampE = LineModelElementList.m_Elements[ilineE]->GetFittedAmplitude( 0 );
-        Float64 erE = LineModelElementList.m_Elements[ilineE]->GetFittedAmplitudeErrorSigma( 0 );
-        Float64 erFitE = LineModelElementList.getModelErrorUnderElement( ilineE );
+        Float64 ampE = LineModelElementList[ilineE]->GetFittedAmplitude( 0 );
+        Float64 erE = LineModelElementList[ilineE]->GetFittedAmplitudeErrorSigma( 0 );
+        Float64 erFitE = LineModelElementList.getModelErrorUnderElement( ilineE,spectrumFlux,modelFlux );
         erE = sqrt(erE*erE+erFitE*erFitE);
-        Float64 ampA = LineModelElementList.m_Elements[ilineA]->GetFittedAmplitude( 0 );
-        Float64 erA = LineModelElementList.m_Elements[ilineA]->GetFittedAmplitudeErrorSigma( 0 );
-        Float64 erFitA = LineModelElementList.getModelErrorUnderElement( ilineA );
+        Float64 ampA = LineModelElementList[ilineA]->GetFittedAmplitude( 0 );
+        Float64 erA = LineModelElementList[ilineA]->GetFittedAmplitudeErrorSigma( 0 );
+        Float64 erFitA = LineModelElementList.getModelErrorUnderElement( ilineA, spectrumFlux, modelFlux );
         erA = sqrt(erA*erA+erFitA*erFitA);
         Float64 amp;
         Float64 er;
@@ -160,11 +165,11 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
         ersFitA.push_back( erFitA );
         iEltE.push_back( ilineE );
         iEltA.push_back( ilineA );
-        Float64 lambda = LineModelElementList.m_Elements[ilineE]->GetRays()[0].GetPosition()*(1.0+LineModelElementList.GetRedshift());
+        Float64 lambda = LineModelElementList[ilineE]->GetRays()[0].GetPosition()*(1.0+Redshift);
         lambdax.push_back( lambda );
         Int32 Idx = spectralAxis.GetIndexAtWaveLength( lambda );
-        continuumx.push_back( LineModelElementList.m_inputSpc.GetContinuumFluxAxis()[Idx] );
-        datax.push_back( LineModelElementList.m_inputSpc.GetContinuumFluxAxis()[Idx] + amp );
+        continuumx.push_back( m_inputSpc.GetContinuumFluxAxis()[Idx] );
+        datax.push_back( m_inputSpc.GetContinuumFluxAxis()[Idx] + amp );
         errdatax.push_back(er);
     }
 
@@ -220,9 +225,9 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
                     if( ampsEwasfitted[i2] )
                     {
                         ampsE[i2] = ampsE[i2]+correction;
-                        LineModelElementList.m_Elements[iEltE[i2]]->SetFittedAmplitude(ampsE[i2]+ampsA[i2]*widthRatioAE, ersE[i2]);
+                        LineModelElementList[iEltE[i2]]->SetFittedAmplitude(ampsE[i2]+ampsA[i2]*widthRatioAE, ersE[i2]);
                     }
-                    LineModelElementList.m_Elements[iEltA[i2]]->SetFittedAmplitude(ampsA[i2], ersA[i2]);
+                    LineModelElementList[iEltA[i2]]->SetFittedAmplitude(ampsA[i2], ersA[i2]);
                     //than re-fit the lines together, because the correction applied so far is for R=1.0, it could be R>1.0
                     if(ampsEwasfitted[i2])
                     {
@@ -242,17 +247,17 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
                         {
                             EOverlapIdx.push_back(EOverlapIdxA[io]);
                         }
-                        LineModelElementList.refreshModelUnderElements( EOverlapIdx );
-                        Float64 previousFitErr = LineModelElementList.getModelErrorUnderElement( iEltE[i2] );
+			//                        LineModelElementList.refreshModelUnderElements( EOverlapIdx );
+                        Float64 previousFitErr = LineModelElementList.getModelErrorUnderElement( iEltE[i2] ,spectrumFlux,modelFlux);
                         while(iterations<maxIterations)
                         {
                             iterations++;
                             ACorrected=ACorrected*(1.0+AStepRatio);
                             Float64 correction = ACorrected-ampsA[i2];
-                            LineModelElementList.m_Elements[iEltA[i2]]->SetFittedAmplitude(ACorrected, ersA[i2]);
-                            LineModelElementList.m_Elements[iEltE[i2]]->SetFittedAmplitude(ampsE[i2]+correction+ACorrected*widthRatioAE, ersE[i2]);
-                            LineModelElementList.refreshModelUnderElements(EOverlapIdx);
-                            Float64 newFitErr = LineModelElementList.getModelErrorUnderElement( iEltE[i2] );
+                            LineModelElementList[iEltA[i2]]->SetFittedAmplitude(ACorrected, ersA[i2]);
+                            LineModelElementList[iEltE[i2]]->SetFittedAmplitude(ampsE[i2]+correction+ACorrected*widthRatioAE, ersE[i2]);
+			    //                            LineModelElementList.refreshModelUnderElements(EOverlapIdx);
+                            Float64 newFitErr = LineModelElementList.getModelErrorUnderElement( iEltE[i2] ,spectrumFlux,modelFlux);
                             if(newFitErr >= previousFitErr)
                             { //todo put a ratio threshold ?
                                 iterations = maxIterations;
@@ -265,8 +270,8 @@ void CRuleBalmerLinearSolver::Correct( CLineModelElementList& LineModelElementLi
                         }
                         ampsA[i2] = ValidAcorrected;
                         ampsE[i2] = ValidEcorrected+ValidAcorrected*widthRatioAE;
-                        LineModelElementList.m_Elements[iEltA[i2]]->SetFittedAmplitude(ValidAcorrected, ersA[i2]);
-                        LineModelElementList.m_Elements[iEltE[i2]]->SetFittedAmplitude(ValidEcorrected+ValidAcorrected*widthRatioAE, ersE[i2]);
+                        LineModelElementList[iEltA[i2]]->SetFittedAmplitude(ValidAcorrected, ersA[i2]);
+                        LineModelElementList[iEltE[i2]]->SetFittedAmplitude(ValidEcorrected+ValidAcorrected*widthRatioAE, ersE[i2]);
                     }
                 }
             }

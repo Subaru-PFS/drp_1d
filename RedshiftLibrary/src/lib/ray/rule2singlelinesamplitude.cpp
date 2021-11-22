@@ -79,7 +79,7 @@ void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
 /**
  * \brief Correct both lines depending on their sigmas.
  **/
-void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElementList )
+void CRule2SingleLinesAmplitude::Correct( CElements& LineModelElementList )
 {
     Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType );
   if( iA==-1 )
@@ -87,7 +87,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
       Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineA.c_str() );
       return;
     }
-  if( LineModelElementList.m_Elements[iA]->GetSize()>1 )
+  if( LineModelElementList[iA]->GetSize()>1 )
     {
       Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineA.c_str() );
       iA=-1;
@@ -98,7 +98,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
       Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineB.c_str() );
       return;
     }
-  if( LineModelElementList.m_Elements[iB]->GetSize()>1 )
+  if( LineModelElementList[iB]->GetSize()>1 )
     {
       Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineB.c_str() );
       iB=-1;
@@ -108,10 +108,10 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
       Log.LogDebug( "Rule %s: line %s has same index as line %s.", Name.c_str(), m_LineA.c_str(), m_LineB.c_str() );
       return;
     }
-  if( LineModelElementList.m_Elements[iA]->IsOutsideLambdaRange() == false )
+  if( LineModelElementList[iA]->IsOutsideLambdaRange() == false )
     {
-      Float64 ampA = LineModelElementList.m_Elements[iA]->GetFittedAmplitude( 0 );
-      Float64 ampB = LineModelElementList.m_Elements[iB]->GetFittedAmplitude( 0 );
+      Float64 ampA = LineModelElementList[iA]->GetFittedAmplitude( 0 );
+      Float64 ampB = LineModelElementList[iB]->GetFittedAmplitude( 0 );
 
       if( !(ampA<=0.0 && ampB<=0.0) )
       {
@@ -120,7 +120,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
           Float64 maxB = (m_Coefficient*ampA);
           if(maxB==std::min(maxB, ampB))
           {
-              LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+              LineModelElementList[iB]->LimitFittedAmplitude(0, maxB);
               //log the correction
               {
                   std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "2_SINGLE_LINES_AMPLITUDE" ));
@@ -136,7 +136,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
           Float64 maxB = (m_Coefficient*ampA) + (erA*nSigma*m_Coefficient);
           if(maxB==std::min(maxB, ampB))
           {
-              LineModelElementList.m_Elements[iB]->LimitFittedAmplitude(0, maxB);
+              LineModelElementList[iB]->LimitFittedAmplitude(0, maxB);
               //log the correction
               {
                   std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "2_SINGLE_LINES_AMPLITUDE" ));
@@ -164,15 +164,15 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
               }
               Float64 correctedA = (ampA*wA + ampB*wB*R)/(wA+wB);
               Float64 correctedB = correctedA/R;
-              LineModelElementList.m_Elements[iA]->SetFittedAmplitude( correctedA, erA ); //check: keep the original error sigma ?
-              LineModelElementList.m_Elements[iB]->SetFittedAmplitude( correctedB, erB ); //check: keep the original error sigma ?
+              LineModelElementList[iA]->SetFittedAmplitude( correctedA, erA ); //check: keep the original error sigma ?
+              LineModelElementList[iB]->SetFittedAmplitude( correctedB, erB ); //check: keep the original error sigma ?
           }
           else
           {
               if( ampB!=0.0 && ampA==0.0 )
               {
                   Float64 maxB = erA;
-                  LineModelElementList.m_Elements[iB]->LimitFittedAmplitude( 0, maxB );
+                  LineModelElementList[iB]->LimitFittedAmplitude( 0, maxB );
               }
           }
           //*/
@@ -180,7 +180,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
   }
 }
 
-Bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
+Bool CRule2SingleLinesAmplitude::Check( CElements& LineModelElementList )
 {
   return false;
 }

@@ -62,7 +62,7 @@ CRegulament::CRegulament()
 CRegulament::~CRegulament()
 {
 }
-void CRegulament::Apply( CLineModelElementList& LineModelElementList )
+void CRegulament::Apply( CElements& LineModelElementList )
 {
   for(unique_ptr<CRule>& rule: m_RulesVector)
   {
@@ -176,6 +176,7 @@ void CRegulament::EnableLogs( bool enable )
     m_LogsEnabled = enable;
     m_RulesLog.clear();
 }
+
 std::vector<string> CRegulament::GetLogs( )
 {
     return m_RulesLog;

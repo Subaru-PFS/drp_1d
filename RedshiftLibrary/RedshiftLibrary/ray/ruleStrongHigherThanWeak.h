@@ -55,15 +55,15 @@ class CRuleStrongHigherThanWeak : public CRule
     CRuleStrongHigherThanWeak();
     ~CRuleStrongHigherThanWeak();
 
-    Bool Check(CLineModelElementList &LineModelElementList);
+    Bool Check(CElements &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 
   private:
     Int32 m_LineType;
-    void Correct(CLineModelElementList &LineModelElementList);
+    void Correct(CElements &LineModelElementList);
     Float64
     FindHighestStrongLineAmp(Int32 linetype, Float64 &er, std::string &name,
-                             CLineModelElementList &LineModelElementList);
+                             CElements &LineModelElementList);
 };
 } // namespace NSEpic
 

@@ -78,7 +78,7 @@ void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
  *  Get the parameters for the entry
  *  Limit the amplitude of the entry to the maximum amplitude for super strong lines
  **/
-void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
+void CRuleSuperStrong::Correct( CElements& LineModelElementList )
 {
   Float64 coeff = 1.0;
   Float64 erStrong=-1.0;
@@ -118,8 +118,8 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
 	  continue;
 	}
       Int32 eIdxWeak = LineModelElementList.FindElementIndex( iRestRayWeak );
-      Int32 subeIdxWeak = LineModelElementList.m_Elements[eIdxWeak]->FindElementIndex( iRestRayWeak );
-      if( LineModelElementList.m_Elements[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
+      Int32 subeIdxWeak = LineModelElementList[eIdxWeak]->FindElementIndex( iRestRayWeak );
+      if( LineModelElementList[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
 	{
 	  continue;
 	}
@@ -127,7 +127,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
       Float64 nSigma = 1.0;
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
-      Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
+      Float64 ampB = LineModelElementList[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
 
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
@@ -145,7 +145,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
 
       if(maxB==std::min(maxB, ampB) && maxB!=ampB)
       {
-          LineModelElementList.m_Elements[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
+          LineModelElementList[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
           //log the correction
           {
               std::string nameWeak = LineModelElementList.m_RestRayList[iRestRayWeak].GetName();
@@ -161,7 +161,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
     }
 }
 
-Bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
+Bool CRuleSuperStrong::Check( CElements& LineModelElementList )
 {
   return false;
 }
@@ -169,7 +169,7 @@ Bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
 /**
  * \brief Returns the maximum amplitude between strong lines within the support of m_Elements. The referenced er argument will hold the error sigma for the same element.
  **/
-Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CLineModelElementList& LineModelElementList )
+Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CElements& LineModelElementList )
 {
   Float64 maxi = -1.0;
   for( UInt32 iRestRayStrong=0; iRestRayStrong<LineModelElementList.m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
@@ -197,14 +197,14 @@ Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrong
       }
 
       Int32 eIdxStrong = LineModelElementList.FindElementIndex( iRestRayStrong );
-      Int32 subeIdxStrong = LineModelElementList.m_Elements[eIdxStrong]->FindElementIndex( iRestRayStrong );
-      if( LineModelElementList.m_Elements[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )
+      Int32 subeIdxStrong = LineModelElementList[eIdxStrong]->FindElementIndex( iRestRayStrong );
+      if( LineModelElementList[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )
 	{
 	  continue;
 	}
 
-      Float64 ampStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
-      Float64 erStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
+      Float64 ampStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
+      Float64 erStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
       // if(erStrong>0.0 && ampStrong>0.0)
       // {
       //     lineSnr = ampStrong/erStrong;

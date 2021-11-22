@@ -93,7 +93,7 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
-        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
+        linemodel->m_Elements.SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     if(controller->isEmissionVelocityFitted()){
@@ -157,7 +157,7 @@ int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
-        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
+        linemodel->m_Elements.SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     if(controller->isEmissionVelocityFitted()){

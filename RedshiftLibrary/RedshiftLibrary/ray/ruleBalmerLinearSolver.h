@@ -55,11 +55,18 @@ namespace NSEpic
   public:
     CRuleBalmerLinearSolver();
     ~CRuleBalmerLinearSolver();
-    Bool Check( CLineModelElementList& LineModelElementList );
+    Bool Check( CElements& LineModelElementList );
     void SetUp( Bool EnabledArgument, ... );
   private:
-    void Correct( CLineModelElementList& LineModelElementList );
+    void Correct( CElements& LineModelElementList );
     TFloat64List BalmerModelLinSolve( std::vector<Float64> lambdax, std::vector<Float64> continuumx, std::vector<Float64> datax, std::vector<Float64> errdatax );
+
+    //Dummy members to compile temporarily, should come from elementlist
+    CSpectrumSpectralAxis spectralAxis;
+    CSpectrumFluxAxis spectrumFlux;
+    CSpectrumFluxAxis modelFlux;
+    Float64 Redshift;
+    CSpectrum m_inputSpc;
   };
 }
 

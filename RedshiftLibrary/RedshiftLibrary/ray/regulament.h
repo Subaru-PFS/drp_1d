@@ -46,7 +46,7 @@
 
 namespace NSEpic {
 
-class CLineModelElementList;
+class CElements;
 /**
  * \ingroup Redshift
  * \brief Control class for preparing and applying Linemodel rules.
@@ -57,7 +57,7 @@ class CRegulament
     CRegulament();
     ~CRegulament();
 
-    void Apply(CLineModelElementList &LineModelElementList);
+    void Apply(CElements &LineModelElementList);
     // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>
     // > LinemodelElements, Float64 Redshift );
     Bool CreateRulesFromJSONFiles(void);

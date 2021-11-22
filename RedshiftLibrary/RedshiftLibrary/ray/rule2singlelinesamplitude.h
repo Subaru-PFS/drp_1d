@@ -54,7 +54,7 @@ class CRule2SingleLinesAmplitude : public CRule
   public:
     CRule2SingleLinesAmplitude();
     ~CRule2SingleLinesAmplitude();
-    Bool Check(CLineModelElementList &LineModelElementList);
+    Bool Check(CElements &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 
   private:
@@ -62,7 +62,7 @@ class CRule2SingleLinesAmplitude : public CRule
     std::string m_LineA;
     std::string m_LineB;
     Float64 m_Coefficient;
-    void Correct(CLineModelElementList &LineModelElementList);
+    void Correct(CElements &LineModelElementList);
 };
 } // namespace NSEpic
 

@@ -53,7 +53,7 @@ class CRuleRatioRange : public CRule
   public:
     CRuleRatioRange();
     ~CRuleRatioRange();
-    Bool Check(CLineModelElementList &LineModelElementList);
+    Bool Check(CElements &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 
   private:
@@ -61,7 +61,7 @@ class CRuleRatioRange : public CRule
     std::string m_LineA;
     std::string m_LineB;
     Float64 m_Coefficient;
-    void Correct(CLineModelElementList &LineModelElementList);
+    void Correct(CElements &LineModelElementList);
 };
 } // namespace NSEpic
 

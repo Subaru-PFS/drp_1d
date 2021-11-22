@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/ray/ray.h"
 #include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/elements.h"
 
 
 #include <boost/format.hpp>
@@ -73,10 +73,10 @@ public:
     ~CLineCatalogsOffsets();
     void Init(std::string calibrationPath, std::string offsetsCatalogsRelPath);
 
-    Bool SetLinesOffsets(CLineModelElementList *LineModelElementList, Int32 index);
+    Bool SetLinesOffsets(CElements& LineModelElementList, Int32 index);
 
     // Hack: select/bypass stack automatically from its name in the reference_stack catalog
-    Bool SetLinesOffsetsAutoSelectStack(CLineModelElementList *LineModelElementList, std::string spectrumName);
+    Bool SetLinesOffsetsAutoSelectStack(CElements& LineModelElementList, std::string spectrumName);
     Int32 AutoSelectStackFromReferenceFile(std::string spectrumName);
 
 private:

@@ -37,7 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/linemodel/multiline.h"
 #include "RedshiftLibrary/ray/ray.h"
 #include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
@@ -63,16 +62,16 @@ BOOST_AUTO_TEST_CASE(Instance){
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
-  BOOST_CHECK_THROW(CMultiLine(rs,  "foobar",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
+  BOOST_CHECK_THROW(CLineModelElement(rs,  "foobar",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
 		    GlobalException);
 
-    BOOST_CHECK_THROW(CMultiLine(rs,  "fixed",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
+    BOOST_CHECK_THROW(CLineModelElement(rs,  "fixed",  1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes),
 		    GlobalException);
   /*
-  CMultiLine element = CMultiLine(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CLineModelElement element = CLineModelElement(rs,  "fixed",  8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
   BOOST_CHECK_CLOSE( 1.0, element.GetVelocityEmission(), 0.01 );
   BOOST_CHECK_CLOSE( 1.1, element.GetVelocityAbsorption(), 0.01 );
-  BOOST_CHECK(element.GetElementTypeTag() == "CMultiLine" );
+  BOOST_CHECK(element.GetElementTypeTag() == "CLineModelElement" );
   BOOST_CHECK(element.GetSize()==2);
   element.SetVelocityEmission(2.0);
   BOOST_CHECK_CLOSE( 2.0, element.GetVelocityEmission(), 0.01 );
@@ -110,11 +109,11 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
-    CMultiLine elementID = CMultiLine(rs,  "instrumentdriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    //CMultiLine elementfixed = CMultiLine(rs,  "fixed", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementcombined = CMultiLine(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    CMultiLine elementVD = CMultiLine(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
-    //CMultiLine elementNip = CMultiLine(rs,  "nispsim2016", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CLineModelElement elementID = CLineModelElement(rs,  "instrumentdriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    //CLineModelElement elementfixed = CLineModelElement(rs,  "fixed", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CLineModelElement elementcombined = CLineModelElement(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    CLineModelElement elementVD = CLineModelElement(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+    //CLineModelElement elementNip = CLineModelElement(rs,  "nispsim2016", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
     //setLSF on multiLines
     std::string lsfType="GaussianConstantResolution"; //TBC
@@ -163,7 +162,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
 
-  CMultiLine element = CMultiLine(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CLineModelElement element = CLineModelElement(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(nsigmasupport)};
   std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
@@ -191,7 +190,7 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CLineModelElement element = CLineModelElement(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
   Float64 nsigmasupport = 8.;
   Float64 resolution = 0.9;
@@ -225,7 +224,7 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   std::vector<UInt32> catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
-  CMultiLine element = CMultiLine(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
+  CLineModelElement element = CLineModelElement(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
   */
   /*std::cout << profilesym->GetNSigmaSupport()<<"\n";
   std::cout << profilelor->GetNSigmaSupport()<<"\n";

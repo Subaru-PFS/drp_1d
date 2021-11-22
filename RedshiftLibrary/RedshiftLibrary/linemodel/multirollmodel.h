@@ -49,7 +49,6 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/linemodel/multiline.h"
 
 #include <cmath>
 #include <cfloat>

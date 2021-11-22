@@ -63,12 +63,13 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "RedshiftLibrary/linemodel/elements.h"
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 
 #include <memory>
 namespace NSEpic
 {
-  static Int32 defaultIdx = -1;
+
   //to avoid circular dependency
   class CLineProfileASYM;
   class CLineProfileASYMFIXED;
@@ -178,14 +179,7 @@ public:
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
     Int32 GetNElements();
-    Int32 GetModelValidElementsNDdl();
-    Int32 GetModelNonZeroElementsNDdl();
-    std::vector<UInt32> GetModelValidElementsIndexes();
-    bool IsElementIndexInDisabledList(Int32 index);
-    void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
-    Float64 GetElementAmplitude(Int32 j);
-    void SetElementIndexesDisabledAuto();
-    void ResetElementIndexesDisabled();
+
 
     void SetVelocityEmission(Float64 vel);
     void SetVelocityAbsorption(Float64 vel);
@@ -198,8 +192,7 @@ public:
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
-    void SetSourcesizeDispersion(Float64 sizeArcsec);
-    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
+
 
     Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
@@ -236,10 +229,7 @@ public:
     void refreshModelDerivVelAbsorptionUnderElements(const std::vector<UInt32> & filterEltsIdx);
     void refreshModelDerivVelEmissionUnderElements(const std::vector<UInt32> & filterEltsIdx);
 
-    Bool addToSpectrumAmplitudeOffset(CSpectrumFluxAxis &modelfluxAxis);
-    Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
-
-
+   
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
     CMask getOutsideLinesMask();
     Float64 getOutsideLinesSTD(Int32 which, TFloat64Range lambdarange);
@@ -259,7 +249,7 @@ public:
     Float64 getCumulSNROnRange( TInt32Range idxRange );
     bool GetModelStrongEmissionLinePresent();
     bool GetModelHaStrongest();
-    Float64 getModelErrorUnderElement(UInt32 eltId);
+   
     Float64 getContinuumMeanUnderElement(UInt32 eltId);
     Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
@@ -294,13 +284,9 @@ public:
                                         Float64& f,
                                         Float64* g);
 
-
-    std::vector<std::shared_ptr<CLineModelElement> > m_Elements;
+    CElements m_Elements;
     const CSpectrum & m_inputSpc;
     CSpectrum m_SpectrumModel;  //model
-    Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
-    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd, Float64 overlapThres=0.1);
     CRayCatalog::TRayVector m_RestRayList;
     CSpectrum m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
@@ -386,7 +372,6 @@ private:
                                     const UInt32& idxLineLyaE);
     void SetLSF();
 
-    std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
     Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);
     std::vector<UInt32> getOverlappingElementsBySupport(UInt32 ind , Float64 overlapThres=0.1);
     std::vector<UInt32> ReestimateContinuumApprox(const std::vector<UInt32> & EltsIdx);
@@ -435,7 +420,7 @@ private:
 
     std::string m_calibrationPath;
     std::string m_fittingmethod;
-    std::vector<Int32> m_elementsDisabledIndexes;
+
     std::string m_rulesoption;
     std::string m_rigidity;
     bool m_forcedisableTplratioISMfit=false;
@@ -481,11 +466,6 @@ private:
     bool m_lmfit_fitEmissionVelocity;
     bool m_lmfit_fitAbsorptionVelocity;
 
-    std::vector<Float64> m_ampOffsetsX0;
-    std::vector<Float64> m_ampOffsetsX1;
-    std::vector<Float64> m_ampOffsetsX2;
-    std::vector<Int32> m_ampOffsetsIdxStart;
-    std::vector<Int32> m_ampOffsetsIdxStop;
 
     const TFloat64Range m_lambdaRange;
 };

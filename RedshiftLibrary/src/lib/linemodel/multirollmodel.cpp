@@ -122,13 +122,13 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                                              )));
         //hardcoded source size definition for each roll
         if(km==0){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==1){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==2){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==3){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }
     }
 }
@@ -771,7 +771,7 @@ std::vector<std::vector<Int32>> CMultiRollModel::GetModelVelfitGroups( Int32 lin
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->GetModelVelfitGroups(lineType);
+        return m_models[0]->m_Elements.GetModelVelfitGroups(lineType);
     }
     else
     {
@@ -816,7 +816,7 @@ void CMultiRollModel::ResetElementIndexesDisabled()
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        m_models[km]->ResetElementIndexesDisabled();
+        m_models[km]->m_Elements.ResetElementIndexesDisabled();
     }
 }
 
@@ -882,7 +882,7 @@ Int32 CMultiRollModel::GetModelNonZeroElementsNDdl()
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->GetModelNonZeroElementsNDdl();
+        return m_models[0]->m_Elements.GetModelNonZeroElementsNDdl();
     }
     else
     {

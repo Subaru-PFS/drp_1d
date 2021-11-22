@@ -155,7 +155,7 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelElementList> lm
     nddl = lmresult->LineModelSolutions[idx].nDDL; // override nddl by the actual number of elements in
     // the fitted model
     NDof =
-      lmel->GetModelNonZeroElementsNDdl();
+      lmel->m_Elements.GetModelNonZeroElementsNDdl();
 
     Float64 bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
     // Float64 aic = m + 2*nddl; //AIC
