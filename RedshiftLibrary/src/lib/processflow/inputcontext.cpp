@@ -71,10 +71,12 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //only when lsf changes notably when LSFType is fromspectrumdata
     //or the first time InitIsmIgm is called
     m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
-    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())    
+    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())
     {
         m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
-    }else{
+    }
+    else
+      {
       if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
       {
         m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());

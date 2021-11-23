@@ -119,6 +119,7 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
+#include "RedshiftLibrary/builders/basicbuilders.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -261,6 +262,9 @@ class PC
   static void get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Int32Array) get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+
 };
 
 class CRayCatalog
@@ -435,7 +439,6 @@ class COperatorResultStore
 
 };
 
-%catches(std::string, ...) CSpectrum::LoadSpectrum;
 
 class CSpectrum
 {
@@ -472,6 +475,7 @@ class CSpectrumAxis
   CSpectrumAxis( UInt32 n );
   CSpectrumAxis(const Float64* samples, UInt32 n );
   Float64* GetSamples();
+  const TAxisSampleList& GetSamplesVector() const;
   UInt32 GetSamplesCount() const;
   virtual void SetSize( UInt32 s );
 };
@@ -720,3 +724,11 @@ class CSolveDescription
 };
 
 
+  class SampleVectorBuilder
+  {
+  public:
+    SampleVectorBuilder() ;
+    const TAxisSampleList&   GetSamplesVector() const;
+    const TFloat64List&   GetFloat64List() const;
+
+  };
