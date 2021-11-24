@@ -58,16 +58,16 @@ namespace NSEpic
                             const TAsymParams params = {2., 2.5, 0.}, 
                             const std::string centeringMethod = "mean");//mainly called by asymfit
  
-            Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma) override;
-            Float64 GetLineFlux(Float64 A, const Float64 sigma) override;
-            Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, const Float64 sigma) override;
-            Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) override;
+            Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma) const override;
+            Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;
+            Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, const Float64 sigma) const override;
+            Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) const override;
             Float64 GetNSigmaSupport() const override;
 
-            Float64 GetAsymDelta() override;
-            const TAsymParams  GetAsymParams() override;
-            virtual bool    isAsymFixed() override;
-            virtual bool    isAsymFit()   override;
+            Float64 GetAsymDelta() const override;
+            const TAsymParams  GetAsymParams() const override;
+            virtual bool   isAsymFixed() const override;
+            virtual bool   isAsymFit()   const override;
 
             virtual ~CLineProfileASYM() = default;
             CLineProfileASYM(const CLineProfileASYM & other) = default; 
@@ -76,9 +76,9 @@ namespace NSEpic
             CLineProfileASYM& operator=(CLineProfileASYM&& other) = default;
         private:
             virtual CLineProfile* CloneImplementation() const override { return new CLineProfileASYM(*this);}
-            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
+            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc) const;
         protected: 
-            bool isValid();
+            bool isValid() const;
             Float64 m_asym_sigma_coeff = 1.0;//vs 2. for asymFit/Fixed
             Float64 m_asym_alpha = 4.5;
             Float64 m_asym_delta = 0.;

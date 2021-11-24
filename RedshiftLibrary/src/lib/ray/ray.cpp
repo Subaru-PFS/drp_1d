@@ -117,7 +117,7 @@ void CRay::resetAsymFitParams()
         throw GlobalException(INTERNAL_ERROR,"CRay::resetAsymParams: lineprofile is not initialized");
     m_Profile->resetAsymFitParams();
 }
-const TAsymParams CRay::GetAsymParams()
+TAsymParams CRay::GetAsymParams() const
 {
     if(!m_Profile)
         throw GlobalException(INTERNAL_ERROR,"CRay::GetAsymParams: lineprofile is not initialized");
@@ -139,7 +139,7 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-std::shared_ptr<CLineProfile> CRay::GetProfile() const
+std::shared_ptr<const CLineProfile> CRay::GetProfile() const
 {
     if(!m_Profile)
         throw GlobalException(INTERNAL_ERROR,"Current Ray does not have a set profile ");
@@ -147,7 +147,7 @@ std::shared_ptr<CLineProfile> CRay::GetProfile() const
      
 }
 
-bool CRay::SetProfile(const std::shared_ptr<CLineProfile>& profile)
+bool CRay::SetProfile(const std::shared_ptr< const CLineProfile>& profile)
 {
     m_Profile = profile->Clone();
     return true;

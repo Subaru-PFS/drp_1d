@@ -100,8 +100,8 @@ public:
     bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
-    std::shared_ptr<CLineProfile>        GetProfile() const;
-    bool                SetProfile(const std::shared_ptr<CLineProfile>& profile);
+    std::shared_ptr<const CLineProfile>        GetProfile() const;
+    bool                SetProfile(const std::shared_ptr<const CLineProfile>& profile);
 
     Float64             GetPosition() const;
     Float64             GetOffset() const;
@@ -116,7 +116,7 @@ public:
     Float64             GetPosFitError() const;
     Float64             GetSigmaFitError() const;
     Float64             GetAmpFitError() const;
-    const TAsymParams   GetAsymParams();
+    TAsymParams         GetAsymParams() const;
     void                SetAsymParams(TAsymParams asymParams);
     void                resetAsymFitParams();
 

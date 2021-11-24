@@ -72,7 +72,7 @@ public:
                TUInt32List catalogIndexes);
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta=true) const;
-    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
+    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x);// const;
     void    getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
                                             Float64& mu, Float64& sigma, 
                                             bool doAsymfitdelta=true) const;
@@ -112,7 +112,7 @@ public:
                                      Int32 kRaySupport = -1);
     Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
                                                    Float64 redshift,
-                                                   Float64 continuumFlux) const;
+                                                   Float64 continuumFlux);// const;
     Float64
     GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                       Float64 continuumFluxUnscale);
@@ -163,7 +163,7 @@ public:
     void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
-    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0);
+    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0) const;
     void resetAsymfitParams();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
   Int32 FindElementIndex(std::string LineTagStr);
@@ -179,7 +179,7 @@ public:
 
     std::vector<Int32> m_LineCatalogIndexes;
    
-    Float64 GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0,
+    Float64 GetLineProfileDerivVel(const std::shared_ptr<const CLineProfile>& profile, Float64 x, Float64 x0,
                                    Float64 sigma, bool isEmission);
 
     Float64 GetSumCross();
@@ -230,8 +230,7 @@ public:
 
   Float64 m_absLinesLimit;
 
-  TProfileList  m_profile;
-
+  std::shared_ptr<const CLineProfile> getRayProfile(Int32 rayIdx);
 
   TInt32List          m_StartNoOverlap;
   TInt32List          m_EndNoOverlap;

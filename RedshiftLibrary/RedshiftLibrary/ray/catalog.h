@@ -65,10 +65,6 @@ public:
 
     typedef std::vector<CRay> TRayVector;
 
-    CRayCatalog();
-    ~CRayCatalog();
-
-
     bool Add( const CRay& r );
     void Load( const char* filePath, Float64 nsigmasupport=8.);
     bool Save( const char* filePath );

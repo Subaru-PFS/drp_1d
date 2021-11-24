@@ -70,17 +70,17 @@ namespace NSEpic
         public:
             CLineProfile(const Float64 nsigmasupport=8.0);
             CLineProfile(const Float64 nsigmasupport=8.0, const TProfile=NONE);
-            virtual Float64 GetLineProfile(Float64 x, Float64 x0, Float64 sigma)=0;
-            virtual Float64 GetLineFlux( Float64 A, Float64 sigma)=0;
-            virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)=0;
-            virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)=0;
+            virtual Float64 GetLineProfile(Float64 x, Float64 x0, Float64 sigma) const =0;
+            virtual Float64 GetLineFlux( Float64 A, Float64 sigma)const =0;
+            virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)const=0;
+            virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)const=0;
             virtual Float64 GetNSigmaSupport() const;
 
-            const TProfile& GetName();
-            virtual const TAsymParams GetAsymParams(){return {NAN,NAN,NAN};};
-            virtual Float64 GetAsymDelta();
-            virtual bool isAsymFit();
-            virtual bool isAsymFixed();
+            const TProfile& GetName() const;
+            virtual const TAsymParams GetAsymParams()const{return {NAN,NAN,NAN};};
+            virtual Float64 GetAsymDelta() const;
+            virtual bool isAsymFit() const;
+            virtual bool isAsymFixed() const;
             virtual void SetAsymParams(TAsymParams params){};
             virtual void resetAsymFitParams();
             CLineProfile(const CLineProfile & other) = default; 
@@ -89,7 +89,7 @@ namespace NSEpic
             CLineProfile& operator=(CLineProfile&& other) = default; 
 
             virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class
-            std::shared_ptr<CLineProfile> Clone (){return std::shared_ptr<CLineProfile>(CloneImplementation());} 
+            std::shared_ptr<CLineProfile> Clone () const {return std::shared_ptr<CLineProfile>(CloneImplementation());} 
         private:
             virtual CLineProfile* CloneImplementation() const =0;
         protected:
@@ -101,7 +101,7 @@ namespace NSEpic
     typedef std::vector<CLineProfile_ptr> TProfileList;
 
     inline
-    const TProfile& CLineProfile::GetName(){
+    const TProfile& CLineProfile::GetName()const{
         return m_name;
     }
 
@@ -123,15 +123,15 @@ namespace NSEpic
         return m_nsigmasupport;
     }
     inline
-    Float64 CLineProfile::GetAsymDelta(){
+    Float64 CLineProfile::GetAsymDelta() const{
         return 0.;//default. Mainly used for asylfit/fixed
     }
     inline
-    bool CLineProfile::isAsymFit(){
+    bool CLineProfile::isAsymFit()const{
         return 0; //default to no
     }
     inline
-    bool CLineProfile::isAsymFixed(){
+    bool CLineProfile::isAsymFixed() const{
         return 0; //default to no
     }
     inline

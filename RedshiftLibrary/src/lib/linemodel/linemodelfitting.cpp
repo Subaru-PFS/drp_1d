@@ -1505,7 +1505,7 @@ bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lamb
 
 bool CLineModelFitting::setTplshapeModel(Int32 itplshape, bool enableSetVelocity)
 {
-    setLyaProfileFromTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
+    setLyaProfileFromTplShapeCatalog(itplshape);
 
     SetMultilineNominalAmplitudesFast(itplshape );
 
@@ -1668,18 +1668,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
         {
-            if(m_rigidity!="tplshape")
-            {
-                if(!m_forceDisableLyaFitting)
-                {
-                    //prepare the Lya width and asym coefficients if the asymfit profile option is met
-                    setLyaProfile(redshift, spectralAxis);
-                }
-            }else{
-
-                if(m_forcedisableTplratioISMfit)
-                {
-                    if(m_CatalogTplShape.GetIsmCoeff(ifitting)>0 && ifitting>0)
+            if(m_rigidity=="tplshape"){
+                    if(m_forcedisableTplratioISMfit && ifitting>0 && m_CatalogTplShape.GetIsmCoeff(ifitting)>0)
                     {
                         //copy the values for ebmv=ebmv_fixed (=0) here
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
@@ -1702,12 +1692,17 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         }
                         continue;
                     }
-                }
                 setTplshapeModel(ifitting, false);
                 //prepare the Lya width and asym coefficients if the asymfit profile option is met
                 //INFO: tpl-shape are often ASYMFIXED in the tplshape catalog files, for the lyaE profile, as of 2016-01-11
                 //INFO: tplshape can override the lyafitting, see m_opt_lya_forcefit
-                setLyaProfile(redshift, spectralAxis);
+                setLyaProfile(redshift, spectralAxis, true);
+            }else{
+                if(!m_forceDisableLyaFitting)//for asymFit, disable fitting
+                {
+                    //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                    setLyaProfile(redshift, spectralAxis);
+                }
             }
             //generate random amplitudes
             if(m_fittingmethod=="random")
@@ -3495,7 +3490,7 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
     const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    std::shared_ptr<CLineProfile> profile = ray.GetProfile();
+    std::shared_ptr<const CLineProfile> profile = ray.GetProfile();
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
     Float64 winsize = profile->GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
@@ -4126,11 +4121,9 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
  * SetLyaProfile should be part of CLineModelFitting, and rather takes a CLineModelFitting as argument.
  * This is mainly because no ch
 */
-bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
-                                        bool forceLyaFitting,
-                                        const Float64 nsigmasupport)
+bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog)
 {
-    if(iCatalog<0)
+        if(iCatalog<0)
         return false;
     
     linetags ltags;
@@ -4145,10 +4138,10 @@ bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog,
         if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
             continue;
 
-        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile()->Clone());
+        std::shared_ptr< const CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile()->Clone());
         
-        if(forceLyaFitting)
-            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
+        if(m_forceLyaFitting)
+            targetProfile = std::make_shared<CLineProfileASYMFIT>(m_NSigmaSupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
 
         //find line Lya in the elementList
         for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -4159,7 +4152,7 @@ bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog,
             {
                 if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
                 {
-                    m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
+                    m_Elements[iElts]->m_Rays[j].SetProfile(targetProfile);// I believe the problem comes from here: we wrote into m_Elements but then we read from m_Rest
                     break;
                 }
             }
@@ -4173,10 +4166,10 @@ bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog,
 * @brief CLineModelFitting::setLyaProfile
 * If a Lya line is present with ASYMFIT profile, fit the width and asymmetry parameters
 * If a Lya line is present with ASYMFIXED profile, set the width and asymmetry parameters according to profile parameters given in the string
-* @param redshift, spectralAxis
+* @param redshift, spectralAxis, catalog (could be tplshape or linecatalog)
 * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya not configured to be fitted in the catalog
 */
-Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis)
+Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis, bool tplshape)
 {
     Int32 verbose=0;
     if(verbose)
@@ -4193,7 +4186,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectral
     {
         return 2; //Lya alpha not found
     }
-    std::vector<UInt32> filterEltsIdxLya;
+    TUInt32List filterEltsIdxLya;
     filterEltsIdxLya.push_back(idxLyaE);
 
     //2. check if the profile has to be fitted
@@ -4204,7 +4197,13 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectral
     for(Int32 iray=0; iray<nrays; iray++)
     {
         Int32 lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[iray];
-        std::shared_ptr<CLineProfile> profile = m_RestRayList[lineIndex].GetProfile();
+        std::shared_ptr<const CLineProfile> profile;
+        if(m_RestRayList[m_Elements[idxLyaE]->m_LineCatalogIndexes[iray]].GetName() == lyaTag.c_str() &&  tplshape)
+        {//if we find the lya and we are using tplshape, read profile directly from m_Elements!
+            profile =  m_Elements[idxLyaE]->m_Rays[iray].GetProfile();//getRayProfile(iray);//
+        }else{
+            profile =  m_RestRayList[lineIndex].GetProfile();
+        }
         bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
 
         if( profile->isAsymFit() && !lineOutsideLambdaRange)
@@ -4215,7 +4214,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectral
         {
             //use the manual fixed profile parameters from catalog profile string
             asimfixedProfileFound = true;
-            m_Elements[idxLyaE]->SetAsymfitParams(m_RestRayList[lineIndex].GetAsymParams());
+            m_Elements[idxLyaE]->SetAsymfitParams(profile->GetAsymParams());
             break;
         }
     }
@@ -4227,18 +4226,20 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectral
     //FIT the profile parameters
     if(asimfitProfileFound)
     {
-        if(verbose)
-        {
-            Log.LogInfo("Fitting Lya Profile: width, asym, delta");
-        }
         //3. find the best width and asym coeff. parameters
         TAsymParams bestfitParams = FitAsymParameters(spectralAxis, redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
+        if(verbose)
+        {
+            Log.LogInfo("z:%f, idxLyaE: %d, filterEltsIdxLya:%d, idxLineLyaE: %d",redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
+            Log.LogInfo("Fitting Lya Profile: width,: %f, asym: %f, delta: %f", bestfitParams.sigma, bestfitParams.alpha, bestfitParams.delta);
+        }
         //4. set the associated Lya members in the element definition
         m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
     }
 
     return 1;
 }
+
 TAsymParams CLineModelFitting::FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
                                                     const Float64& redshift, 
                                                     const UInt32& idxLyaE,
@@ -5114,6 +5115,9 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
  */
 bool CLineModelFitting::GetModelStrongEmissionLinePresent()
 {
+    if(!m_RestRayList.size())
+        throw GlobalException(INTERNAL_ERROR, "m_RestframeList is empty");
+
     bool isStrongPresent = false;
 
     std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
@@ -5509,7 +5513,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     CLineModelSolution modelSolution;
     modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
     std::transform (m_RestRayList.begin(), m_RestRayList.end(), std::back_inserter(modelSolution.Rays), 
-                                                         [](CRay &c){return c.clone();});
+                                                         [](const CRay &c){return c.clone();});
 
     modelSolution.ElementId.resize(m_RestRayList.size());
     modelSolution.snrHa = NAN;

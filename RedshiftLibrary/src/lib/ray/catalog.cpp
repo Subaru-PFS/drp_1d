@@ -58,16 +58,6 @@ using namespace boost;
 using namespace boost::filesystem;
 
 
-CRayCatalog::CRayCatalog()
-{
-
-}
-
-CRayCatalog::~CRayCatalog()
-{
-
-}
-
 const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 {
     return m_List;
