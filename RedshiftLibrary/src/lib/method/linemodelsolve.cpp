@@ -271,10 +271,10 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
-  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum());
+  const CSpectrum& spc=*(inputContext->GetSpectrum());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
 
   PopulateParameters( inputContext->GetParameterStore() );
 

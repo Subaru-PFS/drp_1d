@@ -64,8 +64,8 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 {
 
-    const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-    const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+    const CSpectrum& spc=*(inputContext->GetSpectrum());
+    const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
 
     Bool storeResult = false;
     m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");

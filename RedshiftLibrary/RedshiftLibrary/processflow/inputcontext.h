@@ -71,7 +71,7 @@ class CInputContext
   // mutable getters
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
   std::shared_ptr<CSpectrum>  GetRebinnedSpectrum() {return m_rebinnedSpectrum;}
-  std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {return m_TemplateCatalog;}
+  std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
   std::shared_ptr<CRayCatalog>  GetRayCatalog(const std::string &objectType);
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 

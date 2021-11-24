@@ -2317,10 +2317,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                           TFloat64List& redshiftsGrid)
 {
 
-  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
+  const CSpectrum& spc=*(inputContext->GetSpectrum());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();

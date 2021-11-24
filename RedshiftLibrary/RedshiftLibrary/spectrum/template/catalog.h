@@ -62,7 +62,8 @@ public:
     void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
     void    ClearTemplates(const std::string & category,  Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates=false);
     void    ClearTemplateList(const std::string & category,  Bool opt_ortho, Bool opt_logsampling);
-
+    void    resetCatalogState(){m_logsampling=0;m_orthogonal=0;};
+    
     TTemplateConstRefList GetTemplateList( const TStringList& categoryList ) const;
     TTemplateRefList GetTemplateList( const TStringList& categoryList );
     
