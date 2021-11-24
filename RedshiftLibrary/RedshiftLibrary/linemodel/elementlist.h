@@ -79,6 +79,7 @@ class CLineModelElementList
 public:
 
     CLineModelElementList(const CSpectrum& spectrum,
+                          const TFloat64Range& range,
                           const CTemplateCatalog& tplCatalog,
                           const TStringList& tplCategoryList,
                           const std::string calibrationPath,
@@ -485,6 +486,8 @@ private:
     std::vector<Float64> m_ampOffsetsX2;
     std::vector<Int32> m_ampOffsetsIdxStart;
     std::vector<Int32> m_ampOffsetsIdxStop;
+
+    TFloat64Range m_lambdaRange;
 };
 
 }
