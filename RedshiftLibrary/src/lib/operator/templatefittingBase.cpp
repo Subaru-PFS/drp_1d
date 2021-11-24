@@ -66,7 +66,8 @@ Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog(const CSpectrum &
     return cstLog;
 }
 
-Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spectrum,
+std::shared_ptr<CModelSpectrumResult>   COperatorTemplateFittingBase::ComputeSpectrumModel( 
+                                                            const CSpectrum& spectrum,
                                                             const CTemplate& tpl,
                                                             Float64 redshift,
                                                             Float64 EbmvCoeff,
@@ -74,22 +75,20 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
                                                             Float64 amplitude,
                                                             std::string opt_interp,
                                                             const TFloat64Range& lambdaRange,
-                                                            Float64 overlapThreshold,
-                                                            std::shared_ptr<CModelSpectrumResult> & spcPtr)
+                                                            const Float64& overlapThreshold)
 {
     Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model templateFitting for candidate Zcand=%f", redshift);
-    EStatus status;
-    TFloat64Range currentRange;
+    
     Float64 overlapRate = 0.0;
-
-    Int32 ret = RebinTemplate(  spectrum, 
-                                tpl,
-                                redshift, 
-                                lambdaRange,
-                                opt_interp,
-                                currentRange,
-                                overlapRate,
-                                overlapThreshold);
+    TFloat64Range currentRange = RebinTemplate( spectrum, 
+                                                tpl,
+                                                redshift, 
+                                                lambdaRange,
+                                                opt_interp,
+                                                overlapRate,
+                                                overlapThreshold);
+    /*
+    EStatus status;
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return -1;
@@ -97,7 +96,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     if( ret == -2 ){
         status = nStatus_DataError;
         return -1;
-    }
+    }*/
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     
     if ((EbmvCoeff>0.) || (meiksinIdx>-1)){
@@ -108,8 +107,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     {
         if (m_templateRebined_bf.CalzettiInitFailed())
         {
-            Log.LogError("  Operator-TemplateFitting: asked model with Dust extinction with no calzetti calib. file loaded in template" );
-            return -1;
+            throw GlobalException(INTERNAL_ERROR,"no calzetti initialization for template");
         }
         Int32 idxEbmv = -1;
         idxEbmv = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff); 
@@ -122,8 +120,7 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     {
         if (m_templateRebined_bf.MeiksinInitFailed())
         {
-            Log.LogError("  Operator-TemplateFitting: asked model with IGM extinction with no Meikin calib. file loaded in template" );
-            return -1;
+            throw GlobalException(INTERNAL_ERROR,"no meiksin initialization for template");
         }
         m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
     } 
@@ -131,20 +128,18 @@ Int32   COperatorTemplateFittingBase::ComputeSpectrumModel( const CSpectrum& spe
     //shift the spectralaxis to sync with the spectrum lambdaAxis
     const CSpectrumFluxAxis & modelflux =  m_templateRebined_bf.GetFluxAxis();
     CSpectrumSpectralAxis modelwav = m_templateRebined_bf.GetSpectralAxis(); // needs a copy to be shifted
-    modelwav.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
-    spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelwav), modelflux));
-    return 0;
+    modelwav.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward );
+
+    return std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelwav), modelflux));
 }
 
-Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
+TFloat64Range  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
                                                     const CTemplate& tpl, 
                                                     Float64 redshift,
                                                     const TFloat64Range& lambdaRange,
                                                     std::string opt_interp,
-                                                    //return variables
-                                                    TFloat64Range& currentRange,
                                                     Float64& overlapRate,
-                                                    Float64 overlapThreshold)// const
+                                                    const Float64& overlapThreshold)
 {
     Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -174,22 +169,21 @@ Int32  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
     if( overlapRate < overlapThreshold || overlapRate<=0.0 )
     {
         //status = nStatus_NoOverlap; 
-        return -1 ;
+        throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,Formatter()<<"overlaprate of "<<overlapRate);
     }
 
     TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
     //the spectral axis should be in the same scale
-    currentRange = logIntersectedLambdaRange;
+    TFloat64Range currentRange = logIntersectedLambdaRange;
     if( m_spcSpectralAxis_restframe.IsInLinearScale() != tplSpectralAxis.IsInLinearScale() )
     {
-        Log.LogError( "    chisquare operator: data and model not in the same scale (lin/log) ! Aborting.");
         //status = nStatus_DataError;
-        return -2;
+        throw GlobalException(INTERNAL_ERROR,"data and model not in the same scale (lin/log)");
     }
     if(m_spcSpectralAxis_restframe.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
-    return 0;
+    return std::move(currentRange);
 }
 
 //get z at which igm starts given that LyA starts at lbda_rest=1216

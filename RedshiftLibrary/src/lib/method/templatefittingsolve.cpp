@@ -493,14 +493,16 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         Bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
-        std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
-                                                        z,
-                                                        TplFitResult->FitEbmvCoeff[idx],
-                                                        TplFitResult->FitMeiksinIdx[idx],
-                                                        TplFitResult->FitAmplitude[idx],
-                                                        opt_interp, lambdaRange, 
-                                                        overlapThreshold, spcmodelPtr);
+        std::shared_ptr<CModelSpectrumResult> spcmodelPtr = 
+                            m_templateFittingOperator->ComputeSpectrumModel(spc, *tpl, 
+                                                                            z,
+                                                                            TplFitResult->FitEbmvCoeff[idx],
+                                                                            TplFitResult->FitMeiksinIdx[idx],
+                                                                            TplFitResult->FitAmplitude[idx],
+                                                                            opt_interp, lambdaRange, overlapThreshold);
+        
+        if(spcmodelPtr==nullptr)
+            throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 

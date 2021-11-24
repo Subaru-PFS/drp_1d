@@ -150,16 +150,13 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         return ;
     }
 
-    TFloat64Range currentRange;
-
-    Int32 ret = RebinTemplate(  spectrum, 
-                                tpl,
-                                redshift, 
-                                lambdaRange,
-                                opt_interp, 
-                                currentRange,
-                                overlapRate,
-                                overlapThreshold);
+    TFloat64Range currentRange = RebinTemplate( spectrum, 
+                                                tpl,
+                                                redshift, 
+                                                lambdaRange,
+                                                opt_interp,
+                                                overlapRate,
+                                                overlapThreshold);
     
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
@@ -174,7 +171,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
     if (opt_extinction)
         kIgmEnd = m_templateRebined_bf.GetIgmEndIndex();
-        
+    /*    
     if( ret == -1 ){
         status = nStatus_NoOverlap; 
         return;
@@ -183,7 +180,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         status = nStatus_DataError;
         return;
     }
-
+    */
     Int32 EbmvListSize = ChiSquareInterm.size();
     Int32 MeiksinListSize = ChiSquareInterm[0].size();
 
@@ -369,9 +366,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                     Float64 bss2 = logpriore[kEbmv].betaA/(logpriore[kEbmv].A_sigma*logpriore[kEbmv].A_sigma);
                     ampl = (sumCross+logpriore[kEbmv].A_mean*bss2)/(sumT+bss2);
                     ampl_err = sqrt(sumT)/(sumT+bss2); 
-                    /*
-                    Log.LogInfo("  Operator-TemplateFitting: Constrained amplitude (betaA=%e):  s2b=%e, mtm=%e", logpriore[kEbmv].betaA, s2b, sumT);
-                    //*/
                 }
 
                 if(forcedAmplitude !=-1){
@@ -390,7 +384,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 fit = sumS + sumT*ampl*ampl - 2.*ampl*sumCross;
             }
 
-            //*
             if(verbose)
             {
                 Log.LogDebug("");
@@ -403,7 +396,6 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
                 Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
 
             }
-            //*/
 
             Float64 logprior = 0.;
             if (apply_priore)

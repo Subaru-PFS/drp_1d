@@ -78,7 +78,8 @@ public:
                                              Int32 FitMeiksinIdx=-1);
 
     Float64 ComputeDtD(const CSpectrumFluxAxis& spcFluxAxis, const TInt32Range& range); //could be also made static
-    Int32   ComputeSpectrumModel(   const CSpectrum& spectrum,
+    std::shared_ptr<CModelSpectrumResult>   ComputeSpectrumModel(   
+                                    const CSpectrum& spectrum,
                                     const TTemplateConstRefList& tplList,
                                     Float64 redshift,
                                     Float64 EbmvCoeff,
@@ -86,8 +87,7 @@ public:
                                     const TFloat64List& amplitudes,
                                     std::string opt_interp,
                                     const TFloat64Range& lambdaRange,
-                                    Float64 overlapThreshold,
-                                    std::shared_ptr<CModelSpectrumResult> & spcPtr);
+                                    const Float64& overlapThreshold);
 private:
 
     struct STplcombination_basicfitresult
@@ -125,20 +125,18 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   const TInt32List& MeiksinList=TInt32List(-1),
                   const TInt32List& EbmvList=TInt32List(-1));
-    Int32 RebinTemplate(const CSpectrum& spectrum,
+    TFloat64Range RebinTemplate(const CSpectrum& spectrum,
                         const TTemplateConstRefList& tplList,
                         Float64 redshift,
                         const TFloat64Range& lambdaRange,
                         std::string opt_interp,
-                        TFloat64Range& currentRange,
                         Float64& overlapRate,
-                        Float64 overlapThreshold);
+                        const Float64& overlapThreshold);
     // buffers for the interpolated axis (templates & spectrum)
-    std::vector<CTemplate>   m_templatesRebined_bf; //vector of buffer
-    std::vector<CMask>       m_masksRebined_bf; //vector of buffer
-    CSpectrumSpectralAxis    m_spcSpectralAxis_restframe; //buffer
+    std::vector<CTemplate>   m_templatesRebined_bf;
+    std::vector<CMask>       m_masksRebined_bf;
+    CSpectrumSpectralAxis    m_spcSpectralAxis_restframe;
 
-    //Likelihood
     Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 
     Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis& correctedFlux, 

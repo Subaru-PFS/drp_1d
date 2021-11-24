@@ -124,15 +124,13 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: spcMaskAdditional does not have the same size as the spectrum flux vector... ("<< spcMaskAdditional.GetMasksCount() <<" vs "<< spcFluxAxis.GetSamplesCount() <<"), aborting");       
     }
 
-    TFloat64Range currentRange;   
-    Int32 ret = RebinTemplate(spectrum, 
-                              tplList, 
-                              redshift, 
-                              lambdaRange, 
-                              opt_interp,
-                              currentRange,
-                              fittingResults.overlapRate,
-                              overlapThreshold); 
+    TFloat64Range currentRange = RebinTemplate( spectrum, 
+                                                tplList, 
+                                                redshift, 
+                                                lambdaRange, 
+                                                opt_interp,
+                                                fittingResults.overlapRate,
+                                                overlapThreshold); 
     
     Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
     //I consider here that all templates share the same spectralAxis
@@ -148,16 +146,6 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
     }
     if(opt_extinction)
         kIgmEnd = m_templatesRebined_bf[0].GetIgmEndIndex();
-
-
-    if( ret == -1 ){
-        fittingResults.status = COperator::nStatus_NoOverlap; 
-        return;
-    }
-    /*if( ret == -2 ){//this is not coded
-        fittingResults.status = COperator::nStatus_DataError;
-        return;
-    }*/
 
     //determine min and max value of ebmv coeff
     Int32 nISM = EbmvList.size(); 
@@ -439,14 +427,13 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(const CSpectrumFluxAxis& 
     return chi2Value;
 }
 
-Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
+TFloat64Range  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
                                                 const TTemplateConstRefList& tplList,
                                                 Float64 redshift,
                                                 const TFloat64Range& lambdaRange,
                                                 std::string opt_interp,
-                                                TFloat64Range& currentRange,
                                                 Float64& overlapRate,
-                                                Float64 overlapThreshold)
+                                                const Float64& overlapThreshold)
 {
     Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -495,11 +482,11 @@ Int32  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
         // Check for overlap rate
         if( overlapRate < overlapThreshold || overlapRate<=0.0 )
         {
-            return  -1;
+           throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,Formatter()<<"overlaprate of "<<overlapRate);
         }
     }
-    currentRange = intersectedAllLambdaRange; 
-    return 0;
+
+    return std::move(intersectedAllLambdaRange);
 }
 
 /**
@@ -748,7 +735,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
 
 }
 
-Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum,
+std::shared_ptr<CModelSpectrumResult>   COperatorTplcombination::ComputeSpectrumModel( 
+                                                        const CSpectrum& spectrum,
                                                         const TTemplateConstRefList& tplList,
                                                         Float64 redshift,
                                                         Float64 EbmvCoeff,
@@ -756,8 +744,7 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
                                                         const TFloat64List& amplitudes,
                                                         std::string opt_interp,
                                                         const TFloat64Range& lambdaRange,
-                                                        Float64 overlapThreshold,
-                                                        std::shared_ptr<CModelSpectrumResult> & spcPtr)
+                                                        const Float64& overlapThreshold)
 {
     Log.LogDetail("  Operator-COperatorTplCombination: building spectrum model tptCombination for candidate Zcand=%f", redshift);
     
@@ -766,23 +753,21 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
 
     //Estatus status; 
     Float64 overlapRate = 0.0;
-    TFloat64Range currentRange;   
-    Int32 ret = RebinTemplate(spectrum, 
-                              tplList, 
-                              redshift, 
-                              lambdaRange, 
-                              opt_interp,
-                              currentRange,
-                              overlapRate,
-                              overlapThreshold); 
-    if( ret == -1 ){
+    TFloat64Range currentRange = RebinTemplate( spectrum, 
+                                                tplList, 
+                                                redshift, 
+                                                lambdaRange, 
+                                                opt_interp,
+                                                overlapRate,
+                                                overlapThreshold); 
+    /*if( ret == -1 ){
         //status = nStatus_NoOverlap; 
         return -1;
     }
     if( ret == -2 ){
         //status = nStatus_DataError;
         return -1;
-    }
+    }*/
     Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
 
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart, kEnd);
@@ -826,12 +811,11 @@ Int32   COperatorTplcombination::ComputeSpectrumModel( const CSpectrum& spectrum
         }
     }
     modelSpcAxis.ShiftByWaveLength((1.0+redshift), CSpectrumSpectralAxis::nShiftForward ) ;
-    spcPtr = std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)));
 
     // Deallocate the rebined template and mask buffers
     m_templatesRebined_bf.clear();
     m_masksRebined_bf.clear();   
-    return 0;
+    return std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelSpcAxis), std::move(modelFlux)));
 }
 
 /**

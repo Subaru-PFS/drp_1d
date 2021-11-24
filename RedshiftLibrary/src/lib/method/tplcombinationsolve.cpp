@@ -445,15 +445,16 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         //make sure tpl is non-rebinned
         Bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
-        std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
+        std::shared_ptr<CModelSpectrumResult> spcmodelPtr = m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
                                                         z,
                                                         TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],
                                                         TplFitResult->FitAmplitude[idx],
                                                         opt_interp, lambdaRange, 
-                                                        overlapThreshold, spcmodelPtr);
-        tplCatalog.m_logsampling = currentSampling;                                                
+                                                        overlapThreshold);
+        tplCatalog.m_logsampling = currentSampling;            
+        if(spcmodelPtr==nullptr)
+            throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");                                    
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);   
     }
 

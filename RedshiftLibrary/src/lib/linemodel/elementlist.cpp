@@ -1051,17 +1051,18 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
 
-    std::shared_ptr<CModelSpectrumResult> spcmodel; 
     std::string inter_opt = "spline";
     Float64 overlapThreshold = 1., amplitude = 1.; 
-    m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
+    std::shared_ptr<CModelSpectrumResult> spcmodel = m_templateFittingOperator.ComputeSpectrumModel(
+                                                 m_SpectrumModel, tpl, 
                                                  zcontinuum,
                                                  m_fitContinuum_tplFitEbmvCoeff, 
                                                  m_fitContinuum_tplFitMeiksinIdx, 
                                                  amplitude,
                                                  inter_opt, m_lambdaRange, 
-                                                 overlapThreshold, spcmodel);
-
+                                                 overlapThreshold);
+    if(spcmodel==nullptr)
+        throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
     m_observeGridContinuumFlux = (*spcmodel).ModelFlux;
 
