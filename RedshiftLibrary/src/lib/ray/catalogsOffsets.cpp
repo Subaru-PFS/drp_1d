@@ -211,7 +211,7 @@ Bool CLineCatalogsOffsets::LoadCatalog( const char* filePath )
     return true;
 }
 
-Bool CLineCatalogsOffsets::SetLinesOffsets(CElements &LineModelElementList, Int32 index)
+Bool CLineCatalogsOffsets::SetLinesOffsets(CLineModelElementList &LineModelElementList, Int32 index)
 {
     Int32 nLines = m_OffsetsCatalog[index].Offsets.size();
     if(index>=nLines)
@@ -260,7 +260,7 @@ Bool CLineCatalogsOffsets::SetLinesOffsets(CElements &LineModelElementList, Int3
     return true;
 }
 
-Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CElements& LineModelElementList, std::string spectrumName)
+Bool CLineCatalogsOffsets::SetLinesOffsetsAutoSelectStack(CLineModelElementList& LineModelElementList, std::string spectrumName)
 {
     Int32 offsetCtlgIndex = AutoSelectStackFromReferenceFile(spectrumName);
     if(offsetCtlgIndex>=0)

@@ -52,7 +52,7 @@
 
 namespace NSEpic
 {
-    class CElements;
+    class CLineModelElementList;
 
 /**
  * \ingroup Redshift
@@ -82,7 +82,7 @@ public:
     Float64 GetIsmCoeff(Int32 idx);
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
-    Bool InitLineCorrespondingAmplitudes(const CElements &LineModelElementList);
+    Bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
     const CRayCatalog& GetCatalog(Int32 icatlog);
     const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance(){return m_RayCatalogLinesCorrespondingNominalAmp;};
 private:

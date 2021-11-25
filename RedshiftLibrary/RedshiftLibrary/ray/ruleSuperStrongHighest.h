@@ -55,17 +55,17 @@ class CRuleSuperStrong : public CRule
   public:
     CRuleSuperStrong();
     ~CRuleSuperStrong();
-    Bool Check(CElements &LineModelElementList);
+    Bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(Bool EnabledArgument, ...);
 
   private:
     Int32 m_LineType = 0;
     TStringList m_SuperStrongTags;
-    void Correct(CElements &LineModelElementList);
+    void Correct(CLineModelElementList &LineModelElementList);
     Float64
     FindHighestSuperStrongLineAmp(TStringList superstrongTags, Float64 &er,
                                   std::string &name,
-                                  CElements &LineModelElementList);
+                                  CLineModelElementList &LineModelElementList);
 };
 } // namespace NSEpic
 

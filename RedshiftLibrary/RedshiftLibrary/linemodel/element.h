@@ -70,7 +70,6 @@ public:
                TFloat64List nominalAmplitudes, 
                Float64 nominalWidth, 
                TUInt32List catalogIndexes);
-    ~CLineModelElement();
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) const;
     Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;

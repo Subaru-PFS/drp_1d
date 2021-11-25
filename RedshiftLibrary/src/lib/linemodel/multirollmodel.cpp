@@ -104,8 +104,8 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
     for(Int32 km=0; km<nModels; km++)
     {
         Float64 lines_nsigmasupport = 6.0;
-        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
-                                                                                             range,
+        m_models.push_back(std::shared_ptr<CLineModelFitting> (new CLineModelFitting(*spcRolls[km],
+											range,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,

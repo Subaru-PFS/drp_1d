@@ -183,7 +183,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
+    m_model = std::shared_ptr<CLineModelFitting>(new CLineModelFitting(
                                                          spectrum,
                                                          clampedlambdaRange,
                                                          tplCatalog,
@@ -2351,7 +2351,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-  m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
+  m_model = std::shared_ptr<CLineModelFitting>(new CLineModelFitting(spc,
                                                                              clampedlambdaRange,
                                                                              tplCatalog,
                                                                              tplCategoryList,

@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
@@ -404,7 +404,7 @@ public:
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
-    std::shared_ptr<CLineModelElementList> m_model;
+    std::shared_ptr<CLineModelFitting> m_model;
     TFloat64List m_sortedRedshifts;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;

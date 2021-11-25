@@ -44,7 +44,7 @@
 
 namespace NSEpic
 {
-class CElements;
+class CLineModelElementList;
 
   /**
    * \ingroup Redshift
@@ -58,12 +58,12 @@ class CElements;
     
     CRule ( );
     virtual ~CRule();
-    void Apply( CElements& LineModelElementList );
-    virtual Bool Check( CElements& LineModelElementList ) = 0;
+    void Apply( CLineModelElementList& LineModelElementList );
+    virtual Bool Check( CLineModelElementList& LineModelElementList ) = 0;
     virtual void SetUp( Bool EnabledArgument, ... ) = 0;
     std::string GetLogs();
   private:
-    virtual void Correct( CElements& LineModelElementList ) = 0;
+    virtual void Correct( CLineModelElementList& LineModelElementList ) = 0;
   protected:
     // Library of common methods:
     std::string Logs;

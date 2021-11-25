@@ -73,7 +73,7 @@ void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
   va_end(Arguments);
 }
 
-Bool CRuleRatioRange::Check( CElements& LineModelElementList )
+Bool CRuleRatioRange::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }
@@ -81,7 +81,7 @@ Bool CRuleRatioRange::Check( CElements& LineModelElementList )
 /**
  * For two distinct lines, if neither IsOutsideLambdaRange, and their amplitudes are beyond a range (considering coeff), SetFittedAmplitude of each with corrected values.
  **/
-void CRuleRatioRange::Correct( CElements& LineModelElementList )
+void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
 {
     Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType);
     if( iA==-1 )

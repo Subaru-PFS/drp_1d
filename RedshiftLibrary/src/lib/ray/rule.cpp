@@ -60,7 +60,7 @@ CRule::~CRule ( )
 /**
  * Checks the elements and corrects if necessary.
  **/
-void CRule::Apply( CElements& LineModelElementList )
+void CRule::Apply( CLineModelElementList& LineModelElementList )
 {
   if ( ! Enabled )
     {

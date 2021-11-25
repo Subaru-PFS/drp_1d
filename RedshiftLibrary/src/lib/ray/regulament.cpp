@@ -46,7 +46,6 @@
 
 // To be removed once JSON code is in <--
 #include "RedshiftLibrary/ray/rule2singlelinesamplitude.h"
-#include "RedshiftLibrary/ray/ruleBalmerLinearSolver.h"
 #include "RedshiftLibrary/ray/ruleOIIRatioRange.h"
 #include "RedshiftLibrary/ray/ruleStrongHigherThanWeak.h"
 #include "RedshiftLibrary/ray/ruleSuperStrongHighest.h"
@@ -62,7 +61,7 @@ CRegulament::CRegulament()
 CRegulament::~CRegulament()
 {
 }
-void CRegulament::Apply( CElements& LineModelElementList )
+void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
   for(unique_ptr<CRule>& rule: m_RulesVector)
   {

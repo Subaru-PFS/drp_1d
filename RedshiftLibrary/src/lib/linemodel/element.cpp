@@ -118,12 +118,6 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
     SetFittedAmplitude(-1.0, -1.0);
 }
 
-/**
- * \brief Empty destructor.
- **/
-CLineModelElement::~CLineModelElement()
-{
-}
 
 std::string CLineModelElement::GetElementTypeTag()
 {
@@ -211,7 +205,7 @@ Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>&
     return 0.0;
 }
 //TODO: check if below can be removed
-//this is called from CLineModelElementList: thus the call should be redirected to the new lsf class
+//this is called from CLineModelFitting: thus the call should be redirected to the new lsf class
 void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
 {
     //m_SourceSizeDispersion = sigma;

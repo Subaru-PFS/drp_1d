@@ -79,7 +79,7 @@ void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
 /**
  * \brief Correct both lines depending on their sigmas.
  **/
-void CRule2SingleLinesAmplitude::Correct( CElements& LineModelElementList )
+void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElementList )
 {
     Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType );
   if( iA==-1 )
@@ -180,7 +180,7 @@ void CRule2SingleLinesAmplitude::Correct( CElements& LineModelElementList )
   }
 }
 
-Bool CRule2SingleLinesAmplitude::Check( CElements& LineModelElementList )
+Bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

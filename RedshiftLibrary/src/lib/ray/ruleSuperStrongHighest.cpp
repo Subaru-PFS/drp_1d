@@ -78,7 +78,7 @@ void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
  *  Get the parameters for the entry
  *  Limit the amplitude of the entry to the maximum amplitude for super strong lines
  **/
-void CRuleSuperStrong::Correct( CElements& LineModelElementList )
+void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
 {
   Float64 coeff = 1.0;
   Float64 erStrong=-1.0;
@@ -161,7 +161,7 @@ void CRuleSuperStrong::Correct( CElements& LineModelElementList )
     }
 }
 
-Bool CRuleSuperStrong::Check( CElements& LineModelElementList )
+Bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }
@@ -169,7 +169,7 @@ Bool CRuleSuperStrong::Check( CElements& LineModelElementList )
 /**
  * \brief Returns the maximum amplitude between strong lines within the support of m_Elements. The referenced er argument will hold the error sigma for the same element.
  **/
-Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CElements& LineModelElementList )
+Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CLineModelElementList& LineModelElementList )
 {
   Float64 maxi = -1.0;
   for( UInt32 iRestRayStrong=0; iRestRayStrong<LineModelElementList.m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
