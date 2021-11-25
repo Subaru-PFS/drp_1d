@@ -123,11 +123,22 @@ def _cfitsio_build(path, prefix, options, extra_flags=''):
 
 def _openblas_build(path, prefix, options, extra_flags=''):
     os.system("cd {path} ;"
-              "make -j{parallel} ; make install PREFIX={prefix}".format(
+              "make -j{parallel} {extra_flags}; make install PREFIX={prefix} {extra_flags}".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
                   extra_flags=extra_flags))
 
+def _openblas_extra_flags():
+    _os = platform(terse=True).lower()
+    print("Working on platform : {}".format(_os))
+    if 'macos' in _os or _os.startswith('darwin'):
+        extflg = ""
+    elif _os == 'windows':
+        extflg = ""
+    else:
+        print("Set default CPU architeture to CORE2")
+        extflg = "TARGET=CORE2"
+    return extflg
 
 libDict = {
     "boost": {
@@ -166,7 +177,7 @@ libDict = {
         "v0.3.7.tar.gz",
         "check_file": "libopenblas",
         "build": _openblas_build,
-        "extra_flags": ''
+        "extra_flags": _openblas_extra_flags()
     }
 
 }
@@ -198,6 +209,9 @@ def Main(argv):
                         dest="shared", default=False)
     parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
                         nargs='*', help="Modules to build.")
+    parser.add_argument('--extra_flags', default="",
+                        help="Extra flags for building stage.")
+
     args = parser.parse_args()
 
     print("Starting thirparties build...")
@@ -206,7 +220,8 @@ def Main(argv):
         libPath = os.path.join(build_dir, libDict[module]["path"])
         libSrc = libDict[module]["src"]
         build_method = libDict[module]['build']
-        extra_flags = libDict[module]['extra_flags']
+        extra_flags = libDict[module]['extra_flags'] + " {extra_flags}".format(extra_flags=args.extra_flags)
+        print("Extra flags : {extra_flags}".format(extra_flags=extra_flags))
         if not _check_lib(module, args.prefix, args):
             DownloadHTTPFile(libSrc, libPath + ".tar.gz")
             ExtractTarGZ(libPath + ".tar.gz", libPath)
