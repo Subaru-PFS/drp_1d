@@ -163,7 +163,9 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
     ClearTemplates(category, m_orthogonal, m_logsampling, i);
 
     // assign new template
-    GetList().at(category)[i] = tpl;
+    if( !GetTemplateCount(category)) Add(tpl);
+    else
+        GetList().at(category)[i] = tpl;
 }
 
 // clear all templates in a category
