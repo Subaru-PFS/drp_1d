@@ -176,15 +176,16 @@ void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_
 void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
 {
     TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
-    if( tplList.find( category ) != tplList.end()) return;
-    
-    if (alltemplates)
+    if( tplList.find( category ) == tplList.end()) return;
+
+    if (alltemplates){
         tplList.at(category).clear(); //clear the list
 
         if (opt_ortho){ // reset LSFWidth if the 2 ortho list are empty
             auto & otherOrthoList = GetList(opt_ortho, !opt_logsampling);
             if (otherOrthoList.find(category) == otherOrthoList.end())
-                m_ortho_LSFWidth = NAN;         
+                m_ortho_LSFWidth = NAN;  
+        }       
     } 
     else {
         tplList.at(category)[i] = nullptr; // clear one element in the list
