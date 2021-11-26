@@ -517,6 +517,7 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
 BOOST_AUTO_TEST_CASE(ExtractTest)
 {
+    CSpectrumAxis axis({1.,2.,3.,4.,5.});
     CSpectrumSpectralAxis spcAxis({1.,2.,3.,4.,5.});
     CSpectrumNoiseAxis noiseAxis({-1.,-2.,-3.,-4.,-5.});
     CSpectrumFluxAxis fluxAxis(CSpectrumAxis({2.,4.,6.,8.,10.}), noiseAxis);
@@ -524,10 +525,30 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
 
     Int32 istart = 1;
     Int32 iend = 3;
-    CSpectrum extractedSpc = spc.extractFrom(istart,iend);
-
-    //read results 
     Int32 s = iend-istart+1;
+
+    TFloat64List correctSpcAxis{2.,3.,4.};
+    TFloat64List correctFluxAxis{4.,6.,8};
+    TFloat64List correctNoiseAxis{-2.,-3.,-4.};
+
+    ///////////////////////////
+    CSpectrumAxis axis_extract = axis.extract(istart,iend);
+    CSpectrumSpectralAxis spcAxis_extract = spcAxis.extract(istart,iend);
+    CSpectrumNoiseAxis noiseAxis_extract = noiseAxis.extract(istart,iend);
+    CSpectrumFluxAxis  fluxAxis_extract = fluxAxis.extract(istart,iend);
+
+    TFloat64List extractedAxis1 = axis_extract.GetSamplesVector();
+    TFloat64List extractedSpcAxis1 = spcAxis_extract.GetSamplesVector();
+    TFloat64List extractedFluxAxis1 = fluxAxis_extract.GetSamplesVector();
+    TFloat64List extractedNoiseAxis1 = noiseAxis_extract.GetSamplesVector();
+    
+    BOOST_CHECK(extractedAxis1.size() == s); 
+    BOOST_CHECK(extractedSpcAxis1.size() == s); 
+    BOOST_CHECK(extractedFluxAxis1.size() == s); 
+    BOOST_CHECK(extractedNoiseAxis1.size() == s); 
+    ////////////////////////////
+    //read results 
+    CSpectrum extractedSpc = spc.extract(istart,iend);
     TFloat64List extractedSpcAxis = extractedSpc.GetSpectralAxis().GetSamplesVector();
     TFloat64List extractedFluxAxis = extractedSpc.GetFluxAxis().GetSamplesVector();
     TFloat64List extractedNoiseAxis = extractedSpc.GetFluxAxis().GetError().GetSamplesVector();
@@ -538,9 +559,7 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
     BOOST_CHECK(extractedFluxAxis.size() == s); 
     BOOST_CHECK(extractedNoiseAxis.size() == s); 
 
-    TFloat64List correctSpcAxis{2.,3.,4.};
-    TFloat64List correctFluxAxis{4.,6.,8};
-    TFloat64List correctNoiseAxis{-2.,-3.,-4.};
+
     BOOST_CHECK_EQUAL_COLLECTIONS(extractedSpcAxis.begin(), extractedSpcAxis.end(), correctSpcAxis.begin(), correctSpcAxis.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(extractedFluxAxis.begin(), extractedFluxAxis.end(), correctFluxAxis.begin(), correctFluxAxis.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(extractedNoiseAxis.begin(), extractedNoiseAxis.end(), correctNoiseAxis.begin(), correctNoiseAxis.end());

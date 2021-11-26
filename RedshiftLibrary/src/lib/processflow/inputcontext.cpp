@@ -143,7 +143,7 @@ void CInputContext::RebinInputs()
         bool ret = m_lambdaRange.getClosedIntervalIndices(spcWav.GetSamplesVector(), kstart, kend);
         if(!ret) throw GlobalException(INTERNAL_ERROR, "LambdaRange borders are outside the spectralAxis range");
         //save into the rebinnedSpectrum
-        m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav.extractFrom(kstart,kend)), m_Spectrum->GetFluxAxis().extractFrom(kstart,kend));
+        m_rebinnedSpectrum->SetSpectralAndFluxAxes(spcWav.extract(kstart,kend), m_Spectrum->GetFluxAxis().extract(kstart,kend));
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {

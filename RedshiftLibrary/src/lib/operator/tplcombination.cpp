@@ -124,13 +124,15 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: spcMaskAdditional does not have the same size as the spectrum flux vector... ("<< spcMaskAdditional.GetMasksCount() <<" vs "<< spcFluxAxis.GetSamplesCount() <<"), aborting");       
     }
 
-    TFloat64Range currentRange = RebinTemplate( spectrum, 
-                                                tplList, 
-                                                redshift, 
-                                                lambdaRange, 
-                                                opt_interp,
-                                                fittingResults.overlapRate,
-                                                overlapThreshold); 
+    TFloat64Range currentRange;
+    RebinTemplate( spectrum, 
+                    tplList, 
+                    redshift, 
+                    lambdaRange, 
+                    opt_interp,
+                    currentRange,
+                    fittingResults.overlapRate,
+                    overlapThreshold); 
     
     Int32 kStart = -1, kEnd = -1, kIgmEnd = -1;
     //I consider here that all templates share the same spectralAxis
@@ -427,13 +429,14 @@ Float64 COperatorTplcombination::ComputeXi2_bruteForce(const CSpectrumFluxAxis& 
     return chi2Value;
 }
 
-TFloat64Range  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
+void  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum,
                                                 const TTemplateConstRefList& tplList,
                                                 Float64 redshift,
                                                 const TFloat64Range& lambdaRange,
                                                 std::string opt_interp,
+                                                TFloat64Range& currentRange,
                                                 Float64& overlapRate,
-                                                const Float64& overlapThreshold)
+                                                const Float64 overlapThreshold)
 {
     Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -485,8 +488,8 @@ TFloat64Range  COperatorTplcombination::RebinTemplate( const CSpectrum& spectrum
            throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,Formatter()<<"overlaprate of "<<overlapRate);
         }
     }
-
-    return std::move(intersectedAllLambdaRange);
+    currentRange = intersectedAllLambdaRange;
+    return;
 }
 
 /**
@@ -744,7 +747,7 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTplcombination::ComputeSpectrum
                                                         const TFloat64List& amplitudes,
                                                         std::string opt_interp,
                                                         const TFloat64Range& lambdaRange,
-                                                        const Float64& overlapThreshold)
+                                                        const Float64 overlapThreshold)
 {
     Log.LogDetail("  Operator-COperatorTplCombination: building spectrum model tptCombination for candidate Zcand=%f", redshift);
     
@@ -753,13 +756,15 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTplcombination::ComputeSpectrum
 
     //Estatus status; 
     Float64 overlapRate = 0.0;
-    TFloat64Range currentRange = RebinTemplate( spectrum, 
-                                                tplList, 
-                                                redshift, 
-                                                lambdaRange, 
-                                                opt_interp,
-                                                overlapRate,
-                                                overlapThreshold); 
+    TFloat64Range currentRange; 
+    RebinTemplate( spectrum, 
+                    tplList, 
+                    redshift, 
+                    lambdaRange, 
+                    opt_interp,
+                    currentRange,
+                    overlapRate,
+                    overlapThreshold); 
     /*if( ret == -1 ){
         //status = nStatus_NoOverlap; 
         return -1;

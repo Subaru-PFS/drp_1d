@@ -75,28 +75,21 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTemplateFittingBase::ComputeSpe
                                                             Float64 amplitude,
                                                             std::string opt_interp,
                                                             const TFloat64Range& lambdaRange,
-                                                            const Float64& overlapThreshold)
+                                                            const Float64 overlapThreshold)
 {
     Log.LogDetail("  Operator-COperatorTemplateFitting: building spectrum model templateFitting for candidate Zcand=%f", redshift);
     
     Float64 overlapRate = 0.0;
-    TFloat64Range currentRange = RebinTemplate( spectrum, 
-                                                tpl,
-                                                redshift, 
-                                                lambdaRange,
-                                                opt_interp,
-                                                overlapRate,
-                                                overlapThreshold);
-    /*
-    EStatus status;
-    if( ret == -1 ){
-        status = nStatus_NoOverlap; 
-        return -1;
-    }
-    if( ret == -2 ){
-        status = nStatus_DataError;
-        return -1;
-    }*/
+    TFloat64Range currentRange;
+    RebinTemplate(  spectrum, 
+                    tpl,
+                    redshift, 
+                    lambdaRange,
+                    opt_interp,
+                    currentRange,
+                    overlapRate,
+                    overlapThreshold);
+
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     
     if ((EbmvCoeff>0.) || (meiksinIdx>-1)){
@@ -133,13 +126,14 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTemplateFittingBase::ComputeSpe
     return std::make_shared<CModelSpectrumResult>(CSpectrum(std::move(modelwav), modelflux));
 }
 
-TFloat64Range  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
+void  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spectrum,
                                                     const CTemplate& tpl, 
                                                     Float64 redshift,
                                                     const TFloat64Range& lambdaRange,
                                                     std::string opt_interp,
+                                                    TFloat64Range& currentRange,
                                                     Float64& overlapRate,
-                                                    const Float64& overlapThreshold)
+                                                    const Float64 overlapThreshold)
 {
     Float64 onePlusRedshift = 1.0 + redshift;
 
@@ -174,7 +168,7 @@ TFloat64Range  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spe
 
     TFloat64Range logIntersectedLambdaRange( log( intersectedLambdaRange.GetBegin() ), log( intersectedLambdaRange.GetEnd() ) );
     //the spectral axis should be in the same scale
-    TFloat64Range currentRange = logIntersectedLambdaRange;
+    currentRange = logIntersectedLambdaRange;
     if( m_spcSpectralAxis_restframe.IsInLinearScale() != tplSpectralAxis.IsInLinearScale() )
     {
         //status = nStatus_DataError;
@@ -183,7 +177,7 @@ TFloat64Range  COperatorTemplateFittingBase::RebinTemplate( const CSpectrum& spe
     if(m_spcSpectralAxis_restframe.IsInLinearScale()){
         currentRange = intersectedLambdaRange;
     }
-    return std::move(currentRange);
+    return;
 }
 
 //get z at which igm starts given that LyA starts at lbda_rest=1216

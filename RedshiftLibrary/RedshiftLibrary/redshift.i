@@ -579,7 +579,9 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 };
   typedef enum ErrorCode
     {
-      INVALID_SPECTRA_FLUX=	0,
+      INTERNAL_ERROR=0,
+      EXTERNAL_LIB_ERROR,
+      INVALID_SPECTRA_FLUX,
       INVALID_NOISE	,
       SMALL_WAVELENGTH_RANGE ,
       NEGATIVE_CONTINUUMFIT	,
@@ -590,7 +592,12 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       UNKNOWN_PARAMETER  ,
       BAD_PARAMETER_VALUE,
       UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG
+      BAD_LINECATALOG,
+      BAD_LOGSAMPLEDSPECTRUM,
+      BAD_COUNTMATCH,
+      BAD_TEMPLATECATALOG,
+      INVALID_SPECTRUM,
+      OVERLAPRATE_NOTACCEPTABLE
     } ErrorCode;
 
 typedef struct{

@@ -76,7 +76,8 @@ public:
     CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale=false, std::string AirVacuum="" );
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="");
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
-
+    CSpectrumSpectralAxis   extract(Int32 startIdx, Int32 endIdx) const;
+    
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
     Float64             GetMeanResolution() const;
 
@@ -108,7 +109,7 @@ public:
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const;
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const;
     UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
-    
+
 private:
 
     mutable UInt32      m_SpectralFlags = 0;
@@ -116,7 +117,11 @@ private:
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
 
 };
-
+inline
+CSpectrumSpectralAxis CSpectrumSpectralAxis::extract(Int32 startIdx, Int32 endIdx) const
+{
+    return CSpectrumSpectralAxis(CSpectrumAxis::extract(startIdx, endIdx).GetSamplesVector());
+}
 }
 
 #endif

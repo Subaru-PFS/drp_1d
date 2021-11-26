@@ -487,7 +487,7 @@ private:
     std::vector<Int32> m_ampOffsetsIdxStart;
     std::vector<Int32> m_ampOffsetsIdxStop;
 
-    TFloat64Range m_lambdaRange;
+    const TFloat64Range m_lambdaRange;
 };
 
 }

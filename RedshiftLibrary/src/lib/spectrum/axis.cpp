@@ -78,14 +78,6 @@ UInt32 CSpectrumAxis::GetSamplesCount( )
     return m_Samples.size();
 }
 
-TFloat64List CSpectrumAxis::extractFrom(Int32 startIdx, Int32 endIdx) const
-{
-    if(!m_Samples.size()) return TFloat64List();
-    TFloat64List extract;
-    std::copy(std::begin(m_Samples)+startIdx, std::begin(m_Samples)+endIdx+1,
-          std::back_inserter(extract));
-    return extract;
-}
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */

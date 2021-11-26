@@ -150,13 +150,15 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
         return ;
     }
 
-    TFloat64Range currentRange = RebinTemplate( spectrum, 
-                                                tpl,
-                                                redshift, 
-                                                lambdaRange,
-                                                opt_interp,
-                                                overlapRate,
-                                                overlapThreshold);
+    TFloat64Range currentRange;
+    RebinTemplate( spectrum, 
+                    tpl,
+                    redshift, 
+                    lambdaRange,
+                    opt_interp,
+                    currentRange,
+                    overlapRate,
+                    overlapThreshold);
     
     const TAxisSampleList & Xspc = m_spcSpectralAxis_restframe.GetSamplesVector();
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
@@ -171,16 +173,7 @@ void COperatorTemplateFitting::BasicFit(const CSpectrum& spectrum,
     }
     if (opt_extinction)
         kIgmEnd = m_templateRebined_bf.GetIgmEndIndex();
-    /*    
-    if( ret == -1 ){
-        status = nStatus_NoOverlap; 
-        return;
-    }
-    if( ret == -2 ){
-        status = nStatus_DataError;
-        return;
-    }
-    */
+
     Int32 EbmvListSize = ChiSquareInterm.size();
     Int32 MeiksinListSize = ChiSquareInterm[0].size();
 

@@ -79,7 +79,7 @@ public:
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
     Bool                Subtract(const CSpectrumFluxAxis& other);
     Bool                Invert();
-    CSpectrumFluxAxis   extractFrom(Int32 startIdx, Int32 endIdx) const;//this is mainly applied on m_StdError
+    CSpectrumFluxAxis   extract(Int32 startIdx, Int32 endIdx) const;//this is mainly applied on m_StdError
 
 private:
 
@@ -103,10 +103,10 @@ const CSpectrumNoiseAxis& CSpectrumFluxAxis::GetError() const
 }
 
 inline
-CSpectrumFluxAxis CSpectrumFluxAxis::extractFrom(Int32 startIdx, Int32 endIdx) const
+CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx, Int32 endIdx) const
 {
-  return CSpectrumFluxAxis(CSpectrumAxis(m_Samples).extractFrom(startIdx, endIdx), 
-                            CSpectrumNoiseAxis(m_StdError.extractFrom(startIdx, endIdx))); 
+  return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx), 
+                           m_StdError.extract(startIdx, endIdx)); 
 }
 }
 

@@ -94,20 +94,21 @@ public:
                               Float64 amplitude,
                               std::string opt_interp,
                               const TFloat64Range& lambdaRange,
-                              const Float64& overlapThreshold);
+                              const Float64 overlapThreshold);
 
   inline virtual bool IsFFTProcessing() {return false;};
 
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
 
 protected:
-  TFloat64Range  RebinTemplate( const CSpectrum& spectrum,
+  void  RebinTemplate( const CSpectrum& spectrum,
                           const CTemplate& tpl, 
                           Float64 redshift,
                           const TFloat64Range& lambdaRange,
                           std::string opt_interp,
+                          TFloat64Range& currentRange,
                           Float64& overlaprate,
-                          const Float64& overlapThreshold);
+                          const Float64 overlapThreshold);
 
   CTemplate       m_templateRebined_bf;
   CSpectrumSpectralAxis m_spcSpectralAxis_restframe;

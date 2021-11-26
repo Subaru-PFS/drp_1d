@@ -159,7 +159,7 @@ public:
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
                                            const std::string opt_error_interp="no" ) const;
-    CSpectrum                       extractFrom(Int32 startIdx, Int32 endIdx)const;
+    CSpectrum                       extract(Int32 startIdx, Int32 endIdx)const;
 
 protected:
 
@@ -353,11 +353,12 @@ void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 }
 
 inline
-CSpectrum  CSpectrum::extractFrom(Int32 startIdx, Int32 endIdx) const
+CSpectrum  CSpectrum::extract(Int32 startIdx, Int32 endIdx) const
 {
-    //probably we should do the save for all axis of the spectrum
-    return CSpectrum ( CSpectrumSpectralAxis(m_SpectralAxis.extractFrom(startIdx, endIdx)), 
-                    GetFluxAxis().extractFrom(startIdx, endIdx));;
+    CSpectrum copy = *this;
+    copy.SetSpectralAndFluxAxes(copy.m_SpectralAxis.extract(startIdx, endIdx),
+                                copy.GetFluxAxis().extract(startIdx, endIdx));
+    return copy;
 }
 
 }

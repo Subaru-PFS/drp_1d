@@ -87,7 +87,7 @@ public:
                                     const TFloat64List& amplitudes,
                                     std::string opt_interp,
                                     const TFloat64Range& lambdaRange,
-                                    const Float64& overlapThreshold);
+                                    const Float64 overlapThreshold);
 private:
 
     struct STplcombination_basicfitresult
@@ -125,13 +125,14 @@ private:
                   CPriorHelper::TPriorEList logpriore=CPriorHelper::TPriorEList(),
                   const TInt32List& MeiksinList=TInt32List(-1),
                   const TInt32List& EbmvList=TInt32List(-1));
-    TFloat64Range RebinTemplate(const CSpectrum& spectrum,
+    void RebinTemplate(const CSpectrum& spectrum,
                         const TTemplateConstRefList& tplList,
                         Float64 redshift,
                         const TFloat64Range& lambdaRange,
                         std::string opt_interp,
+                        TFloat64Range& currentRange,
                         Float64& overlapRate,
-                        const Float64& overlapThreshold);
+                        const Float64 overlapThreshold);
     // buffers for the interpolated axis (templates & spectrum)
     std::vector<CTemplate>   m_templatesRebined_bf;
     std::vector<CMask>       m_masksRebined_bf;
