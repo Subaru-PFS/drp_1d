@@ -62,8 +62,10 @@ CMultiLine::CMultiLine( std::vector<CRay> rs,
 CLineModelElement ( widthType, velocityEmission, velocityAbsorption ),
 m_NominalAmplitudes(nominalAmplitudes)
 {
-    //TODO:below variables should be initialized throw CLineModelElt rather than here
-    m_Rays = rs;
+    //TODO:below variables should be initialized through CLineModelElt rather than here
+
+    std::transform (rs.begin(), rs.end(), std::back_inserter(m_Rays), 
+                                                        []( CRay &c){return c.clone();});
     m_ElementType = "CMultiLine";
     m_absLinesLimit=-1.0;//-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
     m_sumCross = 0.;

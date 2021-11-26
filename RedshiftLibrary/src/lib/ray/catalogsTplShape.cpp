@@ -408,23 +408,15 @@ Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 }
 
 
-Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList)
+Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
     for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
     {
-        std::vector<std::vector<Float64>> thisElementLinesCorresp;
-
         Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        TFloat64List thisCatLinesCorresp(nRays, 0.0); //is nRays cte among Elts?
+        std::vector<TFloat64List> thisElementLinesCorresp(GetCatalogsCount(), thisCatLinesCorresp);
 
-        for(Int32 k=0; k<GetCatalogsCount(); k++)
-        {
-            std::vector<Float64> thisCatLinesCorresp;
-            for(UInt32 j=0; j<nRays; j++){
-                thisCatLinesCorresp.push_back(0.0);
-            }
-            thisElementLinesCorresp.push_back(thisCatLinesCorresp);
-        }
         m_RayCatalogLinesCorrespondingNominalAmp.push_back(thisElementLinesCorresp);
 
         //now set the non-zero amp correspondences
@@ -468,123 +460,10 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(CLineModelElementList
     return 0;
 }
 
-/**
- * @brief CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast
- * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
- * INFO: fast method, InitLineCorrespondence() should have been called previously with the same LineModelElementList arg.
- * @param LineModelElementList
- * @param iCatalog
- * @return
- */
-Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog)
+const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog)
 {
-    if(iCatalog<0){
-        return false;
-    }
-    Float64 nominalAmp = 0.0;
-    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-    {
-        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-        for(UInt32 j=0; j<nRays; j++){
-            nominalAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j];
-            LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
-        }
-    }
-    return true;
+    return m_RayCatalogList[iCatalog];
 }
-
-/**
- * @brief CRayCatalogsTplShape::SetMultilineNominalAmplitudes
- * This method sets the linemodel unique elt nominal amplitudes to the corresponding value of the iCatalog st catalog.
- * INFO: slow method
- * @param LineModelElementList
- * @param iCatalog
- * @return
- */
-Bool CRayCatalogsTplShape::SetMultilineNominalAmplitudes(CLineModelElementList &LineModelElementList, Int32 iCatalog)
-{
-    //first set all amplitudes to 0.0
-    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-    {
-        //get the max nominal amplitude
-        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-        for(UInt32 j=0; j<nRays; j++){
-            LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, 0.0);
-        }
-    }
-
-    //loop the amplitudes in the iLine_st catalog
-    CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
-    Int32 nLines = currentCatalogLineList.size();
-    for(Int32 kL=0; kL<nLines; kL++)
-    {
-        Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
-        Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-        Float64 dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff( m_IsmIndexes[iCatalog], restLambda);
-        nominalAmp*=dustCoeff;
-        //find line in the elementList
-        for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-        {
-            //get the max nominal amplitude
-            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++){
-
-                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
-                {
-                    LineModelElementList.m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
-                }
-
-            }
-        }
-
-    }
-    return true;
-}
-
-Bool CRayCatalogsTplShape::SetLyaProfile(CLineModelElementList &LineModelElementList, 
-                                        Int32 iCatalog, 
-                                        bool forceLyaFitting,
-                                        const Float64 nsigmasupport)
-{
-    if(iCatalog<0)
-        return false;
-    
-    linetags ltags;
-    std::string lyaTag = ltags.lya_em;
-
-    //loop the amplitudes in the iLine_st catalog in order to find Lya
-    CRayCatalog::TRayVector currentCatalogLineList = m_RayCatalogList[iCatalog].GetList();
-    Int32 nLines = currentCatalogLineList.size();
-
-    for(Int32 kL=0; kL<nLines; kL++)
-    {
-        if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
-            continue;
-
-        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile());
-        
-        if(forceLyaFitting)
-            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
-
-        //find line Lya in the elementList
-        for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
-        {
-            //get the max nominal amplitude
-            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++)
-            {
-                if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
-                {
-                    LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
-                    break;
-                }
-            }
-        }
-
-    }
-    return true;
-}
-
 
 /**
  * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs: (for lm-rigidity=tplcorr)

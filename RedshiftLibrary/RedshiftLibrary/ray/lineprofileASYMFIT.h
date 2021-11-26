@@ -58,7 +58,8 @@ namespace NSEpic
             Bool    isAsymFixed() override;
             void    SetAsymParams(TAsymParams params) override;
             void resetAsymFitParams() override;
-
+        private:
+            CLineProfile* CloneImplementation() const override { return new CLineProfileASYMFIT(*this);}
     };
 }
 #endif
