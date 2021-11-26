@@ -159,6 +159,9 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
 {
     const std::string category = tpl->GetCategory();
 
+    Int32 count = GetTemplateCount(category);
+    if(i<0 || count <= i)
+        throw GlobalException(INTERNAL_ERROR,"SetTemplate: invalid index");
     // first clear given template
     ClearTemplates(category, m_orthogonal, m_logsampling, i);
 
