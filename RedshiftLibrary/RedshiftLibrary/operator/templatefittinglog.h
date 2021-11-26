@@ -81,7 +81,7 @@ public:
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               Bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
-                                              Int32 FitMeiksinIdx=-1);
+                                              Int32 FitMeiksinIdx=-1) override;
 
     inline  bool IsFFTProcessing() override{return true;}; 
 
