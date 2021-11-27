@@ -443,9 +443,9 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
-  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
   std::shared_ptr<const CLSF> GetLSF() const;
-  void SetLSF(const std::shared_ptr<CLSF>& lsf);
+  void SetLSF(const std::shared_ptr<const CLSF>& lsf);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   TLambdaRange GetLambdaRange() const;

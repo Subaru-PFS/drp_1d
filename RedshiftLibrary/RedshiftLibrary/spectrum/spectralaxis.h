@@ -71,6 +71,9 @@ public:
     };
 
     CSpectrumSpectralAxis();
+    CSpectrumSpectralAxis(const CSpectrumAxis & other):CSpectrumAxis (other){};
+    CSpectrumSpectralAxis(CSpectrumAxis && other):CSpectrumAxis (std::move(other)){};
+
     CSpectrumSpectralAxis( UInt32 n, Bool isLogScale =false);
     CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale=false, std::string AirVacuum="" );
     CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale=false, std::string AirVacuum="" );
@@ -113,14 +116,17 @@ public:
 private:
 
     mutable UInt32      m_SpectralFlags = 0;
-    mutable Bool        m_regularLogSamplingChecked=false;
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
 
 };
+
 inline
 CSpectrumSpectralAxis CSpectrumSpectralAxis::extract(Int32 startIdx, Int32 endIdx) const
 {
-    return CSpectrumSpectralAxis(CSpectrumAxis::extract(startIdx, endIdx).GetSamplesVector());
+    CSpectrumSpectralAxis spcaxis = CSpectrumAxis::extract(startIdx, endIdx);
+    spcaxis.m_SpectralFlags = m_SpectralFlags;
+    spcaxis.m_regularLogSamplingStep = m_regularLogSamplingStep;
+    return spcaxis;
 }
 }
 

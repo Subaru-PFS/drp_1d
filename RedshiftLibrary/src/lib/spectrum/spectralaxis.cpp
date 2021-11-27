@@ -442,7 +442,7 @@ Bool CSpectrumSpectralAxis::ConvertToLogScale()
 
 void CSpectrumSpectralAxis::SetLogScale() 
 {
-    m_SpectralFlags |= nFLags_LogScale; //not sure what is the difference between these two flags      
+    m_SpectralFlags |= nFLags_LogScale;
 }
 
 /**
@@ -482,8 +482,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
     }
     //  recompute log step with more precision:
     m_regularLogSamplingStep = log(m_Samples.back()/m_Samples.front())/(GetSamplesCount()-1); 
-    m_SpectralFlags |= nFLags_LogSampled; //setting through a logical OR
-    m_regularLogSamplingChecked = true;
+    m_SpectralFlags |= nFLags_LogSampled;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
 
     return true;
@@ -510,7 +509,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
 
 Bool CSpectrumSpectralAxis::IsLogSampled() const
 {
-    if(!m_regularLogSamplingChecked) 
+    if(!(m_SpectralFlags & nFLags_LogSampled)) 
         CheckLoglambdaSampling();
 
     return m_SpectralFlags & nFLags_LogSampled;

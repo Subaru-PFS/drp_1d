@@ -107,7 +107,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
     CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr)
 {}
 
-CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf) :
+CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf) :
     m_SpectralAxis(std::move(spectralAxis)),
     m_RawFluxAxis(std::move(fluxAxis)),
     m_estimationMethod(""),
@@ -502,7 +502,7 @@ const std::string & CSpectrum::GetName() const
 
 void CSpectrum::SetName(std::string name)
 {
-    m_Name = name;
+    m_Name = std::move(name);
 }
 
 const CSpectrum::EType CSpectrum::GetType() const

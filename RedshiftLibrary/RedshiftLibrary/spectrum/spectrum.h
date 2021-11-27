@@ -87,7 +87,7 @@ public:
     CSpectrum(CSpectrum&& other);
     CSpectrum(const CSpectrum& other, const TFloat64List & mask);
     CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
-    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
@@ -355,10 +355,11 @@ void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 inline
 CSpectrum  CSpectrum::extract(Int32 startIdx, Int32 endIdx) const
 {
-    CSpectrum copy = *this;
-    copy.SetSpectralAndFluxAxes(copy.m_SpectralAxis.extract(startIdx, endIdx),
-                                copy.GetFluxAxis().extract(startIdx, endIdx));
-    return copy;
+    CSpectrum spc{m_SpectralAxis.extract(startIdx, endIdx),m_RawFluxAxis.extract(startIdx, endIdx), m_LSF};
+    spc.m_Name = m_Name;
+    spc.m_estimationMethod = m_estimationMethod;
+    spc.m_medianWindowSize = m_medianWindowSize;
+    return spc;
 }
 
 }

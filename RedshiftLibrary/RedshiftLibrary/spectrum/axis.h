@@ -134,6 +134,7 @@ inline
 Bool CSpectrumAxis::isEmpty() const{
     return m_Samples.size()==0;
 }
+
 inline
 CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx, Int32 endIdx) const
 {
