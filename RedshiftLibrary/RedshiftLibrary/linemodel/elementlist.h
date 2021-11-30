@@ -68,7 +68,7 @@ namespace NSEpic
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j);
 
-    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres=0.1);
+    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres);
 
     Int32 GetModelValidElementsNDdl();
     Int32 GetModelNonZeroElementsNDdl();

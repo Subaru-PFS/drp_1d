@@ -2868,7 +2868,7 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
       }
       //do the fit on the ovelapping elements
       Float64 overlapThres = 0.15; //15% seemed necessary for Ha/SII complex when lines are very wide (either because of PSF or source size)
-      std::vector<UInt32> overlappingInds = m_Elements.getOverlappingElements(iElts, indexesFitted, m_Redshift, overlapThres);
+      std::vector<UInt32> overlappingInds = m_Elements.getOverlappingElements(iElts, indexesFitted,m_Redshift,  overlapThres);
 
       //setting the fitting group info
       for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)

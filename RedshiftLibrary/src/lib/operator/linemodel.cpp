@@ -125,9 +125,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
-                                           const CRayCatalog &restraycatalog,
-                                           const std::string &opt_lineTypeFilter,
-                                           const std::string &opt_lineForceFilter,
+                                           const CRayCatalog::TRayVector &restRayList,
                                            const TFloat64Range &lambdaRange,
                                            const std::string &opt_fittingmethod,
                                            const std::string &opt_lineWidthType,
@@ -161,24 +159,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     fclose( f );
     */
 
-    Int32 typeFilter = -1;
-    if (opt_lineTypeFilter == "A")
-    {
-        typeFilter = CRay::nType_Absorption;
-    } else if (opt_lineTypeFilter == "E")
-    {
-        typeFilter = CRay::nType_Emission;
-    }
-
-    Int32 forceFilter = -1; // CRay::nForce_Strong;
-    if (opt_lineForceFilter == "S")
-    {
-        forceFilter = CRay::nForce_Strong;
-    }
-    Log.LogDebug("restRayList force filter = %d", forceFilter);
-    CRayCatalog::TRayVector restRayList =
-        restraycatalog.GetFilteredList(typeFilter, forceFilter);
-    Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
@@ -1056,9 +1036,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
-                                            const CRayCatalog &restraycatalog,
-                                            const std::string &opt_lineTypeFilter,
-                                            const std::string &opt_lineForceFilter,
                                             const TFloat64Range &lambdaRange,
                                             const std::string &opt_fittingmethod,
                                             const std::string &opt_lineWidthType,

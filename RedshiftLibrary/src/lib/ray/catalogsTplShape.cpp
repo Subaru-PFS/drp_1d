@@ -411,9 +411,9 @@ Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
-    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    for( UInt32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
     {
-        Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+        Int32 nRays = LineModelElementList[iElts]->GetSize();
         TFloat64List thisCatLinesCorresp(nRays, 0.0); //is nRays cte among Elts?
         std::vector<TFloat64List> thisElementLinesCorresp(GetCatalogsCount(), thisCatLinesCorresp);
 
@@ -430,10 +430,10 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
                 Float64 dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff( m_IsmIndexes[iCatalog], restLambda);
                 nominalAmp*=dustCoeff;
                 //find line in the elementList
-                Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+                Int32 nRays = LineModelElementList[iElts]->GetSize();
                 for(UInt32 j=0; j<nRays; j++){
 
-                    if(LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                    if(LineModelElementList.m_RestRayList[LineModelElementList[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
                     {
                         m_RayCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j]=nominalAmp;
                     }
@@ -443,15 +443,15 @@ Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
     }
 
     //Now log the linesCorrespondingNominalAmp
-    for( UInt32 iElts=0; iElts<LineModelElementList.m_Elements.size(); iElts++ )
+    for( UInt32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
     {
         for(Int32 k=0; k<GetCatalogsCount(); k++)
         {
-            Int32 nRays = LineModelElementList.m_Elements[iElts]->GetSize();
+            Int32 nRays = LineModelElementList[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
                 Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(m_IsmIndexes[k]);
                 Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
-                std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList.m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName();
+                std::string lineName = LineModelElementList.m_RestRayList[LineModelElementList[iElts]->m_LineCatalogIndexes[j]].GetName();
                 Log.LogDebug("    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);
             }
         }

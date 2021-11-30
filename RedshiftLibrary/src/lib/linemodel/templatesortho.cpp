@@ -205,7 +205,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         //Compute linemodel on the template
         CLineModelFitting model( spectrum,
-				lambdarange,
+				lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,
