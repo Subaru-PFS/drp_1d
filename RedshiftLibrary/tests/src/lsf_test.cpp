@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth)
     object_CSpectrum3.SetLSF(LSF);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == true);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 1.09);
-    /*object_CSpectrum3.GetLSF()->SetWidth(2.04e-60);
+    object_CSpectrum3.GetLSF()->SetWidth(2.04e-60);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->GetWidth() == 2.04e-60); 
     object_CSpectrum3.GetLSF()->SetWidth(0.0);
     BOOST_CHECK(object_CSpectrum3.GetLSF()->IsValid() == false);

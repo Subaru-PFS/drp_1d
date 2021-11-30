@@ -82,6 +82,7 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
 CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
+                                             const TFloat64Range& lambdaRange,
                                              const CTemplateCatalog& tplCatalog,
                                              const TStringList& tplCategoryList,
                                              const std::string calibrationPath,
@@ -111,7 +112,8 @@ CLineModelElementList::CLineModelElementList(const CSpectrum& spectrum,
     m_rulesoption(opt_rules),
     m_rigidity(opt_rigidity),
     m_Regulament(),
-    m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError())
+    m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()),
+    m_lambdaRange(lambdaRange) //TODO: replace this latter with m_lambdaRange, and simplify function signature in elementlist
 {
     //check if tplcat and orthoTplCat are aligned
     /*for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
@@ -897,7 +899,7 @@ void CLineModelElementList::LoadFitContinuumOneTemplate(const TFloat64Range& lam
  * TODO: study this possibility before doing the change
  */
 void CLineModelElementList::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect)
-{
+{   
     Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
     if(m_observeGridContinuumFlux.empty())
     {
@@ -1049,17 +1051,18 @@ Int32 CLineModelElementList::ApplyContinuumOnGrid(const CTemplate& tpl, Float64 
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
     TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n-1]);
 
-    std::shared_ptr<CModelSpectrumResult> spcmodel; 
     std::string inter_opt = "spline";
     Float64 overlapThreshold = 1., amplitude = 1.; 
-    m_templateFittingOperator.ComputeSpectrumModel(m_SpectrumModel, tpl, 
+    std::shared_ptr<CModelSpectrumResult> spcmodel = m_templateFittingOperator.ComputeSpectrumModel(
+                                                 m_SpectrumModel, tpl, 
                                                  zcontinuum,
                                                  m_fitContinuum_tplFitEbmvCoeff, 
                                                  m_fitContinuum_tplFitMeiksinIdx, 
                                                  amplitude,
-                                                 inter_opt, range, 
-                                                 overlapThreshold, spcmodel);
-
+                                                 inter_opt, m_lambdaRange, 
+                                                 overlapThreshold);
+    if(spcmodel==nullptr)
+        throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
     m_observeGridContinuumFlux = (*spcmodel).ModelFlux;
 

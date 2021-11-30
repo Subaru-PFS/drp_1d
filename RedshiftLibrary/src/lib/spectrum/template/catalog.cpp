@@ -159,11 +159,16 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
 {
     const std::string category = tpl->GetCategory();
 
+    Int32 count = GetTemplateCount(category);
+    if(i<0 || count <= i)
+        throw GlobalException(INTERNAL_ERROR,"SetTemplate: invalid index");
     // first clear given template
     ClearTemplates(category, m_orthogonal, m_logsampling, i);
 
     // assign new template
-    GetList().at(category)[i] = tpl;
+    if( !GetTemplateCount(category)) Add(tpl);
+    else
+        GetList().at(category)[i] = tpl;
 }
 
 // clear all templates in a category
@@ -176,15 +181,16 @@ void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_
 void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
 {
     TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
-    if( tplList.find( category ) != tplList.end()) return;
-    
-    if (alltemplates)
+    if( tplList.find( category ) == tplList.end()) return;
+
+    if (alltemplates){
         tplList.at(category).clear(); //clear the list
 
         if (opt_ortho){ // reset LSFWidth if the 2 ortho list are empty
             auto & otherOrthoList = GetList(opt_ortho, !opt_logsampling);
             if (otherOrthoList.find(category) == otherOrthoList.end())
-                m_ortho_LSFWidth = NAN;         
+                m_ortho_LSFWidth = NAN;  
+        }       
     } 
     else {
         tplList.at(category)[i] = nullptr; // clear one element in the list

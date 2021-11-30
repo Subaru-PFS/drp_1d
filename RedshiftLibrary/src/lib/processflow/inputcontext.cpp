@@ -137,8 +137,13 @@ void CInputContext::RebinInputs()
         m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
         CSpectrumSpectralAxis  spcWav = m_Spectrum->GetSpectralAxis();
         spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
+
+        //Intersect with input lambdaRange and get indexes
+        Int32 kstart = -1; Int32 kend = -1;
+        bool ret = m_lambdaRange.getClosedIntervalIndices(spcWav.GetSamplesVector(), kstart, kend);
+        if(!ret) throw GlobalException(INTERNAL_ERROR, "LambdaRange borders are outside the spectralAxis range");
         //save into the rebinnedSpectrum
-        m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav), m_Spectrum->GetFluxAxis());
+        m_rebinnedSpectrum->SetSpectralAndFluxAxes(spcWav.extract(kstart,kend), m_Spectrum->GetFluxAxis().extract(kstart,kend));
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {

@@ -180,8 +180,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         restraycatalog.GetFilteredList(typeFilter, forceFilter);
     Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+
     m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
                                                          spectrum,
+                                                         clampedlambdaRange,
                                                          tplCatalog,
                                                          tplCategoryList,
                                                          opt_calibrationPath,
@@ -425,8 +429,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    baselineResult); return NULL;
     //    // end of hack
     //    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    TFloat64Range clampedlambdaRange;
-    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
     m_result->nSpcSamples = m_model->getSpcNSamples(clampedlambdaRange);
     m_result->dTransposeD = m_model->getDTransposeD(clampedlambdaRange);
@@ -2317,10 +2319,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                           TFloat64List& redshiftsGrid)
 {
 
-  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
+  const CSpectrum& spc=*(inputContext->GetSpectrum());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
@@ -2345,8 +2347,12 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   const std::string& opt_continuumcomponent = "nocontinuum";//params->GetScoped<std::string>("continuumcomponent");
   spc.SetContinuumEstimationMethod("zero");
   m_opt_continuum_neg_amp_threshold = -1;// unused params->GetScoped<Float64>( "continuumfit.negativethreshold");
-    
+
+  TFloat64Range clampedlambdaRange;
+  spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+
   m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
+                                                                             clampedlambdaRange,
                                                                              tplCatalog,
                                                                              tplCategoryList,
                                                                              calibrationDir,
@@ -2413,9 +2419,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
 
     m_estimateLeastSquareFast = 0;
     m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
-
-  TFloat64Range clampedlambdaRange;
-  spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
   m_model->initDtd(clampedlambdaRange);
   

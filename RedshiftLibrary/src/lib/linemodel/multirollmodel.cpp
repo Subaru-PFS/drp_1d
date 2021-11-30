@@ -53,6 +53,7 @@ using namespace std;
  * \brief Constructor.
  **/
 CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
+                                 const TFloat64Range& range,
                                  const CTemplateCatalog& tplCatalog,
                                  const TStringList& tplCategoryList,
                                  const std::string calibrationPath,
@@ -104,6 +105,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
     {
         Float64 lines_nsigmasupport = 6.0;
         m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
+                                                                                             range,
                                                                                              tplCatalog,
                                                                                              tplCategoryList,
                                                                                              calibrationPath,

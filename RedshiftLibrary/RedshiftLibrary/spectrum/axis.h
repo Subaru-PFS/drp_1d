@@ -80,7 +80,7 @@ public:
     UInt32                   GetSamplesCount();
     virtual void             SetSize( UInt32 s );
     void                     clear();
-    Int32 extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx);
+    CSpectrumAxis            extract(Int32 startIdx, Int32 endIdx) const;
     Bool isEmpty() const ;
 protected:
 
@@ -133,6 +133,13 @@ const TAxisSampleList& CSpectrumAxis::GetSamplesVector() const
 inline
 Bool CSpectrumAxis::isEmpty() const{
     return m_Samples.size()==0;
+}
+
+inline
+CSpectrumAxis CSpectrumAxis::extract(Int32 startIdx, Int32 endIdx) const
+{
+    if(!m_Samples.size()) return CSpectrumAxis();
+    return CSpectrumAxis(TFloat64List(m_Samples.begin()+startIdx, m_Samples.begin()+endIdx+1));
 }
 }
 #endif

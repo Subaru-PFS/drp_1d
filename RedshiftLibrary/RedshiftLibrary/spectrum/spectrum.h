@@ -87,7 +87,7 @@ public:
     CSpectrum(CSpectrum&& other);
     CSpectrum(const CSpectrum& other, const TFloat64List & mask);
     CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
-    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
+    CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
     ~CSpectrum();
 
     CSpectrum& operator=(const CSpectrum& other);
@@ -159,7 +159,7 @@ public:
     Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp = "lin",
                                            const std::string opt_error_interp="no" ) const;
-    Int32                           extractFrom(const CSpectrum& other, Int32 startIdx, Int32 endIdx);
+    CSpectrum                       extract(Int32 startIdx, Int32 endIdx)const;
 
 protected:
 
@@ -353,12 +353,13 @@ void CSpectrum::SetLSF(const std::shared_ptr<const CLSF>& lsf)
 }
 
 inline
-Int32  CSpectrum::extractFrom(const CSpectrum& other, Int32 startIdx, Int32 endIdx)
+CSpectrum  CSpectrum::extract(Int32 startIdx, Int32 endIdx) const
 {
-    m_SpectralAxis.extractFrom(other.GetSpectralAxis(), startIdx, endIdx);
-    m_RawFluxAxis.extractFrom(other.GetFluxAxis(), startIdx, endIdx);
-    //probably we should do the save for all axis of the spectrum
-    return 0;
+    CSpectrum spc{m_SpectralAxis.extract(startIdx, endIdx),m_RawFluxAxis.extract(startIdx, endIdx), m_LSF};
+    spc.m_Name = m_Name;
+    spc.m_estimationMethod = m_estimationMethod;
+    spc.m_medianWindowSize = m_medianWindowSize;
+    return spc;
 }
 
 }

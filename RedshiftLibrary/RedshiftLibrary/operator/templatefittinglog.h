@@ -106,8 +106,7 @@ private:
     bool verboseLogXtYFFT = false;
     bool verboseExportXtYFFT = false;
 
-    Int32 FitAllz(const TFloat64Range& lambdaRange,
-                  std::shared_ptr<CTemplateFittingResult> result,
+    Int32 FitAllz(std::shared_ptr<CTemplateFittingResult> result,
                   TInt32List MeiksinList=TInt32List(1, 0),
                   TInt32List EbmvList=TInt32List(1, 0),
                   CMask spcMaskAdditional=CMask(),

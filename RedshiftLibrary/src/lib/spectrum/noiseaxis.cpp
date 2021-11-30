@@ -52,14 +52,6 @@ CSpectrumNoiseAxis::CSpectrumNoiseAxis( UInt32 n ) :
 
 }
 
-CSpectrumNoiseAxis::CSpectrumNoiseAxis( const Float64* samples, UInt32 n ) :
-    CSpectrumAxis( samples, n ) 
-{
-
-}
-
-
-
 Bool CSpectrumNoiseAxis::Invert()
 {
     Int32 N = GetSamplesCount();

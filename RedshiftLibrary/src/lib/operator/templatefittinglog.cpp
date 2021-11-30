@@ -522,8 +522,7 @@ void COperatorTemplateFittingLog::freeFFTPlans()
  * @param logpriorze: if size=0, prior is deactivated
  * @return
  */
-Int32 COperatorTemplateFittingLog::FitAllz(const TFloat64Range &lambdaRange,
-                                           std::shared_ptr<CTemplateFittingResult> result,
+Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResult> result,
                                            TInt32List MeiksinList,
                                            TInt32List EbmvList,
                                            CMask spcMaskAdditional,
@@ -1194,29 +1193,30 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(const TFloat64List& in,
  * Method logic: 
  * 1. count the number of steps (Integer) between start/end borders of redshiftRange and 
  * the min/max Z values corresponding to the templateSpectralAxis min/max borders
- * 2. these number of zsteps correspond exactly to the right/left offsets on the spectralAxis in log
+ * 2. this number of zsteps correspond exactly to the right/left offsets on the spectralAxis in log
 */
 TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const TFloat64Range & redshiftrange) const
 {
     return FindTplSpectralIndex(m_spectrumRebinedLog.GetSpectralAxis(), m_templateRebinedLog.GetSpectralAxis(), redshiftrange);
 }
 
-TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSpectralAxis& spcSpectralAxis, //spcRange,
+TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSpectralAxis& spcSpectralAxis,
                                                                const CSpectrumSpectralAxis& tplSpectralAxis,
                                                                const TFloat64Range & redshiftrange) const
 {
-    const TFloat64Range spcRange = spcSpectralAxis.GetLambdaRange();
+
+    const TFloat64Range spcRange = spcSpectralAxis.GetLambdaRange();//this is correct only if spcSpectralAxis is intersected with the input lambdaRange
     const TFloat64Range tplRange = tplSpectralAxis.GetLambdaRange();
     const UInt32 tplsize = tplSpectralAxis.GetSamplesCount();
     const Float64 logstep = tplSpectralAxis.GetlogGridStep();
 
     Float64 zmax = (spcRange.GetBegin() - tplRange.GetBegin()) / tplRange.GetBegin(); //get maximum z reachable with given template & spectra
     Float64 offset_left =  log((zmax+1)/(redshiftrange.GetEnd()+1))/logstep;  //  should be integer at numerical precision before round
-    UInt32 ilbdamin = round(offset_left); // deduce min lambda from max reachable z and max z in current range.
+    Int32 ilbdamin = round(offset_left); // deduce min lambda from max reachable z and max z in current range.
     Float64 zmin = (spcRange.GetEnd() - tplRange.GetEnd()) / tplRange.GetEnd(); // get minimum reachable z with given template & spectra
 
     Float64 offset_right = log((redshiftrange.GetBegin()+1)/(zmin+1))/logstep;
-    UInt32 ilbdamax = tplsize- 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
+    Int32 ilbdamax = tplsize- 1 - round(offset_right); // deduce max lambda from min reachable z and min min z in current range.
  
     if( ilbdamax>=tplsize || ilbdamin < 0)
         throw GlobalException(INTERNAL_ERROR,"FindTplSpectralIndex failed to find indexes");
@@ -1362,7 +1362,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const CSpe
 
     TFloat64Range clampedlambdaRange;
     m_spectrumRebinedLog.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
-    Int32 retFit = FitAllz(clampedlambdaRange, result, MeiksinList, EbmvList, CMask(), logpriorze);
+    Int32 retFit = FitAllz(result, MeiksinList, EbmvList, CMask(), logpriorze);
     
     if (retFit != 0)
     {

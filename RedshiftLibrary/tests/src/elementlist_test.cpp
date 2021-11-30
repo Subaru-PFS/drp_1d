@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
 
   // no continuum
-  CLineModelElementList model_nocontinuum(spectrum,
+  CLineModelElementList model_nocontinuum(spectrum,range,
                                           tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
 					                                "lmfit", "nocontinuum",-INFINITY,
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
-  CLineModelElementList model_fromspectrum(spectrum,
+  CLineModelElementList model_fromspectrum(spectrum,range,
                                            tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
 					                                 "lmfit", "fromspectrum", -INFINITY,
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   // tplfit
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
-  CLineModelElementList model_tplfit(spectrum,
+  CLineModelElementList model_tplfit(spectrum,range,
                                      tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
    				                           "lmfit", "tplfit", -5.0,
