@@ -88,7 +88,8 @@ private:
 
           TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling);
     const TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling) const;
-
+    
+    UInt32 GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const;
     typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
     TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
 
@@ -101,7 +102,7 @@ private:
 inline 
 std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
-    return GetList().at( category )[i];   
+    return GetList().at( category ).at(i);   
 }
 
 // non const getter returning mutable templates
