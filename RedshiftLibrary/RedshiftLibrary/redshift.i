@@ -661,9 +661,10 @@ class CPhotometricBand
 public:
     CPhotometricBand() = default;
     CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
-
-    TFloat64List m_transmission;
-    TFloat64List m_lambda;
+    const TFloat64List & GetTransmission() const;
+    const TFloat64List & GetWavelength() const;
+    Float64 GetMinLambda() const;
+    Float64 IntegrateFlux(const TFloat64List &flux) const;
 };
 %clear (const Float64 * trans, Int32 n1);
 %clear (const Float64 * lambda, Int32 n2);
@@ -675,6 +676,7 @@ class CPhotBandCatalog : public std::map<std::string, CPhotometricBand>
 public:
     void Add(const std::string & name, const CPhotometricBand & filter);
     TStringList GetNameList() const;
+    TStringList GetNameListSortedByLambda() const;
 };
 
 class AmzException : public std::exception

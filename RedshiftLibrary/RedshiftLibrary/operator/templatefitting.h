@@ -116,13 +116,29 @@ protected:
                   const TInt32List& MeiksinList=TInt32List(-1),
                   const TInt32List& EbmvList=TInt32List(-1));
 
+    virtual void InitIsmIgmConfig( Float64 redshift,
+                           const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);
+
+    virtual bool CheckLyaIsInCurrentRange(const TFloat64Range & currentRange) const {
+        return  currentRange.GetBegin() > 1216.0;
+    };
+
+    virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx) {
+        return m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);};
+
+    virtual bool ApplyDustCoeff(Int32 kEbmv) {
+        return m_templateRebined_bf.ApplyDustCoeff(kEbmv);};
+
     virtual TFittingResult ComputeLeastSquare(  Int32 kM,
                                                 Int32 kEbmv,
                                                 const CPriorHelper::SPriorTZE & logprior,
                                                 const CMask & spcMaskAdditional);
 
+    void ComputeAmplitude( TFittingResult & fitres, const CPriorHelper::SPriorTZE & logpriorTZ) const;
+
     Bool m_option_igmFastProcessing;
-    Int32 m_kStart, m_kEnd, m_kIgmEnd;
+    Int32 m_kStart, m_kEnd;
     Float64 m_forcedAmplitude;
 
     TFloat64List m_sumCross_outsideIGM;

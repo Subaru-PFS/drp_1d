@@ -97,12 +97,12 @@ public:
   static Float64 GetIGMStartingRedshiftValue(const Float64 spcLbda0);
 
 protected:
-  void  RebinTemplate(  const std::shared_ptr<const CTemplate> & tpl, 
-                        Float64 redshift,
-                        const std::string & opt_interp,
-                        TFloat64Range& currentRange,
-                        Float64& overlaprate,
-                        const Float64 overlapThreshold);
+  virtual void  RebinTemplate(  const std::shared_ptr<const CTemplate> & tpl, 
+                                Float64 redshift,
+                                const std::string & opt_interp,
+                                TFloat64Range& currentRange,
+                                Float64& overlaprate,
+                                const Float64 overlapThreshold);
   //Likelihood
   static Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
 

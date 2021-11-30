@@ -80,15 +80,19 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
   //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
   bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
+
+  bool use_photometry = false;
+  if (inputContext->GetParameterStore()->Has<bool>("enablephotometry"))
+    use_photometry = inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
   
   if(fft_processing)
     {
-      m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFittingLog(spc, rebinnedSpc, m_lambdaRange, m_redshifts));
-      tplCatalog.m_logsampling = true; 
+        m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(spc, rebinnedSpc, m_lambdaRange, m_redshifts);
+        tplCatalog.m_logsampling = true; 
     }
   else{
-       m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting(spc, m_lambdaRange, m_redshifts));
-       tplCatalog.m_logsampling = false;
+        m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
+        tplCatalog.m_logsampling = false;
   }
 
 
@@ -167,7 +171,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         //for each extrema, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
         if (fft_processing){ // go back to normal templatefitting operator
-            m_templateFittingOperator = std::shared_ptr<COperatorTemplateFittingBase>(new COperatorTemplateFitting(spc, m_lambdaRange, m_redshifts));
+            m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
             tplCatalog.m_logsampling = false;
         }
         std::shared_ptr<const ExtremaResult> extremaResult =    

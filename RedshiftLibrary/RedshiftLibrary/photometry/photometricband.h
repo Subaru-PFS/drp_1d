@@ -51,10 +51,19 @@ class CPhotometricBand
 {
 public:
     CPhotometricBand() = default;
-    CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
+    CPhotometricBand(TFloat64List trans, TFloat64List lambda);
+    CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ): //for swig binding to numpy array
+        CPhotometricBand(TFloat64List(trans, trans+n1), TFloat64List(lambda, lambda+n2)) {};
 
+    const TFloat64List & GetTransmission() const {return m_transmission;};
+    const TFloat64List & GetWavelength() const { return m_lambda;};
+    Float64 GetMinLambda() const {return m_minLambda;};
+    Float64 IntegrateFlux(const TFloat64List &flux) const;
+
+private:
     TFloat64List m_transmission;
     TFloat64List m_lambda;
+    Float64 m_minLambda=0.0;
 };
 
 class CPhotBandCatalog : public std::map<std::string, CPhotometricBand> 
@@ -62,6 +71,7 @@ class CPhotBandCatalog : public std::map<std::string, CPhotometricBand>
 public:
     void Add(const std::string & name, const CPhotometricBand & filter){insert({name, filter});};
     TStringList GetNameList() const;
+    TStringList GetNameListSortedByLambda() const;
 };
 
 }

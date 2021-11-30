@@ -112,7 +112,7 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
         return result ;
     }
 
-    TFloat64Range currentRange;
+    TFloat64Range currentRange; // restframe
     RebinTemplate(  tpl,
                     redshift, 
                     opt_interp,
@@ -123,11 +123,13 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
     bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
     
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart, m_kEnd);
-    if (!kStartEnd_ok){
+    if (!kStartEnd_ok)
       throw GlobalException(INTERNAL_ERROR,"COperatorTemplateFitting::BasicFit: impossible to get valid kstart or kend");
-    }
+    if(m_kStart==-1 || m_kEnd==-1)
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorTemplateFitting::BasicFit:: kStart="<<m_kStart<<", kEnd="<<m_kEnd);
+
     if (apply_ism || opt_extinction){          
-        m_templateRebined_bf.InitIsmIgmConfig(m_kStart, m_kEnd, redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin);
+        InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin);
     }
     
     Int32 iEbmvCoeffMin = EbmvList[0];
@@ -135,15 +137,13 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
 
     m_option_igmFastProcessing = (MeiksinList.size()==1 ? false : true);
 
-    // LinearLeastSquareSolver LSQSolve( m_templateRebined_bf,  option_igmFastProcessing, EbmvList, kStart, kEnd, forcedAmplitude);
     m_forcedAmplitude = forcedAmplitude;
-    m_kIgmEnd = m_option_igmFastProcessing ? m_templateRebined_bf.GetIgmEndIndex() :-1;
     m_sumCross_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
     m_sumT_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
     m_sumS_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
 
-    bool apply_priore = !logpriore.empty() && !m_templateRebined_bf.CalzettiInitFailed() 
-                        && (logpriore.size()==m_templateRebined_bf.m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
+    bool apply_priore = !logpriore.empty() && !tpl->CalzettiInitFailed() 
+                        && (logpriore.size()==tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
     
     CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
@@ -167,22 +167,15 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
         }
         Int32 meiksinIdx = MeiksinList[kM]; //index for the Meiksin curve (0-6; 3 being the median extinction value)
 
-        if(m_kStart==-1 || m_kEnd==-1)
-        {
-            Log.LogDebug( "  Operator-TemplateFitting: kStart=%d, kEnd=%d ! Aborting.", m_kStart, m_kEnd);
-            break;
-        }
-
         bool igmCorrectionAppliedOnce = false;
         //Meiksin IGM extinction
         if(opt_extinction)
         {
-            //check if lya belongs to current range. If not, no
-            //zigm_min = GetIGMStartingRedshiftValue(currentRange.GetBegin())
-            if(currentRange.GetBegin()/(1+redshift) > 1216)
+            //check if lya belongs to current range. 
+            if (CheckLyaIsInCurrentRange(currentRange))
                 igmCorrectionAppliedOnce = false;
             else
-                igmCorrectionAppliedOnce = m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
+                igmCorrectionAppliedOnce = ApplyMeiksinCoeff(meiksinIdx);
             if(!igmCorrectionAppliedOnce)
                 igmLoopUseless_WavelengthRange = true; 
         }
@@ -194,8 +187,8 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
 
             if (apply_ism)
             {
-                coeffEBMV = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
-                m_templateRebined_bf.ApplyDustCoeff(kEbmv);
+                coeffEBMV = tpl->m_ismCorrectionCalzetti->GetEbmvValue(kEbmv);
+                ApplyDustCoeff(kEbmv);
             }
 
             const CPriorHelper::SPriorTZE & logpriorTZE = apply_priore ?  logpriore[kEbmv] : logpriorTZEempty;
@@ -240,6 +233,14 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
     return result;
 }
 
+void COperatorTemplateFitting::InitIsmIgmConfig(
+        Float64 redshift,
+        const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+{
+    m_templateRebined_bf.InitIsmIgmConfig(m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+}
+
 TFittingResult 
 COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
                                                 Int32 kEbmv_,
@@ -270,10 +271,11 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
     Int32 numDevsFull = 0;
     const CSpectrumNoiseAxis& error = spcFluxAxis.GetError();
 
-    Int32 kEndloop = m_option_igmFastProcessing && kM>0  ? m_kIgmEnd : m_kEnd;
+    Int32 kIgmEnd = m_option_igmFastProcessing ? m_templateRebined_bf.GetIgmEndIndex() :-1;
+    Int32 kEndloop = m_option_igmFastProcessing && kM>0  ? kIgmEnd : m_kEnd;
     for(Int32 j=m_kStart; j<=kEndloop; j++)
     {
-        if(m_option_igmFastProcessing && sumsIgmSaved==0 && j>m_kIgmEnd )
+        if(m_option_igmFastProcessing && sumsIgmSaved==0 && j>kIgmEnd )
         {
             //store intermediate sums for IGM range
             sumCross_IGM = sumCross;
@@ -295,19 +297,19 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
             sumS+= Yspc[j]*Yspc[j]*err2;
 
             if( std::isinf(err2) || std::isnan(err2) ){
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::LinearLeastSquareSolver::Compute: found invalid inverse variance : err2="<<err2<<", for index="<< j<<" at restframe wl="<<Xtpl[j]);
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid inverse variance : err2="<<err2<<", for index="<< j<<" at restframe wl="<<Xtpl[j]);
             }
 
             if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
-                Log.LogError("COperatorTemplateFitting::LinearLeastSquareSolver::Compute:: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::LinearLeastSquareSolver::Compute:: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::LinearLeastSquareSolver::Compute:: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::LinearLeastSquareSolver::Compute:: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, Xtpl[j]);
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::LinearLeastSquareSolver::Compute: found invalid dtd");
+                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, Xtpl[j]);
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd");
             }
 
             if( std::isinf(sumT) || std::isnan(sumT) ){
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::LinearLeastSquareSolver::Compute: found invalid mtm : mtm=" << sumT
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid mtm : mtm=" << sumT
                     << " for index=" << j << " at restframe wl=" << Xtpl[j]);
             }
         }
@@ -329,8 +331,23 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
 
     if ( numDevs==0 )
     {
-        throw GlobalException(INTERNAL_ERROR,  "COperatorTemplateFitting::LinearLeastSquareSolver::Compute: empty leastsquare sum");
+        throw GlobalException(INTERNAL_ERROR,  "COperatorTemplateFitting::ComputeLeastSquare: empty leastsquare sum");
     }
+
+    ComputeAmplitude(fitResult, logpriorTZE);
+
+    return fitResult;
+}
+
+void 
+COperatorTemplateFitting::ComputeAmplitude( TFittingResult & fitResult,
+                                            const CPriorHelper::SPriorTZE & logpriorTZE) const
+{
+    Float64 & fit = fitResult.chiSquare;
+
+    Float64 & sumCross = fitResult.sumCross;
+    Float64 & sumT = fitResult.sumT;
+    Float64 & sumS = fitResult.sumS;
 
     Float64 & ampl = fitResult.ampl;
     Float64 & ampl_err = fitResult.ampl_err;
@@ -387,10 +404,7 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
         }
         fit += logprior;
     }
-
-    return fitResult;
 }
-
 
 /**
  * \brief

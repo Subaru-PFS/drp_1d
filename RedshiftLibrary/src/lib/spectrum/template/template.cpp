@@ -357,11 +357,7 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
         m_meiksinRedshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     
         // get last index in spectral axis where igm can be applied
-        TAxisSampleList::iterator istart = m_SpectralAxis.GetSamplesVector().begin()+m_IsmIgm_kstart;
-        TAxisSampleList::iterator iend = m_SpectralAxis.GetSamplesVector().begin()+m_Ism_kend+1;
-        TAxisSampleList::iterator it = std::upper_bound(istart, iend, m_igmCorrectionMeiksin->GetLambdaMax());
-        if (it!=istart)  // should -1 if not applicable (lambdamax< lmabd[kstart]) 
-            m_Igm_kend = it - m_SpectralAxis.GetSamplesVector().begin() -1; 
+        m_Igm_kend = GetIgmEndIndex(m_IsmIgm_kstart, m_Ism_kend);
     }
 
     if(m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
@@ -374,6 +370,20 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
     
     m_computedDustCoeff.resize(m_SpectralAxis.GetSamplesCount());
     std::fill(m_computedDustCoeff.begin(), m_computedDustCoeff.end(), 1.0);
+}
+
+Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const
+{
+    if (MeiksinInitFailed()){
+        throw GlobalException(INTERNAL_ERROR,"CTemplate::GetIgmEndIndex: igm initialization not done");
+    }
+
+    Int32 Igm_kend = -1;
+    // get last index in spectral axis where igm can be applied
+    TAxisSampleList::const_iterator istart = m_SpectralAxis.GetSamplesVector().begin()+kstart;
+    TAxisSampleList::const_iterator iend = m_SpectralAxis.GetSamplesVector().begin()+kend+1;
+    TAxisSampleList::const_iterator it = std::upper_bound(istart, iend, m_igmCorrectionMeiksin->GetLambdaMax());
+    return (it == istart) ? -1 : it - 1 - m_SpectralAxis.GetSamplesVector().begin(); // should be -1 if not applicable (lambdamax< lmabd[kstart]) 
 }
 
 void CTemplate::ScaleFluxAxis(Float64 amplitude){

@@ -79,7 +79,10 @@ template <typename T> class CRange
 
     void SetEnd(const T &v) { m_End = v; }
 
-    CRange<T> operator-(Float64 t) { return CRange<T>(m_Begin - t, m_End - t); }
+    CRange<T> operator-(T t) { return CRange<T>(m_Begin - t, m_End - t); }
+    CRange<T> operator+(T t) { return CRange<T>(m_Begin + t, m_End + t); }
+    CRange<T> operator*(T t) { return CRange<T>(m_Begin * t, m_End * t); }
+    CRange<T> operator/(T t) { return CRange<T>(m_Begin / t, m_End / t); }
 
     T Interpolate(Float64 t) { return m_Begin + (m_End - m_Begin) * t; }
 
