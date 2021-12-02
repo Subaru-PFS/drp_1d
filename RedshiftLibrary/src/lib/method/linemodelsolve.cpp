@@ -283,11 +283,30 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   bool useloglambdasampling = inputContext->GetParameterStore()->GetScoped<bool>("linemodel.useloglambdasampling");
   useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
 
+  Int32 typeFilter = -1;
+  if (m_opt_linetypefilter == "A")
+    {
+      typeFilter = CRay::nType_Absorption;
+    } else if (m_opt_linetypefilter == "E")
+    {
+      typeFilter = CRay::nType_Emission;
+    }
+
+  Int32 forceFilter = -1; // CRay::nForce_Strong;
+  if (m_opt_lineforcefilter == "S")
+    {
+      forceFilter = CRay::nForce_Strong;
+    }
+  Log.LogDebug("restRayList force filter = %d", forceFilter);
+  CRayCatalog::TRayVector restRayList =
+    restraycatalog.GetFilteredList(typeFilter, forceFilter);
+  Log.LogDebug("restRayList.size() = %d", restRayList.size());
+
   bool retSolve = Solve( resultStore,
                          useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
-                         restraycatalog,
+                         restRayList,
                          m_lambdaRange,
                          m_redshifts );
  
@@ -733,7 +752,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
-                             const CRayCatalog& restraycatalog,
+                             const CRayCatalog::TRayVector& restRayList,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts )
 {
@@ -812,6 +831,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     }
     //logstep from redshift
 
+
+    
     //**************************************************
     //FIRST PASS
     //**************************************************
@@ -820,9 +841,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
-                                                    restraycatalog,
-                                                    m_opt_linetypefilter,
-                                                    m_opt_lineforcefilter,
+                                                    restRayList,
                                                     lambdaRange,
                                                     m_opt_fittingmethod,
                                                     m_opt_lineWidthType,
@@ -908,9 +927,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
-                                                            restraycatalog,
-                                                            m_opt_linetypefilter,
-                                                            m_opt_lineforcefilter,
+                                                            restRayList,
                                                             lambdaRange,
                                                             m_opt_fittingmethod,
                                                             m_opt_lineWidthType,
@@ -972,9 +989,6 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,
-                                                          restraycatalog,
-                                                          m_opt_linetypefilter,
-                                                          m_opt_lineforcefilter,
                                                           lambdaRange,
                                                           m_opt_fittingmethod,
                                                           m_opt_lineWidthType,

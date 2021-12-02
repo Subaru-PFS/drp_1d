@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 
 
@@ -204,8 +204,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
         TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         //Compute linemodel on the template
-        CLineModelElementList model( spectrum,
-                                     lambdaRange,
+        CLineModelFitting model( spectrum,
+				lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,

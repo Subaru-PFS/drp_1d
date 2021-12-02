@@ -842,7 +842,7 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
         numDevs++;
         sumLogNoise += log( error[j] );
     }
-    //Log.LogDebug( "CLineModelElementList::EstimateMTransposeM val = %f", mtm );
+    //Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
     cstLog = -numDevs*0.5*log(2*M_PI) - sumLogNoise;
 

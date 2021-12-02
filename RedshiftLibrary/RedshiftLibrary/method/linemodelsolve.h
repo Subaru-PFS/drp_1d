@@ -77,7 +77,7 @@ public:
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
-               const CRayCatalog& restraycatalog,
+               const CRayCatalog::TRayVector& restraycatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts);
 

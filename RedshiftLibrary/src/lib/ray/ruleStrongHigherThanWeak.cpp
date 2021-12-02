@@ -101,8 +101,8 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
 	  continue;
 	}
       Int32 eIdxWeak = LineModelElementList.FindElementIndex( iRestRayWeak );
-      Int32 subeIdxWeak = LineModelElementList.m_Elements[eIdxWeak]->FindElementIndex( iRestRayWeak );
-      if( LineModelElementList.m_Elements[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
+      Int32 subeIdxWeak = LineModelElementList[eIdxWeak]->FindElementIndex( iRestRayWeak );
+      if( LineModelElementList[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
 	{
 	  continue;
 	}
@@ -110,7 +110,7 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
       Float64 nSigma = 1.0;
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
-      Float64 ampB = LineModelElementList.m_Elements[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
+      Float64 ampB = LineModelElementList[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
 
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
@@ -130,7 +130,7 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
 
       if(maxB==std::min(maxB, ampB) && maxB!=ampB)
       {
-          LineModelElementList.m_Elements[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
+          LineModelElementList[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
           //log the correction
           {
               std::string nameWeak = LineModelElementList.m_RestRayList[iRestRayWeak].GetName();
@@ -168,14 +168,14 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp( Int32 linetype , Fl
 	  continue;
 	}
       Int32 eIdxStrong = LineModelElementList.FindElementIndex( iRestRayStrong );
-      Int32 subeIdxStrong = LineModelElementList.m_Elements[eIdxStrong]->FindElementIndex( iRestRayStrong );
-      if( LineModelElementList.m_Elements[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )
+      Int32 subeIdxStrong = LineModelElementList[eIdxStrong]->FindElementIndex( iRestRayStrong );
+      if( LineModelElementList[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )
 	{
 	  continue;
 	}
 
-      Float64 ampStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
-      Float64 erStrong = LineModelElementList.m_Elements[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
+      Float64 ampStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
+      Float64 erStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
       // if(erStrong>0.0 && ampStrong>0.0)
       // {
       //     lineSnr = ampStrong/erStrong;

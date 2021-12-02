@@ -125,9 +125,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
-                                           const CRayCatalog &restraycatalog,
-                                           const std::string &opt_lineTypeFilter,
-                                           const std::string &opt_lineForceFilter,
+                                           const CRayCatalog::TRayVector &restRayList,
                                            const TFloat64Range &lambdaRange,
                                            const std::string &opt_fittingmethod,
                                            const std::string &opt_lineWidthType,
@@ -161,29 +159,11 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     fclose( f );
     */
 
-    Int32 typeFilter = -1;
-    if (opt_lineTypeFilter == "A")
-    {
-        typeFilter = CRay::nType_Absorption;
-    } else if (opt_lineTypeFilter == "E")
-    {
-        typeFilter = CRay::nType_Emission;
-    }
-
-    Int32 forceFilter = -1; // CRay::nForce_Strong;
-    if (opt_lineForceFilter == "S")
-    {
-        forceFilter = CRay::nForce_Strong;
-    }
-    Log.LogDebug("restRayList force filter = %d", forceFilter);
-    CRayCatalog::TRayVector restRayList =
-        restraycatalog.GetFilteredList(typeFilter, forceFilter);
-    Log.LogDebug("restRayList.size() = %d", restRayList.size());
 
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(
+    m_model = std::shared_ptr<CLineModelFitting>(new CLineModelFitting(
                                                          spectrum,
                                                          clampedlambdaRange,
                                                          tplCatalog,
@@ -200,7 +180,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                          opt_rules,
                                                          opt_rigidity));
     Float64 setssSizeInit = 0.1;
-    m_model->SetSourcesizeDispersion(setssSizeInit);
+    m_model->m_Elements.SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
                 setssSizeInit);
 
@@ -1056,9 +1036,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
                                             const std::string opt_calibrationPath,
-                                            const CRayCatalog &restraycatalog,
-                                            const std::string &opt_lineTypeFilter,
-                                            const std::string &opt_lineForceFilter,
                                             const TFloat64Range &lambdaRange,
                                             const std::string &opt_fittingmethod,
                                             const std::string &opt_lineWidthType,
@@ -1288,7 +1265,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
             std::vector<std::vector<Int32>> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Absorption);
             std::string alv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1302,7 +1279,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
             Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s", alv_list_str.c_str());
             //emission
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Emission);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Emission);
             std::string elv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1618,7 +1595,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 m_secondpass_parameters_extremaResult.Redshift_lmfit.push_back(z);
 
                 m_model->SetFittingMethod(opt_fittingmethod);
-                m_model->ResetElementIndexesDisabled();
+                m_model->m_Elements.ResetElementIndexesDisabled();
                 Int32 velocityHasBeenReset =
                         m_model->ApplyVelocityBound(velfitMinE, velfitMaxE);
                 enableManualStepVelocityFit = velocityHasBeenReset;
@@ -1653,7 +1630,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         if (m_enableWidthFitByGroups)
                         {
                             idxVelfitGroups.clear();
-                            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Absorption);
+                            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Absorption);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d",
                                         idxVelfitGroups.size());
                             if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
@@ -1672,7 +1649,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         if (m_enableWidthFitByGroups)
                         {
                             idxVelfitGroups.clear();
-                            idxVelfitGroups = m_model->GetModelVelfitGroups(
+                            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(
                                         CRay::nType_Emission);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups EMISSION - n = %d",
                                         idxVelfitGroups.size());
@@ -1885,7 +1862,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             std::vector<std::vector<Int32>> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(
                         CRay::nType_Absorption);
             std::string alv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
@@ -1900,7 +1877,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s", alv_list_str.c_str());
             //emission
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->GetModelVelfitGroups(CRay::nType_Emission);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Emission);
             std::string elv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -2287,7 +2264,7 @@ void COperatorLineModel::fitVelocityByGroups(std::vector<Float64> velfitlist,
 {
   Int32 nVelSteps = velfitlist.size();
 
-  std::vector<std::vector<Int32>> idxVelfitGroups = m_model->GetModelVelfitGroups(rayType);
+  std::vector<std::vector<Int32>> idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(rayType);
   TFloat64List GroupsV;
 
   for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
@@ -2330,7 +2307,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
-  Float64 opt_resolution = params->Get<Float64>("LSF.resolution");
+
   Float64 opt_velocityEmission= params->GetScoped<Float64>("velocityemission");//set by client, not in parameters.json
   Float64 opt_velocityAbsorption= params->GetScoped<Float64>("velocityabsorption");//set by client, not in parameters.json
   std::string opt_rules = params->GetScoped<std::string>("rules");
@@ -2351,7 +2328,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-  m_model = std::shared_ptr<CLineModelElementList>(new CLineModelElementList(spc,
+  m_model = std::shared_ptr<CLineModelFitting>(new CLineModelFitting(spc,
                                                                              clampedlambdaRange,
                                                                              tplCatalog,
                                                                              tplCategoryList,
@@ -2367,7 +2344,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                                              opt_rules,
                                                                              opt_rigidity));
   Float64 setssSizeInit = 0.1;
-  m_model->SetSourcesizeDispersion(setssSizeInit);
+  m_model->m_Elements.SetSourcesizeDispersion(setssSizeInit);
   Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
               setssSizeInit);
 

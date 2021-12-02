@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
@@ -262,9 +262,7 @@ public:
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
-                           const CRayCatalog& restraycatalog,
-                           const std::string &opt_lineTypeFilter,
-                           const std::string &opt_lineForceFilter,
+                           const CRayCatalog::TRayVector& restraycatalog,
                            const TFloat64Range& lambdaRange,
                            const std::string &opt_fittingmethod,
                            const std::string& opt_lineWidthType,
@@ -289,9 +287,6 @@ public:
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,
-                            const CRayCatalog& restraycatalog,
-                            const std::string &opt_lineTypeFilter,
-                            const std::string &opt_lineForceFilter,
                             const TFloat64Range& lambdaRange,
                             const std::string &opt_fittingmethod,
                             const std::string& opt_lineWidthType,
@@ -404,7 +399,7 @@ public:
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
-    std::shared_ptr<CLineModelElementList> m_model;
+    std::shared_ptr<CLineModelFitting> m_model;
     TFloat64List m_sortedRedshifts;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
