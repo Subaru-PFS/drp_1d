@@ -127,11 +127,6 @@ CTemplateCatalog CreateCatalog(bool logSampling, bool ortho)
     return catalog;
 }
 
-bool outOfBound(const GlobalException& ex)
-{
-    BOOST_CHECK_EQUAL(ex.what(), std::string("SetTemplate: invalid index"));
-    return true;
-}
 BOOST_AUTO_TEST_CASE(Add)
 {
 
@@ -163,13 +158,9 @@ BOOST_AUTO_TEST_CASE(SetTemplate)
     std::shared_ptr<const CTemplate> retreivedTemplate = catalog.GetTemplate(category, 0);
     BOOST_CHECK( retreivedTemplate->GetName() == "modifiedT1");
     //case out-of-index
-    BOOST_CHECK_EXCEPTION(catalog.SetTemplate(CreateTemplate("modifiedT1", category), 3), 
-                                              GlobalException, 
-                                              outOfBound);
+    BOOST_CHECK_THROW(catalog.SetTemplate(CreateTemplate("modifiedT1", category), 3), std::exception);
     //negative Index
-    BOOST_CHECK_EXCEPTION(catalog.SetTemplate(CreateTemplate("modifiedT1", category), -2), 
-                                              GlobalException, 
-                                              outOfBound);                                    
+    BOOST_CHECK_THROW(catalog.SetTemplate(CreateTemplate("modifiedT1", category), -2), std::exception);                   
     
     category = "qso";
     catalog.SetTemplate(CreateTemplate("modifiedT3", category), 0);
@@ -220,10 +211,8 @@ BOOST_AUTO_TEST_CASE(SetTemplate_afterChangingOriginalTemplates)
     BOOST_CHECK(catalog.GetTemplateCount(category) == 2);//size doesnt change
 
     category = "qso";
-    std::shared_ptr<const CTemplate> retreivedTemplate3 = catalog.GetTemplate(category, 0);
-    BOOST_CHECK( retreivedTemplate3 == nullptr);
     //check purging 
-    BOOST_CHECK(catalog.GetTemplateCount(category) == 0);
+    BOOST_CHECK(catalog.GetNonNullTemplateCount(category) == 0);
 
 }
 
