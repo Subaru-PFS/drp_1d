@@ -28,6 +28,7 @@ build-osx:
   stage: build
   tags:
     - osx
+  when: manual
   script:
     - mkdir -p build
     - cd build
@@ -42,6 +43,7 @@ test-osx:
   stage: test
   tags:
     - osx
+  when: manual
   allow_failure: true
   script:
     - cd build
@@ -56,6 +58,7 @@ test-osx:
   stage: build-wheel
   tags:
     - osx
+  when: manual
   before_script:
     - cd build
     - cd ..
