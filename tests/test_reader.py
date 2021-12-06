@@ -40,23 +40,20 @@
 from pylibamazed.AbstractSpectrumReader import AbstractSpectrumReader
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 
+import random
 import numpy as np
 
 
 class FakeSpectrumReader(AbstractSpectrumReader):
 
     def load_wave(self, location):
-        self.waves.append(np.array([float(i) for i in range(10)]))
+        self.waves.append(np.array([float(i) + random.uniform(0, 0.0001) for i in range(10)]))
 
     def load_flux(self, location):
-        """
-        Load the spectral axis in self.flux , units are in erg.cm-2 by default
-        :param location: location of the resource where the wave can be found
-        """
-        self.fluxes.append(np.array([float(i) for i in range(10)]))
+        self.fluxes.append(np.array([random.random() for i in range(10)]))
 
     def load_error(self, location):
-        self.errors.append(np.array([float(i) for i in range(10)]))
+        self.errors.append(np.array([random.random() for i in range(10)]))
 
     def load_lsf(self, location):
         self.lsf_type = "GaussianConstantWidth"
@@ -67,6 +64,8 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         #self.photometric_data.append
 
 
+
+
 def test_reader():
     parameters = dict()
     parameters["LSF"] = dict()
@@ -75,4 +74,22 @@ def test_reader():
     cl = CalibrationLibrary(parameters, "/tmp")
     fsr = FakeSpectrumReader("000", parameters, cl, "000")
     fsr.load_all(None)
+    s = fsr.get_spectrum()
+
+
+def test_multi_obs():
+    parameters = dict()
+    parameters["LSF"] = dict()
+    parameters["LSF"]["LSFType"] = "FROMSPECTRUMDATA"
+    parameters["airvacuum_method"] = ""
+    cl = CalibrationLibrary(parameters, "/tmp")
+    fsr = FakeSpectrumReader("000", parameters, cl, "000")
+    fsr.load_wave(None)
+    fsr.load_flux(None)
+    fsr.load_error(None)
+    fsr.load_wave(None)
+    fsr.load_flux(None)
+    fsr.load_error(None)
+    fsr.load_lsf(None)
+    fsr.init()
     s = fsr.get_spectrum()

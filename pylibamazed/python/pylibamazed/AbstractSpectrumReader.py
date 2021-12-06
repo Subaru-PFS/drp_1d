@@ -39,6 +39,8 @@
 
 import numpy as np
 import os,json
+
+import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withError,
                                   CSpectrum,
@@ -51,15 +53,26 @@ from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 
 class AbstractSpectrumReader:
+    """
+    Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
+    Light Spread Function (LSF) whether its spectrum dependent or general. It can also handle photometric data
+    if present.
+
+    :param observation_id: Observation ID of the spectrum, there can be multiple observation id for the same source_id
+    :type observation_id: str
+    :param parameters: Parameters of the amazed run. It should at least have information about LSF and lambda range
+    :type parameters: dict
+    :param calibration_library: Calibration library object, containing all calibration data necessary,
+        according to parameters
+    :type calibration_library: class:`CalibrationLibrary`
+    :param source_id: Astronomical source ID
+    :type source_id: str
+
+    """
 
     def __init__(self, observation_id, parameters, calibration_library, source_id):
-        '''
-        :param observation_id:
-        :param parameters: dict containing the parameters
-        :param calibration_library: Calibration library object, containing all calibration data necessary,
-        according to parameters
-        :param source_id: Astronomical source ID
-        '''
+        """Constructor method
+        """
         self.observation_id = observation_id
         self.waves = []
         self.fluxes = []
@@ -76,13 +89,16 @@ class AbstractSpectrumReader:
     def load_wave(self, arg):
         """
         Append the spectral axis in self.wave , units are in Angstrom by default
-        :param location: location of the resource where the wave can be found
+
+        :param arg: location of the resource where the wave can be found
+
         """
         raise NotImplementedError("Implement in derived class")
 
     def load_flux(self, arg):
         """
         Append the flux in self.flux , units are in erg.cm-2 by default
+
         :param arg: location or handler for the resource where the flux can be found
         """
         raise NotImplementedError("Implement in derived class")
@@ -120,6 +136,7 @@ class AbstractSpectrumReader:
     def get_spectrum(self):
         """
         Get spectrum c++ object
+
         :return: CSpectrum object, fully loaded
         """
         if self._spectra[0] is not None:
@@ -165,8 +182,31 @@ class AbstractSpectrumReader:
             print("Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
-        spectralaxis = CSpectrumSpectralAxis(self.waves[0], airvacuum_method)
-        signal = CSpectrumFluxAxis_withError(self.fluxes[0], self.errors[0])
+        if len(self.waves) == 1:
+            spectralaxis = CSpectrumSpectralAxis(self.waves[0], airvacuum_method)
+            signal = CSpectrumFluxAxis_withError(self.fluxes[0], self.errors[0])
+        else:
+            wse = pd.DataFrame()
+            wse["wave"] = self.waves[0]
+            wse["flux"] = self.fluxes[0]
+            wse["error"] = self.errors[0]
+
+            for i in range(1, len(self.waves)):
+                wse_ = pd.DataFrame()
+                wse_["wave"] = self.waves[i]
+                wse_["flux"] = self.fluxes[i]
+                wse_["error"] = self.errors[i]
+                wse = wse.append(wse_)
+
+            wse.sort_values(["wave"], inplace=True)
+            wse.index = range(len(wse.index))
+            for i in range(1, len(wse.index)):
+                if wse.at[i, "wave"] == wse.at[i-1, "wave"]:
+                    wse.at[i, 'wave'] = wse.at[i, 'wave'] + 1e-10
+            spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
+            signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
+                                                 np.array(wse["error"]))
+
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[0].SetName(self.source_id)
 

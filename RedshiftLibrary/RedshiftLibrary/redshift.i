@@ -119,7 +119,6 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
-#include "RedshiftLibrary/builders/basicbuilders.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -724,11 +723,3 @@ class CSolveDescription
 };
 
 
-  class SampleVectorBuilder
-  {
-  public:
-    SampleVectorBuilder() ;
-    const TAxisSampleList&   GetSamplesVector() const;
-    const TFloat64List&   GetFloat64List() const;
-
-  };
