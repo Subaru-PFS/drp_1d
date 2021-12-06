@@ -37,13 +37,12 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import abc
-from .InputManager import InputManager
 import pandas as pd
 
 
 class AbstractOutput:
 
-    def __init__(self,input_manager):
+    def __init__(self):
         self.spectrum_id = ''
         self.root_results = dict()
         self.root_dataframes = dict()
