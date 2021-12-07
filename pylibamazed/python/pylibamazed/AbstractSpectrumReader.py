@@ -86,51 +86,62 @@ class AbstractSpectrumReader:
         self.calibration_library = calibration_library
         self.source_id = source_id
 
-    def load_wave(self, arg):
-        """
-        Append the spectral axis in self.wave , units are in Angstrom by default
+    def load_wave(self, resource):
+        """Append the spectral axis in self.wave , units are in Angstrom by default
 
-        :param arg: location of the resource where the wave can be found
+        :param resource: resource where the wave can be found, no restriction for type (can be a path,
+            a file handler, an hdf5 node,...)
+
+        """
+        raise NotImplementedError("Implement in derived class")
+
+    def load_flux(self, resource):
+        """Append the flux in self.flux , units are in erg.cm-2 by default
+
+        :param resource: resource where the flux can be found, no restriction for type (can be a path, a file handler,
+            an hdf5 node,...)
 
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_flux(self, arg):
-        """
-        Append the flux in self.flux , units are in erg.cm-2 by default
+    def load_error(self, resource):
+        """Append the variance in self.error , units are in erg.cm-2 by default
 
-        :param arg: location or handler for the resource where the flux can be found
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
+            an hdf5 node,...)
+
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_error(self, arg):
-        """
-        Append the variance in self.error , units are in erg.cm-2 by default
-        :param arg: location or handler for the resource where the error can be found
+    def load_lsf(self, resource):
+        """Append the spectral axis in self.flux , units are in erg.cm-2 by default
+
+         :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
+            an hdf5 node,...)
+
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_lsf(self, arg):
-        """
-        Append the spectral axis in self.flux , units are in erg.cm-2 by default
-        :param arg: location or handler for the resource where the wave can be found
+    def load_photometry(self, resource):
+        """Append the photometric data in self.photometric_data , units are in erg.cm-2 by default
+
+        :param resource: resource where the error can be found, no restriction for type (can be a path, a file handler,
+            an hdf5 node,...)
+
         """
         raise NotImplementedError("Implement in derived class")
 
-    def load_photometry(self, location):
-        raise NotImplementedError("Implement in derived class")
+    def load_all(self, resource):
+        """
+        Load all components of the spectrum. Reimplement this if resources are different
 
-    def load_all(self, location):
-        '''
-        Load all components of the spectrum. Reimplement this if locations are different
-        :param location:
-        @return:
-        '''
-        self.load_wave(location)
-        self.load_flux(location)
-        self.load_error(location)
-        self.load_lsf(location)
-        self.load_photometry(location)
+        :param resource: resource where wave, flux, error, lsf and photometry can be found
+        """
+        self.load_wave(resource)
+        self.load_flux(resource)
+        self.load_error(resource)
+        self.load_lsf(resource)
+        self.load_photometry(resource)
         self.init()
 
     def get_spectrum(self):
@@ -147,7 +158,9 @@ class AbstractSpectrumReader:
     def get_wave(self):
         """
 
-        :return:
+        :raises: Spectrum not loaded
+        :return: wavelength
+        :rtype: np.array
         """
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetSpectralAxis().GetSamplesVector())
@@ -155,27 +168,53 @@ class AbstractSpectrumReader:
             raise Exception("Spectrum not loaded")
 
     def get_flux(self):
+        """
+
+        :raises: Spectrum not loaded
+        :return: wavelength
+        :rtype: np.array
+        """
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList( self._spectra[0].GetFluxAxis().GetSamplesVector())
         else:
             raise Exception("Spectrum not loaded")
 
     def get_error(self):
+        """
+
+        :raises: Spectrum not loaded
+        :return: error
+        :rtype: np.array
+        """
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetFluxAxis().GetSamplesVector())
         else:
             raise Exception("Spectrum not loaded")
 
     def get_lsf(self):
+        """
+        :raises: Spectrum not loaded
+        :return: lsf
+        :rtype: np.array
+        """
         return self.lsf_data[0]
 
     def set_air(self):
+        """
+        Set w_frame to "air" (default is vacuum). Client should use this method if input spectra are in air frame
+        """
         self.w_frame = "air"
 
     def init(self):
+        if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
+            raise Exception("Numbers of error, wavelength and flux arrays should be the same : " + str(len(self.waves))
+                            + " " + str(len(self.errors)) + " " + str(len(self.fluxes))
+                            )
         if len(self.lsf_data) > 1:
             raise Exception("Multiple LSF not handled")
         airvacuum_method = self.parameters.get("airvacuum_method", "")
+        if airvacuum_method == "default":
+            airvacuum_method = "Morton2000"
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
         elif airvacuum_method != "" and self.w_frame == "vacuum":
@@ -197,12 +236,14 @@ class AbstractSpectrumReader:
                 wse_["flux"] = self.fluxes[i]
                 wse_["error"] = self.errors[i]
                 wse = wse.append(wse_)
-
             wse.sort_values(["wave"], inplace=True)
-            wse.index = range(len(wse.index))
-            for i in range(1, len(wse.index)):
-                if wse.at[i, "wave"] == wse.at[i-1, "wave"]:
-                    wse.at[i, 'wave'] = wse.at[i, 'wave'] + 1e-10
+            codes, uniques = pd.factorize(wse["wave"])
+            epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
+            wse["wave"] = wse["wave"] + epsilon
+            if len(wse["wave"].unique()) != wse.index.size:
+                raise Exception("Duplicates in wavelengths")
+            if not (np.diff(wse["wave"]) > 0).all():
+                raise Exception("Wavelenghts are not sorted")
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))

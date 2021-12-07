@@ -42,18 +42,34 @@ from pylibamazed.CalibrationLibrary import CalibrationLibrary
 
 import random
 import numpy as np
+import tempfile
 
 
 class FakeSpectrumReader(AbstractSpectrumReader):
 
-    def load_wave(self, location):
-        self.waves.append(np.array([float(i) + random.uniform(0, 0.0001) for i in range(10)]))
+    def __init__(self, observation_id, parameters, calibration_library, source_id, lambda_type):
+        AbstractSpectrumReader.__init__(self, observation_id,parameters,calibration_library,source_id)
+        self.lambda_type = lambda_type
 
-    def load_flux(self, location):
-        self.fluxes.append(np.array([random.random() for i in range(10)]))
+    def load_wave(self, l_range):
+        if self.lambda_type == "random":
+            self.waves.append(np.array([float(i) + random.uniform(0, 0.0001) for i in range(10)]))
+        elif self.lambda_type == "range":
+            self.waves.append(np.array([float(i) for i in range(l_range[0], l_range[1])]))
+        else:
+            raise Exception("unknown lambda type")
 
-    def load_error(self, location):
-        self.errors.append(np.array([random.random() for i in range(10)]))
+    def load_flux(self, l_range):
+        if l_range is not None:
+            self.fluxes.append(np.array([random.random() for i in range(l_range[0],l_range[1])]))
+        else:
+            self.fluxes.append(np.array([random.random() for i in range(10)]))
+
+    def load_error(self, l_range):
+        if l_range is not None:
+            self.errors.append(np.array([random.random() for i in range(l_range[0],l_range[1])]))
+        else:
+            self.errors.append(np.array([random.random() for i in range(10)]))
 
     def load_lsf(self, location):
         self.lsf_type = "GaussianConstantWidth"
@@ -64,15 +80,13 @@ class FakeSpectrumReader(AbstractSpectrumReader):
         #self.photometric_data.append
 
 
-
-
 def test_reader():
     parameters = dict()
     parameters["LSF"] = dict()
     parameters["LSF"]["LSFType"] = "FROMSPECTRUMDATA"
     parameters["airvacuum_method"] = ""
     cl = CalibrationLibrary(parameters, "/tmp")
-    fsr = FakeSpectrumReader("000", parameters, cl, "000")
+    fsr = FakeSpectrumReader("000", parameters, cl, "000","random")
     fsr.load_all(None)
     s = fsr.get_spectrum()
 
@@ -82,14 +96,17 @@ def test_multi_obs():
     parameters["LSF"] = dict()
     parameters["LSF"]["LSFType"] = "FROMSPECTRUMDATA"
     parameters["airvacuum_method"] = ""
-    cl = CalibrationLibrary(parameters, "/tmp")
-    fsr = FakeSpectrumReader("000", parameters, cl, "000")
-    fsr.load_wave(None)
-    fsr.load_flux(None)
-    fsr.load_error(None)
-    fsr.load_wave(None)
-    fsr.load_flux(None)
-    fsr.load_error(None)
+    cl = CalibrationLibrary(parameters, tempfile.mkdtemp())
+    fsr = FakeSpectrumReader("000", parameters, cl, "000","range")
+    fsr.load_wave([0,10])
+    fsr.load_flux([0,10])
+    fsr.load_error([0,10])
+    fsr.load_wave([8,20])
+    fsr.load_flux([8,20])
+    fsr.load_error([8,20])
+    fsr.load_wave([7,12])
+    fsr.load_flux([7,12])
+    fsr.load_error([7,12])
     fsr.load_lsf(None)
     fsr.init()
     s = fsr.get_spectrum()

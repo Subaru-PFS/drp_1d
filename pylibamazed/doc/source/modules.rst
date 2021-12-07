@@ -8,7 +8,6 @@ pylibamazed
    AbstractSpectrumReader
    CalibrationLibrary
    Hdf5Output
-   InputManager
    OutputSpecifications
    ResultStoreOutput
    lsf

@@ -99,16 +99,16 @@ In order to disable test building, set the `BUILD_TESTING` option to `OFF`:
 
 ## Additional documentation
 
-Detailed documentation about this software can be found by building the provided documentation:
+Documentation about the python API of this software can be found by building the provided documentation:
 
 Build documentation:
 
-    cd $ROOT_DIR/tools/
-    python ./builddoc.py`
+    cd $ROOT_DIR/pylibamazed/doc
+    make html
 
 Then open in your web browser:
 
-    $ROOT_DIR/docs/html/index.html
+    $ROOT_DIR/pylibamazed/build/html/index.html
 
 ## Base environment install guide
 
