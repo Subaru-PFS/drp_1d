@@ -48,6 +48,8 @@
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 #include <map>
+#include <memory>
+#include <string>
 namespace NSEpic {
 
 class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
@@ -55,9 +57,8 @@ class COperatorTemplateFittingPhot : public COperatorTemplateFitting {
 public:
   explicit COperatorTemplateFittingPhot(
       const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
-      const CPhotBandCatalog &photbandcat,
+      const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
       const TFloat64List &redshifts = TFloat64List());
-  ~COperatorTemplateFittingPhot() = default;
 
 private:
   void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
@@ -87,7 +88,7 @@ private:
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;
 
-  const CPhotBandCatalog &m_photBandCat;
+  std::shared_ptr<const CPhotBandCatalog> m_photBandCat;
   TStringList m_sortedBandNames;
 };
 

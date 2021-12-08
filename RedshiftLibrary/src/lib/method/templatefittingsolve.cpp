@@ -50,6 +50,7 @@
 #include "RedshiftLibrary/statistics/zprior.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
+#include "RedshiftLibrary/operator/templatefittingwithphot.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -82,16 +83,23 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
 
   bool use_photometry = false;
-  if (inputContext->GetParameterStore()->Has<bool>("enablephotometry"))
+  if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry"))
     use_photometry = inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
   
+  if (fft_processing && use_photometry)
+    throw GlobalException(INTERNAL_ERROR, "CMethodTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
+
   if(fft_processing)
     {
         m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(spc, rebinnedSpc, m_lambdaRange, m_redshifts);
         tplCatalog.m_logsampling = true; 
     }
   else{
+      if (use_photometry){
         m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
+      }else{
+        m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spc, m_lambdaRange, inputContext->GetPhotBandCatalog(), m_redshifts);
+      }
         tplCatalog.m_logsampling = false;
   }
 
@@ -170,8 +178,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 
         //for each extrema, get best model by reading from datastore and selecting best fit
         /////////////////////////////////////////////////////////////////////////////////////
-        if (fft_processing){ // go back to normal templatefitting operator
-            m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
+        if (fft_processing){ 
             tplCatalog.m_logsampling = false;
         }
         std::shared_ptr<const ExtremaResult> extremaResult =    

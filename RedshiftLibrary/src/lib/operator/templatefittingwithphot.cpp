@@ -44,7 +44,8 @@ using namespace std;
 
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
-    const CPhotBandCatalog &photbandcat, const TFloat64List &redshifts)
+    const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
+    const TFloat64List &redshifts)
     : COperatorTemplateFitting(spectrum, lambdaRange, redshifts),
       m_photBandCat(photbandcat) {
 
@@ -59,7 +60,7 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   }
 
   // initialize restframe photometric axis and rebined photmetric template
-  for (auto const &band : m_photBandCat) {
+  for (auto const &band : *m_photBandCat) {
     const string &bandName = band.first;
     m_photSpectralAxis_restframe[bandName]; // default initialisation
     m_templateRebined_phot[bandName];       // default initialisation
@@ -67,7 +68,7 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
   // sort photometric band by increasing lambda (by lower bound of the bands)
   //  for IGM processing
-  m_sortedBandNames = m_photBandCat.GetNameListSortedByLambda();
+  m_sortedBandNames = m_photBandCat->GetNameListSortedByLambda();
 }
 
 void COperatorTemplateFittingPhot::RebinTemplate(
@@ -87,7 +88,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 
   Float64 onePlusRedshift = 1.0 + redshift;
 
-  for (auto const &band : m_photBandCat) {
+  for (auto const &band : *m_photBandCat) {
     const string &bandName = band.first;
     const TFloat64List &bandLambda = band.second.GetWavelength();
 
@@ -187,7 +188,7 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
   // compute photometric Leastquare
   for (const auto &band : m_templateRebined_phot) {
     const auto &bandName = band.first;
-    const auto &photBand = m_photBandCat.at(bandName);
+    const auto &photBand = m_photBandCat->at(bandName);
     const auto &flux = band.second.GetFluxAxis().GetSamplesVector();
 
     // integrate flux
