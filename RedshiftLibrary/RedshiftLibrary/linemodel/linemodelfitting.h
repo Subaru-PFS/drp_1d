@@ -79,21 +79,21 @@ class CLineModelFitting
 
 public:
 
-    CLineModelFitting(const CSpectrum& spectrum,
-		      const TFloat64Range& lambdaRange,
-                          const CTemplateCatalog& tplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string &opt_continuumcomponent,
-                          const Float64 opt_continuum_neg_threshold,
-                          const std::string& lineWidthType,
-                          const Float64 nsigmasupport,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string &opt_rules,
-                          const std::string &opt_rigidity);
+    CLineModelFitting(  const CSpectrum& spectrum,
+                        const TFloat64Range& lambdaRange,
+                        const CTemplateCatalog& tplCatalog,
+                        const TStringList& tplCategoryList,
+                        const std::string calibrationPath,
+                        const CRayCatalog::TRayVector& restRayList,
+                        const std::string& opt_fittingmethod,
+                        const std::string &opt_continuumcomponent,
+                        const Float64 opt_continuum_neg_threshold,
+                        const std::string& lineWidthType,
+                        const Float64 nsigmasupport,
+                        const Float64 velocityEmission,
+                        const Float64 velocityAbsorption,
+                        const std::string &opt_rules,
+                        const std::string &opt_rigidity);
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
@@ -129,6 +129,7 @@ public:
     Float64 getFitContinuum_tplAmplitudeError() const;
     Float64 getFitContinuum_snr() const;
     Float64 getFitContinuum_tplMerit() const;
+    Float64 getFitContinuum_tplMeritPhot() const;
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
     Float64 getFitContinuum_tplIsmEbmvCoeff() const;
     Float64 getFitContinuum_tplIgmMeiksinIdx() const;
@@ -142,6 +143,7 @@ public:
                                    Float64 tplfit_amp,
                                    Float64 tplfit_amperr,
                                    Float64 tplfit_chi2,
+                                   Float64 tplfit_chi2_phot,
                                    Float64 tplfit_ebmv,
                                    Int32 tplfit_meiksinidx,
                                    Float64 tplfit_continuumredshift,
@@ -445,6 +447,7 @@ private:
     Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
     Float64 m_fitContinuum_tplFitAmplitudeSigmaMAX = NAN;
     Float64 m_fitContinuum_tplFitMerit = NAN;
+    Float64 m_fitContinuum_tplFitMerit_phot = NAN;
     Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
     Int32   m_fitContinuum_tplFitMeiksinIdx = -1;
     Float64 m_fitContinuum_tplFitRedshift = NAN; // only used with m_fitContinuum_option==2 for now

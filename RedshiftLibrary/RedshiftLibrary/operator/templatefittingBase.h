@@ -104,7 +104,7 @@ protected:
                                 Float64& overlaprate,
                                 const Float64 overlapThreshold);
   //Likelihood
-  static Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange);
+  virtual Float64 EstimateLikelihoodCstLog(const CSpectrum& spectrum, const TFloat64Range& lambdaRange) const;
 
   const CSpectrum & m_spectrum;
   TFloat64Range   m_lambdaRange;

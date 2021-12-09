@@ -62,13 +62,8 @@ CTemplatesFitStore::~CTemplatesFitStore()
  */
 void CTemplatesFitStore::initFitValues()
 {
-    for(Int32 kz=0; kz<redshiftgrid.size(); kz++)
-    {
-        SValues values_unused;
-        values_unused.merit = DBL_MAX;
-        std::vector<SValues> zfitvals;//(n_max_continuum_candidates, values_unused);
-        m_fitValues.push_back(zfitvals);
-    }
+    std::vector<SValues> zfitvals;
+    m_fitValues = std::vector<std::vector<SValues>>(redshiftgrid.size(), zfitvals);
 }
 
 const std::vector<Float64> & CTemplatesFitStore::GetRedshiftList() const 
@@ -108,6 +103,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
                              Int32 igmMeiksinIdx,
                              Float64 redshift,
                              Float64 merit,
+                             Float64 chiSquare_phot,
                              Float64 fitAmplitude,
                              Float64 fitAmplitudeError,
                              Float64 fitAmplitudeSigma,
@@ -117,6 +113,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
 {
     SValues tmpSValues;
     tmpSValues.merit = merit;
+    tmpSValues.chiSquare_phot = chiSquare_phot;
     tmpSValues.fitAmplitude = fitAmplitude;
     tmpSValues.fitAmplitudeError = fitAmplitudeError;
     tmpSValues.fitAmplitudeSigma = fitAmplitudeSigma;
@@ -135,35 +132,30 @@ bool CTemplatesFitStore::Add(std::string tplName,
                      redshift);
         return false;
     }
-    //
 
     //if chi2 val is the lowest, and condition on tplName, insert at position ipos
-    Int32 ipos=-1;
-    for(Int32 kpos=0; kpos<m_fitValues[idxz].size(); kpos++)
-    {
-        if(tmpSValues.merit < m_fitValues[idxz][kpos].merit)
-        {
-            ipos = kpos;
-            break;
-        }
-    }
+    auto ipos = std::upper_bound(m_fitValues[idxz].begin(),
+                                 m_fitValues[idxz].end(), tmpSValues.merit,
+                                 [](Float64 val, const SValues &lhs) {
+                                   return (val < lhs.merit);
+                                 });
 
-    if(ipos<0 && m_fitValues[idxz].size()<n_max_continuum_candidates)
+    if(ipos==m_fitValues[idxz].cend()) 
     {
-        Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at end position %d (merit=%e, ebmv=%e, imeiksin=%d)",
-                     idxz,
-                     redshift,
-                     m_fitValues[idxz].size(),
-                     tmpSValues.merit,
-                     tmpSValues.ismEbmvCoeff,
-                     tmpSValues.igmMeiksinIdx);
+        if (m_fitValues[idxz].size()<n_max_continuum_candidates) {
+            Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at end position %d (merit=%e, ebmv=%e, imeiksin=%d)",
+                idxz,
+                redshift,
+                m_fitValues[idxz].size(),
+                tmpSValues.merit,
+                tmpSValues.ismEbmvCoeff,
+                tmpSValues.igmMeiksinIdx);
 
-        m_fitValues[idxz].push_back(tmpSValues);
-
-    }else if(ipos<0)
-    {
-        //nothing to do, merit doesn't qualify the fit result to be stored
-    }else{
+            m_fitValues[idxz].push_back(tmpSValues);
+        } else {
+            //nothing to do, merit doesn't qualify the fit result to be stored
+        }        
+    } else {
         Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d (merit=%e, ebmv=%e, imeiksin=%d)",
                      idxz,
                      redshift,
@@ -173,27 +165,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
                      tmpSValues.igmMeiksinIdx);
 
         //insert the new SValue and move all the older candidates position according to ipos found
-        std::vector<SValues>  tmpBufferValues;
-        for(UInt32 ktmp=0; ktmp<m_fitValues[idxz].size(); ktmp++)
-        {
-            tmpBufferValues.push_back(m_fitValues[idxz][ktmp]);
-        }
-        SValues values_unused;
-        values_unused.merit = DBL_MAX;
-        tmpBufferValues.push_back(values_unused);
-
-        UInt32 iOld=0;
-        for(UInt32 ktmp=0; ktmp<m_fitValues[idxz].size(); ktmp++)
-        {
-            if(ipos==ktmp)
-            {
-                m_fitValues[idxz][ktmp] = tmpSValues;
-            }else{
-                m_fitValues[idxz][ktmp] = tmpBufferValues[iOld];
-                iOld++;
-            }
-        }
-        m_fitValues[idxz].push_back(tmpBufferValues[iOld]);
+        m_fitValues[idxz].insert(ipos, tmpSValues);
     }
 
     //this is not very secure. it should be checked that all redshifts have the same fitValues count

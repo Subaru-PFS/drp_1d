@@ -53,7 +53,7 @@ COperatorTemplateFittingBase::COperatorTemplateFittingBase(const CSpectrum& spec
  * wavelength range
  **/
 Float64 COperatorTemplateFittingBase::EstimateLikelihoodCstLog(const CSpectrum &spectrum, 
-                                                              const TFloat64Range &lambdaRange) 
+                                                              const TFloat64Range &lambdaRange) const
 {
     const CSpectrumSpectralAxis &spcSpectralAxis = spectrum.GetSpectralAxis();
     const TFloat64List &error = spectrum.GetFluxAxis().GetError().GetSamplesVector();;

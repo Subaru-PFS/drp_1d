@@ -85,6 +85,14 @@ private:
                                     const CPriorHelper::SPriorTZE &logprior,
                                     const CMask &spcMaskAdditional) override;
 
+  void ComputePhotCrossProducts(TFittingResult &fitResult,
+                                Float64 &sumCross_phot, Float64 &sumT_phot,
+                                Float64 &sumS_phot);
+
+  Float64
+  EstimateLikelihoodCstLog(const CSpectrum &spectrum,
+                           const TFloat64Range &lambdaRange) const override;
+
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;
 

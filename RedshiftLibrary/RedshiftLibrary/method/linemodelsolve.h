@@ -79,7 +79,8 @@ public:
                const TStringList& tplCategoryList,
                const CRayCatalog::TRayVector& restraycatalog,
                const TFloat64Range& lambdaRange,
-               const TFloat64List& redshifts);
+               const TFloat64List& redshifts,
+               const std::shared_ptr<const CPhotBandCatalog> &photBandCat);
 
 private:
 
@@ -109,6 +110,7 @@ private:
 
     bool m_opt_tplfit_fftprocessing=true;//default to using fft
     bool m_opt_tplfit_fftprocessing_secondpass=true;
+    bool m_opt_tplfit_use_photometry=false;
     bool m_opt_tplfit_dustfit=false;
     bool m_opt_tplfit_igmfit=false;
   Float64 m_opt_continuumfitcount; //TODO is this really a double and not an integer ?

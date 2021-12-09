@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(indexing_test_float)
 
 bool correctMessage(const GlobalException& ex)
 {
-    BOOST_CHECK_EQUAL(ex.what(), std::string("Could not find index for 2.000000"));
+    BOOST_CHECK_EQUAL(ex.what(), std::string("CIndexing::getIndex: Could not find index for 2"));
     return true;
 }
 BOOST_AUTO_TEST_CASE(indexing_test_float_erro)

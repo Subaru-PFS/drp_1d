@@ -52,6 +52,7 @@ using namespace NSEpic;
 void CTemplateFittingResult::Init(UInt32 n)
 {
     ChiSquare.resize( n );
+    ChiSquarePhot.resize( n );
     FitAmplitude.resize( n );
     FitAmplitudeError.resize( n );
     FitAmplitudeSigma.resize( n);
@@ -89,6 +90,7 @@ void CTemplateFittingResult::InitIntermediate(Int32 EbmvListSize, Int32 MeiksinL
 void CTemplateFittingResult::set_at_redshift(const UInt32 i, TFittingIsmIgmResult val)
 {
     ChiSquare[i] = val.chiSquare;
+    ChiSquarePhot[i] = val.chiSquare_phot;
     FitAmplitude[i] = val.ampl;
     FitAmplitudeError[i] = val.ampl_err;
     FitAmplitudeSigma[i] = val.ampl_sigma;

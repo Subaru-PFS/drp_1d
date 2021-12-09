@@ -57,6 +57,7 @@ namespace NSEpic
 {
 struct TFittingResult {
     Float64 chiSquare = INFINITY;
+    Float64 chiSquare_phot = 0.0; // should be initialized at zero to be summed unconditionnaly 
     Float64 ampl = NAN;
     Float64 ampl_err = NAN;
     Float64 ampl_sigma = NAN;
@@ -134,8 +135,12 @@ protected:
                                                 Int32 kEbmv,
                                                 const CPriorHelper::SPriorTZE & logprior,
                                                 const CMask & spcMaskAdditional);
+    
+    TFittingResult ComputeCrossProducts(Int32 kM,
+                                        Int32 kEbmv_,
+                                        const CMask & spcMaskAdditional);
 
-    void ComputeAmplitude( TFittingResult & fitres, const CPriorHelper::SPriorTZE & logpriorTZ) const;
+    void ComputeAmplitudeAndChi2( TFittingResult & fitres, const CPriorHelper::SPriorTZE & logpriorTZ) const;
 
     Bool m_option_igmFastProcessing;
     Int32 m_kStart, m_kEnd;

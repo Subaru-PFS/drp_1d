@@ -247,16 +247,25 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
                                                 const CPriorHelper::SPriorTZE & logpriorTZE,
                                                 const CMask & spcMaskAdditional)
 {
+    TFittingResult fitResult = ComputeCrossProducts(kM, kEbmv_, spcMaskAdditional);
+
+    ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
+
+    return fitResult;
+}
+
+TFittingResult 
+COperatorTemplateFitting::ComputeCrossProducts( Int32 kM,
+                                                Int32 kEbmv_,
+                                                const CMask & spcMaskAdditional)
+{
     const CSpectrumFluxAxis & spcFluxAxis = m_spectrum.GetFluxAxis();
+    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
     const TAxisSampleList & Ytpl = m_templateRebined_bf.GetFluxAxis().GetSamplesVector();
     const TAxisSampleList & Xtpl = m_templateRebined_bf.GetSpectralAxis().GetSamplesVector();
-    const TAxisSampleList & Yspc = spcFluxAxis.GetSamplesVector();
-
 
     TFittingResult fitResult;
     
-    Float64 & fit = fitResult.chiSquare;
-
     Float64 & sumCross = fitResult.sumCross;
     Float64 & sumT = fitResult.sumT;
     Float64 & sumS = fitResult.sumS;
@@ -297,19 +306,19 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
             sumS+= Yspc[j]*Yspc[j]*err2;
 
             if( std::isinf(err2) || std::isnan(err2) ){
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid inverse variance : err2="<<err2<<", for index="<< j<<" at restframe wl="<<Xtpl[j]);
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: found invalid inverse variance : err2="<<err2<<", for index="<< j<<" at restframe wl="<<Xtpl[j]);
             }
 
             if( std::isinf(sumS) || std::isnan(sumS) || sumS!=sumS ){
-                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, Xtpl[j]);
-                Log.LogError("COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, Xtpl[j]);
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid dtd");
+                Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found invalid dtd : dtd=%e, for index=%d at restframe wl=%f", sumS, j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found invalid dtd : Yspc=%e, for index=%d at restframe wl=%f", Yspc[j], j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found invalid dtd : err2=%e, for index=%d at restframe wl=%f", err2, j, Xtpl[j]);
+                Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found invalid dtd : error=%e, for index=%d at restframe wl=%f", error[j], j, Xtpl[j]);
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: found invalid dtd");
             }
 
             if( std::isinf(sumT) || std::isnan(sumT) ){
-                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeLeastSquare: found invalid mtm : mtm=" << sumT
+                throw GlobalException(INTERNAL_ERROR, Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: found invalid mtm : mtm=" << sumT
                     << " for index=" << j << " at restframe wl=" << Xtpl[j]);
             }
         }
@@ -331,27 +340,24 @@ COperatorTemplateFitting::ComputeLeastSquare(   Int32 kM,
 
     if ( numDevs==0 )
     {
-        throw GlobalException(INTERNAL_ERROR,  "COperatorTemplateFitting::ComputeLeastSquare: empty leastsquare sum");
+        throw GlobalException(INTERNAL_ERROR,  "COperatorTemplateFitting::ComputeCrossProducts: empty leastsquare sum");
     }
-
-    ComputeAmplitude(fitResult, logpriorTZE);
 
     return fitResult;
 }
 
 void 
-COperatorTemplateFitting::ComputeAmplitude( TFittingResult & fitResult,
+COperatorTemplateFitting::ComputeAmplitudeAndChi2( TFittingResult & fitResult,
                                             const CPriorHelper::SPriorTZE & logpriorTZE) const
-{
-    Float64 & fit = fitResult.chiSquare;
-
-    Float64 & sumCross = fitResult.sumCross;
-    Float64 & sumT = fitResult.sumT;
-    Float64 & sumS = fitResult.sumS;
+{ 
+    const Float64 & sumCross = fitResult.sumCross;
+    const Float64 & sumT = fitResult.sumT;
+    const Float64 & sumS = fitResult.sumS;
 
     Float64 & ampl = fitResult.ampl;
     Float64 & ampl_err = fitResult.ampl_err;
     Float64 & ampl_sigma = fitResult.ampl_sigma;
+    Float64 & fit = fitResult.chiSquare;
 
     bool apply_priore = (logpriorTZE.A_sigma>0.0 && logpriorTZE.betaA>0.0) ? true : false;
 

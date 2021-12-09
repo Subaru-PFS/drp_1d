@@ -96,9 +96,9 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     }
   else{
       if (use_photometry){
-        m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
-      }else{
         m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spc, m_lambdaRange, inputContext->GetPhotBandCatalog(), m_redshifts);
+      }else{
+        m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
       }
         tplCatalog.m_logsampling = false;
   }
@@ -480,6 +480,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         // Fill extrema Result
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( results[tplName] );
         extremaResult->m_ranked_candidates[i].second.FittedTplMerit = ChiSquare;
+        extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot = TplFitResult->ChiSquarePhot[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplName= tplName;
         extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx= TplFitResult->FitMeiksinIdx[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff= TplFitResult->FitEbmvCoeff[idx];

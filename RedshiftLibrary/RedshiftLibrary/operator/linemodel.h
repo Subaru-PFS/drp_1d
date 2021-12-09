@@ -78,6 +78,7 @@ public:
     FittedTplAmplitude.resize(size);
     FittedTplAmplitudeError.resize(size);
     FittedTplMerit.resize(size);
+    FittedTplMeritPhot.resize(size);
     FittedTplEbmvCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
     FittedTplDtm.resize(size);
@@ -166,6 +167,7 @@ public:
   TFloat64List      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
   TFloat64List      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
   TFloat64List      FittedTplMerit;     //Chisquare for the best template fitted for continuum
+  TFloat64List      FittedTplMeritPhot; // extra chisquare term due to photometry   
   TFloat64List      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
   TInt32List        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
   TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
@@ -234,10 +236,6 @@ class COperatorLineModel
 
 public:
 
-    COperatorLineModel();
-    virtual ~COperatorLineModel();
-
-
     Int32 Init( const CSpectrum& spectrum,
                 const TFloat64List& redshifts, 
                 const std::string &opt_continuumcomponent,
@@ -254,6 +252,7 @@ public:
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
+                                const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                                 bool ignoreLinesSupport=false,
                                 Int32 candidateIdx = -1);
 
@@ -264,6 +263,7 @@ public:
                            const std::string opt_calibrationPath,
                            const CRayCatalog::TRayVector& restraycatalog,
                            const TFloat64Range& lambdaRange,
+                           const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
                            const std::string &opt_fittingmethod,
                            const std::string& opt_lineWidthType,
                            const Float64 opt_velocityEmission,
@@ -276,6 +276,7 @@ public:
                            const std::string &opt_rigidity="rules",
                            const string &opt_tplratioCatRelPath="",
                            const string &opt_offsetCatRelPath="");
+
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
@@ -288,6 +289,7 @@ public:
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,
                             const TFloat64Range& lambdaRange,
+                            const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                             const std::string &opt_fittingmethod,
                             const std::string& opt_lineWidthType,
                             const Float64 opt_velocityEmission,
@@ -336,7 +338,7 @@ public:
 
     Float64 m_linesmodel_nsigmasupport;
 
-    Int32 m_maxModelSaveCount;
+    Int32 m_maxModelSaveCount=20;
     Float64 m_secondPass_halfwindowsize; // = 0.005;
     Float64 m_extremaRedshiftSeparation; 
 
@@ -351,6 +353,7 @@ public:
 
     bool m_opt_tplfit_fftprocessing = false; //we cant set it as the default since not taken into account when deiding on rebinning
     bool m_opt_tplfit_fftprocessing_secondpass = false;//true;
+    bool m_opt_tplfit_use_photometry = false;
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
@@ -414,7 +417,7 @@ private:
 
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
     
-    std::shared_ptr<COperatorTemplateFittingBase> templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     //lmfit
 

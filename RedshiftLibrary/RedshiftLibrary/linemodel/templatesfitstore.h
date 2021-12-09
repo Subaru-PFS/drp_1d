@@ -60,7 +60,8 @@ public:
         Float64 ismEbmvCoeff;
         Int32 igmMeiksinIdx;
 
-        Float64 merit;
+        Float64 merit; 
+        Float64 chiSquare_phot;
         Float64 fitAmplitude;
         Float64 fitAmplitudeError;
         Float64 fitAmplitudeSigma;
@@ -78,6 +79,7 @@ public:
              Int32 igmMeiksinIdx,
              Float64 redshift,
              Float64 merit,
+             Float64 chiSquare_phot,
              Float64 fitAmplitude,
              Float64 fitAmplitudeError,
              Float64 fitAmplitudeSigma,

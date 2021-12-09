@@ -176,12 +176,39 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
     Int32 kM, Int32 kEbmv, const CPriorHelper::SPriorTZE &logpriorTZE,
     const CMask &spcMaskAdditional) {
 
-  TFittingResult fitResult = COperatorTemplateFitting::ComputeLeastSquare(
-      kM, kEbmv, logpriorTZE, spcMaskAdditional);
+  TFittingResult fitResult = ComputeCrossProducts(kM, kEbmv, spcMaskAdditional);
+
+  Float64 sumCross_phot = 0.0;
+  Float64 sumT_phot = 0.0;
+  Float64 sumS_phot = 0.0;
+
+  ComputePhotCrossProducts(fitResult, sumCross_phot, sumT_phot, sumS_phot);
 
   Float64 &sumCross = fitResult.sumCross;
   Float64 &sumT = fitResult.sumT;
   Float64 &sumS = fitResult.sumS;
+
+  sumCross += sumCross_phot;
+  sumT += sumT_phot;
+  sumS += sumS_phot;
+
+  ComputeAmplitudeAndChi2(fitResult, logpriorTZE);
+
+  // save photometric chi2 part
+  const Float64 &ampl = fitResult.ampl;
+  fitResult.chiSquare_phot =
+      sumS_phot + sumT_phot * ampl * ampl - 2. * ampl * sumCross_phot;
+
+  return fitResult;
+}
+
+void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
+    TFittingResult &fitResult, Float64 &sumCross_phot, Float64 &sumT_phot,
+    Float64 &sumS_phot) {
+
+  sumCross_phot = 0.0;
+  sumT_phot = 0.0;
+  sumS_phot = 0.0;
 
   const auto &photData = m_spectrum.GetPhotData();
 
@@ -205,13 +232,25 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
                          "found invalid inverse variance : err2="
                       << oneOverErr2 << ", for band=" << bandName);
 
-    sumCross += d * integ_flux * oneOverErr2;
-    sumT += integ_flux * integ_flux * oneOverErr2;
-    sumS += d * d * oneOverErr2;
+    sumCross_phot += d * integ_flux * oneOverErr2;
+    sumT_phot += integ_flux * integ_flux * oneOverErr2;
+    sumS_phot += d * d * oneOverErr2;
   }
+}
 
-  // TODO compute ampl and chi2
-  ComputeAmplitude(fitResult, logpriorTZE);
+Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
+    const CSpectrum &spectrum, const TFloat64Range &lambdaRange) const {
 
-  return fitResult;
+  Float64 cstlog =
+      COperatorTemplateFitting::EstimateLikelihoodCstLog(spectrum, lambdaRange);
+
+  Float64 sumLogNoise;
+  const auto &photData = m_spectrum.GetPhotData();
+  for (const auto &b : *m_photBandCat) {
+    const std::string &bandName = b.first;
+    sumLogNoise += log(photData->GetFluxErr(bandName));
+  }
+  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) + sumLogNoise;
+
+  return cstlog;
 }

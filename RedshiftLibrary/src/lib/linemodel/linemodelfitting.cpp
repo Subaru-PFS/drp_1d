@@ -81,21 +81,21 @@ using namespace std;
  * Sets many state variables.
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
-CLineModelFitting::CLineModelFitting(const CSpectrum& spectrum,
-				     const TFloat64Range& lambdaRange,
-                                             const CTemplateCatalog& tplCatalog,
-                                             const TStringList& tplCategoryList,
-                                             const std::string calibrationPath,
-                                             const CRayCatalog::TRayVector& restRayList,
-                                             const std::string& opt_fittingmethod,
-                                             const std::string& opt_continuumcomponent,
-                                             const Float64 opt_continuum_neg_threshold,
-                                             const std::string& widthType,
-                                             const Float64 nsigmasupport,
-                                             const Float64 velocityEmission,
-                                             const Float64 velocityAbsorption,
-                                             const std::string& opt_rules,
-                                             const std::string& opt_rigidity):
+CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
+                                        const TFloat64Range& lambdaRange,
+                                        const CTemplateCatalog& tplCatalog,
+                                        const TStringList& tplCategoryList,
+                                        const std::string calibrationPath,
+                                        const CRayCatalog::TRayVector& restRayList,
+                                        const std::string& opt_fittingmethod,
+                                        const std::string& opt_continuumcomponent,
+                                        const Float64 opt_continuum_neg_threshold,
+                                        const std::string& widthType,
+                                        const Float64 nsigmasupport,
+                                        const Float64 velocityEmission,
+                                        const Float64 velocityAbsorption,
+                                        const std::string& opt_rules,
+                                        const std::string& opt_rigidity):
     m_inputSpc(spectrum),
     m_lambdaRange(lambdaRange),
     m_tplCatalog(tplCatalog),
@@ -913,6 +913,7 @@ void CLineModelFitting::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32
         m_fitContinuum_tplFitAmplitude = fitValues.fitAmplitude;
         m_fitContinuum_tplFitAmplitudeError = fitValues.fitAmplitudeError;
         m_fitContinuum_tplFitMerit = fitValues.merit;
+        m_fitContinuum_tplFitMerit_phot = fitValues.chiSquare_phot;
         m_fitContinuum_tplFitEbmvCoeff = fitValues.ismEbmvCoeff;
         m_fitContinuum_tplFitMeiksinIdx = fitValues.igmMeiksinIdx;
         m_fitContinuum_tplFitRedshift = m_Redshift;
@@ -1062,7 +1063,7 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(const std::shared_ptr<const CTempl
         throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");
 
     //m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
-    m_observeGridContinuumFlux = (*spcmodel).ModelFlux;
+    m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
 
   return 0;
 }
@@ -1278,6 +1279,11 @@ Float64 CLineModelFitting::getFitContinuum_tplMerit() const
     return m_fitContinuum_tplFitMerit;
 }
 
+Float64 CLineModelFitting::getFitContinuum_tplMeritPhot() const
+{
+    return m_fitContinuum_tplFitMerit_phot;
+}
+
 Float64 CLineModelFitting::getFitContinuum_tplIsmEbmvCoeff() const
 {
     return m_fitContinuum_tplFitEbmvCoeff;
@@ -1352,6 +1358,7 @@ void CLineModelFitting::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_amp,
                                                       Float64 tplfit_amperr,
                                                       Float64 tplfit_chi2,
+                                                      Float64 tplfit_chi2_phot,
                                                       Float64 tplfit_ebmv,
                                                       Int32 tplfit_meiksinidx,
                                                       Float64 tplfit_continuumredshift,
@@ -1364,6 +1371,7 @@ void CLineModelFitting::SetFitContinuum_FitValues(std::string tplfit_name,
     m_fitContinuum_tplFitAmplitude = tplfit_amp;
     m_fitContinuum_tplFitAmplitudeError = tplfit_amperr;
     m_fitContinuum_tplFitMerit = tplfit_chi2;
+    m_fitContinuum_tplFitMerit_phot = tplfit_chi2_phot;
     m_fitContinuum_tplFitEbmvCoeff = tplfit_ebmv;
     m_fitContinuum_tplFitMeiksinIdx = tplfit_meiksinidx;
     m_fitContinuum_tplFitRedshift = tplfit_continuumredshift;
@@ -4533,6 +4541,7 @@ Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
 
     if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
     {
+        fit += m_fitContinuum_tplFitMerit_phot; // unconditionnal sum (if photometry disabled, will sum 0.0)
         fit += m_fitContinuum_tplFitLogprior;
     }
 
@@ -5660,6 +5669,7 @@ CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution()
     continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
     continuumModelSolution.tplAmplitudeError = m_fitContinuum_tplFitAmplitudeError;
     continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
+    continuumModelSolution.tplMeritPhot = m_fitContinuum_tplFitMerit_phot;
     continuumModelSolution.tplDtm = m_fitContinuum_tplFitDtM;
     continuumModelSolution.tplMtm = m_fitContinuum_tplFitMtM;
     continuumModelSolution.tplLogPrior = m_fitContinuum_tplFitLogprior;
