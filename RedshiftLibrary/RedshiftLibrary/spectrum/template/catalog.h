@@ -70,6 +70,7 @@ public:
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
+    UInt32                  GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const;
     UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
     void                    InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore);
     void                    InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
@@ -89,7 +90,6 @@ private:
           TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling);
     const TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling) const;
     
-    UInt32 GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const;
     typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
     TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
 
