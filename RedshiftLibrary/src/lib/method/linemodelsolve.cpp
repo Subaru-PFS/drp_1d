@@ -101,8 +101,11 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         m_opt_tplfit_fftprocessing = parameterStore->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
         m_opt_tplfit_use_photometry = false;
-        if (parameterStore->HasScoped<bool>("linemodel.enablephotometry"))
-            m_opt_tplfit_use_photometry = parameterStore->GetScoped<bool>("linemodel.enablephotometry"); 
+        if (parameterStore->HasScoped<bool>("linemodel.enablephotometry")){
+            m_opt_tplfit_use_photometry = parameterStore->GetScoped<bool>("linemodel.enablephotometry");
+            if (m_opt_tplfit_use_photometry)
+                m_opt_tplfit_photo_weight = parameterStore->GetScoped<Float64>("linemodel.photometry.weight");
+        } 
         if (m_opt_tplfit_fftprocessing && m_opt_tplfit_use_photometry)
             throw GlobalException(INTERNAL_ERROR, "CLineModelSolve::PopulateParameters: fftprocessing not implemented with photometry enabled");
         m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
@@ -315,7 +318,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                          restRayList,
                          m_lambdaRange,
                          m_redshifts,
-                         photBandCat );
+                         photBandCat,
+                         m_opt_tplfit_use_photometry );
  
     if(!retSolve){
         return NULL;
@@ -762,7 +766,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CRayCatalog::TRayVector& restRayList,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts,
-                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat )
+                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                             const Float64 photo_weight )
 {
     std::string scopeStr = "linemodel";
 
@@ -853,6 +858,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     restRayList,
                                                     lambdaRange,
                                                     photBandCat,
+                                                    photo_weight,
                                                     m_opt_fittingmethod,
                                                     m_opt_lineWidthType,
                                                     m_opt_velocity_emission,
@@ -940,6 +946,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             restRayList,
                                                             lambdaRange,
                                                             photBandCat,
+                                                            photo_weight,
                                                             m_opt_fittingmethod,
                                                             m_opt_lineWidthType,
                                                             m_opt_velocity_emission,
@@ -1002,6 +1009,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                           m_calibrationPath,
                                                           lambdaRange,
                                                           photBandCat,
+                                                          photo_weight,
                                                           m_opt_fittingmethod,
                                                           m_opt_lineWidthType,
                                                           m_opt_velocity_emission,

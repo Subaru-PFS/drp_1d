@@ -58,6 +58,7 @@ public:
   explicit COperatorTemplateFittingPhot(
       const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
       const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
+      const Float64 weight = 1.0,
       const TFloat64List &redshifts = TFloat64List());
 
 private:
@@ -96,6 +97,7 @@ private:
   std::map<std::string, CSpectrumSpectralAxis> m_photSpectralAxis_restframe;
   std::map<std::string, CTemplate> m_templateRebined_phot;
 
+  Float64 m_weight;
   std::shared_ptr<const CPhotBandCatalog> m_photBandCat;
   TStringList m_sortedBandNames;
 };

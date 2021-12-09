@@ -253,6 +253,7 @@ public:
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                                const Float64 photometry_weight,
                                 bool ignoreLinesSupport=false,
                                 Int32 candidateIdx = -1);
 
@@ -264,6 +265,7 @@ public:
                            const CRayCatalog::TRayVector& restraycatalog,
                            const TFloat64Range& lambdaRange,
                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
+                           const Float64 photo_weight,
                            const std::string &opt_fittingmethod,
                            const std::string& opt_lineWidthType,
                            const Float64 opt_velocityEmission,
@@ -290,6 +292,7 @@ public:
                             const std::string opt_calibrationPath,
                             const TFloat64Range& lambdaRange,
                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                            const Float64 photo_weight,
                             const std::string &opt_fittingmethod,
                             const std::string& opt_lineWidthType,
                             const Float64 opt_velocityEmission,

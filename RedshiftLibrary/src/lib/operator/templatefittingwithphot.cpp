@@ -45,9 +45,9 @@ using namespace std;
 COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
     const std::shared_ptr<const CPhotBandCatalog> &photbandcat,
-    const TFloat64List &redshifts)
+    const Float64 weight, const TFloat64List &redshifts)
     : COperatorTemplateFitting(spectrum, lambdaRange, redshifts),
-      m_photBandCat(photbandcat) {
+      m_photBandCat(photbandcat), m_weight(weight) {
 
   // clamp spectral axis at lambdaRange
   Int32 kstart, kend;
@@ -223,7 +223,8 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
 
     // add to leastsquare sum
     const auto d = photData->GetFlux(bandName);
-    const auto oneOverErr2 = photData->GetFluxOverErr2(bandName);
+    const auto oneOverErr2 =
+        photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
       throw GlobalException(
@@ -248,7 +249,7 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
   const auto &photData = m_spectrum.GetPhotData();
   for (const auto &b : *m_photBandCat) {
     const std::string &bandName = b.first;
-    sumLogNoise += log(photData->GetFluxErr(bandName));
+    sumLogNoise += log(photData->GetFluxErr(bandName)*m_weight);
   }
   cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) + sumLogNoise;
 

@@ -83,9 +83,12 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
 
   bool use_photometry = false;
-  if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry"))
+  Float64 photometry_weight = NAN;
+  if (inputContext->GetParameterStore()->HasScoped<bool>("enablephotometry")){
     use_photometry = inputContext->GetParameterStore()->GetScoped<bool>("enablephotometry");
-  
+    if (use_photometry)
+        photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>("photometry.weight");
+  }
   if (fft_processing && use_photometry)
     throw GlobalException(INTERNAL_ERROR, "CMethodTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
 
@@ -96,7 +99,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
     }
   else{
       if (use_photometry){
-        m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spc, m_lambdaRange, inputContext->GetPhotBandCatalog(), m_redshifts);
+        m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spc, m_lambdaRange, inputContext->GetPhotBandCatalog(), photometry_weight, m_redshifts);
       }else{
         m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spc, m_lambdaRange, m_redshifts);
       }

@@ -119,6 +119,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CRayCatalog::TRayVector &restRayList,
                                            const TFloat64Range &lambdaRange,
                                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
+                                           const Float64 photo_weight,
                                            const std::string &opt_fittingmethod,
                                            const std::string &opt_lineWidthType,
                                            const Float64 opt_velocityEmission,
@@ -361,6 +362,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                     lambdaRange,
                     largeGridRedshifts,
                     photBandCat,
+                    photo_weight,
                     m_opt_tplfit_ignoreLinesSupport);
         tplCatalog.m_orthogonal = 0;
     }else{
@@ -597,6 +599,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const TFloat64Range &lambdaRange,
                                                 const TFloat64List& redshifts,
                                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                                                const Float64 photometry_weight,
                                                 bool ignoreLinesSupport,
                                                 Int32 candidateIdx)
 {
@@ -653,7 +656,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     {
         if(m_templateFittingOperator == nullptr || m_templateFittingOperator->IsFFTProcessing()) //else reuse the shared pointer for secondpass
             if (m_opt_tplfit_use_photometry) {
-                m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spectrum,lambdaRange, photBandCat, redshiftsTplFit);
+                m_templateFittingOperator = std::make_shared<COperatorTemplateFittingPhot>(spectrum,lambdaRange, photBandCat, photometry_weight, redshiftsTplFit);
             }else{
                 m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(spectrum,lambdaRange, redshiftsTplFit);
             }
@@ -1034,6 +1037,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const std::string opt_calibrationPath,
                                             const TFloat64Range &lambdaRange,
                                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                                            const Float64 photo_weight,
                                             const std::string &opt_fittingmethod,
                                             const std::string &opt_lineWidthType,
                                             const Float64 opt_velocityEmission,
@@ -1093,6 +1097,7 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                 lambdaRange,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 photBandCat,
+                                photo_weight,
                                 m_opt_tplfit_ignoreLinesSupport,
                                 i);
                 if (m_opt_continuumcomponent == "fromspectrum")
