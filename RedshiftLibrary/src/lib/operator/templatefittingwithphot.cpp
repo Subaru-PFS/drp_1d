@@ -182,7 +182,8 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
   Float64 sumT_phot = 0.0;
   Float64 sumS_phot = 0.0;
 
-  ComputePhotCrossProducts(fitResult, sumCross_phot, sumT_phot, sumS_phot);
+  ComputePhotCrossProducts(kM, kEbmv, fitResult, sumCross_phot, sumT_phot,
+                           sumS_phot);
 
   Float64 &sumCross = fitResult.sumCross;
   Float64 &sumT = fitResult.sumT;
@@ -203,20 +204,46 @@ TFittingResult COperatorTemplateFittingPhot::ComputeLeastSquare(
 }
 
 void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
-    TFittingResult &fitResult, Float64 &sumCross_phot, Float64 &sumT_phot,
-    Float64 &sumS_phot) {
+    Int32 kM, Int32 kEbmv_, TFittingResult &fitResult, Float64 &sumCross_phot,
+    Float64 &sumT_phot, Float64 &sumS_phot) {
 
   sumCross_phot = 0.0;
   sumT_phot = 0.0;
   sumS_phot = 0.0;
 
+  Float64 sumCross_IGM = 0.0;
+  Float64 sumT_IGM = 0.0;
+  Float64 sumS_IGM = 0.0;
+  bool sumsIgmSaved = false;
+
   const auto &photData = m_spectrum.GetPhotData();
 
+  // determine bands impacted by IGM
+  const auto &Start = m_sortedBandNames.cbegin();
+  const auto &End = m_sortedBandNames.cend();
+  const auto IgmEnd =
+      std::lower_bound(m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
+                       1216.0, [this](const std::string &s, Float64 v) {
+                         return m_photBandCat->at(s).GetMinLambda() < v;
+                       });
+
+  auto EndLoop = m_option_igmFastProcessing && kM > 0 ? IgmEnd : End;
+
   // compute photometric Leastquare
-  for (const auto &band : m_templateRebined_phot) {
-    const auto &bandName = band.first;
+  for (auto it = Start; it < EndLoop; it++) {
+
+    if (m_option_igmFastProcessing && !sumsIgmSaved && it > IgmEnd) {
+      // store intermediate sums for IGM range
+      sumCross_IGM = sumCross_phot;
+      sumT_IGM = sumT_phot;
+      sumS_IGM = sumS_phot;
+      sumsIgmSaved = true;
+    }
+
+    const auto &bandName = *it;
     const auto &photBand = m_photBandCat->at(bandName);
-    const auto &flux = band.second.GetFluxAxis().GetSamplesVector();
+    const auto &flux =
+        m_templateRebined_phot.at(bandName).GetFluxAxis().GetSamplesVector();
 
     // integrate flux
     const auto integ_flux = photBand.IntegrateFlux(flux);
@@ -237,6 +264,18 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
     sumT_phot += integ_flux * integ_flux * oneOverErr2;
     sumS_phot += d * d * oneOverErr2;
   }
+
+  if (m_option_igmFastProcessing) {
+    if (kM == 0) {
+      m_sumCross_outsideIGM_phot[kEbmv_] = sumCross_phot - sumCross_IGM;
+      m_sumT_outsideIGM_phot[kEbmv_] = sumT_phot - sumT_IGM;
+      m_sumS_outsideIGM_phot[kEbmv_] = sumS_phot - sumS_IGM;
+    } else {
+      sumCross_phot += m_sumCross_outsideIGM_phot[kEbmv_];
+      sumT_phot += m_sumT_outsideIGM_phot[kEbmv_];
+      sumS_phot += m_sumS_outsideIGM_phot[kEbmv_];
+    }
+  }
 }
 
 Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
@@ -249,7 +288,7 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
   const auto &photData = m_spectrum.GetPhotData();
   for (const auto &b : *m_photBandCat) {
     const std::string &bandName = b.first;
-    sumLogNoise += log(photData->GetFluxErr(bandName)*m_weight);
+    sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
   }
   cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) + sumLogNoise;
 

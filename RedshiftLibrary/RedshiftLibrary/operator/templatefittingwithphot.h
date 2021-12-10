@@ -86,7 +86,8 @@ private:
                                     const CPriorHelper::SPriorTZE &logprior,
                                     const CMask &spcMaskAdditional) override;
 
-  void ComputePhotCrossProducts(TFittingResult &fitResult,
+  void ComputePhotCrossProducts(Int32 kM, Int32 kEbmv_,
+                                TFittingResult &fitResult,
                                 Float64 &sumCross_phot, Float64 &sumT_phot,
                                 Float64 &sumS_phot);
 
@@ -100,6 +101,10 @@ private:
   Float64 m_weight;
   std::shared_ptr<const CPhotBandCatalog> m_photBandCat;
   TStringList m_sortedBandNames;
+
+  TFloat64List m_sumCross_outsideIGM_phot;
+  TFloat64List m_sumT_outsideIGM_phot;
+  TFloat64List m_sumS_outsideIGM_phot;
 };
 
 } // namespace NSEpic
