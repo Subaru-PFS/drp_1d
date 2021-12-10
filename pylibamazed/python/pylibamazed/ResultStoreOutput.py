@@ -36,21 +36,21 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from .AbstractOutput import AbstractOutput
-from .r_specifications import rspecifications
+from pylibamazed.AbstractOutput import AbstractOutput
+from pylibamazed.r_specifications import rspecifications
 import numpy as np
 import pandas as pd
 import resource
 from collections import defaultdict
-from pylibamazed.redshift import PC_Get_Float64Array,PC_Get_Int32Array,CLog
+from pylibamazed.redshift import PC_Get_Float64Array, PC_Get_Int32Array, CLog
 
 zlog = CLog.GetInstance()
 
 
 class ResultStoreOutput(AbstractOutput):
 
-    def __init__(self, input_manager, result_store, parameters, results_specifications=rspecifications):
-        AbstractOutput.__init__(self, input_manager)
+    def __init__(self, result_store, parameters, results_specifications=rspecifications):
+        AbstractOutput.__init__(self)
         self.results_store = result_store
         self.parameters = parameters
         self.operator_results = dict()
