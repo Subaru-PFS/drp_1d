@@ -62,6 +62,8 @@ public:
       const TFloat64List &redshifts = TFloat64List());
 
 private:
+  void checkInputPhotometry() const;
+
   void RebinTemplate(const std::shared_ptr<const CTemplate> &tpl,
                      Float64 redshift, const std::string &opt_interp,
                      TFloat64Range &currentRange, Float64 &overlaprate,

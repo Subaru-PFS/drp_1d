@@ -49,6 +49,9 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
     : COperatorTemplateFitting(spectrum, lambdaRange, redshifts),
       m_photBandCat(photbandcat), m_weight(weight) {
 
+  // check availabality and coherence of photometric bands & data
+  checkInputPhotometry();
+
   // clamp spectral axis at lambdaRange
   Int32 kstart, kend;
   bool b = m_lambdaRange.getClosedIntervalIndices(
@@ -69,6 +72,27 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   // sort photometric band by increasing lambda (by lower bound of the bands)
   //  for IGM processing
   m_sortedBandNames = m_photBandCat->GetNameListSortedByLambda();
+}
+
+void COperatorTemplateFittingPhot::checkInputPhotometry() const {
+  if (m_photBandCat == nullptr)
+    throw GlobalException(
+        INTERNAL_ERROR,
+        "COperatorTemplateFittingPhot: photometric bands not availables");
+  if (m_spectrum.GetPhotData() == nullptr)
+    throw GlobalException(INTERNAL_ERROR,
+                          "COperatorTemplateFittingPhot: photometric data not "
+                          "available in spectrum");
+
+  const auto &dataNames = m_spectrum.GetPhotData()->GetNameList();
+  for (const auto &bandName : m_photBandCat->GetNameList())
+    if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
+        dataNames.cend())
+      throw GlobalException(INTERNAL_ERROR,
+                            Formatter() << "COperatorTemplateFittingPhot: "
+                                           "photometry point for band name: "
+                                        << bandName
+                                        << " is not available in the spectrum");
 }
 
 void COperatorTemplateFittingPhot::RebinTemplate(
