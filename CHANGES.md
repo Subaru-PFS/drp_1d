@@ -1,7 +1,24 @@
 # Changelog
 
+## 0.28.0 (2021-12-14)
+### Added
+* [6783] : Add `AbstractSpectrumReader`, abstract class for writing spectrum reader adaptated for user instrument file.
+* [6783] : Add `CalibrationLibrary`class for loading calibration files.
+* [6783] : Add basic multi-observation processing. Several spectra can be provided for one source. Wavelength ranges of spectra can overlaped or be disjoined
+* [6616] : Add option to use photometric data in the chisquare for TemplatefittingSolve & LineModelSolve 
+### Changed
+* None
+### Deprecated
+* None
+### Removed
+* None
+### Fixed
+* [6785] : Take into account the input lambdaRange for cropping input log sampled spectra
+* [6872] : Fix conditions to orthogonalize all templates from both QSO and galaxy objects
+* [6873] : Limit LSF access to observable lambda range
+
 ## 0.26.0 (2021-10-25)
-### Added*
+### Added
 * [5994] : Add option to logrebin input spectra for linemodel processing
 * [5775] : Add Air to Vacuum conversion in `spectralAxis`
 * [6489] : Activate fftprocessing for qso
