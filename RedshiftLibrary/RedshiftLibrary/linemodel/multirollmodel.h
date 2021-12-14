@@ -63,7 +63,7 @@ class CMultiRollModel
 public:
 
     CMultiRollModel(const CSpectrum& spectrum,
-                    const TFloat64Range& range,
+                    const TFloat64Range& lambdaRange,
                     const CTemplateCatalog& tplCatalog,
                     const TStringList& tplCategoryList,
                     const std::string calibrationPath,

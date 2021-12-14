@@ -94,6 +94,7 @@ public:
 
     void GetIsmIgmRangeIndex(Int32& begin, Int32& end) const;
     Int32 GetIgmEndIndex() const;
+    Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
     void InitIsmIgmConfig( Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,

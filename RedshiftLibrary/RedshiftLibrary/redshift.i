@@ -79,7 +79,8 @@
 %shared_ptr(TLSFGaussianConstantResolutionArgs)
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
-
+%shared_ptr(CPhotometricData)
+%shared_ptr(CPhotBandCatalog)
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -105,7 +106,7 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
@@ -326,7 +327,8 @@ public:
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog);
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
+            std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();
@@ -448,6 +450,7 @@ class CSpectrum
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
   std::shared_ptr<const CLSF> GetLSF() const;
   void SetLSF(const std::shared_ptr<const CLSF>& lsf);
+  void SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
   TLambdaRange GetLambdaRange() const;
@@ -658,9 +661,10 @@ class CPhotometricBand
 public:
     CPhotometricBand() = default;
     CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
-
-    TFloat64List m_transmission;
-    TFloat64List m_lambda;
+    const TFloat64List & GetTransmission() const;
+    const TFloat64List & GetWavelength() const;
+    Float64 GetMinLambda() const;
+    Float64 IntegrateFlux(const TFloat64List &flux) const;
 };
 %clear (const Float64 * trans, Int32 n1);
 %clear (const Float64 * lambda, Int32 n2);
@@ -672,6 +676,7 @@ class CPhotBandCatalog : public std::map<std::string, CPhotometricBand>
 public:
     void Add(const std::string & name, const CPhotometricBand & filter);
     TStringList GetNameList() const;
+    TStringList GetNameListSortedByLambda() const;
 };
 
 class AmzException : public std::exception

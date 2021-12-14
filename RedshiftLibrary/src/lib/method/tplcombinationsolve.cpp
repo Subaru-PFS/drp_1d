@@ -434,6 +434,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
 
         // Fill extrema Result
         extremaResult->m_ranked_candidates[i].second.FittedTplMerit = TplFitResult->ChiSquare[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot = TplFitResult->ChiSquarePhot[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx= TplFitResult->FitMeiksinIdx[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff= TplFitResult->FitEbmvCoeff[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeList= TplFitResult->FitAmplitude[idx];

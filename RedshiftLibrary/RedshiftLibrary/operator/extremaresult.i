@@ -61,6 +61,7 @@ public:
   Float64      FittedTplAmplitude = NAN;     //Amplitude for the best template fitted for continuum
   Float64      FittedTplAmplitudeError= NAN;     //Amplitude error for the best template fitted for continuum
   Float64      FittedTplMerit= NAN;     //Chisquare for the best template fitted for continuum
+  Float64      FittedTplMeritPhot = NAN; // extra chisquare term due to photometry (set to 0.0 if not enabled)
   Float64      FittedTplEbmvCoeff= NAN;     //Calzetti ebmvcoeff for the best template fitted for continuum
   Int32        FittedTplMeiksinIdx=-1;    //Meiksin igm index for the best template fitted for continuum
   Float64      FittedTplDtm= NAN;    //DTM for the best template fitted for continuum

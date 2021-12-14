@@ -50,6 +50,7 @@ TLineModelResult::TLineModelResult(const CContinuumModelSolution& cms)
     FittedTplAmplitude = cms.tplAmplitude;
     FittedTplAmplitudeError = cms.tplAmplitudeError;
     FittedTplMerit = cms.tplMerit;
+    FittedTplMeritPhot = cms.tplMeritPhot;
     FittedTplEbmvCoeff = cms.tplEbmvCoeff;
     FittedTplMeiksinIdx = cms.tplMeiksinIdx;
     FittedTplRedshift = cms.tplRedshift;
@@ -67,6 +68,7 @@ void TLineModelResult::updateFromContinuumModelSolution(const CContinuumModelSol
     FittedTplAmplitude = cms.tplAmplitude;
     FittedTplAmplitudeError = cms.tplAmplitudeError;
     FittedTplMerit = cms.tplMerit;
+    FittedTplMeritPhot = cms.tplMeritPhot;
     FittedTplEbmvCoeff = cms.tplEbmvCoeff;
     FittedTplMeiksinIdx = cms.tplMeiksinIdx;
       }
@@ -89,6 +91,7 @@ void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModel
     FittedTplAmplitude= lmel->getFitContinuum_tplAmplitude();
     FittedTplAmplitudeError= lmel->getFitContinuum_tplAmplitudeError();
     FittedTplMerit= lmel->getFitContinuum_tplMerit();
+    FittedTplMeritPhot = lmel->getFitContinuum_tplMeritPhot();
     FittedTplEbmvCoeff= lmel->getFitContinuum_tplIsmEbmvCoeff();
     FittedTplMeiksinIdx= lmel->getFitContinuum_tplIgmMeiksinIdx();
   }

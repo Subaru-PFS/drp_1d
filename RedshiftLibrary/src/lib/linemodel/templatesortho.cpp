@@ -209,10 +209,11 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         CTemplateCatalog tplCatalogUnused;
         TStringList tplCategoryListUnused;
 
-        TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         //Compute linemodel on the template
+        TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
+
         CLineModelFitting model( spectrum,
-				lambdaRange,
+                                     lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,
@@ -228,7 +229,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
                                      opt_rigidity);
 
         Float64 redshift = 0.0;
-
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
         CLineModelSolution modelSolution;

@@ -556,7 +556,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     }
 
     Log.LogDebug("  Operator-tplcombination: prepare the results");
-    std::shared_ptr<CTplCombinationResult> result = std::shared_ptr<CTplCombinationResult>( new CTplCombinationResult() );
+    std::shared_ptr<CTplCombinationResult> result = make_shared<CTplCombinationResult>();
 
     TInt32List MeiksinList;
     TInt32List EbmvList;

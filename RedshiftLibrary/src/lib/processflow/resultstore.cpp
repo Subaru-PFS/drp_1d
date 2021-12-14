@@ -93,15 +93,15 @@ void COperatorResultStore::StoreResult( TResultsMap& map, const std::string& pat
 }
 
 
-void COperatorResultStore::StorePerTemplateResult( const CTemplate& t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
+void COperatorResultStore::StorePerTemplateResult( const std::shared_ptr<const CTemplate> & t, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
-    TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t.GetName() );
+    TPerTemplateResultsMap::iterator it = m_PerTemplateResults.find( t->GetName() );
     if( it == m_PerTemplateResults.end() )
     {
-        m_PerTemplateResults[ t.GetName() ] = TResultsMap();
+        m_PerTemplateResults[ t->GetName() ] = TResultsMap();
     }
 
-    StoreResult( m_PerTemplateResults[ t.GetName() ], path, name, result );
+    StoreResult( m_PerTemplateResults[ t->GetName() ], path, name, result );
 }
 
 void COperatorResultStore::StoreGlobalResult( const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result )
@@ -109,9 +109,9 @@ void COperatorResultStore::StoreGlobalResult( const std::string& path, const std
     StoreResult( m_GlobalResults, path, name, result );
 }
 
-std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult( const CTemplate& t, const std::string& name ) const
+std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& name ) const
 {
-    TPerTemplateResultsMap::const_iterator it1 = m_PerTemplateResults.find( t.GetName() );
+    TPerTemplateResultsMap::const_iterator it1 = m_PerTemplateResults.find( t->GetName() );
     if( it1 != m_PerTemplateResults.end() )
     {
         const TResultsMap& m = (*it1).second;
@@ -446,7 +446,7 @@ void COperatorResultStore::test()
 }
 
 
-void  COperatorResultStore::StoreScopedPerTemplateResult( const CTemplate& t, const std::string& name, std::shared_ptr<const COperatorResult> result )
+void  COperatorResultStore::StoreScopedPerTemplateResult( const std::shared_ptr<const CTemplate> & t, const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     StorePerTemplateResult( t, GetCurrentScopeName(), name, result );
 }

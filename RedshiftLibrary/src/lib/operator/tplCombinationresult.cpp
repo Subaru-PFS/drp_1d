@@ -43,6 +43,7 @@ using namespace NSEpic;
 void CTplCombinationResult::Init(UInt32 n , Int32 EbmvListSize, Int32 MeiksinListSize, Int32 componentSize)
 {
     ChiSquare.resize(n);
+    ChiSquarePhot.resize(n);
     FitEbmvCoeff.resize(n);
     FitMeiksinIdx.resize(n);
     FitCOV.resize(n);//covariance

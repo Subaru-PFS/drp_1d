@@ -79,21 +79,21 @@ class CLineModelFitting
 
 public:
 
-    CLineModelFitting(const CSpectrum& spectrum,
-		      const TFloat64Range& range,
-                          const CTemplateCatalog& tplCatalog,
-                          const TStringList& tplCategoryList,
-                          const std::string calibrationPath,
-                          const CRayCatalog::TRayVector& restRayList,
-                          const std::string& opt_fittingmethod,
-                          const std::string &opt_continuumcomponent,
-                          const Float64 opt_continuum_neg_threshold,
-                          const std::string& lineWidthType,
-                          const Float64 nsigmasupport,
-                          const Float64 velocityEmission,
-                          const Float64 velocityAbsorption,
-                          const std::string &opt_rules,
-                          const std::string &opt_rigidity);
+    CLineModelFitting(  const CSpectrum& spectrum,
+                        const TFloat64Range& lambdaRange,
+                        const CTemplateCatalog& tplCatalog,
+                        const TStringList& tplCategoryList,
+                        const std::string calibrationPath,
+                        const CRayCatalog::TRayVector& restRayList,
+                        const std::string& opt_fittingmethod,
+                        const std::string &opt_continuumcomponent,
+                        const Float64 opt_continuum_neg_threshold,
+                        const std::string& lineWidthType,
+                        const Float64 nsigmasupport,
+                        const Float64 velocityEmission,
+                        const Float64 velocityAbsorption,
+                        const std::string &opt_rules,
+                        const std::string &opt_rigidity);
 
     void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
     void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
@@ -104,12 +104,11 @@ public:
     void PrepareContinuum();
     void EstimateSpectrumContinuum(Float64 opt_enhance_lines, const TFloat64Range &lambdaRange);
 
-    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
+    void LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const std::shared_ptr<const CTemplate> & tpl);
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-    Int32 ApplyContinuumOnGrid(const CTemplate& tpl, Float64 zcontinuum);
-    Bool SolveContinuum(const CTemplate& tpl,
-                        const TFloat64Range& lambdaRange,
+    Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate>& tpl, Float64 zcontinuum);
+    Bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
                         const TFloat64List& redshifts,
                         Float64 overlapThreshold,
                         std::vector<CMask> maskList,
@@ -130,6 +129,7 @@ public:
     Float64 getFitContinuum_tplAmplitudeError() const;
     Float64 getFitContinuum_snr() const;
     Float64 getFitContinuum_tplMerit() const;
+    Float64 getFitContinuum_tplMeritPhot() const;
     void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
     Float64 getFitContinuum_tplIsmEbmvCoeff() const;
     Float64 getFitContinuum_tplIgmMeiksinIdx() const;
@@ -143,6 +143,7 @@ public:
                                    Float64 tplfit_amp,
                                    Float64 tplfit_amperr,
                                    Float64 tplfit_chi2,
+                                   Float64 tplfit_chi2_phot,
                                    Float64 tplfit_ebmv,
                                    Int32 tplfit_meiksinidx,
                                    Float64 tplfit_continuumredshift,
@@ -394,7 +395,7 @@ private:
 
     CSpectrumFluxAxis m_SpcFluxAxis;    //observed spectrum
     CSpectrumFluxAxis m_spcFluxAxisNoContinuum; //observed spectrum for line fitting
-    CTemplate m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
+    std::shared_ptr<CTemplate> m_tplContaminantSpcRebin; //optionally used contaminant to be removed from observed spectrum
     CSpectrumNoiseAxis& m_ErrorNoContinuum;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
     CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
@@ -446,6 +447,7 @@ private:
     Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
     Float64 m_fitContinuum_tplFitAmplitudeSigmaMAX = NAN;
     Float64 m_fitContinuum_tplFitMerit = NAN;
+    Float64 m_fitContinuum_tplFitMerit_phot = NAN;
     Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
     Int32   m_fitContinuum_tplFitMeiksinIdx = -1;
     Float64 m_fitContinuum_tplFitRedshift = NAN; // only used with m_fitContinuum_option==2 for now
