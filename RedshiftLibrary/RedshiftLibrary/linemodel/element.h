@@ -73,7 +73,9 @@ public:
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) const;
     Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
-    Float64 GetWidth(Int32 subeIdx, Float64 redshift) const;
+    void    getWidth(Int32 subeIdx, Float64 redshift, 
+                    Float64& mu, Float64& sigma, 
+                    Bool doAsymfitdelta) const;
     std::string GetElementTypeTag();
 
     void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
@@ -81,7 +83,7 @@ public:
                                 const TFloat64Range &lambdaRange);
     TInt32RangeList getSupport();
     TInt32RangeList getTheoreticalSupport();
-    TInt32Range EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
+    void EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
     TInt32Range getSupportSubElt(Int32 subeIdx);
     TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
 

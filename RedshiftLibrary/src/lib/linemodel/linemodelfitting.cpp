@@ -494,8 +494,11 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
     {
         Int32 eIdx=eIdx_list[kl];
         Int32 subeIdx=subeIdx_list[kl];
-        Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
-        Float64 LineWidth = m_Elements[eIdx]->GetLineWidth(mu, m_Redshift, m_Elements[eIdx]->m_Rays[subeIdx].GetIsEmission());
+
+        Float64 mu = NAN;
+        Float64 LineWidth = NAN;
+        m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, LineWidth, true);
+
         Float64 winsizeAngstrom = LineWidth*nsigma;
 
         TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
@@ -3416,8 +3419,7 @@ Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(UInt32 sampleIndex
     {
         Int32 iElts = EltsIdx[i];
 
-
-
+        //getTheoreticalSupport reads from the 2 class variables
         TInt32RangeList s = m_Elements[iElts]->getTheoreticalSupport();
         for( UInt32 iS=0; iS<s.size(); iS++ )
         {
@@ -4457,7 +4459,9 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumApprox(const std::vect
             }
             A*= m_Elements[eltIdx]->GetSignFactor(iray);
 
-            Float64 integratedA = A*m_Elements[eltIdx]->GetWidth(iray, m_Redshift)*sqrt(2*M_PI);
+            Float64 mu = NAN;Float64 sigma = NAN;
+            m_Elements[eltIdx]->getWidth(iray, m_Redshift, mu, sigma, false);
+            Float64 integratedA = A*sigma*sqrt(2*M_PI);
             Float64 coeffA = integratedA/(Float64)sSize;
 
             Float64 term=0.0;
@@ -4786,7 +4790,11 @@ std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
         }else{
 
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
-            Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
+
+            Float64 mu = NAN;
+            Float64 sigma = NAN;
+            m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);
+
             Float64 flux = -1;
             Float64 fluxError = -1;
             Float64 fluxDI = -1;
@@ -5400,8 +5408,10 @@ Int32 CLineModelFitting::improveBalmerFit()
 
         //try if the width is significantly different: abs > em
         Float64 AbsVSEmWidthCoeffThreshold = 2.0;
-        Float64 sigmaE = m_Elements[ilineE]->GetWidth(subeIdxE, m_Redshift);
-        Float64 sigmaA = m_Elements[ilineA]->GetWidth(subeIdxA, m_Redshift);
+        Float64 muE = NAN;Float64 muA = NAN;
+        Float64 sigmaE = NAN; Float64 sigmaA = NAN;
+        m_Elements[ilineE]->getWidth(subeIdxE, m_Redshift, muE, sigmaE, false);// do not apply Lya asym offset
+        m_Elements[ilineA]->getWidth(subeIdxA, m_Redshift, muA, sigmaA, false);// do not apply Lya asym offset
         if(sigmaA<AbsVSEmWidthCoeffThreshold*sigmaE)
         {
             continue;
@@ -5516,11 +5526,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 
             if(opt_level!=0)// brief, to save processing time, do not estimate fluxes and high level line properties
             {
-	      modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
+	            modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
                 Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
                 modelSolution.CenterContinuumFlux.push_back(cont);
                 modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
-                Float64 sigma = m_Elements[eIdx]->GetWidth(subeIdx, m_Redshift);
+                Float64 mu = NAN;Float64 sigma = NAN;
+                m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
+
                 Float64 flux = NAN;
                 Float64 fluxError = NAN;
                 Float64 fluxDI = NAN;

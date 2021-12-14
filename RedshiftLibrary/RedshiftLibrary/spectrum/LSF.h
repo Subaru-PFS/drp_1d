@@ -120,6 +120,7 @@ public:
     CLSF& operator=(CLSF&& other) = default; 
     //GetWidth requires observed wavelength, not restframe
     virtual Float64             GetWidth(Float64 lambda) const=0;
+    virtual bool                checkAvailability(Float64 lambda) const {return true;};//default to true
     virtual bool                IsValid() const = 0;
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
     Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;

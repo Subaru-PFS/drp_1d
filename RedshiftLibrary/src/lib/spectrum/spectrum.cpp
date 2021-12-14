@@ -1016,4 +1016,12 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange, Bool enableInputSpcC
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate noise on wavelength range"<<lmin<<";"<<lmax<<")");
     else
         Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    
+    if(!m_LSF) return;
+    //check if spectrum LSF spectralAxis covers lambdaRange
+    if(!m_LSF->checkAvailability(lambdaRange.GetBegin()) || !m_LSF->checkAvailability(lambdaRange.GetEnd()))
+    {
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate lsf on wavelength range"<<lmin<<";"<<lmax<<")"); 
+    }
+
 }
