@@ -59,8 +59,7 @@
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
-%shared_ptr(CSpectrumIOGenericReader)
-%shared_ptr(CSpectrumIOReader)
+%shared_ptr(CSpectrumNoiseAxis)
 %shared_ptr(CSpectrumSpectralAxis)
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
@@ -453,6 +452,7 @@ class CSpectrum
   void SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
+  const CSpectrumNoiseAxis&  GetErrorAxis() const;
   TLambdaRange GetLambdaRange() const;
   %apply Float64& OUTPUT { Float64& mean };
   %apply Float64& OUTPUT { Float64& std };
@@ -525,7 +525,15 @@ class CSpectrumFluxAxis : public CSpectrumAxis
   CSpectrumFluxAxis( const double* samples, UInt32 n,
   		     const double* error, UInt32 m );
   void SetSize( UInt32 s );
+
 };
+
+class  CSpectrumNoiseAxis : public CSpectrumAxis
+{
+ public:
+  CSpectrumNoiseAxis();
+};
+
 //%clear (const Float64* samples, UInt32 n);
 //%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
 
