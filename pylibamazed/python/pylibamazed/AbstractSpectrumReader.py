@@ -48,8 +48,11 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CProcessFlowContext,
                                   TLSFGaussianVarWidthArgs,
                                   CLSFFactory,
-                                  CPhotometricData)
+                                  CPhotometricData,
+                                  CLog)
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
+
+zlog = CLog.GetInstance()
 
 
 class AbstractSpectrumReader:
@@ -187,7 +190,7 @@ class AbstractSpectrumReader:
         :rtype: np.array
         """
         if self._spectra[0] is not None:
-            return PC_Get_AxisSampleList(self._spectra[0].GetFluxAxis().GetSamplesVector())
+            return PC_Get_AxisSampleList(self._spectra[0].GetErrorAxis().GetSamplesVector())
         else:
             raise Exception("Spectrum not loaded")
 
@@ -218,7 +221,7 @@ class AbstractSpectrumReader:
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
         elif airvacuum_method != "" and self.w_frame == "vacuum":
-            print("Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
+            zlog.LogWarning("Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
         if len(self.waves) == 1:
