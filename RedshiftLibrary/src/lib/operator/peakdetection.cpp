@@ -66,7 +66,7 @@ CPeakDetection::~CPeakDetection()
 
 std::shared_ptr<const CPeakDetectionResult> CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
 {
-    auto result = std::shared_ptr<CPeakDetectionResult>( new CPeakDetectionResult() );
+    auto result = std::make_shared<CPeakDetectionResult>();
 
     const CSpectrumFluxAxis& fluxAxis = spectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = spectrum.GetSpectralAxis();

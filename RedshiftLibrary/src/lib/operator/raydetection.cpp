@@ -93,7 +93,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
 
     UInt32 nPeaks = resPeaks.size();
 
-    auto result = std::shared_ptr<CLineDetectionResult>( new CLineDetectionResult() );
+    auto result = std::make_shared<CLineDetectionResult>();
 
     //retest list
     TInt32RangeList retestPeaks;
@@ -564,7 +564,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
     }
 
     // create reduced spectra
-    const CSpectrum *reducedSpectrum  = new CSpectrum( spectrum, mask );
+    const CSpectrum reducedSpectrum( spectrum, mask );
     TFloat64List reducedindexesMap;
     for( Int32 k=0; k<spectrum.GetSampleCount(); k++ )
     {
@@ -590,7 +590,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
       {
         TInt32Range reducedrange( (int)reducedindexesMap[selectedretestPeaks[k].GetBegin()], (int)reducedindexesMap[selectedretestPeaks[k].GetEnd()] );
         //Float64 ratioAmp = ComputeFluxes(spectrum, winsize, selectedretestPeaks[k], mask);
-        Float64 ratioAmp = ComputeFluxes( *reducedSpectrum, winsize, reducedrange );
+        Float64 ratioAmp = ComputeFluxes( reducedSpectrum, winsize, reducedrange );
         if( ratioAmp > cut )
 	  {
             Float64 force = CRay::nForce_Weak;
