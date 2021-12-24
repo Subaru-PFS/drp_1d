@@ -37,17 +37,13 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/linemodelresult.h"
-
 #include "RedshiftLibrary/statistics/deltaz.h"
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <string>
-#include <fstream>
-#include <iomanip>      // std::setprecision
-
-#include <string>
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/ray/linetags.h"
+#include "RedshiftLibrary/linemodel/templatesfitstore.h"
+
+#include <string>
+#include <fstream>
 
 using namespace NSEpic;
 
@@ -64,6 +60,7 @@ using namespace NSEpic;
  */
 void CLineModelResult::Init(TFloat64List redshifts,
                               CRayCatalog::TRayVector restRays,
+                              Int32 nTemplates,
                               Int32 nTplshapes,
                               TFloat64List tplshapesPriors)
 {
@@ -76,22 +73,54 @@ void CLineModelResult::Init(TFloat64List redshifts,
     Status.resize( nResults );
     ChiSquare.resize( nResults );
     ScaleMargCorrection.resize( nResults );
-    Redshifts.resize( nResults );
-    Redshifts = redshifts;
-    restRayList = restRays;
+    Redshifts = std::move(redshifts);
+    restRayList = std::move(restRays);
     LineModelSolutions.resize( nResults );
     ContinuumModelSolutions.resize( nResults );
-    //init the tplshape chisquare results  
+    
     ChiSquareContinuum.resize( nResults );
-    ScaleMargCorrectionContinuum.resize( nResults);  
-    ChiSquareTplshapes              = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, DBL_MAX));
-    ScaleMargCorrectionTplshapes    = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, 0.));
-    StrongELPresentTplshapes        = std::vector<TBoolList>(nTplshapes, TBoolList(nResults, false));
-    StrongHalphaELPresentTplshapes  = std::vector<TBoolList>(nTplshapes, TBoolList(nResults, false));
-    NLinesAboveSNRTplshapes         = std::vector<TInt32List>(nTplshapes, TInt32List(nResults, 0));
-    PriorLinesTplshapes             = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, 0.));
+    ScaleMargCorrectionContinuum.resize( nResults); 
 
-    PriorTplshapes = std::move(tplshapesPriors);
+    if (nTemplates >0)
+        ChiSquareTplContinuum.assign(nTemplates, TFloat64List(nResults, DBL_MAX) );
+    else
+        ChiSquareTplContinuum.clear();
+
+    //init the tplshape chisquare results
+    if (nTplshapes >0){
+        ChiSquareTplshapes.assign(nTplshapes, TFloat64List(nResults, DBL_MAX) );
+        ScaleMargCorrectionTplshapes.assign(nTplshapes, TFloat64List(nResults, 0.0) );
+        StrongELPresentTplshapes.assign(nTplshapes, TBoolList(nResults, false) );
+        StrongHalphaELPresentTplshapes.assign(nTplshapes, TBoolList(nResults, false));
+        NLinesAboveSNRTplshapes.assign(nTplshapes, TInt32List(nResults, false) );
+        PriorTplshapes = std::move(tplshapesPriors);
+        PriorLinesTplshapes.assign(nTplshapes, TFloat64List(nResults, 0.0) );
+    }else{
+        ChiSquareTplshapes.clear();
+        ScaleMargCorrectionTplshapes.clear();
+        StrongELPresentTplshapes.clear();
+        NLinesAboveSNRTplshapes.clear();
+        PriorTplshapes.clear();
+        PriorLinesTplshapes.clear();
+    }
+}
+
+void CLineModelResult::SetChisquareTplContinuumResult( Int32 index_z, const shared_ptr<const CTemplatesFitStore> &tplFitStore)
+{
+    const auto index_z_in_store = tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
+    if (index_z_in_store == -1)
+        throw GlobalException(INTERNAL_ERROR, "CLineModelResult::SetChisquareTplContinuumResult: redshift not in fitstore");
+
+    for(Int32 k=0; k<tplFitStore->GetContinuumCount(); k++){ // TODO: handle the use of more than one continuum in linemodel
+        ChiSquareTplContinuum[k][index_z] = tplFitStore->GetFitValues(index_z_in_store, k).merit;
+    }
+    
+}
+
+void CLineModelResult::SetChisquareTplContinuumResultFromPrevious(Int32 index_z){
+    auto previous = index_z-1;
+    for (auto it=ChiSquareTplContinuum.begin(), e=ChiSquareTplContinuum.end(); it!=e; ++it)
+        it->at(index_z) = it->at(previous);
 }
 
 void CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
@@ -128,24 +157,24 @@ void CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
     return;
 }
 
+TFloat64List CLineModelResult::getChisquareTplContinuumResult(Int32 index_z){
+
+    TFloat64List ret;
+    ret.reserve(ChiSquareTplContinuum.size());
+    for (auto it=ChiSquareTplContinuum.begin(), e=ChiSquareTplContinuum.end(); it!=e; ++it)
+        ret.push_back(it->at(index_z));
+
+    return ret;
+}
+
 TFloat64List CLineModelResult::getChisquareTplshapeResult( Int32 index_z )
 {
-    TFloat64List chisquareTplshape;
-    if(index_z>=Redshifts.size())
-    {
-        return chisquareTplshape;
-    }
-    if(ChiSquareTplshapes.size()<1)
-    {
-        return chisquareTplshape;
-    }
+    TFloat64List ret; 
+    ret.reserve(ChiSquareTplshapes.size());
+    for (auto it=ChiSquareTplshapes.begin(), e=ChiSquareTplshapes.end(); it!=e; ++it)
+        ret.push_back(it->at(index_z));
 
-    for(Int32 k=0; k<ChiSquareTplshapes.size(); k++)
-    {
-        chisquareTplshape.push_back(ChiSquareTplshapes[k][index_z]);
-    }
-
-    return chisquareTplshape;
+    return ret;
 }
 
 TFloat64List CLineModelResult::getScaleMargCorrTplshapeResult( Int32 index_z )

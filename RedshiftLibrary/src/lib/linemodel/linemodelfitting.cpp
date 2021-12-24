@@ -1317,6 +1317,13 @@ Int32 CLineModelFitting::SetFitContinuum_FitStore(const std::shared_ptr<const CT
     return 1;
 }
 
+const std::shared_ptr<const CTemplatesFitStore> & 
+CLineModelFitting::GetFitContinuum_FitStore() const
+{
+    return m_fitContinuum_tplfitStore;
+}
+
+
 Int32 CLineModelFitting::SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper)
 {
     m_fitContinuum_priorhelper = priorhelper;

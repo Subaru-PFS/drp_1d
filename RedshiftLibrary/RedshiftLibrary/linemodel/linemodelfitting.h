@@ -135,6 +135,7 @@ public:
     Float64 getFitContinuum_tplIgmMeiksinIdx() const;
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
+    const std::shared_ptr<const CTemplatesFitStore> & GetFitContinuum_FitStore() const;
     Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);

@@ -444,24 +444,16 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
     const TFloat64List & modelPriors = chisquarearray.modelpriors;
 
     if (meritResults.size() != zPriors.size())
-    {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz::Marginalize: merit.size ("<<meritResults.size()<<") != prior.size ("<<zPriors.size()<<")");
-    }
+    
     if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1)
-    {
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz::Marginalize: merit.size("<<meritResults.size()<<"), prior.size("<<zPriors.size()<<") or redshifts.size("<<redshifts.size()<<") is zero !");
-    }
 
     // check merit curves. Maybe this should be assert stuff ?
     for (const TFloat64List & _merit : meritResults)
         for (const Float64 & m : _merit)
-        {
             if (m != m) // test NAN value
-            {
                 throw GlobalException(INTERNAL_ERROR,"COperatorPdfz::Marginalize - merit result has at least one nan value");
-            }
-        }
-
 
     std::vector<UInt32> nSum(redshifts.size(), 0);
 
@@ -469,22 +461,21 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
     TFloat64List LogEvidencesWPriorM;
     Float64 sumModifiedEvidences = 0.0;
 
-    std::vector<Float64> logPriorModel;
+    TFloat64List logPriorModel;
     if (modelPriors.size() != meritResults.size()){
     
-        Float64 priorModelCst = 1.0 / Float64(meritResults.size());
+        const Float64 priorModelCst = 1.0 / Float64(meritResults.size());
         Log.LogInfo("COperatorPdfz::Marginalize: no priors loaded, using constant priors (=%f)", priorModelCst);
-        for (Int32 km = 0; km < meritResults.size(); km++)
-        {
-            logPriorModel.push_back(log(priorModelCst));
-        }
-    } else
-    { //we need to check if modelPriors is a const vector passed from linemodelsolve.combinePDF
+        logPriorModel = TFloat64List(meritResults.size(), log(priorModelCst));
 
-        for (Int32 km = 0; km < meritResults.size(); km++)
-        {
-            logPriorModel.push_back(log(modelPriors[km]));
-        }
+    } else {
+
+        logPriorModel.resize(meritResults.size());
+        std::transform(modelPriors.cbegin(), modelPriors.cend(), logPriorModel.begin(), 
+            [](Float64 v){
+                return log(v);
+                }
+            );
 
         // logging priors used
         Float64 sumPriors = 0.0;
@@ -493,15 +484,17 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
             sumPriors += exp(logPriorModel[km]);
             Log.LogDetail("COperatorPdfz::Marginalize: for model k=%d, using prior=%f", km, exp(logPriorModel[km]));
         }
+
         Log.LogInfo("COperatorPdfz::Marginalize: sumPriors=%f", sumPriors);
         if (sumPriors > 1.1 || sumPriors < 0.9)
-        {
             throw GlobalException(INTERNAL_ERROR,"Pdfz::Marginalize: sumPriors should be close to 1... !!!");
-        }
+
     }
 
     std::vector<TFloat64List> logProbaList;
     TFloat64List logEvidenceList;
+    logEvidenceList.reserve(meritResults.size());
+    LogEvidencesWPriorM.reserve(meritResults.size());
     for (Int32 km = 0; km < meritResults.size(); km++)
     {
         // Todo: Check if the status is OK ?
@@ -523,62 +516,43 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
         }
 
     }
+
     if (verbose)
-    {
         Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e", MaxiLogEvidence);
-    }
 
     Float64 & logSumEvidence = m_postmargZResult->valEvidenceLog;
 
     // Using computational trick to sum the evidences
-    for (Int32 k = 0; k < LogEvidencesWPriorM.size(); k++)
-    {
-        sumModifiedEvidences += exp(LogEvidencesWPriorM[k] - MaxiLogEvidence);
-    }
+    for (auto & logEv:LogEvidencesWPriorM)
+        sumModifiedEvidences += exp(logEv - MaxiLogEvidence);
     logSumEvidence = MaxiLogEvidence + log(sumModifiedEvidences); //here is the marginalized evidence, used for classification
-    if (verbose)
-    {
-        Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e", logSumEvidence);
-    }
 
+    if (verbose)
+        Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e", logSumEvidence);
+
+    // marginalize: ie sum all PDFS
     for (Int32 km = 0; km < meritResults.size(); km++)
     {
         if (verbose)
-        {
             Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d", km);
-        }
 
         // Todo: Check if the status is OK ?
         // meritResult->Status[i] == COperator::nStatus_OK
-        TFloat64List logProba;
-        Float64 logEvidence;
-        logProba = logProbaList[km];
-        logEvidence = logEvidenceList[km];
+        const TFloat64List &logProba = logProbaList[km];
+        const Float64 logWeight = logPriorModel[km] + logEvidenceList[km] - logSumEvidence;
 
         // check if the redshift bins are the same
-        for (UInt32 k = 0; k < redshifts.size(); k++)
-        {
-            if (m_postmargZResult->Redshifts[k] != redshifts[k])
-            {
-	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz::Marginalize z-bins comparison failed for result km="<< km);
-            }
-        }
+        if (m_postmargZResult->Redshifts != redshifts)
+            throw GlobalException(INTERNAL_ERROR, "COperatorPdfz::Marginalize z-bins comparison failed");
 
         for (UInt32 k = 0; k < redshifts.size(); k++)
         {
-            if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo: check (temporarily considers status is always OK for linemodel tplshape)
-            {
-                Float64 & logValProba = m_postmargZResult->valProbaLog[k];
-                Float64 logValProbaAdd = logProba[k] + logPriorModel[km] + logEvidence - logSumEvidence;
-                Float64 maxP = logValProba;
-                if (maxP < logValProbaAdd)
-                {
-                    maxP = logValProbaAdd;
-                }
-                Float64 valExp = exp(logValProba - maxP) + exp(logValProbaAdd - maxP);
-                logValProba = maxP + log(valExp);
-                nSum[k]++;
-            }
+            Float64 & logValProba = m_postmargZResult->valProbaLog[k];
+            const Float64 logValProbaAdd = logProba[k] + logWeight;
+            const Float64 maxP = std::max(logValProbaAdd,logValProba);
+            const Float64 valExp = exp(logValProba - maxP) + exp(logValProbaAdd - maxP);
+            logValProba = maxP + log(valExp);
+            nSum[k]++;
         }
 
     }

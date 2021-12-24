@@ -439,7 +439,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
 
     CZPrior zpriorhelper;
 
-    if(opt_rigidity!="tplshape" || opt_combine=="bestchi2")
+    if(opt_combine=="bestchi2")
     {
         chisquarearray.zpriors.emplace_back();
         TFloat64List & zpriors = chisquarearray.zpriors.back();
@@ -470,22 +470,30 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
             std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
             zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
         }
-
-        //correct chi2 if necessary
-        TFloat64List logLikelihoodCorrected = result->ChiSquare;
-        if(false && m_opt_pdf_margAmpCorrection) //maybe there should not be a scalemarg correction for the bestchi2 option ? Todo: raise warning then...
-        {
-            for ( UInt32 k=0; k<result->Redshifts.size(); k++ )
-            {
-                logLikelihoodCorrected[k] += result->ScaleMargCorrection[k];
-            }
-        }
         
-        chisquarearray.chisquares.push_back(std::move(logLikelihoodCorrected));
+        chisquarearray.chisquares.push_back(result->ChiSquare);
 
     }else if(opt_combine=="bestproba" || opt_combine=="marg"){
+/*
+        // store all continuum tpl fitting chisquares  (ChiSquareTplContinuum size will be null if not tplfit)      
+        for (Int32 k=1; k<result->ChiSquareTplContinuum.size(); k++) // skip 1st one, used with linemodel
+        {
+            if(zPriorEuclidNHa)
+            {
+                chisquarearray.zpriors.push_back(
+                    zpriorhelper.GetEuclidNhaLogZPrior( result->Redshifts, 
+                                                        opt_euclidNHaEmittersPriorStrength));
+            } else {
+                chisquarearray.zpriors.push_back(
+                    zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
 
-        //Log.LogInfo("Linemodel: Pdfz computation - combination: method=%s, n=%d", opt_combine.c_str(), result->ChiSquareTplshapes.size());
+            }
+
+            chisquarearray.chisquares.push_back(result->ChiSquareTplContinuum[k]);
+
+        }
+*/
+        // note: even if not tplshape, the ChiSquareTplshapes vector will have its first element filled. 
         for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
         {
             chisquarearray.zpriors.emplace_back();
@@ -557,7 +565,12 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
             }
         }
 
-        chisquarearray.modelpriors = result->PriorTplshapes;
+        chisquarearray.modelpriors = result->PriorTplshapes; 
+        
+        // TODO: need to add/handle tpl continuum priors 
+        // in the case of ATEZ (which is exclusive of zpriors and Tplshapes), 
+        // priors are included already in the chisquares of both tplcontinuum chi2 and tplshape chi2
+        // But the tplshapes sums should be inside the tplcontinuums sum, ie with the best contiuum prior factorized.
 
 
         // todo : store priors for each tplshape model ?
@@ -593,7 +606,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -608,7 +621,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -622,7 +635,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->PriorLinesTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->PriorLinesTplshapes[km][kz];
@@ -634,7 +647,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
 
     //Save PriorContinuumTplshapes results
     std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, std::vector<Float64>() );
+    result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
     for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
     {
         result_chisquaretplshape->ChiSquare[kz] = result->ContinuumModelSolutions[kz].tplLogPrior;
