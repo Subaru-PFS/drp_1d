@@ -56,7 +56,6 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include <math.h>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/format.hpp>

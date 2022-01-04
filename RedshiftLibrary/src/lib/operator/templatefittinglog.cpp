@@ -40,7 +40,6 @@
 
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/axis.h"

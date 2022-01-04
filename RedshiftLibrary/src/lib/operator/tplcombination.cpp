@@ -44,7 +44,6 @@
 #include  "RedshiftLibrary/spectrum/tools.h"
 #include  "RedshiftLibrary/common/mask.h"
 #include  "RedshiftLibrary/extremum/extremum.h"
-#include  "RedshiftLibrary/common/quicksort.h"
 #include  "RedshiftLibrary/common/indexing.h"
 #include  "RedshiftLibrary/log/log.h"
 

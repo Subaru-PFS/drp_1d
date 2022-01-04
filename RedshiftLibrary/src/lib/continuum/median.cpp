@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/continuum/median.h"
 
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/spectrum/axis.h"

@@ -45,7 +45,6 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/log/log.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
