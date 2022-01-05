@@ -113,7 +113,7 @@ template <typename T> class CRange
         return false;
     }
 
-    std::vector<T> SpreadOver(Float64 delta) const
+    std::vector<T> SpreadOver(T delta) const
     {
         std::vector<T> v;
 
@@ -135,18 +135,20 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta, Float64 offset=0.) const
+    std::vector<T> SpreadOverLog(T delta, T offset=0.) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
+
         std::vector<T> v;
-        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
         {
             v.resize(1);
             v[0] = m_Begin;
             return v;
         }
 
-        Float64 x = m_Begin + offset;
-        Float64 edelta = exp(delta);
+        T x = m_Begin + offset;
+        T edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
         while (x < (m_End + offset + epsilon) && count < maxCount)
@@ -158,8 +160,9 @@ template <typename T> class CRange
         return v;
     }  
     //spread over log (z+1)
-    std::vector<T> SpreadOverLogZplusOne(Float64 delta) const
+    std::vector<T> SpreadOverLogZplusOne(T delta) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
         return SpreadOverLog(delta, 1.);
     }
     //  template<typename T>

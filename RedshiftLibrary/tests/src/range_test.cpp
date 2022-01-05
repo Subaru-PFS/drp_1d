@@ -367,112 +367,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4)
 //-----------------------------------------------------------------------------
 
 // TEST 1
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
-//       TRUE            FALSE              FALSE
-BOOST_AUTO_TEST_CASE(SpreadOverLog_Int_test1)
-{
-    Float64 delta = 0.5;
-    Float64 offset = 0.1;
-
-    // reference
-    std::vector<Int32> myVector;
-    myVector.resize(1);
-    myVector[0] = 1;
-
-    // test
-    CRange<Int32> myRange(1, 1);
-    BOOST_CHECK(myRange.GetIsEmpty() == true);
-
-    std::vector<Int32> functionResult = myRange.SpreadOverLog(delta, offset);
-    BOOST_CHECK(functionResult.size() == 1);
-    BOOST_CHECK(myVector == functionResult);
-}
-//-----------------------------------------------------------------------------
-
-// TEST 2
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
-//       FALSE            TRUE              FALSE
-BOOST_AUTO_TEST_CASE(SpreadOverLog_Int_test2)
-{
-    Float64 delta = 0.0;
-    Float64 offset = 0.1;
-
-    // Known vector
-    std::vector<Int32> myVector;
-    myVector.resize(1);
-    myVector[0] = 1;
-
-    CRange<Int32> myRange(1, 3);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
-    std::vector<Int32> functionResult = myRange.SpreadOverLog(delta, offset);
-    BOOST_CHECK(functionResult.size() == 1);
-    BOOST_CHECK(myVector == functionResult);
-}
-//-----------------------------------------------------------------------------
-
-// TEST 3
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
-//       FALSE            FALSE              TRUE
-BOOST_AUTO_TEST_CASE(SpreadOverLog_Int_test3)
-{
-    Float64 delta = 5.0;
-    Float64 offset = 0.1;
-
-    // Known vector
-    std::vector<Int32> myVector;
-    myVector.resize(1);
-    myVector[0] = 1;
-
-    CRange<Int32> myRange(1, 3);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
-    std::vector<Int32> functionResult = myRange.SpreadOverLog(delta, offset);
-    BOOST_CHECK(functionResult.size() == 1);
-    BOOST_CHECK(myVector == functionResult);
-}
-//-----------------------------------------------------------------------------
-
-// TEST 4
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
-//       FALSE            FALSE              FALSE
-BOOST_AUTO_TEST_CASE(SpreadOverLog_Int_test4)
-{
-    Float64 delta = 0.5;
-    Float64 offset = 0.1;
-
-    // reference
-    std::vector<Int32> myVector;
-    Float64 vBegin = 1;
-    Float64 vEnd = 11;
-    Float64 vEpsilon = 1E-6;
-    Float64 x = vBegin + offset;
-    Float64 edelta = exp(delta);
-    Int32 count = 0;
-    Int32 maxCount = 1e8;
-    while (x < (vEnd + offset + vEpsilon) && count < maxCount)
-    {
-        myVector.push_back(x - offset);
-        count++;
-        x *= edelta;
-    }
-    
-    // test
-    CRange<Int32> range(1,11);
-    BOOST_CHECK(range.GetIsEmpty() == false);
-    BOOST_CHECK(range.GetLength() == 10);    
-    
-    std::vector<Int32> functionResult = range.SpreadOverLog(delta, offset);
-    BOOST_CHECK_CLOSE(functionResult.front() , range.GetBegin(), precision);
-    for (int i = 0; i< functionResult.size() - 1; i++){
-        BOOST_CHECK_CLOSE((functionResult[i+1]+offset)/(functionResult[i]+offset) ,exp(delta), precision);
-    }
-    BOOST_CHECK((range.GetEnd() + offset)/(functionResult.back()+offset) < exp(delta));
-}
-//-----------------------------------------------------------------------------
-
-// TEST 1
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
 //       TRUE            FALSE              FALSE
 BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test1)
 {
@@ -494,7 +389,7 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test1)
 //-----------------------------------------------------------------------------
 
 // TEST 2
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
 //       FALSE            TRUE              FALSE
 BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test2)
 {
@@ -507,15 +402,13 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test2)
     myVector[0] = 1;
 
     TFloat64Range myRange(1, 3);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
     std::vector<Float64> functionResult = myRange.SpreadOverLog(delta, offset);
     BOOST_CHECK(myVector == functionResult);
 }
 //-----------------------------------------------------------------------------
 
 // TEST 3
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
 //       FALSE            FALSE              TRUE
 BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test3)
 {
@@ -528,15 +421,13 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test3)
     myVector[0] = 1;
 
     TFloat64Range myRange(1, 3);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
     std::vector<Float64> functionResult = myRange.SpreadOverLog(delta, offset);
     BOOST_CHECK(myVector == functionResult);
 }
 //-----------------------------------------------------------------------------
 
 // TEST 4
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
 //       FALSE            FALSE              FALSE
 BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4)
 {
@@ -558,7 +449,7 @@ BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4)
 //-----------------------------------------------------------------------------
 
 // TEST SpreadOverLogZplusOne --> offset is locked to one
-// if(GetIsEmpty() || delta == 0.0  || GetLength() < delta)
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
 //       FALSE            FALSE              FALSE
 BOOST_AUTO_TEST_CASE(SpreadOverLogZPlusOne_test)
 {
