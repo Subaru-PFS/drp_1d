@@ -377,3 +377,17 @@ BOOST_AUTO_TEST_CASE(ClampLambdaRange)
   //BOOST_TEST_MESSAGE("Mean resolution:"<<xAxis.GetMeanResolution());
   //BOOST_TEST_MESSAGE("Interpolate value:"<<yInt[0]);
   //BOOST_CHECK( 0 == 1 );
+BOOST_AUTO_TEST_CASE(isSorted)
+{
+  TFloat64List arr = {0.,1.,4., 3.};
+  CSpectrumSpectralAxis axis(arr,false);
+  BOOST_CHECK(axis.isSorted()==false);
+
+  TFloat64List arr2 = {0.,0.};
+  CSpectrumSpectralAxis axis2(arr2,false);
+  BOOST_CHECK(axis2.isSorted()==false);
+
+  TFloat64List arr3 = {};
+  CSpectrumSpectralAxis axis3(arr3,false);
+  BOOST_CHECK(axis3.isSorted()==false);
+}

@@ -112,7 +112,7 @@ public:
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const;
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const;
     UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
-
+    bool                isSorted() const;
 private:
 
     mutable UInt32      m_SpectralFlags = 0;

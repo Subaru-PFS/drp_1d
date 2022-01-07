@@ -117,7 +117,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
 {
     if(!IsValid())
     {
-        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
     }
 
 }
@@ -137,7 +137,10 @@ CSpectrum::CSpectrum(const CSpectrum& other):
     m_Name(other.m_Name),
     alreadyRemoved(other.alreadyRemoved)
 {
-
+    if(!IsValid())
+    {
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
+    }
 }
 
 CSpectrum::CSpectrum(CSpectrum&& other):
@@ -152,7 +155,10 @@ CSpectrum::CSpectrum(CSpectrum&& other):
     m_Name(std::move(other.m_Name)),
     alreadyRemoved(other.alreadyRemoved)
 {
-
+    if(!IsValid())
+    {
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
+    }
 }
 
 CSpectrum::~CSpectrum()
@@ -255,7 +261,7 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis, CSpectrumF
 
 void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
 {
-    if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+    if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
 
     Float64 smoothWidth = parameterStore.Get<Float64>( "smoothWidth");
     std::string medianRemovalMethod =parameterStore.Get<std::string>( "continuumRemoval.method");
@@ -570,7 +576,7 @@ const Bool CSpectrum::IsFluxValid( Float64 LambdaMin, Float64 LambdaMax ) const
     Int32 nInvalid = 0;
 
     if(!IsValid())
-        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
         
     const Float64* flux = GetFluxAxis().GetSamples();
     if (LambdaMin < m_SpectralAxis[0] || LambdaMax > m_SpectralAxis[m_SpectralAxis.GetSamplesCount()-1]){
@@ -645,7 +651,7 @@ Bool CSpectrum::correctSpectrum( Float64 LambdaMin, Float64 LambdaMax, Float64 c
     Bool corrected = false;
     Int32 nCorrected = 0;
     if(!IsValid()){
-        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
     }
     CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
     TFloat64List & error = fluxaxis.GetError().GetSamplesVector();
@@ -784,7 +790,7 @@ Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
                        CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string & opt_interp, const std::string & opt_error_interp ) const
 {
     
-    if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+    if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
         
     UInt32 s = targetSpectralAxis.GetSamplesCount();
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
@@ -988,7 +994,7 @@ void CSpectrum::ScaleFluxAxis(Float64 scale){
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange, Bool enableInputSpcCorrect)
 {
     if(!IsValid())
-        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
+        throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size or unsorted spectral axis");
 
     TFloat64Range clampedlambdaRange;
     m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);

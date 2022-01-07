@@ -612,3 +612,15 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
     m_Samples = new_lrange.SpreadOverLog(new_regularLogSamplingStep);
     m_regularLogSamplingStep = new_regularLogSamplingStep;
 }
+
+/**
+ * @brief Check if spectral axis is sorted in the increasing order
+ * empty or constant vectors are considered as non-sorted
+ */
+bool CSpectrumSpectralAxis::isSorted() const
+{
+    if(std::is_sorted(std::begin(m_Samples), std::end(m_Samples)))
+        if(m_Samples.size() && m_Samples.front()!=m_Samples.back()) 
+            return true;
+    return false;
+}

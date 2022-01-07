@@ -125,8 +125,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
 
   // cas 3
-
-  CSpectrumSpectralAxis sourceSpectralAxis3(n, 1);
+  CSpectrumSpectralAxis sourceSpectralAxis3(lbdaList, 1);
 
   CSpectrum object_CSpectrum3(sourceSpectralAxis3, sourceFluxAxis);
   CSpectrum rebinnedSpectrum3;

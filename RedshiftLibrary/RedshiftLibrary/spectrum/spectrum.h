@@ -335,7 +335,7 @@ bool CSpectrum::IsEmpty()const
 inline
 bool CSpectrum::IsValid()const
 {
-    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty();
+    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty() && m_SpectralAxis.isSorted();
 }
 
 inline
