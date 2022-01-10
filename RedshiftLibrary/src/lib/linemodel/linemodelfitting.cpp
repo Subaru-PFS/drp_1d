@@ -498,7 +498,7 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
 
         Float64 mu = NAN;
         Float64 LineWidth = NAN;
-        m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, LineWidth, true);
+        m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, LineWidth);
 
         Float64 winsizeAngstrom = LineWidth*nsigma;
 
@@ -4463,7 +4463,7 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumApprox(const std::vect
             A*= m_Elements[eltIdx]->GetSignFactor(iray);
 
             Float64 mu = NAN;Float64 sigma = NAN;
-            m_Elements[eltIdx]->getWidth(iray, m_Redshift, mu, sigma, false);
+            m_Elements[eltIdx]->getObservedPositionAndLineWidth(iray, m_Redshift, mu, sigma, false);
             Float64 integratedA = A*sigma*sqrt(2*M_PI);
             Float64 coeffA = integratedA/(Float64)sSize;
 
@@ -4797,7 +4797,7 @@ std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
 
             Float64 mu = NAN;
             Float64 sigma = NAN;
-            m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);
+            m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);
 
             Float64 flux = -1;
             Float64 fluxError = -1;
@@ -5414,8 +5414,8 @@ Int32 CLineModelFitting::improveBalmerFit()
         Float64 AbsVSEmWidthCoeffThreshold = 2.0;
         Float64 muE = NAN;Float64 muA = NAN;
         Float64 sigmaE = NAN; Float64 sigmaA = NAN;
-        m_Elements[ilineE]->getWidth(subeIdxE, m_Redshift, muE, sigmaE, false);// do not apply Lya asym offset
-        m_Elements[ilineA]->getWidth(subeIdxA, m_Redshift, muA, sigmaA, false);// do not apply Lya asym offset
+        m_Elements[ilineE]->getObservedPositionAndLineWidth(subeIdxE, m_Redshift, muE, sigmaE, false);// do not apply Lya asym offset
+        m_Elements[ilineA]->getObservedPositionAndLineWidth(subeIdxA, m_Redshift, muA, sigmaA, false);// do not apply Lya asym offset
         if(sigmaA<AbsVSEmWidthCoeffThreshold*sigmaE)
         {
             continue;
@@ -5535,7 +5535,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
                 modelSolution.CenterContinuumFlux.push_back(cont);
                 modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
                 Float64 mu = NAN;Float64 sigma = NAN;
-                m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
+                m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
 
                 Float64 flux = NAN;
                 Float64 fluxError = NAN;
