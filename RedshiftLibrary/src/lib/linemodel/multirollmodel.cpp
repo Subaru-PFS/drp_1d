@@ -42,7 +42,6 @@
 
 #include "RedshiftLibrary/spectrum/combination.h"
 
-#include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 namespace bfs = boost::filesystem;

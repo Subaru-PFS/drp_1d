@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/noise/flat.h"
 
-#include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
@@ -61,6 +60,7 @@ using namespace std;
 CSpectrum::CSpectrum():
     m_estimationMethod(""),
     m_medianWindowSize(-1),
+    m_medianEvenReflection(true),
     m_Name("")
 {
 
@@ -71,6 +71,7 @@ CSpectrum::CSpectrum(const std::string& name):m_Name(name){};
 CSpectrum::CSpectrum(const CSpectrum& other, const TFloat64List& mask):
     m_estimationMethod(other.m_estimationMethod),
     m_medianWindowSize(other.m_medianWindowSize),
+    m_medianEvenReflection(other.m_medianEvenReflection),
     m_Name(other.m_Name),
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
@@ -112,6 +113,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
     m_RawFluxAxis(std::move(fluxAxis)),
     m_estimationMethod(""),
     m_medianWindowSize(-1),
+    m_medianEvenReflection(true),
     m_Name(""),
     m_LSF(lsf)
 {
@@ -128,6 +130,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
 CSpectrum::CSpectrum(const CSpectrum& other):
     m_estimationMethod(other.m_estimationMethod),
     m_medianWindowSize(other.m_medianWindowSize),
+    m_medianEvenReflection(other.m_medianEvenReflection),
     m_SpectralAxis(other.m_SpectralAxis),
     m_RawFluxAxis(other.m_RawFluxAxis),
     m_ContinuumFluxAxis(other.m_ContinuumFluxAxis),
@@ -146,6 +149,7 @@ CSpectrum::CSpectrum(const CSpectrum& other):
 CSpectrum::CSpectrum(CSpectrum&& other):
     m_estimationMethod(std::move(other.m_estimationMethod)),
     m_medianWindowSize(other.m_medianWindowSize),
+    m_medianEvenReflection(other.m_medianEvenReflection),
     m_SpectralAxis(std::move(other.m_SpectralAxis)),
     m_RawFluxAxis(std::move(other.m_RawFluxAxis)),
     m_ContinuumFluxAxis(std::move(other.m_ContinuumFluxAxis)),
@@ -181,6 +185,7 @@ CSpectrum& CSpectrum::operator=(const CSpectrum& other)
 
     m_estimationMethod = other.m_estimationMethod;
     m_medianWindowSize = other.m_medianWindowSize;
+    m_medianEvenReflection = other.m_medianEvenReflection;
     m_Name = other.m_Name;
     alreadyRemoved = other.alreadyRemoved;
     return *this;
@@ -199,6 +204,7 @@ CSpectrum& CSpectrum::operator=(CSpectrum&& other)
 
     m_estimationMethod = std::move(other.m_estimationMethod);
     m_medianWindowSize = other.m_medianWindowSize;
+    m_medianEvenReflection = other.m_medianEvenReflection;
     m_Name = std::move(other.m_Name);
     alreadyRemoved = other.alreadyRemoved;
 
@@ -266,6 +272,7 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     Float64 smoothWidth = parameterStore.Get<Float64>( "smoothWidth");
     std::string medianRemovalMethod =parameterStore.Get<std::string>( "continuumRemoval.method");
     Float64 medianKernelWidth = parameterStore.Get<Float64>( "continuumRemoval.medianKernelWidth");
+    bool medianEvenReflection = parameterStore.Get<bool>( "continuumRemoval.medianEvenReflection");
     SetType(EType::nType_raw);
     if( smoothWidth > 0 ){
         m_RawFluxAxis.ApplyMeanSmooth(smoothWidth);
@@ -273,6 +280,7 @@ void CSpectrum::InitSpectrum(CParameterStore& parameterStore)
     ResetContinuum();
     SetContinuumEstimationMethod(medianRemovalMethod);
     SetMedianWinsize(medianKernelWidth);
+    SetMedianEvenReflection(medianEvenReflection);
 }
 
 /**
@@ -342,12 +350,7 @@ void CSpectrum::EstimateContinuum() const
         CContinuumIrregularSamplingMedian continuum;
         continuum.SetMedianKernelWidth( m_medianWindowSize );
         continuum.SetMeanKernelWidth( m_medianWindowSize );
-        RemoveContinuum( continuum );
-        Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
-    }else if( m_estimationMethod == "Median" )
-    {
-        CContinuumMedian continuum;
-        continuum.SetMedianKernelWidth( m_medianWindowSize );
+        continuum.SetMedianEvenReflection(m_medianEvenReflection);
         RemoveContinuum( continuum );
         Log.LogDetail( "Continuum estimation - medianKernelWidth = %.2f", m_medianWindowSize );
     }
@@ -724,6 +727,11 @@ const Float64 CSpectrum::GetMedianWinsize() const
       return m_medianWindowSize;
 }
 
+const bool CSpectrum::GetMedianEvenReflection() const
+{
+      return m_medianEvenReflection;
+}
+
 const std::string & CSpectrum::GetContinuumEstimationMethod() const
 {
       return m_estimationMethod;
@@ -742,6 +750,16 @@ void CSpectrum::SetMedianWinsize( Float64 winsize )
         ResetContinuum();
     }
     m_medianWindowSize = winsize;
+}
+
+void CSpectrum::SetMedianEvenReflection( bool medianEvenReflection )
+{
+    if (m_medianEvenReflection!=medianEvenReflection &&
+            (m_estimationMethod=="IrregularSamplingMedian" || m_estimationMethod=="Median"))
+    {
+        ResetContinuum();
+    }
+    m_medianEvenReflection = medianEvenReflection;
 }
 
 void CSpectrum::SetContinuumEstimationMethod( std::string method ) const

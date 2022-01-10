@@ -45,6 +45,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <boost/algorithm/clamp.hpp>
 
 using namespace NSEpic;
 using namespace std;
@@ -57,7 +58,7 @@ CContinuumIrregularSamplingMedian::CContinuumIrregularSamplingMedian()
     m_MeanSmoothAmplitude = 75;     // Angstrom
     m_MedianSmoothCycles = 5;
     m_MedianSmoothAmplitude = 75;   // Angstrom
-    m_Even = true;
+    m_MedianEvenReflection = true;
 }
 
 /**
@@ -93,20 +94,29 @@ void CContinuumIrregularSamplingMedian::SetMedianCycleCount( UInt32 count )
 }
 
 /**
+ * Sets m_even to input.
+ */
+void CContinuumIrregularSamplingMedian::SetMedianEvenReflection( bool evenReflection )
+{
+    m_MedianEvenReflection = evenReflection;
+}
+
+/**
  * Take an array lenght N,
  * foreach j element computes median value on interval j-n_range/2,j+n_range/2
  * an put this value in y_out array
  */
-Int32 CContinuumIrregularSamplingMedian::MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out)
+TFloat64List CContinuumIrregularSamplingMedian::MedianSmooth( const TFloat64List &y, Int32 n_range)
 {
     Int32 i;
-
     Int32 half,rest;
-
     Int32 start, stop;
+    Int32 n_points = y.size();
 
     half = n_range/2;
-    rest = n_range-2*half;
+    rest = n_range-2*half;    
+
+    TFloat64List y_out(n_points);
 
     CMedian<Float64> median;
     for( i=0; i<n_points; i++ )
@@ -114,51 +124,126 @@ Int32 CContinuumIrregularSamplingMedian::MedianSmooth( const Float64 *y, Int32 n
         start = max( 0, i-half );
         stop = min( i+half+rest, n_points-1 );
 
-        *( y_out+i ) = median.Find( y+start, stop-start );
+        y_out[i] = median.Find( (y.data())+start, stop-start );
     }
 
-    return 0;
+    return y_out;
 }
+
+/**
+ * Compute an average smooth.
+ */
+TFloat64List CContinuumIrregularSamplingMedian::MeanSmooth( const TFloat64List &y, Int32 n)
+{
+    Int32 i;
+    Int32 start,end,half,rest;
+    Int32 N = y.size();
+
+    half = n/2;
+    rest = n-2*half;
+
+    TFloat64List y_out(N);
+
+    CMean<Float64> mean;
+    for( i=0; i<N; i++ )
+    {
+        start = max( 0, i-half-rest );
+        end = min( i+half, N-1 );
+
+        y_out[i] = mean.Find( (y.data())+start, (end-start)+1);
+    }
+    return y_out;
+ }
 
 /**
  * Input: y_input, which has N elemnts
  * Reflects on border this array
  * y_out extended array
  */
-Int32 CContinuumIrregularSamplingMedian::OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val, Float64* y_out )
+TFloat64List CContinuumIrregularSamplingMedian::OddMirror(  const TFloat64List::iterator & begin, 
+                                                            const TFloat64List::iterator & end,
+                                                            Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val)
 {
-    Int32 j;
+    TFloat64List y_out(std::distance(begin,end)+2*Nreflex);
 
-    for( j=0; j<N; j++ )
-    {
-        *( y_out+j+Nreflex ) = *( y_input+j );
-    }
+    auto out_begin = y_out.begin()+Nreflex;
+    std::copy(begin, end, out_begin);
 
-    for( j=0; j<Nreflex; j++ )
-    {
-        *( y_out+Nreflex-j-1 ) = 2*y_input_begin_val-*( y_input+j );
-        *( y_out+N+Nreflex+j ) = 2*y_input_end_val-*( y_input+N-j-1 );
-    }
-    return 0;
+    auto out_rbegin = std::reverse_iterator<TFloat64List::iterator>(out_begin);
+    std::transform( begin, begin+Nreflex, out_rbegin, 
+                    [y_input_begin_val](Float64 in){ 
+                        return 2*y_input_begin_val - in;
+                        });
+
+    auto rbegin = std::reverse_iterator<TFloat64List::iterator>(end);
+    out_begin = y_out.end()-Nreflex;
+    std::transform(rbegin, rbegin+Nreflex, out_begin, [y_input_end_val](Float64 in){
+        return 2*y_input_end_val - in;});
+
+    return y_out;
 }
+
 
 /**
  * Extends array with its own "reflection". Version for even-sized arrays.
  */
-Int32 CContinuumIrregularSamplingMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out )
+TFloat64List CContinuumIrregularSamplingMedian::EvenMirror(  const TFloat64List::iterator & begin, 
+                                                            const TFloat64List::iterator & end,
+                                                            Int32 Nreflex)
 {
-    int j;
+    TFloat64List y_out(std::distance(begin,end)+2*Nreflex);
 
-    for( j=0; j<N; j++ )
-    {
-        *( y_out+j+Nreflex ) = *( y_input+j );
+    auto out_begin = y_out.begin()+Nreflex;
+    std::copy(begin, end, out_begin);
+
+    auto out_rbegin = std::reverse_iterator<TFloat64List::iterator>(out_begin);
+    for (auto in=begin; in<begin+Nreflex; in++,out_rbegin++) 
+        *out_rbegin = *in; 
+
+    auto rbegin = std::reverse_iterator<TFloat64List::iterator>(end);
+    out_begin = y_out.end()-Nreflex;
+    for (auto in=rbegin; in<rbegin+Nreflex; in++, out_begin++)
+        *out_begin = *in;
+
+    return y_out;
+}
+
+//estimate lin fit border values for odd reflex robustness
+Float64 CContinuumIrregularSamplingMedian::FitBorder(const CSpectrum& s, const TFloat64List::iterator & begin , Int32 k0, Int32 k1, Int32 Nreflex, bool isRightBorder)
+{
+    const CSpectrumSpectralAxis& spectralAxis = s.GetSpectralAxis();
+    UInt32 kBeginSup;
+    Int32 kEndInf;
+    TFloat64Range range;
+
+    if (isRightBorder){
+        kBeginSup = k0+Nreflex;
+        if(kBeginSup>k1){
+            kBeginSup = k1;
+        }
+        range = TFloat64Range( spectralAxis[k0], spectralAxis[kBeginSup] );
     }
-    for( j=0; j<Nreflex; j++ )
+    else
     {
-        *( y_out+Nreflex-j-1 ) = *( y_input+j );
-        *( y_out+N+Nreflex+j ) = *( y_input+N-j-1 );
+        kEndInf = k1-Nreflex-1;
+        if(kEndInf<k0){
+            kEndInf = k0;
+        }
+        range = TFloat64Range( spectralAxis[kEndInf], spectralAxis[k1] );
     }
-    return 0;
+    
+    Float64 a;
+    Float64 b;
+    Float64 fitValue;
+    Int32 k = isRightBorder ? k0 : k1;
+    bool ret = s.GetLinearRegInRange( range,  a, b);
+    fitValue = *(begin+k);
+    if(ret){
+        Float64 wlBegin = spectralAxis[k];
+        fitValue = wlBegin*a + b;
+    }
+
+    return fitValue;
 }
 
 /**
@@ -170,9 +255,9 @@ bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSp
 {
     Float64 resolution = s.GetMeanResolution();
 
-    ProcessRemoveContinuum( s, noContinuumFluxAxis, resolution );
+    bool result = ProcessRemoveContinuum( s, noContinuumFluxAxis, resolution );
 
-    return true;
+    return result;
 }
 
 /**
@@ -184,28 +269,21 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     UInt32 k1 = 0;
     Int32 nd;
 
-    Int32 nreflex, nbig;
+    Int32 nreflex;
     Int32 j, k;
 
     const CSpectrumFluxAxis& fluxAxis = s.GetRawFluxAxis();
 
     Int32 norig = s.GetSampleCount();
 
-    Float64 frac = m_MeanSmoothAmplitude / resolution - floor( m_MeanSmoothAmplitude/resolution );
-
-    Int32 meanSmoothAmplitude = (Int32) m_MeanSmoothAmplitude/resolution;
-
-    if( frac>=0.5 )
-    {
-        meanSmoothAmplitude+=1;
-    }
+    Int32 meanSmoothAmplitude = round(m_MeanSmoothAmplitude/resolution);
 
     // set default
     if( meanSmoothAmplitude<=0 )
     {
         return false;
     }
-
+    
     meanSmoothAmplitude = min( meanSmoothAmplitude,norig/2 );
 
     // set default
@@ -214,14 +292,7 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         return false;
     }
 
-    frac = m_MedianSmoothAmplitude/resolution-floor( m_MedianSmoothAmplitude/resolution );
-
-    Int32 medianSmoothAmplitude = (Int32) m_MedianSmoothAmplitude/resolution;
-
-    if( frac>=0.5 )
-    {
-        medianSmoothAmplitude += 1;
-    }
+    Int32 medianSmoothAmplitude = round(m_MedianSmoothAmplitude/resolution);
 
     // set default
     if( medianSmoothAmplitude<=0 )
@@ -230,6 +301,7 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     }
 
     medianSmoothAmplitude = max( meanSmoothAmplitude, medianSmoothAmplitude );
+    // medianSmoothAmplitude = max( meanSmoothAmplitude, medianSmoothAmplitude );
 
     noContinuumFluxAxis = CSpectrumFluxAxis(norig, 0.);
     noContinuumFluxAxis.GetError() = fluxAxis.GetError();
@@ -278,65 +350,24 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     // lenght("effective spectrum")=nd
     {
         //set the reflection size
-        Float64 tmp =  nd / 2.0;
-
-        if( 5.0 * meanSmoothAmplitude < tmp )
-        {
-            tmp = 5.0*meanSmoothAmplitude;
-        }
-
-        if( tmp<10.0 )
-        {
-            tmp=10.;
-        }
-
-        nreflex = (Int32) tmp;
+        nreflex = boost::algorithm::clamp(round(nd / 2.0), 10.0, 5.0 * meanSmoothAmplitude);
     }
 
-
-    // spectrum reflected size
-    nbig = nd+2*nreflex;
-
-    // Allocate array
-    vector<Float64> ysmoobig( nbig );
+    // declare extend vector array
+    TFloat64List ysmoobig;
 
     // reflect original "effective spectrum" a set it in ysmoobig
     // if m_Even==1 reflects spectrum as an m_Even function
     // if m_Even==0 reflacts spectrum as an odd function
-    if( m_Even )
+    TFloat64List flux = fluxAxis.GetSamplesVector();
+    if( m_MedianEvenReflection )
     {
-        EvenMirror( fluxAxis.GetSamples()+k0, nd, nreflex, ysmoobig.data() );
+        ysmoobig = EvenMirror( flux.begin(), flux.end(), nreflex);
     }else{
-        //estimate lin fit border values for odd reflex robustness
-        //begin
-        const CSpectrumSpectralAxis& spectralAxis = s.GetSpectralAxis();
-        UInt32 kBeginSup = k0+nreflex;
-        if(kBeginSup>k1){
-            kBeginSup = k1;
-        }
-        TFloat64Range rangeBegin = TFloat64Range( spectralAxis[k0], spectralAxis[kBeginSup] );
-        Float64 a;
-        Float64 b;
-        bool retBegin = s.GetLinearRegInRange( rangeBegin,  a, b);
-        Float64 FBegin = *(fluxAxis.GetSamples()+k0);
-        if(retBegin){
-            Float64 wlBegin = spectralAxis[k0];
-            FBegin = wlBegin*a + b;
-        }
-        //end
-        Int32 kEndInf = k1-nreflex-1;
-        if(kEndInf<k0){
-            kEndInf = k0;
-        }
-        TFloat64Range rangeEnd = TFloat64Range( spectralAxis[kEndInf], spectralAxis[k1] );
-        bool retEnd = s.GetLinearRegInRange( rangeEnd,  a, b);
-        Float64 FEnd = *(fluxAxis.GetSamples()+k1);
-        if(retEnd){
-            Float64 wlEnd = spectralAxis[k1];
-            FEnd = wlEnd*a + b;
-        }
-
-        OddMirror( fluxAxis.GetSamples()+k0, nd, nreflex, FBegin, FEnd, ysmoobig.data() );
+        Float64 FBegin = FitBorder(s, flux.begin(), k0, k1, nreflex, true);
+        Float64 FEnd = FitBorder(s, flux.begin(), k0, k1, nreflex, false);
+        
+        ysmoobig = OddMirror( flux.begin(), flux.end(), nreflex, FBegin, FEnd);
     }
     /*//debug:
     // save reflex data
@@ -348,7 +379,6 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
     fclose( f );
     //*/
 
-
     {
         // WARNING!!!
         // medianSmoothAmplitude must be an odd number;
@@ -356,13 +386,10 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         // by the median smooth iterations
 
         // median smoothing
-        vector<Float64> temp( nbig );
-
         for( k=0; k<m_MedianSmoothCycles; k++ )
         {
             // median smooth size=2*medianSmoothAmplitude+1
-            MedianSmooth( ysmoobig.data(), nbig, 2*medianSmoothAmplitude+1,temp.data() );
-            ysmoobig = temp;
+            ysmoobig = MedianSmooth( ysmoobig, 2*medianSmoothAmplitude+1);
         }
 
         // medianSmoothAmplitude must be odd
@@ -372,20 +399,15 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         for( k=0; k<m_MedianSmoothCycles; k++ )
         {
             // median smooth size=medianSmoothAmplitude
-            MedianSmooth( ysmoobig.data(), nbig, medianSmoothAmplitude, temp.data() );
-            ysmoobig = temp;
+            ysmoobig = MedianSmooth( ysmoobig, medianSmoothAmplitude);
         }
     }
 
 
     {
         // mean smoothing
-        vector<Float64> temp( nbig );
-
         // mean smooth size=meanSmoothAmplitude/4
-        MeanSmooth( ysmoobig.data(), nbig, (Int32) meanSmoothAmplitude/4, temp.data() );
-
-        ysmoobig = temp;
+        ysmoobig = MeanSmooth( ysmoobig, (Int32) meanSmoothAmplitude/4);
     }
 
     // Copy spectrum before k0
@@ -411,25 +433,3 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
 
     return true;
 }
-
-/**
- * Compute an average smooth.
- */
-Int32 CContinuumIrregularSamplingMedian::MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out )
-{
-    Int32 i;
-    Int32 start,end,half,rest;
-
-    half = n/2;
-    rest = n-2*half;
-
-    CMean<Float64> mean;
-    for( i=0; i<N; i++ )
-    {
-        start = max( 0, i-half-rest );
-        end = min( i+half, N-1 );
-
-        *(y_out+i) = mean.Find( y+start, (end-start)+1);
-    }
-    return 0;
- }

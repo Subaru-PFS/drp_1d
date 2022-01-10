@@ -60,6 +60,7 @@ public:
     void SetMeanKernelWidth( Float32 width );
     void SetMedianKernelWidth( Float32 width );
     void SetMedianCycleCount( UInt32 count );
+    void SetMedianEvenReflection( bool evenReflection );
 
     bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
     bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );
@@ -67,17 +68,22 @@ public:
 
 private:
 
-    Int32   MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out );
+    TFloat64List MedianSmooth( const TFloat64List &y, Int32 n_range);
+    TFloat64List MeanSmooth( const TFloat64List &y, Int32 n);
 
-    Int32   MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out );
+    TFloat64List OddMirror(    const TFloat64List::iterator & begin, 
+                                const TFloat64List::iterator & end,
+                                Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val);
+    TFloat64List EvenMirror(   const TFloat64List::iterator & begin, 
+                                const TFloat64List::iterator & end,
+                                Int32 Nreflex);
 
-    Int32   OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val, Float64* y_out );
-    Int32   EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out );
+    Float64 FitBorder(const CSpectrum& s,const TFloat64List::iterator & begin , Int32 k0, Int32 k1, Int32 Nreflex, bool isRightBorder);
 
-    Int32   m_MeanSmoothAmplitude;
+    Float32 m_MeanSmoothAmplitude;
     Int32   m_MedianSmoothCycles;
-    Int32   m_MedianSmoothAmplitude;
-    bool    m_Even;
+    Float32 m_MedianSmoothAmplitude;
+    bool    m_MedianEvenReflection;
 
 };
 
