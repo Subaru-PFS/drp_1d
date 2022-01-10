@@ -285,15 +285,15 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
                   if( bestRedshift != -1.0 )
                   {
                       Log.LogDebug ( "return std::shared_ptr<const CLineMatchingSolveResult>( new CLineMatchingSolveResult() );" );
-                      return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                      return std::make_shared<CLineMatchingSolveResult>();
                   }else if(! m_dynamicLinematching)
                   {
-                      return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                      return std::make_shared<CLineMatchingSolveResult>();
                   }
               } // rayMatchingResult
               else if(! m_dynamicLinematching)
               {
-                  return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                  return std::make_shared<CLineMatchingSolveResult>();
               }
           } // minimumNumberOfPeaks
       } // lineDetectionResult
@@ -366,7 +366,7 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
   {
       Log.LogWarning( "Warning. Stopped the linematching dynamic cut loop..." );
   }
-  return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+  return std::make_shared<CLineMatchingSolveResult>();
 }
 
 const std::string CMethodLineMatchingSolve::GetDescription()

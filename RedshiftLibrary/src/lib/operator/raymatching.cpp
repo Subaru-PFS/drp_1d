@@ -205,7 +205,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
   
   if( newSolutions.size()>0 ) 
     {
-      auto result = std::shared_ptr<CRayMatchingResult>( new CRayMatchingResult() );
+      auto result = std::make_shared<CRayMatchingResult>();
       result->SolutionSetList = newSolutions;
       result->m_RestCatalog = restRayCatalog;
       result->m_DetectedCatalog = restRayCatalog;
