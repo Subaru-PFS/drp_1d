@@ -82,11 +82,9 @@ public:
     Float64 GetIsmCoeff(Int32 idx);
 
     Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
-    Bool SetMultilineNominalAmplitudes(CLineModelElementList& LineModelElementList, Int32 iLine);
-    Bool SetLyaProfile(CLineModelElementList &LineModelElementList, Int32 iCatalog, bool forceLyaFitting, const Float64 nsigmasupport);
-    Bool InitLineCorrespondingAmplitudes(CLineModelElementList &LineModelElementList);
-    Bool SetMultilineNominalAmplitudesFast(CLineModelElementList &LineModelElementList, Int32 iCatalog);
-
+    Bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
+    const CRayCatalog& GetCatalog(Int32 icatlog);
+    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance(){return m_RayCatalogLinesCorrespondingNominalAmp;};
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
 
@@ -94,7 +92,7 @@ private:
 
     std::vector<std::string> m_RayCatalogNames;
     std::vector<CRayCatalog> m_RayCatalogList;
-    std::vector<std::vector<std::vector<Float64>>> m_RayCatalogLinesCorrespondingNominalAmp;
+    std::vector<std::vector<TFloat64List>> m_RayCatalogLinesCorrespondingNominalAmp;
     std::vector<Float64> m_ELvelocities;
     std::vector<Float64> m_ABSvelocities;
     std::vector<Float64> m_Priors;

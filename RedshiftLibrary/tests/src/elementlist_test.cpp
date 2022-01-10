@@ -36,7 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/noise/flat.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/log/consolehandler.h"
@@ -112,7 +112,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CRayCatalog::TRayVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
 
   // no continuum
-  CLineModelElementList model_nocontinuum(spectrum,
+  CLineModelFitting model_nocontinuum(    spectrum,
+                                          range,
                                           tplCatalog, tplCategories,
 					                                calibrationPath.c_str(), lineList,
 					                                "lmfit", "nocontinuum",-INFINITY,
@@ -120,7 +121,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
 					                                opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
-  CLineModelElementList model_fromspectrum(spectrum,
+  CLineModelFitting model_fromspectrum(    spectrum,
+                                           range,
                                            tplCatalog, tplCategories,
 					                                 calibrationPath.c_str(), lineList,
 					                                 "lmfit", "fromspectrum", -INFINITY,
@@ -131,7 +133,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   // tplfit
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
-  CLineModelElementList model_tplfit(spectrum,
+  CLineModelFitting model_tplfit(    spectrum,
+                                     range,
                                      tplCatalog, tplCategories,
    				                           calibrationPath.c_str(), lineList,
    				                           "lmfit", "tplfit", -5.0,

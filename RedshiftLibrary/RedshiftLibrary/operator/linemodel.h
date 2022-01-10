@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/operator.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
@@ -78,6 +78,7 @@ public:
     FittedTplAmplitude.resize(size);
     FittedTplAmplitudeError.resize(size);
     FittedTplMerit.resize(size);
+    FittedTplMeritPhot.resize(size);
     FittedTplEbmvCoeff.resize(size);
     FittedTplMeiksinIdx.resize(size);
     FittedTplDtm.resize(size);
@@ -166,6 +167,7 @@ public:
   TFloat64List      FittedTplAmplitude;     //Amplitude for the best template fitted for continuum
   TFloat64List      FittedTplAmplitudeError;     //Amplitude error for the best template fitted for continuum
   TFloat64List      FittedTplMerit;     //Chisquare for the best template fitted for continuum
+  TFloat64List      FittedTplMeritPhot; // extra chisquare term due to photometry   
   TFloat64List      FittedTplEbmvCoeff;     //Calzetti ebmvcoeff for the best template fitted for continuum
   TInt32List        FittedTplMeiksinIdx;    //Meiksin igm index for the best template fitted for continuum
   TFloat64List      FittedTplDtm;    //DTM for the best template fitted for continuum
@@ -234,10 +236,6 @@ class COperatorLineModel
 
 public:
 
-    COperatorLineModel();
-    virtual ~COperatorLineModel();
-
-
     Int32 Init( const CSpectrum& spectrum,
                 const TFloat64List& redshifts, 
                 const std::string &opt_continuumcomponent,
@@ -248,24 +246,26 @@ public:
     std::shared_ptr<COperatorResult> getResult();
 
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
-                                const CSpectrum &rebinnedSpectrum,
+                                const CSpectrum &logSampledSpectrum,
                                 const CTemplateCatalog &tplCatalog,
                                 const TStringList &tplCategoryList,
                                 const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
+                                const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                                const Float64 photometry_weight,
                                 bool ignoreLinesSupport=false,
                                 Int32 candidateIdx = -1);
 
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
-                           const CSpectrum& rebinnedSpc,
+                           const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
-                           const CRayCatalog& restraycatalog,
-                           const std::string &opt_lineTypeFilter,
-                           const std::string &opt_lineForceFilter,
+                           const CRayCatalog::TRayVector& restraycatalog,
                            const TFloat64Range& lambdaRange,
+                           const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
+                           const Float64 photo_weight,
                            const std::string &opt_fittingmethod,
                            const std::string& opt_lineWidthType,
                            const Float64 opt_velocityEmission,
@@ -278,6 +278,7 @@ public:
                            const std::string &opt_rigidity="rules",
                            const string &opt_tplratioCatRelPath="",
                            const string &opt_offsetCatRelPath="");
+
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
@@ -285,14 +286,13 @@ public:
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
-                            const CSpectrum &rebinnedSpectrum,
+                            const CSpectrum &logSampledSpectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
                             const std::string opt_calibrationPath,
-                            const CRayCatalog& restraycatalog,
-                            const std::string &opt_lineTypeFilter,
-                            const std::string &opt_lineForceFilter,
                             const TFloat64Range& lambdaRange,
+                            const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                            const Float64 photo_weight,
                             const std::string &opt_fittingmethod,
                             const std::string& opt_lineWidthType,
                             const Float64 opt_velocityEmission,
@@ -341,7 +341,7 @@ public:
 
     Float64 m_linesmodel_nsigmasupport;
 
-    Int32 m_maxModelSaveCount;
+    Int32 m_maxModelSaveCount=20;
     Float64 m_secondPass_halfwindowsize; // = 0.005;
     Float64 m_extremaRedshiftSeparation; 
 
@@ -356,6 +356,7 @@ public:
 
     bool m_opt_tplfit_fftprocessing = false; //we cant set it as the default since not taken into account when deiding on rebinning
     bool m_opt_tplfit_fftprocessing_secondpass = false;//true;
+    bool m_opt_tplfit_use_photometry = false;
     Int32 m_opt_tplfit_dustFit = 1;
     Int32 m_opt_tplfit_extinction = 1;
     Int32 m_opt_fitcontinuum_maxN = 2;
@@ -404,7 +405,7 @@ public:
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
-    std::shared_ptr<CLineModelElementList> m_model;
+    std::shared_ptr<CLineModelFitting> m_model;
     TFloat64List m_sortedRedshifts;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
@@ -419,7 +420,7 @@ private:
 
     Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
     
-    std::shared_ptr<COperatorTemplateFittingBase> templateFittingOperator;
+    std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
     //lmfit
 

@@ -90,6 +90,8 @@ public:
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
 
+    CRay clone() const;
+
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
 

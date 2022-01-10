@@ -64,8 +64,8 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 {
 
-    const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-    const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
+    const CSpectrum& spc=*(inputContext->GetSpectrum());
+    const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
 
     Bool storeResult = false;
     m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");
@@ -434,6 +434,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
 
         // Fill extrema Result
         extremaResult->m_ranked_candidates[i].second.FittedTplMerit = TplFitResult->ChiSquare[idx];
+        extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot = TplFitResult->ChiSquarePhot[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx= TplFitResult->FitMeiksinIdx[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff= TplFitResult->FitEbmvCoeff[idx];
         extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeList= TplFitResult->FitAmplitude[idx];
@@ -445,15 +446,16 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         //make sure tpl is non-rebinned
         Bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
-        std::shared_ptr<CModelSpectrumResult> spcmodelPtr; 
-        m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
+        std::shared_ptr<CModelSpectrumResult> spcmodelPtr = m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
                                                         z,
                                                         TplFitResult->FitEbmvCoeff[idx],
                                                         TplFitResult->FitMeiksinIdx[idx],
                                                         TplFitResult->FitAmplitude[idx],
                                                         opt_interp, lambdaRange, 
-                                                        overlapThreshold, spcmodelPtr);
-        tplCatalog.m_logsampling = currentSampling;                                                
+                                                        overlapThreshold);
+        tplCatalog.m_logsampling = currentSampling;            
+        if(spcmodelPtr==nullptr)
+            throw GlobalException(INTERNAL_ERROR,"Couldnt compute spectrum model");                                    
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);   
     }
 

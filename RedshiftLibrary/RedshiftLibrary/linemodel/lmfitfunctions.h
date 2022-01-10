@@ -36,7 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -48,13 +48,13 @@ namespace NSEpic
  the first one (lmfit_f) return a vector : for each lamdbda the difference between model and flux
  the second one (lmfit_df) return a jacobian matrix : for each lambda the derivatives amplitudes between model and flux (emission and absorbtion lines)
 **/
-class CLineModelElementList;
+class CLineModelFitting;
 
 
 struct lmfitdata {
     size_t n;
     Float64 * y;
-    CLineModelElementList* linemodel;
+    CLineModelFitting* linemodel;
     std::vector<UInt32> linemodel_samples_indexes;
     const Float64* observeGridContinuumFlux;
     CLmfitController* controller;
@@ -64,8 +64,8 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
 {
     size_t n = ((struct lmfitdata *)data)->n;
     Float64 *y = ((struct lmfitdata *)data)->y;
-    //std::shared_ptr<CLineModelElementList> linemodel = ((struct lmfitdata *)data)->linemodel;
-    CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
+    //std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata *)data)->linemodel;
+    CLineModelFitting* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
     std::vector<UInt32> elts_indexes = controller->getFilteredIdx();
     std::vector<UInt32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
@@ -93,7 +93,7 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
-        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
+        linemodel->m_Elements.SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     if(controller->isEmissionVelocityFitted()){
@@ -126,8 +126,8 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
 int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
 {
     size_t n = ((struct lmfitdata *)data)->n;
-    //std::shared_ptr<CLineModelElementList> linemodel = ((struct lmfitdata *)data)->linemodel;
-    CLineModelElementList* linemodel = ((struct lmfitdata *)data)->linemodel;
+    //std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata *)data)->linemodel;
+    CLineModelFitting* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
     std::vector<UInt32> elts_indexes = controller->getFilteredIdx();
     std::vector<UInt32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
@@ -157,7 +157,7 @@ int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
     for (UInt32 iElt = 0; iElt < elts_indexes.size(); iElt++)
     {
         Float64 amp = controller->lineAmp_LmToModel(gsl_vector_get (x, iElt));///normFactor;
-        linemodel->SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
+        linemodel->m_Elements.SetElementAmplitude(elts_indexes[iElt], amp, 0.0);
     }
 
     if(controller->isEmissionVelocityFitted()){

@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include <float.h>
 using namespace NSEpic;
 
@@ -49,12 +50,14 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
                              std::shared_ptr<CRayCatalog> gal_rayCatalog,
                              std::shared_ptr<CRayCatalog> qso_rayCatalog,
+                             std::shared_ptr<CPhotBandCatalog> photBandCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
 
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
   m_gal_RayCatalog(std::move(gal_rayCatalog)),
   m_qso_RayCatalog(std::move(qso_rayCatalog)),
+  m_photBandCatalog(std::move(photBandCatalog)),
   m_ParameterStore(std::move(paramStore))
 { 
     Bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
@@ -71,10 +74,12 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
     //only when lsf changes notably when LSFType is fromspectrumdata
     //or the first time InitIsmIgm is called
     m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
-    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())    
+    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())
     {
         m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
-    }else{
+    }
+    else
+      {
       if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
       {
         m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());
@@ -137,8 +142,13 @@ void CInputContext::RebinInputs()
         m_rebinnedSpectrum = std::make_shared<CSpectrum>(m_Spectrum->GetName());
         CSpectrumSpectralAxis  spcWav = m_Spectrum->GetSpectralAxis();
         spcWav.RecomputePreciseLoglambda(); // in case input spectral values have been rounded
+
+        //Intersect with input lambdaRange and get indexes
+        Int32 kstart = -1; Int32 kend = -1;
+        bool ret = m_lambdaRange.getClosedIntervalIndices(spcWav.GetSamplesVector(), kstart, kend);
+        if(!ret) throw GlobalException(INTERNAL_ERROR, "LambdaRange borders are outside the spectralAxis range");
         //save into the rebinnedSpectrum
-        m_rebinnedSpectrum->SetSpectralAndFluxAxes(std::move(spcWav), m_Spectrum->GetFluxAxis());
+        m_rebinnedSpectrum->SetSpectralAndFluxAxes(spcWav.extract(kstart,kend), m_Spectrum->GetFluxAxis().extract(kstart,kend));
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {
@@ -172,8 +182,8 @@ void CInputContext::OrthogonalizeTemplates()
     Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
 
     Float64 lambda = (m_lambdaRange.GetBegin() + m_lambdaRange.GetEnd())/2;
-    std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(m_Spectrum->GetLSF()->GetWidth(lambda));
-    std::shared_ptr<const CLSF> lsf = LSFFactory.Create("GaussianConstantWidth", args);
+    std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(lambda/m_Spectrum->GetLSF()->GetWidth(lambda));
+    std::shared_ptr<const CLSF> lsf = LSFFactory.Create("GaussianConstantResolution", args);
 
     if(orthog_gal)
     {

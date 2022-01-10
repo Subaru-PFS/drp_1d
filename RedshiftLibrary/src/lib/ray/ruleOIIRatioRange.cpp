@@ -89,7 +89,7 @@ void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
         Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineA.c_str() );
         return;
     }
-    if( LineModelElementList.m_Elements[iA]->GetSize()>1 )
+    if( LineModelElementList[iA]->GetSize()>1 )
     {
         Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineA.c_str() );
         iA=-1;
@@ -100,7 +100,7 @@ void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
         Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineB.c_str() );
         return;
     }
-    if( LineModelElementList.m_Elements[iB]->GetSize()>1 )
+    if( LineModelElementList[iB]->GetSize()>1 )
     {
         Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineB.c_str() );
         iB=-1;
@@ -109,12 +109,12 @@ void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
     {
         return;
     }
-    if( LineModelElementList.m_Elements[iA]->IsOutsideLambdaRange() == false && LineModelElementList.m_Elements[iB]->IsOutsideLambdaRange() == false)
+    if( LineModelElementList[iA]->IsOutsideLambdaRange() == false && LineModelElementList[iB]->IsOutsideLambdaRange() == false)
     {
-        Float64 ampA = LineModelElementList.m_Elements[iA]->GetFittedAmplitude( 0 );
-        Float64 erA = LineModelElementList.m_Elements[iA]->GetFittedAmplitudeErrorSigma( 0 );
-        Float64 ampB = LineModelElementList.m_Elements[iB]->GetFittedAmplitude( 0 );
-        Float64 erB = LineModelElementList.m_Elements[iB]->GetFittedAmplitudeErrorSigma( 0 );
+        Float64 ampA = LineModelElementList[iA]->GetFittedAmplitude( 0 );
+        Float64 erA = LineModelElementList[iA]->GetFittedAmplitudeErrorSigma( 0 );
+        Float64 ampB = LineModelElementList[iB]->GetFittedAmplitude( 0 );
+        Float64 erB = LineModelElementList[iB]->GetFittedAmplitudeErrorSigma( 0 );
         Int32 i1 = iA;
         Int32 i2 = iB;
         Float64 amp1 = ampA;
@@ -177,7 +177,7 @@ void CRuleRatioRange::Correct( CLineModelElementList& LineModelElementList )
             Logs.append(strTmp2.c_str());
         }
 
-        LineModelElementList.m_Elements[i1]->SetFittedAmplitude( corrected1, er1 );
-        LineModelElementList.m_Elements[i2]->SetFittedAmplitude( corrected2, er2 );
+        LineModelElementList[i1]->SetFittedAmplitude( corrected1, er1 );
+        LineModelElementList[i2]->SetFittedAmplitude( corrected2, er2 );
     }
 }

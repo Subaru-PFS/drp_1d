@@ -56,7 +56,7 @@ class CLSFGaussianVariableWidth : public CLSF
         bool                  IsValid() const override;
 
         static std::shared_ptr<CLSF> make_LSF(const std::shared_ptr<const TLSFArguments>& args);
-
+        bool                  checkAvailability(Float64 lambda) const override;
     private:
         TFloat64List             m_width;
         CSpectrumSpectralAxis    m_spcAxis;

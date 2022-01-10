@@ -36,11 +36,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from .AbstractOutput import AbstractOutput
-from .OutputSpecifications import results_specifications
+from pylibamazed.AbstractOutput import AbstractOutput
+from pylibamazed.OutputSpecifications import results_specifications
 import numpy as np
 import pandas as pd
-import abc
 from collections import defaultdict
 from pandas.core.dtypes.common import is_numeric_dtype, is_string_dtype
 
@@ -51,8 +50,8 @@ def get_attribute_from_attrs(hdf5_group, attr_name, is_string):
 
 class Hdf5Output(AbstractOutput):
 
-    def __init__(self,input_manager,hdf5_group, parameters):
-        AbstractOutput.__init__(self,input_manager)
+    def __init__(self,hdf5_group, parameters):
+        AbstractOutput.__init__(self)
         self.hdf5_group = hdf5_group
         self.spectrum_id = hdf5_group.name[1:]
         self.parameters = parameters

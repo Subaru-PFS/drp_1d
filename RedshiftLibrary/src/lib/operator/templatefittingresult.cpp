@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include <RedshiftLibrary/operator/templatefittingresult.h>
+#include <RedshiftLibrary/operator/templatefitting.h>
 #include <RedshiftLibrary/extremum/extremum.h>
 
 #include <boost/tokenizer.hpp>
@@ -48,9 +49,10 @@
 
 using namespace NSEpic;
 
-void CTemplateFittingResult::Init(UInt32 n , Int32 EbmvListSize, Int32 MeiksinListSize)
+void CTemplateFittingResult::Init(UInt32 n)
 {
     ChiSquare.resize( n );
+    ChiSquarePhot.resize( n );
     FitAmplitude.resize( n );
     FitAmplitudeError.resize( n );
     FitAmplitudeSigma.resize( n);
@@ -63,17 +65,44 @@ void CTemplateFittingResult::Init(UInt32 n , Int32 EbmvListSize, Int32 MeiksinLi
     Overlap.resize( n );
     Status.resize( n );
     SNR.resize( n );
-    ChiSquareIntermediate.clear();
-    IsmEbmvCoeffIntermediate.clear();
-    IgmMeiksinIdxIntermediate.clear();
+    ChiSquareIntermediate.resize( n);
+    IsmEbmvCoeffIntermediate.resize( n );
+    IgmMeiksinIdxIntermediate.resize(n );
+}
 
+void CTemplateFittingResult::Init( UInt32 n, Int32 EbmvListSize, Int32 MeiksinListSize)
+{
+    Init(n);
+    InitIntermediate(EbmvListSize, MeiksinListSize);
+}
+
+void CTemplateFittingResult::InitIntermediate(Int32 EbmvListSize, Int32 MeiksinListSize)
+{ 
     std::vector<TFloat64List> _chi2ListList(EbmvListSize, TFloat64List(MeiksinListSize, DBL_MAX));
     std::vector<TFloat64List> _ismListList(EbmvListSize, TFloat64List(MeiksinListSize, NAN));
     std::vector<TInt32List>   _igmListList(EbmvListSize, TInt32List(MeiksinListSize, -1));
-        
-    ChiSquareIntermediate = std::vector<std::vector<TFloat64List>>(n, _chi2ListList);
-    IsmEbmvCoeffIntermediate = std::vector<std::vector<TFloat64List>>(n, _ismListList);
-    IgmMeiksinIdxIntermediate = std::vector<std::vector<TInt32List>>(n, _igmListList);
+
+    ChiSquareIntermediate.assign(ChiSquareIntermediate.size(), _chi2ListList);
+    IsmEbmvCoeffIntermediate.assign(IsmEbmvCoeffIntermediate.size(), _ismListList);
+    IgmMeiksinIdxIntermediate.assign(IgmMeiksinIdxIntermediate.size(), _igmListList);
 }
 
+void CTemplateFittingResult::set_at_redshift(const UInt32 i, TFittingIsmIgmResult val)
+{
+    ChiSquare[i] = val.chiSquare;
+    ChiSquarePhot[i] = val.chiSquare_phot;
+    FitAmplitude[i] = val.ampl;
+    FitAmplitudeError[i] = val.ampl_err;
+    FitAmplitudeSigma[i] = val.ampl_sigma;
+    FitEbmvCoeff[i] = val.EbmvCoeff;
+    FitMeiksinIdx[i] = val.MeiksinIdx;
+    FitDtM[i] = val.sumCross;
+    FitMtM[i] = val.sumT;
+    LogPrior[i] = val.logprior;
+    Overlap[i] = val.overlapRate;
+    Status[i] = val.status;
 
+    ChiSquareIntermediate[i] = std::move(val.ChiSquareInterm);
+    IsmEbmvCoeffIntermediate[i] = std::move(val.IsmCalzettiCoeffInterm);
+    IgmMeiksinIdxIntermediate[i] = std::move(val.IgmMeiksinIdxInterm);
+}

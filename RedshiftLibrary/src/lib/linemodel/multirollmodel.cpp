@@ -53,6 +53,7 @@ using namespace std;
  * \brief Constructor.
  **/
 CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
+                                 const TFloat64Range& lambdaRange,
                                  const CTemplateCatalog& tplCatalog,
                                  const TStringList& tplCategoryList,
                                  const std::string calibrationPath,
@@ -103,30 +104,31 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
     for(Int32 km=0; km<nModels; km++)
     {
         Float64 lines_nsigmasupport = 6.0;
-        m_models.push_back(std::shared_ptr<CLineModelElementList> (new CLineModelElementList(*spcRolls[km],
-                                                                                             tplCatalog,
-                                                                                             tplCategoryList,
-                                                                                             calibrationPath,
-                                                                                             restRayList,
-                                                                                             opt_fittingmethod,
-                                                                                             opt_continuumcomponent,
-                                                                                             opt_continuum_neg_threshold,
-                                                                                             widthType,
-                                                                                             lines_nsigmasupport,
-                                                                                             velocityEmission,
-                                                                                             velocityAbsorption,
-                                                                                             opt_rules,
-                                                                                             opt_rigidity
-                                                                                             )));
+        m_models.push_back(std::make_shared<CLineModelFitting> (    *spcRolls[km],
+                                                                    lambdaRange,
+                                                                    tplCatalog,
+                                                                    tplCategoryList,
+                                                                    calibrationPath,
+                                                                    restRayList,
+                                                                    opt_fittingmethod,
+                                                                    opt_continuumcomponent,
+                                                                    opt_continuum_neg_threshold,
+                                                                    widthType,
+                                                                    lines_nsigmasupport,
+                                                                    velocityEmission,
+                                                                    velocityAbsorption,
+                                                                    opt_rules,
+                                                                    opt_rigidity
+                                                                    ));
         //hardcoded source size definition for each roll
         if(km==0){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==1){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==2){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }else if(km==3){
-         m_models[km]->SetSourcesizeDispersion(0.35);
+         m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
         }
     }
 }
@@ -769,7 +771,7 @@ std::vector<std::vector<Int32>> CMultiRollModel::GetModelVelfitGroups( Int32 lin
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->GetModelVelfitGroups(lineType);
+        return m_models[0]->m_Elements.GetModelVelfitGroups(lineType);
     }
     else
     {
@@ -814,7 +816,7 @@ void CMultiRollModel::ResetElementIndexesDisabled()
 {
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        m_models[km]->ResetElementIndexesDisabled();
+        m_models[km]->m_Elements.ResetElementIndexesDisabled();
     }
 }
 
@@ -880,7 +882,7 @@ Int32 CMultiRollModel::GetModelNonZeroElementsNDdl()
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->GetModelNonZeroElementsNDdl();
+        return m_models[0]->m_Elements.GetModelNonZeroElementsNDdl();
     }
     else
     {

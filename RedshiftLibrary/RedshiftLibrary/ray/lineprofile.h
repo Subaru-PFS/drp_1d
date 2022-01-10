@@ -88,7 +88,10 @@ namespace NSEpic
             CLineProfile& operator=(const CLineProfile& other) = default;  
             CLineProfile& operator=(CLineProfile&& other) = default; 
 
-            virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class 
+            virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class
+            std::shared_ptr<CLineProfile> Clone (){return std::shared_ptr<CLineProfile>(CloneImplementation());} 
+        private:
+            virtual CLineProfile* CloneImplementation() const =0;
         protected:
             Float64 m_nsigmasupport;
             const TProfile m_name;//hack to avoid using dynamic casting

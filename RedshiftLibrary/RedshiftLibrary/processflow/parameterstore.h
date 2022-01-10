@@ -73,6 +73,11 @@ public:
     return true;
   }
 
+  template<typename T> bool HasScoped(const std::string& name) const
+  {
+    return Has<T>(GetScopedName(name));
+  }
+
   Bool HasFFTProcessing(const std::string &objectType) const;  
   Bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
   Bool EnableTemplateOrthogonalization(const std::string &objectType) const;
@@ -86,8 +91,8 @@ public:
 
   template<typename T> T GetScoped(const std::string& name) const
   {
-    if (Has<T>(GetScopedName(name)))    return Get<T>(GetScopedName(name));    
-    else return Get<T>(name);
+    if (HasScoped<T>(name))    return Get<T>(GetScopedName(name));    
+    else throw GlobalException(UNKNOWN_PARAMETER,Formatter()<<"unknown parameter "<<GetScopedName(name));
   }
 
 

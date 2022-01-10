@@ -64,7 +64,7 @@ namespace NSEpic
             Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma) override;
             Float64 GetNSigmaSupport() const override;
 
-            Float64 GetAsymDelta();
+            Float64 GetAsymDelta() override;
             const TAsymParams  GetAsymParams() override;
             virtual Bool    isAsymFixed() override;
             virtual Bool    isAsymFit()   override;
@@ -73,16 +73,17 @@ namespace NSEpic
             CLineProfileASYM(const CLineProfileASYM & other) = default; 
             CLineProfileASYM(CLineProfileASYM && other) = default; 
             CLineProfileASYM& operator=(const CLineProfileASYM& other) = default;  
-            CLineProfileASYM& operator=(CLineProfileASYM&& other) = default; 
+            CLineProfileASYM& operator=(CLineProfileASYM&& other) = default;
+        private:
+            virtual CLineProfile* CloneImplementation() const override { return new CLineProfileASYM(*this);}
+            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
         protected: 
             Bool isValid();
             Float64 m_asym_sigma_coeff = 1.0;//vs 2. for asymFit/Fixed
             Float64 m_asym_alpha = 4.5;
             Float64 m_asym_delta = 0.;
             std::string m_centeringMethod = "none";
-            Float64 m_constSigma = 1;//vs 2.5 for AsymFit and AsymFixed
-        private:
-            Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
+            Float64 m_constSigma = 1;//vs 2.5 for AsymFit and AsymFixed    
     };
 }
 #endif

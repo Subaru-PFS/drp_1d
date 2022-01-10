@@ -52,18 +52,24 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
 
 public:
     using CSpectrumAxis::CSpectrumAxis;
+    CSpectrumNoiseAxis()=default;
+    CSpectrumNoiseAxis(const CSpectrumAxis & other):CSpectrumAxis (other){};
+    CSpectrumNoiseAxis(CSpectrumAxis && other):CSpectrumAxis (std::move(other)){};
 
-    CSpectrumNoiseAxis() = default;
     explicit  CSpectrumNoiseAxis( UInt32 n );
-    CSpectrumNoiseAxis( const Float64* samples, UInt32 n );
 
     void                SetSize( UInt32 s, Float64 valueDef = 1.0);
     Bool                Invert();
-
+    CSpectrumNoiseAxis  extract(Int32 startIdx, Int32 endIdx) const;
 private:
 
 };
 
+inline
+CSpectrumNoiseAxis CSpectrumNoiseAxis::extract(Int32 startIdx, Int32 endIdx) const
+{
+    return CSpectrumAxis::extract(startIdx, endIdx);
+}
 }
 
 #endif

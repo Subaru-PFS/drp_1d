@@ -83,7 +83,7 @@ namespace NSEpic
     }
     cms.fillRayIds();
     /*
-    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy").get());
+    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
 
     std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(cms,

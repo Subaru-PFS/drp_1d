@@ -107,7 +107,7 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxA
     CSpectrum(std::move(spectralAxis), std::move(fluxAxis), nullptr)
 {}
 
-CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf) :
+CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf) :
     m_SpectralAxis(std::move(spectralAxis)),
     m_RawFluxAxis(std::move(fluxAxis)),
     m_estimationMethod(""),
@@ -502,7 +502,7 @@ const std::string & CSpectrum::GetName() const
 
 void CSpectrum::SetName(std::string name)
 {
-    m_Name = name;
+    m_Name = std::move(name);
 }
 
 const CSpectrum::EType CSpectrum::GetType() const
@@ -781,7 +781,7 @@ void CSpectrum::ClearFineGrid() const
  * targetSpectralAxis should be expressed in same frame as source SpetralAxis
 */
 Bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
-                       CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string opt_interp, const std::string opt_error_interp ) const
+                       CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string & opt_interp, const std::string & opt_error_interp ) const
 {
     
     if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes or non-matching size");
@@ -1016,4 +1016,12 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange, Bool enableInputSpcC
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate noise on wavelength range"<<lmin<<";"<<lmax<<")");
     else
         Log.LogDetail( "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin, lmax );
+    
+    if(!m_LSF) return;
+    //check if spectrum LSF spectralAxis covers lambdaRange
+    if(!m_LSF->checkAvailability(lambdaRange.GetBegin()) || !m_LSF->checkAvailability(lambdaRange.GetEnd()))
+    {
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Failed to validate lsf on wavelength range"<<lmin<<";"<<lmax<<")"); 
+    }
+
 }
