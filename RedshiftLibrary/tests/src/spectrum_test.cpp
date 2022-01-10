@@ -537,10 +537,10 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
     CSpectrumNoiseAxis noiseAxis_extract = noiseAxis.extract(istart,iend);
     CSpectrumFluxAxis  fluxAxis_extract = fluxAxis.extract(istart,iend);
 
-    TFloat64List extractedAxis1 = axis_extract.GetSamplesVector();
-    TFloat64List extractedSpcAxis1 = spcAxis_extract.GetSamplesVector();
-    TFloat64List extractedFluxAxis1 = fluxAxis_extract.GetSamplesVector();
-    TFloat64List extractedNoiseAxis1 = noiseAxis_extract.GetSamplesVector();
+    const TFloat64List extractedAxis1 = axis_extract.GetSamplesVector();
+    const TFloat64List extractedSpcAxis1 = spcAxis_extract.GetSamplesVector();
+    const TFloat64List extractedFluxAxis1 = fluxAxis_extract.GetSamplesVector();
+    const TFloat64List extractedNoiseAxis1 = noiseAxis_extract.GetSamplesVector();
     
     BOOST_CHECK(extractedAxis1.size() == s); 
     BOOST_CHECK(extractedSpcAxis1.size() == s); 

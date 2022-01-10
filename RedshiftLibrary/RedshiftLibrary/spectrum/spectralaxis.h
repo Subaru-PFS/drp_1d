@@ -42,9 +42,9 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/common/range.h"
-
+#include <boost/logic/tribool.hpp>
 #include <vector>
-
+using namespace boost::logic;
 namespace NSEpic
 {
 
@@ -58,27 +58,23 @@ class CSpectrumSpectralAxis : public CSpectrumAxis
 
 public:
 
-    enum EFlags
-    {
-        nFLags_LogScale = 1 << 0,
-        nFLags_LogSampled = 1 << 1 //using second bit(shifting once): 0000 0010
-    };
-
     enum EShiftDirection
     {
         nShiftForward =0,
         nShiftBackward
     };
 
-    CSpectrumSpectralAxis();
+    CSpectrumSpectralAxis()=default;
     CSpectrumSpectralAxis(const CSpectrumAxis & other):CSpectrumAxis (other){};
     CSpectrumSpectralAxis(CSpectrumAxis && other):CSpectrumAxis (std::move(other)){};
 
-    CSpectrumSpectralAxis( UInt32 n, Bool isLogScale =false);
-    CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale=false, std::string AirVacuum="" );
-    CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale=false, std::string AirVacuum="" );
+    CSpectrumSpectralAxis( UInt32 n, bool isLogScale = false);
+    CSpectrumSpectralAxis( UInt32 n, Float64 value);
+    CSpectrumSpectralAxis( const TFloat64List & samples, bool isLogScale=false, std::string AirVacuum="" );
+    CSpectrumSpectralAxis( TFloat64List && samples, bool isLogScale=false, std::string AirVacuum="" );
     CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="");
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
+    CSpectrumSpectralAxis& operator*=(const Float64 op) override;
     CSpectrumSpectralAxis   extract(Int32 startIdx, Int32 endIdx) const;
     
     Float64             GetResolution( Float64 atWavelength = -1.0 ) const;
@@ -95,7 +91,7 @@ public:
 
     Bool                ConvertToLinearScale();
     Bool                ConvertToLogScale();
-    Bool                IsInLogScale() const;
+    bool                IsInLogScale() const;
     Bool                IsInLinearScale() const;
 
     TLambdaRange        GetLambdaRange() const;
@@ -113,18 +109,26 @@ public:
     TFloat64List        GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const;
     UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
     bool                isSorted() const;
+
+    void                MaskAxis(const TFloat64List& mask, CSpectrumSpectralAxis& maskedAxis) const;
+    void                SetSize( UInt32 s ) override;
 private:
 
-    mutable UInt32      m_SpectralFlags = 0;
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 
-
+    
+    void                resetAxisProperties() override;
+    mutable tribool     m_isSorted     = indeterminate;
+    mutable tribool     m_isLogSampled = indeterminate;
+    mutable bool        m_isLogScale   = false;
 };
 
 inline
 CSpectrumSpectralAxis CSpectrumSpectralAxis::extract(Int32 startIdx, Int32 endIdx) const
 {
     CSpectrumSpectralAxis spcaxis = CSpectrumAxis::extract(startIdx, endIdx);
-    spcaxis.m_SpectralFlags = m_SpectralFlags;
+    spcaxis.m_isSorted      = m_isSorted;
+    spcaxis.m_isLogSampled  = m_isLogSampled;
+    spcaxis.m_isLogScale    = m_isLogScale;
     spcaxis.m_regularLogSamplingStep = m_regularLogSamplingStep;
     return spcaxis;
 }

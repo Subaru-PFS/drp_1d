@@ -389,5 +389,5 @@ BOOST_AUTO_TEST_CASE(isSorted)
 
   TFloat64List arr3 = {};
   CSpectrumSpectralAxis axis3(arr3,false);
-  BOOST_CHECK(axis3.isSorted()==false);
+  BOOST_CHECK(axis3.isSorted()==true);
 }
