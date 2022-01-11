@@ -49,6 +49,12 @@ class PC
     *data = const_cast<double*>(vec.data());
     *size = vec.size();
   }
+  static void getasl(const TAxisSampleList& vec,double ** data, int * size)
+  {
+    *data = const_cast<double*>(vec.data());
+    *size = vec.size();
+  }
+
   static void get(const TInt32List& vec,int ** data, int * size)
   {
     *data = const_cast<int*>(vec.data());

@@ -67,7 +67,7 @@ m_Force(force),
 m_Amp(amp),
 m_Width(width),
 m_Cut(cut),
-m_Profile(profile),
+m_Profile(profile->Clone()),
 m_PosFitErr(posErr),
 m_SigmaFitErr(sigmaErr),
 m_AmpFitErr(ampErr),
@@ -78,6 +78,13 @@ m_id(id),
 m_Offset(0.),
 m_OffsetFit(false)
 {
+}
+
+CRay CRay::clone() const
+{
+   CRay this_copy = *this; //shallow copy
+   this_copy.m_Profile = this_copy.m_Profile->Clone();// deep-copy
+   return this_copy;
 }
 
 bool CRay::operator < (const CRay& str) const
@@ -142,7 +149,7 @@ std::shared_ptr<CLineProfile> CRay::GetProfile() const
 
 bool CRay::SetProfile(const std::shared_ptr<CLineProfile>& profile)
 {
-    m_Profile = profile;
+    m_Profile = profile->Clone();
     return true;
 }
 

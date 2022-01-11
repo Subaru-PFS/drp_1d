@@ -46,7 +46,6 @@
 
 // To be removed once JSON code is in <--
 #include "RedshiftLibrary/ray/rule2singlelinesamplitude.h"
-#include "RedshiftLibrary/ray/ruleBalmerLinearSolver.h"
 #include "RedshiftLibrary/ray/ruleOIIRatioRange.h"
 #include "RedshiftLibrary/ray/ruleStrongHigherThanWeak.h"
 #include "RedshiftLibrary/ray/ruleSuperStrongHighest.h"
@@ -176,6 +175,7 @@ void CRegulament::EnableLogs( bool enable )
     m_LogsEnabled = enable;
     m_RulesLog.clear();
 }
+
 std::vector<string> CRegulament::GetLogs( )
 {
     return m_RulesLog;

@@ -59,8 +59,7 @@
 %shared_ptr(CSpectrum)
 %shared_ptr(CSpectrumAxis)
 %shared_ptr(CSpectrumFluxAxis)
-%shared_ptr(CSpectrumIOGenericReader)
-%shared_ptr(CSpectrumIOReader)
+%shared_ptr(CSpectrumNoiseAxis)
 %shared_ptr(CSpectrumSpectralAxis)
 %shared_ptr(CTemplate)
 %shared_ptr(CTemplateCatalog)
@@ -79,7 +78,8 @@
 %shared_ptr(TLSFGaussianConstantResolutionArgs)
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
-
+%shared_ptr(CPhotometricData)
+%shared_ptr(CPhotBandCatalog)
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -105,7 +105,7 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
@@ -261,6 +261,9 @@ class PC
   static void get(const TFloat64List& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_Int32Array) get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+
 };
 
 class CRayCatalog
@@ -323,7 +326,8 @@ public:
   void Init(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog);
+            std::shared_ptr<CRayCatalog> qso_rayCatalog,
+            std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();
@@ -435,7 +439,6 @@ class COperatorResultStore
 
 };
 
-%catches(std::string, ...) CSpectrum::LoadSpectrum;
 
 class CSpectrum
 {
@@ -443,11 +446,13 @@ class CSpectrum
  public:
   CSpectrum();
   CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis);
-  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<CLSF>& lsf);
+  CSpectrum(CSpectrumSpectralAxis spectralAxis, CSpectrumFluxAxis fluxAxis, const std::shared_ptr<const CLSF>& lsf);
   std::shared_ptr<const CLSF> GetLSF() const;
-  void SetLSF(const std::shared_ptr<CLSF>& lsf);
+  void SetLSF(const std::shared_ptr<const CLSF>& lsf);
+  void SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
   CSpectrumFluxAxis& GetFluxAxis();
   CSpectrumSpectralAxis& GetSpectralAxis();
+  const CSpectrumNoiseAxis&  GetErrorAxis() const;
   TLambdaRange GetLambdaRange() const;
   %apply Float64& OUTPUT { Float64& mean };
   %apply Float64& OUTPUT { Float64& std };
@@ -472,6 +477,7 @@ class CSpectrumAxis
   CSpectrumAxis( UInt32 n );
   CSpectrumAxis(const Float64* samples, UInt32 n );
   Float64* GetSamples();
+  const TAxisSampleList& GetSamplesVector() const;
   UInt32 GetSamplesCount() const;
   virtual void SetSize( UInt32 s );
 };
@@ -519,7 +525,15 @@ class CSpectrumFluxAxis : public CSpectrumAxis
   CSpectrumFluxAxis( const double* samples, UInt32 n,
   		     const double* error, UInt32 m );
   void SetSize( UInt32 s );
+
 };
+
+class  CSpectrumNoiseAxis : public CSpectrumAxis
+{
+ public:
+  CSpectrumNoiseAxis();
+};
+
 //%clear (const Float64* samples, UInt32 n);
 //%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
 
@@ -579,7 +593,9 @@ class CLSFFactory : public CSingleton<CLSFFactory>
 };
   typedef enum ErrorCode
     {
-      INVALID_SPECTRA_FLUX=	0,
+      INTERNAL_ERROR=0,
+      EXTERNAL_LIB_ERROR,
+      INVALID_SPECTRA_FLUX,
       INVALID_NOISE	,
       SMALL_WAVELENGTH_RANGE ,
       NEGATIVE_CONTINUUMFIT	,
@@ -590,7 +606,12 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       UNKNOWN_PARAMETER  ,
       BAD_PARAMETER_VALUE,
       UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG
+      BAD_LINECATALOG,
+      BAD_LOGSAMPLEDSPECTRUM,
+      BAD_COUNTMATCH,
+      BAD_TEMPLATECATALOG,
+      INVALID_SPECTRUM,
+      OVERLAPRATE_NOTACCEPTABLE
     } ErrorCode;
 
 typedef struct{
@@ -648,9 +669,10 @@ class CPhotometricBand
 public:
     CPhotometricBand() = default;
     CPhotometricBand(const Float64 * trans, Int32 n1, const Float64 * lambda, Int32 n2  ); //for swig binding to numpy array
-
-    TFloat64List m_transmission;
-    TFloat64List m_lambda;
+    const TFloat64List & GetTransmission() const;
+    const TFloat64List & GetWavelength() const;
+    Float64 GetMinLambda() const;
+    Float64 IntegrateFlux(const TFloat64List &flux) const;
 };
 %clear (const Float64 * trans, Int32 n1);
 %clear (const Float64 * lambda, Int32 n2);
@@ -662,6 +684,7 @@ class CPhotBandCatalog : public std::map<std::string, CPhotometricBand>
 public:
     void Add(const std::string & name, const CPhotometricBand & filter);
     TStringList GetNameList() const;
+    TStringList GetNameListSortedByLambda() const;
 };
 
 class AmzException : public std::exception

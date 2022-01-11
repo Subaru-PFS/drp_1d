@@ -56,9 +56,10 @@ namespace NSEpic
                                 const std::string centeringMethod = "mean");
             Bool    isAsymFit() override;
             Bool    isAsymFixed() override;
-            void    SetAsymParams(TAsymParams params);
+            void    SetAsymParams(TAsymParams params) override;
             void resetAsymFitParams() override;
-
+        private:
+            CLineProfile* CloneImplementation() const override { return new CLineProfileASYMFIT(*this);}
     };
 }
 #endif

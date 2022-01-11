@@ -49,31 +49,29 @@ It's also store the results of the fitting, in order to temporize the moment whe
 keep the best one.
 */
 CLmfitController::CLmfitController(
-          const CTemplate& tpl,
+          const std::shared_ptr<const CTemplate>& tpl,
           bool continumLoaded,
           bool continuumfit,
           bool emissionVelFit,
-          bool absorptionVelFit
-      ){
-    m_tpl = &tpl;
-    m_noContinuum = false;
-    m_continumLoaded = continumLoaded;
-    m_continuumfit = continuumfit;
-    m_emissionVelFit = emissionVelFit;
-    m_absorptionVelFit = absorptionVelFit;
-}
+          bool absorptionVelFit):
+    m_tpl(tpl),
+    m_noContinuum(false),
+    m_continumLoaded(continumLoaded),
+    m_continuumfit(continuumfit),
+    m_emissionVelFit(emissionVelFit),
+    m_absorptionVelFit(absorptionVelFit)
+{}
 
 CLmfitController::CLmfitController(
           bool emissionVelFit,
-          bool absorptionVelFit
-      ){
-    m_tpl = NULL;
-    m_noContinuum = true;
-    m_continumLoaded = true;
-    m_continuumfit = false;
-    m_emissionVelFit = emissionVelFit;
-    m_absorptionVelFit = absorptionVelFit;
-}
+          bool absorptionVelFit):
+    m_tpl(nullptr),
+    m_noContinuum(true),
+    m_continumLoaded(true),
+    m_continuumfit(false),
+    m_emissionVelFit(emissionVelFit),
+    m_absorptionVelFit(absorptionVelFit)
+{}
 
 bool CLmfitController::isEmissionVelocityFitted(){
   return m_emissionVelFit;
@@ -384,6 +382,6 @@ Float64 CLmfitController::getMerit(){
   return m_merit;
 }
 
-const CTemplate* CLmfitController::getTemplate(){
+const std::shared_ptr<const CTemplate> CLmfitController::getTemplate(){
   return m_tpl;
 }

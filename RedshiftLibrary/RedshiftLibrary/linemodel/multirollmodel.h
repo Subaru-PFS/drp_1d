@@ -47,9 +47,8 @@
 #include "RedshiftLibrary/ray/catalog.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/linemodel/multiline.h"
 
 #include <cmath>
 #include <cfloat>
@@ -64,6 +63,7 @@ class CMultiRollModel
 public:
 
     CMultiRollModel(const CSpectrum& spectrum,
+                    const TFloat64Range& lambdaRange,
                     const CTemplateCatalog& tplCatalog,
                     const TStringList& tplCategoryList,
                     const std::string calibrationPath,
@@ -140,7 +140,7 @@ public:
 
     Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
-    std::vector<std::shared_ptr<CLineModelElementList> > m_models;
+    std::vector<std::shared_ptr<CLineModelFitting> > m_models;
 
 private:
 

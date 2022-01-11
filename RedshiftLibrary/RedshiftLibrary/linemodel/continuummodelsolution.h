@@ -63,6 +63,7 @@ struct CContinuumModelSolution
     Float64             tplRedshift = NAN;
 
     Float64             tplMerit = NAN;
+    Float64             tplMeritPhot = NAN;
     Float64             tplDtm = NAN;
     Float64             tplMtm = NAN;
     Float64             tplLogPrior = NAN;

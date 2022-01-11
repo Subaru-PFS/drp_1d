@@ -40,6 +40,7 @@
 #define _REDSHIFT_COMMON_INDEX_
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
 #include <vector>
 #include<iostream>
@@ -58,13 +59,8 @@ template <typename T> class CIndexing
     {
         typename std::vector<T>::const_iterator itr = std::find(list.begin(),list.end(), z); 
         if (itr == list.end())
-        {
-            size_t size = snprintf( nullptr, 0, "Could not find index for %f", z) + 1;
-            std::unique_ptr<char[]> buf( new char[ size ] );                                                        
-            snprintf( buf.get(), size, "Could not find index for %f", z);                          
-            std::string _msg = std::string( buf.get(), buf.get() + size - 1 ); 
-            throw GlobalException(INTERNAL_ERROR,_msg.c_str());
-        }
+            throw GlobalException(INTERNAL_ERROR,Formatter()<<"CIndexing::getIndex: Could not find index for "<<z);
+
         return (itr - list.begin()); 
     }
     

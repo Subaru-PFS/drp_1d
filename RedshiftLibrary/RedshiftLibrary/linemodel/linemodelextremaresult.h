@@ -58,7 +58,7 @@ class CModelSpectrumResult;
 class CLineModelSolution;
 class CModelRulesResult;
 class CSpectraFluxResult;
-class CLineModelElementList;
+class CLineModelFitting;
 
   class CLineModelResult;
   #include "RedshiftLibrary/linemodel/linemodelextremaresult.i"

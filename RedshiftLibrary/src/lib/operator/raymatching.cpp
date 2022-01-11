@@ -87,15 +87,15 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
       Log.LogDebug ( "CRayMatching: Only 1 ray detected. n=%d", nDetectedRay );
       // if there is only one detected line, then there are N=#restlines possible redshifts
       for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
-        {
-	  CRayMatchingResult::TSolutionSet solution;
-	  Float64 redShift = (detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
-	  if( redShift > 0 ) // we don't care about blueshift.
-	    {
-	      solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift ) );
-	      solutions.push_back( solution );
-	    }
-        }
+      {
+        CRayMatchingResult::TSolutionSet solution;
+        Float64 redShift = (detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
+        if( redShift > 0 ) // we don't care about blueshift.
+          {
+            solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift ) );
+            solutions.push_back( solution );
+          }
+      }
     }
   else
     {

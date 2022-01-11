@@ -78,14 +78,6 @@ UInt32 CSpectrumAxis::GetSamplesCount( )
     return m_Samples.size();
 }
 
-Int32 CSpectrumAxis::extractFrom(const CSpectrumAxis& other, Int32 startIdx, Int32 endIdx)
-{
-    m_Samples.resize(endIdx-startIdx +1);
-    for(Int32 i = startIdx; i < endIdx + 1; i++){
-        m_Samples[i - startIdx] = other.m_Samples[i];
-    }
-    return 0;
-}
 /*
     maskedAxis is the output axis after applying the mask on the current object
 */

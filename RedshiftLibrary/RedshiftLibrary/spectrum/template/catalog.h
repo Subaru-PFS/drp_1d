@@ -62,13 +62,15 @@ public:
     void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
     void    ClearTemplates(const std::string & category,  Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates=false);
     void    ClearTemplateList(const std::string & category,  Bool opt_ortho, Bool opt_logsampling);
-
+    void    resetCatalogState() const {m_logsampling=0;m_orthogonal=0;};
+    
     TTemplateConstRefList GetTemplateList( const TStringList& categoryList ) const;
     TTemplateRefList GetTemplateList( const TStringList& categoryList );
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
+    UInt32                  GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const;
     UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
     void                    InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore);
     void                    InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
@@ -87,7 +89,7 @@ private:
 
           TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling);
     const TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling) const;
-
+    
     typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
     TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
 
@@ -100,7 +102,7 @@ private:
 inline 
 std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
 {
-    return GetList().at( category )[i];   
+    return GetList().at( category ).at(i);   
 }
 
 // non const getter returning mutable templates

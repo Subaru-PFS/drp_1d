@@ -100,6 +100,14 @@ Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     m_opt_continuumcomponent = parameterStore->GetScoped<std::string>( "linemodel.continuumcomponent");
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent == "tplfitauto"){
         m_opt_tplfit_fftprocessing = parameterStore->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
+        m_opt_tplfit_use_photometry = false;
+        if (parameterStore->HasScoped<bool>("linemodel.enablephotometry")){
+            m_opt_tplfit_use_photometry = parameterStore->GetScoped<bool>("linemodel.enablephotometry");
+            if (m_opt_tplfit_use_photometry)
+                m_opt_tplfit_photo_weight = parameterStore->GetScoped<Float64>("linemodel.photometry.weight");
+        } 
+        if (m_opt_tplfit_fftprocessing && m_opt_tplfit_use_photometry)
+            throw GlobalException(INTERNAL_ERROR, "CLineModelSolve::PopulateParameters: fftprocessing not implemented with photometry enabled");
         m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
 	    m_opt_tplfit_dustfit = parameterStore->GetScoped<bool>( "linemodel.continuumfit.ismfit");
         m_opt_tplfit_igmfit = parameterStore->GetScoped<bool>( "linemodel.continuumfit.igmfit");
@@ -271,10 +279,11 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                        TScopeStack &scope)
 {
 
-  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum().get());
-  const CSpectrum& spc=*(inputContext->GetSpectrum().get());
-  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog().get());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType).get());
+  const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum());
+  const CSpectrum& spc=*(inputContext->GetSpectrum());
+  const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
+  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
+  const auto &photBandCat = inputContext->GetPhotBandCatalog();
 
   PopulateParameters( inputContext->GetParameterStore() );
 
@@ -283,13 +292,34 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   bool useloglambdasampling = inputContext->GetParameterStore()->GetScoped<bool>("linemodel.useloglambdasampling");
   useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
 
+  Int32 typeFilter = -1;
+  if (m_opt_linetypefilter == "A")
+    {
+      typeFilter = CRay::nType_Absorption;
+    } else if (m_opt_linetypefilter == "E")
+    {
+      typeFilter = CRay::nType_Emission;
+    }
+
+  Int32 forceFilter = -1; // CRay::nForce_Strong;
+  if (m_opt_lineforcefilter == "S")
+    {
+      forceFilter = CRay::nForce_Strong;
+    }
+  Log.LogDebug("restRayList force filter = %d", forceFilter);
+  CRayCatalog::TRayVector restRayList =
+    restraycatalog.GetFilteredList(typeFilter, forceFilter);
+  Log.LogDebug("restRayList.size() = %d", restRayList.size());
+
   bool retSolve = Solve( resultStore,
                          useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
-                         restraycatalog,
+                         restRayList,
                          m_lambdaRange,
-                         m_redshifts );
+                         m_redshifts,
+                         photBandCat,
+                         m_opt_tplfit_use_photometry );
  
     if(!retSolve){
         return NULL;
@@ -733,9 +763,11 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
-                             const CRayCatalog& restraycatalog,
+                             const CRayCatalog::TRayVector& restRayList,
                              const TFloat64Range& lambdaRange,
-                             const TFloat64List& redshifts )
+                             const TFloat64List& redshifts,
+                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+                             const Float64 photo_weight )
 {
     std::string scopeStr = "linemodel";
 
@@ -770,6 +802,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
 
         m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
         m_linemodel.m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing_secondpass;
+        m_linemodel.m_opt_tplfit_use_photometry = m_opt_tplfit_use_photometry;
         m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit);
         m_linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit);
         m_linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
@@ -812,6 +845,8 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     }
     //logstep from redshift
 
+
+    
     //**************************************************
     //FIRST PASS
     //**************************************************
@@ -820,10 +855,10 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     tplCatalog,
                                                     tplCategoryList,
                                                     m_calibrationPath,
-                                                    restraycatalog,
-                                                    m_opt_linetypefilter,
-                                                    m_opt_lineforcefilter,
+                                                    restRayList,
                                                     lambdaRange,
+                                                    photBandCat,
+                                                    photo_weight,
                                                     m_opt_fittingmethod,
                                                     m_opt_lineWidthType,
                                                     m_opt_velocity_emission,
@@ -908,10 +943,10 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             tplCatalog,
                                                             tplCategoryList,
                                                             m_calibrationPath,
-                                                            restraycatalog,
-                                                            m_opt_linetypefilter,
-                                                            m_opt_lineforcefilter,
+                                                            restRayList,
                                                             lambdaRange,
+                                                            photBandCat,
+                                                            photo_weight,
                                                             m_opt_fittingmethod,
                                                             m_opt_lineWidthType,
                                                             m_opt_velocity_emission,
@@ -972,10 +1007,9 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                           tplCatalog,
                                                           tplCategoryList,
                                                           m_calibrationPath,
-                                                          restraycatalog,
-                                                          m_opt_linetypefilter,
-                                                          m_opt_lineforcefilter,
                                                           lambdaRange,
+                                                          photBandCat,
+                                                          photo_weight,
                                                           m_opt_fittingmethod,
                                                           m_opt_lineWidthType,
                                                           m_opt_velocity_emission,

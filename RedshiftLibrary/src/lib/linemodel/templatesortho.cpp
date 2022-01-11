@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesortho.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/spectrum/logrebinning.h"
 
 
@@ -84,27 +84,33 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
     Bool currentsampling = tplCatalog->m_logsampling; 
 
+    // check if category never orthogonalized
+    Bool first_time_ortho = !tplCatalog->GetTemplateCount(category,true,false);
+
     //check if LSF has changed, if yes reorthog all
     bool differentLSF = false;
     std::vector<Bool> samplingList {0,1};
-    Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
-    if(std::isnan(tplCatalog->m_ortho_LSFWidth)){ //first time orthogonalizing - do it for all
-        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); 
-        differentLSF = true;
-    }else{ // not first time
-        if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
-        {   
+
+    if(!first_time_ortho)
+    {
+        Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
+        if(std::isnan(tplCatalog->m_ortho_LSFWidth)){ //first time orthogonalizing - do it for all
+            tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); 
             differentLSF = true;
-            tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
-            tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
-            tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
+        }else{ // not first time
+            if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
+            {   
+                differentLSF = true;
+                tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
+                tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
+                tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
+            }
         }
     }
-
     // check if log-sampled templates have changed and need ortho 
     Bool need_ortho_logsampling = true;
-    if (!differentLSF){    
-        
+    if (!first_time_ortho && !differentLSF)
+    {    
         tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
         need_ortho_logsampling = tplCatalog->GetTemplateCount(category) > 0;// orig log list is not empty
         if (need_ortho_logsampling){//log sampling is there       
@@ -124,8 +130,9 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
             samplingList = {1};
         }
     }
+    //check first if category has been orthogonalized at least a first time
 
-    Bool needOrthogonalization = need_ortho_logsampling | differentLSF;
+    Bool needOrthogonalization = first_time_ortho | need_ortho_logsampling | differentLSF;
     if(!needOrthogonalization) {
         tplCatalog->m_logsampling = currentsampling;
         tplCatalog->m_orthogonal = 0; 
@@ -203,7 +210,10 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         TStringList tplCategoryListUnused;
 
         //Compute linemodel on the template
-        CLineModelElementList model( spectrum,
+        TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
+
+        CLineModelFitting model( spectrum,
+                                     lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
                                      opt_calibrationPath,
@@ -219,7 +229,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
                                      opt_rigidity);
 
         Float64 redshift = 0.0;
-        TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
         Float64 contreest_iterations = 0;
         Bool enableLogging=true;
         CLineModelSolution modelSolution;

@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
@@ -50,6 +50,7 @@ TLineModelResult::TLineModelResult(const CContinuumModelSolution& cms)
     FittedTplAmplitude = cms.tplAmplitude;
     FittedTplAmplitudeError = cms.tplAmplitudeError;
     FittedTplMerit = cms.tplMerit;
+    FittedTplMeritPhot = cms.tplMeritPhot;
     FittedTplEbmvCoeff = cms.tplEbmvCoeff;
     FittedTplMeiksinIdx = cms.tplMeiksinIdx;
     FittedTplRedshift = cms.tplRedshift;
@@ -67,6 +68,7 @@ void TLineModelResult::updateFromContinuumModelSolution(const CContinuumModelSol
     FittedTplAmplitude = cms.tplAmplitude;
     FittedTplAmplitudeError = cms.tplAmplitudeError;
     FittedTplMerit = cms.tplMerit;
+    FittedTplMeritPhot = cms.tplMeritPhot;
     FittedTplEbmvCoeff = cms.tplEbmvCoeff;
     FittedTplMeiksinIdx = cms.tplMeiksinIdx;
       }
@@ -83,17 +85,18 @@ void TLineModelResult::updateFromLineModelSolution(const CLineModelSolution& cms
     Alv= cms.AbsorptionVelocity;
   }
 
-void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelElementList> lmel)
+void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelFitting> lmel)
   {
     FittedTplName= lmel->getFitContinuum_tplName();
     FittedTplAmplitude= lmel->getFitContinuum_tplAmplitude();
     FittedTplAmplitudeError= lmel->getFitContinuum_tplAmplitudeError();
     FittedTplMerit= lmel->getFitContinuum_tplMerit();
+    FittedTplMeritPhot = lmel->getFitContinuum_tplMeritPhot();
     FittedTplEbmvCoeff= lmel->getFitContinuum_tplIsmEbmvCoeff();
     FittedTplMeiksinIdx= lmel->getFitContinuum_tplIgmMeiksinIdx();
   }
 
-void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelElementList> lmel)
+void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelFitting> lmel)
   {
         FittedTplratioName = lmel->getTplshape_bestTplName();
         FittedTplratioIsmCoeff = lmel->getTplshape_bestTplIsmCoeff();
@@ -103,10 +106,10 @@ void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelE
 
   }
 
-void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelElementList> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int idx,const TFloat64Range &lambdaRange, int i_2pass)
+void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int idx,const TFloat64Range &lambdaRange, int i_2pass)
   {
     
-    // TODO : make all these getters const in CLineModelElementList before uncommenting this
+    // TODO : make all these getters const in CLineModelFitting before uncommenting this
     //LineModelSolutions
     Elv = lmel->GetVelocityEmission();
     Alv = lmel->GetVelocityAbsorption();
@@ -155,7 +158,7 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelElementList> lm
     nddl = lmresult->LineModelSolutions[idx].nDDL; // override nddl by the actual number of elements in
     // the fitted model
     NDof =
-      lmel->GetModelNonZeroElementsNDdl();
+      lmel->m_Elements.GetModelNonZeroElementsNDdl();
 
     Float64 bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
     // Float64 aic = m + 2*nddl; //AIC

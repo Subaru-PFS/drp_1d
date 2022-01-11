@@ -52,10 +52,11 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(const std::shared_ptr<const
 {
     IsValid();
 }
+
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda) const
 {
     Int32 idx = -1;
-    if(lambda<m_spcAxis[0] || lambda>m_spcAxis[m_width.size()-1])
+    if(!checkAvailability(lambda))
     {
         throw GlobalException(INTERNAL_ERROR,"CLSFGaussianVariableWidth::GetWidth: lambda outside spectralAxis range");
     }
@@ -82,4 +83,12 @@ bool CLSFGaussianVariableWidth::IsValid() const
     for(Float64 w : m_width)
         if(w <= 0. ) return false;
     return true;
+}
+
+bool CLSFGaussianVariableWidth::checkAvailability(Float64 lambda)const
+{   
+    Bool available = true;
+    if(lambda<m_spcAxis[0] || lambda>m_spcAxis[m_width.size()-1])
+        available = false;
+    return available;
 }

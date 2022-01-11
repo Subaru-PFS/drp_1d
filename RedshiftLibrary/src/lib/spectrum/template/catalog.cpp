@@ -120,19 +120,19 @@ TStringList CTemplateCatalog::GetCategoryList() const
  */
 UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {   
-    UInt32 l; 
-
-    if( GetList().find( category ) == GetList().end() )
-        return 0;
-    l = GetList().at( category ).size();
-
-    return l;
+    return GetTemplateCount(category, m_orthogonal, m_logsampling);
 }
 
+UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const
+{   
+    if(!GetList(opt_ortho, opt_logsampling).count(category))
+        return 0;
+    return GetList(opt_ortho, opt_logsampling).at( category ).size();
+}
 
 UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const
 {   
-    if (!GetTemplateCount(category)) return 0;
+    if (!GetTemplateCount(category, opt_ortho, opt_logsampling)) return 0;
 
     const TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
     UInt32 count = 0;
@@ -163,7 +163,9 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
     ClearTemplates(category, m_orthogonal, m_logsampling, i);
 
     // assign new template
-    GetList().at(category)[i] = tpl;
+    if( !GetTemplateCount(category)) Add(tpl);
+    else
+        GetList().at(category).at(i) = tpl;
 }
 
 // clear all templates in a category
@@ -175,19 +177,19 @@ void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_
 // clear one template in a category
 void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
 {
+    if(!GetTemplateCount(category, opt_ortho, opt_logsampling)) return;
     TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
-    if( tplList.find( category ) != tplList.end()) return;
-    
-    if (alltemplates)
-        tplList.at(category).clear(); //clear the list
 
+    if (alltemplates){
+        tplList.at(category).clear();
         if (opt_ortho){ // reset LSFWidth if the 2 ortho list are empty
             auto & otherOrthoList = GetList(opt_ortho, !opt_logsampling);
             if (otherOrthoList.find(category) == otherOrthoList.end())
-                m_ortho_LSFWidth = NAN;         
+                m_ortho_LSFWidth = NAN;  
+        }       
     } 
     else {
-        tplList.at(category)[i] = nullptr; // clear one element in the list
+        tplList.at(category).at(i) = nullptr; // clear one element in the list
     
         // clear the list if all nullptr
         if (!GetNonNullTemplateCount(category, opt_ortho, opt_logsampling))

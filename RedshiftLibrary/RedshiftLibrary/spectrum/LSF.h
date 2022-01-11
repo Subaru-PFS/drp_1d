@@ -69,32 +69,27 @@ namespace NSEpic
 struct TLSFGaussianConstantWidthArgs : virtual TLSFArguments
  {
    Float64 width;
-   TLSFGaussianConstantWidthArgs(const std::shared_ptr<const CParameterStore>& parameterStore)
-   {
-      width = parameterStore->GetScoped<Float64>("LSF.width");//13.
-   }
-    TLSFGaussianConstantWidthArgs(Float64 _width)
-   {
-      width = _width;
-   }
+   TLSFGaussianConstantWidthArgs(const std::shared_ptr<const CParameterStore>& parameterStore):
+    width(parameterStore->GetScoped<Float64>("LSF.width")){}
+
+   TLSFGaussianConstantWidthArgs(Float64 _width):width(_width){}
  };
 
 struct TLSFGaussianConstantResolutionArgs : virtual TLSFArguments
  {
    Float64 resolution;
-   TLSFGaussianConstantResolutionArgs(const std::shared_ptr<const CParameterStore>& parameterStore)
-   {
-      resolution = parameterStore->GetScoped<Float64>("LSF.resolution");// 2350.0
-   }
+   TLSFGaussianConstantResolutionArgs(const std::shared_ptr<const CParameterStore>& parameterStore):
+    resolution(parameterStore->GetScoped<Float64>("LSF.resolution")){}
+
+   TLSFGaussianConstantResolutionArgs(Float64 _resolution):resolution(_resolution){}
  };
 
 struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
  {
    Float64 sourcesize;
-   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore)
-   {
-      sourcesize = parameterStore->GetScoped<Float64>("LSF.sourcesize");//0.1
-   }
+   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore):
+      sourcesize(parameterStore->GetScoped<Float64>("LSF.sourcesize")){}
+
  };
 /**
  * \ingroup Redshift
@@ -120,6 +115,7 @@ public:
     CLSF& operator=(CLSF&& other) = default; 
     //GetWidth requires observed wavelength, not restframe
     virtual Float64             GetWidth(Float64 lambda) const=0;
+    virtual bool                checkAvailability(Float64 lambda) const {return true;};//default to true
     virtual bool                IsValid() const = 0;
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
     Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;

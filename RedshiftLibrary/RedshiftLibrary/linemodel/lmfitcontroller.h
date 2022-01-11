@@ -49,7 +49,7 @@ namespace NSEpic
 class CLmfitController{
   public:
     CLmfitController(
-              const CTemplate& tpl,
+              const std::shared_ptr<const CTemplate>& tpl,
               bool continumLoaded,
               bool continuumfit,
               bool emissionVelFit,
@@ -99,7 +99,7 @@ class CLmfitController{
     Float64 getLineAmp(Int32 idx);
     Float64 getLineAmpErr(Int32 idx);
     bool isRedshiftFitted();
-    CTemplate const * getTemplate();
+    const std::shared_ptr<CTemplate const> getTemplate();
 
 
     Float64 lineAmp_LmToModel(Float64 lmLineAmp);
@@ -143,7 +143,7 @@ class CLmfitController{
     Int32 m_indContinuumAmp = 0;
     Int32 m_indRedshift = 0;
     bool m_NegAmpRemoved = false;
-    CTemplate const * m_tpl;
+    const std::shared_ptr<const CTemplate> m_tpl;
 };
 }
 #endif

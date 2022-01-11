@@ -77,9 +77,11 @@ public:
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
-               const CRayCatalog& restraycatalog,
+               const CRayCatalog::TRayVector& restraycatalog,
                const TFloat64Range& lambdaRange,
-               const TFloat64List& redshifts);
+               const TFloat64List& redshifts,
+               const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+               const Float64 photo_weight);
 
 private:
 
@@ -109,6 +111,8 @@ private:
 
     bool m_opt_tplfit_fftprocessing=true;//default to using fft
     bool m_opt_tplfit_fftprocessing_secondpass=true;
+    bool m_opt_tplfit_use_photometry=false;
+    Float64 m_opt_tplfit_photo_weight = 1.0;
     bool m_opt_tplfit_dustfit=false;
     bool m_opt_tplfit_igmfit=false;
   Float64 m_opt_continuumfitcount; //TODO is this really a double and not an integer ?
