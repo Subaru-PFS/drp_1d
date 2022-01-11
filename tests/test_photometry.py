@@ -18,8 +18,8 @@ def test_CPhotometricBand():
     trans = np.full(lbda.size, .7)
     pb = CPhotometricBand(trans,lbda)
 
-    assert np.all(pb.m_transmission==trans)
-    assert np.all(pb.m_lambda==lbda)
+    assert np.all(pb.GetTransmission() == trans)
+    assert np.all(pb.GetWavelength() == lbda)
 
 
 def test_CPhotBandCatalog():
@@ -39,5 +39,5 @@ def test_CPhotBandCatalog():
     assert photcat.GetNameList() == names
     pb = photcat[names[0]]
 
-    assert np.all(np.array(pb.m_transmission)==np.array(pb1.m_transmission))
-    assert np.all(np.array(pb.m_lambda)==np.array(pb1.m_lambda))
+    assert np.all(np.array(pb.GetTransmission())==np.array(pb1.GetTransmission()))
+    assert np.all(np.array(pb.GetWavelength())==np.array(pb1.GetWavelength()))
