@@ -165,12 +165,12 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float6
     return val;
 }
  
-Bool CLineProfileASYM::isAsymFixed()
+bool CLineProfileASYM::isAsymFixed()
 { //probably we need to clean this
     return 1;
 }
  
-Bool CLineProfileASYM::isAsymFit()
+bool CLineProfileASYM::isAsymFit()
 { //probably we need to clean this
     return 0;
 }
@@ -183,7 +183,7 @@ const TAsymParams CLineProfileASYM::GetAsymParams()
 {
     return {m_asym_sigma_coeff, m_asym_alpha, m_asym_delta};//default. Mainly used for asymfit/fixed
 }
-Bool CLineProfileASYM::isValid()
+bool CLineProfileASYM::isValid()
 {
     if(std::isnan(m_asym_sigma_coeff) || std::isnan(m_asym_alpha) || std::isnan(m_asym_alpha)){
         return 0;

@@ -66,8 +66,8 @@ namespace NSEpic
 
             Float64 GetAsymDelta() override;
             const TAsymParams  GetAsymParams() override;
-            virtual Bool    isAsymFixed() override;
-            virtual Bool    isAsymFit()   override;
+            virtual bool    isAsymFixed() override;
+            virtual bool    isAsymFit()   override;
 
             virtual ~CLineProfileASYM() = default;
             CLineProfileASYM(const CLineProfileASYM & other) = default; 
@@ -78,7 +78,7 @@ namespace NSEpic
             virtual CLineProfile* CloneImplementation() const override { return new CLineProfileASYM(*this);}
             Float64 GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc);
         protected: 
-            Bool isValid();
+            bool isValid();
             Float64 m_asym_sigma_coeff = 1.0;//vs 2. for asymFit/Fixed
             Float64 m_asym_alpha = 4.5;
             Float64 m_asym_delta = 0.;

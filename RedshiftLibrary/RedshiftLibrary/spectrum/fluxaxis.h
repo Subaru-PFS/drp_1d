@@ -71,20 +71,20 @@ public:
 
     void                SetSize( UInt32 s );
     void                clear();
-    Bool                ApplyMeanSmooth( UInt32 kernelHalfWidth );
-    Bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
+    bool                ApplyMeanSmooth( UInt32 kernelHalfWidth );
+    bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
 
 
-    Bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev) const;
+    bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev) const;
     Float64             ComputeRMSDiff( const CSpectrumFluxAxis& other );
-    Bool                Subtract(const CSpectrumFluxAxis& other);
-    Bool                Invert();
+    bool                Subtract(const CSpectrumFluxAxis& other);
+    bool                Invert();
     CSpectrumFluxAxis   extract(Int32 startIdx, Int32 endIdx) const;//this is mainly applied on m_StdError
 
 private:
 
-    Bool                ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const;
-    Bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev) const;
+    bool                ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const;
+    bool                ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev) const;
 
     CSpectrumNoiseAxis        m_StdError;//STD
 

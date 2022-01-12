@@ -60,7 +60,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_photBandCatalog(std::move(photBandCatalog)),
   m_ParameterStore(std::move(paramStore))
 { 
-    Bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
+    bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
 
@@ -124,9 +124,9 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
-    Bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
-    Bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
-    Bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
+    bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
+    bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
+    bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
     
     if(fft_processing_star)
     {
@@ -178,8 +178,8 @@ void CInputContext::RebinInputs()
 
 void CInputContext::OrthogonalizeTemplates()
 {
-    Bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
-    Bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
+    bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
+    bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
 
     Float64 lambda = (m_lambdaRange.GetBegin() + m_lambdaRange.GetEnd())/2;
     std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(lambda/m_Spectrum->GetLSF()->GetWidth(lambda));

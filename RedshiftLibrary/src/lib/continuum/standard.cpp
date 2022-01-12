@@ -60,7 +60,7 @@ CContinuumStandard::~CContinuumStandard()
 /**
  * Does nothing, but returns true.
  */
-Bool CContinuumStandard::Remove( CSpectrum& s )
+bool CContinuumStandard::Remove( CSpectrum& s )
 {
     return true;
 }

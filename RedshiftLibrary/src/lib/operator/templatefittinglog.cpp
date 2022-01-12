@@ -1292,7 +1292,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const std:
                                                                     Int32 opt_extinction,
                                                                     Int32 opt_dustFitting,
                                                                     CPriorHelper::TPriorZEList logpriorze,
-                                                                    Bool keepigmism,
+                                                                    bool keepigmism,
                                                                     Float64 FitEbmvCoeff,
                                                                     Int32 FitMeiksinIdx)
 {

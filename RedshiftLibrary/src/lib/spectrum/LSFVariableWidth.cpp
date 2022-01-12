@@ -87,7 +87,7 @@ bool CLSFGaussianVariableWidth::IsValid() const
 
 bool CLSFGaussianVariableWidth::checkAvailability(Float64 lambda)const
 {   
-    Bool available = true;
+    bool available = true;
     if(lambda<m_spcAxis[0] || lambda>m_spcAxis[m_width.size()-1])
         available = false;
     return available;

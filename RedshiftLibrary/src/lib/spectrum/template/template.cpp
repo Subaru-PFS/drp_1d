@@ -174,7 +174,7 @@ const std::string& CTemplate::GetCategory() const
 /**
  * Saves the template in the given filePath.
  */
-Bool CTemplate::Save( const char* filePath ) const
+bool CTemplate::Save( const char* filePath ) const
 {
     std::fstream file;
 
@@ -396,7 +396,7 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
                             Int32 opt_dustFitting,
                             TInt32List& MeiksinList, //return 
                             TInt32List& EbmvList, //return
-                            Bool keepigmism,
+                            bool keepigmism,
                             Float64 FitEbmvCoeff,
                             Int32 FitMeiksinIdx)const
 {

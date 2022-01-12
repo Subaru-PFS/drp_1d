@@ -186,7 +186,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                            opt_rules,
                            opt_rigidity);
 
-    Bool enableLoadContTemplateOverride = false; //manual switch for hardcoded
+    bool enableLoadContTemplateOverride = false; //manual switch for hardcoded
     contaminant bypass load if(enableLoadContTemplateOverride)
     {
         m_enableLoadContTemplate = false; //disable stock contaminant in case of
@@ -517,8 +517,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         }
         // Flags on continuum and model amplitudes
         Int32 nbLines = m_result->LineModelSolutions[i].Amplitudes.size();
-        Bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0);
-        Bool modelAmplitudesZero = true;
+        bool continuumAmplitudeZero = (m_result->ContinuumModelSolutions[i].tplAmplitude <= 0.0);
+        bool modelAmplitudesZero = true;
         for (Int32 l = 0; l < nbLines; l++)
         {
             modelAmplitudesZero = (modelAmplitudesZero && m_result->LineModelSolutions[i].Amplitudes[l] <= 0.0);
@@ -527,7 +527,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
 
     }
     // Check if all amplitudes are zero for all z
-    Bool checkAllAmplitudes = AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
+    bool checkAllAmplitudes = AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
     if (checkAllAmplitudes == true)
     {
         throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: All amplitudes (continuum & model) are zero for all z. Aborting...");
@@ -573,9 +573,9 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     return 0;
 }
 
-Bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ)
+bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ)
 {
-    Bool areZero = true;
+    bool areZero = true;
     for (Int32 iZ = 0; iZ < nbZ; iZ++)
     {
        areZero = (areZero && amplitudesZero[iZ]);
@@ -633,7 +633,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                     " (faster when only few redshifts calc. points)");
     }
 
-    Bool currentSampling = tplCatalog.m_logsampling; 
+    bool currentSampling = tplCatalog.m_logsampling; 
     std::string opt_interp = "precomputedfinegrid"; //"lin"; //
     Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
                 fftprocessing);
@@ -699,7 +699,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     Float64 EbmvCoeff = -1.; Int32 meiksinIdx = -1;
-    Bool keepismigm = false;
+    bool keepismigm = false;
     if(m_model->GetPassNumber() == 2){ //if we are in secondpass
         if(m_continnuum_fit_option == 3 && (m_opt_tplfit_dustFit ||m_opt_tplfit_extinction ) ) {//refitfirstpass
             if(candidateIdx<0 || candidateIdx> m_firstpass_extremaResult->size()-1){
@@ -1544,8 +1544,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
         // m = m_result->ChiSquare[idx];
         if (enableVelocityFitting)
         {
-            Bool enableManualStepVelocityFit = true;
-            Bool enableLMVelocityFit = false;
+            bool enableManualStepVelocityFit = true;
+            bool enableLMVelocityFit = false;
             if (enableLMVelocityFit)
             {
                 // fit the emission and absorption width using the linemodel

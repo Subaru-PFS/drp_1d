@@ -61,8 +61,8 @@ public:
     void SetMedianKernelWidth( Float32 width );
     void SetMedianCycleCount( UInt32 count );
 
-    Bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
-    Bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );
+    bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
+    bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );
 
 
 private:
@@ -77,7 +77,7 @@ private:
     Int32   m_MeanSmoothAmplitude;
     Int32   m_MedianSmoothCycles;
     Int32   m_MedianSmoothAmplitude;
-    Bool    m_Even;
+    bool    m_Even;
 
 };
 

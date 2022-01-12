@@ -61,7 +61,7 @@ class CContinuumMedian : public CContinuum
     void SetMedianKernelWidth(Float32 width);
     void SetMedianCycleCount(UInt32 count);
 
-    Bool RemoveContinuum(const CSpectrum &s,
+    bool RemoveContinuum(const CSpectrum &s,
                          CSpectrumFluxAxis &noContinuumFluxAxis);
 
   private:
@@ -78,7 +78,7 @@ class CContinuumMedian : public CContinuum
     Int32 m_MeanSmoothAmplitude;
     Int32 m_MedianSmoothCycles;
     Int32 m_MedianSmoothAmplitude;
-    Bool m_Even;
+    bool m_Even;
 };
 
 } // namespace NSEpic

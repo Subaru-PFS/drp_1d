@@ -66,13 +66,13 @@ public:
 
     CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
 
-    Bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
+    bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
                                           TScopeStack &scope) override;
 
-    Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+    bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,

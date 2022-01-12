@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   //--------------------//
   // test Subtract
 
-  Bool resultSubtract = object_FluxAxisA.Subtract(object_FluxAxisB);
+  bool resultSubtract = object_FluxAxisA.Subtract(object_FluxAxisB);
 
   int indice = 0;
   bool sub;
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   //--------------------//
   // test Invert
 
-  Bool resultInvert = object_FluxAxisA.Invert();
+  bool resultInvert = object_FluxAxisA.Invert();
 
   int indice2 = 0;
   bool inv;
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   const CSpectrumNoiseAxis empty_error;
 
   object_FluxAxisA.GetError() = error;
-  Bool resultComputeMeanAndSDev_cas1 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
+  bool resultComputeMeanAndSDev_cas1 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas1 == false);
 
   for (int i=0;i<10;i++) {
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   }
 
   object_FluxAxisA.GetError() = empty_error;
-  Bool resultComputeMeanAndSDev_cas2 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
+  bool resultComputeMeanAndSDev_cas2 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas2 == false);
 }
 

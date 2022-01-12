@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(range_test_int1)
   //test on : T GetLength() const
   BOOST_CHECK(range2.GetLength() == 3);
 
-  //test on : static Bool Intersect(...)
+  //test on : static bool Intersect(...)
   // range1 = [-5, -1]
   // range2 = [0, 3]
   range1.Set(-5, -1);

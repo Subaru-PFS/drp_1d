@@ -72,7 +72,7 @@ CRayMatchingResult::~CRayMatchingResult()
  *      * lambda range not able to cover the strong lines
  * @return
  */
-Bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const
+bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const
 {
   Int32 thresMatchingNumber = 2; //minimum matching number for a solution
   TSolutionSetList selectedResults = GetSolutionsListOverNumber( thresMatchingNumber-1 );
@@ -119,7 +119,7 @@ Bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumb
  *
  * @return
  */
-Bool CRayMatchingResult::GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const
+bool CRayMatchingResult::GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const
 {
   MatchingNumber = GetMaxMatchingNumber();
   TSolutionSetList selectedResults = GetSolutionsListOverNumber( MatchingNumber-1 );

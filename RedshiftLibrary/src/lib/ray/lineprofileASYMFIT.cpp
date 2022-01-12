@@ -64,12 +64,12 @@ void CLineProfileASYMFIT::resetAsymFitParams()
     m_asym_delta = 0.;
 }
  
-Bool CLineProfileASYMFIT::isAsymFit()
+bool CLineProfileASYMFIT::isAsymFit()
 {
     return 1;
 }
  
-Bool CLineProfileASYMFIT::isAsymFixed()
+bool CLineProfileASYMFIT::isAsymFixed()
 {
     return 0;
 }

@@ -141,7 +141,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
                       - 2288.98457865 );
 
         //shape prior at low z, left of the bell
-        Bool enable_low_z_flat = false;
+        bool enable_low_z_flat = false;
         if(enable_low_z_flat && z<0.7204452872044528){
             zPrior[kz]=20367.877916402278;
         }else if(zPrior[kz]<0){

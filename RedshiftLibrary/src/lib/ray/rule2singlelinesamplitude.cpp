@@ -58,7 +58,7 @@ CRule2SingleLinesAmplitude::~CRule2SingleLinesAmplitude()
 {
 }
 
-void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
+void CRule2SingleLinesAmplitude::SetUp( bool EnabledArgument, ... )
 {
   Name = "balmersingle";
   Enabled = EnabledArgument;
@@ -180,7 +180,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
   }
 }
 
-Bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
+bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

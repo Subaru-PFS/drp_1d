@@ -60,7 +60,7 @@ class CRegulament
     void Apply(CLineModelElementList &LineModelElementList);
     // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>
     // > LinemodelElements, Float64 Redshift );
-    Bool CreateRulesFromJSONFiles(void);
+    bool CreateRulesFromJSONFiles(void);
     void EnableRulesAccordingToParameters(std::string Parameters);
     std::vector<std::string> GetLogs();
     void EnableLogs(bool enable);

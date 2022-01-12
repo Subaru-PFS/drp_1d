@@ -132,7 +132,7 @@ const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList( TRay
 }
 
 
-Bool CRayCatalog::Add( const CRay& r )
+bool CRayCatalog::Add( const CRay& r )
 {
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
@@ -368,7 +368,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
     }
 }
 
-Bool CRayCatalog::Save( const char* filePath )
+bool CRayCatalog::Save( const char* filePath )
 {
     std::ofstream file;
     file.open( filePath, std::ofstream::out );

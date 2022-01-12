@@ -80,7 +80,7 @@ public:
                                                        Int32 opt_extinction,
                                                        Int32 opt_dustFitting,
                                                        CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
-                                                       Bool keepigmism = false,
+                                                       bool keepigmism = false,
                                                        Float64 FitEbmvCoeff=-1.,
                                                        Int32 FitMeiksinIdx=-1) = 0;
 

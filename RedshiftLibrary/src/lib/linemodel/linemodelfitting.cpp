@@ -219,7 +219,7 @@ void CLineModelFitting::initLambdaOffsets(std::string offsetsCatalogsRelPath)
 }
 
 
-Bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
+bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
 {
 
     bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
@@ -854,7 +854,7 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaR
   {
     throw GlobalException(INTERNAL_ERROR,"Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
-  Bool ret = SolveContinuum( tpl,
+  bool ret = SolveContinuum( tpl,
                              redshifts,
                              overlapThreshold,
                              maskList,
@@ -1067,7 +1067,7 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(const std::shared_ptr<const CTempl
   return 0;
 }
 
-Bool CLineModelFitting::SolveContinuum( const std::shared_ptr<const CTemplate>& tpl,
+bool CLineModelFitting::SolveContinuum( const std::shared_ptr<const CTemplate>& tpl,
                                         const TFloat64List& redshifts,
                                         Float64 overlapThreshold,
                                         std::vector<CMask> maskList,
@@ -1484,7 +1484,7 @@ const std::vector<Int32> & CLineModelFitting::GetNLinesAboveSNRTplshape() const
     return m_NLinesAboveSNRTplshape;
 }
 
-Bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
+bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
 
@@ -1498,7 +1498,7 @@ Bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lamb
     return true;
 }
 
-Bool CLineModelFitting::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
+bool CLineModelFitting::setTplshapeModel(Int32 itplshape, bool enableSetVelocity)
 {
     setLyaProfileFromTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
 
@@ -1522,7 +1522,7 @@ Int32 CLineModelFitting::SetTplshape_PriorHelper(const std::shared_ptr<const CPr
 }
 
 
-Bool CLineModelFitting::setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts)
+bool CLineModelFitting::setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts)
 {
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
@@ -1533,7 +1533,7 @@ Bool CLineModelFitting::setTplshapeAmplitude(const std::vector<Float64> & ampsEl
 
 
 
-Bool CLineModelFitting::initDtd(const TFloat64Range& lambdaRange)
+bool CLineModelFitting::initDtd(const TFloat64Range& lambdaRange)
 {
     m_dTransposeDLambdaRange = lambdaRange;
     if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
@@ -2073,7 +2073,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 for( UInt32 i=0; i<validEltsIdx.size(); i++ )
                 {
                     Int32 eltIdx = validEltsIdx[i];
-                    Bool isSnrHigh = false;
+                    bool isSnrHigh = false;
                     Int32 nrays = m_Elements[eltIdx]->GetSize();
                     for(Int32 iray=0; iray<nrays; iray++)
                     {
@@ -2526,7 +2526,7 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter)
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
 
-    Bool enableMinMaxLog = false;
+    bool enableMinMaxLog = false;
     if(enableMinMaxLog)
     {
         //check the model min/max values
@@ -3064,7 +3064,7 @@ Int32 CLineModelFitting::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, 
 //std::vector<Float64>& ampsfitted, std::vector<Float64>& ampsErrfitted, Float64& velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = true;
+    bool verbose = true;
 
     if(verbose)
     {
@@ -3541,7 +3541,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32
                                                                    const CSpectrumFluxAxis& continuumfluxAxis,
                                                                    std::vector<Float64>& ampsfitted,
                                                                    std::vector<Float64>& errorsfitted,
-                                                                   Bool enableOffsetFitting)
+                                                                   bool enableOffsetFitting)
 {
     Int32 ret=-1;
     Int32 nSteps = int((m_LambdaOffsetMax-m_LambdaOffsetMin)/m_LambdaOffsetStep+0.5);
@@ -4109,7 +4109,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
  * SetLyaProfile should be part of CLineModelFitting, and rather takes a CLineModelFitting as argument.
  * This is mainly because no ch
 */
-Bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
+bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
                                         bool forceLyaFitting,
                                         const Float64 nsigmasupport)
 {
@@ -6050,7 +6050,7 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog(const TFloat64Range& lambdaR
  * @param iCatalog
  * @return
  */
-Bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
+bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
 {
     if(iCatalog<0){
         return false;
@@ -6074,7 +6074,7 @@ Bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
  * @param iCatalog
  * @return
  */
-Bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
+bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
 {
     //first set all amplitudes to 0.0
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )

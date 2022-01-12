@@ -79,8 +79,8 @@ namespace NSEpic
             const TProfile& GetName();
             virtual const TAsymParams GetAsymParams(){return {NAN,NAN,NAN};};
             virtual Float64 GetAsymDelta();
-            virtual Bool isAsymFit();
-            virtual Bool isAsymFixed();
+            virtual bool isAsymFit();
+            virtual bool isAsymFixed();
             virtual void SetAsymParams(TAsymParams params){};
             virtual void resetAsymFitParams();
             CLineProfile(const CLineProfile & other) = default; 
@@ -127,11 +127,11 @@ namespace NSEpic
         return 0.;//default. Mainly used for asylfit/fixed
     }
     inline
-    Bool CLineProfile::isAsymFit(){
+    bool CLineProfile::isAsymFit(){
         return 0; //default to no
     }
     inline
-    Bool CLineProfile::isAsymFixed(){
+    bool CLineProfile::isAsymFixed(){
         return 0; //default to no
     }
     inline

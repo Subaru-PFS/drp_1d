@@ -74,18 +74,18 @@ public:
                   Float64 meritcut = 0.0,  // no cut
                   UInt32 maxCandidate=10, // max number of candidate at the end
                   const std::string & Id_prefix="EXT",
-                  Bool allow_extrema_at_border=true,
+                  bool allow_extrema_at_border=true,
                   UInt32 maxPeakCount_per_window=0,  // <=0 will be set to maxCandidate (default to one window)
                   const std::vector<TFloat64List> & candidatesRedshifts = std::vector<TFloat64List>(1) ,
                   const TStringList & candidatesIds = TStringList(1)
                 );
 
     
-  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(const ChisquareArray & chisquares, Bool integ=true);
+  std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> Compute(const ChisquareArray & chisquares, bool integ=true);
 
     void CombinePDF(const ChisquareArray & chisquares);
 
-    Bool checkPdfSum() const;
+    bool checkPdfSum() const;
 
     std::shared_ptr<CPdfMargZLogResult> m_postmargZResult;
 
@@ -116,7 +116,7 @@ private:
     const UInt32 m_maxPeakCount_per_window;
     const UInt32 m_maxCandidate;
     const Float64  m_peakSeparation;
-    const Bool m_allow_extrema_at_border;
+    const bool m_allow_extrema_at_border;
     const Float64  m_meritcut;
     const std::string m_Id_prefix;// =  "EXT"; // for "extrema"
 

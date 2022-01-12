@@ -128,7 +128,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
                           Float64 redshiftTolerance = tol*(1+(redShift+redShift2)*0.5);
                           if( fabs( (redShift-redShift2) )<=redshiftTolerance )
                           {
-                              Bool found = false;
+                              bool found = false;
                               //avoid repeated solution sets
                               for( UInt32 iSet=0; iSet<solution.size(); iSet++ )
                               {
@@ -164,7 +164,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
   {
       CRayMatchingResult::TSolutionSet currentSet = solutions[iSol];
       sort( currentSet.begin(), currentSet.end() );
-      Bool found = false;
+      bool found = false;
       for( UInt32 iNewSol=0; iNewSol<newSolutions.size(); iNewSol++ )
       {
           if( AreSolutionSetsEqual( newSolutions[iNewSol],currentSet ) )
@@ -219,13 +219,13 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
  * Given 2 TSolutionSets, returns true if they are equivalent (have the same line values), false otherwise.
  * The algorithm only works reliably if the inputs are sorted.
  */
-Bool CRayMatching::AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet& s1, const CRayMatchingResult::TSolutionSet& s2 )
+bool CRayMatching::AreSolutionSetsEqual( const CRayMatchingResult::TSolutionSet& s1, const CRayMatchingResult::TSolutionSet& s2 )
 {
   if( s1.size() != s2.size() ) 
     {
       return false;
     }
-  Bool diffFound = false;
+  bool diffFound = false;
   for( UInt32 iSet=0; iSet<s1.size(); iSet++ )
     {
       if( s1[iSet].DetectedRay!=s2[iSet].DetectedRay || s1[iSet].RestRay!=s2[iSet].RestRay || s1[iSet].Redshift!=s2[iSet].Redshift )

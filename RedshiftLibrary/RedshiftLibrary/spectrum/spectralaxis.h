@@ -89,19 +89,19 @@ public:
     TInt32Range         GetIndexesAtWaveLengthRange( const TFloat64Range& waveLengthRange ) const;
 
 
-    Bool                ConvertToLinearScale();
-    Bool                ConvertToLogScale();
+    bool                ConvertToLinearScale();
+    bool                ConvertToLogScale();
     bool                IsInLogScale() const;
-    Bool                IsInLinearScale() const;
+    bool                IsInLinearScale() const;
 
     TLambdaRange        GetLambdaRange() const;
-    Bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
+    bool                ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const;
     void                GetMask( const TFloat64Range& range,  CMask& mask ) const;
     Float64             IntersectMaskAndComputeOverlapRate( const TFloat64Range& lambdaRange,  const CMask& omask ) const;
     void                SetLogScale();
-    Bool                CheckLoglambdaSampling()const;
-    Bool                IsLogSampled(Float64 logGridstep)const;
-    Bool                IsLogSampled()const;
+    bool                CheckLoglambdaSampling()const;
+    bool                IsLogSampled(Float64 logGridstep)const;
+    bool                IsLogSampled()const;
     Float64             GetlogGridStep() const;
     void                RecomputePreciseLoglambda();
     TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;

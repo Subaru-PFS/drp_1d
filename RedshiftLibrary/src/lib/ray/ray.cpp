@@ -124,12 +124,12 @@ const TAsymParams CRay::GetAsymParams()
     return m_Profile->GetAsymParams();
 }
 
-Bool CRay::GetIsStrong() const
+bool CRay::GetIsStrong() const
 {
     return m_Force == nForce_Strong;
 }
 
-Bool CRay::GetIsEmission() const
+bool CRay::GetIsEmission() const
 {
     return m_Type == nType_Emission;
 }

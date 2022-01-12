@@ -96,8 +96,8 @@ public:
     bool operator != (const CRay& str) const;
 
     Int32               GetID() const;
-    Bool                GetIsStrong() const;
-    Bool                GetIsEmission() const;
+    bool                GetIsStrong() const;
+    bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
     std::shared_ptr<CLineProfile>        GetProfile() const;

@@ -147,7 +147,7 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
     CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
     //Loop on the meiksin Idx
-    Bool igmLoopUseless_WavelengthRange = false;
+    bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kM=0; kM<MeiksinListSize; kM++)
     {
         if(igmLoopUseless_WavelengthRange)
@@ -426,7 +426,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
                                                               Int32 opt_extinction,
                                                               Int32 opt_dustFitting,
                                                               CPriorHelper::TPriorZEList logpriorze,
-                                                              Bool keepigmism,
+                                                              bool keepigmism,
                                                               Float64 FitEbmvCoeff,
                                                               Int32 FitMeiksinIdx)
 {

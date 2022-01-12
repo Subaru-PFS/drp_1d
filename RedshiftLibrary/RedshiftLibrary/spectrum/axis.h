@@ -80,7 +80,7 @@ public:
     virtual void             SetSize( UInt32 s );
     void                     clear();
     CSpectrumAxis            extract(Int32 startIdx, Int32 endIdx) const;
-    Bool isEmpty() const ;
+    bool isEmpty() const ;
 protected:
 
     TAxisSampleList          m_Samples;
@@ -133,7 +133,7 @@ const TAxisSampleList& CSpectrumAxis::GetSamplesVector() const
     return m_Samples;
 }
 inline
-Bool CSpectrumAxis::isEmpty() const{
+bool CSpectrumAxis::isEmpty() const{
     return m_Samples.size()==0;
 }
 

@@ -281,7 +281,7 @@ bool CSpectrumSpectralAxis::IsInLogScale() const
 /**
  *
  */
-Bool CSpectrumSpectralAxis::IsInLinearScale() const
+bool CSpectrumSpectralAxis::IsInLinearScale() const
 {
     return !m_isLogScale;;
 }
@@ -364,7 +364,7 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat6
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
+bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
     TFloat64Range effectiveRange = GetLambdaRange();
 
@@ -425,7 +425,7 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ConvertToLinearScale()
+bool CSpectrumSpectralAxis::ConvertToLinearScale()
 {
     if( !m_isLogScale )
         return true;
@@ -443,7 +443,7 @@ Bool CSpectrumSpectralAxis::ConvertToLinearScale()
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ConvertToLogScale()
+bool CSpectrumSpectralAxis::ConvertToLogScale()
 {
     if( m_isLogScale )
         return true;
@@ -466,7 +466,7 @@ void CSpectrumSpectralAxis::SetLogScale()
 /**
  * Check if spectralAxis is well rebinned in log
 */
-Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
+bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
 {
     Float64 logGridStep;
     if(IsInLogScale())
@@ -511,7 +511,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
  * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
  * 
 */
-Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
+bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
 {       
     if (!IsLogSampled() )
         return false;
@@ -525,7 +525,7 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
     return true;
 }
 
-Bool CSpectrumSpectralAxis::IsLogSampled() const
+bool CSpectrumSpectralAxis::IsLogSampled() const
 {
     if(indeterminate(m_isLogSampled)) 
         CheckLoglambdaSampling();

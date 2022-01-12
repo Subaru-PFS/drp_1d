@@ -167,7 +167,7 @@ Int32 CDeltaz::Compute(const TFloat64List & merits, const TFloat64List & redshif
 Int32 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma)
 {
     sigma = -1.0; //default value
-    Bool verbose = false;
+    bool verbose = false;
     
     //quadratic fit
     Int32 i, n;

@@ -108,7 +108,7 @@ public:
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
     Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate>& tpl, Float64 zcontinuum);
-    Bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
+    bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
                         const TFloat64List& redshifts,
                         Float64 overlapThreshold,
                         std::vector<CMask> maskList,
@@ -155,7 +155,7 @@ public:
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
 
-    Bool initDtd(const TFloat64Range& lambdaRange);
+    bool initDtd(const TFloat64Range& lambdaRange);
     Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent);
     Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
     Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
@@ -193,7 +193,7 @@ public:
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
 
 
-    Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
+    bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
     Float64 fit(Float64 redshift,
                 const TFloat64Range& lambdaRange,
@@ -202,11 +202,11 @@ public:
                 Int32 contreest_iterations=0,
                 bool enableLogging=0);
 
-    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
+    bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
     void initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
-    Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
-    Bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);
+    bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity=false);
+    bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
@@ -341,7 +341,7 @@ private:
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
     Int32 fitAmplitudesLinSolve(const std::vector<UInt32> & EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
-    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
+    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, bool enableOffsetFitting);
 
     Int32 fitAmplitudesLinesAndContinuumLinSolve(const std::vector<UInt32> & EltsIdx,
                                                  const TFloat64Range& lambdaRange,
@@ -356,12 +356,12 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
 
-    Bool setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
+    bool setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
                                         bool forceLyaFitting,
                                         const Float64 nsigmasupport);
 
-    Bool SetMultilineNominalAmplitudes(Int32 iLine);
-    Bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+    bool SetMultilineNominalAmplitudes(Int32 iLine);
+    bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
    
     Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
     TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 

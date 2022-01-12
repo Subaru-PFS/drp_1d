@@ -140,8 +140,8 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
     m_cut = paramStore->GetScoped<Float64>( "linematching.cut");
     m_detectioncut = paramStore->GetScoped<Float64>( "linematching.detectioncut");
     m_detectionnoiseoffset = paramStore->GetScoped<Float64>( "linematching.detectionnoiseoffset");
-    m_disablegaussianfitqualitycheck = paramStore->GetScoped<Bool>( "linematching.disablegaussianfitqualitycheck");
-    m_dynamicLinematching = paramStore->GetScoped<Bool>( "linematching.dynamicLinematching");
+    m_disablegaussianfitqualitycheck = paramStore->GetScoped<bool>( "linematching.disablegaussianfitqualitycheck");
+    m_dynamicLinematching = paramStore->GetScoped<bool>( "linematching.dynamicLinematching");
     m_enlargeRate = paramStore->GetScoped<Float64>( "linematching.enlargeRate");
     linetypeStr = paramStore->GetScoped<std::string>( "linematching.linetype");
     m_maxsize = paramStore->GetScoped<Float64>( "linematching.maxsize");
@@ -232,9 +232,9 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
   Float64 minimumFwhhMaximum = 1e1;
   Float64 minimumFwhhStep = ( minimumFwhhMaximum - minimumFwhhMinimum ) / 5;
   Int32 minimumNumberOfPeaks = 200;
-  Bool newValues = false;
+  bool newValues = false;
   Int32 numberOfPeaksBest = -1;
-  Bool numberOfPeaksBestBypass = false;
+  bool numberOfPeaksBestBypass = false;
   Int32 previousNumberOfPeaks = -1;
   Float64 strongcutBest = m_strongcut;
   auto strongcutCurrent = m_strongcut;

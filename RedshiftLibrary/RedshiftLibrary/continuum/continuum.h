@@ -59,7 +59,7 @@ public:
     CContinuum();
     virtual ~CContinuum();
 
-    virtual Bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) = 0;
+    virtual bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) = 0;
 
 private:
 

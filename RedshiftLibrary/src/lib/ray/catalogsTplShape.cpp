@@ -59,7 +59,7 @@ using namespace std;
 using namespace boost;
 
 
-Bool CRayCatalogsTplShape::Init( std::string calibrationPath, 
+bool CRayCatalogsTplShape::Init( std::string calibrationPath, 
                                 std::string opt_tplratioCatRelPath, 
                                 Int32 enableISMCalzetti, 
                                 std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
@@ -92,7 +92,7 @@ Bool CRayCatalogsTplShape::Init( std::string calibrationPath,
 }
 
 
-Bool CRayCatalogsTplShape::Load( const char* dirPath )
+bool CRayCatalogsTplShape::Load( const char* dirPath )
 {
     // Clear current catalog list
     m_RayCatalogList.clear();
@@ -400,7 +400,7 @@ Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx)
     return m_IsmIndexes[idx];
 }
 
-Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
+bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
 {
     elv = m_ELvelocities[idx];
     alv = m_ABSvelocities[idx];
@@ -408,7 +408,7 @@ Bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 }
 
 
-Bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
+bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
     for( UInt32 iElts=0; iElts<LineModelElementList.size(); iElts++ )

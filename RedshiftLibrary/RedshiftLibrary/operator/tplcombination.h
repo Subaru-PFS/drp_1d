@@ -73,7 +73,7 @@ public:
                                              Int32 opt_extinction=0, 
                                              Int32 opt_dustFitting=0,
                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
-                                             Bool keepigmism = false,
+                                             bool keepigmism = false,
                                              Float64 FitEbmvCoeff=-1.,
                                              Int32 FitMeiksinIdx=-1);
 

@@ -87,7 +87,7 @@ namespace NSEpic
     Int32 getIndexAmpOffset(UInt32 index);
     void setAmplitudeOffsetsCoeffsAt(UInt32 index,Float64 x0,Float64 x1,Float64 x2);
     Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
-    Bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis);
+    bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis);
 
     bool IsElementIndexInDisabledList(Int32 index);
     void SetElementIndexesDisabledAuto();

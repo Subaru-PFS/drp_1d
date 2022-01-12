@@ -56,7 +56,7 @@ public:
     CContinuumStandard();
     ~CContinuumStandard();
 
-    Bool Remove( CSpectrum& s );
+    bool Remove( CSpectrum& s );
 
 private:
 
