@@ -79,6 +79,8 @@
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
 %shared_ptr(CPhotometricData)
+%shared_ptr(CPhotometricBand)
+%shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
 
 %feature("director");
