@@ -85,7 +85,7 @@ class AbstractSpectrumReader:
         self.photometric_data = []
         self._spectra = []
         self.w_frame = 'vacuum'
-        self.parameters = parameters
+        self.parameters = parameters.copy()
         self.calibration_library = calibration_library
         self.source_id = source_id
 

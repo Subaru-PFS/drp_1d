@@ -145,7 +145,9 @@ class CalibrationLibrary:
 
     def load_lsf(self):
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
-            with fits.open(self.parameters["LSF"]["GaussianVariablewidthFileName"]) as hdul:
+            file = os.path.join(self.calibration_dir,
+                                self.parameters["LSF"]["GaussianVariablewidthFileName"])
+            with fits.open(file) as hdul:
                 self.lsf["wave"] = hdul[1].data.field(0)
                 self.lsf["width"] = hdul[1].data.field(1)
 
@@ -175,6 +177,10 @@ class CalibrationLibrary:
                     linecatalog_loaded = True
             if not linecatalog_loaded:
                 self.load_empty_line_catalog(object_type)
+
+        if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
+            self.load_lsf()
+
         if "photometryTransmissionDir" in self.parameters:
             self.load_photometric_bands()
 

@@ -73,9 +73,9 @@ public:
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) const;
     Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
-    void    getWidth(Int32 subeIdx, Float64 redshift, 
-                    Float64& mu, Float64& sigma, 
-                    Bool doAsymfitdelta) const;
+    void    getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
+                                            Float64& mu, Float64& sigma, 
+                                            Bool doAsymfitdelta=true) const;
     std::string GetElementTypeTag();
 
     void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,

@@ -389,14 +389,13 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpe
  **/
 void CLineModelElement::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
-    Float64 mu = NAN;
-    Float64 sigma = NAN;
+    Float64 mu =  GetObservedPosition(subeIdx, redshift);
     if( !m_LSF->checkAvailability(mu) )
     {
         m_OutsideLambdaRangeList[subeIdx] = true; 
         return;
     }
-    getWidth(subeIdx, redshift, mu, sigma, true);// do not apply Lya asym offset
+    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
     Float64 winsize = m_profile[subeIdx]->GetNSigmaSupport()*sigma;
     TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
@@ -683,9 +682,9 @@ TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 subeIdx)
 /**
  * \brief Calls GetLineWidth using the arguments and a calculated argument mu.
  **/
-void CLineModelElement::getWidth(Int32 subeIdx, Float64 redshift, 
-                                 Float64& mu, Float64& sigma, 
-                                 Bool doAsymfitdelta) const
+void CLineModelElement::getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
+                                                        Float64& mu, Float64& sigma, 
+                                                        Bool doAsymfitdelta) const
 {
     mu = GetObservedPosition(subeIdx, redshift, doAsymfitdelta);
     if( !m_LSF->checkAvailability(mu) )
@@ -721,7 +720,7 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redsh
 {
     Float64 mu = NAN;
     Float64 sigma = NAN;
-    getWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
+    getObservedPositionAndLineWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
     return m_profile[subeIdx]->GetLineProfile(x, mu, sigma);
 }
 
@@ -1182,7 +1181,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& 
             Float64 A = m_FittedAmplitudes[k];
             Float64 mu = NAN;
             Float64 sigma = NAN;
-            getWidth(k, redshift, mu, sigma, false);
+            getObservedPositionAndLineWidth(k, redshift, mu, sigma, false);
 
             if(m_SignFactors[k]==-1){
                 flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma, m_Rays[k].GetIsEmission());
@@ -1307,7 +1306,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Flo
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 mu = NAN;
         Float64 sigma = NAN;
-        getWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
+        getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
         if(m_SignFactors[k2]==1){
             Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
@@ -1340,7 +1339,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshi
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 mu = NAN;
         Float64 sigma = NAN;
-        getWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
+        getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
         if(m_SignFactors[k2]==1){
             Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
