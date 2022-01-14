@@ -41,6 +41,14 @@
 
 #include "RedshiftLibrary/continuum/continuum.h"
 
+namespace continuum_test { //boost_test_suite
+    //all boost_auto_test_case that use private method
+    class mean_test; 
+    class median_test;
+    class evenMirror_test;
+    class oddMirror_test;
+    class fitBorder_test;
+}
 namespace NSEpic
 {
 
@@ -67,6 +75,11 @@ public:
 
 
 private:
+    friend class continuum_test::mean_test;
+    friend class continuum_test::median_test;
+    friend class continuum_test::evenMirror_test;
+    friend class continuum_test::oddMirror_test;
+    friend class continuum_test::fitBorder_test;
 
     TFloat64List MedianSmooth( const TFloat64List &y, Int32 n_range);
     TFloat64List MeanSmooth( const TFloat64List &y, Int32 n);
