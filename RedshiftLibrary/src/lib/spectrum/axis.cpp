@@ -53,7 +53,6 @@ CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
     {
         m_Samples[i] = samples[i];
     }
-    resetAxisProperties();
 }
 
 

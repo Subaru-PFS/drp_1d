@@ -102,30 +102,29 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origi
 }
 
 CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Float64 value):
-    CSpectrumAxis(n,value),    
-    m_isLogScale(false),
-    m_isSorted(false)
+    CSpectrumAxis(n,value)
 {}
 
 CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator*=(const Float64 op)
 {
     CSpectrumAxis::operator*=(op);
-    if(op<=0 && !indeterminate(m_isSorted)) m_isSorted =!m_isSorted;
+    if(op<0 && !indeterminate(m_isSorted)) m_isSorted =!m_isSorted;
+    if(!op) m_isSorted = (GetSamplesCount()<2);
     if(m_isLogScale) m_isLogSampled = indeterminate;
     return *this;
 }
 void CSpectrumSpectralAxis::MaskAxis(const TFloat64List& mask, CSpectrumSpectralAxis& maskedSpcAxis) const 
 {
-    CSpectrumAxis maskedAxis; 
-    CSpectrumAxis::MaskAxis(mask, maskedAxis);
-    maskedSpcAxis = CSpectrumSpectralAxis(maskedAxis);
+    CSpectrumAxis::MaskAxis(mask, maskedSpcAxis);
     maskedSpcAxis.m_isSorted = m_isSorted;
+    if(maskedSpcAxis.GetSamplesCount()<2) maskedSpcAxis.m_isSorted = true;
     maskedSpcAxis.m_isLogSampled = indeterminate;
 
 }
 void CSpectrumSpectralAxis::SetSize( UInt32 s )
 {
-    if(!s || GetSamplesCount()<s) resetAxisProperties();
+    if(s<2) m_isSorted = true;
+    else{if(GetSamplesCount()<s) resetAxisProperties();}
 }
 /**
  * Shift current axis the input offset in the input direction.
@@ -168,8 +167,6 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
     if( origin.IsInLogScale() )
     {
         wavelengthOffset = log( wavelengthOffset );
-        if(wavelengthOffset<0.)
-            throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::ShiftByWaveLength: wavelengthOffset can not be negative");
 
         if( direction == nShiftForward )
         {

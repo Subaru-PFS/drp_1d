@@ -527,9 +527,9 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
     Int32 iend = 3;
     Int32 s = iend-istart+1;
 
-    TFloat64List correctSpcAxis{2.,3.,4.};
-    TFloat64List correctFluxAxis{4.,6.,8};
-    TFloat64List correctNoiseAxis{-2.,-3.,-4.};
+    const TFloat64List correctSpcAxis{2.,3.,4.};
+    const TFloat64List correctFluxAxis{4.,6.,8};
+    const TFloat64List correctNoiseAxis{-2.,-3.,-4.};
 
     ///////////////////////////
     CSpectrumAxis axis_extract = axis.extract(istart,iend);
@@ -537,10 +537,10 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
     CSpectrumNoiseAxis noiseAxis_extract = noiseAxis.extract(istart,iend);
     CSpectrumFluxAxis  fluxAxis_extract = fluxAxis.extract(istart,iend);
 
-    const TFloat64List extractedAxis1 = axis_extract.GetSamplesVector();
-    const TFloat64List extractedSpcAxis1 = spcAxis_extract.GetSamplesVector();
-    const TFloat64List extractedFluxAxis1 = fluxAxis_extract.GetSamplesVector();
-    const TFloat64List extractedNoiseAxis1 = noiseAxis_extract.GetSamplesVector();
+    const TFloat64List& extractedAxis1 = axis_extract.GetSamplesVector();
+    const TFloat64List& extractedSpcAxis1 = spcAxis_extract.GetSamplesVector();
+    const TFloat64List& extractedFluxAxis1 = fluxAxis_extract.GetSamplesVector();
+    const TFloat64List& extractedNoiseAxis1 = noiseAxis_extract.GetSamplesVector();
     
     BOOST_CHECK(extractedAxis1.size() == s); 
     BOOST_CHECK(extractedSpcAxis1.size() == s); 
@@ -549,9 +549,9 @@ BOOST_AUTO_TEST_CASE(ExtractTest)
     ////////////////////////////
     //read results 
     CSpectrum extractedSpc = spc.extract(istart,iend);
-    TFloat64List extractedSpcAxis = extractedSpc.GetSpectralAxis().GetSamplesVector();
-    TFloat64List extractedFluxAxis = extractedSpc.GetFluxAxis().GetSamplesVector();
-    TFloat64List extractedNoiseAxis = extractedSpc.GetFluxAxis().GetError().GetSamplesVector();
+    const TFloat64List& extractedSpcAxis = extractedSpc.GetSpectralAxis().GetSamplesVector();
+    const TFloat64List& extractedFluxAxis = extractedSpc.GetFluxAxis().GetSamplesVector();
+    const TFloat64List& extractedNoiseAxis = extractedSpc.GetFluxAxis().GetError().GetSamplesVector();
 
     //check results
     //check size is correct
