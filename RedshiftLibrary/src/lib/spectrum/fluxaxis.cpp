@@ -129,8 +129,6 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
 
         (*this)[i] = median.Find( tmp.GetSamples()+left, ( right - left ) +1 );
     }
-
-    resetAxisProperties();
     return true;
 }
 

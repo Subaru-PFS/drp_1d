@@ -132,13 +132,13 @@ BOOST_AUTO_TEST_CASE(XMadFind){
 BOOST_AUTO_TEST_CASE(ComputeFluxes){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   CSpectrum spc = CSpectrum();
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(10, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  CSpectrumSpectralAxis spectralAxis(10, false );
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
 
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(10);
+  CSpectrumFluxAxis modelfluxAxis(10);
   Float64* modelSamples = modelfluxAxis.GetSamples();
   modelSamples[0] = 1.;
   modelSamples[1] = 1.;
@@ -225,9 +225,9 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(Retest){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
@@ -420,9 +420,9 @@ BOOST_AUTO_TEST_CASE(Compute){
 
   Int32 n = 2000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
