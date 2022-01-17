@@ -115,7 +115,7 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
     if( GetSamplesCount() < ( kernelHalfWidth ) + 1 )
         return false;
 
-    CSpectrumAxis tmp = *this;
+    const CSpectrumAxis tmp = *this;
 
     Int32 left = 0;
     Int32 right = 0;
@@ -130,6 +130,7 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
         (*this)[i] = median.Find( tmp.GetSamples()+left, ( right - left ) +1 );
     }
 
+    resetAxisProperties();
     return true;
 }
 

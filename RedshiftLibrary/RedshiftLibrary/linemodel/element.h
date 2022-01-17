@@ -95,7 +95,7 @@ public:
 
     Float64 GetContinuumAtCenterProfile(
         Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
-        Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis);
+        Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis);
 
     void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
@@ -126,12 +126,12 @@ public:
     void
     addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                        CSpectrumFluxAxis &modelfluxAxis,
-                       CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
+                       const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
                        Int32 lineIdx = -1);
     void
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
-                               CSpectrumFluxAxis &continuumFluxAxis,
+                               const CSpectrumFluxAxis &continuumFluxAxis,
                                Float64 redshift, bool emissionRay);
 
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,

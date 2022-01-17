@@ -145,7 +145,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
     auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum->GetName());
     CMask mskRebinedLog;
 
-    CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(lambdaRange_spc, loglambda_count_spc);
+    const CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(lambdaRange_spc, loglambda_count_spc);
 
     TFloat64Range spcLbdaRange(targetSpectralAxis[0] - 0.5 * m_logGridStep,
                             targetSpectralAxis[loglambda_count_spc-1] + 0.5 * m_logGridStep);
@@ -214,7 +214,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"CSpectrumLogRebinning::LoglambdaRebinTemplate overlap found to be lower than 1.0 for the template "<< tpl->GetName().c_str());
     }
 
-    CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(lambdaRange_tpl,
+    const CSpectrumSpectralAxis targetSpectralAxis =  computeTargetLogSpectralAxis(lambdaRange_tpl,
                                                                             loglambda_count_tpl);
 
     if(targetSpectralAxis[loglambda_count_tpl-1]< targetSpectralAxis[0])

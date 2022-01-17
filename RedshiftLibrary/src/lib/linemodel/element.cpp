@@ -368,7 +368,7 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit)
  * @return the continuum flux val at the sub element center wavelength. Error returns -999/-9999 if center profile not in range
  *
  */
-Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)
+Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
 
@@ -1123,7 +1123,7 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
 /**
  * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
  **/
-void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
+void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
     {
@@ -1158,7 +1158,8 @@ void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelsp
     return;
 }
 
-void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay)
+void CLineModelElement::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, 
+                                                    const CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay)
 {
     if(m_OutsideLambdaRange){
         return;
