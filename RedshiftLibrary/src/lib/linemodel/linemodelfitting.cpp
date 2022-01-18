@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/ray/regulament.h"
 #include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/catalogsOffsets.h"
 #include "RedshiftLibrary/ray/linetags.h"
 #include "RedshiftLibrary/ray/ray.h"
 
@@ -205,17 +204,6 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
 }
 
 
-void CLineModelFitting::initLambdaOffsets(std::string offsetsCatalogsRelPath)
-{
-  CLineCatalogsOffsets ctlgOffsets = CLineCatalogsOffsets();
-  ctlgOffsets.Init(m_calibrationPath, offsetsCatalogsRelPath);
-  // load static offset catalog, idx=0
-  ctlgOffsets.SetLinesOffsets( m_Elements, 0);
-
-  // load auto stack, hack from reference catalog
-  //std::string spcName = m_inputSpc.GetName();
-  //ctlgOffsets.SetLinesOffsetsAutoSelectStack(*this, spcName);
-}
 
 
 bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)

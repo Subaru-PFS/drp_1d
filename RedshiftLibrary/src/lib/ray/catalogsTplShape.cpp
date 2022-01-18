@@ -194,7 +194,7 @@ bool CRayCatalogsTplShape::Load( const char* dirPath )
             CRayCatalog lineCatalog;
             try
             {
-                lineCatalog.Load( tplshapeCatalogList[ktpl].c_str(), m_nsigmasupport);
+	      ;//lineCatalog.Load( tplshapeCatalogList[ktpl].c_str(), m_nsigmasupport);
             }
             catch (std::string& e)
             {

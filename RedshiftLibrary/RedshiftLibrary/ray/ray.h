@@ -89,7 +89,6 @@ public:
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
-
     CRay( const std::string& name,
           Float64 pos, UInt32 type,
           const CLineProfile &profile,
@@ -105,6 +104,17 @@ public:
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
     
+    CRay( const std::string& name,
+          Float64 pos, UInt32 type,
+          std::shared_ptr<CLineProfile> profile,
+          UInt32 force,
+	  Float64 velocityOffset ,
+	  bool enableVelocityOffset,
+          const std::string& groupName,
+          Float64 nominalAmp,
+          const std::string& velGroupName,
+	  Int32 id);
+
     CRay(const CRay & other); 
     CRay(CRay && other) = default; 
     CRay& operator=(const CRay& other);  
@@ -169,7 +179,7 @@ private:
     Float64         m_NominalAmplitude = 0.;
 
     //for offset fitting
-    bool            m_OffsetFit = false;
+  bool            m_OffsetFit = false; // NB: even if false m_Offset is taken into account -> TODO investigate
 
     //for velocity fitting
     std::string     m_VelGroupName = "";

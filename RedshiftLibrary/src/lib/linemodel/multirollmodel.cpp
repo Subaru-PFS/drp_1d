@@ -232,11 +232,6 @@ bool CMultiRollModel::initTplratioCatalogs(std::string opt_tplratioCatRelPath, I
     return ret;
 }
 
-bool CMultiRollModel::initLambdaOffsets(std::string offsetsCatalogsRelPath)
-{
-    bool ret=-1;
-    return ret;
-}
 
 Int32 CMultiRollModel::getTplshape_count()
 {

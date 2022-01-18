@@ -52,11 +52,6 @@ namespace NSEpic
  * \ingroup Redshift
  * Line catalog allow to store multiple lines description in a single text file.
  *
- * - Each line of the file represent a single Line
- * - Each line begenning with a # is a comment, and is skipped by the parser
- * - Format for each line is as follow:
- *        [Position in agstrum]   [Name of the line]                   [A/E]       [W/S]
- *        ex: 10320   [SII]                   E       W
  */
 class CRayCatalog
 {
@@ -65,9 +60,25 @@ public:
 
     typedef std::vector<CRay> TRayVector;
 
-    bool Add( const CRay& r );
-    void Load( const char* filePath, Float64 nsigmasupport=8.);
-    bool Save( const char* filePath );
+    CRayCatalog();
+    CRayCatalog(Float64 sigmaSupport);
+    ~CRayCatalog();
+
+
+  void Add( const CRay& r );
+  void AddRayFromParams(const std::string& name,
+			const Float64& position,
+			const std::string& type,
+			const std::string& force,
+			const std::string& profile,
+			const TAsymParams& asymParams,
+			const std::string& groupName,
+			const Float64& nominalAmplitude,
+			const std::string& velocityGroup,
+			const Float64& velocityOffset,
+			const bool& enableVelocityFit,
+			const Int32& id);
+  
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
     const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
@@ -77,7 +88,9 @@ public:
 private:
 
     TRayVector m_List;
+    std::map<std::string, TRayVector> rayGroups;
 
+  Float64 m_nSigmaSupport;
 };
 
 }

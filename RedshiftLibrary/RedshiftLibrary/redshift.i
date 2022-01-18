@@ -102,6 +102,7 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
@@ -271,9 +272,28 @@ class PC
 class CRayCatalog
 {
 public:
-    void Load( const char* filePath );
-    bool Save( const char* filePath );
+  CRayCatalog();
+  CRayCatalog(Float64 nSigmaSupport);
+  void AddRayFromParams(const std::string& name,
+			const Float64& position,
+			const std::string& type,
+			const std::string& force,
+			const std::string& profile,
+			const TAsymParams& asymParams,
+			const std::string& groupName,
+			const Float64& nominalAmplitude,
+			const std::string& velocityGroup,
+			const Float64& velocityOffset,
+			const bool& enableVelocityFit,
+			const Int32& id);
+
 };
+
+typedef struct {
+        Float64 sigma, alpha, delta;
+    } TAsymParams;
+TAsymParams makeAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
+
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
 

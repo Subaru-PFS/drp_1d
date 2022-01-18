@@ -1,15 +1,3 @@
-import os
-import logging
-
-import pandas as pd
-from pylibamazed.redshift import (CSpectrumSpectralAxis,
-                                  CSpectrumFluxAxis_withSpectrum,
-                                  CTemplate, CTemplateCatalog,
-                                  CRayCatalog,
-                                  CPhotBandCatalog, CPhotometricBand)
-import numpy as np
-from astropy.io import fits
-import glob
 # ============================================================================
 #
 # This file is part of: AMAZED
@@ -48,6 +36,20 @@ import glob
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+
+import os
+import logging
+
+import pandas as pd
+from pylibamazed.redshift import (CSpectrumSpectralAxis,
+                                  CSpectrumFluxAxis_withSpectrum,
+                                  CTemplate, CTemplateCatalog,
+                                  CRayCatalog,
+                                  CPhotBandCatalog, CPhotometricBand,
+                                  makeAsymParams)
+import numpy as np
+from astropy.io import fits
+import glob
 
 
 class CalibrationLibrary:
@@ -138,7 +140,26 @@ class CalibrationLibrary:
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
         self.line_catalogs[object_type] = CRayCatalog()
-        self.line_catalogs[object_type].Load(os.path.join(self.calibration_dir, line_catalog_file))
+        line_catalog = pd.read_csv(os.path.join(self.calibration_dir, line_catalog_file), sep='\t')
+        for index, row in line_catalog.iterrows():
+            if row.Profile == "ASYM":
+                asymParams = makeAsymParams(1., 4.5, 0.)
+            elif row.Profile == "ASYMFIT":
+                asymParams = makeAsymParams(2., 2., 0.)
+            else:
+                asymParams = makeAsymParams(0, 0, 0)
+            self.line_catalogs[object_type].AddRayFromParams(row.Name,
+                                                             row.RestLength,
+                                                             row.Type,
+                                                             row.Force,
+                                                             row.Profile,
+                                                             asymParams,
+                                                             row.AmplitudeGroup,
+                                                             row.GroupNominalAmplitude,
+                                                             row.VelocityGroup,
+                                                             row.VelocityOffset,
+                                                             row.EnableVelocityOffsetFit,
+                                                             index)
 
     def load_empty_line_catalog(self, object_type):
         self.line_catalogs[object_type] = CRayCatalog()

@@ -60,123 +60,16 @@ using namespace boost;
 BOOST_AUTO_TEST_SUITE(Ray)
 
 //
-NSEpic::TFloat64List UtilLoadDetectedRayPositions( const char* filePath ){
-    TFloat64List posList;
-
-    ifstream file;
-    file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-        return posList;
-
-    string line;
-
-    // Read file line by line
-    while( getline( file, line ) )
-    {
-        char_separator<char> sep(" \t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() && *it != "#" )
-        {
-            // Parse name
-            string name;
-            if( it != tok.end() )
-            {
-                name = *it;
-            }
-            else
-            {
-                return posList;
-            }
-
-            ++it;
-            // Parse position
-            double pos = 0.0;
-            try
-            {
-                pos = lexical_cast<double>(*it);
-            }
-            catch (bad_lexical_cast&)
-            {
-                pos = 0.0;
-                return posList;
-            }
-            posList.push_back(pos);
-
-        }
-    }
-    file.close();
-
-    return posList;
-}
-
-
-//
-NSEpic::TFloat64List UtilLoadRayMatchingResults( const char* filePath ){
-    TFloat64List zList;
-
-    ifstream file;
-    file.open( filePath, ifstream::in );
-    if( file.rdstate() & ios_base::failbit )
-        return zList;
-
-    string line;
-
-    // Read file line by line
-    while( getline( file, line ) )
-    {
-        char_separator<char> sep("\t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        double z = -1.0;
-        ttokenizer::iterator it = tok.begin();
-        std::string str = *it;
-        std::string str1 = str.substr(0,1);
-        int comment = strcmp(str1.c_str(), "#");
-        if(comment != 0){
-            if( it != tok.end() )
-            {
-                while(it != tok.end()){
-
-
-                    try
-                    {
-                        z = lexical_cast<double>(*it);
-                    }
-                    catch (bad_lexical_cast&)
-                    {;
-                    }
-                    ++it;
-
-                }
-
-            }
-
-            zList.push_back(z);
-        }
-    }
-
-    file.close();
-    return zList;
-}
 
 
 BOOST_AUTO_TEST_CASE(LoadCatalog)
 {
     CRayCatalog catalog;
 
-    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
-    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ),
-		      GlobalException);
+    // TODO this test should be moved to python
+    //    BOOST_CHECK_NO_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_OK1.txt" ));
+    //    BOOST_CHECK_THROW(catalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_NOK1.txt" ),
+    //		      GlobalException);
 
 }
 
@@ -184,9 +77,13 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
 BOOST_AUTO_TEST_CASE(MatchingTest1)
 {
     CRayCatalog restFrameCatalog;
+    TAsymParams asymP;
+    restFrameCatalog.AddRayFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,0);
+    restFrameCatalog.AddRayFromParams("Hbeta",4861.3,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,1);
+    restFrameCatalog.AddRayFromParams("Hgamma",4340.4,"E","W","SYM",asymP,"",1.,"E1",INFINITY,false,2);
+    restFrameCatalog.AddRayFromParams("Hdelta",4101.7,"E","W","SYM",asymP,"",1.,"E1",INFINITY,false,3);
 
-    BOOST_CHECK_NO_THROW(restFrameCatalog.Load( DATA_ROOT_DIR "RayTestCase/raycatalog_testMatch1.txt" ));
-
+    
     CRayCatalog detectedCatalog;
     Float64 shiftLambda = 1.5;
     CRayCatalog::TRayVector cataloglist = restFrameCatalog.GetList();
@@ -205,7 +102,7 @@ BOOST_AUTO_TEST_CASE(MatchingTest1)
     Float64 res = result->GetMeanRedshiftSolutionByIndex(0);
     BOOST_CHECK( fabs(res-(shiftLambda-1)) < 0.0001 );
 
-}
+}/*
 
 BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
 // load raydetection results from VVDS DEEP and compare results with EZ python EZELMatch results
@@ -256,5 +153,5 @@ BOOST_AUTO_TEST_CASE(MatchingTest2_EzValidationTest)
         BOOST_CHECK( found );
     }
 }
-
+ */
 BOOST_AUTO_TEST_SUITE_END()

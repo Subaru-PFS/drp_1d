@@ -78,6 +78,37 @@ CRay::CRay(const string& name,
 {}
 
 CRay::CRay(const string& name,
+           Float64 pos,
+	   UInt32 type,
+           std::shared_ptr<CLineProfile> profile,
+           UInt32 force,
+	   Float64 velocityOffset,
+	   bool enableVelocityOffset,
+           const std::string& groupName,
+           Float64 nominalAmp,
+           const string &velGroupName,
+	   Int32 id):
+  m_Name(name),
+  m_Pos(pos),
+  m_Type(type),
+  m_Force(force),
+  m_Amp(-1.0),
+  m_Width(-1.0),
+  m_Cut(-1.0),
+  m_Profile(profile->Clone()),
+  m_PosFitErr(-1.0),
+  m_SigmaFitErr(-1.0),
+  m_AmpFitErr(-1.0),
+  m_GroupName(groupName),
+  m_NominalAmplitude(nominalAmp),
+  m_VelGroupName(velGroupName),
+  m_id(id),
+  m_Offset(velocityOffset),
+  m_OffsetFit(enableVelocityOffset)
+{
+}
+
+CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
            const CLineProfile &profile,
            UInt32 force,
@@ -157,6 +188,7 @@ CRay& CRay::operator=(const CRay& other)
 
     return *this;
 }
+
 
 bool CRay::operator < (const CRay& str) const
 {

@@ -48,9 +48,12 @@ namespace NSEpic
     * struct that holds ASYMFIXED profile parameters
     */
     typedef struct {
+      
         Float64 sigma, alpha, delta;
     } TAsymParams;
-    
+
+
+  
     enum TProfile
     {
         NONE,
@@ -139,5 +142,15 @@ namespace NSEpic
     void CLineProfile::resetAsymFitParams(){
         return;
     }
+  inline
+  TAsymParams makeAsymParams(Float64 sigma,Float64 alpha,Float64 delta)
+  {
+    TAsymParams ret;
+    ret.sigma= sigma;
+    ret.alpha = alpha;
+    ret.delta = delta;
+    return ret;
+  };
+
 }
 #endif
