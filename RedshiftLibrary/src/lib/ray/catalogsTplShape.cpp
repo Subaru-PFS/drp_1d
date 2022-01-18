@@ -523,7 +523,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
             std::vector<Float64> ampsCorrected;
             ampsCorrected.resize(linemodelAmplitudes.size());
             Float64 fit = GetFit(linemodelAmplitudes, linemodelErrors, tplshapeAmplitudes, ampsCorrected);
-            if(fit>0.0 && !boost::math::isnan(fit) && (fit<coeffMin || coeffMin==-1))
+            if(fit>0.0 && !std::isnan(fit) && (fit<coeffMin || coeffMin==-1))
             {
                 coeffMin = fit;
                 bestFitAmplitudes = ampsCorrected;
