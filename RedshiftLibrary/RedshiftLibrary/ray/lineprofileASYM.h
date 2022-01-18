@@ -53,10 +53,7 @@ namespace NSEpic
             CLineProfileASYM(const Float64 nsigmasupport = 8.0, 
                             const TAsymParams params = {1., 4.5, 0.}, 
                             const std::string centeringMethod = "none");
-            CLineProfileASYM(const TProfile pltype,
-                            const Float64 nsigmasupport = 8.0, 
-                            const TAsymParams params = {2., 2.5, 0.}, 
-                            const std::string centeringMethod = "mean");//mainly called by asymfit
+
  
             Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma) const override;
             Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;
@@ -84,6 +81,10 @@ namespace NSEpic
             Float64 m_asym_delta = 0.;
             std::string m_centeringMethod = "none";
             Float64 m_constSigma = 1;//vs 2.5 for AsymFit and AsymFixed    
+            CLineProfileASYM(const TProfile pltype,
+                const Float64 nsigmasupport = 8.0, 
+                const TAsymParams params = {2., 2.5, 0.}, 
+                const std::string centeringMethod = "mean");//mainly called by asymfit
     };
 }
 #endif
