@@ -72,7 +72,7 @@ public:
                TUInt32List catalogIndexes);
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta=true) const;
-    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x);// const;
+    Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
     void    getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
                                             Float64& mu, Float64& sigma, 
                                             bool doAsymfitdelta=true) const;
@@ -112,7 +112,7 @@ public:
                                      Int32 kRaySupport = -1);
     Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
                                                    Float64 redshift,
-                                                   Float64 continuumFlux);// const;
+                                                   Float64 continuumFlux) const;
     Float64
     GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
                                       Float64 continuumFluxUnscale);
@@ -230,7 +230,7 @@ public:
 
   Float64 m_absLinesLimit;
 
-  std::shared_ptr<const CLineProfile> getRayProfile(Int32 rayIdx);
+  std::shared_ptr<const CLineProfile> getLineProfile(Int32 rayIdx) const;
 
   TInt32List          m_StartNoOverlap;
   TInt32List          m_EndNoOverlap;

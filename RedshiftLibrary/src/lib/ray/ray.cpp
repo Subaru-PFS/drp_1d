@@ -147,10 +147,9 @@ std::shared_ptr<const CLineProfile> CRay::GetProfile() const
      
 }
 
-bool CRay::SetProfile(const std::shared_ptr< const CLineProfile>& profile)
+void CRay::SetProfile(const std::shared_ptr< const CLineProfile>& profile)
 {
     m_Profile = profile->Clone();
-    return true;
 }
 
 Int32 CRay::GetForce() const

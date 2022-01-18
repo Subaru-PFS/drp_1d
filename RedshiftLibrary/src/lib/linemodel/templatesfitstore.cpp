@@ -159,7 +159,7 @@ bool CTemplatesFitStore::Add(std::string tplName,
         Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d (merit=%e, ebmv=%e, imeiksin=%d)",
                      idxz,
                      redshift,
-                     ipos,
+                     std::distance(m_fitValues[idxz].begin(), ipos),
                      tmpSValues.merit,
                      tmpSValues.ismEbmvCoeff,
                      tmpSValues.igmMeiksinIdx);

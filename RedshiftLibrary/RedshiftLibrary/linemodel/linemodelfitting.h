@@ -356,13 +356,12 @@ private:
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
 
-    bool setLyaProfileFromTplShapeCatalog(Int32 iCatalog);
     bool SetMultilineNominalAmplitudes(Int32 iLine);
     bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
-    Int32 setLyaProfile(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis, bool tplshape=false);
-
-    TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
-                                    const Float64& redshift, 
+    Int32  setLyaProfile(Float64 redshift, 
+                          const CRayCatalog::TRayVector& rayList,
+                          bool tplratio=false);
+    TAsymParams   FitAsymParameters(const Float64& redshift, 
                                     const UInt32& idxLyaE,
                                     const TUInt32List& filterEltsIdxLya, 
                                     const UInt32& idxLineLyaE);

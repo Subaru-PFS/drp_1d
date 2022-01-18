@@ -110,7 +110,7 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
     }
     for(Int32 k2=0; k2<nRays; k2++)
     {
-        if(getRayProfile(k2)->isAsymFit())
+        if(getLineProfile(k2)->isAsymFit())
             m_asymLineIndices.push_back(k2);
     }
     SetFittedAmplitude(-1.0, -1.0);
@@ -265,11 +265,11 @@ void CLineModelElement::setVelocity(Float64 vel)
 
 }
 
- std::shared_ptr<const CLineProfile> CLineModelElement::getRayProfile(Int32 rayIdx)
+std::shared_ptr<const CLineProfile> CLineModelElement::getLineProfile(Int32 rayIdx) const
 {
     if(rayIdx > m_Rays.size()-1)
-        throw GlobalException(INTERNAL_ERROR,"CLineModelElement::getRayProfile out-of-bound index");
-    return m_Rays[rayIdx].GetProfile()->Clone();
+        throw GlobalException(INTERNAL_ERROR,"CLineModelElement::getLineProfile out-of-bound index");
+    return m_Rays[rayIdx].GetProfile();
 }
 
 //wrapper function 
@@ -403,7 +403,7 @@ void CLineModelElement::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectru
         return;
     }
     Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
-    Float64 winsize = getRayProfile(subeIdx)->GetNSigmaSupport()*sigma;
+    Float64 winsize = getLineProfile(subeIdx)->GetNSigmaSupport()*sigma;
     TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
     m_StartTheoretical[subeIdx] = supportRange.GetBegin();
@@ -723,12 +723,12 @@ Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, 
 /**
  * \brief Returns the line profile of the sub-element subIdx at wavelength x, for a given redshift.
  **/
-Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x)// const
+Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const
 {
     Float64 mu = NAN;
     Float64 sigma = NAN;
     getObservedPositionAndLineWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
-    std::shared_ptr<const CLineProfile>  profile = getRayProfile(subeIdx);
+    const std::shared_ptr<const CLineProfile>  profile = getLineProfile(subeIdx);
     return profile->GetLineProfile(x, mu, sigma);
 }
 
@@ -1193,9 +1193,9 @@ void CLineModelElement::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis&
             getObservedPositionAndLineWidth(k, redshift, mu, sigma, false);
 
             if(m_SignFactors[k]==-1){
-                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(getRayProfile(k), x, mu, sigma, m_Rays[k].GetIsEmission());
+                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma, m_Rays[k].GetIsEmission());
             }else{
-                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(getRayProfile(k), x, mu, sigma,  m_Rays[k].GetIsEmission());
+                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,  m_Rays[k].GetIsEmission());
             }
         }
     }
@@ -1243,7 +1243,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift, Fl
     return Yi;
 }
 
-Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux)// const
+Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux) const
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -1318,9 +1318,9 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Flo
         getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * getRayProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * getLineProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * getRayProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * getLineProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }
     }
     return Yi;
@@ -1351,10 +1351,10 @@ Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshi
         getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * getRayProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
+            Yi += m_SignFactors[k2] * A * getLineProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * getRayProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma)
-                  + m_SignFactors[k2] * A * continuumFluxDerivZ * getRayProfile(k2)->GetLineProfile( x, mu, sigma);
+            Yi += m_SignFactors[k2] * A * continuumFlux * getLineProfile(k2)->GetLineProfileDerivZ( x, lamdba0, redshift, sigma)
+                  + m_SignFactors[k2] * A * continuumFluxDerivZ * getLineProfile(k2)->GetLineProfile( x, mu, sigma);
         }
     }
     return Yi;
