@@ -952,77 +952,64 @@ std::shared_ptr<const LineModelExtremaResult> COperatorLineModel::saveFirstPassE
     return ExtremaResult;
 }
 
-Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b)
+/**
+ * @brief Aggregate candidates from both firstpasses, while avoiding duplicate candidates
+ * 
+ * @param firstpass_results_b 
+ */
+void COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b)
 {
-    Int32 retval = 0;
-    Float64 skip_thres_absdiffz = 5e-4; //threshold to remove duplicate extrema/candidates
-
-    m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() );
+    TInt32List uniqueIdx_fpb = m_firstpass_extremaResult->getUniqueCandidates(firstpass_results_b);
+    m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() + uniqueIdx_fpb.size());
+    
     Int32 startIdx = m_firstpass_extremaResult->size();
-    for (Int32 keb = 0; keb < firstpass_results_b->size(); keb++)
+    for (Int32 keb = 0; keb < uniqueIdx_fpb.size(); keb++)
     {
-        const Float64 & z_fpb = firstpass_results_b->Redshift(keb);
-        const Float64 & m_fpb = firstpass_results_b->ValProba(keb);
-        //skip if z_fpb is nearly the same as any z_fp
-        Float64 minAbsDiffz = DBL_MAX;
-        for (Int32 ke = 0; ke < m_firstpass_extremaResult->size(); ke++)
-        {
-            Float64 z_diff = z_fpb - m_firstpass_extremaResult->Redshift(ke);
-            if(std::abs(z_diff) < minAbsDiffz)
-            {
-                minAbsDiffz = std::abs(z_diff);
-            }
-        }
-        if(minAbsDiffz<skip_thres_absdiffz)
-        {
-            Log.LogInfo(" Combine firstpass results: dropping cand B, idx=%d, z_fpb=%f", 
-                            keb, firstpass_results_b->Redshift(keb));
-            continue;
-        }
-
+        Int32 i = uniqueIdx_fpb[keb];
         //append the candidate to m_firstpass_extremaResult
-        m_firstpass_extremaResult->m_ranked_candidates[startIdx + keb] = firstpass_results_b->m_ranked_candidates[keb];
+        m_firstpass_extremaResult->m_ranked_candidates[startIdx + keb] = firstpass_results_b->m_ranked_candidates[i];
             
         // extend z around the extrema
-        m_firstpass_extremaResult->ExtendedRedshifts[startIdx + keb] = SpanRedshiftWindow(z_fpb);
+        const Float64 & z_fpb = firstpass_results_b->Redshift(i);
+        m_firstpass_extremaResult->ExtendedRedshifts[startIdx+keb] = (SpanRedshiftWindow(z_fpb));
 
         //save basic fitting info from first pass
-        m_firstpass_extremaResult->Elv.push_back(firstpass_results_b->Elv[keb]);
-        m_firstpass_extremaResult->Alv.push_back(firstpass_results_b->Alv[keb]);
+        m_firstpass_extremaResult->Elv[startIdx+keb] = firstpass_results_b->Elv[i];
+        m_firstpass_extremaResult->Alv[startIdx+keb] = firstpass_results_b->Alv[i];
 
         //save the continuum fitting parameters from first pass
         if(0) //cannot work since the fpb is linemodel without cont. tplfit...
         {
-            m_firstpass_extremaResult->FittedTplName.push_back(firstpass_results_b->FittedTplName[keb]);
-            m_firstpass_extremaResult->FittedTplAmplitude.push_back(firstpass_results_b->FittedTplAmplitude[keb]);
-            m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(firstpass_results_b->FittedTplAmplitudeError[keb]);
-            m_firstpass_extremaResult->FittedTplMerit.push_back(firstpass_results_b->FittedTplMerit[keb]);
-            m_firstpass_extremaResult->FittedTplMeritPhot.push_back(firstpass_results_b->FittedTplMeritPhot[keb]);
-            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(firstpass_results_b->FittedTplEbmvCoeff[keb]);
-            m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(firstpass_results_b->FittedTplMeiksinIdx[keb]);
-            m_firstpass_extremaResult->FittedTplRedshift.push_back(firstpass_results_b->FittedTplRedshift[keb]);
-            m_firstpass_extremaResult->FittedTplDtm.push_back(firstpass_results_b->FittedTplDtm[keb]);
-            m_firstpass_extremaResult->FittedTplMtm.push_back(firstpass_results_b->FittedTplMtm[keb]);
-            m_firstpass_extremaResult->FittedTplLogPrior.push_back(firstpass_results_b->FittedTplLogPrior[keb]);
-            m_firstpass_extremaResult->FittedTplpCoeffs.push_back(firstpass_results_b->FittedTplpCoeffs[keb]);
+            m_firstpass_extremaResult->FittedTplName[startIdx+keb] = firstpass_results_b->FittedTplName[i];
+            m_firstpass_extremaResult->FittedTplAmplitude[startIdx+keb] = firstpass_results_b->FittedTplAmplitude[i];
+            m_firstpass_extremaResult->FittedTplAmplitudeError[startIdx+keb] = firstpass_results_b->FittedTplAmplitudeError[i];
+            m_firstpass_extremaResult->FittedTplMerit[startIdx+keb] = firstpass_results_b->FittedTplMerit[i];
+            m_firstpass_extremaResult->FittedTplMeritPhot[startIdx+keb] = firstpass_results_b->FittedTplMeritPhot[i];
+            m_firstpass_extremaResult->FittedTplEbmvCoeff[startIdx+keb] = firstpass_results_b->FittedTplEbmvCoeff[i];
+            m_firstpass_extremaResult->FittedTplMeiksinIdx[startIdx+keb] = firstpass_results_b->FittedTplMeiksinIdx[i];
+            m_firstpass_extremaResult->FittedTplRedshift[startIdx+keb] = firstpass_results_b->FittedTplRedshift[i];
+            m_firstpass_extremaResult->FittedTplDtm[startIdx+keb] = firstpass_results_b->FittedTplDtm[i];
+            m_firstpass_extremaResult->FittedTplMtm[startIdx+keb] = firstpass_results_b->FittedTplMtm[i];
+            m_firstpass_extremaResult->FittedTplLogPrior[startIdx+keb] = firstpass_results_b->FittedTplLogPrior[i];
+            m_firstpass_extremaResult->FittedTplpCoeffs[startIdx+keb] = firstpass_results_b->FittedTplpCoeffs[i];
         }else{
             // find the index in the zaxis results
           
             Int32 idx =  CIndexing<Float64>::getIndex(m_result->Redshifts, z_fpb);
 
             //save the continuum fitting parameters from first pass
-            m_firstpass_extremaResult->FittedTplName.push_back(m_result->ContinuumModelSolutions[idx].tplName);
-            m_firstpass_extremaResult->FittedTplAmplitude.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitude);
-            m_firstpass_extremaResult->FittedTplAmplitudeError.push_back(m_result->ContinuumModelSolutions[idx].tplAmplitudeError);
-            m_firstpass_extremaResult->FittedTplMerit.push_back(m_result->ContinuumModelSolutions[idx].tplMerit);
-            m_firstpass_extremaResult->FittedTplMeritPhot.push_back(m_result->ContinuumModelSolutions[idx].tplMeritPhot);
-            m_firstpass_extremaResult->FittedTplEbmvCoeff.push_back(m_result->ContinuumModelSolutions[idx].tplEbmvCoeff);
-            m_firstpass_extremaResult->FittedTplMeiksinIdx.push_back(m_result->ContinuumModelSolutions[idx].tplMeiksinIdx);
-            m_firstpass_extremaResult->FittedTplRedshift.push_back(m_result->ContinuumModelSolutions[idx].tplRedshift);
-            m_firstpass_extremaResult->FittedTplDtm.push_back(m_result->ContinuumModelSolutions[idx].tplDtm);
-            m_firstpass_extremaResult->FittedTplMtm.push_back(m_result->ContinuumModelSolutions[idx].tplMtm);
-            m_firstpass_extremaResult->FittedTplLogPrior.push_back(m_result->ContinuumModelSolutions[idx].tplLogPrior);
-            m_firstpass_extremaResult->FittedTplpCoeffs.push_back(m_result->ContinuumModelSolutions[idx].pCoeffs);
+            m_firstpass_extremaResult->FittedTplName[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplName;
+            m_firstpass_extremaResult->FittedTplAmplitude[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplAmplitude;
+            m_firstpass_extremaResult->FittedTplAmplitudeError[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplAmplitudeError;
+            m_firstpass_extremaResult->FittedTplMerit[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplMerit;
+            m_firstpass_extremaResult->FittedTplMeritPhot[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplMeritPhot;
+            m_firstpass_extremaResult->FittedTplEbmvCoeff[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplEbmvCoeff;
+            m_firstpass_extremaResult->FittedTplMeiksinIdx[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplMeiksinIdx;
+            m_firstpass_extremaResult->FittedTplRedshift[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplRedshift;
+            m_firstpass_extremaResult->FittedTplDtm[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplDtm;
+            m_firstpass_extremaResult->FittedTplMtm[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplMtm;
+            m_firstpass_extremaResult->FittedTplLogPrior[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].tplLogPrior;
+            m_firstpass_extremaResult->FittedTplpCoeffs[startIdx+keb] =  m_result->ContinuumModelSolutions[idx].pCoeffs;
 
             if(m_result->ContinuumModelSolutions[idx].tplName=="")
             {
@@ -1032,8 +1019,6 @@ Int32 COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COp
 
         }
     }
-
-    return retval;
 }
 
 Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,

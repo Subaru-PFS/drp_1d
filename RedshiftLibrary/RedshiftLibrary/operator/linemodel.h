@@ -140,6 +140,31 @@ public:
     return redshifts;
   }
 
+
+  TInt32List getUniqueCandidates(std::shared_ptr<const COperatorLineModelExtremaResult> results_b)
+  { 
+      TInt32List uniqueIndices;
+      Float64 skip_thres_absdiffz = 5e-4; //threshold to remove duplicate extrema/candidates
+      for (Int32 keb = 0; keb < results_b->m_ranked_candidates.size(); keb++)
+      {
+          const Float64 & z_fpb = results_b->m_ranked_candidates[keb].second.Redshift;
+          //skip if z_fpb is nearly the same as any z_fp
+          Float64 minAbsDiffz = DBL_MAX;
+          bool duplicate = false;
+          for (Int32 ke = 0; ke < m_ranked_candidates.size(); ke++)
+          {
+            Float64 z_diff = z_fpb - m_ranked_candidates[ke].second.Redshift;
+            if(std::abs(z_diff) < skip_thres_absdiffz)
+            {   
+                duplicate = true;
+                break; //no need to look for more
+            }
+          }
+          if(!duplicate) uniqueIndices.push_back(keb);
+      }
+      return uniqueIndices;
+  }
+
   TStringList GetIDs() const
   {
     TStringList ids;
@@ -282,7 +307,7 @@ public:
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
 
-    Int32 Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b);
+    void Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> results_b);
 
 
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
