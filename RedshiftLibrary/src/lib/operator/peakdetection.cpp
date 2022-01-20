@@ -283,16 +283,14 @@ Float64 CPeakDetection::XMad( const Float64* x, Int32 n, Float64 median )
     std::vector<Float64> xdata;
     Float64 xmadm = 0.0;
 
-    xdata.reserve( n );
+    xdata.resize( n );
 
     for( Int32 i=0;i<n; i++ )
     {
         xdata[i] = fabs( x[i]-median );
     }
 
-    CQuickSort<Float64> sort;
-
-    sort.Sort( xdata.data(), n);
+    std::sort(xdata.begin(), xdata.end());
 
     if( ((float)n)/2. - int(n/2.) == 0 )
     {

@@ -54,7 +54,6 @@
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
 

@@ -58,8 +58,7 @@ template <class T> T CMedian<T>::BeersFind(const T *x, Int32 n)
     for (i = 0; i < n; i++)
         xwork[i] = x[i];
 
-    CQuickSort<T> quickSort;
-    quickSort.Sort(xwork.data(), n);
+    std::sort(xwork.begin(), xwork.end());
 
     n2 = (Int32)(n * 0.5);
     if (2 * n2 == n)
