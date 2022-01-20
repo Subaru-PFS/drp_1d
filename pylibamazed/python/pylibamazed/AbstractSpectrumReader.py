@@ -276,9 +276,9 @@ class AbstractSpectrumReader:
         lsf = lsf_factory.Create(self.parameters["LSF"]["LSFType"], lsf_args)
         self._spectra[0].SetLSF(lsf)
         if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
-            names = tuple(self.photometry.Name)
-            flux = tuple([float(f) for f in self.photometry.Flux])
-            fluxerr = tuple([float(f) for f in self.photometry.Error])
+            names = tuple(self.photometric_data[0].Name)
+            flux = tuple([float(f) for f in self.photometric_data[0].Flux])
+            fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
         del ctx
