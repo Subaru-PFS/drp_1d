@@ -89,7 +89,8 @@ namespace NSEpic
             CLineProfile& operator=(CLineProfile&& other) = default; 
 
             virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class
-            std::shared_ptr<CLineProfile> Clone () const {return std::shared_ptr<CLineProfile>(CloneImplementation());} 
+            //std::shared_ptr<CLineProfile> Clone () const {return std::shared_ptr<CLineProfile>(CloneImplementation());} 
+            std::unique_ptr<CLineProfile> Clone () const {return std::unique_ptr<CLineProfile>(CloneImplementation());} 
         private:
             virtual CLineProfile* CloneImplementation() const =0;
         protected:
@@ -97,7 +98,9 @@ namespace NSEpic
             const TProfile m_name;//hack to avoid using dynamic casting
 
     };
-    typedef std::shared_ptr<CLineProfile> CLineProfile_ptr;
+    typedef std::shared_ptr<CLineProfile> CLineProfile_shared_ptr;
+    typedef std::unique_ptr<CLineProfile> CLineProfile_ptr;
+    typedef std::unique_ptr<const CLineProfile> CLineProfile_const_ptr;
     typedef std::vector<CLineProfile_ptr> TProfileList;
 
     inline

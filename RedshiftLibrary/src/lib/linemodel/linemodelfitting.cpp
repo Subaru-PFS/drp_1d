@@ -3488,7 +3488,7 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
     const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    std::shared_ptr<const CLineProfile> profile = ray.GetProfile();
+    const CLineProfile_const_ptr& profile = ray.GetProfile();
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
     Float64 winsize = profile->GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
@@ -4153,12 +4153,12 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
     if(lineIndex<0 || lineIndex > catalog.size()-1) throw GlobalException(INTERNAL_ERROR,"out-of-bound");
 
     //finding or setting the correct profile
-    std::shared_ptr<const CLineProfile> profile;
+    CLineProfile_ptr profile;
     if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
-        profile = std::make_shared<CLineProfileASYMFIT>(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"); 
+        profile = std::move(std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"))); 
     else
         profile =  catalog[lineIndex].GetProfile()->Clone();
-    m_Elements[idxLyaE]->m_Rays[idxLineLyaE].SetProfile(profile);
+    m_Elements[idxLyaE]->m_Rays[idxLineLyaE].SetProfile(std::move(profile));
     
     bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
 

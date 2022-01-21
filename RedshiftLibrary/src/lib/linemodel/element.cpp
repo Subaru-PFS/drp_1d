@@ -179,7 +179,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, boo
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
     return sigma;
 }
-Float64 CLineModelElement::GetLineProfileDerivVel(const std::shared_ptr<const CLineProfile>& profile, Float64 x, Float64 x0, Float64 sigma, bool isEmission)
+Float64 CLineModelElement::GetLineProfileDerivVel(const CLineProfile_const_ptr& profile, Float64 x, Float64 x0, Float64 sigma, bool isEmission)
 {
     const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
@@ -265,7 +265,7 @@ void CLineModelElement::setVelocity(Float64 vel)
 
 }
 
-std::shared_ptr<const CLineProfile> CLineModelElement::getLineProfile(Int32 rayIdx) const
+CLineProfile_const_ptr CLineModelElement::getLineProfile(Int32 rayIdx) const
 {
     if(rayIdx > m_Rays.size()-1)
         throw GlobalException(INTERNAL_ERROR,"CLineModelElement::getLineProfile out-of-bound index");
@@ -714,7 +714,7 @@ Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, 
     // deals with delta of asym profile
     if (doAsymfitdelta)
     {
-        std::shared_ptr<const CLineProfile> profile = m_Rays[subeIdx].GetProfile();
+        const CLineProfile_const_ptr& profile = m_Rays[subeIdx].GetProfile();
         mu -= profile->GetAsymDelta();
     }
     return mu;
@@ -728,7 +728,7 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redsh
     Float64 mu = NAN;
     Float64 sigma = NAN;
     getObservedPositionAndLineWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
-    const std::shared_ptr<const CLineProfile>  profile = getLineProfile(subeIdx);
+    const CLineProfile_const_ptr&  profile = getLineProfile(subeIdx);
     return profile->GetLineProfile(x, mu, sigma);
 }
 

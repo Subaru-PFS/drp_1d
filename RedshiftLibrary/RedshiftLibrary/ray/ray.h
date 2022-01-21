@@ -77,7 +77,7 @@ public:
     CRay();
     CRay( const std::string& name,
           Float64 pos, UInt32 type,
-          std::shared_ptr<CLineProfile> profile,
+          CLineProfile_ptr profile,
           UInt32 force,
           Float64 amp=-1.0,
           Float64 width=-1.0,
@@ -89,6 +89,11 @@ public:
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
+    
+    CRay(const CRay & other); 
+    CRay(CRay && other); 
+    CRay& operator=(const CRay& other);  
+    CRay& operator=(CRay&& other); 
 
     CRay clone() const;
 
@@ -100,8 +105,8 @@ public:
     bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
-    std::shared_ptr<const CLineProfile>        GetProfile() const;
-    void                SetProfile(const std::shared_ptr<const CLineProfile>& profile);
+    CLineProfile_const_ptr       GetProfile() const;
+    void                SetProfile(CLineProfile_ptr&& profile);
 
     Float64             GetPosition() const;
     Float64             GetOffset() const;
@@ -132,7 +137,7 @@ public:
 private:
     Int32           m_id = -1;
     Int32           m_Type = 0;
-    std::shared_ptr<CLineProfile>    m_Profile=nullptr;
+    CLineProfile_ptr    m_Profile=nullptr;
     Int32           m_Force = 0;
     Float64         m_Pos = 0.;
     Float64         m_Offset = 0.;

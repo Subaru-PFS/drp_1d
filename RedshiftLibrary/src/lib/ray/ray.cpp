@@ -48,7 +48,7 @@ CRay::CRay():m_Offset(0.){}
 
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
-           std::shared_ptr<CLineProfile> profile,
+           CLineProfile_ptr profile,
            UInt32 force,
            Float64 amp,
            Float64 width,
@@ -79,11 +79,97 @@ m_Offset(0.),
 m_OffsetFit(false)
 {
 }
+CRay::CRay(const CRay & other):
+m_Name(other.m_Name),
+m_Pos(other.m_Pos),
+m_Type(other.m_Type),
+m_Force(other.m_Force),
+m_Amp(other.m_Amp),
+m_Width(other.m_Width),
+m_Cut(other.m_Cut),
+m_Profile(other.m_Profile->Clone()),
+m_PosFitErr(other.m_PosFitErr),
+m_SigmaFitErr(other.m_SigmaFitErr),
+m_AmpFitErr(other.m_AmpFitErr),
+m_GroupName(other.m_GroupName),
+m_NominalAmplitude(other.m_NominalAmplitude),
+m_VelGroupName(other.m_VelGroupName),
+m_id(other.m_id),
+m_Offset(other.m_Offset),
+m_OffsetFit(other.m_OffsetFit){}
+
+CRay::CRay(CRay && other):
+m_Name(other.m_Name),
+m_Pos(other.m_Pos),
+m_Type(other.m_Type),
+m_Force(other.m_Force),
+m_Amp(other.m_Amp),
+m_Width(other.m_Width),
+m_Cut(other.m_Cut),
+m_Profile(other.m_Profile->Clone()),
+m_PosFitErr(other.m_PosFitErr),
+m_SigmaFitErr(other.m_SigmaFitErr),
+m_AmpFitErr(other.m_AmpFitErr),
+m_GroupName(other.m_GroupName),
+m_NominalAmplitude(other.m_NominalAmplitude),
+m_VelGroupName(other.m_VelGroupName),
+m_id(other.m_id),
+m_Offset(other.m_Offset),
+m_OffsetFit(other.m_OffsetFit){}
+
+CRay& CRay::operator=(const CRay& other)
+{
+    m_Name = other.m_Name;
+    m_Pos = other.m_Pos;
+    m_Type = other.m_Type;
+    m_Force = other.m_Force;
+    m_Amp = other.m_Amp;
+    m_Width = other.m_Width;
+    m_Cut = other.m_Cut;
+
+    m_PosFitErr = other.m_PosFitErr;
+    m_SigmaFitErr = other.m_SigmaFitErr;
+    m_AmpFitErr = other.m_AmpFitErr;
+    m_GroupName = other.m_GroupName;
+    m_NominalAmplitude = other.m_NominalAmplitude;
+    m_VelGroupName = other.m_VelGroupName;
+    m_id = other.m_id;
+    m_Offset = other.m_Offset;
+    m_OffsetFit = other.m_OffsetFit;
+
+    //deep copy for m_Profile
+    m_Profile = other.m_Profile->Clone();
+    return *this;
+} 
+CRay& CRay::operator=(CRay&& other)
+{
+    m_Name = other.m_Name;
+    m_Pos = other.m_Pos;
+    m_Type = other.m_Type;
+    m_Force = other.m_Force;
+    m_Amp = other.m_Amp;
+    m_Width = other.m_Width;
+    m_Cut = other.m_Cut;
+
+    m_PosFitErr = other.m_PosFitErr;
+    m_SigmaFitErr = other.m_SigmaFitErr;
+    m_AmpFitErr = other.m_AmpFitErr;
+    m_GroupName = other.m_GroupName;
+    m_NominalAmplitude = other.m_NominalAmplitude;
+    m_VelGroupName = other.m_VelGroupName;
+    m_id = other.m_id;
+    m_Offset = other.m_Offset;
+    m_OffsetFit = other.m_OffsetFit;
+
+    //deep copy for m_Profile
+    m_Profile = other.m_Profile->Clone();
+    return *this;
+} 
 
 CRay CRay::clone() const
 {
-   CRay this_copy = *this; //shallow copy
-   this_copy.m_Profile = this_copy.m_Profile->Clone();// deep-copy
+    CRay this_copy= *this;
+    this_copy.m_Profile = this_copy.m_Profile->Clone();// deep-copy
    return this_copy;
 }
 
@@ -139,17 +225,18 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-std::shared_ptr<const CLineProfile> CRay::GetProfile() const
+CLineProfile_const_ptr CRay::GetProfile() const
 {
     if(!m_Profile)
         throw GlobalException(INTERNAL_ERROR,"Current Ray does not have a set profile ");
-    return m_Profile;
+    CLineProfile_ptr tmp = m_Profile->Clone();
+    return std::move(tmp);
      
 }
 
-void CRay::SetProfile(const std::shared_ptr< const CLineProfile>& profile)
+void CRay::SetProfile(CLineProfile_ptr&& profile)
 {
-    m_Profile = profile->Clone();
+    m_Profile = std::move(profile);
 }
 
 Int32 CRay::GetForce() const

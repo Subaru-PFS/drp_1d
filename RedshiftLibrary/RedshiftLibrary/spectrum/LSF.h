@@ -106,7 +106,7 @@ public:
       GaussianVariableWidth
     };
     CLSF(TLSFType name);
-    CLSF(TLSFType name, CLineProfile_ptr profile);
+    CLSF(TLSFType name, CLineProfile_shared_ptr profile);
     virtual ~CLSF() = default;
 
     CLSF(const CLSF & other) = default; 
@@ -124,7 +124,7 @@ public:
     const TLSFType  m_name;
     
 protected:
-    CLineProfile_ptr m_profile;
+    CLineProfile_shared_ptr m_profile;
 };
 
 }

@@ -179,7 +179,7 @@ public:
 
     std::vector<Int32> m_LineCatalogIndexes;
    
-    Float64 GetLineProfileDerivVel(const std::shared_ptr<const CLineProfile>& profile, Float64 x, Float64 x0,
+    Float64 GetLineProfileDerivVel(const CLineProfile_const_ptr& profile, Float64 x, Float64 x0,
                                    Float64 sigma, bool isEmission);
 
     Float64 GetSumCross();
@@ -230,7 +230,7 @@ public:
 
   Float64 m_absLinesLimit;
 
-  std::shared_ptr<const CLineProfile> getLineProfile(Int32 rayIdx) const;
+  CLineProfile_const_ptr getLineProfile(Int32 rayIdx) const;
 
   TInt32List          m_StartNoOverlap;
   TInt32List          m_EndNoOverlap;
