@@ -55,7 +55,7 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( Bool sampling )
+CTemplateCatalog::CTemplateCatalog( bool sampling )
 {
     m_logsampling = sampling;
 }
@@ -123,14 +123,14 @@ UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
     return GetTemplateCount(category, m_orthogonal, m_logsampling);
 }
 
-UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const
+UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category,bool opt_ortho, bool opt_logsampling  ) const
 {   
     if(!GetList(opt_ortho, opt_logsampling).count(category))
         return 0;
     return GetList(opt_ortho, opt_logsampling).at( category ).size();
 }
 
-UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const
+UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, bool opt_ortho, bool opt_logsampling ) const
 {   
     if (!GetTemplateCount(category, opt_ortho, opt_logsampling)) return 0;
 
@@ -169,13 +169,13 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
 }
 
 // clear all templates in a category
-void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_ortho, Bool opt_logsampling)
+void CTemplateCatalog::ClearTemplateList(const std::string & category, bool opt_ortho, bool opt_logsampling)
 {
     ClearTemplates(category, opt_ortho, opt_logsampling, 0, true);
 }
 
 // clear one template in a category
-void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
+void CTemplateCatalog::ClearTemplates(const std::string & category, bool opt_ortho, bool opt_logsampling, UInt32 i, bool alltemplates)
 {
     if(!GetTemplateCount(category, opt_ortho, opt_logsampling)) return;
     TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);

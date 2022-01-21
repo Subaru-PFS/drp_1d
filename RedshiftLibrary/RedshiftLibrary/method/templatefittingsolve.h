@@ -82,7 +82,7 @@ private:
                                         TScopeStack &scope) override;
 
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const std::shared_ptr<const CTemplate> & tpl,
                Float64 overlapThreshold,
@@ -110,7 +110,7 @@ private:
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
-    Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
+    bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
 
 };
 

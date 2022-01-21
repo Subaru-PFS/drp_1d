@@ -67,7 +67,7 @@
     std::vector<Float64> LambdaObs;  //observed position in Angstrom
     std::vector<Float64> Velocity;  //dispersion velocity in km/s
     std::vector<Float64> Offset;    //line offset in km/s
-    std::vector<Bool> OutsideLambdaRange;
+    std::vector<bool> OutsideLambdaRange;
     std::vector<TInt32Range> fittingIndexRange;
     std::vector<std::string> fittingGroupInfo;
 

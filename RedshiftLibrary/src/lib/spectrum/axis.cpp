@@ -70,6 +70,7 @@ void CSpectrumAxis::SetSize( UInt32 s )
 }
 void CSpectrumAxis::clear()
 {
+    resetAxisProperties();
     m_Samples.clear();
 }
 

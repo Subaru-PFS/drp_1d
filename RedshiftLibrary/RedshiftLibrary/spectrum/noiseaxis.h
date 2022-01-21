@@ -59,7 +59,7 @@ public:
     explicit  CSpectrumNoiseAxis( UInt32 n );
 
     void                SetSize( UInt32 s, Float64 valueDef = 1.0);
-    Bool                Invert();
+    bool                Invert();
     CSpectrumNoiseAxis  extract(Int32 startIdx, Int32 endIdx) const;
 private:
 

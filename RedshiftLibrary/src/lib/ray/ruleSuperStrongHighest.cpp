@@ -53,7 +53,7 @@ CRuleSuperStrong::~CRuleSuperStrong()
 {
 }
 
-void CRuleSuperStrong::SetUp( Bool EnabledArgument, ... )
+void CRuleSuperStrong::SetUp( bool EnabledArgument, ... )
 {
   Name = "superstrong";
   Enabled = EnabledArgument;
@@ -161,7 +161,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
     }
 }
 
-Bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
+bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

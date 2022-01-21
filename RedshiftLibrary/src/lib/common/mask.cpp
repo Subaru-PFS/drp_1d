@@ -87,7 +87,7 @@ CMask& CMask::operator &= ( const CMask& other )
 /**
  *
  */
-Bool CMask::IntersectWith( const CMask& other )
+bool CMask::IntersectWith( const CMask& other )
 {
     if( GetMasksCount() != other.GetMasksCount() )
         return false;

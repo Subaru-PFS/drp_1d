@@ -52,7 +52,7 @@ CSpectrumNoiseAxis::CSpectrumNoiseAxis( UInt32 n ) :
 
 }
 
-Bool CSpectrumNoiseAxis::Invert()
+bool CSpectrumNoiseAxis::Invert()
 {
     Int32 N = GetSamplesCount();
     for( UInt32 i=0; i<N; i++ )

@@ -60,8 +60,8 @@ public:
     CSpectrumFluxCorrectionCalzetti();
     ~CSpectrumFluxCorrectionCalzetti();
 
-    Bool Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n );
-    Bool LoadFile( const char* filePath );
+    bool Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n );
+    bool LoadFile( const char* filePath );
 
     Float64 GetLambdaMin() const;
     Float64 GetLambdaMax() const;

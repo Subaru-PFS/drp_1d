@@ -54,7 +54,7 @@ CRuleStrongHigherThanWeak::~CRuleStrongHigherThanWeak()
 {
 }
 
-void CRuleStrongHigherThanWeak::SetUp( Bool EnabledArgument, ... )
+void CRuleStrongHigherThanWeak::SetUp( bool EnabledArgument, ... )
 {
   Name = "strongweak";
   Enabled = EnabledArgument;
@@ -146,7 +146,7 @@ void CRuleStrongHigherThanWeak::Correct( CLineModelElementList& LineModelElement
     }
 }
 
-Bool CRuleStrongHigherThanWeak::Check( CLineModelElementList& LineModelElementList )
+bool CRuleStrongHigherThanWeak::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

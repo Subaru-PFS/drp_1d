@@ -84,7 +84,7 @@ class CResultStore;
 
 private:
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,

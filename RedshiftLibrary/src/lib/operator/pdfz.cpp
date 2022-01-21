@@ -52,7 +52,7 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
                              Float64 meritcut,
                              UInt32 maxCandidate,
                              const std::string & Id_prefix,
-                             Bool allow_extrema_at_border,
+                             bool allow_extrema_at_border,
                              UInt32 maxPeakCount_per_window,
                              const std::vector<TFloat64List> & candidatesRedshifts,
                              const TStringList & candidatesIds
@@ -84,7 +84,7 @@ COperatorPdfz::COperatorPdfz(const std::string & opt_combine,
 *  combine pdf and search for candidates.
 */
 std::shared_ptr<PdfCandidatesZResult> COperatorPdfz::Compute(const ChisquareArray & chisquarearray,
-                                                              Bool integ)
+                                                              bool integ)
 {
     Log.LogInfo("%s: Pdfz computation", __func__);    
 
@@ -151,9 +151,9 @@ void COperatorPdfz::CombinePDF(const ChisquareArray & chisquarearray)
     isPdfValid(); //will throw an error if not
 }
 
-Bool COperatorPdfz::checkPdfSum() const
+bool COperatorPdfz::checkPdfSum() const
 {
-    Bool ret = true;
+    bool ret = true;
 
     //check pdf sum=1
     Float64 sumTrapez = getSumTrapez(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog);
@@ -178,10 +178,10 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const
         std::string id = cand.first;
 
         //call Find on each secondpass range and retrieve the best  peak
-        Bool invertForMinSearch=false;
+        bool invertForMinSearch=false;
         CExtremum extremum_op = CExtremum( m_maxPeakCount_per_window, m_peakSeparation, m_meritcut, 
                                            invertForMinSearch, m_allow_extrema_at_border, redshiftsRange);
-        Bool findok = extremum_op.Find(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog, extremumList);
+        bool findok = extremum_op.Find(m_postmargZResult->Redshifts, m_postmargZResult->valProbaLog, extremumList);
         if (!findok){
             if (m_candidatesZRanges.size() >1){ // we are in 2nd pass (several redshift ranges)
                 Log.LogInfo("COperatorPdfz::searchMaxPDFcandidates: Second-pass fitting degenerates the first-pass results of candidate:%s in range [%f , %f]\n", 
@@ -281,7 +281,7 @@ void COperatorPdfz::ComputePdf(const TFloat64List & merits, const TFloat64List &
                                         const Float64 cstLog, const TFloat64List & logZPrior,
                                         TFloat64List &logPdf, Float64 &logEvidence)
 {
-    Bool verbose = true;
+    bool verbose = true;
     logPdf.clear();
 
     if (verbose)
@@ -608,7 +608,7 @@ void COperatorPdfz::BestProba(const ChisquareArray & chisquarearray)
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorPdfz: Pdfz-bestproba problem, merit.size("<<meritResults.size()<<"), prior.size("<<zPriors.size()<<") or redshifts.size("<<redshifts.size()<<") is zero !");
     }
 
-    Bool initPostMarg = false;  
+    bool initPostMarg = false;  
 
     for (Int32 km = 0; km < meritResults.size(); km++)
     {

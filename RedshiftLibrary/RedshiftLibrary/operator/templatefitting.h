@@ -99,7 +99,7 @@ public:
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
-                                              Bool keepigmism = false,
+                                              bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
                                               Int32 FitMeiksinIdx=-1) override;
 
@@ -142,7 +142,7 @@ protected:
 
     void ComputeAmplitudeAndChi2( TFittingResult & fitres, const CPriorHelper::SPriorTZE & logpriorTZ) const;
 
-    Bool m_option_igmFastProcessing;
+    bool m_option_igmFastProcessing;
     Int32 m_kStart, m_kEnd;
     Float64 m_forcedAmplitude;
 

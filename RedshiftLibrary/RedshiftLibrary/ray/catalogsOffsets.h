@@ -73,16 +73,16 @@ public:
     ~CLineCatalogsOffsets();
     void Init(std::string calibrationPath, std::string offsetsCatalogsRelPath);
 
-    Bool SetLinesOffsets(CLineModelElementList& LineModelElementList, Int32 index);
+    bool SetLinesOffsets(CLineModelElementList& LineModelElementList, Int32 index);
 
     // Hack: select/bypass stack automatically from its name in the reference_stack catalog
-    Bool SetLinesOffsetsAutoSelectStack(CLineModelElementList& LineModelElementList, std::string spectrumName);
+    bool SetLinesOffsetsAutoSelectStack(CLineModelElementList& LineModelElementList, std::string spectrumName);
     Int32 AutoSelectStackFromReferenceFile(std::string spectrumName);
 
 private:
 
     void Load( const char* dirPath );
-    Bool LoadCatalog( const char* filePath );
+    bool LoadCatalog( const char* filePath );
 
     std::string m_Catalogs_relpath;
     std::string m_Calibration_path;

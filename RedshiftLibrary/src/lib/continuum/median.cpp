@@ -170,7 +170,7 @@ Int32 CContinuumMedian::EvenMirror( const Float64* y_input, Int32 N, Int32 Nrefl
  * A mean smoothing with m_MeanSmoothingAmplitude / 4 is applied
  * The added parts are cut away
 **/
-Bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
+bool CContinuumMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
 {
     Int32 k0 = 0;
     Int32 k1 = 0;

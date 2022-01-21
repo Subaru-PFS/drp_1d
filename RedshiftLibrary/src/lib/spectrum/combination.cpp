@@ -100,8 +100,8 @@ Int32 CSpectrumCombination::Combine( std::vector<std::shared_ptr<CSpectrum>> spc
 
     for(Int32 kr=0; kr<nRolls; kr++)
     {
-        CSpectrumFluxAxis rollFluxAxis = spcList[kr]->GetFluxAxis();
-        CSpectrumNoiseAxis& rollNoise = rollFluxAxis.GetError();
+        const CSpectrumFluxAxis rollFluxAxis = spcList[kr]->GetFluxAxis();
+        const CSpectrumNoiseAxis& rollNoise = rollFluxAxis.GetError();
         for(Int32 ks=0; ks<nSamples; ks++)
         {
             Float64 sigma2Inv = 1.0/(rollNoise[ks]*rollNoise[ks]);

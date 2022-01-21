@@ -53,15 +53,15 @@ class CTemplateCatalog
 
 public:
 
-    CTemplateCatalog(  Bool sampling = 0 );
+    CTemplateCatalog(  bool sampling = 0 );
     
     void                    Add( const std::shared_ptr<CTemplate> & tpl);
 
     std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
     void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
-    void    ClearTemplates(const std::string & category,  Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates=false);
-    void    ClearTemplateList(const std::string & category,  Bool opt_ortho, Bool opt_logsampling);
+    void    ClearTemplates(const std::string & category,  bool opt_ortho, bool opt_logsampling, UInt32 i, bool alltemplates=false);
+    void    ClearTemplateList(const std::string & category,  bool opt_ortho, bool opt_logsampling);
     void    resetCatalogState() const {m_logsampling=0;m_orthogonal=0;};
     
     TTemplateConstRefList GetTemplateList( const TStringList& categoryList ) const;
@@ -70,25 +70,25 @@ public:
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
     TStringList             GetCategoryList() const;
     UInt32                  GetTemplateCount( const std::string& category ) const;
-    UInt32                  GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const;
+    UInt32                  GetTemplateCount( const std::string& category,bool opt_ortho, bool opt_logsampling  ) const;
     UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
     void                    InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore);
     void                    InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
-    mutable Bool            m_logsampling = 0;//non-log by default
-    mutable Bool            m_orthogonal = 0;//non-log by default
+    mutable bool            m_logsampling = 0;//non-log by default
+    mutable bool            m_orthogonal = 0;//non-log by default
     Float64                 m_ortho_LSFWidth = NAN;
 private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
 
-    UInt32 GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const;
+    UInt32 GetNonNullTemplateCount( const std::string& category, bool opt_ortho, bool opt_logsampling ) const;
 
           TTemplatesRefDict &    GetList();
     const TTemplatesRefDict &    GetList() const;
 
-          TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling);
-    const TTemplatesRefDict &    GetList( Bool opt_ortho, Bool opt_logsampling) const;
+          TTemplatesRefDict &    GetList( bool opt_ortho, bool opt_logsampling);
+    const TTemplatesRefDict &    GetList( bool opt_ortho, bool opt_logsampling) const;
     
     typedef std::vector<std::vector<TTemplatesRefDict>> TTemplatesRefDictAA;
     TTemplatesRefDictAA m_ListMatrix{2, std::vector<TTemplatesRefDict>(2)};//row corresponds to original vs ortho; col corresponds to orig vs rebinned
@@ -122,7 +122,7 @@ TTemplateConstRefList CTemplateCatalog::GetTemplateList( const TStringList& cate
 
  //below functions aim at avoid using if..else to access the right categoryList
 inline 
-const TTemplatesRefDict & CTemplateCatalog::GetList( Bool opt_ortho, Bool opt_logsampling) const
+const TTemplatesRefDict & CTemplateCatalog::GetList( bool opt_ortho, bool opt_logsampling) const
 {
     return const_cast<CTemplateCatalog*>(this)->GetList(opt_ortho, opt_logsampling);
 }
@@ -134,7 +134,7 @@ const TTemplatesRefDict & CTemplateCatalog::GetList() const
 }
 
 inline 
-TTemplatesRefDict & CTemplateCatalog::GetList( Bool opt_ortho, Bool opt_logsampling)
+TTemplatesRefDict & CTemplateCatalog::GetList( bool opt_ortho, bool opt_logsampling)
 {
     return m_ListMatrix[opt_ortho][opt_logsampling];
 }

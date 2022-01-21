@@ -75,7 +75,7 @@ public:
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=0,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
-                                              Bool keepigmism = false,
+                                              bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
                                               Int32 FitMeiksinIdx=-1) override;
 
@@ -135,8 +135,8 @@ private:
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
 
-    Bool m_enableISM = 1;
-    Bool m_enableIGM = 1; 
+    bool m_enableISM = 1;
+    bool m_enableIGM = 1; 
 
     //buffers for fft computation
     Int32 m_nPaddedSamples =0;

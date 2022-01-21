@@ -71,7 +71,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
-  Bool storeResult = false;
+  bool storeResult = false;
   Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
@@ -208,7 +208,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 }
 
 
-Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                    const CSpectrum& spc,
                                    const std::shared_ptr<const CTemplate> & tpl,
                                    Float64 overlapThreshold,
@@ -358,7 +358,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
 
         //check chi2 results status for this template
         {
-            Bool foundBadStatus = 0;
+            bool foundBadStatus = 0;
             for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
             {
                 if(meritResult->Status[kz]!=COperator::nStatus_OK)
@@ -414,7 +414,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 
     TOperatorResultMap results = store->GetPerTemplateResult(scope.c_str());
 
-    //Bool foundRedshiftAtLeastOnce = false;
+    //bool foundRedshiftAtLeastOnce = false;
 
     Int32 extremumCount = ranked_zCandidates.size();
     
@@ -429,8 +429,8 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
         }
 
-        Bool foundBadStatus = false;
-        Bool foundBadRedshift = false;
+        bool foundBadStatus = false;
+        bool foundBadRedshift = false;
         for ( UInt32 kz=0; kz<TplFitResult->Redshifts.size(); kz++)
         {
             if(TplFitResult->Status[kz]!=COperator::nStatus_OK)
@@ -498,7 +498,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
         extremaResult->m_ranked_candidates[i].second.FittedTplSNR= FitSNR;
         //make sure tpl is non-rebinned
-        Bool currentSampling = tplCatalog.m_logsampling;
+        bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
         std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = 

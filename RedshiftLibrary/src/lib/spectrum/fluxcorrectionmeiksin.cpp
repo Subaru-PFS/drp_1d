@@ -68,7 +68,7 @@ CSpectrumFluxCorrectionMeiksin::~CSpectrumFluxCorrectionMeiksin()
 
 }
 
-Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
+bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
 {
     m_convolRange = convolRange;
     bfs::path calibrationFolder( calibrationPath.c_str() );
@@ -109,7 +109,7 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const st
  * i.e., from the least extinction curve to the highest extinction curve 
  *         
  * */
-Bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
+bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
 {
     bool loadSuccess=true;
     std::ifstream file;

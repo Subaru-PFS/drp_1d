@@ -78,10 +78,10 @@ void CRegulament::ApplyWithRedshift( Float64 Redshift )
 
 }
 */
-Bool CRegulament::CreateRulesFromJSONFiles( void )
+bool CRegulament::CreateRulesFromJSONFiles( void )
 {
   // To be removed once JSON code is in <--
-  Bool True = true;
+  bool True = true;
   linetags ltags;
 
   //m_RulesVector.push_back( std::make_unique<CRuleBalmerLinearSolver>() );
@@ -157,7 +157,7 @@ void CRegulament::EnableRulesAccordingToParameters( std::string Parameters )
     }
   for(unique_ptr<CRule>& rule: m_RulesVector )
     {
-      Bool enableRule = Parameters.find ( rule->Name ) != std::string::npos;
+      bool enableRule = Parameters.find ( rule->Name ) != std::string::npos;
       if( Parameters=="all" || enableRule )
     {
       Log.LogDebug( "Enabling rule %s.", rule->Name.c_str() );

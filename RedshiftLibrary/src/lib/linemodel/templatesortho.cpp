@@ -63,7 +63,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     std::string rigidity = opt_rigidity.c_str();
     std::string rules = opt_rules.c_str();
     //temporary options override to be removed when full tpl ortho is implemented
-    Bool enableOverride = true;
+    bool enableOverride = true;
     if(enableOverride){
         rigidity = "rules";
         rules = "no";
@@ -82,14 +82,14 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
 
     //retrieve templateCatalog
     std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
-    Bool currentsampling = tplCatalog->m_logsampling; 
+    bool currentsampling = tplCatalog->m_logsampling; 
 
     // check if category never orthogonalized
-    Bool first_time_ortho = !tplCatalog->GetTemplateCount(category,true,false);
+    bool first_time_ortho = !tplCatalog->GetTemplateCount(category,true,false);
 
     //check if LSF has changed, if yes reorthog all
     bool differentLSF = false;
-    std::vector<Bool> samplingList {0,1};
+    std::vector<bool> samplingList {0,1};
 
     if(!first_time_ortho)
     {
@@ -108,7 +108,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
         }
     }
     // check if log-sampled templates have changed and need ortho 
-    Bool need_ortho_logsampling = true;
+    bool need_ortho_logsampling = true;
     if (!first_time_ortho && !differentLSF)
     {    
         tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
@@ -132,21 +132,21 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     }
     //check first if category has been orthogonalized at least a first time
 
-    Bool needOrthogonalization = first_time_ortho | need_ortho_logsampling | differentLSF;
+    bool needOrthogonalization = first_time_ortho | need_ortho_logsampling | differentLSF;
     if(!needOrthogonalization) {
         tplCatalog->m_logsampling = currentsampling;
         tplCatalog->m_orthogonal = 0; 
         return;
     }
 
-    for(Bool sampling:samplingList)
+    for(bool sampling:samplingList)
     {
         tplCatalog->m_logsampling = sampling;
         //orthogonalize all templates
         tplCatalog->m_orthogonal = 0;
         const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplCatalog)->GetTemplateList(TStringList{category});
         tplCatalog->m_orthogonal = 1;
-        Bool partial = (sampling && tplCatalog->GetTemplateCount(category)) ? true :false; //need to replace only some of the ortho
+        bool partial = (sampling && tplCatalog->GetTemplateCount(category)) ? true :false; //need to replace only some of the ortho
         for (Int32 i=0; i< TplList.size(); i++)
         {
             const CTemplate tpl = *TplList[i];
@@ -230,7 +230,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
         Float64 redshift = 0.0;
         Float64 contreest_iterations = 0;
-        Bool enableLogging=true;
+        bool enableLogging=true;
         CLineModelSolution modelSolution;
         CContinuumModelSolution continuumModelSolution;
         model.fit( redshift,

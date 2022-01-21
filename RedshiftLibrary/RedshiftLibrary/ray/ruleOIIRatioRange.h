@@ -53,8 +53,8 @@ class CRuleRatioRange : public CRule
   public:
     CRuleRatioRange();
     ~CRuleRatioRange();
-    Bool Check(CLineModelElementList &LineModelElementList);
-    void SetUp(Bool EnabledArgument, ...);
+    bool Check(CLineModelElementList &LineModelElementList);
+    void SetUp(bool EnabledArgument, ...);
 
   private:
     Int32 m_LineType;

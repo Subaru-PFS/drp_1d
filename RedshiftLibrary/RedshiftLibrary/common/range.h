@@ -67,7 +67,7 @@ template <typename T> class CRange
 
     ~CRange() {}
 
-    Bool GetIsEmpty() const { return m_Begin == m_End; }
+    bool GetIsEmpty() const { return m_Begin == m_End; }
 
     void Set(const T &b, const T &e)
     {
@@ -92,12 +92,12 @@ template <typename T> class CRange
 
     T GetLength() const { return m_End - m_Begin; }
 
-    Bool IntersectWith(const CRange<T> r)
+    bool IntersectWith(const CRange<T> r)
     {
         return Intersect(*this, r, *this);
     }
 
-    static Bool Intersect(const CRange<T> &a, const CRange<T> b,
+    static bool Intersect(const CRange<T> &a, const CRange<T> b,
                           CRange<T> &intersect)
     {
         if ((a.GetBegin() >= b.GetBegin() && a.GetBegin() <= b.GetEnd()) ||

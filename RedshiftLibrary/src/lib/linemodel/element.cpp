@@ -152,7 +152,7 @@ bool CLineModelElement::IsOutsideLambdaRange()
  * Get instrumental response (including source response) from LSF
  * combine quadratically with the instrinsic width of the Line itself. The line width in this case represents to the velocity
  * */
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission) const
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, bool isEmission) const
 {
     const Float64 c = m_speedOfLightInVacuum;
     Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
@@ -181,7 +181,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
     return sigma;
 }
-Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission)
+Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0, Float64 sigma, bool isEmission)
 {
     const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
@@ -368,7 +368,7 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit)
  * @return the continuum flux val at the sub element center wavelength. Error returns -999/-9999 if center profile not in range
  *
  */
-Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)
+Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
 
@@ -684,7 +684,7 @@ TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 subeIdx)
  **/
 void CLineModelElement::getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
                                                         Float64& mu, Float64& sigma, 
-                                                        Bool doAsymfitdelta) const
+                                                        bool doAsymfitdelta) const
 {
     mu = GetObservedPosition(subeIdx, redshift, doAsymfitdelta);
     if( !m_LSF->checkAvailability(mu) )
@@ -698,7 +698,7 @@ void CLineModelElement::getObservedPositionAndLineWidth(Int32 subeIdx, Float64 r
 /**
  * \brief Get the observed position of the sub-element subeIdx for a given redshift
  **/
-Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta) const
+Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta) const
 {
     Float64 dzOffset = m_Rays[subeIdx].GetOffset()/m_speedOfLightInVacuum;
 
@@ -1123,7 +1123,7 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
 /**
  * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
  **/
-void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
+void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
 {
     if(m_OutsideLambdaRange)
     {
@@ -1158,7 +1158,8 @@ void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelsp
     return;
 }
 
-void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay)
+void CLineModelElement::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, 
+                                                    const CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay)
 {
     if(m_OutsideLambdaRange){
         return;

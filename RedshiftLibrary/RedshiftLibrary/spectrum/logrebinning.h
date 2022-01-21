@@ -69,7 +69,7 @@ private:
     void  SetupRebinning( CSpectrum &spectrum, const TFloat64Range &lambdaRange);
     CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 gridCount) const;
     UInt32 InferTemplateRebinningSetup(const TFloat64Range& z_range, TFloat64Range& lambdaRange_tpl) const;
-    Bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl, const TFloat64Range& lambdaRange_tpl) const;
+    bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl, const TFloat64Range& lambdaRange_tpl) const;
     const std::string m_rebinMethod = "lin";
 
     CInputContext& m_inputContext;

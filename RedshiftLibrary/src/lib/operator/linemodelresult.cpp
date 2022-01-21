@@ -392,7 +392,7 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineMode
  */
 TBoolList CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
 {
-    Bool verbose = true;
+    bool verbose = true;
     UInt32 filterType=1;
     linetags ltags;
     TBoolList strongestIsHa(linemodelsols.size(), false);

@@ -42,6 +42,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -65,12 +66,11 @@ typedef float Float32;
 typedef double Float64;
 typedef char Char;
 typedef unsigned char Byte;
-typedef unsigned int Bool;
 typedef const char *String;
 
 typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Int64> TInt64List;
-typedef std::vector<Bool> TBoolList;
+typedef std::vector<bool> TBoolList;
 typedef std::vector<Int32> TInt32List;
 typedef std::vector<UInt32> TUInt32List;
 typedef std::vector<UInt8> TUInt8List;
@@ -100,6 +100,13 @@ typedef Float64 Sample;
 typedef std::vector<Mask> TMaskList;
 typedef std::vector<Redshift> TRedshiftList;
 typedef std::vector<Sample> TAxisSampleList;
+
+// for C++11, defined since C++17, 
+template <class T>
+constexpr typename std::add_const<T>::type& as_const(T& t) noexcept {return t;};
+
+template <class T>
+void as_const(const T&&) = delete;
 
 } // namespace NSEpic
 

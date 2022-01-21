@@ -162,7 +162,7 @@ void  COperatorTemplateFittingBase::RebinTemplate(  const std::shared_ptr<const 
     TFloat64Range intersectedLambdaRange( 0.0, 0.0 );
     TFloat64Range::Intersect( tplLambdaRange, spcLambdaRange_restframe, intersectedLambdaRange );
 
-    Bool b = tpl->Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, m_templateRebined_bf, m_mskRebined_bf, opt_interp);   
+    bool b = tpl->Rebin( intersectedLambdaRange, m_spcSpectralAxis_restframe, m_templateRebined_bf, m_mskRebined_bf, opt_interp);   
     if(!b) throw GlobalException(INTERNAL_ERROR,"COperatorTemplateFittingBase::RebinTemplate: error in rebinning tpl");
 
     //overlapRate

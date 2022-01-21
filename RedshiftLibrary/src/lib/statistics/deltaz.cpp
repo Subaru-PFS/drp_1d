@@ -125,7 +125,7 @@ Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 red
     }
     
     //find indexes: iz, izmin and izmax
-    bool ok = effectiveRange.getEnclosingIntervalIndices(const_cast<TFloat64List&>(redshifts),izmin,izmax);
+    bool ok = effectiveRange.getEnclosingIntervalIndices(redshifts,izmin,izmax);
     iz= std::lower_bound(redshifts.begin(),redshifts.end(),redshift) - redshifts.begin();
     
     
@@ -167,7 +167,7 @@ Int32 CDeltaz::Compute(const TFloat64List & merits, const TFloat64List & redshif
 Int32 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma)
 {
     sigma = -1.0; //default value
-    Bool verbose = false;
+    bool verbose = false;
     
     //quadratic fit
     Int32 i, n;

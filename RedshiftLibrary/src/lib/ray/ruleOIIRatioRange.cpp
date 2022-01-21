@@ -60,7 +60,7 @@ CRuleRatioRange::~CRuleRatioRange()
 {
 }
 
-void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
+void CRuleRatioRange::SetUp( bool EnabledArgument, ... )
 {
   Name = "ratiorange";
   Enabled = EnabledArgument;
@@ -73,7 +73,7 @@ void CRuleRatioRange::SetUp( Bool EnabledArgument, ... )
   va_end(Arguments);
 }
 
-Bool CRuleRatioRange::Check( CLineModelElementList& LineModelElementList )
+bool CRuleRatioRange::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

@@ -78,7 +78,7 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string cal
  * Populates the method parameters from the dataStore into the class members
  * Returns true if successful, false otherwise
  **/
-Bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore )
+bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore )
 {
     m_redshiftSeparation = parameterStore->Get<Float64>("extremaredshiftseparation");//,m_redshiftSeparation,2e-3);
     m_opt_linetypefilter = parameterStore->GetScoped<std::string>( "linemodel.linetypefilter");
@@ -758,7 +758,7 @@ Int32 getVelocitiesFromRefFile(const char* filePath, std::string spcid, Float64&
  * If that returned true, store results.
  **/
 
-Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
+bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
@@ -904,7 +904,7 @@ Bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
-    Bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
+    bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
     std::string fpb_opt_continuumcomponent = "fromspectrum";//Note: this is hardocoded! given that condition for FPB relies on having "tplfit"
     Int32 retInitB = linemodel_fpb.Init(spc, redshifts, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);

@@ -131,7 +131,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     CMask mskRebined;
     const TFloat64Range lambdaRange_restframe =
         photSpectralAxis_restframe.GetLambdaRange();
-    Bool b = tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
+    bool b = tpl->Rebin(lambdaRange_restframe, photSpectralAxis_restframe,
                         templateRebined_phot, mskRebined, opt_interp);
 
     if (!b)

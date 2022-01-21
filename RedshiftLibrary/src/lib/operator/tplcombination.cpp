@@ -176,8 +176,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         Log.LogDetail("  Operator-Tplcombination: Linear fitting, found normalization Factor=%e", normFactor);
     }
 
-    Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
-    Bool igmLoopUseless_WavelengthRange = false;
+    bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
+    bool igmLoopUseless_WavelengthRange = false;
     fittingResults.chisquare = INFINITY;//final best Xi2 value
     Float64 chisq, SNR;
     Float64 dtd_complement = 0.;//value mainly relevant with DisextinctData method
@@ -188,7 +188,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
      * 
      * TODO: keep the first method once we completely validate the equivalence of both method
     */
-    Bool DisextinctData = false; // true = option 1; false = option 2
+    bool DisextinctData = false; // true = option 1; false = option 2
     //create a template with cte flux = 1, to be used only when disextincting data and noise
     CTemplate identityTemplate("identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(), std::move(CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1)));
     // Prepare the fit data, once for all
@@ -507,7 +507,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting,
                                                                   CPriorHelper::TPriorZEList logpriorze,
-                                                                  Bool keepigmism,
+                                                                  bool keepigmism,
                                                                   Float64 FitEbmvCoeff,
                                                                   Int32 FitMeiksinIdx)
 {

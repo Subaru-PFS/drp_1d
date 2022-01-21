@@ -107,7 +107,7 @@ void CSpectrumFluxAxis::clear()
     m_StdError.clear();
 }
 
-Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
+bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
 {
     if( kernelHalfWidth == 0 )
         return false;
@@ -115,7 +115,7 @@ Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
     if( GetSamplesCount() < ( kernelHalfWidth ) + 1 )
         return false;
 
-    CSpectrumAxis tmp = *this;
+    const CSpectrumAxis tmp = *this;
 
     Int32 left = 0;
     Int32 right = 0;
@@ -129,11 +129,10 @@ Bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
 
         (*this)[i] = median.Find( tmp.GetSamples()+left, ( right - left ) +1 );
     }
-
     return true;
 }
 
-Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
+bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
 {
     if( kernelHalfWidth == 0 )
         return false;
@@ -162,7 +161,7 @@ Bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
 }
 
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev ) const
+bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
     const CSpectrumNoiseAxis & error = GetError();
 
@@ -176,7 +175,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDev( const CMask& mask, Float64& mean, Fl
     }
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const
+bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float64& mean,  Float64& sdev) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
@@ -209,7 +208,7 @@ Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError( const CMask& mask, Float
     return true;
 }
 
-Bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev ) const
+bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError( const CMask& mask, Float64& mean, Float64& sdev ) const
 {
     DebugAssert( mask.GetMasksCount() == GetSamplesCount() );
 
@@ -264,7 +263,7 @@ Float64  CSpectrumFluxAxis::ComputeRMSDiff( const CSpectrumFluxAxis& other )
     return er;
 }
 
-Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
+bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
 {
     Int32 N = GetSamplesCount();
     for( UInt32 i=0; i<N; i++ )
@@ -274,7 +273,7 @@ Bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
     return true;
 }
 
-Bool CSpectrumFluxAxis::Invert()
+bool CSpectrumFluxAxis::Invert()
 {
     Int32 N = GetSamplesCount();
     for( UInt32 i=0; i<N; i++ )

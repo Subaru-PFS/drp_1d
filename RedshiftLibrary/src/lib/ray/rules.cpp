@@ -64,7 +64,7 @@ Int32 CRules::check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutio
 {
     Int32 intval = 0;
 
-    Bool bval;
+    bool bval;
     bval = checkRule01(z, matchingSolutionSet);
     if(!bval){
         intval += 1;
@@ -91,13 +91,13 @@ Int32 CRules::check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutio
  *  - the string lines being unindentified due to high noise
  *
  */
-Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
+bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
 
     // check if only weak lines are in this solution set
     Int32 nStrong=0;
     for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
     {
-        Bool found  = matchingSolutionSet[i].RestRay.GetIsStrong();
+        bool found  = matchingSolutionSet[i].RestRay.GetIsStrong();
         if(found==1){
             nStrong++;
         }
@@ -170,7 +170,7 @@ Bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
  * This rule applies when one of OIII lines have been detected.
  *
  */
-Bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
+bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
 
     // check if the OIII doublet is in this solution set
     Int32 founda=0;
@@ -203,7 +203,7 @@ Bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
  * This rule applies when Hbeta has been detected.
  *
  */
-Bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
+bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet){
 
     // check if the Hbeta doublet is in this solution set
     Int32 foundHbeta=0;

@@ -92,8 +92,8 @@ public:
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
-    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
-    Bool initLambdaOffsets(std::string offsetsCatalogsRelPath);
+    bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
+    bool initLambdaOffsets(std::string offsetsCatalogsRelPath);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange);

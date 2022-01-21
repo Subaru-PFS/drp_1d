@@ -62,17 +62,17 @@ class CRayCatalogsTplShape
 
 public:
 
-    Bool Init(std::string calibrationPath, 
+    bool Init(std::string calibrationPath, 
               std::string opt_tplratioCatRelPath, 
               Int32 enableISMCalzetti,
               std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
               Float64 nsigmasupport);
 
-    Bool Load( const char* dirPath );
+    bool Load( const char* dirPath );
     bool LoadVelocities( const char* filepath, Int32 k );
     bool LoadPrior( const char* filepath, Int32 k );
 
-    //Bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
+    //bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
     CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
     Int32 GetCatalogsCount();
@@ -81,8 +81,8 @@ public:
     Int32 GetIsmIndex(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
 
-    Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
-    Bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
+    bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
+    bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
     const CRayCatalog& GetCatalog(Int32 icatlog);
     const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance(){return m_RayCatalogLinesCorrespondingNominalAmp;};
 private:

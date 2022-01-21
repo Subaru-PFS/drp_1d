@@ -91,8 +91,8 @@ namespace NSEpic
     
     void SaveSolutionSetToStream( std::ostream& stream, TSolutionSetList selectedResults, Int32 type) const;
 
-    Bool GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
-    Bool GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
+    bool GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
+    bool GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const;
 
     Int32 getNStrongRestLines( const TSolutionSet& s ) const;
 
@@ -114,7 +114,7 @@ namespace NSEpic
     CRayCatalog m_RestCatalog;
     CRayCatalog m_DetectedCatalog;
   private:
-    Bool m_bypassDebug;
+    bool m_bypassDebug;
   };
 }
 

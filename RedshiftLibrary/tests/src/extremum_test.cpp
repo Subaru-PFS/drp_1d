@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_isolated)
 
     peaks1.SortIndexes(y);
     
-    Bool v = peaks1.Cut_Threshold(x, y, 2);
+    bool v = peaks1.Cut_Threshold(x, y, 2);
     for (Int32 i = 0; i < x.size(); i++) {       
         maxPoint.push_back(SPoint(x[i],  y[i]) );
     }
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Extremum_cut_onePeak)
 
     peaks1.SortIndexes(y);
 
-    Bool v = peaks1.Cut_Threshold(x, y, 2);
+    bool v = peaks1.Cut_Threshold(x, y, 2);
     for (Int32 i = 0; i < x.size(); i++) {       
         maxPoint.push_back(SPoint(x[i],  y[i]) );
     }

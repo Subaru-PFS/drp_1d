@@ -67,7 +67,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     const CSpectrum& spc=*(inputContext->GetSpectrum());
     const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
 
-    Bool storeResult = false;
+    bool storeResult = false;
     m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination = inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
@@ -165,7 +165,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 }
 
-Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                        const CSpectrum& spc,
                                        const CTemplateCatalog& tplCatalog,
                                        const TStringList& tplCategoryList,
@@ -342,7 +342,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
 
         //check chi2 results status for this template
         {
-            Bool foundBadStatus = 0;
+            bool foundBadStatus = 0;
             for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 if(result->Status[kz]!=COperator::nStatus_OK)
@@ -404,13 +404,13 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     auto TplFitResult = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock());
     const TFloat64List & redshifts = TplFitResult->Redshifts;
 
-    Bool foundRedshiftAtLeastOnce = false;
+    bool foundRedshiftAtLeastOnce = false;
 
     if(TplFitResult->ChiSquare.size() != redshifts.size()){
         throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
     }
 
-    Bool foundBadStatus = false;
+    bool foundBadStatus = false;
 
     if(foundBadStatus)
     {
@@ -444,7 +444,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior= NAN;
         extremaResult->m_ranked_candidates[i].second.FittedTplSNR= TplFitResult->SNR[idx];
         //make sure tpl is non-rebinned
-        Bool currentSampling = tplCatalog.m_logsampling;
+        bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
                                                         z,

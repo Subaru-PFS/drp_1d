@@ -66,8 +66,8 @@ public:
     CSpectrumFluxCorrectionMeiksin();
     ~CSpectrumFluxCorrectionMeiksin();
 
-    Bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
-    Bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
+    bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
+    bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
     TFloat64List Convolve(const TFloat64List& arr, const TFloat64List& kernel);
     TFloat64List ApplyAdaptativeKernel(const TFloat64List& arr, 
                                         const Float64 z_center, 

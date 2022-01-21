@@ -166,7 +166,7 @@ Int32 CContinuumIrregularSamplingMedian::EvenMirror( const Float64* y_input, Int
  * estimate the 'middle' resolution (ex: for PFS the resolution doesn't vary more than ~ 25 % in a spectral axis')
  * compute the continuum using the median technique with that adapted resolution
 **/
-Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
+bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis )
 {
     Float64 resolution = s.GetMeanResolution();
 
@@ -178,7 +178,7 @@ Bool CContinuumIrregularSamplingMedian::RemoveContinuum( const CSpectrum& s, CSp
 /**
  * Computes the continuum using the median technique, and the input resolution.
  */
-Bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution )
+bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution )
 {
     Int32 k0 = 0;
     UInt32 k1 = 0;

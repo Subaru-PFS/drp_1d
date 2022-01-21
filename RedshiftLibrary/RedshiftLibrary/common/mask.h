@@ -65,7 +65,7 @@ public:
     Float64         CompouteOverlapRate( const CMask& other ) const;
     Float64         IntersectAndComputeOverlapRate( const CMask& other ) const;
 
-    Bool            IntersectWith( const CMask& other );
+    bool            IntersectWith( const CMask& other );
     UInt32          GetMaskedSampleCount() const;
     UInt32          GetUnMaskedSampleCount() const;
     void            SetSize( UInt32 s );

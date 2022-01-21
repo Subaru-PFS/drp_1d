@@ -88,7 +88,7 @@ class CThreadPool
         m_IOService.dispatch(task);
     }
 
-    Bool IsRunning()
+    bool IsRunning()
     {
         for (std::list<boost::thread *>::iterator it = m_Threads.begin(),
                                                   end = m_Threads.end();

@@ -91,13 +91,13 @@ private:
     Float64 m_enlargeRate;
 
     // Line Matching
-    Bool m_disablegaussianfitqualitycheck;
-    Bool m_dynamicLinematching;
+    bool m_disablegaussianfitqualitycheck;
+    bool m_dynamicLinematching;
     Int64 m_minMatchNum;
     Float64 m_tol;
 
     // Log
-    Bool m_bypassDebug; // If True, debug messages are suppressed even if the --verbose flag is passed.
+    bool m_bypassDebug; // If True, debug messages are suppressed even if the --verbose flag is passed.
 };
 
 }

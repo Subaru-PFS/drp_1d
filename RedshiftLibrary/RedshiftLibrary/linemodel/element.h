@@ -71,11 +71,12 @@ public:
                Float64 nominalWidth, 
                TUInt32List catalogIndexes);
 
-    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta=true) const;
+    Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta=true) const;
     Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
     void    getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
                                             Float64& mu, Float64& sigma, 
-                                            Bool doAsymfitdelta=true) const;
+                                            bool doAsymfitdelta=true) const;
+
     std::string GetElementTypeTag();
 
     void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
@@ -94,7 +95,7 @@ public:
 
     Float64 GetContinuumAtCenterProfile(
         Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
-        Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis);
+        Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis);
 
     void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
@@ -125,12 +126,12 @@ public:
     void
     addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                        CSpectrumFluxAxis &modelfluxAxis,
-                       CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
+                       const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
                        Int32 lineIdx = -1);
     void
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
-                               CSpectrumFluxAxis &continuumFluxAxis,
+                               const CSpectrumFluxAxis &continuumFluxAxis,
                                Float64 redshift, bool emissionRay);
 
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
@@ -173,13 +174,13 @@ public:
     std::vector<CRay> GetRays();
     std::string GetRayName(Int32 subeIdx);
     bool IsOutsideLambdaRange();
-    Float64 GetLineWidth(Float64 lambda, Float64 z = 0., Bool isEmission=0) const;
+    Float64 GetLineWidth(Float64 lambda, Float64 z = 0., bool isEmission=0) const;
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
     std::vector<Int32> m_LineCatalogIndexes;
    
     Float64 GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0,
-                                   Float64 sigma, Bool isEmission);
+                                   Float64 sigma, bool isEmission);
 
     Float64 GetSumCross();
     void SetSumCross(Float64 val);

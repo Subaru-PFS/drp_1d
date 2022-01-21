@@ -116,7 +116,7 @@ void CLineModelElementList::ResetElementIndexesDisabled()
 **/
 std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType )
 {
-    Bool verbose = false;
+    bool verbose = false;
     if(verbose)
     {
         Log.LogDebug("    model: group tags for lineType=%d", lineType);
@@ -514,7 +514,7 @@ void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(UInt32 index,Float64 x0,
   m_ampOffsetsX2[index] = x2;
 }
 
-Bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& modelfluxAxis )
+bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& modelfluxAxis )
 {
 
 
