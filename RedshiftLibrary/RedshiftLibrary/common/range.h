@@ -113,7 +113,7 @@ template <typename T> class CRange
         return false;
     }
 
-    std::vector<T> SpreadOver(Float64 delta) const
+    std::vector<T> SpreadOver(T delta) const
     {
         std::vector<T> v;
 
@@ -135,18 +135,20 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta, Float64 offset=0.) const
+    std::vector<T> SpreadOverLog(T delta, T offset=0.) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
+
         std::vector<T> v;
-        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
         {
             v.resize(1);
             v[0] = m_Begin;
             return v;
         }
 
-        Float64 x = m_Begin + offset;
-        Float64 edelta = exp(delta);
+        T x = m_Begin + offset;
+        T edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
         while (x < (m_End + offset + epsilon) && count < maxCount)
@@ -158,8 +160,9 @@ template <typename T> class CRange
         return v;
     }  
     //spread over log (z+1)
-    std::vector<T> SpreadOverLogZplusOne(Float64 delta) const
+    std::vector<T> SpreadOverLogZplusOne(T delta) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
         return SpreadOverLog(delta, 1.);
     }
     //  template<typename T>
@@ -172,7 +175,8 @@ template <typename T> class CRange
   friend std::istream& operator>> (std::istream &in, CRange<T> &range)
   {
     in >> range.m_Begin;
-    in >> range.m_End;
+    range.m_End = range.m_Begin;
+
     return in;
  }
 
@@ -218,32 +222,6 @@ template <typename T> class CRange
     return true;
   }
 
-    bool getExactEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
-  {
-    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
-      {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
-        return false;
-      }
-    
-    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
-    typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
-
-    if(*it_min != m_Begin)
-      {
-        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_Begin);
-        return false;
-      }
-    if(*it_max != m_End)
-     {
-        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_End);
-        return false;
-      }
-
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
-    return true;
-  }
   //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
   bool getClosedIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
   {
