@@ -36,64 +36,70 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RAY_CATALOG_
-#define _REDSHIFT_RAY_CATALOG_
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/ray.h"
+using namespace NSEpic;
 
-#include <vector>
-#include <string>
-
-namespace NSEpic
+CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const Float64& n_sigma_support):
+  m_Name(name),
+  CRayCatalog(n_sigma_support)
 {
-
-/**
- * \ingroup Redshift
- * Line catalog allow to store multiple lines description in a single text file.
- *
- */
-class CRayCatalog
-{
-
-public:
-
-    typedef std::vector<CRay> TRayVector;
-
-    CRayCatalog();
-    CRayCatalog(Float64 sigmaSupport);
-    ~CRayCatalog();
-
-
-  void Add( const CRay& r );
-  void AddRayFromParams(const std::string& name,
-			const Float64& position,
-			const std::string& type,
-			const std::string& force,
-			const std::string& profile,
-			const TAsymParams& asymParams,
-			const std::string& groupName,
-			const Float64& nominalAmplitude,
-			const std::string& velocityGroup,
-			const Float64& velocityOffset,
-			const bool& enableVelocityFit,
-			const Int32& id);
-  
-    const TRayVector& GetList() const;
-    const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
-    const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
-
-    void Sort();
-protected:
-  void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
-private:
-
-    TRayVector m_List;
-    std::map<std::string, TRayVector> rayGroups;
-
-  Float64 m_nSigmaSupport;
-};
 
 }
 
-#endif
+CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog):
+  CRayCatalog(lineCatalog),
+  m_Name(name)
+{
+  // TODO set all nominalAmplitudes to 0
+  
+}
+
+/*
+void CLineRatioCatalog::addLine(const std::string& name,
+				const Float64& position,
+				const std::string& type,
+				const std::string& force,
+				const std::string& profile,
+				const TAsymParams& asymParams,
+				const std::string& groupName,
+				const Float64& nominalAmplitude,
+				const std::string& velocityGroup,
+				const Float64& velocityOffset,
+				const bool& enableVelocityFit,
+				const Int32& id)
+{
+  m_LineCatalog.AddRayFromParams(name,
+				 position,
+				 type,
+				 force,
+				 profile,
+				 asymParams,
+				 groupName,
+				 nominalamplitude,
+				 velocityGroup,
+				 velocityOffset,
+				 enableVelocityFit,
+				 id);
+}
+*/
+void CLineRatioCatalog::addVelocity(const std::string& name, const Float64& value)
+{
+  if(!m_Velocities.emplace(name,value).second)
+    throw GlobalException(INTERNAL_ERROR,Formatter()<< "Velocity for group " << name << " already exists");
+}
+
+void CLineRatioCatalog::setPrior(const Float64& prior)
+{
+  m_Prior = prior;
+}
+void CLineRatioCatalog::setIsmIndex(const Float64& ismIndex)
+{
+  m_IsmIndex = ismIndex;
+}
+    
+const Float64& CLineRatioCatalog::getVelocity(const std::string& velGroup)
+{
+  return m_Velocities[velGroup];
+}

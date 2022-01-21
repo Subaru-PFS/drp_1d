@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/ray/ray.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
@@ -68,15 +69,12 @@ public:
               std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
               Float64 nsigmasupport);
 
-    bool Load( const char* dirPath );
-    bool LoadVelocities( const char* filepath, Int32 k );
-    bool LoadPrior( const char* filepath, Int32 k );
 
     //bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
     CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
     Int32 GetCatalogsCount();
-    const std::vector<Float64> & getCatalogsPriors();
+    std::vector<Float64> getCatalogsPriors();
     std::string GetCatalogName(Int32 idx);
     Int32 GetIsmIndex(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
@@ -84,19 +82,17 @@ public:
     bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
     bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
     const CRayCatalog& GetCatalog(Int32 icatlog);
-    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance(){return m_RayCatalogLinesCorrespondingNominalAmp;};
+    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance()
+  {
+    return m_RayCatalogLinesCorrespondingNominalAmp;
+  };
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
 
-    std::string tplshapedcatalog_relpath;
 
-    std::vector<std::string> m_RayCatalogNames;
-    std::vector<CRayCatalog> m_RayCatalogList;
+  std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
     std::vector<std::vector<TFloat64List>> m_RayCatalogLinesCorrespondingNominalAmp;
-    std::vector<Float64> m_ELvelocities;
-    std::vector<Float64> m_ABSvelocities;
-    std::vector<Float64> m_Priors;
-    std::vector<Int32> m_IsmIndexes;
+
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;

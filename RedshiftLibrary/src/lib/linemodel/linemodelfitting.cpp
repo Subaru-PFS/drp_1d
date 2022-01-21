@@ -1430,7 +1430,7 @@ Int32 CLineModelFitting::getTplshape_count()
     return m_CatalogTplShape.GetCatalogsCount();
 }
 
-const std::vector<Float64> & CLineModelFitting::getTplshape_priors() 
+const std::vector<Float64>&  CLineModelFitting::getTplshape_priors() 
 {
     if(m_rigidity!="tplshape")
     {

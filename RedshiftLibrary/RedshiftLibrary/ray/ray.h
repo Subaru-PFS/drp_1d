@@ -146,6 +146,7 @@ public:
     TAsymParams         GetAsymParams() const;
     void                SetAsymParams(TAsymParams asymParams);
     void                resetAsymFitParams();
+  void setNominalAmplitude(const Float64&ampl) { m_NominalAmplitude = ampl;}
 
     const std::string&  GetName() const;
     const std::string&  GetGroupName() const;

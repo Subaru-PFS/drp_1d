@@ -36,11 +36,16 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RAY_CATALOG_
-#define _REDSHIFT_RAY_CATALOG_
+#ifndef _LINE_RATIO_CATALOG_H_
+#define _LINE_RATIO_CATALOG_H_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+
+#include <boost/format.hpp>
 
 #include <vector>
 #include <string>
@@ -48,52 +53,47 @@
 namespace NSEpic
 {
 
-/**
- * \ingroup Redshift
- * Line catalog allow to store multiple lines description in a single text file.
- *
- */
-class CRayCatalog
-{
+  class CLineRatioCatalog : public CRayCatalog
+  {
+  public:
+    CLineRatioCatalog(const std::string& name, const Float64& n_sigma_support);
+    /*CLineRatioCatalog(const std::string& name,
+		      const Float64& n_sigma_support,
+		      const Float64& prior
+		      const Int32& ismIndex);*/
+    CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+    
+    
+    /*    void addLine(const std::string& name,
+		 const Float64& position,
+		 const std::string& type,
+		 const std::string& force,
+		 const std::string& profile,
+		 const TAsymParams& asymParams,
+		 const std::string& groupName,
+		 const Float64& nominalAmplitude,
+		 const std::string& velocityGroup,
+		 const Float64& velocityOffset,
+		 const bool& enableVelocityFit,
+		 const Int32& id);
+    */
 
-public:
-
-    typedef std::vector<CRay> TRayVector;
-
-    CRayCatalog();
-    CRayCatalog(Float64 sigmaSupport);
-    ~CRayCatalog();
-
-
-  void Add( const CRay& r );
-  void AddRayFromParams(const std::string& name,
-			const Float64& position,
-			const std::string& type,
-			const std::string& force,
-			const std::string& profile,
-			const TAsymParams& asymParams,
-			const std::string& groupName,
-			const Float64& nominalAmplitude,
-			const std::string& velocityGroup,
-			const Float64& velocityOffset,
-			const bool& enableVelocityFit,
-			const Int32& id);
-  
-    const TRayVector& GetList() const;
-    const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
-    const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
-
-    void Sort();
-protected:
-  void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
-private:
-
-    TRayVector m_List;
-    std::map<std::string, TRayVector> rayGroups;
-
-  Float64 m_nSigmaSupport;
-};
-
+    void addVelocity(const std::string& name, const Float64& value);
+    void setPrior(const Float64& prior);
+    void setIsmIndex(const Float64& ismIndex);
+    const Float64& getPrior(){return m_Prior;}
+    const std::string& getName(){return m_Name;}
+    const Int32& getIsmIndex(){ return m_IsmIndex;}
+    const Float64& getVelocity(const std::string&group);
+  private:
+    //    CRayCatalog m_LineCatalog;
+    std::string m_Name;
+    std::map<std::string, Float64> m_Velocities;
+    Float64 m_Prior;
+    Int32 m_IsmIndex;
+    
+    
+  };
 }
 
 #endif

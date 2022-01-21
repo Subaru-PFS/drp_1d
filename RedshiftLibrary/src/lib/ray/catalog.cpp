@@ -215,3 +215,12 @@ void CRayCatalog::Sort()
     sort(m_List.begin(), m_List.end());
 }
 
+void CRayCatalog::setLineAmplitude(const std::string& name,const Float64& nominalAmplitude)
+{
+    TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+      if(it->GetName() == name) return it->setNominalAmplitude(nominalAmplitude);
+    }
+    throw GlobalException(INTERNAL_ERROR,Formatter()<<" Line " << name << " does not exist in catalog");
+}
