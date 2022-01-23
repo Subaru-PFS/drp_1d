@@ -62,10 +62,10 @@ namespace NSEpic
       CRay RestRay;
       Float64 Redshift;
 
-      SSolution( const CRay& detectedRay, const CRay& restRay, Float64 redshift )
+      SSolution( CRay detectedRay, CRay restRay, Float64 redshift )
       {
-        DetectedRay = detectedRay.clone();
-        RestRay = restRay.clone();
+        DetectedRay = std::move(detectedRay);
+        RestRay = std::move(restRay);
         Redshift = redshift;
       }
 

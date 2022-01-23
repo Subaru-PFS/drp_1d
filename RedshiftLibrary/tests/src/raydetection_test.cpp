@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetPosition(), 7.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetWidth(), 1.0, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetIsStrong() == false);
 }
@@ -341,8 +341,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetPosition(), 7.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetWidth(), 1.0, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetIsStrong() == false);
 
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetAmplitude(), 0.3, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetPosition(), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
 }
 
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetAmplitude(), 1.5, 1e-6);
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetPosition(), 40.0, 1e-6);
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetWidth(), 4.0, 1e-6);
-  BOOST_CHECK(res->RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(res->RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(res->RayCatalog.GetList()[0].GetIsStrong() == true);
   BOOST_CHECK(res->RayCatalog.GetList()[0].GetIsEmission() == true);
 }

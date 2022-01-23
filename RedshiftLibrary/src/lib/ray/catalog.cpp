@@ -71,7 +71,7 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
         {
             if( typeFilter == -1 || typeFilter == m_List[i].GetType()){
                 if( forceFilter == -1 || forceFilter == m_List[i].GetForce()){
-                    filteredList.push_back(m_List[i].clone());
+                    filteredList.push_back(m_List[i]);
                 }
             }
         }

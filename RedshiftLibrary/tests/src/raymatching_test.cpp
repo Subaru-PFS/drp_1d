@@ -55,18 +55,18 @@ BOOST_AUTO_TEST_CASE(Compute){
 
   CRayCatalog detectedRayCatalog;
   CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
-  detectedRayCatalog.Add(CRay ( CRay("Ray1",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray2",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  detectedRayCatalog.Add( CRay("Ray1",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray2",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
 
-  detectedRayCatalog.Add(CRay ( CRay("Ray3",250, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray4",800, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  detectedRayCatalog.Add( CRay("Ray3",250, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray4",800, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
 
 
   CRayCatalog restRayCatalog;
-  restRayCatalog.Add(CRay ( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_3",125, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_4",400, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  restRayCatalog.Add( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_3",125, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_4",400, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
 
   CRayMatching lineMathing = CRayMatching();
   TFloat64Range redshiftRange = TFloat64Range(0,5);
@@ -84,14 +84,14 @@ BOOST_AUTO_TEST_CASE(Compute){
 
 
   detectedRayCatalog = CRayCatalog();
-  detectedRayCatalog.Add(CRay ( CRay("Ray1",800, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  detectedRayCatalog.Add(CRay("Ray1",800, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
 
 
   restRayCatalog= CRayCatalog();
-  restRayCatalog.Add(CRay ( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_3",125, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_4",400, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  restRayCatalog.Add( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_3",125, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_4",400, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
   nThreshold =1;
   res = lineMathing.Compute(detectedRayCatalog, restRayCatalog, redshiftRange, nThreshold, tol, typeFilter, detectedForceFilter, restRorceFilter);
   BOOST_CHECK_EQUAL(res->SolutionSetList.size(), 1);
@@ -101,20 +101,20 @@ BOOST_AUTO_TEST_CASE(Compute){
 
 
   detectedRayCatalog = CRayCatalog();
-  detectedRayCatalog.Add(CRay ( CRay("Ray1",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray3",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray4",80, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray5",160, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  detectedRayCatalog.Add(CRay ( CRay("Ray6",320, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  detectedRayCatalog.Add( CRay("Ray1",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray2",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray3",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray4",80, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray5",160, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  detectedRayCatalog.Add( CRay("Ray6",320, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
 
 
   restRayCatalog= CRayCatalog();
-  restRayCatalog.Add(CRay ( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_2",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_3",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_4",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
-  restRayCatalog.Add(CRay ( CRay("Ray2_5",80, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6)));
+  restRayCatalog.Add( CRay("Ray2_1",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_2",10, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_3",20, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_4",40, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
+  restRayCatalog.Add( CRay("Ray2_5",80, CRay::nType_Emission, profilesym->Clone(), 2, 1, 4, 5.6));
   nThreshold =3;
   redshiftRange = TFloat64Range(0,10);
   res = lineMathing.Compute(detectedRayCatalog, restRayCatalog, redshiftRange, nThreshold, tol, typeFilter, detectedForceFilter, restRorceFilter);

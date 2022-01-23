@@ -3488,9 +3488,8 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
     const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    const CLineProfile_const_ptr& profile = ray.GetProfile();
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
-    Float64 winsize = profile->GetNSigmaSupport()*c;
+    Float64 winsize = ray.GetProfile().GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
 
@@ -4143,7 +4142,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
     //get index of lya inside tplshape catalog
     if(tplratio) {
         lineIndex = std::find_if(catalog.begin(), catalog.end(), 
-                    [](const CRay& ray){ linetags ltags; return ray.GetName()==ltags.lya_em;}) - catalog.begin();
+                    [lyaTag](const CRay& ray){ return ray.GetName()==lyaTag;}) - catalog.begin();
         if(lineIndex ==-1 || lineIndex > catalog.size()-1)
             return 2;//Lya alpha not found in tplshape catalog
     }else{
@@ -4154,26 +4153,23 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
 
     //finding or setting the correct profile
     CLineProfile_ptr profile;
-    if (m_forceLyaFitting && catalog[lineIndex].GetProfile()->isAsymFixed())
-        profile = std::move(std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"))); 
+    if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+        profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean")); 
     else
-        profile =  catalog[lineIndex].GetProfile()->Clone();
-    m_Elements[idxLyaE]->m_Rays[idxLineLyaE].SetProfile(std::move(profile));
+        profile =  catalog[lineIndex].GetProfile().Clone();
     
-    bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
+    bool doasymfit = profile->isAsymFit() && !m_Elements[idxLyaE]->IsOutsideLambdaRange();
 
-    //FIT the profile parameters
-    if(profile->isAsymFit() && !lineOutsideLambdaRange)
-    {
+    m_Elements[idxLyaE]->m_Rays[idxLineLyaE].SetProfile(std::move(profile));
 
+    if(!doasymfit) return 3;
+    else{
         TUInt32List filterEltsIdxLya;
         filterEltsIdxLya.push_back(idxLyaE);
         //3. find the best width and asym coeff. parameters
         TAsymParams bestfitParams = FitAsymParameters(redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
         //4. set the associated Lya members in the element definition
         m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
-    }else{ 
-        return 3;
     }
 
     return 1;
@@ -5451,9 +5447,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 {
     CLineModelSolution modelSolution;
     modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
-    std::transform (m_RestRayList.begin(), m_RestRayList.end(), std::back_inserter(modelSolution.Rays), 
-                                                         [](const CRay &c){return c.clone();});
-
+    modelSolution.Rays = m_RestRayList;
     modelSolution.ElementId.resize(m_RestRayList.size());
     modelSolution.snrHa = NAN;
     modelSolution.lfHa = NAN;
@@ -5520,13 +5514,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                     {
-                        flux = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, ampError);
+                        flux = m_RestRayList[iRestRay].GetProfile().GetLineFlux( amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile().GetLineFlux( sigma, ampError);
                     }else{
                         Float64 _amp = cont*amp;
                         Float64 _ampError = cont*ampError;
-                        flux = -m_RestRayList[iRestRay].GetProfile()->GetLineFlux( _amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, _ampError);
+                        flux = -m_RestRayList[iRestRay].GetProfile().GetLineFlux( _amp, sigma);
+                        fluxError = m_RestRayList[iRestRay].GetProfile().GetLineFlux( sigma, _ampError);
                     }
                 }
                 modelSolution.Sigmas.push_back(sigma);

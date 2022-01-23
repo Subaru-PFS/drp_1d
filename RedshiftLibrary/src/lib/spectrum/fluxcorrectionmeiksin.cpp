@@ -198,7 +198,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0
     }
     Float64 lambda0_obs = lambda0_rest*(1+z_bin_meiksin);
     Float64 sigma_obs = lsf->GetWidth(lambda0_obs);
-    Float64 sigmaSupport = lsf->GetProfile()->GetNSigmaSupport();
+    Float64 sigmaSupport = lsf->GetProfile().GetNSigmaSupport();
 
     Float64 lbdastep_rest = 1.;//value in angstrom based on calibration-igm files
     Int32 Nhalf = std::round(sigmaSupport*sigma_obs/(1+z_bin_meiksin)/lbdastep_rest);

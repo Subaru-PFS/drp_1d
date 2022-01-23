@@ -74,10 +74,25 @@ public:
         nForce_Strong = 2,
     };
 
-    CRay();
+    CRay() = default;
     CRay( const std::string& name,
           Float64 pos, UInt32 type,
-          CLineProfile_ptr profile,
+          CLineProfile_ptr &&profile,
+          UInt32 force,
+          Float64 amp=-1.0,
+          Float64 width=-1.0,
+          Float64 cut=-1.0,
+          Float64 posErr=-1.0,
+          Float64 sigmaErr=-1.0,
+          Float64 ampErr=-1.0,
+          const std::string& groupName="-1",
+          Float64 nominalAmp=1.0,
+          const std::string& velGroupName="-1",
+	      Int32 id=-1);
+
+    CRay( const std::string& name,
+          Float64 pos, UInt32 type,
+          const CLineProfile &profile,
           UInt32 force,
           Float64 amp=-1.0,
           Float64 width=-1.0,
@@ -91,11 +106,9 @@ public:
 	      Int32 id=-1);
     
     CRay(const CRay & other); 
-    CRay(CRay && other); 
+    CRay(CRay && other) = default; 
     CRay& operator=(const CRay& other);  
-    CRay& operator=(CRay&& other); 
-
-    CRay clone() const;
+    CRay& operator=(CRay&& other) = default; 
 
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
@@ -105,9 +118,8 @@ public:
     bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
-    CLineProfile_const_ptr       GetProfile() const;
-    void                SetProfile(CLineProfile_ptr&& profile);
-
+    const CLineProfile &  GetProfile() const;
+    void                SetProfile(CLineProfile_ptr &&profile);
     Float64             GetPosition() const;
     Float64             GetOffset() const;
     bool                SetOffset(Float64 val);

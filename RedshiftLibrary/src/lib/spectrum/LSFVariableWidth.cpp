@@ -46,7 +46,7 @@ using namespace std;
 //used to create mapping between width and lambda values
 //Instead of this 
 CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(const std::shared_ptr<const TLSFGaussianVarWidthArgs>& args):
-    CLSF(GaussianVariableWidth, std::make_shared<CLineProfileSYM>()),
+    CLSF(GaussianVariableWidth, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
     m_width(args->width),
     m_spcAxis(args->lambdas)
 {
