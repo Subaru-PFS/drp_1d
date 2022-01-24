@@ -300,7 +300,7 @@ std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, co
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         //check linetype
-        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetypeRef){
+        if(m_Elements[iElts]->m_Rays[0].GetType() != linetypeRef){
             continue;
         }
 
@@ -420,7 +420,7 @@ Int32 CLineModelElementList::FindElementIndex(std::string LineTagStr, Int32 line
         if( lineIdx!=-1 ){
             if( linetype!=-1 )
             {
-                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetType() != linetype){
+                if(m_Elements[iElts]->m_Rays[lineIdx].GetType() != linetype){
                     continue;
                 }
             }

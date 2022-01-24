@@ -1719,7 +1719,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
                     Float64 err = 1e-22;
                     Float64 amax = meanContinuum;
-                    if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+                    if(m_Elements[iElts]->m_Rays[0].GetType() == CRay::nType_Absorption)
                     {
                         amax = meanContinuum*0.5*coeffAmpAbsorption;
                     }else{
@@ -3485,7 +3485,7 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
         return indexes;
       }
     TInt32RangeList refsupport = m_Elements[ind]->getSupport();
-    const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
+    const CRay& ray = m_Elements[ind]->m_Rays[0];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
@@ -3499,7 +3499,7 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
     Int32 y2=0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
+        if(m_Elements[iElts]->m_Rays[0].GetType() != linetype){
             continue;
         }
 
@@ -4888,13 +4888,13 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff()
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() ){
                 continue;
             }
 
             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
             sumAmps += amp;
-            if( m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            if( m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
             {
                 AmpsStrong.push_back(amp);
             }
@@ -4931,10 +4931,10 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() ){
                 continue;
             }
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() ){
                 continue;
             }
 
@@ -5062,11 +5062,11 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() )
             {
                 continue;
             }
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
             {
                 continue;
             }
@@ -5075,7 +5075,7 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
             if( amp>0.0)
             {
                 isStrongPresent = true;
-                Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found Strong EL: %s", m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str());
+                Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found Strong EL: %s", m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str());
                 break;
             }
         }
@@ -5103,7 +5103,7 @@ bool CLineModelFitting::GetModelHaStrongest()
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() )
             {
                 continue;
             }
@@ -5111,10 +5111,10 @@ bool CLineModelFitting::GetModelHaStrongest()
             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
             if(amp>0. && amp>ampMax)
             {
-                lineMax = m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str();
+                lineMax = m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str();
                 ampMax = amp;
             }
-            if( strcmp(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str(),ltags.halpha_em)==0)
+            if( strcmp(m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str(),ltags.halpha_em)==0)
             {
                 ampHa = amp;
             }
@@ -5441,7 +5441,7 @@ Int32 CLineModelFitting::improveBalmerFit()
 
 
 /**
- * \brief Returns a SLineModelSolution object populated with the current solutions.
+ * \brief Returns a CLineModelSolution object populated with the current solutions.
  **/
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 {
@@ -5514,13 +5514,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
                 {
                     if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
                     {
-                        flux = m_RestRayList[iRestRay].GetProfile().GetLineFlux( amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile().GetLineFlux( sigma, ampError);
+                        flux = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( amp, sigma);
+                        fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, ampError);
                     }else{
                         Float64 _amp = cont*amp;
                         Float64 _ampError = cont*ampError;
-                        flux = -m_RestRayList[iRestRay].GetProfile().GetLineFlux( _amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile().GetLineFlux( sigma, _ampError);
+                        flux = -m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( _amp, sigma);
+                        fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, _ampError);
                     }
                 }
                 modelSolution.Sigmas.push_back(sigma);
@@ -6068,7 +6068,7 @@ bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
             Int32 nRays = m_Elements[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
 
-                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                if(m_Elements[iElts]->m_Rays[j].GetName() == currentCatalogLineList[kL].GetName())
                 {
                     m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
                 }

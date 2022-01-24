@@ -167,6 +167,7 @@ public:
     void resetAsymfitParams();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
     Int32 FindElementIndex(std::string LineTagStr);
+    const CLineProfile & getLineProfile(Int32 rayIdx) const;
 
     Float64 GetSignFactor(Int32 subeIdx);
 
@@ -229,7 +230,7 @@ public:
 
   Float64 m_absLinesLimit;
 
-  const CLineProfile & getLineProfile(Int32 rayIdx) const;
+
 
   TInt32List          m_StartNoOverlap;
   TInt32List          m_EndNoOverlap;
