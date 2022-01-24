@@ -52,7 +52,8 @@ class CTemplateCatalog;
 class CRayCatalog;
 class CParameterStore;
 class CPhotBandCatalog;
-
+class CRayCatalogsTplShape;
+  
 class CInputContext
 {
  public:
@@ -60,6 +61,7 @@ class CInputContext
                 std::shared_ptr<CTemplateCatalog> tmplCatalog,
                 std::shared_ptr<CRayCatalog> gal_rayCatalog,
                 std::shared_ptr<CRayCatalog> qso_rayCatalog,
+                std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
                 std::shared_ptr<CPhotBandCatalog> photBandCatalog,
                 std::shared_ptr<CParameterStore> paramStore);
 
@@ -98,7 +100,7 @@ private:
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
-
+  std::shared_ptr<CRayCatalogsTplShape> m_gal_lineRatioCatalog;
   void OrthogonalizeTemplates();
   void RebinInputs();
 };

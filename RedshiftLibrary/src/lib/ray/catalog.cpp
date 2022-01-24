@@ -39,7 +39,6 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/ray/catalog.h"
 
 #include <algorithm>    // std::sort
@@ -59,11 +58,6 @@ using namespace boost;
 using namespace boost::filesystem;
 
 
-CRayCatalog::CRayCatalog():
-  m_nSigmaSupport(N_SIGMA_SUPPORT)
-{
-
-}
 
 CRayCatalog::CRayCatalog(Float64 sigmaSupport):
   m_nSigmaSupport(sigmaSupport)
@@ -71,13 +65,6 @@ CRayCatalog::CRayCatalog(Float64 sigmaSupport):
 
 }
 
-
-
-
-CRayCatalog::~CRayCatalog()
-{
-
-}
 
 const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 {
@@ -100,7 +87,7 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
     }
 }
 
-const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList( TRayVector filteredList ) const
+const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList(const TRayVector& filteredList ) 
 {
 
     std::vector<std::string> tags;
@@ -223,4 +210,14 @@ void CRayCatalog::setLineAmplitude(const std::string& name,const Float64& nomina
       if(it->GetName() == name) return it->setNominalAmplitude(nominalAmplitude);
     }
     throw GlobalException(INTERNAL_ERROR,Formatter()<<" Line " << name << " does not exist in catalog");
+}
+
+void CRayCatalog::setAsymParams(TAsymParams params)
+{
+   TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+      if(it->GetName() == "LyAE") return it->SetAsymParams(params);
+    }
+    throw GlobalException(INTERNAL_ERROR,"Cannot set asym parameters on this catalog, lyA does not exist");
 }

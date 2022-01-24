@@ -40,6 +40,7 @@
 #define _REDSHIFT_RAY_CATALOG_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/ray/ray.h"
 
 #include <vector>
@@ -59,10 +60,11 @@ class CRayCatalog
 public:
 
     typedef std::vector<CRay> TRayVector;
-
-    CRayCatalog();
+  CRayCatalog() = default;
+  ~CRayCatalog() = default;
+  
     CRayCatalog(Float64 sigmaSupport);
-    ~CRayCatalog();
+
 
 
   void Add( const CRay& r );
@@ -81,17 +83,19 @@ public:
   
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
-    const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
+    static const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( const TRayVector& filteredList );
 
     void Sort();
-protected:
+
+  void setAsymParams(TAsymParams asymParams);
+
   void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
 private:
 
     TRayVector m_List;
     std::map<std::string, TRayVector> rayGroups;
 
-  Float64 m_nSigmaSupport;
+  Float64 m_nSigmaSupport=N_SIGMA_SUPPORT;
 };
 
 }

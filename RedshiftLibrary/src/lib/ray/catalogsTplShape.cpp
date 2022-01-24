@@ -66,8 +66,6 @@ bool CRayCatalogsTplShape::Init( std::string calibrationPath,
                                 Float64 nsigmasupport)
 {
     m_nsigmasupport = nsigmasupport;
-
-
     m_opt_dust_calzetti = enableISMCalzetti;
     m_ismCorrectionCalzetti = ismCorrectionCalzetti;
 

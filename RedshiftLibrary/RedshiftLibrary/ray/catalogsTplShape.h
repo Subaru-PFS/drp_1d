@@ -86,6 +86,11 @@ public:
   {
     return m_RayCatalogLinesCorrespondingNominalAmp;
   };
+
+  void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog)
+  {
+    m_lineRatioCatalogs.push_back(lr_catalog);
+  }
 private:
     Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
 

@@ -62,7 +62,7 @@ namespace NSEpic
 		      const Float64& prior
 		      const Int32& ismIndex);*/
     CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
-    
+    ~CLineRatioCatalog() = default;
     
     /*    void addLine(const std::string& name,
 		 const Float64& position,
@@ -81,6 +81,7 @@ namespace NSEpic
     void addVelocity(const std::string& name, const Float64& value);
     void setPrior(const Float64& prior);
     void setIsmIndex(const Float64& ismIndex);
+
     const Float64& getPrior(){return m_Prior;}
     const std::string& getName(){return m_Name;}
     const Int32& getIsmIndex(){ return m_IsmIndex;}

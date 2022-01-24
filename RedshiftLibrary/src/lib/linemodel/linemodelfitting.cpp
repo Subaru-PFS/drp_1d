@@ -723,8 +723,8 @@ Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(UInt32 idx) const
  **/
 void CLineModelFitting::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
 {
-    CRayCatalog crctlg;
-    std::vector<CRayCatalog::TRayVector> groupList = crctlg.ConvertToGroupList(restRayList);
+    
+  std::vector<CRayCatalog::TRayVector> groupList = CRayCatalog::ConvertToGroupList(restRayList);
     for(UInt32 ig=0; ig<groupList.size(); ig++)
     {
         std::vector<CRay> lines;

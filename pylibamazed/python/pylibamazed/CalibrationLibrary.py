@@ -39,12 +39,13 @@
 
 import os
 import logging
-
+import json
 import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CTemplate, CTemplateCatalog,
-                                  CRayCatalog,
+                                  CRayCatalog,CRayCatalogsTplShape,
+                                  CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   makeAsymParams)
 import numpy as np
@@ -69,6 +70,7 @@ class CalibrationLibrary:
         self.templates_catalogs = dict()
         self.templates_ratios = dict()
         self.line_catalogs = dict()
+        self.line_ratio_catalog_lists = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
@@ -161,8 +163,40 @@ class CalibrationLibrary:
                                                              row.EnableVelocityOffsetFit,
                                                              index)
 
+    def load_line_ratio_catalog_list(self, object_type, method):
+        logger = logging.getLogger("calibration_api")
+        linemodel_params = self.parameters[object_type][method]["linemodel"]
+        if "tplratio_catalog" not in linemodel_params:
+            raise Exception("Incomplete parameter file, "+method+".linemodel.tplratio_catalog entry mandatory")
+        line_ratio_catalog_list = os.path.join(self.calibration_dir,
+                                               linemodel_params["tplratio_catalog"],
+                                               "*.tsv")
+        
+        logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
+
+        with open(os.path.join(self.calibration_dir,linemodel_params["tplratio_catalog"],"parameters.json")) as f: 
+            line_ratio_catalog_parameters = json.load(f)
+        self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
+        for f in glob.glob(line_ratio_catalog_list):
+            lr_catalog_df = pd.read_csv(f,sep='\t')
+            name = f.split(os.sep)[-1][:-4]
+            lr_catalog = CLineRatioCatalog(name,self.line_catalogs[object_type])
+            for index,row in lr_catalog_df.iterrows():
+                lr_catalog.setLineAmplitude(row.Name,row.NominalAmplitude)
+            line_ratio_catalog_parameter = line_ratio_catalog_parameters[name]
+            lr_catalog.addVelocity("em_vel",line_ratio_catalog_parameter["velocities"]["em_vel"])
+            lr_catalog.addVelocity("abs_vel",line_ratio_catalog_parameter["velocities"]["abs_vel"])
+            lr_catalog.setAsymParams(makeAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
+                                                    line_ratio_catalog_parameter["asym_params"]["alpha"],
+                                                    line_ratio_catalog_parameter["asym_params"]["delta"])
+                                     )
+            self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
+            
     def load_empty_line_catalog(self, object_type):
         self.line_catalogs[object_type] = CRayCatalog()
+
+    def load_empty_line_ratio_catalog_list(self, object_type):
+        self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
 
     def load_lsf(self):
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
@@ -190,14 +224,20 @@ class CalibrationLibrary:
         """
         for object_type in ["star", "galaxy", "qso", "linemeas"]:
             linecatalog_loaded = False
+            lineratio_catalog_loaded = False
             if self.parameters.get("enable" + object_type + "solve") is True:
                 self.load_templates_catalog(object_type)
                 method = self.parameters[object_type]["method"]
                 if method == "linemodelsolve" or method == "linemeassolve":
                     self.load_linecatalog(object_type,method)
+                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
+                        self.load_line_ratio_catalog_list(object_type, method)
+                        lineratio_catalog_loaded = True
                     linecatalog_loaded = True
             if not linecatalog_loaded:
                 self.load_empty_line_catalog(object_type)
+            if not lineratio_catalog_loaded:
+                self.load_empty_line_ratio_catalog_list(object_type)
 
         if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
             self.load_lsf()

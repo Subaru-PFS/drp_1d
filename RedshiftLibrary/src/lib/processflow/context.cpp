@@ -81,6 +81,7 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                std::shared_ptr<CTemplateCatalog> templateCatalog,
                                std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
                                std::shared_ptr<CRayCatalog> qso_rayCatalog,
+			       std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
                                std::shared_ptr<CPhotBandCatalog> photBandCatalog
                                )
 {
@@ -91,6 +92,7 @@ void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
                                                               templateCatalog,
                                                               galaxy_rayCatalog,
                                                               qso_rayCatalog,
+							      gal_lineRatioCatalogs,
                                                               photBandCatalog,
                                                               m_parameterStore);
     }

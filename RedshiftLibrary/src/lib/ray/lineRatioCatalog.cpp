@@ -103,3 +103,4 @@ const Float64& CLineRatioCatalog::getVelocity(const std::string& velGroup)
 {
   return m_Velocities[velGroup];
 }
+

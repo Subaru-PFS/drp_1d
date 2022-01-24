@@ -53,6 +53,7 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
+%shared_ptr(CRayCatalogsTplShape)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CLSFGaussianVariableWidth)
@@ -82,6 +83,8 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
+%shared_ptr(CRayCatalogsTplShape)
+%shared_ptr(CLineRatioCatalog)
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -101,6 +104,8 @@
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
+#include "RedshiftLibrary/ray/catalogsTplShape.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
@@ -287,6 +292,9 @@ public:
 			const bool& enableVelocityFit,
 			const Int32& id);
 
+  void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
+  void setAsymParams(TAsymParams asymParams);
+
 };
 
 typedef struct {
@@ -294,6 +302,26 @@ typedef struct {
     } TAsymParams;
 TAsymParams makeAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
 
+class CLineRatioCatalog : public CRayCatalog
+{
+ public:
+  CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+  ~CLineRatioCatalog();
+  void addVelocity(const std::string& name, const Float64& value);
+  void setPrior(const Float64& prior);
+
+  void setIsmIndex(const Float64& ismIndex);
+
+};
+
+class CRayCatalogsTplShape
+{
+
+public:
+  CRayCatalogsTplShape();
+  void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
+
+};
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
 
@@ -349,6 +377,7 @@ public:
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
             std::shared_ptr<CRayCatalog> qso_rayCatalog,
+	    std::shared_ptr<CRayCatalogsTplShape> galaxy_lineRatioCatalogs,
             std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
