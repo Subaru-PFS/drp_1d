@@ -57,12 +57,7 @@ namespace NSEpic
     std::vector<Int32> m_ampOffsetsIdxStop;
 
     std::vector<Int32> m_elementsDisabledIndexes;
-
-    
-    CLineModelElementList(const CRayCatalog::TRayVector &restRayList);
-
-    const CRayCatalog::TRayVector &m_RestRayList;
-    
+   
     std::vector<UInt32> GetModelValidElementsIndexes();
 
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);

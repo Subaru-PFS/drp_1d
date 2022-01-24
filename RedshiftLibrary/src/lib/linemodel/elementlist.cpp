@@ -40,11 +40,6 @@
 
 using namespace NSEpic;
 
-
-CLineModelElementList::CLineModelElementList(const CRayCatalog::TRayVector &restRayList):
-  m_RestRayList(restRayList)
-{}
-
 /**
  * \brief Returns the number of m_Elements that fail IsOutsideLambdaRange().
  **/

@@ -113,7 +113,6 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
     m_rigidity(opt_rigidity),
     m_Regulament(),
     m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()),
-    m_Elements(restRayList),
     m_templateFittingOperator(spectrum, lambdaRange)
 {
     //check if tplcat and orthoTplCat are aligned

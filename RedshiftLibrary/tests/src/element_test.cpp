@@ -52,7 +52,7 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(test_element)
 
 BOOST_AUTO_TEST_CASE(Instance){
-  CLineProfile_ptr profilesym{new CLineProfileSYM()};
+  CLineProfile_ptr profilesym = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
   CRay ray = CRay("O2",0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
   std::vector<CRay> rs;
   rs.push_back(ray);

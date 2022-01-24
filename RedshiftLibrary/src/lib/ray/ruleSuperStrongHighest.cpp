@@ -95,13 +95,18 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
       //maxiStrong = 0.0;
       //erStrong = 0.0;
     }
-  for( UInt32 iRestRayWeak=0; iRestRayWeak<LineModelElementList.m_RestRayList.size(); iRestRayWeak++ ) //loop on the weak lines
+  
+  for(Int32 iedx = 0; iedx<LineModelElementList.size();iedx++)
+  {
+    Int32 nRays = LineModelElementList[iedx]->m_Rays.size();
+  
+    for( Int32 iLineWeak=0; iLineWeak<nRays; iLineWeak++ ) //loop on the weak lines
     {
 
       bool foundSuperStringTag=false;
       for(Int32 k=0; k<m_SuperStrongTags.size(); k++)
       {
-          if(LineModelElementList.m_RestRayList[iRestRayWeak].GetName() == m_SuperStrongTags[k])
+          if(LineModelElementList[iedx]->m_Rays[iLineWeak].GetName() == m_SuperStrongTags[k])
           {
               foundSuperStringTag=true;
               break;
@@ -112,22 +117,19 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
           continue;
       }
 
-
-      if( LineModelElementList.m_RestRayList[iRestRayWeak].GetType() != m_LineType )
-	{
-	  continue;
-	}
-      Int32 eIdxWeak = LineModelElementList.FindElementIndex( iRestRayWeak );
-      Int32 subeIdxWeak = LineModelElementList[eIdxWeak]->FindElementIndex( iRestRayWeak );
-      if( LineModelElementList[eIdxWeak]->IsOutsideLambdaRange( subeIdxWeak ) == true )
-	{
-	  continue;
-	}
-      //Log.LogDebug( "Rule %s: element %d has force weak, type %d and is not outside lambda range.", Name.c_str(), iRestRayWeak, m_LineType );
+      if( LineModelElementList[iedx]->m_Rays[iLineWeak].GetType() != m_LineType )
+	    {
+	      continue;
+	    }
+      if( LineModelElementList[iedx]->IsOutsideLambdaRange( iLineWeak ) == true )
+      {
+        continue;
+      }
+      //Log.LogDebug( "Rule %s: element %d has force weak, type %d and is not outside lambda range.", Name.c_str(), iLineWeak, m_LineType );
       Float64 nSigma = 1.0;
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
-      Float64 ampB = LineModelElementList[eIdxWeak]->GetFittedAmplitude( subeIdxWeak );
+      Float64 ampB = LineModelElementList[iedx]->GetFittedAmplitude( iLineWeak );
 
       //Method 0 : no noise taken into acccount
       //Float64 maxB = (coeff*ampA);
@@ -145,10 +147,10 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
 
       if(maxB==std::min(maxB, ampB) && maxB!=ampB)
       {
-          LineModelElementList[eIdxWeak]->LimitFittedAmplitude( subeIdxWeak, maxB );
+          LineModelElementList[iedx]->LimitFittedAmplitude( iLineWeak, maxB );
           //log the correction
           {
-              std::string nameWeak = LineModelElementList.m_RestRayList[iRestRayWeak].GetName();
+              std::string nameWeak = LineModelElementList[iedx]->m_Rays[iLineWeak].GetName();
               if(Logs.size()==0)
               {
                   std::string strTmp0 = boost::str( (boost::format("correct - %-10s") % "SUPER_STRONG" ));
@@ -159,6 +161,7 @@ void CRuleSuperStrong::Correct( CLineModelElementList& LineModelElementList )
           }
       }
     }
+  }
 }
 
 bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
@@ -172,50 +175,52 @@ bool CRuleSuperStrong::Check( CLineModelElementList& LineModelElementList )
 Float64 CRuleSuperStrong::FindHighestSuperStrongLineAmp( TStringList superstrongTags , Float64 &er, std::string &name, CLineModelElementList& LineModelElementList )
 {
   Float64 maxi = -1.0;
-  for( UInt32 iRestRayStrong=0; iRestRayStrong<LineModelElementList.m_RestRayList.size(); iRestRayStrong++ ) //loop on the strong lines
+  for(Int32 iedx = 0; iedx<LineModelElementList.size();iedx++)
+  {
+    Int32 nRays = LineModelElementList[iedx]->m_Rays.size();
+    for( Int32 iLineStrong=0; iLineStrong<nRays; iLineStrong++ ) //loop on the strong lines 
     {
-      if( LineModelElementList.m_RestRayList[iRestRayStrong].GetForce() != CRay::nForce_Strong )
-	{
-	  continue;
-	}
-      if( LineModelElementList.m_RestRayList[iRestRayStrong].GetType() != m_LineType )
-	{
-	  continue;
-	}
-      bool foundSuperStringTag=false;
-      for(Int32 k=0; k<superstrongTags.size(); k++)
-      {
-        if(LineModelElementList.m_RestRayList[iRestRayStrong].GetName() == superstrongTags[k])
+        if( LineModelElementList[iedx]->m_Rays[iLineStrong].GetForce() != CRay::nForce_Strong )
         {
-            foundSuperStringTag=true;
-            break;
+          continue;
+        }
+            if( LineModelElementList[iedx]->m_Rays[iLineStrong].GetType() != m_LineType )
+        {
+          continue;
+        }
+        bool foundSuperStringTag=false;
+        for(Int32 k=0; k<superstrongTags.size(); k++)
+        {
+          if(LineModelElementList[iedx]->m_Rays[iLineStrong].GetName() == superstrongTags[k])
+          {
+              foundSuperStringTag=true;
+              break;
+          }
+        }
+        if( !foundSuperStringTag )
+        {
+          continue;
+        }
+
+        if( LineModelElementList[iedx]->IsOutsideLambdaRange( iLineStrong ) == true )
+        {
+          continue;
+        }
+
+        Float64 ampStrong = LineModelElementList[iedx]->GetFittedAmplitude( iLineStrong );
+        Float64 erStrong = LineModelElementList[iedx]->GetFittedAmplitudeErrorSigma( iLineStrong );
+        // if(erStrong>0.0 && ampStrong>0.0)
+        // {
+        //     lineSnr = ampStrong/erStrong;
+        // }
+        if( maxi<ampStrong /*&& lineSnr>validSNRCut*/ )
+        {
+          maxi = ampStrong;
+          er = erStrong;
+          name = LineModelElementList[iedx]->m_Rays[iLineStrong].GetName();
         }
       }
-      if( !foundSuperStringTag )
-      {
-        continue;
-      }
-
-      Int32 eIdxStrong = LineModelElementList.FindElementIndex( iRestRayStrong );
-      Int32 subeIdxStrong = LineModelElementList[eIdxStrong]->FindElementIndex( iRestRayStrong );
-      if( LineModelElementList[eIdxStrong]->IsOutsideLambdaRange( subeIdxStrong ) == true )
-	{
-	  continue;
-	}
-
-      Float64 ampStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitude( subeIdxStrong );
-      Float64 erStrong = LineModelElementList[eIdxStrong]->GetFittedAmplitudeErrorSigma( subeIdxStrong );
-      // if(erStrong>0.0 && ampStrong>0.0)
-      // {
-      //     lineSnr = ampStrong/erStrong;
-      // }
-      if( maxi<ampStrong /*&& lineSnr>validSNRCut*/ )
-	{
-	  maxi = ampStrong;
-      er = erStrong;
-      name = LineModelElementList.m_RestRayList[iRestRayStrong].GetName();
-    }
-    }
+  }
   //Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
 }
