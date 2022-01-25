@@ -49,8 +49,9 @@ calibration_dir = os.path.join(module_root_dir, "..","..","auxdir","pylibamazed"
 
 def make_parameters():
     parameters = dict()
-    
-    parameters["galaxy"]=dict()
+    parameters["ebmv"] = dict()
+    parameters["ebmv"]["count"] = 3
+    parameters["galaxy"] = dict()
     parameters["galaxy"]["linemodelsolve"]=dict()
     parameters["galaxy"]["linemodelsolve"]["linemodel"]=dict()
     parameters["galaxy"]["linemodelsolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H.tsv"

@@ -52,38 +52,14 @@ CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const CRayCatalog&
   CRayCatalog(lineCatalog),
   m_Name(name)
 {
+  for(const CRay& line:GetList())
+    {
+      setLineAmplitude(line.GetName(),0.);
+    }
   // TODO set all nominalAmplitudes to 0
   
 }
 
-/*
-void CLineRatioCatalog::addLine(const std::string& name,
-				const Float64& position,
-				const std::string& type,
-				const std::string& force,
-				const std::string& profile,
-				const TAsymParams& asymParams,
-				const std::string& groupName,
-				const Float64& nominalAmplitude,
-				const std::string& velocityGroup,
-				const Float64& velocityOffset,
-				const bool& enableVelocityFit,
-				const Int32& id)
-{
-  m_LineCatalog.AddRayFromParams(name,
-				 position,
-				 type,
-				 force,
-				 profile,
-				 asymParams,
-				 groupName,
-				 nominalamplitude,
-				 velocityGroup,
-				 velocityOffset,
-				 enableVelocityFit,
-				 id);
-}
-*/
 void CLineRatioCatalog::addVelocity(const std::string& name, const Float64& value)
 {
   if(!m_Velocities.emplace(name,value).second)

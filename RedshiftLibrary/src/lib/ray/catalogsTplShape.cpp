@@ -91,11 +91,13 @@ Int32 CRayCatalogsTplShape::GetCatalogsCount()
     return m_lineRatioCatalogs.size();
 }
 
-std::vector<Float64>  CRayCatalogsTplShape::getCatalogsPriors()
+const std::vector<Float64>&  CRayCatalogsTplShape::getCatalogsPriors()
 {
-  std::vector<Float64> ret;
-  for(CLineRatioCatalog cat : m_lineRatioCatalogs) ret.push_back(cat.getPrior());
-  return ret;
+  if(m_catalogsPriors.empty())
+    {
+      for(CLineRatioCatalog cat : m_lineRatioCatalogs) m_catalogsPriors.push_back(cat.getPrior());
+    }
+  return m_catalogsPriors;
 }
 
 std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
@@ -161,6 +163,7 @@ bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
     {
         for(Int32 k=0; k<GetCatalogsCount(); k++)
         {
+	  Log.LogDebug(Formatter()<<"log linesCorrespondingNominalAmp for "<<m_lineRatioCatalogs[k].getName()); 
             Int32 nRays = LineModelElementList[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
 	        Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k));

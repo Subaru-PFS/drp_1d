@@ -70,10 +70,12 @@ class CalibrationLibrary:
         self.templates_catalogs = dict()
         self.templates_ratios = dict()
         self.line_catalogs = dict()
+        self.line_catalogs_df = dict()
         self.line_ratio_catalog_lists = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
+        self.calzetti = pd.DataFrame()
 
     def _load_templates(self, object_type, path):
         """
@@ -138,11 +140,17 @@ class CalibrationLibrary:
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "linecatalog" not in linemodel_params:
             raise Exception("Incomplete parameter file, "+method+".linemodel.linecatalog entry mandatory")
-        line_catalog_file = linemodel_params["linecatalog"]
+        line_catalog_file = os.path.join(self.calibration_dir,linemodel_params["linecatalog"])
+        if not os.path.exists(line_catalog_file):
+            raise Exception(line_catalog_file + " cannot be found")
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
         self.line_catalogs[object_type] = CRayCatalog()
-        line_catalog = pd.read_csv(os.path.join(self.calibration_dir, line_catalog_file), sep='\t')
+        try:
+            line_catalog = pd.read_csv( line_catalog_file, sep='\t')
+        except Exception as e:
+            raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
+        self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = makeAsymParams(1., 4.5, 0.)
@@ -171,26 +179,36 @@ class CalibrationLibrary:
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                linemodel_params["tplratio_catalog"],
                                                "*.tsv")
-        
+        line_ratio_catalog_list = glob.glob(line_ratio_catalog_list)
+        line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
         with open(os.path.join(self.calibration_dir,linemodel_params["tplratio_catalog"],"parameters.json")) as f: 
             line_ratio_catalog_parameters = json.load(f)
         self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
-        for f in glob.glob(line_ratio_catalog_list):
+        n_ebmv_coeffs = 1
+        if self.parameters[object_type][method]["linemodel"]["tplratio_ismfit"]:
+            n_ebmv_coeffs = self.parameters["ebmv"]["count"]
+        prior = 1./(n_ebmv_coeffs * len(line_ratio_catalog_list))
+
+        for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f,sep='\t')
             name = f.split(os.sep)[-1][:-4]
-            lr_catalog = CLineRatioCatalog(name,self.line_catalogs[object_type])
-            for index,row in lr_catalog_df.iterrows():
-                lr_catalog.setLineAmplitude(row.Name,row.NominalAmplitude)
             line_ratio_catalog_parameter = line_ratio_catalog_parameters[name]
-            lr_catalog.addVelocity("em_vel",line_ratio_catalog_parameter["velocities"]["em_vel"])
-            lr_catalog.addVelocity("abs_vel",line_ratio_catalog_parameter["velocities"]["abs_vel"])
-            lr_catalog.setAsymParams(makeAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
-                                                    line_ratio_catalog_parameter["asym_params"]["alpha"],
-                                                    line_ratio_catalog_parameter["asym_params"]["delta"])
-                                     )
-            self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
+            for k in range(n_ebmv_coeffs):
+                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type])
+                for index,row in lr_catalog_df.iterrows():
+                    if row.Name in list(self.line_catalogs_df[object_type].Name):
+                        lr_catalog.setLineAmplitude(row.Name,row.NominalAmplitude)
+                lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
+                lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
+                lr_catalog.setAsymParams(makeAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
+                                                        line_ratio_catalog_parameter["asym_params"]["alpha"],
+                                                        line_ratio_catalog_parameter["asym_params"]["delta"])
+                                         )
+                lr_catalog.setIsmIndex(k)
+                lr_catalog.setPrior(prior)
+                self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
             
     def load_empty_line_catalog(self, object_type):
         self.line_catalogs[object_type] = CRayCatalog()
@@ -217,6 +235,10 @@ class CalibrationLibrary:
             if band in bands:
                 self.photometric_bands.Add(band, CPhotometricBand(np.array(df[band]),
                                                                   np.array(df["lambda"])))
+
+    def load_calzetti(self):
+        calzetti_df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
+        # self.calzetti =
 
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content

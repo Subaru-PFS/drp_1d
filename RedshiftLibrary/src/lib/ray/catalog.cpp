@@ -138,8 +138,8 @@ void CRayCatalog::Add( const CRay& r )
       //TODO this should be a map with key defined as struct{name,position,type}
       // TODO this should be a map with key defined as ID, much better than struct{name,position,type} now that a ray has an ID
         // Can't add a line with a name + position + type that already exists in the list
-        if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Ray with name " << r.GetName() << " position " << r.GetPosition() << " and type " << r.GetType() << " already exists");
+        if( (*it).GetName() == r.GetName() )
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Ray with name " << r.GetName() << " already exists, position=" << r.GetPosition() << " type=" << r.GetType() );
     }
 
     m_List.push_back( r );

@@ -72,7 +72,7 @@ public:
     Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
     CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
     Int32 GetCatalogsCount();
-    std::vector<Float64> getCatalogsPriors();
+    const std::vector<Float64>& getCatalogsPriors();
     std::string GetCatalogName(Int32 idx);
     Int32 GetIsmIndex(Int32 idx);
     Float64 GetIsmCoeff(Int32 idx);
@@ -95,7 +95,7 @@ private:
 
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
     std::vector<std::vector<TFloat64List>> m_RayCatalogLinesCorrespondingNominalAmp;
-
+  std::vector<Float64> m_catalogsPriors; // TODO temporary hack before reviewing getCatalogsPrior uses
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;

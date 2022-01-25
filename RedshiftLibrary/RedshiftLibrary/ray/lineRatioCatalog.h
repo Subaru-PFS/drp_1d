@@ -90,7 +90,7 @@ namespace NSEpic
     //    CRayCatalog m_LineCatalog;
     std::string m_Name;
     std::map<std::string, Float64> m_Velocities;
-    Float64 m_Prior;
+    Float64 m_Prior = 1;
     Int32 m_IsmIndex = 0;
     
     

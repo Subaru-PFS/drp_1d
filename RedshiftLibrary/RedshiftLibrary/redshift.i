@@ -53,7 +53,6 @@
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
 %shared_ptr(CRayCatalog)
-%shared_ptr(CRayCatalogsTplShape)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CLSFGaussianVariableWidth)
