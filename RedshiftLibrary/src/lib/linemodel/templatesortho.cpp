@@ -89,26 +89,22 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
 
     //check if LSF has changed, if yes reorthog all
     bool differentLSF = false;
-    std::vector<bool> samplingList {0,1};
-
-    if(!first_time_ortho)
+    Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
+    if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // true also if m_ortho_LSFWidth is NAN
     {
-        Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
-        if(std::isnan(tplCatalog->m_ortho_LSFWidth)){ //first time orthogonalizing - do it for all
-            tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); 
-            differentLSF = true;
-        }else{ // not first time
-            if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
-            {   
-                differentLSF = true;
-                tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
-                tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
-                tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
-            }
-        }
+        differentLSF = true;
+        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); // thus initialize if m_ortho_LSFWidth is NAN
     }
+   
+    if(!first_time_ortho && differentLSF)
+    {            
+        tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
+        tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
+    }
+    
     // check if log-sampled templates have changed and need ortho 
     bool need_ortho_logsampling = true;
+    std::vector<bool> samplingList {0,1};
     if (!first_time_ortho && !differentLSF)
     {    
         tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
