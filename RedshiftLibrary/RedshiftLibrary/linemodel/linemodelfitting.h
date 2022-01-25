@@ -202,11 +202,10 @@ public:
                 Int32 contreest_iterations=0,
                 bool enableLogging=0);
 
-    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
-    void initLambdaOffsets(std::string offsetsCatalogsRelPath);
-
-    Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
-    Bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);
+    bool initTplratioCatalogs(/*const CRayCatalogsTplShape& tplRatioCatalog, */Int32 opt_tplratio_ismFit);
+   
+    bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity=false);
+    bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
     void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);

@@ -69,6 +69,7 @@ class CInputContext
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_Spectrum;}
   std::shared_ptr<const CSpectrum>  GetRebinnedSpectrum() const {return m_rebinnedSpectrum;}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
+  std::shared_ptr<const CRayCatalogsTplShape>  GetTemplateRatioCatalog() const {return m_TemplateRatioCatalog;}
   std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog() const {return m_photBandCatalog;}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
@@ -77,6 +78,7 @@ class CInputContext
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
   std::shared_ptr<CSpectrum>  GetRebinnedSpectrum() {return m_rebinnedSpectrum;}
   std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
+  std::shared_ptr<CRayCatalogsTplShape>  GetTemplateRatioCatalog() {return m_TemplateRatioCatalog;}
   std::shared_ptr<CRayCatalog>  GetRayCatalog(const std::string &objectType);
   std::shared_ptr<CPhotBandCatalog> GetPhotBandCatalog() {return m_photBandCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
@@ -100,7 +102,7 @@ private:
   std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
-  std::shared_ptr<CRayCatalogsTplShape> m_gal_lineRatioCatalog;
+  std::shared_ptr<CRayCatalogsTplShape> m_TemplateRatioCatalog;
   void OrthogonalizeTemplates();
   void RebinInputs();
 };

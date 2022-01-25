@@ -106,7 +106,7 @@ public:
     
     CRay( const std::string& name,
           Float64 pos, UInt32 type,
-          std::shared_ptr<CLineProfile> profile,
+          CLineProfile_ptr &&profile,
           UInt32 force,
 	  Float64 velocityOffset ,
 	  bool enableVelocityOffset,

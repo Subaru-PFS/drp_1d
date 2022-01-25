@@ -96,6 +96,7 @@ public:
                            const TStringList &tplCategoryList,
                            const std::string opt_calibrationPath,
                            const CRayCatalog::TRayVector& restraycatalog,
+                           const CRayCatalogsTplShape& tplRatioCatalog,
                            const TFloat64Range& lambdaRange,
                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
                            const Float64 photo_weight,
@@ -108,9 +109,7 @@ public:
                            const bool &opt_velocityFitting=false,
                            const UInt32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
-                           const std::string &opt_rigidity="rules",
-                           const string &opt_tplratioCatRelPath="",
-                           const string &opt_offsetCatRelPath="");
+                           const std::string &opt_rigidity="rules");
 
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);

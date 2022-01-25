@@ -147,7 +147,6 @@ void CRayCatalog::Add( const CRay& r )
 }
 
 
-
 void CRayCatalog::AddRayFromParams(const std::string& name,
 				   const Float64& position,
 				   const std::string& type,
@@ -172,26 +171,26 @@ void CRayCatalog::AddRayFromParams(const std::string& name,
     else throw GlobalException(INTERNAL_ERROR, Formatter()<< "Bad ray force, should be in {S,W} : "<<force);
     TAsymParams _asymParams = {1., 4.5, 0.};
     TAsymParams _asymFitParams = {2., 2., 0.};
-    std::shared_ptr<CLineProfile> profile;
+    std::unique_ptr<CLineProfile> profile;
 
     if (profileName.find("ASYMFIXED") != std::string::npos) {
-      profile = std::make_shared<CLineProfileASYM>(m_nSigmaSupport, asymParams, "mean");
+      profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(m_nSigmaSupport, asymParams, "mean"));
     }
     else if (profileName == "SYM")
-      profile = std::make_shared<CLineProfileSYM>(m_nSigmaSupport);
+      profile = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(m_nSigmaSupport));
     else if (profileName == "LOR")
-      profile = std::make_shared<CLineProfileLOR>(m_nSigmaSupport);
+      profile = std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(m_nSigmaSupport));
     else if (profileName == "ASYM"){
 
-      profile = std::make_shared<CLineProfileASYM>(m_nSigmaSupport, _asymParams, "none");
+      profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(m_nSigmaSupport, _asymParams, "none"));
     }
     else if (profileName == "ASYMFIT"){
-      profile = std::make_shared<CLineProfileASYMFIT>(m_nSigmaSupport, _asymFitParams, "mean");
+      profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_nSigmaSupport, _asymFitParams, "mean"));
     }else{
       throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
     }
     
-      Add( CRay(name, position, etype, profile, eforce, velocityOffset, enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id) );
+    Add( CRay(name, position, etype, std::move(profile), eforce, velocityOffset, enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id) );
 
 
   }

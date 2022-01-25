@@ -116,6 +116,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const TStringList &tplCategoryList,
                                            const std::string opt_calibrationPath,
                                            const CRayCatalog::TRayVector &restRayList,
+                                           const CRayCatalogsTplShape& tplRatioCatalog,
                                            const TFloat64Range &lambdaRange,
                                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
                                            const Float64 photo_weight,
@@ -128,9 +129,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const bool &opt_velocityFitting,
                                            const UInt32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
-                                           const std::string &opt_rigidity,
-                                           const std::string &opt_tplratioCatRelPath,
-                                           const std::string &opt_offsetCatRelPath)
+                                           const std::string &opt_rigidity)
 {
     TFloat64List largeGridRedshifts;
     // redefine redshift grid
@@ -296,8 +295,9 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     {
         // init catalog tplratios
         Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
+        m_model->m_CatalogTplShape = tplRatioCatalog;//pass tplRatioCatalog
         bool tplratioInitRet =
-            m_model->initTplratioCatalogs(opt_tplratioCatRelPath, m_opt_tplratio_ismFit);
+            m_model->initTplratioCatalogs(m_opt_tplratio_ismFit);
         if (!tplratioInitRet)
         {
             throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: Failed to init tpl-ratios. aborting...");

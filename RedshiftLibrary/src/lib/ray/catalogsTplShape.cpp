@@ -59,9 +59,7 @@ using namespace std;
 using namespace boost;
 
 
-bool CRayCatalogsTplShape::Init( std::string calibrationPath, 
-                                std::string opt_tplratioCatRelPath, 
-                                Int32 enableISMCalzetti, 
+bool CRayCatalogsTplShape::Init(Int32 enableISMCalzetti, 
                                 std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
                                 Float64 nsigmasupport)
 {
@@ -165,7 +163,7 @@ bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
         {
             Int32 nRays = LineModelElementList[iElts]->GetSize();
             for(UInt32 j=0; j<nRays; j++){
-	      Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k));
+	        Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k));
                 Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
                 std::string lineName = LineModelElementList[iElts]->m_Rays[j].GetName();
                 Log.LogDebug("    CatalogsTplShape - linesCorrespondingNominalAmp iElt=%d, iCatalog=%d, iLine=%d with name=%s, ebv=%f: NominalAmpFound = %e", iElts, k, j, lineName.c_str(), ebv, nomAmp);

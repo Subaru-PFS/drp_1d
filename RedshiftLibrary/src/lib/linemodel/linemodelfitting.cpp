@@ -206,12 +206,11 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
 
 
 
-bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
+bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit)
 {
-
-    bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
-                                      opt_tplratioCatRelPath, 
-                                      opt_tplratio_ismFit, 
+//TODO: use the passed tplRatioCatalog
+//TODO: check if m_CatalogTplShape changes between iterations
+    bool ret = m_CatalogTplShape.Init(opt_tplratio_ismFit, 
                                       m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti,
                                       m_NSigmaSupport);
     if(!ret)

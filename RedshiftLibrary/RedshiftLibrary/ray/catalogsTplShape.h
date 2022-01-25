@@ -63,9 +63,7 @@ class CRayCatalogsTplShape
 
 public:
 
-    bool Init(std::string calibrationPath, 
-              std::string opt_tplratioCatRelPath, 
-              Int32 enableISMCalzetti,
+    bool Init(Int32 enableISMCalzetti,
               std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
               Float64 nsigmasupport);
 

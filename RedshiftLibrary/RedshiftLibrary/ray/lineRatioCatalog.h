@@ -91,7 +91,7 @@ namespace NSEpic
     std::string m_Name;
     std::map<std::string, Float64> m_Velocities;
     Float64 m_Prior;
-    Int32 m_IsmIndex;
+    Int32 m_IsmIndex = 0;
     
     
   };
