@@ -109,7 +109,7 @@ protected:
                   Float64 redshift,
                   Float64 overlapThreshold,
                   std::string opt_interp,
-                  Float64 forcedAmplitude=-1,
+                  Float64 forcedAmplitude=-1.,
                   Int32 opt_extinction=0,
                   Int32 opt_dustFitting=0,
                   CMask spcMaskAdditional=CMask(),

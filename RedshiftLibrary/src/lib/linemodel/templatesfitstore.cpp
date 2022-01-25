@@ -242,8 +242,7 @@ CTemplatesFitStore::TemplateFitValues  CTemplatesFitStore::GetFitValues(Float64 
 
 
     //find the idxz
-    Int32 idxz=-1;
-    idxz = GetRedshiftIndex(redshiftVal);
+    Int32 idxz = GetRedshiftIndex(redshiftVal);
 
     if(idxz<0)
     {

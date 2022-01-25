@@ -50,10 +50,10 @@ public:
 
 
     std::string m_TypeLabel="-1";
-    Float64 m_evidence_galaxy=-1.0;
-    Float64 m_evidence_star=-1.0;
-    Float64 m_evidence_qso=-1.0;
-    Float64 m_prob_galaxy=-1.0;
-    Float64 m_prob_star=-1.0;
-    Float64 m_prob_qso=-1.0;
+    Float64 m_evidence_galaxy = NAN;
+    Float64 m_evidence_star = NAN;
+    Float64 m_evidence_qso = NAN;
+    Float64 m_prob_galaxy = NAN;
+    Float64 m_prob_star = NAN;
+    Float64 m_prob_qso = NAN;
 };

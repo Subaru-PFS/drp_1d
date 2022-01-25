@@ -159,13 +159,13 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
     // the fitted model
     NDof =
       lmel->m_Elements.GetModelNonZeroElementsNDdl();
-
-    Float64 bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
+  
+    Float64 _bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
     // Float64 aic = m + 2*nddl; //AIC
-    bic = bic;
+    bic = _bic;
     // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
     // //AICc, better when nsamples small
-
+  
     // compute continuum indexes
     // TODO VB is this useful/necessary now ? if there is a computation it should be done before
     //NB AA commented to avoid adding spectrum to getFromModel arguments
@@ -181,10 +181,10 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
 
     OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1, lambdaRange);
     OutsideLinesSTDError = lmel->getOutsideLinesSTD(2, lambdaRange);
-    Float64 ratioSTD = -1;
+
     if(OutsideLinesSTDError>0.0)
       {
-        ratioSTD = OutsideLinesSTDFlux/OutsideLinesSTDError;
+        Float64 ratioSTD = OutsideLinesSTDFlux/OutsideLinesSTDError;
         Float64 ratio_thres = 1.5;
         if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
           {
