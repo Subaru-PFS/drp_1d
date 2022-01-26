@@ -107,7 +107,7 @@ void CSpectrumFluxAxis::clear()
     m_StdError.clear();
 }
 
-bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
+bool CSpectrumFluxAxis::ApplyMedianSmooth( Int32 kernelHalfWidth )
 {
     if( kernelHalfWidth == 0 )
         return false;
@@ -115,7 +115,7 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
     if( GetSamplesCount() < ( kernelHalfWidth ) + 1 )
         return false;
 
-    const CSpectrumAxis tmp = *this;
+    TAxisSampleList tmp(m_Samples.size());
 
     Int32 left = 0;
     Int32 right = 0;
@@ -124,15 +124,16 @@ bool CSpectrumFluxAxis::ApplyMedianSmooth( UInt32 kernelHalfWidth )
 
     for( Int32 i=0; i<N; i++ )
     {
-        left = max( 0, i - (Int32)kernelHalfWidth );
-        right = min( (Int32)N - 1, i + (Int32)kernelHalfWidth );
-
-        (*this)[i] = median.Find( tmp.GetSamples()+left, ( right - left ) +1 );
+        left = max( 0, i - kernelHalfWidth );
+        right = min( N - 1, i + kernelHalfWidth );
+        tmp[i] = median.Find( m_Samples.begin()+left, m_Samples.begin()+right+1 );
     }
+    m_Samples = std::move(tmp);
+    
     return true;
 }
 
-bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
+bool CSpectrumFluxAxis::ApplyMeanSmooth( Int32 kernelHalfWidth )
 {
     if( kernelHalfWidth == 0 )
         return false;
@@ -146,13 +147,14 @@ bool CSpectrumFluxAxis::ApplyMeanSmooth( UInt32 kernelHalfWidth )
     Int32 left = 0;
     Int32 right = 0;
     CMean<Float64> mean;
+    Int32 N = GetSamplesCount();
 
-    for( Int32 i=0; i<GetSamplesCount(); i++ )
+    for( Int32 i=0; i<N; i++ )
     {
-        left = max( 0, i - (Int32)kernelHalfWidth );
-        right = min( (Int32)GetSamplesCount() - 1, i + (Int32)kernelHalfWidth );
+        left = max( 0, i - kernelHalfWidth );
+        right = min( N - 1, i + kernelHalfWidth );
 
-        tmp[i] = mean.Find( m_Samples.data()+left, ( right - left ) +1 );
+        tmp[i] = mean.Find( m_Samples.begin()+left, m_Samples.begin()+right+1 );
     }
     
     m_Samples = std::move(tmp);

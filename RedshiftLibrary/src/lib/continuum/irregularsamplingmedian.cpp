@@ -103,9 +103,9 @@ TFloat64List CContinuumIrregularSamplingMedian::MedianSmooth( const TFloat64List
     for( i=0; i<n_points; i++ )
     {
         start = max( 0, i-half );
-        stop = min( i+half+rest, n_points-1 );
+        stop = min( i+half+rest, n_points );
 
-        y_out[i] = median.Find( (y.data())+start, stop-start );
+        y_out[i] = median.Find( y.begin()+start, y.begin()+stop );
     }
 
     return y_out;
@@ -128,10 +128,10 @@ TFloat64List CContinuumIrregularSamplingMedian::MeanSmooth( const TFloat64List &
     CMean<Float64> mean;
     for( i=0; i<N; i++ )
     {
-        start = max( 0, i-half-rest );
-        end = min( i+half, N-1 );
-
-        y_out[i] = mean.Find( (y.data())+start, (end-start)+1);
+        start = max( 0, i-half );
+        end = min( i+half+rest, N );
+        
+        y_out[i] = mean.Find(y.begin()+start, y.begin()+end);
     }
     return y_out;
  }

@@ -56,12 +56,12 @@ BOOST_AUTO_TEST_CASE(Median3)
 
     const Int32 size = 3;
 
-    Float64 data[size];
+    TFloat64List data(size);
     data[0] = 12;
     data[1] = 64;
     data[2] = 32;
 
-    BOOST_CHECK( median.Find( data, size ) == 32 );
+    BOOST_CHECK( median.Find( data ) == 32 );
 }
 
 BOOST_AUTO_TEST_CASE(Median5)
@@ -70,14 +70,14 @@ BOOST_AUTO_TEST_CASE(Median5)
 
     const Int32 size = 5;
 
-    Float64 data[size];
+    TFloat64List data(size);
     data[0] = 12;
     data[1] = 64;
     data[2] = 32;
     data[3] = 74;
     data[4] = 69;
 
-    BOOST_CHECK( median.Find( data, size ) == 64 );
+    BOOST_CHECK( median.Find( data ) == 64 );
 }
 
 BOOST_AUTO_TEST_CASE(Median7)
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Median7)
 
     const Int32 size = 7;
 
-    Float64 data[size];
+    TFloat64List data(size);
     data[0] = 12;
     data[1] = 125;
     data[2] = 32;
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Median7)
     data[5] = 101;
     data[6] = 100;  
 
-    BOOST_CHECK( median.Find( data, size ) == 100 );
+    BOOST_CHECK( median.Find( data ) == 100 );
 }
 
 BOOST_AUTO_TEST_CASE(Median9)
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(Median9)
 
     const Int32 size = 9;
 
-    Float64 data[size];
+    TFloat64List data(size);
     data[0] = 12;
     data[1] = 125;
     data[2] = 32;
@@ -115,16 +115,16 @@ BOOST_AUTO_TEST_CASE(Median9)
     data[7] = 452;
     data[8] = 0;    
 
-    BOOST_CHECK( median.Find( data, size ) == 100 );
+    BOOST_CHECK( median.Find( data ) == 100 );
 }
 
-BOOST_AUTO_TEST_CASE(MedianBeers)
+BOOST_AUTO_TEST_CASE(MedianFast)
 {
     CMedian<Float64> median;
 
     const Int32 size = ( MEDIAN_FAST_OR_BEERS_THRESHOLD * 2 ) + 1 ;
 
-    Float64 data[size];
+    TFloat64List data(size);
     srand( time(0) );
     for( Int32 i=0; i<MEDIAN_FAST_OR_BEERS_THRESHOLD; i++ )
     {
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(MedianBeers)
     }
 
     data[ size -1 ] = 150.0;
-
-    BOOST_CHECK( median.Find( data, size ) == 150.0 );
+    
+    BOOST_CHECK( median.Find( data ) == 150.0 );
 }
 
-BOOST_AUTO_TEST_CASE(MedianFast)
+BOOST_AUTO_TEST_CASE(MedianBeers)
 {
     CMedian<Float64> median;
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(MedianFast)
     BOOST_CHECK(  size <= MEDIAN_FAST_OR_BEERS_THRESHOLD );
     BOOST_CHECK( halfSize * 2 + 1 == size );
 
-    Float64 data[size];
+    TFloat64List data(size);
     srand( time(0) );
     for( Int32 i=0; i<halfSize; i++ )
     {
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(MedianFast)
 
     data[ size - 1 ] = 150.0;
 
-    BOOST_CHECK( median.Find( data, size ) == 150.0 );
+    BOOST_CHECK( median.Find( data ) == 150.0 );
 }
 
 BOOST_AUTO_TEST_CASE(Mean)
@@ -174,14 +174,14 @@ BOOST_AUTO_TEST_CASE(Mean)
 
     const Int32 size = 128;
 
-    Float64 data[size];
+    TFloat64List data(size);
 
     for( Int32 i=0; i<size; i++ )
     {
         data[i] = 150.0;
     }
 
-    BOOST_CHECK( mean.Find( data, size ) == 150.0 );
+    BOOST_CHECK( mean.Find( data ) == 150.0 );
 }
 
 

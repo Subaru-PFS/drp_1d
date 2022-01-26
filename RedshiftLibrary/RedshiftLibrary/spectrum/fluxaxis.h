@@ -71,8 +71,8 @@ public:
 
     void                SetSize( UInt32 s );
     void                clear();
-    bool                ApplyMeanSmooth( UInt32 kernelHalfWidth );
-    bool                ApplyMedianSmooth( UInt32 kernelHalfWidth );
+    bool                ApplyMeanSmooth( Int32 kernelHalfWidth );
+    bool                ApplyMedianSmooth( Int32 kernelHalfWidth );
 
 
     bool                ComputeMeanAndSDev( const CMask& mask, Float64& mean,  Float64& sdev) const;

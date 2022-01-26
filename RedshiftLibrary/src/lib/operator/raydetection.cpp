@@ -383,19 +383,19 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
     left = max(range.GetBegin(), left);
     right = min(range.GetEnd()+1, right);
 
-    Float64 *fluxMasked = (Float64*)malloc( fluxAxis.GetSamplesCount()*sizeof( Float64 ) );
+    TFloat64List fluxMasked;
+    fluxMasked.reserve(fluxAxis.GetSamplesCount());
     int n=0;
     for( int i=left; i<right; i++ )
       {
         if( mask[i]!=0 )
 	  {
-            fluxMasked[n] = fluxData[i];
+            fluxMasked.push_back(fluxData[i]);
             n++;
 	  }
       }
-    Float64 med = medianProcessor.Find( fluxMasked, n );
-    Float64 xmad = XMadFind( fluxMasked, n, med );
-    free(fluxMasked);
+    Float64 med = medianProcessor.Find( fluxMasked);
+    Float64 xmad = XMadFind( fluxMasked.data(), n, med );
 
     Float64 noise_win= xmad;
     // use noise spectrum
