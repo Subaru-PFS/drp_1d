@@ -326,15 +326,6 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         
         ysmoobig = OddMirror( flux.begin()+k0, flux.begin()+k1+1, nreflex, FBegin, FEnd);
     }
-    /*//debug:
-    // save reflex data
-    FILE* f = fopen( "median_even_dbg.txt", "w+" );
-    for( Int32 t=0;t<ysmoobig.size();t++)
-    {
-        fprintf( f, "%d %f\n", t, ysmoobig[t]*1e17);
-    }
-    fclose( f );
-    //*/
 
     {
         // WARNING!!!
