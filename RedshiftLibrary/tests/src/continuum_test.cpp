@@ -337,31 +337,31 @@ BOOST_AUTO_TEST_CASE(oddMirror_test)
 BOOST_AUTO_TEST_CASE(fitBorder_test)
 {    
     CContinuumIrregularSamplingMedian sample;
-    TAxisSampleList sAxis = {0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10};
-    TAxisSampleList fAxis = {0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10};
+    TAxisSampleList sAxis = {0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
+    TAxisSampleList fAxis = {0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
     CSpectrumSpectralAxis spectralAxis(sAxis);
     CSpectrumFluxAxis fluxAxis(fAxis);
     CSpectrum spectra = CSpectrum(spectralAxis, fluxAxis);
 
     BOOST_TEST_MESSAGE("TEST FIT BORDER");
     TFloat64List flux = fluxAxis.GetSamplesVector();
-    Float64 rightBorder = sample.FitBorder(spectra, flux.begin(), 0, 10, 10, true);
-    BOOST_TEST_MESSAGE("Right : " << rightBorder << "\n");
-    BOOST_CHECK_CLOSE(rightBorder , 0. , 1e-6);
-    Float64 leftBorder = sample.FitBorder(spectra, flux.begin(), 0, 10, 10, false);
+    Float64 leftBorder = sample.FitBorder(spectra, 0, 10, false);
     BOOST_TEST_MESSAGE("Left : " << leftBorder << "\n");
-    BOOST_CHECK_CLOSE(leftBorder , 10. , 1e-6);
+    BOOST_CHECK_CLOSE(leftBorder , 0. , 1e-6);
+    Float64 rightBorder = sample.FitBorder(spectra, 0, 10, true);
+    BOOST_TEST_MESSAGE("Right : " << rightBorder << "\n");
+    BOOST_CHECK_CLOSE(rightBorder , 10. , 1e-6);
 
     fAxis = {0.,1.,2.,3.,4.,5.,4.,3.,2.,1.,0.};
     CSpectrumFluxAxis fluxAxis2(fAxis);
     CSpectrum spectra2 = CSpectrum(spectralAxis, fluxAxis2);
     TFloat64List flux2 = fluxAxis2.GetSamplesVector();
-    rightBorder = sample.FitBorder(spectra2, flux2.begin(), 0, 10, 5, true);
-    BOOST_TEST_MESSAGE("Right : " << rightBorder << "\n");
-    BOOST_CHECK_CLOSE(rightBorder , 0. , 1e-6);
-    leftBorder = sample.FitBorder(spectra2, flux2.begin(), 0, 10, 4, false);
+    leftBorder = sample.FitBorder(spectra2, 0, 4, false);
     BOOST_TEST_MESSAGE("Left : " << leftBorder << "\n");
     BOOST_CHECK_CLOSE(leftBorder , 0. , 1e-6);
+    rightBorder = sample.FitBorder(spectra2, 6, 10, true);
+    BOOST_TEST_MESSAGE("Right : " << leftBorder << "\n");
+    BOOST_CHECK_CLOSE(rightBorder , 0. , 1e-6);
 }
 
 //-----------------------------------------------------------------------------

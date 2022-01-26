@@ -62,16 +62,21 @@ class CContinuumIrregularSamplingMedian : public CContinuum
 
 public:
 
-    CContinuumIrregularSamplingMedian();
-    ~CContinuumIrregularSamplingMedian();
+    CContinuumIrregularSamplingMedian():
+        m_MeanSmoothAmplitude(75.0),     // Angstrom
+        m_MedianSmoothCycles(5),
+        m_MedianSmoothAmplitude(75.0),   // Angstrom
+        m_MedianEvenReflection(true)
+    {}
+
 
     void SetMeanKernelWidth( Float32 width );
     void SetMedianKernelWidth( Float32 width );
     void SetMedianCycleCount( UInt32 count );
     void SetMedianEvenReflection( bool evenReflection );
 
-    bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
-    bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );
+    bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) const ;
+    bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution ) const;
 
 
 private:
@@ -81,17 +86,17 @@ private:
     friend class continuum_test::oddMirror_test;
     friend class continuum_test::fitBorder_test;
 
-    TFloat64List MedianSmooth( const TFloat64List &y, Int32 n_range);
-    TFloat64List MeanSmooth( const TFloat64List &y, Int32 n);
+    TFloat64List MedianSmooth( const TFloat64List &y, Int32 n_range) const;
+    TFloat64List MeanSmooth( const TFloat64List &y, Int32 n) const;
 
-    TFloat64List OddMirror(    const TFloat64List::iterator & begin, 
-                                const TFloat64List::iterator & end,
-                                Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val);
-    TFloat64List EvenMirror(   const TFloat64List::iterator & begin, 
-                                const TFloat64List::iterator & end,
-                                Int32 Nreflex);
-
-    Float64 FitBorder(const CSpectrum& s,const TFloat64List::iterator & begin , Int32 k0, Int32 k1, Int32 Nreflex, bool isRightBorder);
+    TFloat64List OddMirror(    const TFloat64List::const_iterator & begin, 
+                                const TFloat64List::const_iterator & end,
+                                Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val) const;
+    TFloat64List EvenMirror(   const TFloat64List::const_iterator & begin, 
+                                const TFloat64List::const_iterator & end,
+                                Int32 Nreflex) const;
+    
+    Float64 FitBorder(const CSpectrum& s, Int32 kstart, Int32 kend, bool isRightBorder) const;
 
     Float32 m_MeanSmoothAmplitude;
     Int32   m_MedianSmoothCycles;
