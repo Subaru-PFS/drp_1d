@@ -92,7 +92,7 @@ std::shared_ptr<CRayMatchingResult> CRayMatching::Compute( const CRayCatalog& de
         Float64 redShift = (detectedRayList[0].GetPosition()-restRayList[iRestRay].GetPosition())/restRayList[iRestRay].GetPosition();
         if( redShift > 0 ) // we don't care about blueshift.
           {
-            solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], restRayList[iRestRay], redShift ) );
+            solution.push_back( CRayMatchingResult::SSolution( detectedRayList[0], std::move(restRayList[iRestRay]), redShift ) );
             solutions.push_back( solution );
           }
       }

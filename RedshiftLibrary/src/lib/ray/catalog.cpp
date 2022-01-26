@@ -58,16 +58,6 @@ using namespace boost;
 using namespace boost::filesystem;
 
 
-CRayCatalog::CRayCatalog()
-{
-
-}
-
-CRayCatalog::~CRayCatalog()
-{
-
-}
-
 const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 {
     return m_List;
@@ -81,7 +71,7 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
         {
             if( typeFilter == -1 || typeFilter == m_List[i].GetType()){
                 if( forceFilter == -1 || forceFilter == m_List[i].GetForce()){
-                    filteredList.push_back(m_List[i].clone());
+                    filteredList.push_back(m_List[i]);
                 }
             }
         }
@@ -295,26 +285,26 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
             TAsymParams _asymFitParams = {2., 2., 0.};
 
 
-            std::shared_ptr<CLineProfile> profile;
+            CLineProfile_ptr profile;
             // Parse profile name
             ++it;
             if( it != tok.end() ){
                 profileName = *it;
                 if (profileName.find("ASYMFIXED") != std::string::npos) {
                     parse_asymfixed(profileName, asymParams);//reading params from catalog files
-                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, asymParams, "mean");
+                    profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, asymParams, "mean"));
                 }
                 else if (profileName == "SYM")
-                    profile = std::make_shared<CLineProfileSYM>(nsigmasupport);
+                    profile = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(nsigmasupport));
                 else if (profileName == "LOR")
-                    profile = std::make_shared<CLineProfileLOR>(nsigmasupport);
+                    profile = std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(nsigmasupport));
                 else if (profileName == "ASYM"){
                     asymParams =  _asymParams;
-                    profile = std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none");
+                    profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymParams, "none"));
                 }
                 else if (profileName == "ASYMFIT"){
                     asymParams =  _asymFitParams; //using default values
-                    profile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFitParams, "mean");
+                    profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(nsigmasupport, _asymFitParams, "mean"));
                 }else{
                     throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
                 }
@@ -357,7 +347,7 @@ void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
         }
 	    
         if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
-	        Add( CRay(name, pos, Etype, profile, Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, id) );
+	        Add( CRay(name, pos, Etype, std::move(profile), Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, id) );
         }
     }
     file.close();

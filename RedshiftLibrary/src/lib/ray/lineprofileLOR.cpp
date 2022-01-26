@@ -46,7 +46,7 @@ CLineProfileLOR::CLineProfileLOR(const Float64 nsigmasupport):
 CLineProfile(nsigmasupport, LOR)
 {}
  
-Float64 CLineProfileLOR::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineProfileLOR::GetLineProfile(Float64 x, Float64 x0, Float64 sigma) const
 {
     Float64 xc = x-x0;
     Float64 val = 0.0;
@@ -62,17 +62,17 @@ Float64 CLineProfileLOR::GetNSigmaSupport() const
     return m_nsigmasupport*2.0;
 }
  
-Float64 CLineProfileLOR::GetLineFlux( Float64 A , Float64 sigma)
+Float64 CLineProfileLOR::GetLineFlux( Float64 A , Float64 sigma) const
 {
     return A*sigma*M_PI;
 }
  
-Float64 CLineProfileLOR::GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma)
+Float64 CLineProfileLOR::GetLineProfileDerivZ(Float64 x, Float64 lambda0, Float64 redshift, Float64 sigma) const
 {
       throw GlobalException(INTERNAL_ERROR,"Deriv for Z not IMPLEMENTED for profile LOR");
 }
  
-Float64 CLineProfileLOR::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineProfileLOR::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma) const
 {
       throw GlobalException(INTERNAL_ERROR,"No derivate sigma for LOR profile");
 }

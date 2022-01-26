@@ -44,11 +44,9 @@ using namespace NSEpic;
 using namespace std;
 #include <fstream>
 
-CRay::CRay():m_Offset(0.){}
-
 CRay::CRay(const string& name,
            Float64 pos, UInt32 type,
-           std::shared_ptr<CLineProfile> profile,
+           CLineProfile_ptr &&profile,
            UInt32 force,
            Float64 amp,
            Float64 width,
@@ -60,31 +58,104 @@ CRay::CRay(const string& name,
            Float64 nominalAmp,
            const string &velGroupName,
 	       Int32 id):
-m_Name(name),
-m_Pos(pos),
-m_Type(type),
-m_Force(force),
-m_Amp(amp),
-m_Width(width),
-m_Cut(cut),
-m_Profile(profile->Clone()),
-m_PosFitErr(posErr),
-m_SigmaFitErr(sigmaErr),
-m_AmpFitErr(ampErr),
-m_GroupName(groupName),
-m_NominalAmplitude(nominalAmp),
-m_VelGroupName(velGroupName),
-m_id(id),
-m_Offset(0.),
-m_OffsetFit(false)
-{
-}
+    m_Name(name),
+    m_Pos(pos),
+    m_Type(type),
+    m_Force(force),
+    m_Amp(amp),
+    m_Width(width),
+    m_Cut(cut),
+    m_Profile(std::move(profile)),
+    m_PosFitErr(posErr),
+    m_SigmaFitErr(sigmaErr),
+    m_AmpFitErr(ampErr),
+    m_GroupName(groupName),
+    m_NominalAmplitude(nominalAmp),
+    m_VelGroupName(velGroupName),
+    m_id(id),
+    m_Offset(0.),
+    m_OffsetFit(false)
+{}
 
-CRay CRay::clone() const
+CRay::CRay(const string& name,
+           Float64 pos, UInt32 type,
+           const CLineProfile &profile,
+           UInt32 force,
+           Float64 amp,
+           Float64 width,
+           Float64 cut ,
+           Float64 posErr,
+           Float64 sigmaErr,
+           Float64 ampErr,
+           const std::string& groupName,
+           Float64 nominalAmp,
+           const string &velGroupName,
+	       Int32 id):
+    CRay(   name,
+            pos,
+            type,
+            profile.Clone(),
+            force,
+            amp,
+            width,
+            cut ,
+            posErr,
+            sigmaErr,
+            ampErr,
+            groupName,
+            nominalAmp,
+            velGroupName,
+	        id)
+{}
+
+CRay::CRay(const CRay & other):
+    m_id(other.m_id),
+    m_Type(other.m_Type),
+    m_Profile(other.m_Profile->Clone()),//deep copy for m_Profile
+    m_Force(other.m_Force),
+    m_Pos(other.m_Pos),
+    m_Offset(other.m_Offset),
+    m_Amp(other.m_Amp),
+    m_Width(other.m_Width),
+    m_Cut(other.m_Cut),
+    m_PosFitErr(other.m_PosFitErr),
+    m_SigmaFitErr(other.m_SigmaFitErr),
+    m_AmpFitErr(other.m_AmpFitErr),
+    m_Name(other.m_Name),
+    m_GroupName(other.m_GroupName),
+    m_NominalAmplitude(other.m_NominalAmplitude),
+    m_OffsetFit(other.m_OffsetFit),
+    m_VelGroupName(other.m_VelGroupName)
+    {}
+
+
+
+CRay& CRay::operator=(const CRay& other)
 {
-   CRay this_copy = *this; //shallow copy
-   this_copy.m_Profile = this_copy.m_Profile->Clone();// deep-copy
-   return this_copy;
+    m_id = other.m_id;
+    m_Type = other.m_Type;
+    m_Profile = other.m_Profile->Clone(); //deep copy for m_Profile
+    m_Force = other.m_Force;
+    m_Pos = other.m_Pos;
+    m_Offset = other.m_Offset;
+    m_Amp = other.m_Amp;
+    m_Width = other.m_Width;
+    m_Cut = other.m_Cut;
+
+    m_PosFitErr = other.m_PosFitErr;
+    m_SigmaFitErr = other.m_SigmaFitErr;
+    m_AmpFitErr = other.m_AmpFitErr;
+
+    m_Name = other.m_Name;
+
+    m_GroupName = other.m_GroupName;
+    m_NominalAmplitude = other.m_NominalAmplitude;
+
+    m_OffsetFit = other.m_OffsetFit;
+
+    m_VelGroupName = other.m_VelGroupName;
+
+    return *this;
 }
 
 bool CRay::operator < (const CRay& str) const
@@ -117,7 +188,7 @@ void CRay::resetAsymFitParams()
         throw GlobalException(INTERNAL_ERROR,"CRay::resetAsymParams: lineprofile is not initialized");
     m_Profile->resetAsymFitParams();
 }
-const TAsymParams CRay::GetAsymParams()
+TAsymParams CRay::GetAsymParams() const
 {
     if(!m_Profile)
         throw GlobalException(INTERNAL_ERROR,"CRay::GetAsymParams: lineprofile is not initialized");
@@ -139,18 +210,16 @@ Int32 CRay::GetType() const
     return m_Type;
 }
 
-std::shared_ptr<CLineProfile> CRay::GetProfile() const
+const CLineProfile & CRay::GetProfile() const
 {
     if(!m_Profile)
-        throw GlobalException(INTERNAL_ERROR,"Current Ray does not have a set profile ");
-    return m_Profile;
-     
+        throw GlobalException(INTERNAL_ERROR,"Current Ray does not have a profile");
+    return *m_Profile;
 }
 
-bool CRay::SetProfile(const std::shared_ptr<CLineProfile>& profile)
+void CRay::SetProfile(CLineProfile_ptr&& profile)
 {
-    m_Profile = profile->Clone();
-    return true;
+    m_Profile = std::move(profile);
 }
 
 Int32 CRay::GetForce() const

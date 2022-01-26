@@ -156,17 +156,18 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     Float64 GetVelocityAbsorption();
     Float64 GetVelocity();
-  void setVelocity(Float64 vel);
+    void setVelocity(Float64 vel);
 
     void SetSourcesizeDispersion(Float64 sigma);
 
     void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
-    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0);
+    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0) const;
     void resetAsymfitParams();
     Int32 FindElementIndex(Int32 LineCatalogIndex);
-  Int32 FindElementIndex(std::string LineTagStr);
+    Int32 FindElementIndex(std::string LineTagStr);
+    const CLineProfile & getLineProfile(Int32 rayIdx) const;
 
     Float64 GetSignFactor(Int32 subeIdx);
 
@@ -177,9 +178,7 @@ public:
     Float64 GetLineWidth(Float64 lambda, Float64 z = 0., bool isEmission=0) const;
     bool IsOutsideLambdaRange(Int32 subeIdx);
 
-    std::vector<Int32> m_LineCatalogIndexes;
-   
-    Float64 GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0,
+    Float64 GetLineProfileDerivVel(const CLineProfile & profile, Float64 x, Float64 x0,
                                    Float64 sigma, bool isEmission);
 
     Float64 GetSumCross();
@@ -192,6 +191,7 @@ public:
 
     std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
+    std::vector<Int32> m_LineCatalogIndexes;
     std::string m_fittingGroupInfo;
 
   protected:
@@ -230,7 +230,6 @@ public:
 
   Float64 m_absLinesLimit;
 
-  TProfileList  m_profile;
 
 
   TInt32List          m_StartNoOverlap;

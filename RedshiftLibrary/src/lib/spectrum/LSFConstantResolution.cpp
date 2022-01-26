@@ -44,7 +44,7 @@ using namespace NSEpic;
 using namespace std;
 
 CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(const Float64 resolution):
-    CLSF(GaussianConstantResolution, std::make_shared<CLineProfileSYM>()),
+    CLSF(GaussianConstantResolution, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
     m_Resolution(resolution)
 {
     IsValid();
