@@ -50,6 +50,30 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(Common)
 
+BOOST_AUTO_TEST_CASE(Median0)
+{
+    CMedian<Float64> median;
+
+    const Int32 size = 1;
+
+    TFloat64List data(size);
+    data[0] = 12;
+
+    BOOST_CHECK( median.Find( data.begin(), data.begin() ) == 12 );
+}
+
+BOOST_AUTO_TEST_CASE(Median1)
+{
+    CMedian<Float64> median;
+
+    const Int32 size = 1;
+
+    TFloat64List data(size);
+    data[0] = 12;
+
+    BOOST_CHECK( median.Find( data ) == 12 );
+}
+
 BOOST_AUTO_TEST_CASE(Median3)
 {
     CMedian<Float64> median;
@@ -145,6 +169,7 @@ BOOST_AUTO_TEST_CASE(MedianBeers)
 {
     CMedian<Float64> median;
 
+    // odd range
     const Int32 size = ( ( MEDIAN_FAST_OR_BEERS_THRESHOLD - 1 ) | 1 ) ;
     const Int32 halfSize = size / 2 ;
 
@@ -166,6 +191,33 @@ BOOST_AUTO_TEST_CASE(MedianBeers)
     data[ size - 1 ] = 150.0;
 
     BOOST_CHECK( median.Find( data ) == 150.0 );
+
+    // even range
+    const Int32 size_2 = ( MEDIAN_FAST_OR_BEERS_THRESHOLD - 2 ) ;
+    const Int32 halfSize_2 = size_2 / 2 ;
+
+    BOOST_CHECK(  size_2 <= MEDIAN_FAST_OR_BEERS_THRESHOLD );
+    BOOST_CHECK( halfSize_2 * 2 == size_2 );
+
+    data.resize(size_2);
+    srand( time(0) );
+    for( Int32 i=0; i<halfSize_2-1; i++ )
+    {
+        data[i] = ( (Float64) rand() / (Float64) (RAND_MAX) ) * 100.0;
+    }
+
+    for( Int32 i=0; i<halfSize_2-1; i++ )
+    {
+        data[i+halfSize_2-1] = 200.0 + ( (Float64) rand() / (Float64) (RAND_MAX) ) * 100.0;
+    }
+
+    data[ size_2 - 1 ] = 150.0;
+    data[ size_2 - 2 ] = 150.0;
+
+    BOOST_CHECK( median.Find( data ) == 150.0 );
+
+    //test Find(beg, end)
+    BOOST_CHECK( median.Find( data ) == median.Find( data.begin(), data.end() ) );
 }
 
 BOOST_AUTO_TEST_CASE(Mean)
@@ -182,6 +234,9 @@ BOOST_AUTO_TEST_CASE(Mean)
     }
 
     BOOST_CHECK( mean.Find( data ) == 150.0 );
+
+    //test Find(beg, end)
+    BOOST_CHECK( mean.Find( data ) == mean.Find( data.begin(), data.end() ) );
 }
 
 
