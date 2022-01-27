@@ -322,7 +322,7 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum( const CSpectrum&
         
         Float64 FBegin = FitBorder(s, k0, std::max(k0+nreflex,k1), false);
 
-        Float64 FEnd = FitBorder(s, std::min(k0,k1-nreflex-1), k1, true);// the k1-nreflex-1 is strange here...
+        Float64 FEnd = FitBorder(s, std::min(k0,k1-nreflex), k1, true);
         
         ysmoobig = OddMirror( flux.begin()+k0, flux.begin()+k1+1, nreflex, FBegin, FEnd);
     }
