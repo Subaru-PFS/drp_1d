@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -209,12 +208,14 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 {
     std::string ContinuumRemovalMethod = parameterStore->Get<std::string>("templateCatalog.continuumRemoval.method");
     Float64 medianKernelWidth = parameterStore->Get<Float64>("templateCatalog.continuumRemoval.medianKernelWidth");
+    bool medianEvenReflection = parameterStore->Get<bool>("templateCatalog.continuumRemoval.medianEvenReflection");
     for(auto it : GetList(0,0))
     {             
         const TTemplateRefList  & TplList = it.second;
         for (auto tpl : TplList){
             tpl->SetContinuumEstimationMethod(ContinuumRemovalMethod);
             tpl->SetMedianWinsize(medianKernelWidth);
+            tpl->SetMedianEvenReflection(medianEvenReflection);
         }
     }
 }

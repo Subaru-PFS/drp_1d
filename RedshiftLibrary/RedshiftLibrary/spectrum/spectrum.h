@@ -143,10 +143,12 @@ public:
 
     const std::string&       	    GetFullPath() const;
     const Float64                   GetMedianWinsize() const;
+    const bool                      GetMedianEvenReflection() const;
     const std::string&              GetContinuumEstimationMethod() const;
 
     void 			                SetFullPath(const char* nameP);
     void 			                SetMedianWinsize(Float64 winsize);
+    void                            SetMedianEvenReflection(bool even);
     void                            SetContinuumEstimationMethod(std::string method) const;
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
 
@@ -186,6 +188,7 @@ protected:
     // Continuum removal parameters
     mutable Float64                         m_medianWindowSize;
     mutable std::string                     m_estimationMethod;
+    mutable bool                            m_medianEvenReflection;
 
     mutable EType                   m_spcType = nType_raw;
     CSpectrumFluxAxis               m_RawFluxAxis;
@@ -369,6 +372,7 @@ CSpectrum  CSpectrum::extract(Int32 startIdx, Int32 endIdx) const
     spc.m_Name = m_Name;
     spc.m_estimationMethod = m_estimationMethod;
     spc.m_medianWindowSize = m_medianWindowSize;
+    spc.m_medianEvenReflection = m_medianEvenReflection;
     return spc;
 }
 

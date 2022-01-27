@@ -41,6 +41,14 @@
 
 #include "RedshiftLibrary/continuum/continuum.h"
 
+namespace continuum_test { //boost_test_suite
+    //all boost_auto_test_case that use private method
+    class mean_test; 
+    class median_test;
+    class evenMirror_test;
+    class oddMirror_test;
+    class fitBorder_test;
+}
 namespace NSEpic
 {
 
@@ -54,30 +62,46 @@ class CContinuumIrregularSamplingMedian : public CContinuum
 
 public:
 
-    CContinuumIrregularSamplingMedian();
-    ~CContinuumIrregularSamplingMedian();
+    CContinuumIrregularSamplingMedian():
+        m_MeanSmoothAmplitude(75.0),     // Angstrom
+        m_MedianSmoothCycles(5),
+        m_MedianSmoothAmplitude(75.0),   // Angstrom
+        m_MedianEvenReflection(true)
+    {}
+
 
     void SetMeanKernelWidth( Float32 width );
     void SetMedianKernelWidth( Float32 width );
     void SetMedianCycleCount( UInt32 count );
+    void SetMedianEvenReflection( bool evenReflection );
 
-    bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis );
-    bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution );
+    bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) const ;
+    bool ProcessRemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis, Float64 resolution ) const;
 
 
 private:
+    friend class continuum_test::mean_test;
+    friend class continuum_test::median_test;
+    friend class continuum_test::evenMirror_test;
+    friend class continuum_test::oddMirror_test;
+    friend class continuum_test::fitBorder_test;
 
-    Int32   MedianSmooth( const Float64 *y, Int32 n_points, Int32 n_range, Float64 *y_out );
+    TFloat64List MedianSmooth( const TFloat64List &y, Int32 n_range) const;
+    TFloat64List MeanSmooth( const TFloat64List &y, Int32 n) const;
 
-    Int32   MeanSmooth( const Float64 *y, Int32 N, Int32 n, Float64 *y_out );
+    TFloat64List OddMirror(    const TFloat64List::const_iterator & begin, 
+                                const TFloat64List::const_iterator & end,
+                                Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val) const;
+    TFloat64List EvenMirror(   const TFloat64List::const_iterator & begin, 
+                                const TFloat64List::const_iterator & end,
+                                Int32 Nreflex) const;
+    
+    Float64 FitBorder(const CSpectrum& s, Int32 kstart, Int32 kend, bool isRightBorder) const;
 
-    Int32   OddMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64 y_input_begin_val, Float64 y_input_end_val, Float64* y_out );
-    Int32   EvenMirror( const Float64* y_input, Int32 N, Int32 Nreflex, Float64* y_out );
-
-    Int32   m_MeanSmoothAmplitude;
+    Float32 m_MeanSmoothAmplitude;
     Int32   m_MedianSmoothCycles;
-    Int32   m_MedianSmoothAmplitude;
-    bool    m_Even;
+    Float32 m_MedianSmoothAmplitude;
+    bool    m_MedianEvenReflection;
 
 };
 

@@ -527,6 +527,12 @@ BOOST_AUTO_TEST_CASE(Calcul)
 
     CContinuumIrregularSamplingMedian remover2;
 
+    for (int i=nbmin; i<nbmax;++i)
+    {
+        m_FluxAxis[i] = 2.0;
+    }
+    object_CSpectrum2.SetSpectralAndFluxAxes(m_SpectralAxis, m_FluxAxis);
+
     BOOST_CHECK(object_CSpectrum2.RemoveContinuum(remover2)==true);
     BOOST_TEST_MESSAGE("test Remove:"<<object_CSpectrum2.RemoveContinuum(remover2));
 

@@ -69,8 +69,9 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
     CSpectrumSpectralAxis spectralAxis(size, false);
     CSpectrumFluxAxis fluxAxis(size);
 
-    spectrum.SetContinuumEstimationMethod("Median");
+    spectrum.SetContinuumEstimationMethod("IrregularSamplingMedian");
     spectrum.SetMedianWinsize(150);
+    spectrum.SetMedianEvenReflection(false);
 
     boost::random::taus88 rng;
     boost::random::normal_distribution<double> distribution(mean, 1.35);

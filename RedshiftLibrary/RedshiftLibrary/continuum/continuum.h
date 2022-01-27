@@ -56,10 +56,15 @@ class CContinuum
 
 public:
 
-    CContinuum();
-    virtual ~CContinuum();
+    CContinuum() = default;
+    virtual ~CContinuum() = default; 
+    // rule of 5 defaults
+    CContinuum(const CContinuum &) = default;
+    CContinuum(CContinuum &&) = default;
+    CContinuum &operator=(const CContinuum &) = default;
+    CContinuum &operator=(CContinuum &&) = default;
 
-    virtual bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) = 0;
+    virtual bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) const  = 0;
 
 private:
 
