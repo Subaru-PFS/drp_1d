@@ -884,7 +884,8 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
                     {
                         ErrorRebin[j] = sqrt(Error[k]*Error[k]*(1-t)*(1-t) + Error[k+1]*Error[k+1] * t*t);
                         //*
-                        Float64 xDestStep, xStepCompensation;
+                        Float64 xDestStep = NAN;
+                        Float64 xStepCompensation = 1.;
                         if(j<targetSpectralAxis.GetSamplesCount()-1)
                         {
                             xDestStep = Xtgt[j+1]-Xtgt[j];
@@ -892,8 +893,6 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
                         }else if(j>0){
                             xDestStep = Xtgt[j]-Xtgt[j-1];
                             xStepCompensation = xSrcStep/xDestStep;
-                        }else{
-                            xStepCompensation = 1.0;
                         }
                         ErrorRebin[j] *= sqrt(xStepCompensation);
                     }
@@ -946,14 +945,16 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
     }else if(opt_interp=="ngp"){
         //nearest sample, lookup
-        Int32 k = 0; 
-        Int32 kprev = 0;
+        Int32 k = 0;
         Int32 n = m_SpectralAxis.GetSamplesCount();
         while( j<targetSpectralAxis.GetSamplesCount() && Xtgt[j] <= currentRange.GetEnd() )
         {
             //k = gsl_interp_bsearch (Xsrc.data(), Xtgt[j], kprev, n);
             k = CIndexing<Float64>::getCloserIndex(Xsrc, Xtgt[j]);
-            kprev = k;
+            Float64 xSrcStep = NAN;
+            if(k==Xsrc.size()-1) xSrcStep = Xsrc[k]-Xsrc[k-1];
+            else xSrcStep = Xsrc[k+1]-Xsrc[k];
+
             // closest value
             Yrebin[j] = Ysrc[k];
 
@@ -963,7 +964,8 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
 
                 if (opt_error_interp == "rebinVariance")
                 {
-                     Float64 xSrcStep, xDestStep, xStepCompensation;
+                     Float64 xDestStep = NAN;
+                     Float64 xStepCompensation = 1.;
                      if(j<targetSpectralAxis.GetSamplesCount()-1)
                      {
                          xDestStep = Xtgt[j+1]-Xtgt[j];
@@ -971,8 +973,6 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
                      }else if(j>0){
                          xDestStep = Xtgt[j]-Xtgt[j-1];
                          xStepCompensation = xSrcStep/xDestStep;
-                     }else{
-                         xStepCompensation = 1.0;
                      }
                      ErrorRebin[j] *= sqrt(xStepCompensation);
                 }
