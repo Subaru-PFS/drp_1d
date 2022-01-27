@@ -21,7 +21,6 @@ StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	
 LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double	0
 LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double	0
 FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]	
-FittedRaysLambdaRest	fitted_rays	f8	extrema_results	multi	False	candidate	rayLambdaRest	list[double]	
 FittedRaysID	fitted_rays	i	extrema_results	multi	False	candidate	rayId	list[int]	
 FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	Fluxs	list[double]	
 ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]	

@@ -880,7 +880,7 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const
 
 Int32 COperatorLineModel::SetFirstPassCandidates(const TCandidateZbyRank & zCandidates)
 {
-    m_firstpass_extremaResult = std::make_shared<COperatorLineModelExtremaResult>(zCandidates.size());
+    m_firstpass_extremaResult = std::make_shared<CLineModelPassExtremaResult>(zCandidates.size());
 
     m_firstpass_extremaResult->m_ranked_candidates = zCandidates;
 
@@ -957,7 +957,7 @@ std::shared_ptr<const LineModelExtremaResult> COperatorLineModel::saveFirstPassE
  * 
  * @param firstpass_results_b 
  */
-void COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const COperatorLineModelExtremaResult> firstpass_results_b)
+void COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLineModelPassExtremaResult> firstpass_results_b)
 {
     TInt32List uniqueIdx_fpb = m_firstpass_extremaResult->getUniqueCandidates(firstpass_results_b);
     m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() + uniqueIdx_fpb.size());
@@ -1836,7 +1836,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                                                     const Int32 tplfit_option,
                                                     const bool overrideRecomputeOnlyOnTheCandidate)
 {
-    COperatorLineModelExtremaResult &  extremaResult =  m_secondpass_parameters_extremaResult;
+    CLineModelPassExtremaResult &  extremaResult =  m_secondpass_parameters_extremaResult;
     if(extremaResult.size()<1)
     {
         throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: RecomputeAroundCandidates n<1...");
