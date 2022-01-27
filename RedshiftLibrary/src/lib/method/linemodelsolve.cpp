@@ -319,12 +319,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     //std::shared_ptr<CPdfLogResult> zpriorResult = std::make_shared<CPdfLogResult>();
     // suggestion : CSolve::GetCurrentScopeName(TScopeStack)
     // prepare the linemodel chisquares and prior results for pdf computation
-    ChisquareArray chisquares = BuildChisquareArray(result,
-                                                    m_opt_rigidity,
-                                                    m_opt_pdfcombination,
-                                                    m_opt_stronglinesprior,
-                                                    m_opt_haPrior,
-                                                    m_opt_euclidNHaEmittersPriorStrength);
+    ChisquareArray chisquares = BuildChisquareArray(result);
                                                     
     /*
     Log.LogDetail("    linemodelsolve: Storing priors (size=%d)", zpriorResult->Redshifts.size());
@@ -374,12 +369,117 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     return lmsolveresult;
 }
 
-ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
-                                                    std::string opt_rigidity,
-                                                    std::string opt_combine,
-                                                    Float64 opt_stronglinesprior,
-                                                    Float64 opt_hapriorstrength,
-                                                    Float64 opt_euclidNHaEmittersPriorStrength) const
+void  CLineModelSolve::GetZpriorsOptions(   bool & zPriorStrongLinePresence,
+                                            bool & zPriorHaStrongestLine,
+                                            bool & zPriorNLineSNR,
+                                            Float64 & opt_nlines_snr_penalization_factor,
+                                            bool & zPriorEuclidNHa
+                                        ) const
+{
+    zPriorStrongLinePresence = (m_opt_stronglinesprior>0.0);
+    if(zPriorStrongLinePresence)
+    {
+        Log.LogDetail("%s: StrongLinePresence prior enabled: factor=%e", __func__, m_opt_stronglinesprior);
+    }else{
+        Log.LogDetail("%s: StrongLinePresence prior disabled", __func__);
+    }
+
+    zPriorHaStrongestLine = (m_opt_haPrior>0.0);
+    if(zPriorHaStrongestLine)
+    {
+        Log.LogDetail("%s: Ha strongest line prior enabled: factor=%e", __func__, m_opt_haPrior);
+    }else{
+        Log.LogDetail("%s: Ha strongest line prior disabled", __func__);
+    }
+
+    opt_nlines_snr_penalization_factor = -1;
+    zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
+    if(zPriorNLineSNR)
+    {
+        Log.LogDetail("%s: N lines snr>cut prior enabled: factor=%e", __func__, opt_nlines_snr_penalization_factor);
+    }else{
+        Log.LogDetail("%s: N lines snr>cut prior disabled", __func__);
+    }
+
+    //hardcoded Euclid-NHaZprior parameter
+    zPriorEuclidNHa = false;
+    if(m_opt_euclidNHaEmittersPriorStrength>0.0)
+    {
+        zPriorEuclidNHa = true;
+        Log.LogDetail("%s: EuclidNHa prior enabled, with strength-coeff: %e", __func__, m_opt_euclidNHaEmittersPriorStrength);
+    }else{
+        Log.LogDetail("%s: EuclidNHa prior disabled", __func__);
+    }
+
+}
+
+TFloat64List CLineModelSolve::BuildZpriors( const std::shared_ptr<const CLineModelResult> &result, 
+                                            Int32 kTplShape) const
+{
+    TFloat64List zpriors;
+
+    CZPrior zpriorhelper;
+
+    bool zPriorStrongLinePresence, zPriorHaStrongestLine, zPriorEuclidNHa, zPriorNLineSNR;
+    Float64 opt_nlines_snr_penalization_factor;
+    GetZpriorsOptions(  zPriorStrongLinePresence,
+                        zPriorHaStrongestLine,
+                        zPriorNLineSNR,
+                        opt_nlines_snr_penalization_factor,
+                        zPriorEuclidNHa);
+                                        
+    if(zPriorStrongLinePresence)
+    {
+        if (kTplShape==-1){
+            UInt32 lineTypeFilter = 1;// for emission lines only
+            const TBoolList strongLinePresence = result->getStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, m_opt_stronglinesprior);
+        }else{
+            const TBoolList &strongLinePresence = result->StrongELPresentTplshapes[kTplShape];
+            zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, m_opt_stronglinesprior);
+        }
+
+    }else{
+        zpriors = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
+    }
+
+    if(zPriorHaStrongestLine)
+    {
+        TFloat64List zlogPriorHaStrongest;
+        if (kTplShape==-1){
+            const TBoolList wHaStronglinePresence = result->getStrongestLineIsHa(result->LineModelSolutions);
+            zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, m_opt_haPrior);
+        }else{
+            const TBoolList & wHaStronglinePresence = result->StrongHalphaELPresentTplshapes[kTplShape];
+            zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, m_opt_haPrior);
+        }
+        zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
+    }
+
+    if(zPriorEuclidNHa)
+    {
+        std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, m_opt_euclidNHaEmittersPriorStrength);
+        zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
+    }
+
+    if(zPriorNLineSNR)
+    {
+        std::vector<Float64> zlogPriorNLinesAboveSNR;
+        std::vector<Int32> n_lines_above_snr;
+        if (kTplShape==-1){
+            const std::vector<Int32> n_lines_above_snr = result->getNLinesAboveSnrcut(result->LineModelSolutions);
+            zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+        }else{
+            const std::vector<Int32>  &n_lines_above_snr = result->NLinesAboveSNRTplshapes[kTplShape];
+            zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
+        }
+        zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
+    }
+
+    return zpriors;
+}
+
+ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const CLineModelResult> &result) const
 {
     Log.LogDetail("LinemodelSolve: building chisquare array");
 
@@ -390,90 +490,75 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         
     chisquarearray.redshifts = result->Redshifts; 
 
-    bool zPriorStrongLinePresence = (opt_stronglinesprior>0.0);
-    if(zPriorStrongLinePresence)
+    if(m_opt_pdfcombination=="bestchi2")
     {
-        Log.LogDetail("%s: StrongLinePresence prior enabled: factor=%e", __func__, opt_stronglinesprior);
-    }else{
-        Log.LogDetail("%s: StrongLinePresence prior disabled", __func__);
-    }
-    bool zPriorHaStrongestLine = (opt_hapriorstrength>0.0);
-    if(zPriorHaStrongestLine)
-    {
-        Log.LogDetail("%s: Ha strongest line prior enabled: factor=%e", __func__, opt_hapriorstrength);
-    }else{
-        Log.LogDetail("%s: Ha strongest line prior disabled", __func__);
-    }
+        chisquarearray.zpriors.push_back( BuildZpriors(result) );
 
-    Float64 opt_nlines_snr_penalization_factor = -1;
-    bool zPriorNLineSNR = (opt_nlines_snr_penalization_factor>0.0);
-    if(zPriorNLineSNR)
-    {
-        Log.LogDetail("%s: N lines snr>cut prior enabled: factor=%e", __func__, opt_nlines_snr_penalization_factor);
-    }else{
-        Log.LogDetail("%s: N lines snr>cut prior disabled", __func__);
-    }
-
-    //hardcoded Euclid-NHaZprior parameter
-    bool zPriorEuclidNHa = false;
-    if(opt_euclidNHaEmittersPriorStrength>0.0)
-    {
-        zPriorEuclidNHa = true;
-        Log.LogDetail("%s: EuclidNHa prior enabled, with strength-coeff: %e", __func__, opt_euclidNHaEmittersPriorStrength);
-    }else{
-        Log.LogDetail("%s: EuclidNHa prior disabled", __func__);
-    }
-
-    bool zPriorLines = true;
-    Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__, result->PriorLinesTplshapes.size());
-    if( !boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) || result->PriorLinesTplshapes.size()!=result->ChiSquareTplshapes.size())
-    {
-        zPriorLines = false;
-    }
-    if(zPriorLines)
-    {
-        Log.LogDetail("%s: Lines Prior enabled", __func__);
-    }else{
-        Log.LogDetail("%s: Lines Prior disabled", __func__);
-    }
-
-    CZPrior zpriorhelper;
-
-    if(opt_combine=="bestchi2")
-    {
-        chisquarearray.zpriors.emplace_back();
-        TFloat64List & zpriors = chisquarearray.zpriors.back();
-
-        if(zPriorStrongLinePresence)
-        {
-            UInt32 lineTypeFilter = 1;// for emission lines only
-            TBoolList strongLinePresence = result->getStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
-
-            zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
-        }else{
-            zpriors = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
-        }
-        if(zPriorHaStrongestLine)
-        {
-            TBoolList wHaStronglinePresence = result->getStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
-            std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
-        }
-        if(zPriorEuclidNHa)
-        {
-            std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
-        }
-        if(zPriorNLineSNR)
-        {
-            std::vector<Int32> n_lines_above_snr = result->getNLinesAboveSnrcut(result->LineModelSolutions);
-            std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-            zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
-        }
-        
         chisquarearray.chisquares.push_back(result->ChiSquare);
 
-    }else if(opt_combine=="bestproba" || opt_combine=="marg"){
+    }else if(m_opt_pdfcombination=="bestproba" || m_opt_pdfcombination=="marg"){
+
+        if (m_opt_rigidity != "tplshape"){
+
+            chisquarearray.zpriors.push_back( BuildZpriors(result) );
+
+            chisquarearray.chisquares.push_back(result->ChiSquare);
+
+        }else{
+    
+            bool zPriorLines = false;
+            Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__, result->PriorLinesTplshapes.size());
+            if( boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) && result->PriorLinesTplshapes.size()==result->ChiSquareTplshapes.size())
+            {
+                zPriorLines = true;
+                Log.LogDetail("%s: Lines Prior enabled", __func__);
+            }else{
+                Log.LogDetail("%s: Lines Prior disabled", __func__);
+            }
+
+
+            for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
+            {
+                chisquarearray.zpriors.push_back( BuildZpriors(result, k) );
+
+                chisquarearray.chisquares.push_back(result->ChiSquareTplshapes[k]);
+
+                //correct chi2 if necessary 
+                TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();            
+                if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
+                {
+                    //find max scalemargcorr
+                    //*
+                    Float64 maxscalemargcorr=-DBL_MAX;
+                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
+                    {
+                        if(maxscalemargcorr < result->ScaleMargCorrectionTplshapes[k][kz])
+                        {
+                            maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
+                        }
+                    }
+                    Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
+                    //*/
+                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
+                    {
+                        if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
+                        {
+                            logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
+                        }
+                    }
+                }
+
+                if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
+                {
+                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
+                    {
+                        logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
+                    }
+                }
+            }
+
+            chisquarearray.modelpriors = result->PriorTplshapes; 
+        }
 /*
         // store all continuum tpl fitting chisquares  (ChiSquareTplContinuum size will be null if not tplfit)      
         for (Int32 k=1; k<result->ChiSquareTplContinuum.size(); k++) // skip 1st one, used with linemodel
@@ -490,91 +575,15 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
             }
 
             chisquarearray.chisquares.push_back(result->ChiSquareTplContinuum[k]);
+ 
+            // TODO: need to add/handle tpl continuum priors 
+            // in the case of ATEZ (which is exclusive of zpriors and Tplshapes), 
+            // priors are included already in the chisquares of both tplcontinuum chi2 and tplshape chi2
+            // But the tplshapes sums should be inside the tplcontinuums sum, ie with the best contiuum prior factorized.
 
         }
 */
-        // note: even if not tplshape, the ChiSquareTplshapes vector will have its first element filled. 
-        for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
-        {
-            chisquarearray.zpriors.emplace_back();
-            TFloat64List & zpriors = chisquarearray.zpriors.back();
-    
-            if(zPriorStrongLinePresence)
-            {
-                TBoolList const & strongLinePresence = result->StrongELPresentTplshapes[k];
-                zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
-            }else
-            {
-                zpriors = zpriorhelper.GetConstantLogZPrior(result->Redshifts.size());
-            }
 
-            if(zPriorHaStrongestLine)
-            {
-                TBoolList wHaStronglinePresence = result->StrongHalphaELPresentTplshapes[k];
-                std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
-                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
-            }
-            if(zPriorEuclidNHa)
-            {
-                std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, opt_euclidNHaEmittersPriorStrength);
-                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
-            }
-            if(zPriorNLineSNR)
-            {
-                std::vector<Int32> n_lines_above_snr = result->NLinesAboveSNRTplshapes[k];
-                std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
-                zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
-            }
-        }
-
-        //correct chi2 if necessary
-        std::vector<TFloat64List> ChiSquareTplshapesCorrected;
-        for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
-        {
-            chisquarearray.chisquares.push_back(result->ChiSquareTplshapes[k]);
-            TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
-            
-            if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
-            {
-                //find max scalemargcorr
-                //*
-                Float64 maxscalemargcorr=-DBL_MAX;
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                {
-                    if(maxscalemargcorr < result->ScaleMargCorrectionTplshapes[k][kz])
-                    {
-                        maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
-                    }
-                }
-                Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
-                //*/
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                {
-                    if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
-                    {
-                        logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
-                    }
-                }
-            }
-            if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
-            {
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                {
-                    logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
-                }
-            }
-        }
-
-        chisquarearray.modelpriors = result->PriorTplshapes; 
-        
-        // TODO: need to add/handle tpl continuum priors 
-        // in the case of ATEZ (which is exclusive of zpriors and Tplshapes), 
-        // priors are included already in the chisquares of both tplcontinuum chi2 and tplshape chi2
-        // But the tplshapes sums should be inside the tplcontinuums sum, ie with the best contiuum prior factorized.
-
-
-        // todo : store priors for each tplshape model ?
-        //  ->  in ::compute with ChisquareArray
 
     }else{
         Log.LogError("Linemodel: Unable to parse pdf combination method option");
@@ -874,12 +883,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //**************************************************
     std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( m_linemodel.getResult() );
 
-    ChisquareArray chisquares = BuildChisquareArray(lmresult,
-                                                    m_opt_rigidity,
-                                                    m_opt_pdfcombination,
-                                                    m_opt_stronglinesprior,
-                                                    m_opt_haPrior,
-                                                    m_opt_euclidNHaEmittersPriorStrength);
+    ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
     //TODO deal with the case lmresult->Redshifts=1
     Int32 extremacount = 5;
@@ -964,13 +968,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         //**************************************************
         std::shared_ptr<const CLineModelResult> lmresult = std::dynamic_pointer_cast<const CLineModelResult>( linemodel_fpb.getResult() );
                     
-        ChisquareArray chisquares = BuildChisquareArray(lmresult,
-                                                        m_opt_rigidity,
-                                                        m_opt_pdfcombination,
-                                                        m_opt_stronglinesprior,
-                                                        m_opt_haPrior,
-                                                        m_opt_euclidNHaEmittersPriorStrength);
- 
+        ChisquareArray chisquares = BuildChisquareArray(lmresult);
 
         //TODO deal with the case lmresult->Redshifts=1
         Int32 extremacount = 5;
