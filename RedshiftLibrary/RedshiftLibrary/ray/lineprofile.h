@@ -47,8 +47,16 @@ namespace NSEpic
     /**
     * struct that holds ASYMFIXED profile parameters
     */
-    typedef struct {
-      
+    typedef struct TAsymParams{
+        
+	TAsymParams(Float64 sigma,Float64 alpha,Float64 delta):
+	  sigma(sigma),
+	  alpha(alpha),
+	  delta(delta)
+      {
+      };
+     
+      TAsymParams()=default;
         Float64 sigma, alpha, delta;
     } TAsymParams;
 
@@ -93,7 +101,8 @@ namespace NSEpic
 
             virtual ~CLineProfile(){};//to make sure derived objects are correctly deleted from a pointer to the base class
             //std::shared_ptr<CLineProfile> Clone () const {return std::shared_ptr<CLineProfile>(CloneImplementation());} 
-            std::unique_ptr<CLineProfile> Clone () const {return std::unique_ptr<CLineProfile>(CloneImplementation());} 
+            std::unique_ptr<CLineProfile> Clone () const {return std::unique_ptr<CLineProfile>(CloneImplementation());}
+
         private:
             virtual CLineProfile* CloneImplementation() const =0;
         protected:
@@ -142,15 +151,6 @@ namespace NSEpic
     void CLineProfile::resetAsymFitParams(){
         return;
     }
-  inline
-  TAsymParams makeAsymParams(Float64 sigma,Float64 alpha,Float64 delta)
-  {
-    TAsymParams ret;
-    ret.sigma= sigma;
-    ret.alpha = alpha;
-    ret.delta = delta;
-    return ret;
-  };
 
 }
 #endif

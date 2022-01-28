@@ -202,7 +202,7 @@ public:
                 Int32 contreest_iterations=0,
                 bool enableLogging=0);
 
-    bool initTplratioCatalogs(/*const CRayCatalogsTplShape& tplRatioCatalog, */Int32 opt_tplratio_ismFit);
+    bool initTplratioCatalogs(Int32 opt_tplratio_ismFit);
    
     bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity=false);
     bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);

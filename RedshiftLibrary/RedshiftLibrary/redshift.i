@@ -289,17 +289,20 @@ public:
 			const std::string& velocityGroup,
 			const Float64& velocityOffset,
 			const bool& enableVelocityFit,
-			const Int32& id);
+			const Int32& id,
+			const std::string& str_id);
 
-  void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
-  void setAsymParams(TAsymParams asymParams);
+  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
+
 
 };
 
 typedef struct {
+  TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
         Float64 sigma, alpha, delta;
     } TAsymParams;
-TAsymParams makeAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
+
 
 class CLineRatioCatalog : public CRayCatalog
 {

@@ -1,4 +1,4 @@
-RestLength	Name	Type	Force	Profile	AmplitudeGroup	GroupNominalAmplitude	VelocityGroup	VelocityOffset	EnableVelocityOffsetFit
+WaveLength	Name	Type	Force	Profile	AmplitudeGroupName	AmplitudeGroupValue	DispersionVelocityGroupName	WaveLengthOffset	EnableFitWaveLengthOffset
 12821.59	P5A	A	W	SYM	-1	1	Abs1	0	FALSE
 10941.09	P6A	A	W	SYM	-1	1	Abs1	0	FALSE
 10052.13	P7A	A	W	SYM	-1	1	Abs1	0	FALSE

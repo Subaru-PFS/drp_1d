@@ -60,12 +60,13 @@ class CRayCatalog
 public:
 
     typedef std::vector<CRay> TRayVector;
-  CRayCatalog() = default;
-  ~CRayCatalog() = default;
-  
-    CRayCatalog(Float64 sigmaSupport);
-
-
+  CRayCatalog(Float64 sigmaSupport);
+  virtual ~CRayCatalog() = default; 
+  CRayCatalog() = default;//TODO remove in 7007
+  CRayCatalog(const CRayCatalog & other) = default; 
+  CRayCatalog(CRayCatalog && other) = default; 
+  CRayCatalog& operator=(const CRayCatalog& other) = default;  
+  CRayCatalog& operator=(CRayCatalog&& other) = default; 
 
   void Add( const CRay& r );
   void AddRayFromParams(const std::string& name,
@@ -79,7 +80,8 @@ public:
 			const std::string& velocityGroup,
 			const Float64& velocityOffset,
 			const bool& enableVelocityFit,
-			const Int32& id);
+			const Int32& id,
+			const std::string& str_id);
   
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
@@ -87,13 +89,15 @@ public:
 
     void Sort();
 
-  void setAsymParams(TAsymParams asymParams);
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
 
-  void setLineAmplitude(const std::string& name,const Float64& nominalAmplitude);
-private:
+  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+
+  void debug(std::ostream& os);
+protected:
 
     TRayVector m_List;
-    std::map<std::string, TRayVector> rayGroups;
+  //    std::map<std::string, TRayVector> rayGroups; TODO use this map to handle velocity groups
 
   Float64 m_nSigmaSupport=N_SIGMA_SUPPORT;
 };

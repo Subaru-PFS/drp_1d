@@ -41,20 +41,14 @@
 
 using namespace NSEpic;
 
-CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const Float64& n_sigma_support):
-  m_Name(name),
-  CRayCatalog(n_sigma_support)
-{
-
-}
 
 CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog):
   CRayCatalog(lineCatalog),
   m_Name(name)
 {
-  for(const CRay& line:GetList())
+  for(CRay& line:m_List)
     {
-      setLineAmplitude(line.GetName(),0.);
+      line.setNominalAmplitude(0.);
     }
   // TODO set all nominalAmplitudes to 0
   

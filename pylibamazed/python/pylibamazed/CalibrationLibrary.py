@@ -47,7 +47,7 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CRayCatalog,CRayCatalogsTplShape,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
-                                  makeAsymParams)
+                                  TAsymParams)
 import numpy as np
 from astropy.io import fits
 import glob
@@ -150,26 +150,29 @@ class CalibrationLibrary:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
             raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
+        
+
         self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
-                asymParams = makeAsymParams(1., 4.5, 0.)
+                asymParams = TAsymParams(1., 4.5, 0.)
             elif row.Profile == "ASYMFIT":
-                asymParams = makeAsymParams(2., 2., 0.)
+                asymParams = TAsymParams(2., 2., 0.)
             else:
-                asymParams = makeAsymParams(0, 0, 0)
+                asymParams = TAsymParams(0, 0, 0)
             self.line_catalogs[object_type].AddRayFromParams(row.Name,
-                                                             row.RestLength,
+                                                             row.WaveLength,
                                                              row.Type,
                                                              row.Force,
                                                              row.Profile,
                                                              asymParams,
-                                                             row.AmplitudeGroup,
-                                                             row.GroupNominalAmplitude,
-                                                             row.VelocityGroup,
-                                                             row.VelocityOffset,
-                                                             row.EnableVelocityOffsetFit,
-                                                             index)
+                                                             row.AmplitudeGroupName,
+                                                             row.AmplitudeGroupValue,
+                                                             row.DispersionVelocityGroupName,
+                                                             row.WaveLengthOffset,
+                                                             row.EnableFitWaveLengthOffset,
+                                                             index,
+                                                             self._get_linecatalog_id(row))
 
     def load_line_ratio_catalog_list(self, object_type, method):
         logger = logging.getLogger("calibration_api")
@@ -199,13 +202,14 @@ class CalibrationLibrary:
                 lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type])
                 for index,row in lr_catalog_df.iterrows():
                     if row.Name in list(self.line_catalogs_df[object_type].Name):
-                        lr_catalog.setLineAmplitude(row.Name,row.NominalAmplitude)
+                        lr_catalog.setLineAmplitude(self._get_linecatalog_id(row),row.NominalAmplitude)
                 lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
                 lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
-                lr_catalog.setAsymParams(makeAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
-                                                        line_ratio_catalog_parameter["asym_params"]["alpha"],
-                                                        line_ratio_catalog_parameter["asym_params"]["delta"])
-                                         )
+                lr_catalog.setAsymProfileAndParams(line_ratio_catalog_parameter["asym_params"]["profile"],
+                                                   TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
+                                                               line_ratio_catalog_parameter["asym_params"]["alpha"],
+                                                               line_ratio_catalog_parameter["asym_params"]["delta"])
+                                                   )
                 lr_catalog.setIsmIndex(k)
                 lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
@@ -272,3 +276,8 @@ class CalibrationLibrary:
 
         """
         raise NotImplementedError("TODO after reviewing CProcessFlowContext::Init")
+
+
+    def _get_linecatalog_id(self, row):
+        wl = round(row.WaveLength,2)
+        return row.Name + "_" + str(wl) + "_" + row.Type

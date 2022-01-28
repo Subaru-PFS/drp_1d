@@ -185,7 +185,7 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
         LoadCatalogTwoMultilinesAE(restRayList);
     }
     LogCatalogInfos();
-    initLambdaOffsets("linecatalogs_offsets/offsetsCatalogs_20170410_m150");  
+
     /*
     //check the continuum flux axis
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();

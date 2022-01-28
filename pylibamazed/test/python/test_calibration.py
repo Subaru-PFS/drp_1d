@@ -56,6 +56,7 @@ def make_parameters():
     parameters["galaxy"]["linemodelsolve"]["linemodel"]=dict()
     parameters["galaxy"]["linemodelsolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H.tsv"
     parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_catalog"]="lineratiocataloglists/lineratiocatalogs_v15/"
+    parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_ismfit"]=True
     return parameters
 
 

@@ -56,27 +56,8 @@ namespace NSEpic
   class CLineRatioCatalog : public CRayCatalog
   {
   public:
-    CLineRatioCatalog(const std::string& name, const Float64& n_sigma_support);
-    /*CLineRatioCatalog(const std::string& name,
-		      const Float64& n_sigma_support,
-		      const Float64& prior
-		      const Int32& ismIndex);*/
+
     CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
-    ~CLineRatioCatalog() = default;
-    
-    /*    void addLine(const std::string& name,
-		 const Float64& position,
-		 const std::string& type,
-		 const std::string& force,
-		 const std::string& profile,
-		 const TAsymParams& asymParams,
-		 const std::string& groupName,
-		 const Float64& nominalAmplitude,
-		 const std::string& velocityGroup,
-		 const Float64& velocityOffset,
-		 const bool& enableVelocityFit,
-		 const Int32& id);
-    */
 
     void addVelocity(const std::string& name, const Float64& value);
     void setPrior(const Float64& prior);

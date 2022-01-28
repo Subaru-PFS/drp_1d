@@ -91,29 +91,15 @@ public:
 	      Int32 id=-1);
     CRay( const std::string& name,
           Float64 pos, UInt32 type,
-          const CLineProfile &profile,
-          UInt32 force,
-          Float64 amp=-1.0,
-          Float64 width=-1.0,
-          Float64 cut=-1.0,
-          Float64 posErr=-1.0,
-          Float64 sigmaErr=-1.0,
-          Float64 ampErr=-1.0,
-          const std::string& groupName="-1",
-          Float64 nominalAmp=1.0,
-          const std::string& velGroupName="-1",
-	      Int32 id=-1);
-    
-    CRay( const std::string& name,
-          Float64 pos, UInt32 type,
           CLineProfile_ptr &&profile,
           UInt32 force,
 	  Float64 velocityOffset ,
-	  bool enableVelocityOffset,
+	  bool enableVelocityOffsetFitting,
           const std::string& groupName,
           Float64 nominalAmp,
           const std::string& velGroupName,
-	  Int32 id);
+	  Int32 id,
+	  const std::string& str_id);
 
     CRay(const CRay & other); 
     CRay(CRay && other) = default; 
@@ -145,6 +131,7 @@ public:
     Float64             GetAmpFitError() const;
     TAsymParams         GetAsymParams() const;
     void                SetAsymParams(TAsymParams asymParams);
+  void setAsymProfileAndParams(const std::string& profileName,TAsymParams asymParams, Float64 nSigmaSupport);
     void                resetAsymFitParams();
   void setNominalAmplitude(const Float64&ampl) { m_NominalAmplitude = ampl;}
 
@@ -154,6 +141,8 @@ public:
 
     const std::string&  GetVelGroupName() const;
 
+    const std::string&  GetStrID() const;
+  
     void                Save( std::ostream& stream ) const;
     void                SaveDescription( std::ostream& stream ) const;
 
@@ -180,11 +169,12 @@ private:
     Float64         m_NominalAmplitude = 0.;
 
     //for offset fitting
-  bool            m_OffsetFit = false; // NB: even if false m_Offset is taken into account -> TODO investigate
+  bool            m_OffsetFit = false; 
 
     //for velocity fitting
     std::string     m_VelGroupName = "";
 
+  std::string m_strID;
 };
 
 }

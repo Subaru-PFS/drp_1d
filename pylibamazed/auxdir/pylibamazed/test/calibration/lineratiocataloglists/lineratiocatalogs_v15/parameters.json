@@ -1,1 +1,170 @@
-{"tpl_NEW-Im-extended_TF_modified_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.5, "delta": 0.5}, "velocities": {"em_vel": 480.0, "abs_vel": 580.0}}, "tpl_NEW-Sbc-extended_TF_catalog": {"asym_params": {"sigma": 1.0, "alpha": 0.0, "delta": 0.0}, "velocities": {"em_vel": 500.0, "abs_vel": 700.0}}, "tpl_NEW-Im-extended_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.5, "delta": 0.5}, "velocities": {"em_vel": 480.0, "abs_vel": 580.0}}, "tpl_NEW-Im-extended-blue_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 2.0, "delta": 1.5}, "velocities": {"em_vel": 480.0, "abs_vel": 500.0}}, "tpl_COMBINE-ave-Lya-emstr-AND-Scd_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.5, "delta": 1.0}, "velocities": {"em_vel": 500.0, "abs_vel": 620.0}}, "tpl_Rebinned-EW-SB2extended_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 2.0, "delta": 0.5}, "velocities": {"em_vel": 420.0, "abs_vel": 560.0}}, "tpl_COMBINE-ave-BX-highblue-AND-StarBurst1_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.5, "delta": 0.0}, "velocities": {"em_vel": 420.0, "abs_vel": 700.0}}, "tpl_COMBINE-ave-Lya-emstr-AND-StarBurst3_TF_catalog": {"asym_params": {"sigma": 3.0, "alpha": 1.5, "delta": 1.0}, "velocities": {"em_vel": 320.0, "abs_vel": 640.0}}, "tpl_COMBINE-ave-BX-highblue-AND-StarBurst3_TF_catalog": {"asym_params": {"sigma": 3.0, "alpha": 2.0, "delta": 0.0}, "velocities": {"em_vel": 320.0, "abs_vel": 700.0}}, "tpl_COMBINE-ave-Lya-abs-AND-StarBurst1_TF_catalog": {"asym_params": {"sigma": 1.0, "alpha": 0.0, "delta": 0.0}, "velocities": {"em_vel": 420.0, "abs_vel": 780.0}}, "tpl_COMBINE-ave-Lya-emstr-AND-StarBurst1_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.0, "delta": 0.5}, "velocities": {"em_vel": 420.0, "abs_vel": 640.0}}, "tpl_COMBINE-ave-Lya-abs-AND-StarBurst3_TF_catalog": {"asym_params": {"sigma": 1.0, "alpha": 0.0, "delta": 0.0}, "velocities": {"em_vel": 320.0, "abs_vel": 780.0}}, "tpl_COMBINE-ave-Lya-abs-AND-Scd_TF_catalog": {"asym_params": {"sigma": 1.0, "alpha": 0.0, "delta": 0.0}, "velocities": {"em_vel": 480.0, "abs_vel": 780.0}}, "tpl_COMBINE-ave-BX-highblue-AND-Scd_TF_catalog": {"asym_params": {"sigma": 2.0, "alpha": 1.5, "delta": 0.0}, "velocities": {"em_vel": 420.0, "abs_vel": 700.0}}}
+{
+    "tpl_NEW-Im-extended_TF_modified_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.5,
+            "delta": 0.5
+        },
+        "velocities": {
+            "em_vel": 480.0,
+            "abs_vel": 580.0
+        }
+    },
+    "tpl_NEW-Sbc-extended_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 1.0,
+            "alpha": 0.0,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 500.0,
+            "abs_vel": 700.0
+        }
+    },
+    "tpl_NEW-Im-extended_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.5,
+            "delta": 0.5
+        },
+        "velocities": {
+            "em_vel": 480.0,
+            "abs_vel": 580.0
+        }
+    },
+    "tpl_NEW-Im-extended-blue_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 2.0,
+            "delta": 1.5
+        },
+        "velocities": {
+            "em_vel": 480.0,
+            "abs_vel": 500.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-emstr-AND-Scd_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.5,
+            "delta": 1.0
+        },
+        "velocities": {
+            "em_vel": 500.0,
+            "abs_vel": 620.0
+        }
+    },
+    "tpl_Rebinned-EW-SB2extended_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 2.0,
+            "delta": 0.5
+        },
+        "velocities": {
+            "em_vel": 420.0,
+            "abs_vel": 560.0
+        }
+    },
+    "tpl_COMBINE-ave-BX-highblue-AND-StarBurst1_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.5,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 420.0,
+            "abs_vel": 700.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-emstr-AND-StarBurst3_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 3.0,
+            "alpha": 1.5,
+            "delta": 1.0
+        },
+        "velocities": {
+            "em_vel": 320.0,
+            "abs_vel": 640.0
+        }
+    },
+    "tpl_COMBINE-ave-BX-highblue-AND-StarBurst3_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 3.0,
+            "alpha": 2.0,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 320.0,
+            "abs_vel": 700.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-abs-AND-StarBurst1_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 1.0,
+            "alpha": 0.0,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 420.0,
+            "abs_vel": 780.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-emstr-AND-StarBurst1_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.0,
+            "delta": 0.5
+        },
+        "velocities": {
+            "em_vel": 420.0,
+            "abs_vel": 640.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-abs-AND-StarBurst3_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 1.0,
+            "alpha": 0.0,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 320.0,
+            "abs_vel": 780.0
+        }
+    },
+    "tpl_COMBINE-ave-Lya-abs-AND-Scd_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 1.0,
+            "alpha": 0.0,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 480.0,
+            "abs_vel": 780.0
+        }
+    },
+    "tpl_COMBINE-ave-BX-highblue-AND-Scd_TF_catalog": {
+        "asym_params": {
+            "profile": "ASYMFIXED",
+            "sigma": 2.0,
+            "alpha": 1.5,
+            "delta": 0.0
+        },
+        "velocities": {
+            "em_vel": 420.0,
+            "abs_vel": 700.0
+        }
+    }
+}

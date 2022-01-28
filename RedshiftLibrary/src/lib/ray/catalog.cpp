@@ -138,7 +138,7 @@ void CRayCatalog::Add( const CRay& r )
       //TODO this should be a map with key defined as struct{name,position,type}
       // TODO this should be a map with key defined as ID, much better than struct{name,position,type} now that a ray has an ID
         // Can't add a line with a name + position + type that already exists in the list
-        if( (*it).GetName() == r.GetName() )
+      if( (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
 	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Ray with name " << r.GetName() << " already exists, position=" << r.GetPosition() << " type=" << r.GetType() );
     }
 
@@ -158,7 +158,8 @@ void CRayCatalog::AddRayFromParams(const std::string& name,
 				   const std::string& velocityGroup,
 				   const Float64& velocityOffset,
 				   const bool& enableVelocityFit,
-				   const Int32& id)
+				   const Int32& id,
+				   const std::string& str_id)
 {
   int etype = -1;
     if (type == "E") etype=2;
@@ -190,7 +191,7 @@ void CRayCatalog::AddRayFromParams(const std::string& name,
       throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
     }
     
-    Add( CRay(name, position, etype, std::move(profile), eforce, velocityOffset, enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id) );
+    Add( CRay(name, position, etype, std::move(profile), eforce, velocityOffset, enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id,str_id) );
 
 
   }
@@ -201,22 +202,28 @@ void CRayCatalog::Sort()
     sort(m_List.begin(), m_List.end());
 }
 
-void CRayCatalog::setLineAmplitude(const std::string& name,const Float64& nominalAmplitude)
+void CRayCatalog::setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude)
 {
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-      if(it->GetName() == name) return it->setNominalAmplitude(nominalAmplitude);
+      if(it->GetStrID() == str_id) return it->setNominalAmplitude(nominalAmplitude);
     }
-    throw GlobalException(INTERNAL_ERROR,Formatter()<<" Line " << name << " does not exist in catalog");
+    throw GlobalException(INTERNAL_ERROR,Formatter()<<" Line with id " << str_id << " does not exist in catalog");
 }
 
-void CRayCatalog::setAsymParams(TAsymParams params)
+
+void CRayCatalog::setAsymProfileAndParams(const std::string& profile, TAsymParams params)
 {
    TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
     {
-      if(it->GetName() == "LyAE") return it->SetAsymParams(params);
+      if(it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed()) return  it->setAsymProfileAndParams(profile,params,m_nSigmaSupport);
     }
     throw GlobalException(INTERNAL_ERROR,"Cannot set asym parameters on this catalog, lyA does not exist");
+}
+
+void CRayCatalog::debug(std::ostream& os)
+{
+  for(CRay& ray:m_List) ray.Save(os);
 }
