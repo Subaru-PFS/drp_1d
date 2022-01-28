@@ -308,16 +308,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         InitTplratioPriors();
     }
 
-    // init catalog offsets
-    Log.LogInfo("  Operator-Linemodel: Lambda offsets init");
-    try
-    {
-        m_model->initLambdaOffsets(opt_offsetCatRelPath);
-    } catch (std::exception const &e)
-    {
-      throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: Failed to init lambda offsets. "
-                     "Continuing without offsets...");
-    }
 
     Int32 resultInitRet = m_result->Init(m_sortedRedshifts, restRayList,
                                          m_model->getTplshape_count(),
