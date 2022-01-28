@@ -2401,14 +2401,14 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   CLineModelSolution bestModelSolution;
   CContinuumModelSolution bestContinuumModelSolution;
 
-  Float64 bestScore=0;
+  Float64 bestScore=DBL_MAX;
   Float64 bestz=NAN;
   for (Float64 &z:redshiftsGrid)
     {
       Log.LogDebug(Formatter()<<"test with z="<<z);
 
       Float64 score = m_model->fit(z,lambdaRange,modelSolution,continuumModelSolution,0,true);
-      if (score > bestScore)
+      if (score < bestScore)
         {
           bestScore = score;
           bestModelSolution = modelSolution;
