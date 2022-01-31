@@ -210,7 +210,7 @@ void CProcessFlow::Process( CProcessFlowContext& ctx )
       }
     if(ctx.GetParameterStore()->Get<bool>( "enablelinemeassolve"))
       {
-        CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas");
+        CLineMeasSolve solve(ctx.m_ScopeStack,"linemeas",ctx.GetParameterStore()->Get<std::string>("calibrationDir"));
         solve.Compute(ctx.GetInputContext(),
                           ctx.GetResultStore(),
                           ctx.m_ScopeStack);

@@ -235,11 +235,6 @@ bool CMultiRollModel::initTplratioCatalogs(std::string opt_tplratioCatRelPath, I
 bool CMultiRollModel::initLambdaOffsets(std::string offsetsCatalogsRelPath)
 {
     bool ret=-1;
-    for(Int32 km=0; km<m_models.size(); km++)
-    {
-        m_models[km]->initLambdaOffsets(offsetsCatalogsRelPath);
-        ret = true;
-    }
     return ret;
 }
 
