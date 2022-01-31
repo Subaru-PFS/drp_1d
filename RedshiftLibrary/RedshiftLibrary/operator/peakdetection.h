@@ -46,6 +46,13 @@
 
 #include <iterator>
 
+namespace test_peakdetection{ //boost_test_suite
+    //all boost_auto_test_case that use private method
+    class XMad_test;
+    class FindGaussianFitStartAndStop_test;
+    class FindPossiblePeaks_test;
+    class RedefineBorders_test;
+}
 namespace NSEpic
 {
 
@@ -64,6 +71,11 @@ public:
     std::shared_ptr<const CPeakDetectionResult> Compute( const CSpectrum& spectrum);
 
 private:
+    friend class test_peakdetection::XMad_test;
+    friend class test_peakdetection::FindGaussianFitStartAndStop_test;
+    friend class test_peakdetection::FindPossiblePeaks_test;
+    friend class test_peakdetection::RedefineBorders_test;
+
     Float64 m_winsize;
     Float64 m_cut;
     UInt32 m_medianSmoothHalfWidth;
