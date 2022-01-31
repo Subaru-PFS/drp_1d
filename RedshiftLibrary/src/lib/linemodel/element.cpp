@@ -365,10 +365,15 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit)
  * @param redshift
  * @param lambdaRange
  * @param continuumfluxAxis
+ * Add up polynome contribution below lines 
  * @return the continuum flux val at the sub element center wavelength. Error returns -999/-9999 if center profile not in range
  *
  */
-Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis)
+Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, 
+                                                      const CSpectrumSpectralAxis& spectralAxis, 
+                                                      Float64 redshift, 
+                                                      const CSpectrumFluxAxis &continuumfluxAxis,
+                                                      const TPolynomCoeffs& line_polynomCoeffs)
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
 
@@ -378,7 +383,11 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpe
         return NAN;
     }
 
-    return continuumfluxAxis[IdxCenterProfile];
+    Float64 cont = continuumfluxAxis[IdxCenterProfile] + 
+                   line_polynomCoeffs.x0 + 
+                   line_polynomCoeffs.x1*spectralAxis[IdxCenterProfile]+ 
+                   line_polynomCoeffs.x2*spectralAxis[IdxCenterProfile]*spectralAxis[IdxCenterProfile];
+    return cont;
 }
 
 
