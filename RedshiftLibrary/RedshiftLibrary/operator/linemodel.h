@@ -109,7 +109,8 @@ public:
                            const bool &opt_velocityFitting=false,
                            const UInt32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
-                           const std::string &opt_rigidity="rules");
+                           const std::string &opt_rigidity="rules",
+                           const Float64 opt_haprior = -1.);
 
     void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& largeGridRedshifts);
     Int32 SetFirstPassCandidates(const TCandidateZbyRank & candidatesz);
@@ -235,6 +236,7 @@ public:
                            Int32 rayType);
 
   std::shared_ptr<CModelSpectrumResult> getFittedModel();
+  void setHapriorOption(Int32 opt);
 private:
 
     std::shared_ptr<CLineModelResult> m_result;

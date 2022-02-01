@@ -467,7 +467,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         if(zPriorStrongLinePresence)
         {
             UInt32 lineTypeFilter = 1;// for emission lines only
-            TBoolList strongLinePresence = result->GetStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
+            TBoolList strongLinePresence = result->getStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
 
             zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, opt_stronglinesprior);
         }else{
@@ -475,7 +475,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         }
         if(zPriorHaStrongestLine)
         {
-            TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+            TBoolList wHaStronglinePresence = result->getStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
             std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
             zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
         }
@@ -486,7 +486,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
         }
         if(zPriorNLineSNR)
         {
-            std::vector<Int32> n_lines_above_snr = result->GetNLinesAboveSnrcut(result->LineModelSolutions);
+            std::vector<Int32> n_lines_above_snr = result->getNLinesAboveSnrcut(result->LineModelSolutions);
             std::vector<Float64> zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
             zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
         }
@@ -522,7 +522,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
 
             if(zPriorHaStrongestLine)
             {
-                TBoolList wHaStronglinePresence = result->GetStrongestLineIsHa(result->LineModelSolutions); //whasp for lm-tplratio
+                TBoolList wHaStronglinePresence = result->StrongHalphaELPresentTplshapes[k];
                 std::vector<Float64> zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(wHaStronglinePresence, opt_hapriorstrength);
                 zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorHaStrongest);
             }
@@ -869,7 +869,8 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     m_opt_velocityfit,
                                                     m_opt_firstpass_largegridstepRatio,
                                                     m_opt_firstpass_largegridsampling,
-                                                    m_opt_rigidity);
+                                                    m_opt_rigidity,
+                                                    m_opt_haPrior);
     if( retFirstPass!=0 )
     {
         throw GlobalException(INTERNAL_ERROR, "Linemodel, first pass failed. Aborting" );

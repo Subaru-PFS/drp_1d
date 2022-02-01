@@ -228,6 +228,7 @@ bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit)
     m_ChisquareTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_ScaleMargCorrTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_StrongELPresentTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_StrongHalphaELPresentTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_FittedAmpTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
@@ -1465,6 +1466,11 @@ const TBoolList & CLineModelFitting::GetStrongELPresentTplshape() const
     return m_StrongELPresentTplshape;
 }
 
+const TBoolList & CLineModelFitting::getHaELPresentTplshape() const
+{
+    return m_StrongHalphaELPresentTplshape;
+}
+
 const std::vector<Int32> & CLineModelFitting::GetNLinesAboveSNRTplshape() const
 {
     return m_NLinesAboveSNRTplshape;
@@ -1654,6 +1660,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
                         m_ScaleMargCorrTplshape[ifitting] = m_ScaleMargCorrTplshape[ifitting-1];
                         m_StrongELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting-1];
+                        m_StrongHalphaELPresentTplshape[ifitting] = m_StrongHalphaELPresentTplshape[ifitting-1];
                         m_NLinesAboveSNRTplshape[ifitting] = m_NLinesAboveSNRTplshape[ifitting-1];
                         meritTplratio[ifitting] = meritTplratio[ifitting-1];
                         meritPriorTplratio[ifitting] = meritPriorTplratio[ifitting-1];
@@ -2203,7 +2210,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
                     m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
-                    //m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
+                    //given that Ha is a strong emission line, 
+                    if(m_opt_haprior>0.)//check first that haprior is activated
+                        m_StrongHalphaELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting]?GetModelHaStrongest():false;//result per tplratio
+                    
                     std::vector<std::string> strongELSNRAboveCut;// = getLinesAboveSNR(3.5); //this is costing a lot of processing time, so deactivated for now.
                     m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
@@ -5014,11 +5024,8 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() )
-            {
-                continue;
-            }
-            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() || 
+                !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
             {
                 continue;
             }
@@ -5031,6 +5038,7 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
                 break;
             }
         }
+        if(isStrongPresent) break;
     }
 
     return isStrongPresent;
@@ -5042,20 +5050,18 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
  */
 bool CLineModelFitting::GetModelHaStrongest()
 {
-    bool isHaStrongest = false;
-     
-    Float64 ampMax = NAN;
-    std::string lineMax = "";
-    Float64 ampHa = NAN;
+    linetags ltags;
+    Float64 ampMax = -DBL_MAX;
+    std::string ampMaxLineTag = "";
 
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    TUInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
     for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
     {
         Int32 iElts = validEltsIdx[iValidElts];
         UInt32 nlines =  m_Elements[iElts]->GetRays().size();
         for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission())
             {
                 continue;
             }
@@ -5063,24 +5069,17 @@ bool CLineModelFitting::GetModelHaStrongest()
             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
             if(amp>0. && amp>ampMax)
             {
-                lineMax = m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str();
+                ampMaxLineTag = m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str();
                 ampMax = amp;
-            }
-            if( strcmp(m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str(),ltags.halpha_em)==0)
-            {
-                ampHa = amp;
             }
         }
     }
 
-    Log.LogDebug("    model: GetModelHaStrongest - ampMax=%e (for line=%s)", ampMax, lineMax.c_str());
-    Log.LogDebug("    model: GetModelHaStrongest - ampHa=%e (for lha tag=%s)", ampHa, ltags.halpha_em);
-    if( ampHa>0.0 && ampHa==ampMax)
+    bool isHaStrongest = (!std::isnan(ampMax) && ampMax>0. && ampMaxLineTag == ltags.halpha_em); 
+    if(isHaStrongest)
     {
-        isHaStrongest = true;
-        Log.LogDebug("    model: GetModelHaStrongest - found to be true");
-    }
-
+        Log.LogDebug("    model: GetModelHaStrongest - found to be true with ampMax=%e (for line=Halpha)", ampMax);
+    }   
     return isHaStrongest;
 }
 
@@ -5395,19 +5394,38 @@ Int32 CLineModelFitting::improveBalmerFit()
  **/
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 {
+    Int32 s = m_RestRayList.size();
     CLineModelSolution modelSolution;
     modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
-    modelSolution.Rays = m_RestRayList;
-    modelSolution.ElementId.resize(m_RestRayList.size());
+    modelSolution.Rays = m_RestRayList;//copying the catalog?
+    modelSolution.ElementId.resize(s);
     modelSolution.snrHa = NAN;
     modelSolution.lfHa = NAN;
     modelSolution.snrOII = NAN;
     modelSolution.lfOII = NAN;
+    modelSolution.LyaWidthCoeff = NAN;
+    modelSolution.LyaAlpha = NAN;
+    modelSolution.LyaDelta = NAN;
+    modelSolution.Amplitudes = TFloat64List(s, NAN);
+    modelSolution.Errors =  TFloat64List(s, NAN);
+    modelSolution.FittingError = TFloat64List(s, NAN);
+    modelSolution.LambdaObs = TFloat64List(s, NAN);
+    modelSolution.Offset = TFloat64List(s, NAN);
+    modelSolution.Velocity = TFloat64List(s, NAN);
+    modelSolution.CenterContinuumFlux = TFloat64List(s, NAN);
+    modelSolution.ContinuumError = TFloat64List(s, NAN);
+    modelSolution.Sigmas = TFloat64List(s, NAN);
+    modelSolution.Fluxs = TFloat64List(s, NAN);
+    modelSolution.FluxErrors = TFloat64List(s, NAN);
+    modelSolution.FluxDirectIntegration = TFloat64List(s, NAN);
+    modelSolution.FluxDirectIntegrationError = TFloat64List(s, NAN);
+    modelSolution.OutsideLambdaRange = TBoolList(s, true);
+    modelSolution.fittingGroupInfo = TStringList(s, "undefined");
 
     TInt32List eIdx_oii;
     TInt32List subeIdx_oii;
 
-    for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+    for( UInt32 iRestRay=0; iRestRay<s; iRestRay++ )
     {
         Int32 eIdx = m_Elements.FindElementIndex(iRestRay);
         Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
@@ -5415,148 +5433,108 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 
         if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
         {
-            modelSolution.Amplitudes.push_back(NAN);
-            modelSolution.Errors.push_back(NAN);
-            modelSolution.FittingError.push_back(NAN);
-            modelSolution.LambdaObs.push_back(NAN);
-            modelSolution.Offset.push_back(NAN);
-            modelSolution.Velocity.push_back(NAN);
-            modelSolution.CenterContinuumFlux.push_back(NAN);
-            modelSolution.ContinuumError.push_back(NAN);
-            modelSolution.Sigmas.push_back(NAN);
-            modelSolution.Fluxs.push_back(NAN);
-            modelSolution.FluxErrors.push_back(NAN);
-            modelSolution.FluxDirectIntegration.push_back(NAN);
-            modelSolution.OutsideLambdaRange.push_back(true);
-            modelSolution.fittingGroupInfo.push_back("undefined");
-        }else{
-            Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
-            modelSolution.Amplitudes.push_back(amp);
-            Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
-            modelSolution.Errors.push_back(ampError);
-
-            modelSolution.LambdaObs.push_back(m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift));
-            modelSolution.Velocity.push_back(m_Elements[eIdx]->GetVelocity());
-            modelSolution.Offset.push_back(m_Elements[eIdx]->m_Rays[subeIdx].GetOffset());
-
-            if(opt_level!=0)// brief, to save processing time, do not estimate fluxes and high level line properties
-            {
-                modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
-                TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
-                Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
-                                                m_SpectrumModel.GetSpectralAxis(), 
-                                                m_Redshift, 
-                                                m_ContinuumFluxAxis,
-                                                polynom_coeffs);
-                modelSolution.CenterContinuumFlux.push_back(cont);
-                modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
-                Float64 mu = NAN;Float64 sigma = NAN;
-                m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
-
-                Float64 flux = NAN;
-                Float64 fluxError = NAN;
-                Float64 fluxDI = NAN;
-                Float64 snrDI = NAN;
-                TInt32List eIdx_line(1, eIdx);
-                TInt32List subeIdx_line(1, subeIdx);
-                Int32 opt_cont_substract_abslinesmodel=0;
-                bool isEmission = false;
-                if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-                {
-                    opt_cont_substract_abslinesmodel=1;
-                    isEmission = true;
-                }
-                Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
-                if(amp>=0.0)
-                {
-                    if(isEmission)
-                    {
-                        flux = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( amp, sigma);
-                        fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, ampError);
-                    }else{
-                        Float64 _amp = cont*amp;
-                        Float64 _ampError = cont*ampError;
-                        flux = -m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( _amp, sigma);
-                        fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, _ampError);
-                    }
-                }
-                modelSolution.Sigmas.push_back(sigma);
-                modelSolution.Fluxs.push_back(flux);
-                modelSolution.FluxErrors.push_back(fluxError);
-                modelSolution.FluxDirectIntegration.push_back(fluxDI);
-
-                //rough estimation of SNR_Ha, using the given model and fitting method
-                //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
-                 
-                if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && isEmission)
-                {
-                    if(false)
-                    {
-                        if(fluxError>0.0)
-                        {
-                            modelSolution.snrHa = flux/fluxError;
-                        }
-                        if(flux>0.0)
-                        {
-
-                            modelSolution.lfHa = log10(flux);
-                        }
-                    }else{
-                        modelSolution.snrHa = snrDI;
-                        if(fluxDI>0.0)
-                        {
-                            modelSolution.lfHa = log10(fluxDI);
-                        }
-                        else if (fluxDI == 0.)
-                        {
-                            modelSolution.lfHa = -INFINITY;
-                        }
-                    }
-                }
-                if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
-                        &&  isEmission)
-                {
-                    //here we only cover the fluxDI case.
-                    eIdx_oii.push_back(eIdx);
-                    subeIdx_oii.push_back(subeIdx);
-                    if(true)
-                    {
-                        fluxDI = NAN ;
-                        snrDI = NAN;
-                        Int32 opt_cont_substract_abslinesmodel=0;
-                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
-
-                        modelSolution.snrOII = snrDI;
-                        if(fluxDI>0.0)
-                        {
-                            modelSolution.lfOII = log10(fluxDI);
-                        }
-                        else if (fluxDI == 0.)
-                        {
-                            modelSolution.lfOII = -INFINITY;
-                        }
-                    }
-                }
-            }
-            else{
-                modelSolution.FittingError.push_back(NAN);
-                modelSolution.CenterContinuumFlux.push_back(NAN);
-                modelSolution.ContinuumError.push_back(NAN);
-                modelSolution.Sigmas.push_back(NAN);
-                modelSolution.Fluxs.push_back(NAN);
-                modelSolution.FluxErrors.push_back(NAN);
-                modelSolution.FluxDirectIntegration.push_back(NAN);
-            }
-
-            modelSolution.fittingGroupInfo.push_back(m_Elements[eIdx]->m_fittingGroupInfo);
-            modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
+            continue; //data already set to its default values
         }
+        Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
+        modelSolution.Amplitudes[iRestRay] = amp;
+        Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
+        modelSolution.Errors[iRestRay] = ampError;
+
+        modelSolution.LambdaObs[iRestRay] = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+        modelSolution.Velocity[iRestRay] = m_Elements[eIdx]->GetVelocity();
+        modelSolution.Offset[iRestRay] = m_Elements[eIdx]->m_Rays[subeIdx].GetOffset();
+
+        if(opt_level)// brief, to save processing time, do not estimate fluxes and high level line properties
+        {
+            modelSolution.FittingError[iRestRay] = m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis());
+            TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
+            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
+                                            m_SpectrumModel.GetSpectralAxis(), 
+                                            m_Redshift, 
+                                            m_ContinuumFluxAxis,
+                                            polynom_coeffs);
+            modelSolution.CenterContinuumFlux[iRestRay] = cont;
+            modelSolution.ContinuumError[iRestRay] = GetContinuumError(eIdx, subeIdx);
+            Float64 mu = NAN;Float64 sigma = NAN;
+            m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
+
+            Float64 flux = NAN;
+            Float64 fluxError = NAN;
+            Float64 fluxDI = NAN;
+            Float64 snrDI = NAN;
+            TInt32List eIdx_line(1, eIdx);
+            TInt32List subeIdx_line(1, subeIdx);
+            Int32 opt_cont_substract_abslinesmodel=0;
+            bool isEmission = false;
+            if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                opt_cont_substract_abslinesmodel=1;
+                isEmission = true;
+            }
+            Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
+            if(!std::isnan(amp) && amp>=0.0)
+            {
+                if(isEmission)
+                {
+                    flux = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( amp, sigma);
+                    fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, ampError);
+                }else{
+                    Float64 _amp = cont*amp;
+                    Float64 _ampError = cont*ampError;
+                    flux = -m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( _amp, sigma);
+                    fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, _ampError);
+                }
+            }
+            modelSolution.Sigmas[iRestRay] = sigma;
+            modelSolution.Fluxs[iRestRay] = flux;
+            modelSolution.FluxErrors[iRestRay] = fluxError;
+            modelSolution.FluxDirectIntegration[iRestRay] = fluxDI;
+
+            //rough estimation of SNR_Ha, using the given model and fitting method
+            //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
+            bool directIntegration = true;
+            if(isEmission && m_RestRayList[iRestRay].GetName()==ltags.halpha_em)
+            {
+                if(directIntegration){
+                    modelSolution.snrHa = snrDI;
+                    if(fluxDI>0.0)
+                        modelSolution.lfHa = log10(fluxDI);
+                    else if (fluxDI == 0.)
+                        modelSolution.lfHa = -INFINITY;
+                }else{
+                    if(fluxError>0.0)
+                        modelSolution.snrHa = flux/fluxError;
+                    if(flux>0.0)
+                        modelSolution.lfHa = log10(flux);
+                }
+            }
+            if(isEmission && 
+               (m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em))
+            {
+                //here we only cover the fluxDI case.
+                eIdx_oii.push_back(eIdx);
+                subeIdx_oii.push_back(subeIdx);
+                if(directIntegration)
+                {
+                    fluxDI = NAN ;
+                    snrDI = NAN;
+                    Int32 opt_cont_substract_abslinesmodel=0;
+                    Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+                    modelSolution.snrOII = snrDI;
+                    if(fluxDI>0.0)
+                        modelSolution.lfOII = log10(fluxDI);
+                    else if (fluxDI == 0.)
+                        modelSolution.lfOII = -INFINITY;
+                }
+            }
+        }
+
+        modelSolution.fittingGroupInfo[iRestRay] = m_Elements[eIdx]->m_fittingGroupInfo;
+        modelSolution.OutsideLambdaRange[iRestRay] = m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx);
     }
-    //retrieve Lya params if fitted
-    modelSolution.LyaWidthCoeff = NAN;
-    modelSolution.LyaAlpha = NAN;
-    modelSolution.LyaDelta = NAN;
-     
+
+    //retrieve Lya params if fitted    
     std::string lyaTag = ltags.lya_em;
     Int32 idxLyaE = m_Elements.FindElementIndex(lyaTag);
     if( idxLyaE>-1 )
@@ -5570,7 +5548,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
 
-    std::vector<std::string> strongELSNRAboveCut = std::vector<std::string>();// getLinesAboveSNR(3.5);
+    TStringList strongELSNRAboveCut = TStringList();// getLinesAboveSNR(3.5);
     modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
     return modelSolution;
