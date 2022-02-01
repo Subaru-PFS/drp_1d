@@ -101,7 +101,7 @@ class AbstractOutput:
 
     def get_fitted_model_by_rank(self, object_type, rank):
         if object_type == "linemeas":
-            return self.object_dataframes[object_type]["model"]
+            return self.object_dataframes[object_type]["linemeas_model"]
         else:
             return self.object_dataframes[object_type]["model"][rank]
 
