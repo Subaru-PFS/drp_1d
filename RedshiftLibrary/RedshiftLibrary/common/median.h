@@ -60,20 +60,17 @@ class CMedian
 {
 
 public:
-    
-    CMedian();
-    ~CMedian();
-        
-    T Find( const T * a, Int32 n );
+    T Find( const typename std::vector<T>::const_iterator &begin, const typename std::vector<T>::const_iterator &end );
+    T Find( const typename std::vector<T> &v);
 
 private:
     
-    T FastFind( const T* a, Int32 n );
-    T BeersFind( const T* a, Int32 n );
-    T Opt3Find( const T  *a );
-    T Opt5Find( const T  *a );
-    T Opt7Find( const T  *a );
-    T Opt9Find( const T  *a );
+    T FastFind(const typename std::vector<T>::const_iterator &begin, const typename std::vector<T>::const_iterator &end);
+    T BeersFind(const typename std::vector<T>::const_iterator &begin, const typename std::vector<T>::const_iterator &end);
+    T Opt3Find(const typename std::vector<T>::const_iterator &begin);
+    T Opt5Find(const typename std::vector<T>::const_iterator &begin);
+    T Opt7Find(const typename std::vector<T>::const_iterator &begin);
+    T Opt9Find(const typename std::vector<T>::const_iterator &begin);
 
 
 };

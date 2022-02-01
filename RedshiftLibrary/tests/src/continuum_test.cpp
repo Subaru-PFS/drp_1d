@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(median_test)
     BOOST_CHECK(y_out == y_in);
     print_flux(y_out);
 
-    // n_points = 3 (first and 2 last range are truncated) :
+    // n_points = 3 (first and last range are truncated) :
     //           y_in       0   1   2   3   4   5   6   7   8   9   10
     //                      |   |   |   |   |   |   |   |   |   |   |
     // points for i=0   |___|___|...|
@@ -88,38 +88,36 @@ BOOST_AUTO_TEST_CASE(median_test)
     BOOST_TEST_MESSAGE("n_points = 3");
     // i = 0 : n_points = 2 in CMedian::Find
     BOOST_CHECK(y_out[0] == (y_in[0]+y_in[1])/(n_points-1));
-    // i in [1,8] : n_points =3 in CMedian::Find
-    for(UInt32 i=1; i<y_out.size()-2; i++ ){
+    // i in [1,9] : n_points =3 in CMedian::Find
+    for(UInt32 i=1; i<y_out.size()-1; i++ ){
         BOOST_CHECK(y_out[i] == y_in[i]);
     }
-    // i = 9 : n_points = 2 in CMedian::Find
-    BOOST_CHECK(y_out[9]== (y_in[8]+y_in[9])/(n_points-1));
-    // i = 10 : n_points = 1 in CMedian::Find
-    BOOST_CHECK(y_out.back() == y_in[y_in.size()-2]);
+    // i = 10 : n_points = 2 in CMedian::Find
+    BOOST_CHECK(y_out.back() == (y_in[y_in.size()-2]+y_in[y_in.size()-1])/(n_points-1));
     print_flux(y_out);
 
-    // max range : 2*(n_points - 1)
+    // max range : 2*n_points - 1
     //----------------------------
 
-    // n_points = 20 :
-    // final n_points = 10 -> even median : y_out = 0.5 * (y_in[4] + y_in[5])
-    TFloat64List res(11, 10.);
-    n_points = 20;
+    // n_points = 21 :
+    // final n_points = 11 -> odd median : y_out = y_in[5]
+    TFloat64List res(11, 11.);
+    n_points = 21;
     y_out = sample.MedianSmooth(y_in, n_points);
-    BOOST_TEST_MESSAGE("n_points = 20");
+    BOOST_TEST_MESSAGE("n_points = 21");
     BOOST_CHECK(y_out == res);
     print_flux(y_out);
 
     // even y_in test
     TFloat64List y_in_2 = {1.,3.,5.,7.,9.,11.,13.,15.,17.,19.};
-    TFloat64List res_2(10, 9.); 
+    TFloat64List res_2(10, 10.); 
     TFloat64List y_out_2;
 
-    // n_points = 18 :
-    // final n_points = 9 -> odd median : y_out = y_in[5]
-    n_points = 18;
+    // n_points = 19 :
+    // final n_points = 19 -> even  median : y_out = 0.5 * (y_in[4] + y_in[5])
+    n_points = 19;
     y_out_2 = sample.MedianSmooth(y_in_2, n_points);
-    BOOST_TEST_MESSAGE("n_points = 18");
+    BOOST_TEST_MESSAGE("n_points = 19");
     BOOST_CHECK(y_out_2 == res_2);
     print_flux(y_out_2);
 
@@ -131,17 +129,15 @@ BOOST_AUTO_TEST_CASE(median_test)
     BOOST_TEST_MESSAGE("n_points = 3");
     // i = 0 : n_points = 2 in CMedian::Find
     BOOST_CHECK(y_out[0] == (y_in[0]+y_in[1])/(n_points-1));
-    // i in [1,8] : n_points = 3 in CMedian::Find
+    // i in [1,9] : n_points = 3 in CMedian::Find
     TFloat64List y_in_sorted(3);
-    for(UInt32 i=1; i<y_out.size()-2; i++ ){
+    for(UInt32 i=1; i<y_out.size()-1; i++ ){
         std::copy(y_in.begin()+(i-1), y_in.begin()+(i+2), y_in_sorted.begin());
         std::sort(y_in_sorted.begin(), y_in_sorted.end());
         BOOST_CHECK(y_out[i] == y_in_sorted[1]);
     }
-    // i = 9 : n_points = 2 in CMedian::Find
-    BOOST_CHECK(y_out[9]== (y_in[8]+y_in[9])/(n_points-1));
-    // i = 10 : n_points = 1 in CMedian::Find
-    BOOST_CHECK(y_out.back() == y_in[y_in.size()-2]);
+    // i = 10 : n_points = 2 in CMedian::Find
+    BOOST_CHECK(y_out.back() == (y_in[y_in.size()-2]+y_in[y_in.size()-1])/(n_points-1));
     print_flux(y_out);
 }
 
@@ -154,42 +150,41 @@ BOOST_AUTO_TEST_CASE(mean_test)
 
     BOOST_TEST_MESSAGE("TEST MEAN SMOOTH");
 
-    // odd n_range  : rest part is on left side
+    // odd n_range  : rest part is on right side
     // even n_range : no rest part
     // In this context range is always even
 
-    // n_range = 0 > y_out == y_in
-    n_range = 0;
+    // n_range = 1 > y_out == y_in
+    n_range = 1;
     y_out = sample.MeanSmooth(y_in, n_range);
-    BOOST_TEST_MESSAGE("n_range = 0");
+    BOOST_TEST_MESSAGE("n_range = 1");
     BOOST_CHECK(y_out == y_in);
     print_flux(y_out);
 
-    // n_range = 2 (first and last range are truncated) :
+    // n_range = 2 (first range is truncated) :
     //           y_in       0   1   2   3   4   5   6   7   8   9   10
     //                      |   |   |   |   |   |   |   |   |   |   |
-    // range for i=0    |___|___|
-    // range for i=1        |___|___|
-    // range for i=9                                        |___|___|
-    // range for i=10                                           |___|___|
+    // range for i=0    |___|...|
+    // range for i=1        |___|...|
+    // range for i=9                                        |___|...|
+    // range for i=10                                           |___|...|
     n_range = 2;
     y_out = sample.MeanSmooth(y_in, n_range);
     BOOST_TEST_MESSAGE("n_range = 2");
-    BOOST_CHECK(y_out.front() == (y_in.front()+y_in[1])/n_range);
-    for(UInt32 i=1; i<y_out.size()-1; i++ ){
-        BOOST_CHECK(y_out[i] == (y_in[i]+y_in[i-1]+y_in[i+1]) / (n_range+1));
+    BOOST_CHECK(y_out.front() == y_in.front());
+    for(UInt32 i=1; i<y_out.size(); i++ ){
+        BOOST_CHECK(y_out[i] == (y_in[i]+y_in[i-1]) / n_range);
     }
-    BOOST_CHECK(y_out.back() == (y_in.back()+y_in[y_in.size()-2])/n_range);
     print_flux(y_out);
 
-    // max range : 2*(n_range - 1)
+    // max range : 2*n_range -1
     //----------------------------
 
-    // n_range = 20 :   
+    // n_range = 21 :   
     TFloat64List res(11, 11.);    
-    n_range = 20;
+    n_range = 21;
     y_out = sample.MeanSmooth(y_in, n_range);
-    BOOST_TEST_MESSAGE("n_range = 20");
+    BOOST_TEST_MESSAGE("n_range = 21");
     BOOST_CHECK(y_out == res);
     print_flux(y_out);
 
@@ -198,10 +193,10 @@ BOOST_AUTO_TEST_CASE(mean_test)
     TFloat64List res_2(10, 10.); 
     TFloat64List y_out_2;
 
-    // n_range = 18 :
-    n_range = 18;
+    // n_range = 19 :
+    n_range = 19;
     y_out_2 = sample.MeanSmooth(y_in_2, n_range);
-    BOOST_TEST_MESSAGE("n_range = 18");
+    BOOST_TEST_MESSAGE("n_range = 19");
     BOOST_CHECK(y_out_2 == res_2);
     print_flux(y_out_2);
 }
@@ -435,7 +430,7 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test)
     // -------- SPECTRA WITH TWO PARTS TESTS ------------
 
     // TEST 6 : even mirror
-    width = 2;
+    width = 75;
     sample.SetMeanKernelWidth(width);
     sample.SetMedianKernelWidth(width);
     sAxis = {0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.,16.,17.,18.,19.,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.};

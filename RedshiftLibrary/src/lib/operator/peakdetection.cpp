@@ -204,7 +204,7 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     xmad.reserve( fluxAxis.GetSamplesCount() );
 
     // Compute median value for each sample over a window of size windowSampleCount
-    const Float64* fluxData = fluxAxis.GetSamples();
+    TFloat64List fluxVector = fluxAxis.GetSamplesVector();
     CMedian<Float64> medianFilter;
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
@@ -216,8 +216,8 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         UInt32 start = std::max(0, spectralAxis.GetIndexAtWaveLength(spectralAxis[i]-m_winsize/2.0) );
         UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), spectralAxis.GetIndexAtWaveLength(spectralAxis[i]+m_winsize/2.0)  );
 
-        med[i] = medianFilter.Find( fluxData + start, stop - start );
-        xmad[i] = XMad( fluxData+ start, stop - start , med[i] );
+        med[i] = medianFilter.Find( fluxVector.begin() + start, fluxVector.begin()+stop );
+        xmad[i] = XMad( fluxVector.data()+ start, stop - start , med[i] );
         xmad[i] += m_detectionnoiseoffset; //add a noise level, useful for simulation data
     }
 
@@ -243,7 +243,7 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
     for( Int32 i=0; i<fluxAxis.GetSamplesCount(); i++ )
     {
-        if( fluxData[i] > med[i]+0.5*m_cut*xmad[i] )
+        if( fluxVector[i] > med[i]+0.5*m_cut*xmad[i] )
         {
             points[j++] = i;
         }

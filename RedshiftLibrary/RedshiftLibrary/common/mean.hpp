@@ -37,25 +37,15 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 template < class T >
-CMean<T>::CMean()
-{
-}
-
-template < class T >
-CMean<T>::~CMean()
-{
-}
-
-template < class T >
-T CMean<T>::Find( const T* x, Int32 n ) 
+T CMean<T>::Find( const typename std::vector<T>::const_iterator &begin, const typename std::vector<T>::const_iterator &end ) 
 {
     T sum = 0;
-
-    for ( Int32 i=0; i<n ;i++ )
-    {
-        sum += x[i];
-    }
-
-    return (T) (sum/n);
+    sum = std::accumulate(begin, end, sum);
+    return (sum/distance(begin, end));
 }
 
+template < class T >
+T CMean<T>::Find( const typename std::vector<T> &a ) 
+{
+    return Find( a.begin(), a.end() );
+}

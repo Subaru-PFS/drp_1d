@@ -98,17 +98,17 @@ template class rob<CLineDetectionLimitGaussianFitStartAndStop, &CLineDetection::
 BOOST_AUTO_TEST_CASE(XMadFind){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
 
-  Float64* x = (Float64*) calloc( 5, sizeof( Float64 ) );
+  TFloat64List x(10);
   x[0] = 5.;
   x[1] = 2.5;
   x[2] = 1.5;
   x[3] = 4.5;
   x[4] = 3.;
 
-  Float64 returnValue = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x, 5 , 3.);
+  Float64 returnValue = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x.data(), 5 , 3.);
   BOOST_CHECK_CLOSE( returnValue, 1.5, 1e-12);
 
-  x = (Float64*) calloc( 10, sizeof( Float64 ) );
+  x.resize(10);
   x[0] = 1.;
   x[1] = 1.;
   x[2] = 2.;
@@ -118,15 +118,14 @@ BOOST_AUTO_TEST_CASE(XMadFind){
   x[6] = 2.;
   x[7] = 1.;
   x[8] = 1.;
-  x[9] = 1.;
-
+  x[9] = 1.;  
+  
   CMedian<Float64> medianProcessor;
-  Float64 med = medianProcessor.Find( x, 10 );
+  Float64 med = medianProcessor.Find( x );
   BOOST_CHECK_CLOSE( med, 1.5, 1e-12);
 
-  Float64 xmed = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x, 5 , med);
+  Float64 xmed = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x.data(), 5 , med);
   BOOST_CHECK_CLOSE( xmed, 0.5, 1e-12);
-  free(x);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeFluxes){

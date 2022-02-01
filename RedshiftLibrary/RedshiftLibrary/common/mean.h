@@ -40,6 +40,7 @@
 #define _REDSHIFT_COMMON_MEAN_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include <numeric>
 
 using namespace std;
 
@@ -52,10 +53,8 @@ namespace NSEpic {
 template <typename T> class CMean {
 
   public:
-    CMean();
-    ~CMean();
-
-    T Find(const T *a, Int32 n);
+    T Find( const typename std::vector<T>::const_iterator &begin, const typename std::vector<T>::const_iterator &end );
+    T Find( const typename std::vector<T> &a );
 
   private:
 };
