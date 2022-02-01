@@ -56,3 +56,15 @@ LinemeasLfHa	linemeas_parameters	f8	linemeas	mono	False	object	lfHa	double	0
 ModelLambda	linemeas_model	f8	linemeas_model	multi	False	object	ModelLambda	list[double]	
 ModelFlux	linemeas_model	f8	linemeas_model	multi	False	object	ModelFlux	list[double]	
 Reliability	reliability	S2	solveResult	mono	False	root	m_ReliabilityLabel	string	
+FirstpassRedshift	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	Redshift	double	0
+FirstpassTemplateName	fp_model_parameters	S40	linemodel_firstpass_extrema	mono	True	candidate	FittedTplName	string	0
+FirstpassContinuumIsmCoeff	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplEbmvCoeff	double	0
+FirstpassContinuumIgmIndex	fp_model_parameters	i	linemodel_firstpass_extrema	mono	True	candidate	FittedTplMeiksinIdx	int	0
+FirstpassContinuumAmplitude	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplAmplitude	double	0
+FirstpassContinuumAmplitudeError	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplAmplitudeError	double	0
+FirstpassVelocityEmission	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	Elv	double	0
+FirstpassVelocityAbsorption	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	Alv	double	0
+FirstpassRedshiftProba	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	ValSumProba	double	0
+FirstpassContinuumAmplitudeUncertainty	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplAmplitudeError	double	0
+FirstpassFittedTemplateDtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplDtm	double	0
+FirstpassFittedTemplateMtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplMtm	double	0

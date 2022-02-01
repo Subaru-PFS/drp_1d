@@ -48,11 +48,6 @@ namespace NSEpic
     m_calibrationPath(calibrationPath)
 {
 }
-  
-  CLineMeasSolve::~CLineMeasSolve()
-  {
-
-  }
 
   void CLineMeasSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep) 
   {

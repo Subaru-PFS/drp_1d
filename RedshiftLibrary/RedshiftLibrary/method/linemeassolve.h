@@ -64,7 +64,6 @@ class CTemplateCatalog;
 public:
 
   CLineMeasSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
-  ~CLineMeasSolve();
 
   void solve();
   void Init();

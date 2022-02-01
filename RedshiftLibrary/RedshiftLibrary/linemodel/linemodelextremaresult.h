@@ -83,9 +83,8 @@ class CLineModelFitting;
       this->m_type = "LineModelExtremaResult";
 
       for (std::pair<std::string,const TCandidateZ&> cand:zCandidates)
-        {
-	  this->m_ranked_candidates.push_back(std::make_pair<std::string,TLineModelResult>(std::string(cand.first),TLineModelResult(cand.second)));
-        }
+	      this->m_ranked_candidates.push_back(std::make_pair<std::string,TLineModelResult>(std::string(cand.first),TLineModelResult(cand.second)));
+      
       this->Resize(zCandidates.size());
     }
 

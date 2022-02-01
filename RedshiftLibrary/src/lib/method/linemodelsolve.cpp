@@ -362,7 +362,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                         m_linemodel.m_secondpass_parameters_extremaResult.GetIDs()
                         ); 
     
-    std::shared_ptr<CPdfCandidateszResult<TCandidateZ>> candidateResult = pdfz.Compute(chisquares);
+    std::shared_ptr<PdfCandidatesZResult> candidateResult = pdfz.Compute(chisquares);
 
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
@@ -600,8 +600,6 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(std::shared_ptr<const CLineM
 void CLineModelSolve::storeExtremaResults( std::shared_ptr<COperatorResultStore> resultStore,
                                            std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const 
 {
-    std::string extremaResultsStr = "linemodel_extrema";
-    Log.LogInfo("Linemodel, saving extrema results: %s", extremaResultsStr.c_str());
     resultStore->StoreScopedGlobalResult( "extrema_results", ExtremaResult );
 
     Int32 nResults = ExtremaResult->size();
@@ -897,10 +895,9 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                         extremacount,
                         "FPE");
 
-    std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
-    
-    m_linemodel.SetFirstPassCandidates(candResult->m_ranked_candidates);
- 
+    std::shared_ptr<PdfCandidatesZResult> candResult_fp = pdfz.Compute(chisquares, false);
+    m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
+
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
@@ -997,6 +994,9 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
 
     }
 
+    std::shared_ptr<const LineModelExtremaResult> fpExtremaResult = m_linemodel.saveFirstPassExtremaResults(
+                                                    m_linemodel.m_firstpass_extremaResult->m_ranked_candidates);
+
     //**************************************************
     //SECOND PASS
     //**************************************************
@@ -1049,12 +1049,10 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         //don't save linemodel extrema results, since will change with pdf computation
 
         //save linemodel firstpass extrema results
-        std::string firstpassExtremaResultsStr=scopeStr.c_str();
+        std::string firstpassExtremaResultsStr=scopeStr;
         firstpassExtremaResultsStr.append("_firstpass_extrema");
-        //Log.LogError("Linemodel, saving firstpass extrema results: %s", firstpassExtremaResultsStr.c_str());
 
-            //TODO restore this after converting it from COperatorLineModelExtremaResult to LineModelExtremaResult
-        //resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), m_linemodel.m_firstpass_extremaResult);
+        resultStore->StoreScopedGlobalResult( firstpassExtremaResultsStr.c_str(), fpExtremaResult);
 
         //save linemodel firstpass extrema B results
         if(enableFirstpass_B)
