@@ -484,106 +484,115 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const 
     Log.LogDetail("LinemodelSolve: building chisquare array");
 
     ChisquareArray chisquarearray;
-    
+    std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
+    std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
+
     chisquarearray.cstLog = result->cstLog;
     Log.LogDetail("%s: using cstLog = %f", __func__, chisquarearray.cstLog);
         
     chisquarearray.redshifts = result->Redshifts; 
 
-    if(m_opt_pdfcombination=="bestchi2")
-    {
-        chisquarearray.zpriors.push_back( BuildZpriors(result) );
+    const Int32 zsize = result->Redshifts.size();
 
-        chisquarearray.chisquares.push_back(result->ChiSquare);
+    if(m_opt_pdfcombination=="bestchi2"){
+        zpriors.push_back( BuildZpriors(result) );
+        chisquares.push_back(result->ChiSquare);
 
     }else if(m_opt_pdfcombination=="bestproba" || m_opt_pdfcombination=="marg"){
 
         if (m_opt_rigidity != "tplshape"){
-
-            chisquarearray.zpriors.push_back( BuildZpriors(result) );
-
-            chisquarearray.chisquares.push_back(result->ChiSquare);
-
+            zpriors.push_back( BuildZpriors(result) );
+            chisquares.push_back(result->ChiSquare);
         }else{
     
+            const Int32 ntplshapes = result->ChiSquareTplshapes.size();
+
             bool zPriorLines = false;
             Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__, result->PriorLinesTplshapes.size());
-            if( boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) && result->PriorLinesTplshapes.size()==result->ChiSquareTplshapes.size())
-            {
+            if( boost::filesystem::exists( m_opt_tplratio_prior_dirpath ) 
+                && result->PriorLinesTplshapes.size()==ntplshapes){
                 zPriorLines = true;
                 Log.LogDetail("%s: Lines Prior enabled", __func__);
             }else{
                 Log.LogDetail("%s: Lines Prior disabled", __func__);
             }
 
+            chisquares.reserve(ntplshapes);
+            zpriors.reserve(ntplshapes);
 
-            for(Int32 k=0; k<result->ChiSquareTplshapes.size(); k++)
-            {
-                chisquarearray.zpriors.push_back( BuildZpriors(result, k) );
-
-                chisquarearray.chisquares.push_back(result->ChiSquareTplshapes[k]);
+            for(Int32 k=0; k<ntplshapes; ++k){
+                zpriors.push_back( BuildZpriors(result, k) );
+                chisquares.push_back(result->ChiSquareTplshapes[k]);
 
                 //correct chi2 if necessary 
-                TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();            
+                TFloat64List & logLikelihoodCorrected = chisquares.back();
+                /*            
                 if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
                 {
                     //find max scalemargcorr
-                    //*
                     Float64 maxscalemargcorr=-DBL_MAX;
-                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                    {
+                    for ( Int32 kz=0; kz<zsize; kz++ )
                         if(maxscalemargcorr < result->ScaleMargCorrectionTplshapes[k][kz])
-                        {
                             maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
-                        }
-                    }
-                    Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
-                    //*/
-                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                    {
-                        if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
-                        {
-                            logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
-                        }
-                    }
-                }
 
-                if(zPriorLines && result->PriorLinesTplshapes[k].size()==result->Redshifts.size())
-                {
-                    for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++ )
-                    {
+                    Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
+                    for ( UInt32 kz=0; kz<zsize; kz++ )
+                        if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
+                            logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
+
+                    // need to add maxscalemargcorr ? 
+                }*/
+
+                if(zPriorLines && result->PriorLinesTplshapes[k].size()==zsize)
+                    for ( UInt32 kz=0; kz<zsize; kz++ )
                         logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
-                    }
-                }
             }
 
             chisquarearray.modelpriors = result->PriorTplshapes; 
         }
-/*
-        // store all continuum tpl fitting chisquares  (ChiSquareTplContinuum size will be null if not tplfit)      
-        for (Int32 k=1; k<result->ChiSquareTplContinuum.size(); k++) // skip 1st one, used with linemodel
-        {
-            if(zPriorEuclidNHa)
-            {
-                chisquarearray.zpriors.push_back(
-                    zpriorhelper.GetEuclidNhaLogZPrior( result->Redshifts, 
-                                                        opt_euclidNHaEmittersPriorStrength));
-            } else {
-                chisquarearray.zpriors.push_back(
-                    zpriorhelper.GetConstantLogZPrior(result->Redshifts.size()));
 
-            }
+        if ( !result->ChiSquareTplContinuum.empty()) {
+        
+            // Fullmodel (ie with continuum template fitting): store all continuum tpl fitting chisquares  
+            // (ChiSquareTplContinuum size will be null if not tplfit)
 
-            chisquarearray.chisquares.push_back(result->ChiSquareTplContinuum[k]);
- 
+            //  note: the continuum xi2 are computed on continuum ~orthogonal to the linemodel, ie corresponding 
+            //        to a fullmodel with perfect linemodel fit (null Xi2 under the lines).
+            //        They are thus better (smaller) than the fullmodel Xi2 with which they will be summed in the marginalization.
+            //        To mitigate this, for each continuum Xi2, we have to add the Xi2 part of the linemodel alone. 
+            //        The latter can be obtained by subtracting the corresponding continuum Xi2 of the fullmodel.
+
+            const auto newsize = chisquares.size()*result->ChiSquareTplContinuum.size();
+            chisquares.reserve(newsize);
+            zpriors.reserve(newsize);
+            chisquarearray.modelpriors.reserve(newsize);
+
+            // divide model prior by the number of continuum templates
             // TODO: need to add/handle tpl continuum priors 
-            // in the case of ATEZ (which is exclusive of zpriors and Tplshapes), 
-            // priors are included already in the chisquares of both tplcontinuum chi2 and tplshape chi2
-            // But the tplshapes sums should be inside the tplcontinuums sum, ie with the best contiuum prior factorized.
+            // (note: in the case of ATEZ, which is exclusive of zpriors and Tplshapes, 
+            // priors are included already in the chisquares of both tplcontinuum chi2 and tplshape chi2)
+            for (auto &prior : chisquarearray.modelpriors)
+                prior /= result->ChiSquareTplContinuum.size();
 
+            //loop on all tplshapes (or 1 linemodel free)
+            //TFloat64List linemodel_alone_chi2(zsize);
+            for (Int32 k=0,ke=chisquares.size(); k<ke; ++k){
+
+                // loop on all continuum templates, skiping 1st one, already used with linemodel
+                for (auto it=result->ChiSquareTplContinuum.cbegin()+1,
+                            itend=result->ChiSquareTplContinuum.cend(); it!=itend; ++it){
+                    
+                    zpriors.push_back( zpriors[k] ); // duplicate zpriors
+                    chisquares.emplace_back(zsize);
+                    TFloat64List &fullmodel_chi2 = chisquares.back();
+                    for (Int32 iz=0; iz<zsize; ++iz) { // estimate chi2 of fullmodel with other continuum                                                                                
+                        fullmodel_chi2[iz] = chisquares[k][iz] + std::max(0.,(*it)[iz] - result->ChiSquareTplContinuum[0][iz]);
+                    }
+                    if (!chisquarearray.modelpriors.empty())
+                        chisquarearray.modelpriors.push_back(chisquarearray.modelpriors[k]); // duplicate modelpriors
+                }            
+            }
         }
-*/
-
 
     }else{
         Log.LogError("Linemodel: Unable to parse pdf combination method option");

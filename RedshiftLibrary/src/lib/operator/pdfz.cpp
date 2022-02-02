@@ -462,13 +462,14 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
     Float64 sumModifiedEvidences = 0.0;
 
     TFloat64List logPriorModel;
-    if (modelPriors.size() != meritResults.size()){
-    
+    if (modelPriors.empty()){
         const Float64 priorModelCst = 1.0 / Float64(meritResults.size());
         Log.LogInfo("COperatorPdfz::Marginalize: no priors loaded, using constant priors (=%f)", priorModelCst);
         logPriorModel = TFloat64List(meritResults.size(), log(priorModelCst));
 
     } else {
+        if (modelPriors.size() != meritResults.size())
+            throw GlobalException(INTERNAL_ERROR, "COperatorPdfz::Marginalize: modelPriors has wrong size");
 
         logPriorModel.resize(meritResults.size());
         std::transform(modelPriors.cbegin(), modelPriors.cend(), logPriorModel.begin(), 
