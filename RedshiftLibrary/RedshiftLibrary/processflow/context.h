@@ -73,15 +73,14 @@ class CProcessFlowContext
 
 public:
 
-    CProcessFlowContext();
+  CProcessFlowContext(std::shared_ptr<CSpectrum> spectrum,
+		      std::shared_ptr<CTemplateCatalog> templateCatalog,
+		      std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
     ~CProcessFlowContext();
 
-  void Init(std::shared_ptr<CSpectrum> spectrum,
-            std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-	    std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
-            std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog) { m_inputContext->setLineCatalog(objectType,catalog);}
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog) { m_inputContext->setLineRatioCatalogCatalog(objectType,catalog);}
+  void Init();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_inputContext->GetSpectrum();}
@@ -98,7 +97,7 @@ private:
 
     std::shared_ptr<COperatorResultStore> m_ResultStore;
     std::shared_ptr<CParameterStore>      m_parameterStore;
-    std::shared_ptr<const CInputContext>  m_inputContext;
+    std::shared_ptr<CInputContext>  m_inputContext;
  
     //added below variables - to discuss if we only define them here (and no more in processflow)
     TFloat64Range m_spclambdaRange;

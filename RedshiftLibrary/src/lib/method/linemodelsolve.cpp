@@ -283,7 +283,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
   const auto &photBandCat = inputContext->GetPhotBandCatalog();
-  const CRayCatalogsTplShape& tplRatioCatalog=*(inputContext->GetTemplateRatioCatalog());
+  const CRayCatalogsTplShape& tplRatioCatalog=*(inputContext->GetTemplateRatioCatalog(m_objectType));
 
   PopulateParameters( inputContext->GetParameterStore() );
 

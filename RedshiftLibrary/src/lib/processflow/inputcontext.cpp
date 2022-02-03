@@ -48,55 +48,15 @@ using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                             std::shared_ptr<CRayCatalog> gal_rayCatalog,
-                             std::shared_ptr<CRayCatalog> qso_rayCatalog,
-			     std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
                              std::shared_ptr<CPhotBandCatalog> photBandCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
 
   m_Spectrum(std::move(spc)),
   m_TemplateCatalog(std::move(tmplCatalog)),
-  m_gal_RayCatalog(std::move(gal_rayCatalog)),
-  m_qso_RayCatalog(std::move(qso_rayCatalog)),
-  m_TemplateRatioCatalog(std::move(gal_lineRatioCatalogs)),
   m_photBandCatalog(std::move(photBandCatalog)),
   m_ParameterStore(std::move(paramStore))
 { 
-    bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
-    //non clamped lambdaRange: to be clamped depending on used spectra
-    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
 
-    m_Spectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
-    m_Spectrum->InitSpectrum(*m_ParameterStore); 
-    
-    // set template continuum removal parameters
-    m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
-  
-    // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
-    //only when lsf changes notably when LSFType is fromspectrumdata
-    //or the first time InitIsmIgm is called
-    m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
-    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())
-    {
-        m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
-    }
-    else
-      {
-      if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
-      {
-        m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());
-      }
-    }
-
-    RebinInputs();
-
-    if(m_use_LogLambaSpectrum)
-    {
-        m_rebinnedSpectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
-        m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
-    }
-
-    OrthogonalizeTemplates();
 }
 /*
 Two cases exist:
@@ -198,4 +158,53 @@ void CInputContext::OrthogonalizeTemplates()
       tplOrtho_.Orthogonalize(*this, m_categories[1],lsf);
     }
     return;
+}
+
+  void CInputContext::setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog)
+  {
+    m_lineCatalogs[objectType]=catalog;
+  }
+
+  void CInputContext::setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog)
+  {
+    m_lineRatioCatalogCatalogs[objectType]=catalog;
+  }
+
+void CInputContext::Init()
+{
+    bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
+    //non clamped lambdaRange: to be clamped depending on used spectra
+    m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");
+
+    m_Spectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
+    m_Spectrum->InitSpectrum(*m_ParameterStore); 
+    
+    // set template continuum removal parameters
+    m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
+  
+    // Calzetti ISM & Meiksin IGM initialization, for only original templates, 
+    //only when lsf changes notably when LSFType is fromspectrumdata
+    //or the first time InitIsmIgm is called
+    m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
+    if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())
+    {
+        m_TemplateCatalog->InitIsmIgm(m_ParameterStore, m_Spectrum->GetLSF());
+    }
+    else
+      {
+      if(m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA") //redo the convolution
+      {
+        m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->m_igmCorrectionMeiksin->ConvolveAll(m_Spectrum->GetLSF());
+      }
+    }
+
+    RebinInputs();
+
+    if(m_use_LogLambaSpectrum)
+    {
+        m_rebinnedSpectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
+        m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
+    }
+
+    OrthogonalizeTemplates();
 }
