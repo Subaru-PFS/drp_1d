@@ -82,6 +82,8 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
+%shared_ptr(CRayCatalogsTplShape)
+%shared_ptr(CLineRatioCatalog)
 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
@@ -101,7 +103,10 @@
 #include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
+#include "RedshiftLibrary/ray/catalogsTplShape.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
@@ -271,8 +276,53 @@ class PC
 class CRayCatalog
 {
 public:
-    void Load( const char* filePath );
-    bool Save( const char* filePath );
+  CRayCatalog();
+  CRayCatalog(Float64 nSigmaSupport);
+  void AddRayFromParams(const std::string& name,
+			const Float64& position,
+			const std::string& type,
+			const std::string& force,
+			const std::string& profile,
+			const TAsymParams& asymParams,
+			const std::string& groupName,
+			const Float64& nominalAmplitude,
+			const std::string& velocityGroup,
+			const Float64& velocityOffset,
+			const bool& enableVelocityFit,
+			const Int32& id,
+			const std::string& str_id);
+
+  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
+
+
+};
+
+typedef struct {
+  TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
+        Float64 sigma, alpha, delta;
+    } TAsymParams;
+
+
+class CLineRatioCatalog : public CRayCatalog
+{
+ public:
+  CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+  ~CLineRatioCatalog();
+  void addVelocity(const std::string& name, const Float64& value);
+  void setPrior(const Float64& prior);
+
+  void setIsmIndex(const Float64& ismIndex);
+
+};
+
+class CRayCatalogsTplShape
+{
+
+public:
+  CRayCatalogsTplShape();
+  void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
+
 };
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
@@ -329,6 +379,7 @@ public:
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
             std::shared_ptr<CRayCatalog> qso_rayCatalog,
+	    std::shared_ptr<CRayCatalogsTplShape> galaxy_lineRatioCatalogs,
             std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);

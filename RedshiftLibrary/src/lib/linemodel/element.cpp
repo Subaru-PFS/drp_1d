@@ -1424,3 +1424,16 @@ bool CLineModelElement::IsOutsideLambdaRange(Int32 subeIdx)
 {
     return m_OutsideLambdaRangeList[subeIdx];
 }
+
+void CLineModelElement::debug(std::ostream &os)
+{
+  os<<m_fittingGroupInfo<<"\t";
+  os<<GetVelocityAbsorption()<< "\t"<< GetVelocityEmission()<< "\n";
+    for(CRay& ray:m_Rays) ray.Save(os);
+  /*
+  for(int i=0;i<GetSize();i++)
+    {
+      os << GetRayName(i)<< "\t"<< GetNominalAmplitude(i)<< "\t" << getLineProfile(i).GetName()<<"\t"<< GetSignFactor(i)<< "\n";
+    }
+  */
+}

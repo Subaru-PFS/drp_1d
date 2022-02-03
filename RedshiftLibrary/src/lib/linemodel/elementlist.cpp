@@ -632,3 +632,7 @@ Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spc
     return 0;
 }
 
+void CLineModelElementList::debug(std::ostream& os) const
+{
+  for (const std::shared_ptr<CLineModelElement> &elt:m_Elements) elt->debug(os);
+}

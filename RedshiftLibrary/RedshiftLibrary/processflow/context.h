@@ -80,6 +80,7 @@ public:
             std::shared_ptr<CTemplateCatalog> templateCatalog,
             std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
             std::shared_ptr<CRayCatalog> qso_rayCatalog,
+	    std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
             std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {return m_inputContext->GetRebinnedSpectrum();}  

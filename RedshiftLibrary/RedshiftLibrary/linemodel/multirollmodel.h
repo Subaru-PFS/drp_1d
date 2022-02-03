@@ -68,6 +68,7 @@ public:
                     const TStringList& tplCategoryList,
                     const std::string calibrationPath,
                     const CRayCatalog::TRayVector& restRayList,
+                    const CRayCatalogsTplShape& tplRatioCatalog,
                     const std::string& opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
                     const Float64 opt_continuum_neg_threshold,
@@ -92,8 +93,7 @@ public:
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
-    bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
-    bool initLambdaOffsets(std::string offsetsCatalogsRelPath);
+    bool initTplratioCatalogs(const CRayCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit);
 
     Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
     Float64 getDTransposeD(const TFloat64Range& lambdaRange);

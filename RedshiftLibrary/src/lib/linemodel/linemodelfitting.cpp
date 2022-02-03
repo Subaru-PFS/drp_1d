@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/ray/regulament.h"
 #include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/catalogsOffsets.h"
 #include "RedshiftLibrary/ray/linetags.h"
 #include "RedshiftLibrary/ray/ray.h"
 
@@ -186,7 +185,7 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
         LoadCatalogTwoMultilinesAE(restRayList);
     }
     LogCatalogInfos();
-    initLambdaOffsets("linecatalogs_offsets/offsetsCatalogs_20170410_m150");  
+
     /*
     //check the continuum flux axis
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
@@ -205,25 +204,13 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
 }
 
 
-void CLineModelFitting::initLambdaOffsets(std::string offsetsCatalogsRelPath)
+
+
+bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit)
 {
-  CLineCatalogsOffsets ctlgOffsets = CLineCatalogsOffsets();
-  ctlgOffsets.Init(m_calibrationPath, offsetsCatalogsRelPath);
-  // load static offset catalog, idx=0
-  ctlgOffsets.SetLinesOffsets( m_Elements, 0);
-
-  // load auto stack, hack from reference catalog
-  //std::string spcName = m_inputSpc.GetName();
-  //ctlgOffsets.SetLinesOffsetsAutoSelectStack(*this, spcName);
-}
-
-
-bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
-{
-
-    bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
-                                      opt_tplratioCatRelPath, 
-                                      opt_tplratio_ismFit, 
+//TODO: use the passed tplRatioCatalog
+//TODO: check if m_CatalogTplShape changes between iterations
+    bool ret = m_CatalogTplShape.Init(opt_tplratio_ismFit, 
                                       m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti,
                                       m_NSigmaSupport);
     if(!ret)
@@ -735,8 +722,8 @@ Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(UInt32 idx) const
  **/
 void CLineModelFitting::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
 {
-    CRayCatalog crctlg;
-    std::vector<CRayCatalog::TRayVector> groupList = crctlg.ConvertToGroupList(restRayList);
+    
+  std::vector<CRayCatalog::TRayVector> groupList = CRayCatalog::ConvertToGroupList(restRayList);
     for(UInt32 ig=0; ig<groupList.size(); ig++)
     {
         std::vector<CRay> lines;
@@ -1442,7 +1429,7 @@ Int32 CLineModelFitting::getTplshape_count()
     return m_CatalogTplShape.GetCatalogsCount();
 }
 
-const std::vector<Float64> & CLineModelFitting::getTplshape_priors() 
+const std::vector<Float64>&  CLineModelFitting::getTplshape_priors() 
 {
     if(m_rigidity!="tplshape")
     {

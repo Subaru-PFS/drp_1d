@@ -87,6 +87,8 @@ namespace NSEpic
     bool IsElementIndexInDisabledList(Int32 index);
     void SetElementIndexesDisabledAuto();
     void ResetElementIndexesDisabled();
+
+    void debug(std::ostream& os) const;
     
     const std::shared_ptr<CLineModelElement> &operator[](UInt32 i) const {return m_Elements[i];}
     UInt32 size() const {return m_Elements.size();}

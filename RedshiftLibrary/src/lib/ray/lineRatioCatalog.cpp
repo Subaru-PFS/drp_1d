@@ -36,62 +36,41 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RAY_CATALOGSOFFSETS_
-#define _REDSHIFT_RAY_CATALOGSOFFSETS_
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/ray.h"
-#include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+using namespace NSEpic;
 
 
-#include <boost/format.hpp>
-
-#include <vector>
-#include <string>
-
-namespace NSEpic
+CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog):
+  CRayCatalog(lineCatalog),
+  m_Name(name)
 {
-
-/**
- * \ingroup Redshift
- */
-class CLineCatalogsOffsets
-{
-
-public:
-
-    struct SOffsetsCatalog
+  for(CRay& line:m_List)
     {
-        std::string filePath;
-        std::vector<Float64> Offsets;
-        std::vector<std::string> FittingMode;
-        std::vector<std::string> Names;
-    };
-
-    CLineCatalogsOffsets();
-    ~CLineCatalogsOffsets();
-    void Init(std::string calibrationPath, std::string offsetsCatalogsRelPath);
-
-    bool SetLinesOffsets(CLineModelElementList& LineModelElementList, Int32 index);
-
-    // Hack: select/bypass stack automatically from its name in the reference_stack catalog
-    bool SetLinesOffsetsAutoSelectStack(CLineModelElementList& LineModelElementList, std::string spectrumName);
-    Int32 AutoSelectStackFromReferenceFile(std::string spectrumName);
-
-private:
-
-    void Load( const char* dirPath );
-    bool LoadCatalog( const char* filePath );
-
-    std::string m_Catalogs_relpath;
-    std::string m_Calibration_path;
-
-    std::vector<SOffsetsCatalog> m_OffsetsCatalog;
-
-};
-
-
+      line.setNominalAmplitude(0.);
+    }
+  // TODO set all nominalAmplitudes to 0
+  
 }
 
-#endif
+void CLineRatioCatalog::addVelocity(const std::string& name, const Float64& value)
+{
+  if(!m_Velocities.emplace(name,value).second)
+    throw GlobalException(INTERNAL_ERROR,Formatter()<< "Velocity for group " << name << " already exists");
+}
+
+void CLineRatioCatalog::setPrior(const Float64& prior)
+{
+  m_Prior = prior;
+}
+void CLineRatioCatalog::setIsmIndex(const Float64& ismIndex)
+{
+  m_IsmIndex = ismIndex;
+}
+    
+const Float64& CLineRatioCatalog::getVelocity(const std::string& velGroup)
+{
+  return m_Velocities[velGroup];
+}
+

@@ -189,6 +189,8 @@ public:
     void SetSumGauss(Float64 val);
     Float64 GetFitAmplitude();
 
+  void debug(std::ostream& os);
+
     std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
     std::vector<Int32> m_LineCatalogIndexes;

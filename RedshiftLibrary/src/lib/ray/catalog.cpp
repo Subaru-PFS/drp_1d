@@ -58,6 +58,14 @@ using namespace boost;
 using namespace boost::filesystem;
 
 
+
+CRayCatalog::CRayCatalog(Float64 sigmaSupport):
+  m_nSigmaSupport(sigmaSupport)
+{
+
+}
+
+
 const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 {
     return m_List;
@@ -79,7 +87,7 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
     }
 }
 
-const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList( TRayVector filteredList ) const
+const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList(const TRayVector& filteredList ) 
 {
 
     std::vector<std::string> tags;
@@ -122,7 +130,7 @@ const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList( TRay
 }
 
 
-bool CRayCatalog::Add( const CRay& r )
+void CRayCatalog::Add( const CRay& r )
 {
     TRayVector::iterator it;
     for( it = m_List.begin(); it != m_List.end(); ++it )
@@ -130,280 +138,92 @@ bool CRayCatalog::Add( const CRay& r )
       //TODO this should be a map with key defined as struct{name,position,type}
       // TODO this should be a map with key defined as ID, much better than struct{name,position,type} now that a ray has an ID
         // Can't add a line with a name + position + type that already exists in the list
-        if( (*it).GetName() == r.GetName() && (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
-            return false;
+      if( (*it).GetPosition() == r.GetPosition() && (*it).GetType() == r.GetType() )
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Ray with name " << r.GetName() << " already exists, position=" << r.GetPosition() << " type=" << r.GetType() );
     }
 
     m_List.push_back( r );
 
-    return true;
 }
 
-/**
- * @brief parse_asymfixed
- * Parse a ASYMFIXED_XX_YY_ZZ profile string
- */
-//static void parse_asymfixed(std::string &profileString, Float64 &width, Float64 &alpha, Float64 &delta)
-static void parse_asymfixed(std::string &profileString, TAsymParams &asymParams)
+
+void CRayCatalog::AddRayFromParams(const std::string& name,
+				   const Float64& position,
+				   const std::string& type,
+				   const std::string& force,
+				   const std::string& profileName,
+				   const TAsymParams& asymParams,
+				   const std::string& groupName,
+				   const Float64& nominalAmplitude,
+				   const std::string& velocityGroup,
+				   const Float64& velocityOffset,
+				   const bool& enableVelocityFit,
+				   const Int32& id,
+				   const std::string& str_id)
 {
-    std::vector< Float64 > numbers;
-    std::string temp;
-    size_t start = 0, end;
+  int etype = -1;
+    if (type == "E") etype=2;
+    else if(type == "A") etype=1;
+    else throw GlobalException(INTERNAL_ERROR, Formatter()<< "Bad ray type, should be in {A,E} : "<<type);
 
-    end = profileString.find("_", start);
-    if (profileString.substr(start, end-start+1) != "ASYMFIXED_") {
-        throw GlobalException(INTERNAL_ERROR,"XXX");
+    int eforce = -1;
+    if (force == "W") eforce = 1;
+    else if (force == "S") eforce = 2;
+    else throw GlobalException(INTERNAL_ERROR, Formatter()<< "Bad ray force, should be in {S,W} : "<<force);
+    TAsymParams _asymParams = {1., 4.5, 0.};
+    TAsymParams _asymFitParams = {2., 2., 0.};
+    std::unique_ptr<CLineProfile> profile;
+
+    if (profileName.find("ASYMFIXED") != std::string::npos) {
+      profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(m_nSigmaSupport, asymParams, "mean"));
     }
-    start = end + 1;
-    end = profileString.find("_", start);
-    temp = profileString.substr(start, end-start);
-    asymParams.sigma = std::stod(temp);
+    else if (profileName == "SYM")
+      profile = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(m_nSigmaSupport));
+    else if (profileName == "LOR")
+      profile = std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(m_nSigmaSupport));
+    else if (profileName == "ASYM"){
 
-    start = end + 1;
-    end = profileString.find("_", start);
-    temp = profileString.substr(start, end-start);
-    asymParams.alpha = std::stod(temp);
-
-    start = end + 1;
-    end = profileString.length();
-    temp = profileString.substr(start, end-start);
-    asymParams.delta = std::stod(temp);
-}
-
-/**
- * @brief CRayCatalog::Load
- * Loads a line catalog in TSV format as of v0.4
- * @param filePath
- */
-void CRayCatalog::Load( const char* filePath, Float64 nsigmasupport)
-{
-    std::ifstream file;
-
-    // Clear current line list
-    m_List.clear();
-
-    if ( !exists( filePath ) ) {
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Can't load line catalog : "<< filePath<<" does not exist.");
+      profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(m_nSigmaSupport, _asymParams, "none"));
     }
-
-    file.open( filePath, std::ifstream::in );
-    if( file.rdstate() & ios_base::failbit ) {
-      throw GlobalException(INTERNAL_ERROR,"file cannot be opened");
+    else if (profileName == "ASYMFIT"){
+      profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_nSigmaSupport, _asymFitParams, "mean"));
+    }else{
+      throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
     }
-
-    string line;
-
-    Float64 ver = -1.0;
-    // Read file line by line
-    while( getline( file, line ) )
-    {
-        // manage version
-        if(ver==-1.0){
-            if(line.find("#version:0.4.0")!= std::string::npos)
-            {
-                ver = 0.4;
-            }else if(line.find("#version:0.3.0")!= std::string::npos)
-            {
-                ver = 0.3;
-            }else if(line.find("#version:")!= std::string::npos)
-            {
-                Log.LogDebug("Loading Line Catalog: unable to parse version line: %s", line.c_str());
-            }
-            continue;
-        }
-
-        if(ver!=0.4)
-        {
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Line catalog version (found ver="<<ver<<") is not supported");
-        }
-
-        // remove comments
-        if(line.compare(0,1,"#",1)==0){
-            continue;
-        }
-        char_separator<char> sep("\t");
-
-        // Tokenize each line
-        typedef tokenizer< char_separator<char> > ttokenizer;
-        ttokenizer tok( line, sep );
-
-        // Check if it's not a comment
-        ttokenizer::iterator it = tok.begin();
-        if( it != tok.end() && *it != "#" )
-        {
-            // Parse position
-            double pos = 0.0;
-            try{
-                pos = lexical_cast<double>(*it);
-            }catch (const bad_lexical_cast& e)
-            {
-	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad file format : "<<filePath <<" : "<< e.what());
-            }
-
-            // Parse name
-            ++it;
-            string name;
-            if( it != tok.end() )
-                name = *it;
-            else{
-	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad name in : "<< filePath);
-            }
-
-            // Parse type
-            int Etype = 0;
-            ++it;
-            string type = "None";
-            if( it != tok.end() )
-                type = *it;
-            if( strcmp(type.c_str(),"A")==0 )
-                Etype = 1;
-            else if( strcmp(type.c_str(),"E")==0 )
-                Etype = 2;
-
-            // Parse weak or strong
-            int Eforce = 0;
-            ++it;
-            string strong = "None";
-            if( it != tok.end() )
-                strong = *it;
-            if( strcmp(strong.c_str(),"W")==0 )
-                Eforce = 1;
-            else if( strcmp(strong.c_str(),"S")==0 )
-                Eforce = 2;
-            else{
-	      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Bad force in :" << filePath);
-            }
-
-            std::string profileName = "SYM";
-            TAsymParams asymParams = {NAN, NAN, NAN};
-            std::string groupName = "-1";
-            Float64 nominalAmplitude = 1.0;
-            std::string velGroupName = "-1";
-
-            //tmp: default values 
-            TAsymParams _asymParams = {1., 4.5, 0.};
-            TAsymParams _asymFitParams = {2., 2., 0.};
+    
+    Add( CRay(name, position, etype, std::move(profile), eforce, velocityOffset, enableVelocityFit, groupName, nominalAmplitude, velocityGroup, id,str_id) );
 
 
-            CLineProfile_ptr profile;
-            // Parse profile name
-            ++it;
-            if( it != tok.end() ){
-                profileName = *it;
-                if (profileName.find("ASYMFIXED") != std::string::npos) {
-                    parse_asymfixed(profileName, asymParams);//reading params from catalog files
-                    profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, asymParams, "mean"));
-                }
-                else if (profileName == "SYM")
-                    profile = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(nsigmasupport));
-                else if (profileName == "LOR")
-                    profile = std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(nsigmasupport));
-                else if (profileName == "ASYM"){
-                    asymParams =  _asymParams;
-                    profile = std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymParams, "none"));
-                }
-                else if (profileName == "ASYMFIT"){
-                    asymParams =  _asymFitParams; //using default values
-                    profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(nsigmasupport, _asymFitParams, "mean"));
-                }else{
-                    throw GlobalException(INTERNAL_ERROR, Formatter()<<"CRayCatalog::Load: Profile name "<<profileName<<" is no recognized.");
-                }
-            }
+  }
 
-            // Parse group name
-            ++it;
-            if( it != tok.end() )
-            {
-                groupName = *it;
-                // Parse group line nominal amplitude
-                ++it;
-                if( it != tok.end() )
-                {
-                    try{
-                        nominalAmplitude = lexical_cast<double>(*it);
-                    }catch (bad_lexical_cast&){
-                        Log.LogError( "Unable to read nominal amplitude value from file, setting as default (1.0)." );
-                        nominalAmplitude = 1.0;
-                    }
-                }
-                if(groupName=="" || groupName=="-1")
-                    nominalAmplitude = 1.0;
-            }
-
-            // Parse velocity group name
-            ++it;
-            if( it != tok.end() )
-                velGroupName = *it;
-
-	    ++it;
-	    int id=-1;
-	    if( it != tok.end() ){
-	        try{
-		        id = lexical_cast<int>(*it);
-            }catch (const bad_lexical_cast& e)
-            {
-                throw GlobalException(INTERNAL_ERROR,"Bad file format");
-            }
-        }
-	    
-        if( nominalAmplitude>0.0 ) //do not load a line with nominal amplitude = ZERO
-	        Add( CRay(name, pos, Etype, std::move(profile), Eforce, -1, -1, -1, -1, -1, -1, groupName, nominalAmplitude, velGroupName, id) );
-        }
-    }
-    file.close();
-
-    if(ver<0.0)
-    {
-        throw GlobalException(INTERNAL_ERROR,"Invalid line catalog file (found ver");
-    }
-}
-
-bool CRayCatalog::Save( const char* filePath )
-{
-    std::ofstream file;
-    file.open( filePath, std::ofstream::out );
-    if( file.rdstate() & ios_base::failbit )
-    {
-        return false;
-    }
-
-    file << "#version:0.4.0" << std::endl;
-    file << "#lambda" << "\t" << "name" << "\t" << "type" << "\t" << "force" << "\t" << "profile" << "\t" << "amp_group" << "\t" << "nominal_ampl" << "\t" << "vel_group" << std::endl;
-    for( int i = 0; i< m_List.size(); i++ )
-    {
-        file << m_List[i].GetPosition() << "\t";
-        file << m_List[i].GetName() << "\t";
-        if(m_List[i].GetType() == 1)
-        {
-            file << "A" << "\t";
-        }else
-        {
-            file << "E" << "\t";
-        }
-
-        if(m_List[i].GetForce() == 1)
-        {
-            file << "W" << "\t";
-        }else
-        {
-            file << "S" << "\t";
-        }
-        file << m_List[i].GetName() << "\t";
-
-        file << m_List[i].GetGroupName() << "\t";
-        file << m_List[i].GetNominalAmplitude() << "\t";
-
-        file << m_List[i].GetVelGroupName();
-
-        file << std::endl;
-
-    }
-    file.close();
-    return true;
-}
 
 void CRayCatalog::Sort()
 {
     sort(m_List.begin(), m_List.end());
 }
 
+void CRayCatalog::setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude)
+{
+    TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+      if(it->GetStrID() == str_id) return it->setNominalAmplitude(nominalAmplitude);
+    }
+    throw GlobalException(INTERNAL_ERROR,Formatter()<<" Line with id " << str_id << " does not exist in catalog");
+}
+
+
+void CRayCatalog::setAsymProfileAndParams(const std::string& profile, TAsymParams params)
+{
+   TRayVector::iterator it;
+    for( it = m_List.begin(); it != m_List.end(); ++it )
+    {
+      if(it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed()) return  it->setAsymProfileAndParams(profile,params,m_nSigmaSupport);
+    }
+    throw GlobalException(INTERNAL_ERROR,"Cannot set asym parameters on this catalog, lyA does not exist");
+}
+
+void CRayCatalog::debug(std::ostream& os)
+{
+  for(CRay& ray:m_List) ray.Save(os);
+}

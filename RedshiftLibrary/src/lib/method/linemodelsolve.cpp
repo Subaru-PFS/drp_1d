@@ -134,7 +134,7 @@ bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
     {
         m_opt_enableImproveBalmerFit = parameterStore->GetScoped<bool>( "linemodel.improveBalmerFit");
     }
-    m_opt_offsets_reldirpath = parameterStore->GetScoped<std::string>( "linemodel.offsets_catalog");
+
 
 	m_opt_lineWidthType = parameterStore->GetScoped<std::string>( "linemodel.linewidthtype");
     m_opt_nsigmasupport = parameterStore->GetScoped<Float64>( "linemodel.nsigmasupport");
@@ -231,7 +231,6 @@ bool CLineModelSolve::PopulateParameters( std::shared_ptr<const CParameterStore>
         Log.LogInfo( "      -tplratio_priors_betaTE:  %f", m_opt_tplratio_prior_betaTE);
         Log.LogInfo( "      -tplratio_priors_betaZ:  %f", m_opt_tplratio_prior_betaZ);
     }
-    Log.LogInfo( "    -linemodel offsets_catalog: %s", m_opt_offsets_reldirpath.c_str());
 
     Log.LogInfo( "    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
     if(m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto"){
@@ -284,6 +283,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
   const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
   const auto &photBandCat = inputContext->GetPhotBandCatalog();
+  const CRayCatalogsTplShape& tplRatioCatalog=*(inputContext->GetTemplateRatioCatalog());
 
   PopulateParameters( inputContext->GetParameterStore() );
 
@@ -316,6 +316,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                          tplCatalog,
                          m_categoryList,
                          restRayList,
+                         tplRatioCatalog,
                          m_lambdaRange,
                          m_redshifts,
                          photBandCat,
@@ -762,6 +763,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
                              const CRayCatalog::TRayVector& restRayList,
+                             const CRayCatalogsTplShape& tplRatioCatalog,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts,
                              const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -854,6 +856,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     tplCategoryList,
                                                     m_calibrationPath,
                                                     restRayList,
+                                                    tplRatioCatalog,
                                                     lambdaRange,
                                                     photBandCat,
                                                     photo_weight,
@@ -866,9 +869,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     m_opt_velocityfit,
                                                     m_opt_firstpass_largegridstepRatio,
                                                     m_opt_firstpass_largegridsampling,
-                                                    m_opt_rigidity,
-                                                    m_opt_tplratio_reldirpath,
-                                                    m_opt_offsets_reldirpath);
+                                                    m_opt_rigidity);
     if( retFirstPass!=0 )
     {
         throw GlobalException(INTERNAL_ERROR, "Linemodel, first pass failed. Aborting" );
@@ -941,6 +942,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             tplCategoryList,
                                                             m_calibrationPath,
                                                             restRayList,
+                                                            tplRatioCatalog,
                                                             lambdaRange,
                                                             photBandCat,
                                                             photo_weight,
@@ -953,9 +955,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             m_opt_velocityfit,
                                                             m_opt_firstpass_largegridstepRatio,
                                                             m_opt_firstpass_largegridsampling,
-                                                            m_opt_rigidity,
-                                                            m_opt_tplratio_reldirpath,
-                                                            m_opt_offsets_reldirpath);
+                                                            m_opt_rigidity);
         if( retFirstPass!=0 )
         {
             Log.LogError( "Linemodel, first pass failed. Aborting" );

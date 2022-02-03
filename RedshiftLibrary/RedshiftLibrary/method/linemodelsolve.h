@@ -78,6 +78,7 @@ public:
                const CTemplateCatalog& tplCatalog,
                const TStringList& tplCategoryList,
                const CRayCatalog::TRayVector& restraycatalog,
+               const CRayCatalogsTplShape& tplRatioCatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                const std::shared_ptr<const CPhotBandCatalog> &photBandCat,

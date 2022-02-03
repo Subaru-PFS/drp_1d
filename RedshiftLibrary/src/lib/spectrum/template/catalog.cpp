@@ -224,7 +224,7 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                   const std::shared_ptr<const CLSF>& lsf)
 {
-    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");;
+    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");
     Float64 ebmv_step  = parameterStore->Get<Float64>( "ebmv.step");
     UInt32  ebmv_n     = parameterStore->Get<UInt32>( "ebmv.count");
     std::string calibrationPath = parameterStore->Get<std::string>( "calibrationDir");

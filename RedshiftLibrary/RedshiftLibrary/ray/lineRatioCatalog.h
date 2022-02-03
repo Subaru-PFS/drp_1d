@@ -36,31 +36,46 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINE_PROFILE_ASYMFIT_
-#define _REDSHIFT_LINE_PROFILE_ASYMFIT_
-#include <string>
-#include <math.h>
+#ifndef _LINE_RATIO_CATALOG_H_
+#define _LINE_RATIO_CATALOG_H_
+
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/lineprofileASYM.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
+
+#include <boost/format.hpp>
+
+#include <vector>
+#include <string>
 
 namespace NSEpic
 {
-    /**
-     * \ingroup Redshift
-     */
-    class CLineProfileASYMFIT: public CLineProfileASYM
-    {
-        public:
-            CLineProfileASYMFIT(const Float64 nsigmasupport = 8.0, 
-                                TAsymParams params = {2., 2., 0.},
-                                const std::string centeringMethod = "mean");
-            bool    isAsymFit() const override;
-            bool    isAsymFixed() const override;
-            void    SetAsymParams(TAsymParams params) override;
-            void resetAsymFitParams() override;
 
-        private:
-            CLineProfile* CloneImplementation() const override { return new CLineProfileASYMFIT(*this);}
-    };
+  class CLineRatioCatalog : public CRayCatalog
+  {
+  public:
+
+    CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+
+    void addVelocity(const std::string& name, const Float64& value);
+    void setPrior(const Float64& prior);
+    void setIsmIndex(const Float64& ismIndex);
+
+    const Float64& getPrior(){return m_Prior;}
+    const std::string& getName(){return m_Name;}
+    const Int32& getIsmIndex(){ return m_IsmIndex;}
+    const Float64& getVelocity(const std::string&group);
+  private:
+    //    CRayCatalog m_LineCatalog;
+    std::string m_Name;
+    std::map<std::string, Float64> m_Velocities;
+    Float64 m_Prior = 1;
+    Int32 m_IsmIndex = 0;
+    
+    
+  };
 }
+
 #endif

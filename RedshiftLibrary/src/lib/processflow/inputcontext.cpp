@@ -50,6 +50,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
                              std::shared_ptr<CTemplateCatalog> tmplCatalog,
                              std::shared_ptr<CRayCatalog> gal_rayCatalog,
                              std::shared_ptr<CRayCatalog> qso_rayCatalog,
+			     std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
                              std::shared_ptr<CPhotBandCatalog> photBandCatalog,
                              std::shared_ptr<CParameterStore> paramStore):
 
@@ -57,6 +58,7 @@ CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
   m_TemplateCatalog(std::move(tmplCatalog)),
   m_gal_RayCatalog(std::move(gal_rayCatalog)),
   m_qso_RayCatalog(std::move(qso_rayCatalog)),
+  m_TemplateRatioCatalog(std::move(gal_lineRatioCatalogs)),
   m_photBandCatalog(std::move(photBandCatalog)),
   m_ParameterStore(std::move(paramStore))
 { 
