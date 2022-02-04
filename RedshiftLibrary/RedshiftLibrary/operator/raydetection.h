@@ -48,6 +48,14 @@
 
 #include "RedshiftLibrary/ray/lineprofileASYM.h"
 
+namespace test_raydetection { //boost_test_suite
+    //all boost_auto_test_case that use private method
+    class XMadFind;
+    class RemoveStrongFromSpectra;
+    class Retest;
+    class LimitGaussianFitStartAndStop;
+}
+
 namespace NSEpic
 {
 
@@ -93,6 +101,12 @@ class CLineDetection
   Float64 ComputeFluxes( const CSpectrum& spectrum, Float64 winsize, TInt32Range range, TFloat64List mask=TFloat64List(),Float64* maxFluxnoContinuum=NULL, Float64* noise=NULL );
   
  private:
+
+  friend class test_raydetection::XMadFind;
+  friend class test_raydetection::RemoveStrongFromSpectra;
+  friend class test_raydetection::Retest;
+  friend class test_raydetection::LimitGaussianFitStartAndStop;
+
   Int32 m_type;
   
   Float64 m_winsize;

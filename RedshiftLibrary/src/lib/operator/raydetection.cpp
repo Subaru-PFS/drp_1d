@@ -358,6 +358,14 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
 	  }
       }
 
+    // Range must be included in fluxAxis
+    if (range.GetEnd() >= fluxAxis.GetSamplesCount()){
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CLineDetection::ComputeFluxes: upper bound of range "<<range.GetEnd()<<" is >= to fluxAxis length "<<fluxAxis.GetSamplesCount());
+    }
+    if (range.GetBegin() < 0){
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CLineDetection::ComputeFluxes: lower bound of range "<<range.GetEnd()<<" is < 0");
+    }
+
     Float64 maxValue = -DBL_MAX;
     Int32 maxIndex = -1;
     for( Int32 k=range.GetBegin(); k<=range.GetEnd(); k++ )
