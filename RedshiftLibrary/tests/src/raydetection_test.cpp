@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/common/exception.h"
 
 #include <limits>
 #include <iostream>
@@ -152,7 +153,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
 
   spc.SetSpectralAndFluxAxes(std::move(spectralAxis), modelfluxAxis);
   Float64 winsize = 10000.;
-  TInt32Range range = TInt32Range(0,10);
+  TInt32Range range = TInt32Range(0,9);
   TFloat64List mask = TFloat64List();
 
   Float64 maxFluxnoContinuum = 5.;
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   BOOST_CHECK_CLOSE( noise, 0.5, 1e-12);
   BOOST_CHECK_CLOSE( maxFluxnoContinuum, 1.5, 1e-12);
 
-  range = TInt32Range(0,10);
+  range = TInt32Range(0,9);
   CSpectrumNoiseAxis& error = modelfluxAxis.GetError();
   error[0] = 0.5;
   error[1] = 0.3;
@@ -218,6 +219,12 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   BOOST_CHECK_CLOSE( ratioAmp, 3.4/0.66, 1e-12);
   BOOST_CHECK_CLOSE( noise, 0.6, 1e-12);
   BOOST_CHECK_CLOSE( maxFluxnoContinuum, 3.4, 1e-12);
+
+  range = TInt32Range(0,10);
+  BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask, &maxFluxnoContinuum, &noise), GlobalException);
+
+  range = TInt32Range(-2,9);
+  BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask, &maxFluxnoContinuum, &noise), GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
