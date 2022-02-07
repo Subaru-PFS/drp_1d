@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
+#include "RedshiftLibrary/common/exception.h"
 
 #include <istream>
 #include <iostream>
@@ -56,215 +57,104 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(Statistics_deltaz)
 
+Float64 precision = 1e-12;
 
-
-
-
-TFloat64Range redshiftRange = TFloat64Range( 0, 5);
-Float64       redshiftStep = 1E-4;
-TRedshiftList pdfz = redshiftRange.SpreadOverLogZplusOne( redshiftStep );
-TFloat64List Redshifts = {
-0	,
-0.00010000000000000000479217360239	,
-0.00020000000000000000958434720477	,
-0.00030000000000000002792904796323	,
-0.00040000000000000001916869440954	,
-0.00050000000000000001040834085586	,
-0.00060000000000000005585809592645	,
-0.00069999999999999999288763374850	,
-0.00080000000000000003833738881909	,
-0.00090000000000000008378714388968	,
-0.00100000000000000002081668171172	,
-0.00110000000000000006626643678231	,
-0.00120000000000000011171619185291	,
-0.00130000000000000015716594692350	,
-0.00139999999999999998577526749699	,
-0.00150000000000000003122502256758	,
-0.00160000000000000007667477763817	,
-0.00170000000000000012212453270877	,
-0.00180000000000000016757428777936	,
-0.00189999999999999999618360835285	,
-0.00200000000000000004163336342344	,
-0.00210000000000000030392355299114	,
-0.00220000000000000013253287356463	,
-0.00229999999999999996114219413812	,
-0.00240000000000000022343238370581	,
-0.00250000000000000005204170427930	,
-0.00260000000000000031433189384700	,
-0.00270000000000000014294121442049	,
-0.00279999999999999997155053499398	,
-0.00290000000000000023384072456167	,
-0.00300000000000000006245004513517	,
-0.00310000000000000032474023470286	,
-0.00320000000000000015334955527635	,
-0.00329999999999999998195887584984	,
-0.00340000000000000024424906541753	,
-0.00350000000000000007285838599103	,
-0.00360000000000000033514857555872	,
-0.00370000000000000016375789613221	,
-0.00379999999999999999236721670570
-};
-TFloat64List ChiSquares = {
-4.98333524134186914307065308094025e+04	,
-4.98333424134186934679746627807617e+04	,
-4.98333524134186955052427947521210e+04	,
-4.98333624134186975425109267234802e+04	,
-4.98333724134186995797790586948395e+04	,
-4.98333824134187016170471906661987e+04	,
-4.98333924134187036543153226375580e+04	,
-4.98334024134187056915834546089172e+04	,
-4.98334124134187077288515865802765e+04	,
-4.98334224134187097661197185516357e+04	,
-4.98334524134187118033878505229950e+04	,
-4.98334424134187138406559824943542e+04	,
-4.98334524134187158779241144657135e+04	,
-4.98334624134187179151922464370728e+04	,
-4.98334724134187199524603784084320e+04	,
-4.98334824134187219897285103797913e+04	,
-4.98334924134187240269966423511505e+04	,
-4.98335024134187260642647743225098e+04	,
-4.98335124134187281015329062938690e+04	,
-4.98335224134187301388010382652283e+04	,
-4.94605935174078622367233037948608e+04	,
-4.94606035174078642739914357662201e+04	,
-4.94606135174078663112595677375793e+04	,
-4.94606235174078683485276997089386e+04	,
-4.94606335174078703857958316802979e+04	,
-4.94606435174078724230639636516571e+04	,
-4.94606535174078744603320956230164e+04	,
-4.94606635174078764976002275943756e+04	,
-4.94606735174078785348683595657349e+04	,
-4.94606835174078805721364915370941e+04	,
-4.94273189573849595035426318645477e+04	,
-4.94273289573849615408107638359070e+04	,
-4.94273389573849635780788958072662e+04	,
-4.94273489573849656153470277786255e+04	,
-4.94273589573849676526151597499847e+04	,
-4.94273689573849696898832917213440e+04	,
-4.94273789573849717271514236927032e+04	,
-4.94373889573849737644195556640625e+04	,
-4.94573989573849758016876876354218e+04	
-};
-//  TFloat64Range(0,0.01).SpreadOverLog(redshiftStep);
-
-void DeltazTestCompute( const Float64 redshift, const TFloat64Range range )
+BOOST_AUTO_TEST_CASE(GetIndices_test)
 {
-
-   
-    TScopeStack stack;
-    COperatorResultStore result_store(stack);
-    CParameterStore param_store(stack);
-
-    CDeltaz deltaz;
-    Float64 dz=-1.;
+    // simplified test
+    TFloat64List Redshifts_easy = {1., 2., 3., 4., 5., 6., 7.};
     Int32 iz, izmin, izmax;
-    Int32 ret = deltaz.GetRangeIndices(Redshifts, redshift, range, iz, izmin, izmax );
-    ret = deltaz.Compute(ChiSquares, Redshifts, iz, izmin, izmax, dz);
-    BOOST_CHECK_MESSAGE( ret==0, "deltaz process returned error" );
-    BOOST_CHECK_MESSAGE( dz>0, "Deltaz is nul or negative : " << dz );
-  
+    CDeltaz deltaz;
+    Int32 ret;
+    Int32 half_samples_nb = 2;
+
+    // Target outside redshifts range
+    Float64 redshift_target = 8.0;
+    BOOST_CHECK_THROW(deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin, izmax ), GlobalException);
+
+    // Target included in redshifts range but not defined in
+    redshift_target = 4.5; 
+    BOOST_CHECK_THROW(deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin, izmax), GlobalException);
+
+    // Target in redshifts range
+    redshift_target = 4.0;
+    ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin, izmax);
+    BOOST_CHECK(iz == 3 && izmin == 1 && izmax == 5 );
+
+    redshift_target = 7.0;
+    ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin, izmax);
+    BOOST_CHECK(iz == 6 && izmin == 4 && izmax == 6 );
+
+    redshift_target = 1.0;
+    ret = deltaz.GetIndices(Redshifts_easy, redshift_target, half_samples_nb, iz, izmin, izmax);
+    BOOST_CHECK(iz == 0 && izmin == 0 && izmax == 2 );
 }
 
-BOOST_AUTO_TEST_CASE(Deltaz)
+BOOST_AUTO_TEST_CASE(Compute_test)
 {
-    //
-    Float64 center_redshift = 0.001;
-    Float64 zRangeHalf = 0.0001;
-    TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
+    // simplified test
+    TFloat64List Redshifts_easy = {1., 2., 3., 4., 5., 6., 7.};
+    TFloat64List merits = {1., 1., 1., 8., 1., 1., 1.};
+    Int32 iz, izmin, izmax;
+    CDeltaz deltaz;
+    Float64 sigma, deltaz_ref;
 
-    DeltazTestCompute( center_redshift, redshiftRange);
+    iz = 3;
+    izmin = 0;
+    izmax = 6;
+    deltaz_ref = 1.;
+    sigma = deltaz.Compute(merits, Redshifts_easy, iz, izmin, izmax);
+    BOOST_CHECK_CLOSE(sigma, deltaz_ref, precision);
 
+    deltaz_ref = 1.7320508075688776;
+    sigma = deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax);
+    BOOST_CHECK_CLOSE(sigma, deltaz_ref, precision);
+
+    //Compute : c0 <= 0
+    merits = {0., 0., 0., 0., 0., 0., 0.};
+    BOOST_CHECK_THROW(deltaz.Compute(merits, Redshifts_easy, iz, izmin, izmax), GlobalException);
+
+    //Compute3ddl : c2 <= 0;
+    BOOST_CHECK_THROW(deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax), GlobalException);
+
+    //Compute3ddl : (izmax - izmin +1) < 3
+    merits = {1., 1., 1., 5., 1., 1., 1.};
+    izmin = 2;
+    izmax = 3;
+    BOOST_CHECK_THROW(deltaz.Compute3ddl(merits, Redshifts_easy, iz, izmin, izmax), GlobalException);
 }
 
-BOOST_AUTO_TEST_CASE(Deltazbordermin)
+BOOST_AUTO_TEST_CASE(GetDeltaz_test)
 {
-    //
-    Float64 center_redshift = 0;
-    Float64 zRangeHalf = 0.0001;
-    TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
+    // simplified test
+    TFloat64List Redshifts_easy = {1., 2., 3., 4., 5., 6., 7.};
+    TFloat64List merits = {1., 1., 1., 8., 1., 1., 1.};
+    Float64 redshift_target = 4.;
+    CDeltaz deltaz;
+    Float64 dz_1, dz_2, dz_ref;
+    Int32 ret;
 
-    DeltazTestCompute( center_redshift, redshiftRange);
+    //redshifts size = 0
+    BOOST_CHECK_THROW(deltaz.GetDeltaz({}, merits, redshift_target), GlobalException);
 
-}
-BOOST_AUTO_TEST_CASE(Deltazbordermax)
-{
-    //
-    Float64 center_redshift = 0.0038;
-    Float64 zRangeHalf = 0.0001;
-    TFloat64Range redshiftRange = TFloat64Range( center_redshift-zRangeHalf, center_redshift+zRangeHalf );
+    //COMPUTE
+    dz_ref = 1.;
+    dz_1 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target);
+    BOOST_CHECK_CLOSE(dz_1 , dz_ref, precision);
 
-    DeltazTestCompute( center_redshift, redshiftRange);
+    //COMPUTE3DDL
+    dz_ref = 1.7320508075688776;
+    dz_2 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target, true);
+    BOOST_CHECK_CLOSE(dz_2 , dz_ref, precision);
 
-}
-  
-/*
-//both redshifts belong to overlapping range
-BOOST_AUTO_TEST_CASE(Deltaz_overlapping1)
-{
-    TRedshiftList center_redshifts = {1.0, 1.5};
-    TRedshiftList deltaz = { 0.5/3, 0.5/3};
-    TFloat64RangeList ranges;
-    TFloat64RangeList correct_ranges = {{0.5, 1.24990}, {1.25, 2}};
+    //c0 <= 0 : default value
+    merits = {0., 0., 0., 0., 0., 0., 0.};
+    dz_2 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target);
+    BOOST_CHECK_CLOSE(dz_2 , 0.001, precision);
 
-    CPdfCandidateszResult res;
-    res.Init(center_redshifts, deltaz);
-    res.SetIntegrationWindows(pdfz, ranges);
-
-    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
-}
-//no overlapping
-BOOST_AUTO_TEST_CASE(Deltaz_nooverlapping)
-{
-    TRedshiftList center_redshifts = {1.0, 4.0};
-    TRedshiftList deltaz = { 0.5/3, 0.5/3};
-    TFloat64RangeList ranges;
-    TFloat64RangeList correct_ranges = {{0.5, 1.5}, {3.5, 4.5}};
-
-    CPdfCandidateszResult res; 
-    res.Init(center_redshifts, deltaz);
-    res.SetIntegrationWindows(pdfz, ranges);
-
-    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
-}
-//only the smallest redshift belongs to the overlapping region
-BOOST_AUTO_TEST_CASE(Deltaz_overlapping_3)
-{
-    TRedshiftList center_redshifts = {1.0, 4.0};
-    TRedshiftList deltaz = { 1./3, 2.5/3};
-    TFloat64RangeList ranges;
-    TFloat64RangeList correct_ranges = {{0., 1.7499}, {1.75, pdfz.back()}};
-
-    CPdfCandidateszResult res; 
-    res.Init(center_redshifts, deltaz);
-    res.SetIntegrationWindows(pdfz, ranges);
-
-    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
+    //c2 <= 0 : default value
+    dz_2 = deltaz.GetDeltaz(Redshifts_easy, merits, redshift_target, true);
+    BOOST_CHECK_CLOSE(dz_2 , 0.001, precision);
 }
 
-//only the greatest redshift belong to overlapping region
-BOOST_AUTO_TEST_CASE(Deltaz_overlapping_4)
-{
-    TRedshiftList center_redshifts = {1.0, 4.0};
-    TRedshiftList deltaz = {2.0/3, 2.5/3};
-    TFloat64RangeList ranges;
-    TFloat64RangeList correct_ranges = {{0., 2.2499}, {2.25, pdfz.back()}};
-
-    CPdfCandidateszResult res;
-    res.Init(center_redshifts, deltaz);
-    res.SetIntegrationWindows(pdfz, ranges);
-
-    BOOST_CHECK_CLOSE(ranges[0].GetEnd(), correct_ranges[0].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetEnd(), correct_ranges[1].GetEnd(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[0].GetBegin(), correct_ranges[0].GetBegin(), 1E-4);
-    BOOST_CHECK_CLOSE(ranges[1].GetBegin(), correct_ranges[1].GetBegin(), 1E-4);
-}*/
 BOOST_AUTO_TEST_SUITE_END()
