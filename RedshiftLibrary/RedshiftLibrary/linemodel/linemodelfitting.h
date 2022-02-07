@@ -65,6 +65,7 @@
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 #include <memory>
 namespace NSEpic
@@ -249,7 +250,7 @@ public:
     bool GetModelHaStrongest();
    
     Float64 getContinuumMeanUnderElement(UInt32 eltId);
-    Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
+    void LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
     CContinuumModelSolution GetContinuumModelSolution();
     const CSpectrum&    GetModelSpectrum() const;
@@ -449,7 +450,7 @@ private:
     Float64 m_fitContinuum_tplFitDtM = NAN;
     Float64 m_fitContinuum_tplFitMtM = NAN;
     Float64 m_fitContinuum_tplFitLogprior = NAN;
-    Float64 m_fitContinuum_tplFitSNRMax=0.0;
+    Float64 m_fitContinuum_tplFitSNRMax=NAN;
     std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
     Float64 m_fitContinuum_tplFitAlpha=0.;
@@ -462,6 +463,8 @@ private:
     bool m_lmfit_fitAbsorptionVelocity;
 
     const TFloat64Range m_lambdaRange;
+    
+    linetags ltags;
 };
 
 }

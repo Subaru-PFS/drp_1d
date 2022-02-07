@@ -80,7 +80,7 @@ public:
     //TODO: std::vector<std::vector<TFloat64List>> LogPriorIntermediate
     //TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed for correct prior use in marg. mode tplmodel method
 
-    Float64                 CstLog;
+    Float64                 CstLog = NAN;
     TFloat64List            SNR;
     TFloat64List            Overlap;
     COperator::TStatusList  Status;

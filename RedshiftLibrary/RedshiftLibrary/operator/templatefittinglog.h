@@ -102,8 +102,8 @@ private:
     bool verboseLogFitFitRangez = false;
     bool verboseExportFitRangez = false;
     bool verboseExportFitRangez_model = false;
-    UInt32 exportIGMIdx = 5;
-    UInt32 exportISMIdx = -1;
+    Int32 exportIGMIdx = 5;
+    Int32 exportISMIdx = -1;
 
     //hardcoded config: XTY_FFT
     bool verboseLogXtYFFT = false;
@@ -135,8 +135,8 @@ private:
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
 
-    bool m_enableISM = 1;
-    bool m_enableIGM = 1; 
+    bool m_enableISM = true;
+    bool m_enableIGM = true; 
 
     //buffers for fft computation
     Int32 m_nPaddedSamples =0;
