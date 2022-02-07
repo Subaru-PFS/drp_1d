@@ -47,23 +47,13 @@ using namespace std;
 
 #include <gsl/gsl_multifit.h>
 
-CDeltaz::CDeltaz()
-{
-
-}
-
-CDeltaz::~CDeltaz()
-{
-
-}
-
 Float64 CDeltaz::GetDeltaz(const TFloat64List & redshifts, const TFloat64List & pdf, const Float64 z, const Int32 gslfit)
 {
     Float64 dz = -1;
     if (!redshifts.size() )
-        return 0;
+        throw GlobalException(INTERNAL_ERROR,"Deltaz: Redshift range is empty");
     Int32 ret = -1, deltaz_i = 0, maxIter = 2;
-    while(ret == -1 && deltaz_i < maxIter){//iterate only twice
+    while(deltaz_i < maxIter){//iterate only twice
             Int32 izmin= -1;
             Int32 iz= -1;
             Int32 izmax= -1;
@@ -76,20 +66,31 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List & redshifts, const TFloat64List & 
             Int32 half_samples_nb = 5/(deltaz_i+1);
             ret = GetIndices(redshifts, z, half_samples_nb, iz, izmin, izmax);
 
-            if(gslfit)
-                ret = Compute3ddl(pdf, redshifts, iz, izmin, izmax, dz);
-            else{
-                ret = Compute(pdf, redshifts, iz, izmin, izmax, dz);
-            }          
-            if (ret == -1){
-                //Log.LogWarning("  Deltaz: Deltaz computation failed for half range %f", zRangeHalf);
-                Log.LogWarning("  Deltaz: Deltaz computation failed for half range %i samples", half_samples_nb);
-                deltaz_i++; 
+            try
+            {
+                if(gslfit)
+                    dz = Compute3ddl(pdf, redshifts, iz, izmin, izmax);
+                else
+                    dz = Compute(pdf, redshifts, iz, izmin, izmax);
+                break;
             }
-    }
-    if(dz == -1){    
-        Log.LogError("  Deltaz: Deltaz for candidate %f couldnt be calculated", z);
-        dz = 0.001; //default value
+            catch(GlobalException& e){
+                if (e.getErrorCode() != DZ_NOT_COMPUTABLE){
+                    std::string msg;
+                    msg = e.getMessage();
+                    throw GlobalException(e.getErrorCode(), msg);
+                }else{
+                    if (deltaz_i < maxIter){                        
+                        //Log.LogWarning("  Deltaz: Deltaz computation failed for half range %f", zRangeHalf);
+                        Log.LogWarning("  Deltaz: Deltaz computation failed for half range %i samples", half_samples_nb);
+                        deltaz_i++;
+                    }
+                    if(deltaz_i == maxIter - 1){
+                        dz = 0.001;
+                    }
+                    
+                }
+            } 
     }
     return dz;
 }
@@ -101,12 +102,10 @@ Int32 CDeltaz::GetIndices(const TFloat64List & redshifts, const Float64 redshift
     izmin= -1;
     TFloat64List::const_iterator iiz = std::lower_bound(redshifts.begin(),redshifts.end(),redshift); 
     izmax= -1;
-
+ 
     iz = iiz - redshifts.begin();
-    if( *iiz !=redshift ){
-        Log.LogError("  Deltaz: Impossible to get redshift index %f (%d)",
-                     redshift, iz);
-        throw GlobalException(INTERNAL_ERROR,"Deltaz: impossible to get redshift indices!");
+    if( iiz == redshifts.end() || *iiz !=redshift ){
+        throw GlobalException(INTERNAL_ERROR, Formatter()<<"CDeltaz::GetIndices: impossible to get redshift index for z="<<redshift);
     }
 
     izmin = max(iz - HalfNbSamples, 0);
@@ -115,37 +114,14 @@ Int32 CDeltaz::GetIndices(const TFloat64List & redshifts, const Float64 redshift
     return 0;
 }
 
-Int32 CDeltaz::GetRangeIndices(const TFloat64List & redshifts, const Float64 redshift, const TFloat64Range & redshiftRange, 
-                               Int32 & iz, Int32 & izmin, Int32 & izmax )
-{
-    TFloat64Range effectiveRange = TFloat64Range(redshifts.front(), redshifts.back());
-    bool ret = effectiveRange.IntersectWith(redshiftRange);
-    if(!ret){
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Deltaz: Deltaz range for candidate"<< redshift<<" is outside the redshift range");
-    }
-    
-    //find indexes: iz, izmin and izmax
-    bool ok = effectiveRange.getEnclosingIntervalIndices(redshifts,izmin,izmax);
-    iz= std::lower_bound(redshifts.begin(),redshifts.end(),redshift) - redshifts.begin();
-    
-    
-    if( !ok || iz == -1 ){
-        Log.LogError("  Deltaz: Impossible to get redshift index %f (%d) or redshift range indices %f,%f (%d,%d)",
-                     redshift, iz, effectiveRange.GetBegin(), effectiveRange.GetEnd(), izmin, izmax);
-        throw GlobalException(INTERNAL_ERROR,"Deltaz: impossible to get redshift indices!");
-    }
-    return 0;
-}
-
-
-Int32 CDeltaz::Compute(const TFloat64List & merits, const TFloat64List & redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma)
+Float64 CDeltaz::Compute(const TFloat64List & merits, const TFloat64List & redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax)
  {
     Float64 x0 = redshifts[iz];
     Float64 y0 = merits[iz];
     Float64 xi2, yi, c0; 
     Float64 sum = 0, sum2 = 0;
 
-    sigma = -1.0;
+    Float64 sigma = -1.0;
 
     for (Int32 i = izmin; i < izmax+1; i++)
     {
@@ -157,16 +133,16 @@ Int32 CDeltaz::Compute(const TFloat64List & merits, const TFloat64List & redshif
     }
     c0 = sum/sum2; 
     if(c0<=0){
-        return -1;
+        throw GlobalException(DZ_NOT_COMPUTABLE, Formatter()<<"CDeltaz::Compute: impossible to compute sigma");
     }
     sigma = sqrt(1.0/c0);
-    return 0;
+    return sigma;
 }
 
 //todo : merge with previous function instead of duplicating code...
-Int32 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax, Float64& sigma)
+Float64 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redshifts, const Int32 iz, const Int32 izmin, const Int32 izmax)
 {
-    sigma = -1.0; //default value
+    Float64 sigma = -1.0; //default value
     bool verbose = false;
     
     //quadratic fit
@@ -178,7 +154,7 @@ Int32 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redsh
     n = izmax - izmin +1;
     if(n<3)
     {
-        return 1;
+        throw GlobalException(DZ_NOT_COMPUTABLE, Formatter()<<"CDeltaz::Compute: impossible to compute sigma");
     }
 
     X = gsl_matrix_alloc (n, 3);
@@ -261,6 +237,6 @@ Int32 CDeltaz::Compute3ddl(const TFloat64List &merits, const TFloat64List &redsh
     //results.SigmaZ[indz] = sigma;
     //results.LogAreaCorrectedExtrema[indz] = zcorr;
     if(c2<=0) 
-        return -1;
-    return 0;
+        throw GlobalException(DZ_NOT_COMPUTABLE, Formatter()<<"CDeltaz::Compute: impossible to compute sigma");
+    return sigma;
 }
