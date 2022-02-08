@@ -98,7 +98,7 @@ private:
                              std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
-
+    const CRayCatalog::TRayVector  FilterRestLineCatalog(const CRayCatalog& restraycatalog);
 
     COperatorLineModel m_linemodel;
 

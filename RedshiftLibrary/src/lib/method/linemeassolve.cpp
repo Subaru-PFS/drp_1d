@@ -69,29 +69,37 @@ namespace NSEpic
                                                         TScopeStack &scope)
   {
     
+    const CSpectrum& spc=*(inputContext->GetSpectrum());
+    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
+    // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
+    const CRayCatalog::TRayVector restLineList = restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
+    Log.LogDebug("restLineList.size() = %d", restLineList.size());
+
+    Float64 opt_nsigmasupport = inputContext->GetParameterStore()->GetScoped<Float64>("linemodel.nsigmasupport"); // try with 16 (-> parameters.json)
+    const std::string& opt_continuumcomponent = "nocontinuum";//params->GetScoped<std::string>("continuumcomponent");
+
+    m_linemodel.Init(spc, 
+                    m_redshifts, 
+                    std::move(restLineList), 
+                    opt_continuumcomponent, 
+                    opt_nsigmasupport);
+
     CLineModelSolution bestModelSolution;
-    CContinuumModelSolution bestContinuumModelSolution;
+    Float64 bestz = NAN;
     {
       CAutoScope autoscope(scope,"linemodel");
 
       bestModelSolution = m_linemodel.computeForLineMeas(inputContext,
-							 m_redshifts);
+                                      m_redshifts, 
+                                      bestz);
     }
     bestModelSolution.fillRayIds();
-    /*
-    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
-    CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
-
-    std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(bestModelSolution,
-                                                                                    bestModelSolution.Redshift,
-                                                                                    1,
-                                                                                    restRayList
-                                                                                    );
-    */
-     std::shared_ptr<const CLineModelSolution> res = std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
+    std::shared_ptr<const CModelSpectrumResult>  modelspc = 
+        std::make_shared<const CModelSpectrumResult>(m_linemodel.getFittedModelWithoutcontinuum(bestz, bestModelSolution)); 
+    std::shared_ptr<const CLineModelSolution> res = std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
     resultStore->StoreScopedGlobalResult("linemeas",res);
     resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
-    resultStore->StoreScopedGlobalResult("linemeas_model",m_linemodel.getFittedModel());
+    resultStore->StoreScopedGlobalResult("linemeas_model", modelspc);
     return std::make_shared<CLineMeasSolveResult>(CLineMeasSolveResult());
   }
 

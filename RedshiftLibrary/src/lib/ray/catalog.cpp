@@ -73,7 +73,7 @@ const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 
 const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const
 {
-    {
+
         TRayVector filteredList;
         for( int i = 0; i< m_List.size(); i++ )
         {
@@ -84,7 +84,22 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int
             }
         }
         return filteredList;
-    }
+
+}
+
+const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(const std::string& typeFilter, const std::string& forceFilter) const
+{
+    Int32 itypeFilter = -1;
+    if (typeFilter == "A")
+      itypeFilter = CRay::nType_Absorption;
+    else if (typeFilter == "E")
+      itypeFilter = CRay::nType_Emission;
+
+    Int32 iforceFilter = -1; // CRay::nForce_Strong;
+    if (forceFilter == "S")
+      iforceFilter = CRay::nForce_Strong;
+    
+    return GetFilteredList(itypeFilter, iforceFilter);
 }
 
 const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList(const TRayVector& filteredList ) 

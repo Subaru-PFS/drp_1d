@@ -1622,14 +1622,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         }
         if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
         {
-            Int32 autoselect = 0;
-            if(m_ContinuumComponent == "tplfit")
-            {
-                autoselect = 0;
-            }else if(m_ContinuumComponent == "tplfitauto")
-            {
-                autoselect = 1;
-            }
+            Int32 autoselect = (m_ContinuumComponent == "tplfitauto");
             LoadFitContinuum(lambdaRange, icontfitting, autoselect);
         }
         if(m_ContinuumComponent != "nocontinuum")
@@ -1646,7 +1639,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         if(m_enableAmplitudeOffsets)
         {
-            m_Elements.prepareAmplitudeOffset(m_spcFluxAxisNoContinuum);
+            m_Elements.prepareAmplitudeOffset();
         }
 
         for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
@@ -3593,7 +3586,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32
             //todo: replace lambdarange using elements limits for speed
             for(Int32 iE=0; iE<EltsIdx.size(); iE++)
             {
-	      Float64 _fit = m_Elements.getModelErrorUnderElement(iE,fluxAxis,m_SpectrumModel.GetFluxAxis());
+	            Float64 _fit = m_Elements.getModelErrorUnderElement(iE,fluxAxis,m_SpectrumModel.GetFluxAxis());
                 sumFit += _fit;
             }
             if(sumFit<bestMerit)
@@ -4133,7 +4126,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
     //finding or setting the correct profile
     CLineProfile_ptr profile;
     if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
-        profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean")); 
+        profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"));
     else
         profile =  catalog[lineIndex].GetProfile().Clone();
     
@@ -5228,6 +5221,15 @@ void CLineModelFitting::LoadModelSolution(const CLineModelSolution&  modelSoluti
     Int32 eIdx = modelSolution.ElementId[iRestRay];
     if(eIdx == undefIdx) continue;
 
+    if(m_enableAmplitudeOffsets){
+        m_Elements.prepareAmplitudeOffset();//prepare to load polynom coeffs. shd we check if this already done first
+
+        TPolynomCoeffs contPolynomCoeffs = {modelSolution.continuum_pCeoff0[iRestRay],
+                                            modelSolution.continuum_pCeoff1[iRestRay],
+                                            modelSolution.continuum_pCeoff2[iRestRay]};
+        applyPolynomCoeffs(eIdx, contPolynomCoeffs);
+    }
+
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestRay);
 
     if(m_RestRayList[iRestRay] !=modelSolution.Rays[iRestRay])
@@ -5581,6 +5583,24 @@ TPolynomCoeffs CLineModelFitting::getPolynomCoeffs(Int32 eIdx)
         polynom_coeffs = m_Elements.m_ampOffsetsCoeffs[idxAmpOffset];
     }
     return polynom_coeffs;
+}
+
+/**
+ * @brief Add polynom coeffs into the class variables, for all correctly in m_ampOffsetCoeffs
+ * 
+ * @param eIdx 
+ * @param polynom_coeffs 
+ * @return 
+ */
+void CLineModelFitting::applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs& polynom_coeffs)
+{
+    TUInt32List xInds = m_Elements.getSupportIndexes( {UInt32(eIdx)} );
+    if(xInds.size()&& m_Elements.m_ampOffsetsCoeffs.size())
+    {
+        Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+        m_Elements.m_ampOffsetsCoeffs[idxAmpOffset] = polynom_coeffs;
+    }
+    return;
 }
 
 CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution()

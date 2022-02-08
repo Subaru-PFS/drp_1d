@@ -70,11 +70,12 @@ class COperatorLineModel
 public:
 
     Int32 Init( const CSpectrum& spectrum,
-                const TFloat64List& redshifts, 
+                const TFloat64List& redshifts,
+                const CRayCatalog::TRayVector restLineCatalog,
                 const std::string &opt_continuumcomponent,
                 const Float64 nsigmasupport, 
-                const Float64 halfwdwsize, 
-                const Float64 radius);
+                const Float64 halfwdwsize = NAN, 
+                const Float64 radius = NAN);
 
     std::shared_ptr<COperatorResult> getResult();
 
@@ -93,7 +94,6 @@ public:
                            const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
-                           const CRayCatalog::TRayVector& restraycatalog,
                            const CRayCatalogsTplShape& tplRatioCatalog,
                            const TFloat64Range& lambdaRange,
                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
@@ -156,8 +156,10 @@ public:
                                     const std::string &opt_continuumreest,
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
-  CLineModelSolution computeForLineMeas(std::shared_ptr<const CInputContext> context,
-					const TFloat64List& redshiftsGrid);
+    CLineModelSolution  computeForLineMeas(std::shared_ptr<const CInputContext> context,
+                            const TFloat64List& redshiftsGrid,
+                            Float64& bestZ);
+  
   std::shared_ptr<const LineModelExtremaResult> saveFirstPassExtremaResults(const TCandidateZbyRank & zCandidates); 
   std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,
@@ -230,12 +232,14 @@ public:
                            std::vector<Float64> zfitlist,
                            Int32 rayType);
 
-  std::shared_ptr<CModelSpectrumResult> getFittedModel();
   void setHapriorOption(Int32 opt);
+  const CSpectrum& getFittedModelWithoutcontinuum(Float64 z, 
+                                                const CLineModelSolution& bestModelSolution);
 private:
 
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelFitting> m_model;
+    CRayCatalog::TRayVector m_RestLineList;
     TFloat64List m_sortedRedshifts;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;
@@ -256,7 +260,7 @@ private:
 
     bool mlmfit_modelInfoSave = false;
     std::vector<std::shared_ptr<CModelSpectrumResult>> mlmfit_savedModelSpectrumResults_lmfit;
-   std::vector<std::shared_ptr<CLineModelSolution>> mlmfit_savedModelFittingResults_lmfit;
+    std::vector<std::shared_ptr<CLineModelSolution>> mlmfit_savedModelFittingResults_lmfit;
     std::vector<std::shared_ptr<CModelRulesResult>> mlmfit_savedModelRulesResults_lmfit;
     std::vector<std::shared_ptr<CSpectraFluxResult>> mlmfit_savedBaselineResult_lmfit;
 

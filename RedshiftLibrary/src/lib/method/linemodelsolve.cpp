@@ -291,30 +291,14 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   bool useloglambdasampling = inputContext->GetParameterStore()->GetScoped<bool>("linemodel.useloglambdasampling");
   useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
 
-  Int32 typeFilter = -1;
-  if (m_opt_linetypefilter == "A")
-    {
-      typeFilter = CRay::nType_Absorption;
-    } else if (m_opt_linetypefilter == "E")
-    {
-      typeFilter = CRay::nType_Emission;
-    }
-
-  Int32 forceFilter = -1; // CRay::nForce_Strong;
-  if (m_opt_lineforcefilter == "S")
-    {
-      forceFilter = CRay::nForce_Strong;
-    }
-  Log.LogDebug("restRayList force filter = %d", forceFilter);
-  CRayCatalog::TRayVector restRayList =
-    restraycatalog.GetFilteredList(typeFilter, forceFilter);
-  Log.LogDebug("restRayList.size() = %d", restRayList.size());
+  CRayCatalog::TRayVector restLineList = restraycatalog.GetFilteredList(m_opt_linetypefilter, m_opt_lineforcefilter);
+  Log.LogDebug("restLineList.size() = %d", restLineList.size());
 
   bool retSolve = Solve( resultStore,
                          useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
                          m_categoryList,
-                         restRayList,
+                         std::move(restLineList),
                          tplRatioCatalog,
                          m_lambdaRange,
                          m_redshifts,
@@ -761,7 +745,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
                              const TStringList& tplCategoryList,
-                             const CRayCatalog::TRayVector& restRayList,
+                             const CRayCatalog::TRayVector& restLineList,
                              const CRayCatalogsTplShape& tplRatioCatalog,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts,
@@ -789,7 +773,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //    }
 
     // Compute with linemodel operator
-    Int32 retInit = m_linemodel.Init(spc, redshifts, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = m_linemodel.Init(spc, redshifts, restLineList, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         throw GlobalException(INTERNAL_ERROR, "Linemodel, init failed. Aborting" );
@@ -853,7 +837,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     rebinnedSpc,
                                                     tplCatalog,
                                                     tplCategoryList,
-                                                    restRayList,
                                                     tplRatioCatalog,
                                                     lambdaRange,
                                                     photBandCat,
@@ -909,7 +892,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
     std::string fpb_opt_continuumcomponent = "fromspectrum";//Note: this is hardocoded! given that condition for FPB relies on having "tplfit"
-    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, restLineList, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
@@ -944,7 +927,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             rebinnedSpc,
                                                             tplCatalog,
                                                             tplCategoryList,
-                                                            restRayList,
                                                             tplRatioCatalog,
                                                             lambdaRange,
                                                             photBandCat,
