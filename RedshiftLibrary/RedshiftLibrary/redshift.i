@@ -374,13 +374,13 @@ public:
 
 class CProcessFlowContext {
 public:
-  CProcessFlowContext();
-  void Init(std::shared_ptr<CSpectrum> spectrum,
+  CProcessFlowContext(std::shared_ptr<CSpectrum> spectrum,
             std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-	    std::shared_ptr<CRayCatalogsTplShape> galaxy_lineRatioCatalogs,
             std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
+  void Init();
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog); 
+
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();

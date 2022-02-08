@@ -59,9 +59,6 @@ class CInputContext
  public:
   CInputContext(std::shared_ptr<CSpectrum> spc,
                 std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                std::shared_ptr<CRayCatalog> gal_rayCatalog,
-                std::shared_ptr<CRayCatalog> qso_rayCatalog,
-                std::shared_ptr<CRayCatalogsTplShape> gal_lineRatioCatalogs,
                 std::shared_ptr<CPhotBandCatalog> photBandCatalog,
                 std::shared_ptr<CParameterStore> paramStore);
 
@@ -69,7 +66,7 @@ class CInputContext
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_Spectrum;}
   std::shared_ptr<const CSpectrum>  GetRebinnedSpectrum() const {return m_rebinnedSpectrum;}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
-  std::shared_ptr<const CRayCatalogsTplShape>  GetTemplateRatioCatalog() const {return m_TemplateRatioCatalog;}
+  std::shared_ptr<const CRayCatalogsTplShape>  GetTemplateRatioCatalog(const std::string &objectType) const ;
   std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog() const {return m_photBandCatalog;}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
@@ -78,7 +75,7 @@ class CInputContext
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
   std::shared_ptr<CSpectrum>  GetRebinnedSpectrum() {return m_rebinnedSpectrum;}
   std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
-  std::shared_ptr<CRayCatalogsTplShape>  GetTemplateRatioCatalog() {return m_TemplateRatioCatalog;}
+  std::shared_ptr<CRayCatalogsTplShape>  GetTemplateRatioCatalog(const std::string& objectType);
   std::shared_ptr<CRayCatalog>  GetRayCatalog(const std::string &objectType);
   std::shared_ptr<CPhotBandCatalog> GetPhotBandCatalog() {return m_photBandCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
@@ -93,16 +90,21 @@ class CInputContext
   std::map<std::string, SRebinResults> m_logRebin;
   
   std::vector<std::string> m_categories{"galaxy", "qso", "star"};
+
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog);
+  void Init();
 private:
+
 
   std::shared_ptr<CSpectrum> m_Spectrum;
   std::shared_ptr<CSpectrum> m_rebinnedSpectrum;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
-  std::shared_ptr<CRayCatalog> m_gal_RayCatalog;
-  std::shared_ptr<CRayCatalog> m_qso_RayCatalog;
+  std::map<std::string, std::shared_ptr<CRayCatalog>> m_lineCatalogs;
+  std::map<std::string, std::shared_ptr<CRayCatalogsTplShape>> m_lineRatioCatalogCatalogs;
+
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
-  std::shared_ptr<CRayCatalogsTplShape> m_TemplateRatioCatalog;
   void OrthogonalizeTemplates();
   void RebinInputs();
 };
@@ -116,13 +118,25 @@ std::shared_ptr<const CRayCatalog> CInputContext::GetRayCatalog(const std::strin
 inline
 std::shared_ptr<CRayCatalog> CInputContext::GetRayCatalog(const std::string &objectType)  
 {
-  if (objectType=="galaxy")
-    return m_gal_RayCatalog;
-  else if (objectType=="qso")
-    return m_qso_RayCatalog;
-  else {
-      throw GlobalException(INTERNAL_ERROR,"CInputContext::GetRayCatalog: invalid object type");
-  }
+  //  if (std::findm_categories.find(objectType))
+  // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetRayCatalog: invalid object type");
+  return m_lineCatalogs[objectType];
+
+}
+
+inline
+std::shared_ptr<const CRayCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const 
+{
+  return const_cast<CInputContext*>(this)->GetTemplateRatioCatalog(objectType); 
+}
+
+inline
+std::shared_ptr<CRayCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType)  
+{
+  //  if (std::findm_categories.find(objectType))
+  // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog: invalid object type");
+  return m_lineRatioCatalogCatalogs[objectType];
+
 }
 
 } 

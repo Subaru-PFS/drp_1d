@@ -49,7 +49,8 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   TLSFGaussianVarWidthArgs,
                                   CLSFFactory,
                                   CPhotometricData,
-                                  CLog)
+                                  CLog,
+                                  CTemplateCatalog)
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 zlog = CLog.GetInstance()
@@ -254,7 +255,7 @@ class AbstractSpectrumReader:
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[0].SetName(self.source_id)
 
-        ctx = CProcessFlowContext()
+        ctx = CProcessFlowContext(self._spectra[0],CTemplateCatalog())
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type
