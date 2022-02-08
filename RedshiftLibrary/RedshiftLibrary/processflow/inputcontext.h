@@ -57,10 +57,7 @@ class CRayCatalogsTplShape;
 class CInputContext
 {
  public:
-  CInputContext(std::shared_ptr<CSpectrum> spc,
-                std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                std::shared_ptr<CPhotBandCatalog> photBandCatalog,
-                std::shared_ptr<CParameterStore> paramStore);
+  CInputContext(std::shared_ptr<CParameterStore> paramStore);
 
   // const getters
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_Spectrum;}
@@ -93,6 +90,10 @@ class CInputContext
 
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog);
+    void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
+
   void Init();
 private:
 

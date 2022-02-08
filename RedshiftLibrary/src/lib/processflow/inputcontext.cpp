@@ -46,14 +46,7 @@
 #include <float.h>
 using namespace NSEpic;
 
-CInputContext::CInputContext(std::shared_ptr<CSpectrum> spc,
-                             std::shared_ptr<CTemplateCatalog> tmplCatalog,
-                             std::shared_ptr<CPhotBandCatalog> photBandCatalog,
-                             std::shared_ptr<CParameterStore> paramStore):
-
-  m_Spectrum(std::move(spc)),
-  m_TemplateCatalog(std::move(tmplCatalog)),
-  m_photBandCatalog(std::move(photBandCatalog)),
+CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore):
   m_ParameterStore(std::move(paramStore))
 { 
 

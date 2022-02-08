@@ -90,12 +90,12 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 }
 
 
-void CSolve::Compute(std::shared_ptr<const CInputContext> inputContext,
-                     std::shared_ptr<COperatorResultStore> resultStore,
-                     TScopeStack &scope)
+void CSolve::Compute(CProcessFlowContext& context)
 {
-  //      beginCompute(inputContext,resultStore,scope);
-  InitRanges(inputContext);
+  std::shared_ptr<const CInputContext> inputContext=context.GetInputContext();
+  std::shared_ptr<COperatorResultStore> resultStore=context.GetResultStore();
+  TScopeStack &scope=context.m_ScopeStack;
+    InitRanges(inputContext);
   std::shared_ptr<CSolveResult> result=std::shared_ptr<CSolveResult>(nullptr);  
   {
     CAutoScope autoscope(scope,m_name);
@@ -103,8 +103,8 @@ void CSolve::Compute(std::shared_ptr<const CInputContext> inputContext,
     saveToResultStore(result,resultStore);
   }
 
-  //endCompute(inputContext,resultStore,scope);
 }
+
 
 void CSolve::saveToResultStore(std::shared_ptr<CSolveResult> result,std::shared_ptr<COperatorResultStore> resultStore) const
 {

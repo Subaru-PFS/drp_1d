@@ -73,11 +73,12 @@ class CProcessFlowContext
 
 public:
 
-  CProcessFlowContext(std::shared_ptr<CSpectrum> spectrum,
-		      std::shared_ptr<CTemplateCatalog> templateCatalog,
-		      std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
+  CProcessFlowContext();
     ~CProcessFlowContext();
 
+  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_inputContext->setSpectrum(spectrum);}
+  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_inputContext->setTemplateCatalog(templateCatalog);}
+  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_inputContext->setPhotBandCatalog(photBandCatalog);}
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog) { m_inputContext->setLineCatalog(objectType,catalog);}
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog) { m_inputContext->setLineRatioCatalogCatalog(objectType,catalog);}
   void Init();
