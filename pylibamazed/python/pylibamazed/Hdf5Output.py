@@ -57,8 +57,6 @@ class Hdf5Output(AbstractOutput):
         self.parameters = parameters
         self.add_sup_columns = True
         self.object_types = self.parameters["objects"]
-        if self.parameters["enablelinemeassolve"]:
-            self.object_types.append("linemeas")
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
@@ -88,8 +86,6 @@ class Hdf5Output(AbstractOutput):
                 self.object_dataframes[object_type][ds] = pd.DataFrame(np.array(self.hdf5_group.get(object_type).get(ds)))
             
     def load_candidate_level(self, object_type):
-        if object_type == "linemeas":
-            return
         rs = results_specifications
         rs = rs[rs["level"] == "candidate"]
         candidate_datasets = list(rs["hdf5_dataset"].unique())
@@ -173,7 +169,9 @@ class Hdf5Output(AbstractOutput):
        manual_values["Rank"]=-2
        self.object_dataframes[object_type]["model_parameters"] =self.object_dataframes[object_type]["model_parameters"].append(pd.Series(manual_values),ignore_index=True)
 
-    def has_candidate_dataset(self,object_type, dataset):
+    def has_candidate_dataset(self, object_type, dataset):
+        if "candidates" in self.hdf5_group.get(object_type):
+            return False
         if "candidateA" in self.hdf5_group.get(object_type).get("candidates").keys():
             return dataset in self.hdf5_group.get(object_type).get("candidates").get("candidateA").keys()
         else:

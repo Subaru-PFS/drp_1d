@@ -61,7 +61,7 @@ class CResultStore;
 /**
  * \ingroup Redshift
  */
-  class CMethodTplcombinationSolve : public CBayesianSolve
+  class CTplcombinationSolve : public CObjectSolve
 {
 
  public:
@@ -74,7 +74,7 @@ class CResultStore;
              nType_all = 4,
     };
 
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
 
     const std::string GetDescription() const;
 

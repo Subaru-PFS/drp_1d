@@ -60,11 +60,11 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve: public CBayesianSolve
+class CLineModelSolve: public CObjectSolve
 {
 public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
 
     bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
@@ -180,8 +180,6 @@ private:
     std::string m_opt_saveintermediateresults;
     Float64 m_opt_secondpass_halfwindowsize;
 
-    std::string m_calibrationPath;
-    std::string m_outputPdfRelDir;
     Float64 m_redshiftSeparation;
 
 };

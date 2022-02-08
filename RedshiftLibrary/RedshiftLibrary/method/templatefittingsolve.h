@@ -59,7 +59,7 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-  class CMethodTemplateFittingSolve : public CBayesianSolve
+  class CTemplateFittingSolve : public CObjectSolve
 {
 
  public:
@@ -73,7 +73,7 @@ class CTemplateCatalog;
     };
 
 
-  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+  CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
 private:
 

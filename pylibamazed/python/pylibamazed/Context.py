@@ -42,8 +42,8 @@ from pylibamazed.ResultStoreOutput import ResultStoreOutput
 
 from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineModelSolve,
-                                  CMethodTemplateFittingSolve,
-                                  CMethodTplcombinationSolve,
+                                  CTemplateFittingSolve,
+                                  CTplcombinationSolve,
                                   CClassificationSolve,
                                   CReliabilitySolve,
                                   CLineMeasSolve)
@@ -85,8 +85,8 @@ class Context:
                 velocity_em = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityEmission"].iloc[0]
     #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
                 self.parameters[object_type]["redshiftref"] = redshift_ref
-                self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityabsorption"] = velocity_abs
-                self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityemission"] = velocity_em
+                self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
+                self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
         self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
         self.process_flow_context.Init()
 
@@ -113,35 +113,22 @@ class Context:
                     vel_e = output.get_attribute_from_result_store("VelocityEmission",
                                                                    "galaxy",
                                                                    0)
-                    self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityabsorption"] = vel_a
-                    self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityemission"] = vel_e
+                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = vel_a
+                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
                     self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
                 self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
         if enable_classification:
-            self.run_method("classification", "classification")
+            self.run_method("classification", "ClassificationSolve")
         if enable_reliability:
-            self.run_method("reliability", "reliability")
+            self.run_method("reliability", "ReliabilitySolve")
 
         return ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
 
     def run_method(self, object_type, method):
 
-        if method == "linemodelsolve":
-            solver = CLineModelSolve(self.process_flow_context.m_ScopeStack,
-                                     object_type,
-                                     self.config["calibration_dir"])
-        elif method == "templatefittingsolve":
-            solver = CMethodTemplateFittingSolve(self.process_flow_context.m_ScopeStack, object_type)
-        elif method == "tplcombinationsolve":
-            solver = CMethodTplcombinationSolve(self.process_flow_context.m_ScopeStack, object_type)
-        elif method == "linemeassolve":
-            solver = CLineMeasSolve(self.process_flow_context.m_ScopeStack,
-                                    object_type,
-                                    self.config["calibration_dir"])
-        elif method == "classification":
-            solver = CClassificationSolve(self.process_flow_context.m_ScopeStack, object_type)
-        elif method == "reliability":
-            solver = CReliabilitySolve(self.process_flow_context.m_ScopeStack, object_type)
-        else:
+        if "C" + method not in globals():
             raise Exception("Unkown method " + method)
+        solver_method = globals()["C" + method]
+        solver = solver_method(self.process_flow_context.m_ScopeStack,
+                               object_type)
         solver.Compute(self.process_flow_context)

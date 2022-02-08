@@ -45,7 +45,7 @@
 using namespace NSEpic;
 
 CReliabilitySolve::CReliabilitySolve(TScopeStack &scope,std::string objectType):
-  CSolve("reliability",scope,objectType)
+  CSolve("Reliability",scope,objectType)
 {
 }
 

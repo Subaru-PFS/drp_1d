@@ -44,17 +44,18 @@
 namespace NSEpic
 {
 
-  class CBayesianSolve : public CSolve
+  class CObjectSolve : public CSolve
   {
   public:
-    CBayesianSolve(std::string name,TScopeStack &scope,std::string objectType)
+    using CSolve::CSolve;
+    /*    CObjectSolve(std::string name,TScopeStack &scope,std::string objectType)
       :CSolve(name,scope,objectType)
-    {}
-    virtual ~CBayesianSolve()=default;
-    CBayesianSolve(CBayesianSolve const& other) = default;
-    CBayesianSolve& operator=(CBayesianSolve const& other) = default;
-    CBayesianSolve(CBayesianSolve&& other) = default;
-    CBayesianSolve& operator=(CBayesianSolve&& other) = default;
+      {}*/
+    virtual ~CObjectSolve()=default;
+    CObjectSolve(CObjectSolve const& other) = default;
+    CObjectSolve& operator=(CObjectSolve const& other) = default;
+    CObjectSolve(CObjectSolve&& other) = default;
+    CObjectSolve& operator=(CObjectSolve&& other) = default;
 
   protected:
     void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;

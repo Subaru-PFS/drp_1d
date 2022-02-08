@@ -43,9 +43,8 @@
 namespace NSEpic
 {
 
-  CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CBayesianSolve("linemeassolve",scope,objectType),
-    m_calibrationPath(calibrationPath)
+  CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("LineMeasSolve",scope,objectType)
 {
 }
 
@@ -70,24 +69,26 @@ namespace NSEpic
                                                         TScopeStack &scope)
   {
     
-    CLineModelSolution cms;
+    CLineModelSolution bestModelSolution;
+    CContinuumModelSolution bestContinuumModelSolution;
     {
       CAutoScope autoscope(scope,"linemodel");
 
-      cms =m_linemodel.computeForLineMeas(inputContext,m_calibrationPath,m_redshifts);
+      bestModelSolution = m_linemodel.computeForLineMeas(inputContext,
+							 m_redshifts);
     }
-    cms.fillRayIds();
+    bestModelSolution.fillRayIds();
     /*
     const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
 
-    std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(cms,
-                                                                                    cms.Redshift,
+    std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(bestModelSolution,
+                                                                                    bestModelSolution.Redshift,
                                                                                     1,
                                                                                     restRayList
                                                                                     );
     */
-    std::shared_ptr<CLineModelSolution> res = std::make_shared<CLineModelSolution>(cms);
+     std::shared_ptr<const CLineModelSolution> res = std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
     resultStore->StoreScopedGlobalResult("linemeas",res);
     resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
     resultStore->StoreScopedGlobalResult("linemeas_model",m_linemodel.getFittedModel());

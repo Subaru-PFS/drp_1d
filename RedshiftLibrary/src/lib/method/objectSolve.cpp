@@ -41,7 +41,7 @@
 
 using namespace NSEpic;
 
-void CBayesianSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
+void CObjectSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 

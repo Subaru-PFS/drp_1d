@@ -67,9 +67,8 @@ using namespace boost;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CBayesianSolve("linemodelsolve",scope,objectType),
-    m_calibrationPath(calibrationPath)
+CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("LineModelSolve",scope,objectType)
 {
 }
 
@@ -854,7 +853,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                     rebinnedSpc,
                                                     tplCatalog,
                                                     tplCategoryList,
-                                                    m_calibrationPath,
                                                     restRayList,
                                                     tplRatioCatalog,
                                                     lambdaRange,
@@ -946,7 +944,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                             rebinnedSpc,
                                                             tplCatalog,
                                                             tplCategoryList,
-                                                            m_calibrationPath,
                                                             restRayList,
                                                             tplRatioCatalog,
                                                             lambdaRange,
@@ -1013,7 +1010,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                                                           rebinnedSpc,
                                                           tplCatalog,
                                                           tplCategoryList,
-                                                          m_calibrationPath,
                                                           lambdaRange,
                                                           photBandCat,
                                                           photo_weight,

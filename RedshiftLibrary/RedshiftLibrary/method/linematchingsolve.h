@@ -57,7 +57,7 @@ class CParameterStore;
  * \class CMethodLineMatchingSolve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-  class CMethodLineMatchingSolve: public CBayesianSolve
+  class CMethodLineMatchingSolve: public CObjectSolve
 {
 
 public:

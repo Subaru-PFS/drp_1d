@@ -66,8 +66,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
 {
   bfs::path noisePath;
   bfs::path linecatalogPath;
-  bfs::path calibrationPath;
-  string unused_calibrationPath = "";
+
   Int32 lineTypeFilter = CRay::nType_Emission;
   Int32 forceFilter = CRay::nForce_Strong;
   string opt_lineWidthType = "velocitydriven";
@@ -103,8 +102,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
   spectrum.SetLSF(lsf);
 
-generate_template_catalog(tplCatalog, 100, 3500., 12500.);
-  calibrationPath = generate_calibration_dir();
+  generate_template_catalog(tplCatalog, 100, 3500., 12500.);
   TAsymParams asymP;
   /* //TODO restore this test , for the moment if linecatalog is not empty, test will fail with follogin message: fatal error: in "test_elementlist/Constructor": NSEpic::GlobalException: Could not find template with name fromspectrum
 
@@ -183,7 +181,7 @@ generate_template_catalog(tplCatalog, 100, 3500., 12500.);
  CLineModelFitting model_nocontinuum( spectrum,
 				      range,
 				      tplCatalog, tplCategories,
-				      calibrationPath.c_str(), lineList,
+				       lineList,
 				      "lmfit", "nocontinuum",-INFINITY,
 				      opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
 				      opt_velocityAbsorption, opt_rules, opt_rigidity);
@@ -193,7 +191,6 @@ generate_template_catalog(tplCatalog, 100, 3500., 12500.);
 				       range,
 				       tplCatalog,
 				       tplCategories,
-				       calibrationPath.c_str(),
 				       lineList,
 				       "lmfit",
 				       "fromspectrum",
@@ -212,7 +209,7 @@ generate_template_catalog(tplCatalog, 100, 3500., 12500.);
   CLineModelFitting model_tplfit(    spectrum,
                                      range,
                                      tplCatalog, tplCategories,
-   				                           calibrationPath.c_str(), lineList,
+   				                           lineList,
    				                           "lmfit", "tplfit", -5.0,
                                      opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
    				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
@@ -239,7 +236,6 @@ generate_template_catalog(tplCatalog, 100, 3500., 12500.);
 
   bfs::remove(noisePath);
   bfs::remove(linecatalogPath);
-  bfs::remove_all(calibrationPath);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

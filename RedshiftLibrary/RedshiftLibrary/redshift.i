@@ -798,7 +798,7 @@ class CSolve{
     void Compute(CProcessFlowContext& context);
 };
 
-class CBayesianSolve{
+class CObjectSolve{
  public:
   CSolve()=delete;
     void Compute(CProcessFlowContext& context);
@@ -819,31 +819,31 @@ class CBayesianSolve{
 
     CReliabilitySolve(TScopeStack &scope,std::string objectType);
   };
-  class CLineModelSolve:public CBayesianSolve
+  class CLineModelSolve:public CObjectSolve
   {
 
   public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
   };
-  class CLineMeasSolve:public CBayesianSolve
+  class CLineMeasSolve:public CObjectSolve
   {
 
   public:
 
-    CLineMeasSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+    CLineMeasSolve(TScopeStack &scope,std::string objectType);
   };
 
-  class CMethodTemplateFittingSolve : public CBayesianSolve
+  class CTemplateFittingSolve : public CObjectSolve
 {
   public:
 
-    CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
   };
 
-class CMethodTplcombinationSolve : public CBayesianSolve
+class CTplcombinationSolve : public CObjectSolve
 {
 
  public:
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
 };

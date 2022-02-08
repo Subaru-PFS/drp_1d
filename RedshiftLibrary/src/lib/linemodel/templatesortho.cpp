@@ -51,15 +51,14 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     m_LSF = lsf;
     m_enableOrtho = inputContext.GetParameterStore()->EnableTemplateOrthogonalization(category);
 
-    std::string widthType = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linewidthtype"); 
-    Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.nsigmasupport");
-    Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityemission");
-    Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityabsorption");
-    std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rules");
-    std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rigidity");
-    std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linetypefilter");
-    std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.lineforcefilter");
-    const std::string calibrationPath = inputContext.GetParameterStore()->Get<std::string>("calibrationDir");
+    std::string widthType = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.linewidthtype"); 
+    Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.nsigmasupport");
+    Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.velocityemission");
+    Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.velocityabsorption");
+    std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.rules");
+    std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.rigidity");
+    std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.linetypefilter");
+    std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.lineforcefilter");
     std::string rigidity = opt_rigidity.c_str();
     std::string rules = opt_rules.c_str();
     //temporary options override to be removed when full tpl ortho is implemented
@@ -149,7 +148,6 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
             if (partial && tplCatalog->GetTemplate(category, i)) break; //ortho template  is already there  
             Log.LogDetail(Formatter()<<"    TplOrthogonalization: now processing tpl"<<tpl.GetName() );
             std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(tpl,
-                                                                        calibrationPath,
                                                                         restRayList,
                                                                         opt_fittingmethod,
                                                                         widthType,
@@ -178,7 +176,6 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
  * @return
  */
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputTemplate,
-                            const std::string opt_calibrationPath,
                             const CRayCatalog::TRayVector &restRayList,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_lineWidthType,
@@ -212,7 +209,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
                                      lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
-                                     opt_calibrationPath,
                                      restRayList,
                                      opt_fittingmethod,
                                      opt_continuumcomponent,

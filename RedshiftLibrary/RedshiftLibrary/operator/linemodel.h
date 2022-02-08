@@ -82,7 +82,6 @@ public:
                                 const CSpectrum &logSampledSpectrum,
                                 const CTemplateCatalog &tplCatalog,
                                 const TStringList &tplCategoryList,
-                                const std::string opt_calibrationPath,
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -94,7 +93,6 @@ public:
                            const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
                            const TStringList &tplCategoryList,
-                           const std::string opt_calibrationPath,
                            const CRayCatalog::TRayVector& restraycatalog,
                            const CRayCatalogsTplShape& tplRatioCatalog,
                            const TFloat64Range& lambdaRange,
@@ -122,7 +120,6 @@ public:
                             const CSpectrum &logSampledSpectrum,
                             const CTemplateCatalog &tplCatalog,
                             const TStringList &tplCategoryList,
-                            const std::string opt_calibrationPath,
                             const TFloat64Range& lambdaRange,
                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                             const Float64 photo_weight,
@@ -160,9 +157,7 @@ public:
                                     const Int32 tplfit_option,
                                     const bool overrideRecomputeOnlyOnTheCandidate=false);
   CLineModelSolution computeForLineMeas(std::shared_ptr<const CInputContext> context,
-                          std::string calibrationDir,
-                          TFloat64List& redshiftsGrid);
-  
+					const TFloat64List& redshiftsGrid);
   std::shared_ptr<const LineModelExtremaResult> saveFirstPassExtremaResults(const TCandidateZbyRank & zCandidates); 
   std::shared_ptr<LineModelExtremaResult> SaveExtremaResults(const CSpectrum& spectrum,
                                                          const TFloat64Range& lambdaRange,

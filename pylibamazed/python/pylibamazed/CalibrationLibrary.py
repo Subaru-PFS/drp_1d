@@ -253,7 +253,7 @@ class CalibrationLibrary:
             method = self.parameters[object_type]["method"]
             if not method:
                 method = self.parameters[object_type]["linemeas_method"]
-            if method == "linemodelsolve" or method == "linemeassolve":
+            if method == "LineModelSolve" or method == "LineMeasSolve":
                 self.load_linecatalog(object_type,method)
                 if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
                     self.load_line_ratio_catalog_list(object_type, method)

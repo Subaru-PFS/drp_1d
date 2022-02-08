@@ -84,7 +84,6 @@ public:
                         const TFloat64Range& lambdaRange,
                         const CTemplateCatalog& tplCatalog,
                         const TStringList& tplCategoryList,
-                        const std::string calibrationPath,
                         const CRayCatalog::TRayVector& restRayList,
                         const std::string& opt_fittingmethod,
                         const std::string &opt_continuumcomponent,
@@ -416,7 +415,6 @@ private:
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
 
-    std::string m_calibrationPath;
     std::string m_fittingmethod;
 
     std::string m_rulesoption;
