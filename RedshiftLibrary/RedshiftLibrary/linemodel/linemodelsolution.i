@@ -44,18 +44,18 @@
   CLineModelSolution();
  
   
-    std::vector<Float64> ElementId;     //id of the linemodel element it is part of
-    std::vector<Float64> Amplitudes;
+    TFloat64List ElementId;     //id of the linemodel element it is part of
+    TFloat64List Amplitudes;
     std::vector<CRay> Rays;
-    std::vector<Float64> Errors;    //noise sigma
-    std::vector<Float64> FittingError;    //ModelLeastSquare error under each line
-    std::vector<Float64> CenterContinuumFlux;    //Continuum flux value at the center of each line
-    std::vector<Float64> ContinuumError;    //Continuum error value for each line
-    std::vector<Float64> Sigmas;    //width for each line
-    std::vector<Float64> Fluxs;    //Flux for each line
-    std::vector<Float64> FluxErrors;    //Flux error for each line
-    std::vector<Float64> FluxDirectIntegration;    //Flux obtained by direct integration for each line
-    std::vector<Float64> FluxDirectIntegrationError;    //Flux obtained by direct integration for each line
+    TFloat64List Errors;    //noise sigma
+    TFloat64List FittingError;    //ModelLeastSquare error under each line
+    TFloat64List CenterContinuumFlux;    //Continuum flux value at the center of each line
+    TFloat64List ContinuumError;    //Continuum error value for each line
+    TFloat64List Sigmas;    //width for each line
+    TFloat64List Fluxs;    //Flux for each line
+    TFloat64List FluxErrors;    //Flux error for each line
+    TFloat64List FluxDirectIntegration;    //Flux obtained by direct integration for each line
+    TFloat64List FluxDirectIntegrationError;    //Flux obtained by direct integration for each line
     std::vector<Int32> rayId;
 
     Float64 snrHa;
@@ -64,9 +64,9 @@
     Float64 lfOII;
     Int32 NLinesAboveSnrCut;
 
-    std::vector<Float64> LambdaObs;  //observed position in Angstrom
-    std::vector<Float64> Velocity;  //dispersion velocity in km/s
-    std::vector<Float64> Offset;    //line offset in km/s
+    TFloat64List LambdaObs;  //observed position in Angstrom
+    TFloat64List Velocity;  //dispersion velocity in km/s
+    TFloat64List Offset;    //line offset in km/s
     std::vector<bool> OutsideLambdaRange;
     std::vector<TInt32Range> fittingIndexRange;
     std::vector<std::string> fittingGroupInfo;
@@ -80,7 +80,6 @@
     Float64 Redshift;
 
     Int32 nDDL;
-
     void fillRayIds();
       
 };

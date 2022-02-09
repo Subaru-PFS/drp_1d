@@ -5450,7 +5450,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
         if(opt_level)// brief, to save processing time, do not estimate fluxes and high level line properties
         {
             modelSolution.FittingError[iRestRay] = m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis());
-            TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
+            TPolynomCoeffs polynom_coeffs =  getPolynomCoeffs(eIdx);
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
                                             m_SpectrumModel.GetSpectralAxis(), 
                                             m_Redshift, 
@@ -5557,6 +5557,14 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     return modelSolution;
 }
 
+/**
+ * @brief Look for polynom coeffs corresponding to one specific Line
+ * Here,we assume that we already fitted one line at a time, which is not really the case
+ * TODO: take into consideration lines fitted together for the element in question
+ * 
+ * @param eIdx 
+ * @return TPolynomCoeffs 
+ */
 TPolynomCoeffs CLineModelFitting::getPolynomCoeffs(Int32 eIdx)
 {
     TUInt32List xInds = m_Elements.getSupportIndexes( {UInt32(eIdx)} );
