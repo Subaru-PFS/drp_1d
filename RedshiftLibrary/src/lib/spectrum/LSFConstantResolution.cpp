@@ -60,3 +60,8 @@ bool CLSFGaussianConstantResolution::IsValid() const
 {
     return (m_Resolution>1.);
 }
+
+Float64 CLSFGaussianConstantResolution::computeResolution(Float64 lambda, Float64 width)
+{
+    return lambda/width * m_instrumentResolutionEmpiricalFactor;
+}
