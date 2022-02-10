@@ -100,7 +100,6 @@
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
 #include "RedshiftLibrary/ray/lineRatioCatalog.h"
@@ -126,6 +125,12 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/linemeassolve.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/reliabilitysolve.h"
+#include "RedshiftLibrary/method/classificationsolve.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -374,17 +379,21 @@ public:
 
 class CProcessFlowContext {
 public:
-  CProcessFlowContext(std::shared_ptr<CSpectrum> spectrum,
-            std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
+  CProcessFlowContext();
   void Init();
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog); 
+  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
 
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
   void testResultStore();
+  TScopeStack  m_ScopeStack;
+
 };
+
 
 
 class CParameterStore : public CScopeStore
@@ -396,13 +405,6 @@ class CParameterStore : public CScopeStore
 };
 
 %template(Get_string) CParameterStore::Get<std::string>;
-
-class CProcessFlow {
-public:
-  CProcessFlow();
-  void Process( CProcessFlowContext& ctx );
-};
-
 
 class COperatorResultStore
 {
@@ -788,4 +790,51 @@ class CSolveDescription
   static const std::string GetDescription(const std::string& method);
 };
 
+class CSolve{
+ public:
+  CSolve()=delete;
+    void Compute(CProcessFlowContext& context);
+};
+  class CClassificationSolve:public CSolve
+  {
 
+  public:
+
+    CClassificationSolve(TScopeStack &scope,std::string objectType);
+
+  };
+  class CReliabilitySolve:public CSolve
+  {
+
+  public:
+
+    CReliabilitySolve(TScopeStack &scope,std::string objectType);
+  };
+  class CLineModelSolve:public CSolve
+  {
+
+  public:
+
+    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+  };
+  class CLineMeasSolve:public CSolve
+  {
+
+  public:
+
+    CLineMeasSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+  };
+
+  class CMethodTemplateFittingSolve : public CSolve
+{
+  public:
+
+    CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+  };
+
+class CMethodTplcombinationSolve : public CSolve
+{
+
+ public:
+  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+};

@@ -146,7 +146,7 @@ class AbstractSpectrumReader:
         self.load_error(resource)
         self.load_lsf(resource)
         self.load_photometry(resource)
-        self.init()
+
 
     def get_spectrum(self):
         """
@@ -255,7 +255,8 @@ class AbstractSpectrumReader:
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[0].SetName(self.source_id)
 
-        ctx = CProcessFlowContext(self._spectra[0],CTemplateCatalog())
+        ctx = CProcessFlowContext()
+        ctx.setSpectrum(self._spectra[0])
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type

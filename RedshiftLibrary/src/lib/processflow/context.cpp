@@ -59,33 +59,12 @@ static void NewHandler(const char* reason,
     return ;
 }
 
-CProcessFlowContext::CProcessFlowContext(std::shared_ptr<CSpectrum> spectrum,
-                               std::shared_ptr<CTemplateCatalog> templateCatalog,
-                               std::shared_ptr<CPhotBandCatalog> photBandCatalog)
+CProcessFlowContext::CProcessFlowContext()
 {
     gsl_set_error_handler(NewHandler);
     m_parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
     m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-    try
-      {
-	m_inputContext = std::make_shared<CInputContext>( spectrum,
-							  templateCatalog,
-							  photBandCatalog,
-							  m_parameterStore);
-      }
-    catch(GlobalException const&e)
-      {
-	throw e;
-      }    
-    catch(ParameterException const&e)
-      {
-	throw e;
-      }    
-    catch(std::exception const&e)
-      {
-	throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
-      }    
-
+    m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
 CProcessFlowContext::~CProcessFlowContext()

@@ -40,7 +40,7 @@
 #define _SOLVE_H_
 
 #include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
@@ -82,14 +82,7 @@ namespace NSEpic
     CSolve(CSolve&& other) = default;
     CSolve& operator=(CSolve&& other) = default;
 
-    void Compute(std::shared_ptr<const CInputContext> inputContext,
-                 std::shared_ptr<COperatorResultStore> resultStore,
-                 TScopeStack &scope);
-
-    
-    
-   
-
+    void Compute(CProcessFlowContext& context);
     
   };
 
