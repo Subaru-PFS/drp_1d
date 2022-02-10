@@ -368,8 +368,8 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     // store PDF results
     Log.LogInfo("%s: Storing PDF results", __func__);
 
-    resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); //need to store this pdf with this exact same name so that zqual can load it. see zqual.cpp/ExtractFeaturesPDF
-
+    resultStore->StoreScopedGlobalResult( "pdf", pdfz.m_postmargZResult); 
+    
     TFloat64Range clampedlambdaRange; 
     spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange );
     // Get linemodel results at extrema (recompute spectrum model etc.)
@@ -900,6 +900,11 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     std::shared_ptr<PdfCandidatesZResult> candResult_fp = pdfz.Compute(chisquares, false);
     m_linemodel.SetFirstPassCandidates(candResult_fp->m_ranked_candidates);
 
+    //save firstpass pdf
+    //do the necessary to pass a pdf with 1E-3 precision only
+    const std::shared_ptr<const CPdfMargZLogResult> coarsePDFZ = pdfz.compressFirstpassPDF(m_opt_firstpass_largegridstepRatio);
+    resultStore->StoreScopedGlobalResult( "firstpass_pdf", coarsePDFZ);
+
     //**************************************************
     //FIRST PASS + CANDIDATES - B
     //**************************************************
@@ -987,6 +992,7 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         std::shared_ptr<PdfCandidatesZResult> candResult = pdfz.Compute(chisquares, false);
         
         linemodel_fpb.SetFirstPassCandidates(candResult->m_ranked_candidates);
+        //resultStore->StoreScopedGlobalResult( "firstpassb_pdf", pdfz.m_postmargZResult);
 
         //**************************************************
         //COMBINE CANDIDATES

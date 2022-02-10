@@ -43,7 +43,7 @@ import pandas as pd
 import resource
 from collections import defaultdict
 from pylibamazed.redshift import PC_Get_Float64Array, PC_Get_Int32Array, CLog
-
+#from pylibamazed.redshift import PC_Get_Float32Array #TODO ask Ali how to define this latter in the lib
 zlog = CLog.GetInstance()
 
 
@@ -173,11 +173,18 @@ class ResultStoreOutput(AbstractOutput):
             if self.has_dataset(object_type, ds):
                 ds_size = self.get_dataset_size(object_type, ds)
                 if ds_size > 1:
-                    object_results_node.create_dataset(ds,
-                                                  (ds_size,),
-                                                  ds_datatype,
-                                                  self.object_dataframes[object_type][ds].to_records()
-                                                  )
+                    if ds == "firstpass_pdf":#compress firstpass pdf
+                        object_results_node.create_dataset(ds,
+                                                        (ds_size,),
+                                                        ds_datatype,
+                                                        self.object_dataframes[object_type][ds].to_records(),
+                                                        compression="lzf")
+                    else:
+                        object_results_node.create_dataset(ds,
+                                (ds_size,),
+                                ds_datatype,
+                                self.object_dataframes[object_type][ds].to_records())
+
                 else:
                     object_results_node.create_group(ds)
                     for index,ds_row in ds_attributes.iterrows():
@@ -240,7 +247,9 @@ class ResultStoreOutput(AbstractOutput):
         else:
             if data_spec.hdf5_type == 'f8':
                 return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))
-            else:
+            if data_spec.hdf5_type == 'f4':#this should be Float32Array..to be corrected
+                return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))
+            if data_spec.hdf5_type == 'i':
                 return PC_Get_Int32Array(getattr(operator_result, data_spec.OperatorResult_name))
 
     def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
