@@ -352,6 +352,7 @@ public:
 
 };
 
+%template(TMapFloat64) std::map<std::string, Float64>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"

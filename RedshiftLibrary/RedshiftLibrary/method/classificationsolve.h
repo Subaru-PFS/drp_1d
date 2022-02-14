@@ -60,7 +60,7 @@ namespace NSEpic
                                           std::shared_ptr<COperatorResultStore> resultStore,
                  TScopeStack &scope) override;
     
-    std::string typeLabel = "U";//"G"/"S"/"Q"
+    std::string typeLabel = "U";
 
 
   };

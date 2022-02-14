@@ -71,7 +71,7 @@ void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputConte
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
   if (m_objectType == "star" || m_objectType=="qso" ||
-      m_objectType=="galaxy" || m_objectType=="linemeas")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class
+      m_objectType=="galaxy" || m_objectType=="linemeas")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class -> what do we choose ?
     {
       m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 

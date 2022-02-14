@@ -35,12 +35,8 @@ lfOII	model_parameters	f8	extrema_results	mono	False	candidate	lfOII	double
 snrOII	model_parameters	f8	extrema_results	mono	False	candidate	snrOII	double
 lfHa	model_parameters	f8	extrema_results	mono	False	candidate	lfHa	double
 snrHa	model_parameters	f8	extrema_results	mono	False	candidate	snrHa	double
-GalaxyEvidence	classification	f8	solveResult	mono	False	root	m_evidence_galaxy	double
-StarEvidence	classification	f8	solveResult	mono	False	root	m_evidence_star	double
-QSOEvidence	classification	f8	solveResult	mono	False	root	m_evidence_qso	double
-GalaxyProba	classification	f8	solveResult	mono	False	root	m_prob_galaxy	double
-StarProba	classification	f8	solveResult	mono	False	root	m_prob_star	double
-QSOProba	classification	f8	solveResult	mono	False	root	m_prob_qso	double
+<ObjectType>Evidence	classification	f8	solveResult	mono	False	root	m_evidences[object_type]	double
+<ObjectType>Proba	classification	f8	solveResult	mono	False	root	m_proba[object_type]	double
 Type	classification	S1	solveResult	mono	False	root	m_TypeLabel	string
 PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts	list[double]
 PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]
@@ -76,3 +72,5 @@ FirstpassFittedTemplateDtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mo
 FirstpassFittedTemplateMtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplMtm	double
 FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]
 FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]
+FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]	0
+FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]	0

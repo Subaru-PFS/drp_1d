@@ -79,11 +79,12 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
+  // Use an std::map here
     bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
     bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
     bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
     
-    if(fft_processing_star)
+    if(fft_processing["star"])
     {
         throw GlobalException(INTERNAL_ERROR,"FFT processing is not yet supported for stars");
     }
