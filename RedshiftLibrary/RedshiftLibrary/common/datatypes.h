@@ -107,8 +107,10 @@ constexpr typename std::add_const<T>::type& as_const(T& t) noexcept {return t;};
 
 template <class T>
 void as_const(const T&&) = delete;
+
 typedef struct{Float64 x0; Float64 x1; Float64 x2;}TPolynomCoeffs;
-  
+
+static const Int32 undefIdx = -1;
 } // namespace NSEpic
 
 #endif

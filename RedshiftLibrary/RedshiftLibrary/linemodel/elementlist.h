@@ -42,8 +42,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 
 namespace NSEpic
-{
-  static Int32 defaultIdx = -1;
+{ 
   class CLineModelElementList 
   {
   private:
@@ -68,11 +67,14 @@ namespace NSEpic
 
      void SetSourcesizeDispersion(Float64 sizeArcsec);
     
-    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
+    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType);
 
-    Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr, Int32 linetype=-1, Int32& lineIdx=defaultIdx);
-
+    Int32 findElementIndex(const std::string& LineTagStr,Int32 linetype = -1);
+    Int32 findElementIndex(const std::string& LineTagStr, 
+                          Int32 linetype, 
+                          Int32& lineIdx);
+    Int32 findElementIndex(Int32 LineCatalogIndex, 
+                           Int32& lineIdx);
     Float64 getModelErrorUnderElement( UInt32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis);
 
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);

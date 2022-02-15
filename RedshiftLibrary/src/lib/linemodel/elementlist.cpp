@@ -388,14 +388,16 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
 }
 
 /**
- * \brief Returns the first index of m_Elements where calling the element's FindElementIndex method with LineCatalogIndex argument does not return -1.
+ * \brief Returns the first index of m_Elements where calling the element's findElementIndex method with LineCatalogIndex argument does not return -1.
+ * Returns also the line index
  **/
-Int32 CLineModelElementList::FindElementIndex(Int32 LineCatalogIndex)
+Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex, Int32& lineIdx)
 {
-    Int32 idx = -1;
+    Int32 idx = undefIdx;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-    {
-        if(m_Elements[iElts]->FindElementIndex(LineCatalogIndex) !=-1){
+    {   
+        lineIdx = m_Elements[iElts]->findElementIndex(LineCatalogIndex);
+        if( lineIdx!=undefIdx){
             idx = iElts;
             break;
         }
@@ -404,26 +406,29 @@ Int32 CLineModelElementList::FindElementIndex(Int32 LineCatalogIndex)
 }
 
 /**
- * \brief Returns the first index of m_Elements where calling the element's FindElementIndex method with LineTagStr argument does not return -1.
+ * \brief Returns the first index of m_Elements where calling the element's findElementIndex method with LineTagStr argument does not return -1.
  **/
-Int32 CLineModelElementList::FindElementIndex(std::string LineTagStr, Int32 linetype, Int32& lineIdx )
+Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype, Int32& lineIdx )
 {
-    Int32 idx = -1;
+    Int32 idx = undefIdx;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        lineIdx = m_Elements[iElts]->FindElementIndex(LineTagStr) ;
-        if( lineIdx!=-1 ){
-            if( linetype!=-1 )
-            {
-                if(m_Elements[iElts]->m_Rays[lineIdx].GetType() != linetype){
-                    continue;
-                }
-            }
-            idx = iElts;
-            break;
-        }
+        lineIdx = m_Elements[iElts]->findElementIndex(LineTagStr);
+        if(lineIdx == undefIdx) continue;
+
+        if( linetype!=-1 && m_Elements[iElts]->m_Rays[lineIdx].GetType() != linetype)
+            continue;
+
+        idx = iElts;
+        break;
     }
     return idx;
+}
+
+Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype)
+{
+    Int32 lineIdx = undefIdx;
+    return findElementIndex(LineTagStr, linetype, lineIdx);
 }
 
 /**
@@ -637,3 +642,4 @@ void CLineModelElementList::debug(std::ostream& os) const
 {
   for (const std::shared_ptr<CLineModelElement> &elt:m_Elements) elt->debug(os);
 }
+
