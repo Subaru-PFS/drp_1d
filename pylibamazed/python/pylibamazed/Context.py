@@ -91,12 +91,11 @@ class Context:
 
         enable_classification = False
         enable_reliability = True
-        for object_type in ["galaxy", "star", "qso"]:
-            if self.parameters["enable"+object_type+"solve"]:
-                method = self.parameters[object_type]["method"]
-                self.run_method(object_type, method)
-                enable_classification = True
-                enable_reliability = True
+        for object_type in self.parameters["objects"]:
+            method = self.parameters[object_type]["method"]
+            self.run_method(object_type, method)
+            enable_classification = True
+            enable_reliability = True
         if self.parameters["enablelinemeassolve"]:
             self.run_method("linemeas","linemeassolve")
         if enable_classification:

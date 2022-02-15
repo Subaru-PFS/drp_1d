@@ -37,7 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/exception.h"
-
+#include <boost/stacktrace.hpp>
+#include <sstream>
 using namespace NSEpic;
 
 
@@ -45,10 +46,10 @@ AmzException::AmzException(ErrorCode ec,std::string message):
   _msg(message),
   code(ec)
 {
-  //std::ostringstream os;
-  //os << boost::stacktrace::stacktrace();
-  //stacktrace =  os.str();
-  stacktrace = "";
+  std::ostringstream os;
+  os << boost::stacktrace::stacktrace();
+  stacktrace =  os.str();
+  //stacktrace = "";
 }
 
 AmzException::AmzException(const AmzException& e):

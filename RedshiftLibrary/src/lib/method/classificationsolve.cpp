@@ -73,6 +73,7 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
 	  MaxLogEvidence = logEvidences[category];
 	  typeLabel = category;
 	}
+    }
     Log.LogInfo( "Setting object type: %s", typeLabel.c_str());
     // compute  proba 
     Float64 Pgal = 0.;

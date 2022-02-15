@@ -59,15 +59,7 @@ class ResultStoreOutput(AbstractOutput):
                                      dtype={'format': object}
                                      )
         
-        self.object_types = []
-        if self.parameters["enablegalaxysolve"]:
-            self.object_types.append("galaxy")
-        if self.parameters["enablestarsolve"]:
-            self.object_types.append("star")
-        if self.parameters["enableqsosolve"]:
-            self.object_types.append("qso")
-        if self.parameters["enablelinemeassolve"]:
-            self.object_types.append("linemeas")
+        self.object_types = self.parameters["objects"]
             
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
@@ -84,8 +76,14 @@ class ResultStoreOutput(AbstractOutput):
         for ds in root_datasets:
             ds_attributes = rs[rs["hdf5_dataset"] == ds]
             self.root_results[ds]=dict()
-            for index,ds_row in ds_attributes.iterrows():
-                self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row)
+            for index, ds_row in ds_attributes.iterrows():
+                if "<" in ds_row["hdf5_name"]:
+                    for object_type in self.parameters["objects"]:
+                        attr_name = ds_row["hdf5_name"].replace("<ObjectType>", object_type)
+                        self.root_results[ds][attr_name] = self.get_attribute_from_result_store(ds_row,
+                                                                                                object_type=object_type)
+                else:
+                    self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row)
 
     def load_object_level(self, object_type):
         rs = self.results_specifications
@@ -243,7 +241,11 @@ class ResultStoreOutput(AbstractOutput):
     def get_attribute_from_result_store(self,data_spec,object_type=None,rank=None):
         operator_result = self.get_operator_result(data_spec,object_type,rank)
         if data_spec.dimension == "mono":
-            return getattr(operator_result, data_spec.OperatorResult_name)
+            if "[" in data_spec.OperatorResult_name:
+                operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
+                return getattr(operator_result, operator_result_name)[object_type]
+            else:
+                return getattr(operator_result, data_spec.OperatorResult_name)
         else:
             if data_spec.hdf5_type == 'f8':
                 return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))

@@ -37,7 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/linemodel/calibrationconfig.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/ray/catalogsTplShape.h"
 #include "RedshiftLibrary/ray/linetags.h"

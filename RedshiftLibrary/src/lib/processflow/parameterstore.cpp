@@ -165,7 +165,7 @@ void CParameterStore::FromString(const std::string& json)
 bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 {
     bool fft_processing = false;
-    if(!Get<bool>("enable"+ objectType +"solve")) return false;
+
     if(Has<bool>(objectType + ".templatefittingsolve.fftprocessing"))
         fft_processing |= Get<bool>(objectType + ".templatefittingsolve.fftprocessing");
     if(Has<bool>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
@@ -176,7 +176,7 @@ bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 
 bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
 {  
-    bool orthogonalize = Get<bool>("enable"+ objectType +"solve") && Get<std::string>(objectType + ".method") == "linemodelsolve";
+    bool orthogonalize = Get<std::string>(objectType + ".method") == "linemodelsolve";
     if(orthogonalize){
         std::string continuumComponent = Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumcomponent");
         orthogonalize &= (continuumComponent == "tplfit" || continuumComponent == "tplfitauto" );
