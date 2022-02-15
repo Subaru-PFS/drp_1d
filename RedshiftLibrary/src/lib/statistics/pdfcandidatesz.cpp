@@ -299,7 +299,7 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
   while (!fitSuccessful && iTry < nTry) {
     Int32 retFit =
         getCandidateGaussFit(redshifts, valprobalog, current_zrange, candidate);
-    if (!retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
+    if (retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
         std::abs(candidate->GaussSigma / candidate->GaussSigmaErr) > 1e-2) {
       fitSuccessful = true;
     } else {
