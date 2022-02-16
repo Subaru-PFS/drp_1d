@@ -58,7 +58,7 @@ using namespace std;
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
 CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType):
-  CSolve("linematchingsolve",scope,objectType)
+  CObjectSolve("linematchingsolve",scope,objectType)
 {    
   Log.LogDebug ( "CMethodLineMatchingSolve::CMethodLineMatchingSolve()" );
 

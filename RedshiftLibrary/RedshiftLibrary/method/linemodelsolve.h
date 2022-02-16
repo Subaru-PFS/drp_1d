@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/bayesianSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/linemodel.h"
@@ -60,7 +60,7 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve: public CSolve
+class CLineModelSolve: public CBayesianSolve
 {
 public:
 

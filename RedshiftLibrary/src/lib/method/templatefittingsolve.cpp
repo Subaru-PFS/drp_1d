@@ -56,7 +56,7 @@ using namespace NSEpic;
 using namespace std;
 
 CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,string objectType):
-  CSolve("templatefittingsolve",scope,objectType)
+  CObjectSolve("templatefittingsolve",scope,objectType)
 {
 }
 

@@ -36,45 +36,28 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/exception.h"
-//#include <boost/stacktrace.hpp>
-#include <sstream>
+
+#include "RedshiftLibrary/method/bayesianSolve.h"
+
 using namespace NSEpic;
 
-
-AmzException::AmzException(ErrorCode ec,std::string message):
-  _msg(message),
-  code(ec)
+void CBayesianSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
-  //std::ostringstream os;
-  //os << boost::stacktrace::stacktrace();
-  //stacktrace =  os.str();
-  stacktrace = "";
-}
+  m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 
-AmzException::AmzException(const AmzException& e):
-  _msg(e._msg),
-  code(e.code),
-  stacktrace(e.stacktrace)
-{
-}
+  //m_redshiftSampling could be overwritten if fftprocessing is activated
+  // Warning for LineMeas :  we consider linemeas use the same redshiftsampling as the objectMethod
+  // if linemeas is called in standalone, redshiftsampling must be present in parameters
+  m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
 
-const char* AmzException::getStackTrace() const {
-  return stacktrace.c_str();
+  TFloat64Range redshiftRange;
+  Float64 redshiftStep;
+  GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+  Log.LogInfo(Formatter()<<"Init redshift range with " << redshiftRange << " and"<< redshiftStep);      
+  if(m_redshiftSampling=="log")
+    m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+  else  
+    m_redshifts = redshiftRange.SpreadOver( redshiftStep );
+
 }
 
-AmzException::~AmzException()
-{
-}
-GlobalException::~GlobalException()
-{
-}
-SolveException::~SolveException()
-{
-}
-ParameterException::~ParameterException()
-{
-}
-InternalException::~InternalException()
-{
-}

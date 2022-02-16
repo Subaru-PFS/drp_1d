@@ -56,8 +56,9 @@ void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputConte
     if(searchLogRebin!=inputContext->m_logRebin.end())
     {
         redshiftRange = searchLogRebin->second.zrange;
-        redshiftStep = inputContext->m_logGridStep;
-        if(m_redshiftSampling=="lin"){
+
+	redshiftStep = inputContext->m_logGridStep;
+	if(m_redshiftSampling=="lin"){
                 m_redshiftSampling = "log";
                 Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
         }
@@ -68,25 +69,9 @@ void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputConte
     }
     return;
 }
+
 void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
-  if (m_objectType == "star" || m_objectType=="qso" ||
-      m_objectType=="galaxy" || m_objectType=="linemeas")// TODO this is temporary hack, we can put a flag, or overload the method or intermediary CSolve class -> what do we choose ?
-    {
-      m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
-
-      //m_redshiftSampling could be overwritten if fftprocessing is activated
-      m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
-
-      TFloat64Range redshiftRange;
-      Float64 redshiftStep;
-      GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
-      
-      if(m_redshiftSampling=="log")
-          m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
-      else  
-          m_redshifts = redshiftRange.SpreadOver( redshiftStep );
-    }
 }
 
 

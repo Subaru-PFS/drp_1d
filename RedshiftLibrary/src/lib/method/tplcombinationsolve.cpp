@@ -51,7 +51,7 @@ using namespace std;
 
 
 CMethodTplcombinationSolve::CMethodTplcombinationSolve(TScopeStack &scope,string objectType):
-  CSolve("tplcombinationsolve",scope,objectType)
+  CObjectSolve("tplcombinationsolve",scope,objectType)
 {
 }
 

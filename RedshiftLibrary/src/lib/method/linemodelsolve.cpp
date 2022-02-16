@@ -68,7 +68,7 @@ using namespace boost;
  * \brief Empty constructor.
  **/
 CLineModelSolve::CLineModelSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CSolve("linemodelsolve",scope,objectType),
+  CObjectSolve("linemodelsolve",scope,objectType),
     m_calibrationPath(calibrationPath)
 {
 }

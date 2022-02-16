@@ -44,7 +44,7 @@ namespace NSEpic
 {
 
   CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CSolve("linemeassolve",scope,objectType),
+  CObjectSolve("linemeassolve",scope,objectType),
     m_calibrationPath(calibrationPath)
 {
 }
@@ -53,10 +53,10 @@ namespace NSEpic
   {
     //default is to read from the scoped paramStore
     Float64 rangeCenter = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftref" );
-    Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "dzhalf" );
+    Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "linemeas_dzhalf" );
 
     redshiftRange = TFloat64Range(rangeCenter-halfRange,rangeCenter+halfRange);
-    redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
+    redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "linemeas_redshiftstep" );
     
   }
   

@@ -78,7 +78,6 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
-  // Use an std::map here
 
     std::map<std::string,bool> fft_processing;
     m_use_LogLambaSpectrum = false;
@@ -115,11 +114,17 @@ void CInputContext::RebinInputs()
 	  m_logGridStep = DBL_MAX;
 	  if (fft_processing[cat])
 	    {
-	      if(m_ParameterStore->Get<Float64>( cat+".redshiftstep" ) < m_logGridStep)
-		m_logGridStep = m_ParameterStore->Get<Float64>( cat+".redshiftstep" );
+	      Float64 redshift_step = m_ParameterStore->Get<Float64>( cat+".redshiftstep" );
+
+	      if(redshift_step < m_logGridStep)
+		{
+		  m_logGridStep = redshift_step;
+
+		}
 	    }
 	}
     }
+    Log.LogInfo(Formatter()<<"loggrid step=" << m_logGridStep);    
     std::string category;
     std::string errorRebinMethod = "rebinVariance";
     CSpectrumLogRebinning logReb(*this);
@@ -130,7 +135,6 @@ void CInputContext::RebinInputs()
     TFloat64Range zrange;
     for (std::string cat:m_categories)
       {
-	m_logGridStep = DBL_MAX;
 	if (fft_processing[cat])
 	  {
 	    zrange = logReb.LogRebinTemplateCatalog(cat);

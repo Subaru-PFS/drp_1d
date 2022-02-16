@@ -60,7 +60,7 @@ class Context:
         self.config = config
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
-        for object_type in ["galaxy", "qso"]:
+        for object_type in self.parameters["objects"]:
             if object_type in self.calibration_library.line_catalogs:
                 self.process_flow_context.setLineCatalog(object_type,
                                                          self.calibration_library.line_catalogs[object_type])
@@ -68,8 +68,8 @@ class Context:
                 self.process_flow_context.setLineRatioCatalogCatalog(object_type,
                                                                      self.calibration_library.line_ratio_catalog_lists[
                                                                          object_type])
-        if parameters["enablelinemeassolve"]:
-            self.process_flow_context.setLineCatalog("galaxy", self.calibration_library.line_catalogs["linemeas"])
+            if "linemeasmethod" in parameters[object_type] and parameters[object_type]["linemeasmethod"]:
+                self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs["linemeas"])
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
@@ -77,27 +77,46 @@ class Context:
     def run(self, spectrum_reader):
         spectrum_reader.init()
         self.process_flow_context.setSpectrum(spectrum_reader.get_spectrum())
-        if "linemeascatalog" in self.config and self.config["linemeascatalog"] != "":
-            lm = pd.read_csv(self.config["linemeascatalog"], sep='\t', dtype={'ProcessingID': object})
-            redshift_ref = lm[lm.ProcessingID == spectrum_reader.source_id]["g.Redshift"].iloc[0]
-            velocity_abs = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityAbsorption"].iloc[0]
-            velocity_em = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityEmission"].iloc[0]
-#            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
-            self.parameters["linemeas"]["redshiftref"] = redshift_ref
-            self.parameters["linemeas"]["linemeassolve"]["linemodel"]["velocityabsorption"] = velocity_abs
-            self.parameters["linemeas"]["linemeassolve"]["linemodel"]["velocityemission"] = velocity_em
+        if "linemeascatalog" in self.config:
+            for object_type in self.config["linemeascatalog"].keys():
+                lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
+                redshift_ref = lm[lm.ProcessingID == spectrum_reader.source_id]["g.Redshift"].iloc[0]
+                velocity_abs = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityAbsorption"].iloc[0]
+                velocity_em = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityEmission"].iloc[0]
+    #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
+                self.parameters[object_type]["redshiftref"] = redshift_ref
+                self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityabsorption"] = velocity_abs
+                self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityemission"] = velocity_em
         self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
         self.process_flow_context.Init()
 
         enable_classification = False
-        enable_reliability = True
+        enable_reliability = False
         for object_type in self.parameters["objects"]:
             method = self.parameters[object_type]["method"]
-            self.run_method(object_type, method)
-            enable_classification = True
-            enable_reliability = True
-        if self.parameters["enablelinemeassolve"]:
-            self.run_method("linemeas","linemeassolve")
+            if method:
+                self.run_method(object_type, method)
+                enable_classification = True
+                enable_reliability = True
+            if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
+                if "linemeascatalog" not in self.config:
+                    output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
+                                               self.parameters,
+                                               auto_load=False)
+
+                    self.parameters[object_type]["redshiftref"] = output.get_attribute_from_result_store("Redshift",
+                                                                                                         "galaxy",
+                                                                                                         0)
+                    vel_a = output.get_attribute_from_result_store("VelocityAbsorption",
+                                                                   "galaxy",
+                                                                   0)
+                    vel_e = output.get_attribute_from_result_store("VelocityEmission",
+                                                                   "galaxy",
+                                                                   0)
+                    self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityabsorption"] = vel_a
+                    self.parameters[object_type]["linemeassolve"]["linemodel"]["velocityemission"] = vel_e
+                    self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
+                self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
         if enable_classification:
             self.run_method("classification", "classification")
         if enable_reliability:

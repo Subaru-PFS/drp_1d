@@ -49,7 +49,7 @@ zlog = CLog.GetInstance()
 
 class ResultStoreOutput(AbstractOutput):
 
-    def __init__(self, result_store, parameters, results_specifications=rspecifications):
+    def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True):
         AbstractOutput.__init__(self)
         self.results_store = result_store
         self.parameters = parameters
@@ -65,49 +65,58 @@ class ResultStoreOutput(AbstractOutput):
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
             self.operator_results[object_type] = dict()
-        self.load_all()
+        if auto_load:
+            self.load_all()
 
     def load_root(self):
         rs = self.results_specifications
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
-        if len(self.object_types) == 1 and self.parameters["enablelinemeassolve"]:
-            root_datasets =[]
         for ds in root_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"] == ds]
-            self.root_results[ds]=dict()
-            for index, ds_row in ds_attributes.iterrows():
-                if "<" in ds_row["hdf5_name"]:
-                    for object_type in self.parameters["objects"]:
-                        attr_name = ds_row["hdf5_name"].replace("<ObjectType>", object_type)
-                        self.root_results[ds][attr_name] = self.get_attribute_from_result_store(ds_row,
+            if self.results_store.HasDataset(ds,ds,"solveResult"):
+                ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                self.root_results[ds]=dict()
+                for index, ds_row in ds_attributes.iterrows():
+                    if "<" in ds_row["hdf5_name"]:
+                        for object_type in self.parameters["objects"]:
+                            attr_name = ds_row["hdf5_name"].replace("<ObjectType>", object_type)
+                            self.root_results[ds][attr_name] = self._get_attribute_from_result_store(ds_row,
                                                                                                 object_type=object_type)
-                else:
-                    self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row)
+                    else:
+                        self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
 
     def load_object_level(self, object_type):
         rs = self.results_specifications
         rs = rs[rs["level"] == "object"]
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
-            if self.results_store.HasDataset(object_type,
-                                            self.get_solve_method(object_type),
-                                            ds):
-                ds_attributes = rs[rs["hdf5_dataset"] == ds]
-                dimension = ds_attributes["dimension"].iat[0]
-                if dimension == "multi":
-                    self.object_results[object_type][ds] = dict()
-                    self.object_dataframes[object_type][ds] = pd.DataFrame()
-                    for index, ds_row in ds_attributes.iterrows():
-                    #                if self.results_store.hasAttribute(object_type, ds, attr):
-                        self.object_results[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
-                        self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type)
-                else:
-                    self.object_results[object_type][ds] = dict()
-                    for index, ds_row in ds_attributes.iterrows():
-                        self.object_results[object_type][ds][ds_row["hdf5_name"]]=self.get_attribute_from_result_store(ds_row,object_type)
+            methods = self.get_solve_methods(object_type)
+            if self.get_solve_method(object_type):
+                method = self.get_solve_method(object_type)
+            else:
+                method = self.parameters[object_type]["linemeas_method"]
+            for method in methods:
+                if self.results_store.HasDataset(object_type,
+                                                 method,
+                                                 ds):
+                    ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                    dimension = ds_attributes["dimension"].iat[0]
+                    if dimension == "multi":
+                        self.object_results[object_type][ds] = dict()
+                        self.object_dataframes[object_type][ds] = pd.DataFrame()
+                        for index, ds_row in ds_attributes.iterrows():
+                            attr = self._get_attribute_from_result_store(ds_row,object_type)
+                            self.object_results[object_type][ds][ds_row["hdf5_name"]] = attr
+                            self.object_dataframes[object_type][ds][ds_row["hdf5_name"]] = attr
+                    else:
+                        self.object_results[object_type][ds] = dict()
+                        for index, ds_row in ds_attributes.iterrows():
+                            attr = self._get_attribute_from_result_store(ds_row,object_type)
+                            self.object_results[object_type][ds][ds_row["hdf5_name"]] = attr
                     
     def load_candidate_level(self, object_type):
+        if not self.parameters[object_type]["method"]:
+            return
         rs = self.results_specifications
         rs = rs[rs["level"] == "candidate"]
         candidate_datasets = list(rs["hdf5_dataset"].unique())
@@ -133,7 +142,8 @@ class ResultStoreOutput(AbstractOutput):
                 for index, ds_row in ds_attributes.iterrows():
                     #            for attr in list(ds_attributes["hdf5_name"]):
                     if self.has_attribute_in_result_store(ds_row,object_type, rank):
-                        candidates[rank][ds_row["hdf5_name"]] = self.get_attribute_from_result_store(ds_row,object_type,rank)
+                        attr = self._get_attribute_from_result_store(ds_row, object_type, rank)
+                        candidates[rank][ds_row["hdf5_name"]] = attr
                         dimension = ds_row["dimension"]
                         if dimension == "multi":
                             candidates_df[rank][ds_row["hdf5_name"]] = candidates[rank][ds_row["hdf5_name"]]
@@ -202,43 +212,43 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
             object_results = obs.create_group(object_type) #h5
             self.write_hdf5_object_level(object_type, object_results)
-            if object_type == "linemeas":
-                continue
-            candidates = object_results.create_group("candidates")
-            rs = self.results_specifications
-            rs = rs[rs["level"] == "candidate"]
-            candidate_datasets = list(rs["hdf5_dataset"].unique())
-            nb_candidates = self.results_store.getNbRedshiftCandidates(object_type,self.get_solve_method(object_type))
-            for rank in range(nb_candidates):
-                candidate = candidates.create_group(self.get_candidate_group_name(rank))
-                for ds in candidate_datasets:
-                    if self.has_dataset(object_type,ds):
-                        ds_attributes = rs[rs["hdf5_dataset"]==ds]
-                        ds_dim = ds_attributes["dimension"].unique()[0]
-                        if ds_dim == "mono":
-                            candidate.create_group(ds)
+            if self.get_solve_method(object_type):
 
-            for ds in candidate_datasets:
-                ds_attributes = rs[rs["hdf5_dataset"]==ds]
-
-                # TODO change here when we will deal with 2D ranking or model ranking
-                dimension=None
+                candidates = object_results.create_group("candidates")
+                rs = self.results_specifications
+                rs = rs[rs["level"] == "candidate"]
+                candidate_datasets = list(rs["hdf5_dataset"].unique())
+                nb_candidates = self.results_store.getNbRedshiftCandidates(object_type,self.get_solve_method(object_type))
                 for rank in range(nb_candidates):
-                    candidate = candidates.get(self.get_candidate_group_name(rank))
-                    for index,ds_row in ds_attributes.iterrows():
-                        if self.has_attribute_in_result_store(ds_row, object_type, rank):
-                            dimension=ds_row["dimension"]
-                            if dimension == "mono":
-                                candidate.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][rank][ds_row["hdf5_name"]]
-                    if dimension == "multi":
-                        ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
-                        ds_size = self.get_dataset_size(object_type,ds,rank)
-                        candidate.create_dataset(ds,
-                                                 (ds_size,),
-                                                 ds_datatype,
-                                                 self.object_dataframes[object_type][ds][rank].to_records())
+                    candidate = candidates.create_group(self.get_candidate_group_name(rank))
+                    for ds in candidate_datasets:
+                        if self.has_dataset(object_type,ds):
+                            ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                            ds_dim = ds_attributes["dimension"].unique()[0]
+                            if ds_dim == "mono":
+                                candidate.create_group(ds)
 
-    def get_attribute_from_result_store(self,data_spec,object_type=None,rank=None):
+                for ds in candidate_datasets:
+                    ds_attributes = rs[rs["hdf5_dataset"]==ds]
+
+                    # TODO change here when we will deal with 2D ranking or model ranking
+                    dimension=None
+                    for rank in range(nb_candidates):
+                        candidate = candidates.get(self.get_candidate_group_name(rank))
+                        for index,ds_row in ds_attributes.iterrows():
+                            if self.has_attribute_in_result_store(ds_row, object_type, rank):
+                                dimension=ds_row["dimension"]
+                                if dimension == "mono":
+                                    candidate.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][rank][ds_row["hdf5_name"]]
+                        if dimension == "multi":
+                            ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
+                            ds_size = self.get_dataset_size(object_type,ds,rank)
+                            candidate.create_dataset(ds,
+                                                     (ds_size,),
+                                                     ds_datatype,
+                                                     self.object_dataframes[object_type][ds][rank].to_records())
+
+    def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None):
         operator_result = self.get_operator_result(data_spec,object_type,rank)
         if data_spec.dimension == "mono":
             if "[" in data_spec.OperatorResult_name:
@@ -253,6 +263,11 @@ class ResultStoreOutput(AbstractOutput):
                 return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))
             if data_spec.hdf5_type == 'i':
                 return PC_Get_Int32Array(getattr(operator_result, data_spec.OperatorResult_name))
+
+    def get_attribute_from_result_store(self, attribute_name, object_type, rank):
+        rs = self.results_specifications
+        rs = rs[rs["hdf5_name"] == attribute_name]
+        return self._get_attribute_from_result_store(rs[0],object_type,rank)
 
     def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
         if rank is not None:
@@ -316,63 +331,68 @@ class ResultStoreOutput(AbstractOutput):
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "object":
+            if "linemeas" in data_spec.hdf5_dataset:
+                method = self.parameters[object_type]["linemeas_method"]
+            else:
+                method = self.get_solve_method(object_type)
             or_type = self.results_store.GetGlobalResultType(object_type,
-                                                             self.get_solve_method(object_type),
+                                                             method,
                                                              data_spec.ResultStore_key)
 
             if or_type == "CPdfMargZLogResult":
                 return self.results_store.GetPdfMargZLogResult(object_type,
-                                                               self.get_solve_method(object_type),
+                                                               method,
                                                                data_spec.ResultStore_key)
             elif or_type == "CLineModelSolution":
                 return self.results_store.GetLineModelSolution(object_type,
-                                                               self.get_solve_method(object_type),
+                                                               method,
                                                                data_spec.ResultStore_key)
             elif or_type == "CModelSpectrumResult":
                 return self.results_store.GetModelSpectrumResult(object_type,
-                                                                 self.get_solve_method(object_type),
+                                                                 method,
                                                                  data_spec.ResultStore_key)
 
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "candidate":
+            method = self.get_solve_method(object_type)
             or_type = self.results_store.GetCandidateResultType(object_type,
-                                                                self.get_solve_method(object_type),
+                                                                method,
                                                                 data_spec.ResultStore_key,
                                                                 data_spec.hdf5_dataset)
             if or_type == "TLineModelResult":
                 return self.results_store.GetLineModelResult(object_type,
-                                                             self.get_solve_method(object_type),
+                                                             method,
                                                              data_spec.ResultStore_key,
                                                              rank)
             elif or_type == "TExtremaResult":
                 return self.results_store.GetExtremaResult(object_type,
-                                                           self.get_solve_method(object_type),
+                                                           method,
                                                            data_spec.ResultStore_key,
                                                            rank)
             elif or_type == "CModelSpectrumResult":
                 return self.results_store.GetModelSpectrumResult(object_type,
-                                                                 self.get_solve_method(object_type),
+                                                                 method,
                                                                  data_spec.ResultStore_key,
                                                                  rank)
             elif or_type == "CSpectraFluxResult":
                 return self.results_store.GetSpectraFluxResult(object_type,
-                                                               self.get_solve_method(object_type),
+                                                               method,
                                                                data_spec.ResultStore_key,
                                                                rank)
             elif or_type == "CModelFittingResult":
                 return self.results_store.GetModelFittingResult(object_type,
-                                                                self.get_solve_method(object_type),
+                                                                method,
                                                                 data_spec.ResultStore_key,
                                                                 rank)
             elif or_type == "TTplCombinationResult":
                 return self.results_store.GetTplCombinationResult(object_type,
-                                                                self.get_solve_method(object_type),
+                                                                method,
                                                                 data_spec.ResultStore_key,
                                                                 rank)
             elif or_type == "CLineModelSolution":
                 return self.results_store.GetLineModelSolution(object_type,
-                                                               self.get_solve_method(object_type),
+                                                               method,
                                                                data_spec.ResultStore_key,
                                                                rank)
             else:

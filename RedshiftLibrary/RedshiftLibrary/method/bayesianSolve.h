@@ -36,45 +36,29 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/exception.h"
-//#include <boost/stacktrace.hpp>
-#include <sstream>
-using namespace NSEpic;
+#ifndef _BAYESIAN_SOLVE_H_
+#define _BAYESIAN_SOLVE_H_
 
+#include "RedshiftLibrary/method/solve.h"
 
-AmzException::AmzException(ErrorCode ec,std::string message):
-  _msg(message),
-  code(ec)
+namespace NSEpic
 {
-  //std::ostringstream os;
-  //os << boost::stacktrace::stacktrace();
-  //stacktrace =  os.str();
-  stacktrace = "";
-}
 
-AmzException::AmzException(const AmzException& e):
-  _msg(e._msg),
-  code(e.code),
-  stacktrace(e.stacktrace)
-{
-}
+  class CBayesianSolve : public CSolve
+  {
+  public:
+    CBayesianSolve(std::string name,TScopeStack &scope,std::string objectType)
+      :CSolve(name,scope,objectType)
+    {}
+    virtual ~CBayesianSolve()=default;
+    CBayesianSolve(CBayesianSolve const& other) = default;
+    CBayesianSolve& operator=(CBayesianSolve const& other) = default;
+    CBayesianSolve(CBayesianSolve&& other) = default;
+    CBayesianSolve& operator=(CBayesianSolve&& other) = default;
 
-const char* AmzException::getStackTrace() const {
-  return stacktrace.c_str();
+  protected:
+    void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
+  };
 }
 
-AmzException::~AmzException()
-{
-}
-GlobalException::~GlobalException()
-{
-}
-SolveException::~SolveException()
-{
-}
-ParameterException::~ParameterException()
-{
-}
-InternalException::~InternalException()
-{
-}
+#endif
