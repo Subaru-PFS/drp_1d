@@ -119,7 +119,7 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
                     result.overlapRate,
                     overlapThreshold);
     
-    bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
+    bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>-1) ? true : false);
     
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart, m_kEnd);
     if (!kStartEnd_ok)
