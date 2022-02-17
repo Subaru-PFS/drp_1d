@@ -73,7 +73,7 @@ public:
                                               std::vector<CMask> additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
-                                              Int32 opt_dustFitting=0,
+                                              Int32 opt_dustFitting=-1,
                                               CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
                                               bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
