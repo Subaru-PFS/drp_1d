@@ -624,7 +624,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     }
 
     bool currentSampling = tplCatalog.m_logsampling; 
-    std::string opt_interp = "precomputedfinegrid"; //"lin"; //
+    std::string opt_interp = "precomputedfinegrid"; //"lin"; 
     Log.LogInfo("  Operator-Linemodel: precomputing- with fftprocessing = %d",
                 fftprocessing);
     Log.LogDetail("  Operator-Linemodel: precomputing-fitContinuum_dustfit = %d",
@@ -695,7 +695,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             if(candidateIdx<0 || candidateIdx> m_firstpass_extremaResult->size()-1){
                 throw GlobalException(INTERNAL_ERROR,"    COperatorLinemodel::PrecomputeContinuumFit: Candidate index is out of range");
             }
-            opt_interp = "lin"; //in SolveContinuum, case=3, we use linear interpolation!
             //using one template per Z with fixed values for ism/igm (if Z changes, template change;)
             keepismigm = true;//telling that we want to keep the ism and igm indexes
             meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
@@ -710,12 +709,10 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     for (UInt32 i = 0; i < tplCategoryList.size(); i++)
     {
         std::string category = tplCategoryList[i];
-        //for (UInt32 j = 0; j < orthoTplCatalog->GetTemplateCount(category); j++)
         Log.LogDebug(Formatter()<<"Processing "<< tplCatalog.GetTemplateCount(category) << " templates");
 
         for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
-            //const CTemplate &tpl = orthoTplCatalog->GetTemplate(category, j);
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
             Log.LogDebug(Formatter()<<"Processing tpl "<< tpl->GetName());
             //case where we only want to refit using one template:
@@ -727,15 +724,13 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             }
 
             CPriorHelper::TPriorZEList zePriorData;
-            //*
+
             bool retGetPrior = m_phelperContinuum->GetTplPriorData(tpl->GetName(), redshiftsTplFit, zePriorData);
             if(retGetPrior==false)
             {
                 throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: Failed to get prior for chi2 continuum precomp fit. aborting...");
             }
-            //Float64 priorDataLogCheck = zePriorData[0][0].logpriorTZE;
-            //Log.LogInfo("  Operator-Linemodel: check prior data, zePriorData[0][0].logpriorTZE = %e", priorDataLogCheck);
-            //*/
+
             m_templateFittingOperator->SetRedshifts(redshiftsTplFit);
             auto templatefittingResult =
                 std::dynamic_pointer_cast<CTemplateFittingResult>(

@@ -122,7 +122,7 @@ private:
                   Int32 opt_extinction, 
                   Int32 opt_dustFitting, 
                   CMask spcMaskAdditional,
-                  CPriorHelper::TPriorEList logpriore,
+                  const CPriorHelper::TPriorEList& logpriore,
                   const TInt32List& MeiksinList,
                   const TInt32List& EbmvList);
     void RebinTemplate(const CSpectrum& spectrum,
