@@ -67,7 +67,6 @@ class Context:
             self.config["linemeascatalog"] = {}
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
-        self.reliability_models = {}
 
     def init_context(self):
         self.process_flow_context = CProcessFlowContext()
@@ -81,20 +80,6 @@ class Context:
                                                                          object_type])
             if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
                 self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs[object_type])
-
-            if parameters[object_type].get("enable_reliability"):
-                # Load model
-                try:
-                    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                    from tensorflow.keras import models
-                except ImportError:
-                    import warnings
-                    warnings.warn("Tensorflow is required to compute the reliability")
-                else:
-                    model_path = os.path.join(self.parameters["calibrationDir"],
-                                              parameters[object_type]["reliability_model"])
-                    model = models.load_model(model_path)
-                    self.reliability_models[object_type] = model
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
@@ -156,7 +141,7 @@ class Context:
                                            self.parameters,
                                            auto_load=False)
                 pdf = output.get_attribute_from_result_store("PDFProbaLog", object_type, 0)
-                model = self.reliability_models[object_type]
+                model = self.calibration_library.reliability_models[object_type]
                 if pdf.shape[0] != model.input_shape[1]:
                     raise ValueError('PDF and model shapes are not compatible')
                 # The model needs a PDF, not LogPDF
