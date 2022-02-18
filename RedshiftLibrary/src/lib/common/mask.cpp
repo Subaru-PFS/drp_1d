@@ -43,27 +43,12 @@
 
 using namespace NSEpic;
 
-/**
- *
- */
-CMask::CMask()
-{
-
-}
 
 /**
  *
  */
 CMask::CMask( UInt32 weightsCount ) :
     m_Mask( weightsCount )
-{
-
-}
-
-/**
- *
- */
-CMask::~CMask()
 {
 
 }

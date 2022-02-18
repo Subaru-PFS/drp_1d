@@ -564,10 +564,9 @@ void COperatorTemplateFittingLog::freeFFTPlans()
  * @return
  */
 Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResult> result,
-                                           TInt32List MeiksinList,
-                                           TInt32List EbmvList,
-                                           CMask spcMaskAdditional,
-                                           CPriorHelper::TPriorZEList logpriorze)
+                                           const TInt32List &MeiksinList,
+                                           const TInt32List &EbmvList,
+                                           const CPriorHelper::TPriorZEList &logpriorze)
 {
     bool verboseLogFitAllz = true;
 
@@ -710,7 +709,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
                     kism_best = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(subresult->FitEbmvCoeff[isubz]);
                 }
 
-                CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];
+                const CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];
                 logprior += -2.0*pTZE.betaTE*pTZE.logprior_precompTE;
                 logprior += -2.0*pTZE.betaA*pTZE.logprior_precompA;
                 logprior += -2.0*pTZE.betaZ*pTZE.logprior_precompZ;
@@ -812,11 +811,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
  * @param EbmvList
  * @return
  */
-Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
-                                             TInt32Range& currentRange,
-                                             std::shared_ptr<CTemplateFittingResult> result,
-                                             TInt32List MeiksinList,
-                                             TInt32List EbmvList,
+Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List &inv_err2,
+                                             const TInt32Range &currentRange,
+                                             const std::shared_ptr<CTemplateFittingResult> &result,
+                                             const TInt32List &MeiksinList,
+                                             const TInt32List &EbmvList,
                                              const Float64& dtd)
 {
     const TAxisSampleList & spectrumRebinedLambda = m_ssSpectrum.GetSpectralAxis().GetSamplesVector();
@@ -1287,11 +1286,11 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
                                                                     Float64 overlapThreshold,
-                                                                    std::vector<CMask> additional_spcMasks,
+                                                                    const std::vector<CMask> & additional_spcMasks,
                                                                     std::string opt_interp,
                                                                     Int32 opt_extinction,
                                                                     Int32 opt_dustFitting,
-                                                                    CPriorHelper::TPriorZEList logpriorze,
+                                                                    const CPriorHelper::TPriorZEList &logpriorze,
                                                                     bool keepigmism,
                                                                     Float64 FitEbmvCoeff,
                                                                     Int32 FitMeiksinIdx)
@@ -1369,7 +1368,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const std:
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< m_redshifts.size());
     }
 
-    Int32 retFit = FitAllz(result, MeiksinList, EbmvList, CMask(), logpriorze);
+    Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
     
     if (retFit != 0)
     {

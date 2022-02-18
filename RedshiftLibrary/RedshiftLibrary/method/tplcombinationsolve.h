@@ -91,9 +91,9 @@ private:
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
-               std::vector<CMask> maskList,
+               const std::vector<CMask> &maskList,
                EType spctype=nType_raw,
-               std::string opt_interp="lin",
+               const std::string &opt_interp="lin",
                bool opt_extinction=false,
                bool opt_dustFitting=false);
     

@@ -502,11 +502,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
-                                                                  std::vector<CMask> additional_spcMasks,
-                                                                  std::string opt_interp,
+                                                                  const std::vector<CMask> &additional_spcMasks,
+                                                                  const std::string &opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting,
-                                                                  CPriorHelper::TPriorZEList logpriorze,
+                                                                  const CPriorHelper::TPriorZEList &logpriorze,
                                                                   bool keepigmism,
                                                                   Float64 FitEbmvCoeff,
                                                                   Int32 FitMeiksinIdx)
@@ -568,23 +568,15 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize, componentCount);
     result->Redshifts = sortedRedshifts;
 
-    CMask additional_spcMask(spectrum.GetSampleCount());
-    CMask default_spcMask(spectrum.GetSampleCount());
     //default mask
-    for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
-    {
-        default_spcMask[km] = 1.0;
-    }
-    bool useDefaultMask = 0;
-    if(additional_spcMasks.size()!=sortedRedshifts.size())
-    {
-        useDefaultMask=true;
-    }
-    if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
-    {
-        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: using default mask, masks-list size="<<additional_spcMasks.size()<<"didn't match the input redshift-list size="<<sortedRedshifts.size());
+    bool useDefaultMask = additional_spcMasks.size()!=sortedRedshifts.size() ? true : false;
+    CMask default_spcMask(spectrum.GetSampleCount());
+    if (useDefaultMask)
+        for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
+            default_spcMask[km] = 1.0;
 
-    }
+    if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: masks-list size="<<additional_spcMasks.size()<<"didn't match the input redshift-list size="<<sortedRedshifts.size());
 
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
@@ -592,19 +584,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     TFloat64List _ampList(componentCount, NAN);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        //default mask
-        if(useDefaultMask)
-        {
-            additional_spcMask = default_spcMask;
-        }else{
-            //masks from the input masks list
-            additional_spcMask = additional_spcMasks[sortedIndexes[i]];
-        }
-        CPriorHelper::TPriorEList logp;
-        if(logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size())
-        {
-            logp = logpriorze[i];
-        }
+        const CMask &additional_spcMask = useDefaultMask ? default_spcMask : additional_spcMasks[sortedIndexes[i]];
+
+        const CPriorHelper::TPriorEList &logp = logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size() ? logpriorze[i] : CPriorHelper::TPriorEList();
+
         Float64 redshift = result->Redshifts[i];
 
         //initializing fittingResults: could be moved to another function

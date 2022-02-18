@@ -70,11 +70,11 @@ public:
 
     std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & logSampledTpl,
                                               Float64 overlapThreshold,
-                                              std::vector<CMask> additional_spcMasks,
+                                              const std::vector<CMask> & additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
                                               Int32 opt_dustFitting=-1,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                              const CPriorHelper::TPriorZEList &logpriorze=CPriorHelper::TPriorZEList(),
                                               bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
                                               Int32 FitMeiksinIdx=-1) override;
@@ -110,16 +110,15 @@ private:
     bool verboseExportXtYFFT = false;
 
     Int32 FitAllz(std::shared_ptr<CTemplateFittingResult> result,
-                  TInt32List MeiksinList=TInt32List(1, 0),
-                  TInt32List EbmvList=TInt32List(1, 0),
-                  CMask spcMaskAdditional=CMask(),
-                  CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
+                  const TInt32List &MeiksinList=TInt32List(1, 0),
+                  const TInt32List &EbmvList=TInt32List(1, 0),
+                  const CPriorHelper::TPriorZEList &logpriorze=CPriorHelper::TPriorZEList());
 
-    Int32 FitRangez(const TFloat64List & inv_err2,
-                    TInt32Range& range,
-                    std::shared_ptr<CTemplateFittingResult> result,
-                    TInt32List MeiksinList,
-                    TInt32List EbmvList,
+    Int32 FitRangez(const TFloat64List &inv_err2,
+                    const TInt32Range &range,
+                    const std::shared_ptr<CTemplateFittingResult> &result,
+                    const TInt32List &MeiksinList,
+                    const TInt32List &EbmvList,
                     const Float64& dtd);
 
     Int32 EstimateXtY(const TFloat64List& X, const TFloat64List& Y,
