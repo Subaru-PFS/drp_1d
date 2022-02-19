@@ -76,7 +76,7 @@ bool CRayCatalogsTplShape::Init(Int32 enableISMCalzetti,
  * @param index
  * WARNING: ismCoeff not applied on the restlines provided by that function.
  */
-CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 index )
+CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( Int32 index ) const
 {
     Int32 typeFilter=-1;
     Int32 forceFilter=-1;
@@ -85,7 +85,7 @@ CRayCatalog::TRayVector CRayCatalogsTplShape::GetRestLinesList( const Int32 inde
     return restRayList;
 }
 
-Int32 CRayCatalogsTplShape::GetCatalogsCount()
+Int32 CRayCatalogsTplShape::GetCatalogsCount() const
 {
     return m_lineRatioCatalogs.size();
 }
@@ -99,22 +99,22 @@ const std::vector<Float64>&  CRayCatalogsTplShape::getCatalogsPriors()
   return m_catalogsPriors;
 }
 
-std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx)
+std::string CRayCatalogsTplShape::GetCatalogName(Int32 idx) const
 {
   return m_lineRatioCatalogs[idx].getName();
 }
 
-Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx)
+Float64 CRayCatalogsTplShape::GetIsmCoeff(Int32 idx) const
 {
   return m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(idx));
-}
+} 
 
-Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx)
+Int32 CRayCatalogsTplShape::GetIsmIndex(Int32 idx) const
 {
   return m_lineRatioCatalogs[idx].getIsmIndex();
 }
 
-bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv )
+bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv ) const
 {
   //TODO generic velocity groups : there should not be hardcoded values, this should return a map
   elv = m_lineRatioCatalogs[idx].getVelocity("em_vel");
@@ -176,7 +176,7 @@ bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
     return 0;
 }
 
-const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog)
+const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog) const
 {
     return m_lineRatioCatalogs[iCatalog];
 }
@@ -185,7 +185,7 @@ const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog)
  * \brief Calculates the best fit between the linemodel fitted amplitudes and the tplShaped catalogs: (for lm-rigidity=tplcorr)
  *
  **/
-Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64>& amplitudesCorrected, std::string& bestTplName  )
+Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List & fittedErrors, TFloat64List &amplitudesCorrected, std::string& bestTplName) const
 {
     Float64 coeffMin = -1;
     std::vector<Int32> mask;
@@ -270,7 +270,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
     return coeffMin;
 }
 
-Float64 CRayCatalogsTplShape::GetFit( std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL, std::vector<Float64>& ampsCorrected )
+Float64 CRayCatalogsTplShape::GetFit( const TFloat64List &ampsLM, const TFloat64List &errLM, const TFloat64List &ampsTPL, TFloat64List &ampsCorrected )  const
 {
 
     Float64 N = ampsLM.size();

@@ -45,14 +45,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CRuleSuperStrong::CRuleSuperStrong()
-{
-}
-
-CRuleSuperStrong::~CRuleSuperStrong()
-{
-}
-
 void CRuleSuperStrong::SetUp( bool EnabledArgument, ... )
 {
   Name = "superstrong";

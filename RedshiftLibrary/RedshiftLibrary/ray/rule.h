@@ -56,8 +56,13 @@ class CLineModelElementList;
     bool Enabled;
     std::string Name;
     
-    CRule ( );
-    virtual ~CRule();
+    CRule() : Enabled(false) {};
+    virtual ~CRule() = default;
+    CRule(const CRule&) = default;
+    CRule(CRule &&) = default;
+    CRule & operator=(const CRule &) = default;
+    CRule & operator=(CRule &&) = default;
+
     void Apply( CLineModelElementList& LineModelElementList );
     virtual bool Check( CLineModelElementList& LineModelElementList ) = 0;
     virtual void SetUp( bool EnabledArgument, ... ) = 0;

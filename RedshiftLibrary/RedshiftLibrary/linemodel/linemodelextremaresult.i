@@ -52,10 +52,12 @@ public:
 
     void updateFromLineModelSolution(const CLineModelSolution& cms);
 
-  void updateContinuumFromModel(std::shared_ptr<const CLineModelFitting> lmel);
-  void updateTplRatioFromModel(std::shared_ptr<const CLineModelFitting> lmel);
+  void updateContinuumFromModel(const std::shared_ptr<const CLineModelFitting> &lmel);
+  void updateTplRatioFromModel(const std::shared_ptr<const CLineModelFitting> &lmel);
 
-  void updateFromModel(std::shared_ptr<CLineModelFitting> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
+  void updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
+                        const std::shared_ptr<const CLineModelResult> &lmresult,
+                        bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
  
   Float64            MeritContinuum; //extrema merit for continuum
 

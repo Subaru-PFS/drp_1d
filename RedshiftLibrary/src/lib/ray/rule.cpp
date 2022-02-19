@@ -45,19 +45,6 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * \brief Sets itself as disabled per default.
- **/
-CRule::CRule ( )
-{
-  Enabled = false;
-}
-
-CRule::~CRule ( )
-{
-
-}
-
-/**
  * Checks the elements and corrects if necessary.
  **/
 void CRule::Apply( CLineModelElementList& LineModelElementList )
@@ -78,7 +65,7 @@ void CRule::Apply( CLineModelElementList& LineModelElementList )
  **/
 std::string CRule::GetLogs( )
 {
-    std::string _logs = (std::string)Logs;
+    std::string _logs = std::move(Logs);
     Logs.clear();
     return _logs;
 }

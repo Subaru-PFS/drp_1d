@@ -119,7 +119,7 @@ public:
 
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
-    TStringList GetModelRulesLog();
+    TStringList GetModelRulesLog() const;
     std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
     void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);

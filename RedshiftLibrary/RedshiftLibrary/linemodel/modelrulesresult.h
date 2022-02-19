@@ -56,10 +56,8 @@ class CModelRulesResult : public COperatorResult
 
 public:
 
-    CModelRulesResult( TStringList logStrings );
-    CModelRulesResult();
-    virtual ~CModelRulesResult();
-
+    CModelRulesResult(const TStringList &logStrings ): LogStrings(logStrings) {};
+    CModelRulesResult() = default;
 
 private:
 

@@ -789,7 +789,7 @@ void CMultiRollModel::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt)
 }
 
 //todo: add model number tag in front of the log-string items ?
-TStringList CMultiRollModel::GetModelRulesLog()
+TStringList CMultiRollModel::GetModelRulesLog() const
 {
     TStringList tstr;
     for(Int32 km=0; km<m_models.size(); km++)

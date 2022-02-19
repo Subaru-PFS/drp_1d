@@ -43,7 +43,7 @@ using namespace NSEpic;
 /**
  * \brief Returns the number of m_Elements that fail IsOutsideLambdaRange().
  **/
-Int32 CLineModelElementList::GetModelValidElementsNDdl()
+Int32 CLineModelElementList::GetModelValidElementsNDdl() const
 {
     Int32 nddl = 0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -60,7 +60,7 @@ Int32 CLineModelElementList::GetModelValidElementsNDdl()
 /**
  * \brief Returns the number of elements that have only subelements with non-positive amplitude.
  **/
-Int32 CLineModelElementList::GetModelNonZeroElementsNDdl()
+Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const
 {
     Int32 nddl = 0;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -85,7 +85,7 @@ Int32 CLineModelElementList::GetModelNonZeroElementsNDdl()
 /**
  * \brief Returns the list of indexes of elements that fail IsOutsideLambdaRange.
  **/
-std::vector<UInt32> CLineModelElementList::GetModelValidElementsIndexes()
+std::vector<UInt32> CLineModelElementList::GetModelValidElementsIndexes() const
 {
     std::vector<UInt32> nonZeroIndexes;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -103,7 +103,7 @@ std::vector<UInt32> CLineModelElementList::GetModelValidElementsIndexes()
     return nonZeroIndexes;
 }
 
-bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index)
+bool CLineModelElementList::IsElementIndexInDisabledList(Int32 index) const
 {
     for( UInt32 i=0; i<m_elementsDisabledIndexes.size(); i++ )
     {
@@ -147,7 +147,7 @@ void CLineModelElementList::ResetElementIndexesDisabled()
  * \brief Returns the list of groups, with each group being a set of line indexes with the velcocity to be jointly
  * TEMPORARY-DEV: return all the indexes individually as  agroup
 **/
-std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType )
+std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType ) const
 {
     bool verbose = false;
     if(verbose)
@@ -276,7 +276,7 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
  * \brief Returns a sorted, de-duplicated list of indices of lines whose support overlap ind's support and are not listed in the argument excludedInd.
  **/
 
-std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, const std::vector<UInt32> & excludedInd,Float64 redshift,Float64 overlapThres)
+std::vector<UInt32> CLineModelElementList::getOverlappingElements(UInt32 ind, const std::vector<UInt32> & excludedInd,Float64 redshift,Float64 overlapThres) const
 {
     std::vector<UInt32> indexes;
 
@@ -368,7 +368,7 @@ void CLineModelElementList::SetElementAmplitude(Int32 j, Float64 a, Float64 snr)
 /**
  * \brief If j is a valid index of m_Elements, returns a call to that element's GetElementAmplitude. If not, returns -1.
  **/
-Float64 CLineModelElementList::GetElementAmplitude(Int32 j)
+Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const
 {
     Float64 a=-1.0;
     if(j>=0 && j<m_Elements.size())
@@ -391,7 +391,7 @@ void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec)
  * \brief Returns the first index of m_Elements where calling the element's findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
  **/
-Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex, Int32& lineIdx)
+Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex, Int32& lineIdx) const
 {
     Int32 idx = undefIdx;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -408,7 +408,7 @@ Int32 CLineModelElementList::findElementIndex(Int32 LineCatalogIndex, Int32& lin
 /**
  * \brief Returns the first index of m_Elements where calling the element's findElementIndex method with LineTagStr argument does not return -1.
  **/
-Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype, Int32& lineIdx )
+Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype, Int32& lineIdx ) const
 {
     Int32 idx = undefIdx;
     for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
@@ -425,7 +425,7 @@ Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int
     return idx;
 }
 
-Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype)
+Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int32 linetype) const
 {
     Int32 lineIdx = undefIdx;
     return findElementIndex(LineTagStr, linetype, lineIdx);
@@ -440,7 +440,7 @@ Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int
 Float64 CLineModelElementList::getModelErrorUnderElement( UInt32 eltId ,
 					      const CSpectrumFluxAxis& spcFluxAxis,
 					      const CSpectrumFluxAxis& modelFluxAxis
-					      )
+					      ) const
 {
   //before elementlistcutting this variable was CElementList::m_ErrorNoContinuum, a reference initialized twice in CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError() and after to spectrumFluxAxis.GetError
   const CSpectrumNoiseAxis& errorNoContinuum=spcFluxAxis.GetError();
@@ -493,7 +493,7 @@ Float64 CLineModelElementList::getModelErrorUnderElement( UInt32 eltId ,
  * For each EltsIdx entry, if the entry is not outside lambda range, get the support of each subelement.
  * For each selected support, get the sample index. Sort this list and remove multiple entries. Return this clean list.
  **/
-std::vector<UInt32> CLineModelElementList::getSupportIndexes( const std::vector<UInt32> & EltsIdx )
+std::vector<UInt32> CLineModelElementList::getSupportIndexes( const std::vector<UInt32> & EltsIdx ) const
 {
     std::vector<UInt32> indexes;
 
@@ -527,7 +527,7 @@ std::vector<UInt32> CLineModelElementList::getSupportIndexes( const std::vector<
 }
 
 
-Int32 CLineModelElementList::getIndexAmpOffset(UInt32 xIndex)
+Int32 CLineModelElementList::getIndexAmpOffset(UInt32 xIndex) const
 {
   Int32 idxAmpOffset = -1;
 
@@ -548,7 +548,7 @@ void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPol
   m_ampOffsetsCoeffs[index] = line_polynomCoeffs;
 }
 
-bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& modelfluxAxis )
+bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& modelfluxAxis ) const
 {
 
 

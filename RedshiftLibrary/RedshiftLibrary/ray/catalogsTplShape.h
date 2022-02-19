@@ -69,18 +69,18 @@ public:
 
 
     //bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
-    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
-    CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
-    Int32 GetCatalogsCount();
+    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName) const;
+    CRayCatalog::TRayVector GetRestLinesList( Int32 index ) const;
+    Int32 GetCatalogsCount() const;
     const std::vector<Float64>& getCatalogsPriors();
-    std::string GetCatalogName(Int32 idx);
-    Int32 GetIsmIndex(Int32 idx);
-    Float64 GetIsmCoeff(Int32 idx);
+    std::string GetCatalogName(Int32 idx) const;
+    Int32 GetIsmIndex(Int32 idx) const;
+    Float64 GetIsmCoeff(Int32 idx) const;
 
-    bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
+    bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv ) const;
     bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
-    const CRayCatalog& GetCatalog(Int32 icatlog);
-    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance()
+    const CRayCatalog& GetCatalog(Int32 icatlog) const;
+    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance() const
   {
     return m_RayCatalogLinesCorrespondingNominalAmp;
   };
@@ -90,7 +90,7 @@ public:
     m_lineRatioCatalogs.push_back(lr_catalog);
   }
 private:
-    Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
+    Float64 GetFit(const TFloat64List &ampsLM, const TFloat64List &errLM, const TFloat64List &ampsTPL , TFloat64List &ampsCorrected) const;
 
 
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;

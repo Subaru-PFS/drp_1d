@@ -55,44 +55,46 @@ namespace NSEpic
 
     std::vector<Int32> m_elementsDisabledIndexes;
    
-    std::vector<UInt32> GetModelValidElementsIndexes();
+    std::vector<UInt32> GetModelValidElementsIndexes() const;
 
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
-    Float64 GetElementAmplitude(Int32 j);
+    Float64 GetElementAmplitude(Int32 j) const;
 
-    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres);
+    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres) const;
 
-    Int32 GetModelValidElementsNDdl();
-    Int32 GetModelNonZeroElementsNDdl();
+    Int32 GetModelValidElementsNDdl() const;
+    Int32 GetModelNonZeroElementsNDdl() const;
 
      void SetSourcesizeDispersion(Float64 sizeArcsec);
     
-    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType);
+    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType) const;
 
-    Int32 findElementIndex(const std::string& LineTagStr,Int32 linetype = -1);
+    Int32 findElementIndex(const std::string& LineTagStr,Int32 linetype = -1) const;
     Int32 findElementIndex(const std::string& LineTagStr, 
                           Int32 linetype, 
-                          Int32& lineIdx);
+                          Int32& lineIdx) const;
     Int32 findElementIndex(Int32 LineCatalogIndex, 
-                           Int32& lineIdx);
-    Float64 getModelErrorUnderElement( UInt32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis);
+                           Int32& lineIdx) const;
+    Float64 getModelErrorUnderElement( UInt32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis) const;
 
-    std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
+    std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx) const;
 
-    Int32 getIndexAmpOffset(UInt32 index);
+    Int32 getIndexAmpOffset(UInt32 index) const;
     void setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPolynomCoeffs& line_polynomCoeffs);
     Int32 prepareAmplitudeOffset();
-    bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis);
+    bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis) const;
 
-    bool IsElementIndexInDisabledList(Int32 index);
+    bool IsElementIndexInDisabledList(Int32 index) const;
     void SetElementIndexesDisabledAuto();
     void ResetElementIndexesDisabled();
 
     void debug(std::ostream& os) const;
     
-    const std::shared_ptr<CLineModelElement> &operator[](UInt32 i) const {return m_Elements[i];}
+    const std::shared_ptr<const CLineModelElement> operator[](UInt32 i) const {return m_Elements[i];}
+    std::shared_ptr<CLineModelElement> &operator[](UInt32 i) {return m_Elements[i];}
+
     UInt32 size() const {return m_Elements.size();}
-    void push_back(std::shared_ptr<CLineModelElement> elt){ m_Elements.push_back(elt);}
+    void push_back(const std::shared_ptr<CLineModelElement> &elt){ m_Elements.push_back(elt);}
   };
 }
 #endif
