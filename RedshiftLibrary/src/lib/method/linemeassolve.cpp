@@ -44,7 +44,7 @@ namespace NSEpic
 {
 
   CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CObjectSolve("linemeassolve",scope,objectType),
+  CBayesianSolve("linemeassolve",scope,objectType),
     m_calibrationPath(calibrationPath)
 {
 }
