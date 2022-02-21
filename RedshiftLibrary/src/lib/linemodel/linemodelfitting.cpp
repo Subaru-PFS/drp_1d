@@ -3822,11 +3822,9 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
     if(useAmpOffset)
     {
         Float64 x0 = gsl_vector_get(c,EltsIdx.size())/normFactor;
-        m_Elements.m_ampOffsetsX0[idxAmpOffset] = x0;
         Float64 x1 = gsl_vector_get(c,EltsIdx.size()+1)/normFactor;
-        m_Elements.m_ampOffsetsX1[idxAmpOffset] = x1;
         Float64 x2 = gsl_vector_get(c,EltsIdx.size()+2)/normFactor;
-        m_Elements.m_ampOffsetsX2[idxAmpOffset] = x2;
+        m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
     }
 
     gsl_matrix_free (X);
@@ -4718,8 +4716,12 @@ std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
         if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
         {
         }else{
-
-            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
+            TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
+            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
+                                        m_SpectrumModel.GetSpectralAxis(), 
+                                        m_Redshift,
+                                        m_ContinuumFluxAxis,
+                                        polynom_coeffs);
 
             Float64 mu = NAN;
             Float64 sigma = NAN;
@@ -5439,8 +5441,13 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 
             if(opt_level!=0)// brief, to save processing time, do not estimate fluxes and high level line properties
             {
-	            modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
-                Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
+                modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
+                TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
+                Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
+                                                m_SpectrumModel.GetSpectralAxis(), 
+                                                m_Redshift, 
+                                                m_ContinuumFluxAxis,
+                                                polynom_coeffs);
                 modelSolution.CenterContinuumFlux.push_back(cont);
                 modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
                 Float64 mu = NAN;Float64 sigma = NAN;
@@ -5569,6 +5576,17 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     return modelSolution;
 }
 
+TPolynomCoeffs CLineModelFitting::getPolynomCoeffs(Int32 eIdx)
+{
+    TUInt32List xInds = m_Elements.getSupportIndexes( {UInt32(eIdx)} );
+    TPolynomCoeffs polynom_coeffs = {0.,0.,0.}; 
+    if(xInds.size()&& m_Elements.m_ampOffsetsCoeffs.size())
+    {
+        Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+        polynom_coeffs = m_Elements.m_ampOffsetsCoeffs[idxAmpOffset];
+    }
+    return polynom_coeffs;
+}
 
 CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution()
 {

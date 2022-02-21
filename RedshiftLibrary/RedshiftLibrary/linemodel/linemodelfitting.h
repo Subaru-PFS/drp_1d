@@ -374,7 +374,7 @@ private:
     void refreshModelAfterContReestimation(const std::vector<UInt32> & EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
 
     std::vector<UInt32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
-
+    TPolynomCoeffs getPolynomCoeffs(Int32 eIdx);
 
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 

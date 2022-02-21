@@ -95,7 +95,8 @@ public:
 
     Float64 GetContinuumAtCenterProfile(
         Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
-        Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis);
+        Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
+        const TPolynomCoeffs& line_polynomCoeffs);
 
     void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,

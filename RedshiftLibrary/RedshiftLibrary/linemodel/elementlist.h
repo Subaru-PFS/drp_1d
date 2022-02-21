@@ -50,9 +50,7 @@ namespace NSEpic
     std::vector<std::shared_ptr<CLineModelElement> > m_Elements;
     
   public:
-    std::vector<Float64> m_ampOffsetsX0;
-    std::vector<Float64> m_ampOffsetsX1;
-    std::vector<Float64> m_ampOffsetsX2;
+    std::vector<TPolynomCoeffs> m_ampOffsetsCoeffs;
     std::vector<Int32> m_ampOffsetsIdxStart;
     std::vector<Int32> m_ampOffsetsIdxStop;
 
@@ -80,7 +78,7 @@ namespace NSEpic
     std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx);
 
     Int32 getIndexAmpOffset(UInt32 index);
-    void setAmplitudeOffsetsCoeffsAt(UInt32 index,Float64 x0,Float64 x1,Float64 x2);
+    void setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPolynomCoeffs& line_polynomCoeffs);
     Int32 prepareAmplitudeOffset(const CSpectrumFluxAxis &spcFlux);
     bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis);
 

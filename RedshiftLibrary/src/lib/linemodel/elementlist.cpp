@@ -538,11 +538,9 @@ Int32 CLineModelElementList::getIndexAmpOffset(UInt32 xIndex)
   return idxAmpOffset;
 }
     
-void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(UInt32 index,Float64 x0,Float64 x1,Float64 x2)
+void CLineModelElementList::setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPolynomCoeffs& line_polynomCoeffs)
 {
-  m_ampOffsetsX0[index] = x0;
-  m_ampOffsetsX1[index] = x1;
-  m_ampOffsetsX2[index] = x2;
+  m_ampOffsetsCoeffs[index] = line_polynomCoeffs;
 }
 
 bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis, CSpectrumFluxAxis& modelfluxAxis )
@@ -550,11 +548,17 @@ bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectral
 
 
     Log.LogDetail( "Elementlist: Adding n=%d ampOffsets", m_ampOffsetsIdxStart.size());
+    Float64 x0 = NAN;
+    Float64 x1 = NAN;
+    Float64 x2 = NAN;
     for( UInt32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
-    {
+    {   
+        x0 = m_ampOffsetsCoeffs[i].x0;
+        x1 = m_ampOffsetsCoeffs[i].x1;
+        x2 = m_ampOffsetsCoeffs[i].x2;
         for( UInt32 k=m_ampOffsetsIdxStart[i]; k<=m_ampOffsetsIdxStop[i]; k++ )
         {
-            modelfluxAxis[k] += m_ampOffsetsX0[i] + m_ampOffsetsX1[i]*spectralAxis[k]+ m_ampOffsetsX2[i]*spectralAxis[k]*spectralAxis[k];
+            modelfluxAxis[k] += x0 + x1*spectralAxis[k]+ x2*spectralAxis[k]*spectralAxis[k];
         }
 
     }
@@ -563,9 +567,7 @@ bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectral
 
 Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spcFlux)
 {
-    m_ampOffsetsX0.clear();
-    m_ampOffsetsX1.clear();
-    m_ampOffsetsX2.clear();
+    m_ampOffsetsCoeffs.clear();
     m_ampOffsetsIdxStart.clear();
     m_ampOffsetsIdxStop.clear();
 
@@ -582,7 +584,7 @@ Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spc
 
     Int32 idxPrevious = supportIdxes[0];
     m_ampOffsetsIdxStart.push_back(supportIdxes[0]);
-    for( UInt32 i=1; i<supportIdxes.size(); i++ )
+    for( Int32 i=1; i<supportIdxes.size(); i++ )
     {
         UInt32 idxCurrent = supportIdxes[i];
         if(idxCurrent>idxPrevious+1)
@@ -615,16 +617,15 @@ Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spc
         m_ampOffsetsA.push_back(mean);
     }
     //*/
-    for( UInt32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
+    for( Int32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
     {
-        m_ampOffsetsX0.push_back(0.0);
-        m_ampOffsetsX1.push_back(0.0);
-        m_ampOffsetsX2.push_back(0.0);
+        m_ampOffsetsCoeffs.push_back( {0.,0.,0.});
+        
     }
 
     if(1)
     {
-        for( UInt32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
+        for( Int32 i=0; i<m_ampOffsetsIdxStart.size(); i++ )
         {
             Log.LogDebug( "Elementlist: i=%d, m_ampOffsetsIdxStart: %d, m_ampOffsetsIdxStop: %d", i, m_ampOffsetsIdxStart[i], m_ampOffsetsIdxStop[i] );
         }
