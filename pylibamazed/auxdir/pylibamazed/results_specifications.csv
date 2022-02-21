@@ -15,6 +15,7 @@ ContinuumDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDt
 ContinuumLeastSquare	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMerit	double
 ContinuumLogPrior	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplLogPrior	double
 LinesRatioName	model_parameters	S60	extrema_results	mono	False	candidate	FittedTplratioName	string
+LeastSquare	model_parameters	f8	extrema_results	mono	False	candidate	Merit	double
 VelocityEmission	model_parameters	f8	extrema_results	mono	False	candidate	Elv	double
 VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	double
 StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double

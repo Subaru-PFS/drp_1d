@@ -59,8 +59,9 @@ public:
                         const std::shared_ptr<const CLineModelResult> &lmresult,
                         bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
  
-  Float64            MeritContinuum; //extrema merit for continuum
-
+    Float64            MeritContinuum; // best continum  chi2
+    Float64            Merit; // fullmodel best chi2
+    
     Float64            mTransposeM;    // extrema model norm
     Float64            CorrScaleMarg;    // extrema scale marg. correction
     Int32              NDof;   //non zero elements in the lambdarange

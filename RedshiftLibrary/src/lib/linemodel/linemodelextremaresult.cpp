@@ -113,7 +113,9 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
                                         bool estimateLeastSquareFast, int idx, 
                                         const TFloat64Range &lambdaRange, int i_2pass)
   {
-        //LineModelSolutions
+    Merit = lmresult->ChiSquare[idx];
+
+    //LineModelSolutions
     Elv = lmel->GetVelocityEmission();
     Alv = lmel->GetVelocityAbsorption();
         
