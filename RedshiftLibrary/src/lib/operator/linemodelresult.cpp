@@ -53,22 +53,6 @@ using namespace NSEpic;
 
 
 /**
- * \brief Empty constructor.
- **/
-CLineModelResult::CLineModelResult()
-{
-
-}
-
-/**
- * \brief Empty destructor.
- **/
-CLineModelResult::~CLineModelResult()
-{
-
-}
-
-/**
  * @brief CLineModelResult::Init
  * Initializes the linemodel results, by:
  *  - setting the redshift grid
@@ -77,17 +61,15 @@ CLineModelResult::~CLineModelResult()
  * @param restRays
  * @param nTplshapes
  * @return
- * ERR = -2 : if the tplshapesPriors list is not the same size as the tpl-ratios
  */
-Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
+void CLineModelResult::Init(TFloat64List redshifts,
                               CRayCatalog::TRayVector restRays,
                               Int32 nTplshapes,
-                              std::vector<Float64> tplshapesPriors)
+                              TFloat64List tplshapesPriors)
 {
-    Int32 err = 0;
     if(tplshapesPriors.size()!=nTplshapes)
     {
-        return -2;
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"LinemodelResult: tplshapeprior size and tplshapes size do not correspond");
     }
 
     Int32 nResults = redshifts.size();
@@ -99,81 +81,54 @@ Int32 CLineModelResult::Init(std::vector<Float64> redshifts,
     restRayList = restRays;
     LineModelSolutions.resize( nResults );
     ContinuumModelSolutions.resize( nResults );
-
-    //init the tplshape chisquare results
-    for(Int32 k=0; k<nTplshapes; k++)
-    {
-        TFloat64List _chi2tpl(nResults, DBL_MAX);
-        ChiSquareTplshapes.push_back(_chi2tpl);
-
-        TFloat64List _corr(nResults, 0.0);
-        ScaleMargCorrectionTplshapes.push_back(_corr);
-
-        TBoolList selp(nResults, false);
-        StrongELPresentTplshapes.push_back(selp);
-
-        std::vector<Int32> nlac(nResults, false);
-        NLinesAboveSNRTplshapes.push_back(nlac);
-
-        PriorTplshapes.push_back(tplshapesPriors[k]);
-        TFloat64List _logpriors(nResults, 0.0);
-        PriorLinesTplshapes.push_back(_logpriors);
-    }
-
+    //init the tplshape chisquare results  
     ChiSquareContinuum.resize( nResults );
-    ScaleMargCorrectionContinuum.resize( nResults);
+    ScaleMargCorrectionContinuum.resize( nResults);  
+    ChiSquareTplshapes              = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, DBL_MAX));
+    ScaleMargCorrectionTplshapes    = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, 0.));
+    StrongELPresentTplshapes        = std::vector<TBoolList>(nTplshapes, TBoolList(nResults, false));
+    StrongHalphaELPresentTplshapes  = std::vector<TBoolList>(nTplshapes, TBoolList(nResults, false));
+    NLinesAboveSNRTplshapes         = std::vector<TInt32List>(nTplshapes, TInt32List(nResults, 0));
+    PriorLinesTplshapes             = std::vector<TFloat64List>(nTplshapes, TFloat64List(nResults, 0.));
 
-    return err;
+    PriorTplshapes = std::move(tplshapesPriors);
 }
 
-Int32 CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
+void CLineModelResult::SetChisquareTplshapeResult(Int32 index_z,
                                                     const TFloat64List & chisquareTplshape,
                                                     const TFloat64List & scaleMargCorrTplshape,
                                                     const TBoolList & strongEmissionLinePresentTplshape,
+                                                    const TBoolList & strongHalphaELPresentTplshapes,
                                                     const TInt32List & nLinesAboveSNRTplshape,
                                                     const TFloat64List & priorLinesTplshape)
 {
-    if(index_z>=Redshifts.size())
-    {
-        return -1;
-    }
-    if(chisquareTplshape.size()!=ChiSquareTplshapes.size())
-    {
-        return -2;
-    }
     if(chisquareTplshape.size()<1)
-    {
-        return -3;
-    }
-    if(chisquareTplshape.size()!=scaleMargCorrTplshape.size())
-    {
-        return -4;
-    }
-    if(chisquareTplshape.size()!=strongEmissionLinePresentTplshape.size())
-    {
-        return -4;
-    }
-    if(chisquareTplshape.size()!=nLinesAboveSNRTplshape.size())
-    {
-        return -4;
-    }
-    if(chisquareTplshape.size()!=priorLinesTplshape.size())
-    {
-        return -4;
-    }
+        return;
+
+    if(index_z>=Redshifts.size())
+        throw GlobalException(INTERNAL_ERROR,"CLineModelResult::SetChisquareTplshapeResult: invalid z index");
+
+    if(chisquareTplshape.size()!=ChiSquareTplshapes.size()
+        || chisquareTplshape.size()!=scaleMargCorrTplshape.size()
+        || chisquareTplshape.size()!=strongEmissionLinePresentTplshape.size()
+        || chisquareTplshape.size()!=nLinesAboveSNRTplshape.size()
+        || chisquareTplshape.size()!=priorLinesTplshape.size())
+        throw GlobalException(INTERNAL_ERROR,"CLineModelResult::SetChisquareTplshapeResult: vector sizes do not match");
+
 
     for(Int32 k=0; k<chisquareTplshape.size(); k++)
     {
         ChiSquareTplshapes[k][index_z] = chisquareTplshape[k];
         ScaleMargCorrectionTplshapes[k][index_z] = scaleMargCorrTplshape[k];
         StrongELPresentTplshapes[k][index_z] = strongEmissionLinePresentTplshape[k];
+        StrongHalphaELPresentTplshapes[k][index_z] = strongHalphaELPresentTplshapes[k];
         NLinesAboveSNRTplshapes[k][index_z] = nLinesAboveSNRTplshape[k];
         PriorLinesTplshapes[k][index_z] = priorLinesTplshape[k];
     }
-    return 0;
+    return;
 }
 
-TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index_z )
+TFloat64List CLineModelResult::getChisquareTplshapeResult( Int32 index_z )
 {
     TFloat64List chisquareTplshape;
     if(index_z>=Redshifts.size())
@@ -193,7 +148,7 @@ TFloat64List CLineModelResult::GetChisquareTplshapeResult( Int32 index_z )
     return chisquareTplshape;
 }
 
-TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index_z )
+TFloat64List CLineModelResult::getScaleMargCorrTplshapeResult( Int32 index_z )
 {
     TFloat64List scaleMargCorrTplshape;
     if(index_z>=Redshifts.size())
@@ -213,30 +168,41 @@ TFloat64List CLineModelResult::GetScaleMargCorrTplshapeResult( Int32 index_z )
     return scaleMargCorrTplshape;
 }
 
-TBoolList CLineModelResult::GetStrongELPresentTplshapeResult( Int32 index_z )
+TBoolList CLineModelResult::getStrongELPresentTplshapeResult( Int32 index_z )
 {
-    TBoolList strongELPresentTplshape;
-    if(index_z>=Redshifts.size())
+    TBoolList _strongELPresentTplshape;
+    if(index_z>=Redshifts.size() || StrongELPresentTplshapes.size()<1)
     {
-        return strongELPresentTplshape;
-    }
-    if(StrongELPresentTplshapes.size()<1)
-    {
-        return strongELPresentTplshape;
+        return _strongELPresentTplshape;
     }
 
     for(Int32 k=0; k<StrongELPresentTplshapes.size(); k++)
     {
-        strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index_z]);
+        _strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index_z]);
     }
 
-    return strongELPresentTplshape;
+    return _strongELPresentTplshape;
 }
 
-
-std::vector<Int32> CLineModelResult::GetNLinesAboveSNRTplshapeResult( Int32 index_z )
+TBoolList CLineModelResult::getHaELPresentTplshapeResult( Int32 index_z )
 {
-    std::vector<Int32> priorTplshape;
+    TBoolList _strongHaPresentTplshape;
+    if(index_z>=Redshifts.size() || StrongHalphaELPresentTplshapes.size()<1)
+    {
+        return _strongHaPresentTplshape;
+    }
+
+    for(Int32 k=0; k<StrongHalphaELPresentTplshapes.size(); k++)
+    {
+        _strongHaPresentTplshape.push_back(StrongHalphaELPresentTplshapes[k][index_z]);
+    }
+
+    return _strongHaPresentTplshape;
+}
+
+TInt32List CLineModelResult::getNLinesAboveSNRTplshapeResult( Int32 index_z )
+{
+    TInt32List priorTplshape;
     if(index_z>=Redshifts.size())
     {
         return priorTplshape;
@@ -255,9 +221,9 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSNRTplshapeResult( Int32 inde
 }
 
 
-std::vector<Float64> CLineModelResult::GetPriorLinesTplshapeResult( Int32 index_z )
+TFloat64List CLineModelResult::getPriorLinesTplshapeResult( Int32 index_z )
 {
-    std::vector<Float64> priorTplshape;
+    TFloat64List priorTplshape;
     if(index_z>=Redshifts.size())
     {
         return priorTplshape;
@@ -275,11 +241,11 @@ std::vector<Float64> CLineModelResult::GetPriorLinesTplshapeResult( Int32 index_
     return priorTplshape;
 }
 
-Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const
+Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const
 {
     Int32 nSol=0;
 
-    std::vector<Int32> indexesSols;
+    TInt32List indexesSols;
     for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
     {
         //skip if already sol
@@ -323,17 +289,15 @@ Int32 CLineModelResult::GetNLinesOverCutThreshold(Int32 solutionIdx, Float64 snr
 
 
 /**
- * @brief CLineModelResult::GetStrongLinesPresence
+ * @brief CLineModelResult::getStrongLinesPresence
  * @param filterType: 1: emission only, 2 abs only, else: no filter
  * @return: a list of boolean values indicating if a strong is present (not outsidelambdarange for that z) for each redshift
  */
-TBoolList CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vector<CLineModelSolution> linemodelsols ) const
+TBoolList CLineModelResult::getStrongLinesPresence( UInt32 filterType, const std::vector<CLineModelSolution>& linemodelsols ) const
 {
     TBoolList strongIsPresent(linemodelsols.size(), false);
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
-        strongIsPresent[solutionIdx] = false;
-
         for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
             if( !linemodelsols[solutionIdx].Rays[j].GetIsStrong() )
@@ -341,19 +305,11 @@ TBoolList CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vect
                 continue;
             }
 
-            if(filterType==1)
-            {
-                if( !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
-                {
-                    continue;
-                }
-            }else if(filterType==2)
-            {
-                if( linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
-                {
-                    continue;
-                }
-            }
+            if(filterType==1 && !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+                continue;
+            else if(filterType==2 && linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+                continue;
+            
 
             if( linemodelsols[solutionIdx].OutsideLambdaRange[j] )
             {
@@ -372,9 +328,9 @@ TBoolList CLineModelResult::GetStrongLinesPresence( UInt32 filterType, std::vect
 }
 
 
-std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineModelSolution> linemodelsols ) const
+TInt32List CLineModelResult::getNLinesAboveSnrcut(const std::vector<CLineModelSolution>& linemodelsols ) const
 {
-    std::vector<Int32> nlinesabove(linemodelsols.size(), 0);
+    TInt32List nlinesabove(linemodelsols.size(), 0);
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         nlinesabove[solutionIdx] = linemodelsols[solutionIdx].NLinesAboveSnrCut;
@@ -387,42 +343,23 @@ std::vector<Int32> CLineModelResult::GetNLinesAboveSnrcut( std::vector<CLineMode
 
 /**
  * WARNING: this function has not been tested at all !!! please check/debug
- * @brief CLineModelResult::GetStrongestLineIsHa
+ * @brief CLineModelResult::getStrongestLineIsHa
  * @return: a list of boolean values indicating if the strongest line is Ha (Highest amp and not outsidelambdarange for that z) for each redshift
  */
-TBoolList CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution> linemodelsols ) const
+TBoolList CLineModelResult::getStrongestLineIsHa(const std::vector<CLineModelSolution>& linemodelsols ) const
 {
-    bool verbose = true;
-    UInt32 filterType=1;
     linetags ltags;
-    TBoolList strongestIsHa(linemodelsols.size(), false);
+    TBoolList isHaStrongest(linemodelsols.size(), false);
     std::string ampMaxLineTag = "";
     for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
-        strongestIsHa[solutionIdx] = false;
-        Float64 ampMax = -1;
-        Float64 ampHa = -1;
+        Float64 ampMax = -DBL_MAX;
+        ampMaxLineTag = "undefined";
         for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
-
-            if(filterType==1)
-            {
-                if( !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
-                {
-                    continue;
-                }
-            }else if(filterType==2)
-            {
-                if( linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
-                {
-                    continue;
-                }
-            }
-
-            if( linemodelsols[solutionIdx].OutsideLambdaRange[j] )
-            {
+            if(!linemodelsols[solutionIdx].Rays[j].GetIsEmission() ||
+                linemodelsols[solutionIdx].OutsideLambdaRange[j])
                 continue;
-            }
 
             Log.LogDebug("    linemodelresult: using ray for max amp search=%s", linemodelsols[solutionIdx].Rays[j].GetName().c_str());
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
@@ -430,26 +367,19 @@ TBoolList CLineModelResult::GetStrongestLineIsHa( std::vector<CLineModelSolution
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];
                 ampMaxLineTag = linemodelsols[solutionIdx].Rays[j].GetName().c_str();
             }
-            if(linemodelsols[solutionIdx].Rays[j].GetName()==ltags.halpha_em)
-            {
-                ampHa = linemodelsols[solutionIdx].Amplitudes[j];
-            }
         }
 
-        if(ampHa>0 && ampMax==ampHa)
+        isHaStrongest[solutionIdx] = (!std::isnan(ampMax) && ampMax>0. && ampMaxLineTag==ltags.halpha_em) ;
+        if(isHaStrongest[solutionIdx])
         {
-            strongestIsHa[solutionIdx] = true;
-        }
-        if(verbose)
-        {
-            Log.LogDetail("    linemodelresult: z=%f, ampHa=%e, ampMax=%e, ampMaxLineTag=%s", linemodelsols[solutionIdx].Redshift, ampHa, ampMax, ampMaxLineTag.c_str());
-        }
+            Log.LogDebug("CLineModelResult::GetModelHaStrongest:  z=%f found to be true with ampMax=%e (for line=Halpha)", linemodelsols[solutionIdx].Redshift, ampMax);
+        } 
     }
 
-    return strongestIsHa;
+    return isHaStrongest;
 }
 
-Float64 CLineModelResult::GetMinChiSquare() const
+Float64 CLineModelResult::getMinChiSquare() const
 {
     Float64 min=DBL_MAX;
     for ( int i=0; i<Redshifts.size(); i++)
@@ -462,7 +392,7 @@ Float64 CLineModelResult::GetMinChiSquare() const
     return min;
 }
 
-Float64 CLineModelResult::GetMaxChiSquare() const
+Float64 CLineModelResult::getMaxChiSquare() const
 {
     Float64 max=-DBL_MAX;
     for ( int i=0; i<Redshifts.size(); i++)

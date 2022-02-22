@@ -145,7 +145,7 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
     CorrScaleMarg = corrScaleMarg;
 
     static Float64 cutThres = 3.0;
-    Int32 nValidLines = lmresult->GetNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+    Int32 nValidLines = lmresult->getNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
     NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
     Float64 cumulStrongELSNR = lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
     StrongELSNR = cumulStrongELSNR;

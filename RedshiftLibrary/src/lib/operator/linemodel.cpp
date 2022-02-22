@@ -129,7 +129,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const bool &opt_velocityFitting,
                                            const UInt32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
-                                           const std::string &opt_rigidity)
+                                           const std::string &opt_rigidity,
+                                           const Float64 opt_haprior)
 {
     TFloat64List largeGridRedshifts;
     // redefine redshift grid
@@ -166,6 +167,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                         opt_velocityAbsorption,
                                                         opt_rules,
                                                         opt_rigidity);
+    m_model->setHaPriorOption(opt_haprior);
     Float64 setssSizeInit = 0.1;
     m_model->m_Elements.SetSourcesizeDispersion(setssSizeInit);
     Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
@@ -309,13 +311,9 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     }
 
 
-    Int32 resultInitRet = m_result->Init(m_sortedRedshifts, restRayList,
-                                         m_model->getTplshape_count(),
-                                         m_model->getTplshape_priors());
-    if (resultInitRet != 0)
-    {
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Linemodel: ERROR while initializing linemodel result ret="<<resultInitRet);
-    }
+    m_result->Init(m_sortedRedshifts, restRayList,
+                    m_model->getTplshape_count(),
+                    m_model->getTplshape_priors());
 
     Log.LogInfo("  Operator-Linemodel: initialized");
 
@@ -453,6 +451,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
                                                  m_model->GetStrongELPresentTplshape(),
+                                                 m_model->getHaELPresentTplshape(),
                                                  m_model->GetNLinesAboveSNRTplshape(),
                                                  m_model->GetPriorLinesTplshape());
             for (Int32 k = 0; k < m_result->ChiSquareTplshapes.size(); k++)
@@ -488,11 +487,12 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             m_result->ContinuumModelSolutions[i]=
                 m_result->ContinuumModelSolutions[i - 1];
             m_result->SetChisquareTplshapeResult(
-                i, m_result->GetChisquareTplshapeResult(i - 1),
-                m_result->GetScaleMargCorrTplshapeResult(i - 1),
-                m_result->GetStrongELPresentTplshapeResult(i - 1),
-                m_result->GetNLinesAboveSNRTplshapeResult(i - 1),
-                m_result->GetPriorLinesTplshapeResult(i - 1));
+                i, m_result->getChisquareTplshapeResult(i - 1),
+                m_result->getScaleMargCorrTplshapeResult(i - 1),
+                m_result->getStrongELPresentTplshapeResult(i - 1),
+                m_result->getHaELPresentTplshapeResult(i - 1),
+                m_result->getNLinesAboveSNRTplshapeResult(i - 1),
+                m_result->getPriorLinesTplshapeResult(i - 1));
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
@@ -1309,6 +1309,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                                                  m_model->GetChisquareTplshape(),
                                                  m_model->GetScaleMargTplshape(),
                                                  m_model->GetStrongELPresentTplshape(),
+                                                 m_model->getHaELPresentTplshape(),
                                                  m_model->GetNLinesAboveSNRTplshape(),
                                                  m_model->GetPriorLinesTplshape());
             if (!m_estimateLeastSquareFast)
@@ -1963,6 +1964,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
                                                     m_model->GetChisquareTplshape(),
                                                     m_model->GetScaleMargTplshape(),
                                                     m_model->GetStrongELPresentTplshape(),
+                                                    m_model->getHaELPresentTplshape(),
                                                     m_model->GetNLinesAboveSNRTplshape(),
                                                     m_model->GetPriorLinesTplshape());
             if (!m_estimateLeastSquareFast)
@@ -2426,3 +2428,5 @@ std::shared_ptr<CModelSpectrumResult> COperatorLineModel::getFittedModel()
 {
   return std::make_shared<CModelSpectrumResult>(m_model->GetObservedSpectrumWithLinesRemoved(-1));  
 }
+
+

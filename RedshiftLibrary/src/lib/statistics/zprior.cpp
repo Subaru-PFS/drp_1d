@@ -74,9 +74,6 @@ TFloat64List CZPrior::GetStrongLinePresenceLogZPrior(const TBoolList & linePrese
         if (linePresence[kz])
         {
             logzPrior[kz] = logprobaPresent;
-        } else
-        {
-            logzPrior[kz] = logprobaAbsent;
         }
     }
 
@@ -198,15 +195,10 @@ TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1, const TFl
 
     TFloat64List logzPriorCombined(n);
 
-    Float64 maxi = DBL_MIN;
     for (UInt32 k = 0; k < n; k++)
     {
         Float64 val = logprior1[k] + logprior2[k];
         logzPriorCombined[k] = val;
-        if (maxi < val)
-        {
-            maxi = val;
-        }
     }
 
     if (m_normalizePrior) NormalizePrior(logzPriorCombined);

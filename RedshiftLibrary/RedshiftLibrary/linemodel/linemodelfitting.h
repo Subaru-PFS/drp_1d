@@ -175,6 +175,7 @@ public:
     std::vector<Float64> GetPriorLinesTplshape() const ;
     const std::vector<Float64> & GetScaleMargTplshape() const ;
     const TBoolList & GetStrongELPresentTplshape() const ;
+    const TBoolList & getHaELPresentTplshape() const;
     const std::vector<Int32> & GetNLinesAboveSNRTplshape() const ;
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
@@ -334,7 +335,8 @@ public:
     std::string m_opt_secondpass_fittingmethod = "hybrid";
 
     bool m_opt_enable_improveBalmerFit=false;
-
+    Float64 m_opt_haprior = -1.;
+    void setHaPriorOption(Float64 opt){m_opt_haprior = opt;};
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
@@ -385,6 +387,7 @@ private:
 
     std::vector<Float64> m_ScaleMargCorrTplshape;
     TBoolList m_StrongELPresentTplshape;
+    TBoolList m_StrongHalphaELPresentTplshape;
     std::vector<Int32> m_NLinesAboveSNRTplshape;
 
     Float64 m_Redshift;
