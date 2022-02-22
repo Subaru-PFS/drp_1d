@@ -64,7 +64,7 @@ CPeakDetection::~CPeakDetection()
 
 }
 
-std::shared_ptr<const CPeakDetectionResult> CPeakDetection::Compute( const CSpectrum& spectrum, const TLambdaRange& lambdaRange)
+std::shared_ptr<const CPeakDetectionResult> CPeakDetection::Compute( const CSpectrum& spectrum )
 {
     auto result = std::make_shared<CPeakDetectionResult>();
 
@@ -217,7 +217,7 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
         UInt32 stop = std::min( (Int32) fluxAxis.GetSamplesCount(), spectralAxis.GetIndexAtWaveLength(spectralAxis[i]+m_winsize/2.0)  );
 
         med[i] = medianFilter.Find( fluxVector.begin() + start, fluxVector.begin()+stop );
-        xmad[i] = XMad( fluxVector.data()+ start, stop - start , med[i] );
+        xmad[i] = XMad( fluxVector.begin() + start, fluxVector.begin() + stop , med[i] );
         xmad[i] += m_detectionnoiseoffset; //add a noise level, useful for simulation data
     }
 
@@ -237,7 +237,7 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 
 
     // Detect each point whose value is over the median precomputed median
-    TBoolList points;
+    TInt32List points;
     points.resize( fluxAxis.GetSamplesCount() + 1 );
     Int32 j = 0;
 
@@ -278,33 +278,38 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
     }
 }
 
-Float64 CPeakDetection::XMad( const Float64* x, Int32 n, Float64 median )
+Float64 CPeakDetection::XMad( const TFloat64List::const_iterator &begin, const TFloat64List::const_iterator &end, Float64 median )
 {
-    std::vector<Float64> xdata;
+    Int32 n = distance(begin, end);
+    TFloat64List xdata(n);
     Float64 xmadm = 0.0;
-
-    xdata.resize( n );
+    
 
     for( Int32 i=0;i<n; i++ )
     {
-        xdata[i] = fabs( x[i]-median );
+        xdata[i] = fabs( begin[i]-median );
     }
 
     std::sort(xdata.begin(), xdata.end());
 
-    if( ((float)n)/2. - int(n/2.) == 0 )
+    Int32 n2 = n/2;
+    if(2 * n2 == n)
     {
-        UInt32 i1 = n/2 - 1;
-        UInt32 i2 = n/2;
+        UInt32 i1 = n2 - 1;
+        UInt32 i2 = n2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
     else
     {
-        UInt32 i1 = int(n/2);
-        xmadm = xdata[i1];
+        xmadm = xdata[n2];
     }
 
     return xmadm;
+}
+
+Float64 CPeakDetection::XMad( const TFloat64List &x, Float64 median )
+{
+    return XMad(x.begin(), x.end(), median);
 }
 
 /*

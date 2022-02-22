@@ -205,7 +205,7 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
       Log.LogDebug ( "lineType == CRay::nType_Emission" );
     }
 
-  auto peakDetectionResult = peakDetection.Compute( _spc, lambdaRange );
+  auto peakDetectionResult = peakDetection.Compute( _spc );
   if( peakDetectionResult )
     {
       Log.LogDebug ( "Storing %d peaks from PeakList in the result store.", peakDetectionResult->PeakList.size() );
