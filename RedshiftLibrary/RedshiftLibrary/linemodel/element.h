@@ -101,12 +101,12 @@ public:
     void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
                               const CSpectrumFluxAxis &continuumfluxAxis,
-                              Float64 redshift, Int32 lineIdx = -1);
+                              Float64 redshift, Int32 lineIdx = undefIdx);
     void fitAmplitudeAndLambdaOffset(
         const CSpectrumSpectralAxis &spectralAxis,
         const CSpectrumFluxAxis &fluxAxis,
         const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-        Int32 lineIdx = -1, bool enableOffsetFitting = true, Float64 step = 25.,
+        Int32 lineIdx = undefIdx, bool enableOffsetFitting = true, Float64 step = 25.,
         Float64 min = -400., Float64 max = 400.);
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                                      Float64 continuumFlux,
@@ -128,7 +128,7 @@ public:
     addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                        CSpectrumFluxAxis &modelfluxAxis,
                        const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-                       Int32 lineIdx = -1);
+                       Int32 lineIdx = undefIdx);
     void
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
@@ -137,7 +137,7 @@ public:
 
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Int32 lineIdx = -1);
+                                   Int32 lineIdx = undefIdx);
 
     Float64 GetNominalAmplitude(Int32 subeIdx);
     bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
@@ -166,8 +166,8 @@ public:
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
     const TAsymParams GetAsymfitParams(UInt32 asymIdx=0) const;
     void resetAsymfitParams();
-    Int32 FindElementIndex(Int32 LineCatalogIndex);
-    Int32 FindElementIndex(std::string LineTagStr);
+    Int32 findElementIndex(Int32 LineCatalogIndex);
+    Int32 findElementIndex(const std::string& LineTagStr);
     const CLineProfile & getLineProfile(Int32 rayIdx) const;
 
     Float64 GetSignFactor(Int32 subeIdx);
