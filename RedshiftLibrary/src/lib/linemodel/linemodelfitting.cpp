@@ -5424,6 +5424,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     modelSolution.FluxDirectIntegrationError = TFloat64List(s, NAN);
     modelSolution.OutsideLambdaRange = TBoolList(s, true);
     modelSolution.fittingGroupInfo = TStringList(s, "undefined");
+    modelSolution.continuum_pCeoff0 = TFloat64List(s, NAN);
+    modelSolution.continuum_pCeoff1 = TFloat64List(s, NAN);
+    modelSolution.continuum_pCeoff2 = TFloat64List(s, NAN);
 
     TInt32List eIdx_oii;
     TInt32List subeIdx_oii;
@@ -5451,6 +5454,11 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
         {
             modelSolution.FittingError[iRestRay] = m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis());
             TPolynomCoeffs polynom_coeffs =  getPolynomCoeffs(eIdx);
+            //save polynom info to output them in hdf5, mainly to recontruct linemeas model
+            modelSolution.continuum_pCeoff0[iRestRay] = polynom_coeffs.x0;
+            modelSolution.continuum_pCeoff1[iRestRay] = polynom_coeffs.x1;
+            modelSolution.continuum_pCeoff2[iRestRay] = polynom_coeffs.x2;
+
             Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
                                             m_SpectrumModel.GetSpectralAxis(), 
                                             m_Redshift, 

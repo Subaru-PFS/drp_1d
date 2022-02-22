@@ -79,6 +79,10 @@
     Float64 EmissionVelocity;
     Float64 Redshift;
 
+    TFloat64List continuum_pCeoff0;
+    TFloat64List continuum_pCeoff1;
+    TFloat64List continuum_pCeoff2;
+
     Int32 nDDL;
     void fillRayIds();
       
