@@ -166,7 +166,7 @@ private:
     Int64 m_opt_extremacountB;
 
     Float64 m_opt_candidatesLogprobaCutThreshold;
-    UInt32 m_opt_firstpass_largegridstepRatio;
+    Int32 m_opt_firstpass_largegridstepRatio;
     std::string m_opt_firstpass_largegridsampling;
     bool m_opt_firstpass_tplratio_ismfit;
     bool m_opt_firstpass_disablemultiplecontinuumfit;
