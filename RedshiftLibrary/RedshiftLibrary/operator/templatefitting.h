@@ -94,11 +94,11 @@ public:
     
     std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & tpl,
                                               Float64 overlapThreshold,
-                                              std::vector<CMask> additional_spcMasks,
+                                              const std::vector<CMask> &additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
-                                              Int32 opt_dustFitting=0,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
+                                              Int32 opt_dustFitting=-1,
+                                              const CPriorHelper::TPriorZEList &logpriorze=CPriorHelper::TPriorZEList(),
                                               bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
                                               Int32 FitMeiksinIdx=-1) override;
@@ -109,13 +109,13 @@ protected:
                   Float64 redshift,
                   Float64 overlapThreshold,
                   std::string opt_interp,
-                  Float64 forcedAmplitude=-1.,
-                  Int32 opt_extinction=0,
-                  Int32 opt_dustFitting=0,
-                  CMask spcMaskAdditional=CMask(),
-                  const CPriorHelper::TPriorEList & logpriore=CPriorHelper::TPriorEList(),
-                  const TInt32List& MeiksinList=TInt32List(-1),
-                  const TInt32List& EbmvList=TInt32List(-1));
+                  Float64 forcedAmplitude,
+                  Int32 opt_extinction,
+                  Int32 opt_dustFitting,
+                  CMask spcMaskAdditional,
+                  const CPriorHelper::TPriorEList & logpriore,
+                  const TInt32List& MeiksinList,
+                  const TInt32List& EbmvList);
 
     virtual void InitIsmIgmConfig( Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,

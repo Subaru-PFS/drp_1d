@@ -53,9 +53,8 @@ class CMask
 
 public:
 
-    CMask();
+    CMask() = default;
     explicit CMask( UInt32 weightsCount );
-    ~CMask();
 
     const Mask*     GetMasks() const;
     CMask&          operator &= ( const CMask& other );

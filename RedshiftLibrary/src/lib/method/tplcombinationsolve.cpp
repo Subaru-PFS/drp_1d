@@ -172,9 +172,9 @@ bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
                                        const TFloat64Range& lambdaRange,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
-                                       std::vector<CMask> maskList,
+                                       const std::vector<CMask> &maskList,
                                        EType spctype,
-                                       std::string opt_interp,
+                                       const std::string &opt_interp,
                                        bool opt_extinction,
                                        bool opt_dustFitting)
 {
