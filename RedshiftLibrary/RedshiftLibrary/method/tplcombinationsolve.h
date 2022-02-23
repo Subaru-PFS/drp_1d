@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
-#include "RedshiftLibrary/method/bayesianSolve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/tplcombination.h"

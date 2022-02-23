@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _BAYESIAN_SOLVE_H_
-#define _BAYESIAN_SOLVE_H_
+#ifndef _OBJECT_SOLVE_H_
+#define _OBJECT_SOLVE_H_
 
 #include "RedshiftLibrary/method/solve.h"
 
@@ -48,9 +48,6 @@ namespace NSEpic
   {
   public:
     using CSolve::CSolve;
-    /*    CObjectSolve(std::string name,TScopeStack &scope,std::string objectType)
-      :CSolve(name,scope,objectType)
-      {}*/
     virtual ~CObjectSolve()=default;
     CObjectSolve(CObjectSolve const& other) = default;
     CObjectSolve& operator=(CObjectSolve const& other) = default;

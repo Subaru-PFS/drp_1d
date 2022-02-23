@@ -2290,7 +2290,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
-  TStringList tplCategoryList({"linemeas"});
+  TStringList tplCategoryList({"galaxy"});
   //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)

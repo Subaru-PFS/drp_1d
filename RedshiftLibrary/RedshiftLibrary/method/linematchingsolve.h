@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/bayesianSolve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/method/linematchingsolveresult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -57,13 +57,13 @@ class CParameterStore;
  * \class CMethodLineMatchingSolve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-  class CMethodLineMatchingSolve: public CObjectSolve
+  class CLineMatchingSolve: public CObjectSolve
 {
 
 public:
 
-    CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType);
-    ~CMethodLineMatchingSolve();
+    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+    ~CLineMatchingSolve();
 
   std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
 					std::shared_ptr<COperatorResultStore> resultStore,

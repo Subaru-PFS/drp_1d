@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/method/bayesianSolve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 
 using namespace NSEpic;
 

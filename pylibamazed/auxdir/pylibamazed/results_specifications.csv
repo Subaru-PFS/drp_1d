@@ -72,5 +72,3 @@ FirstpassFittedTemplateDtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mo
 FirstpassFittedTemplateMtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mono	True	candidate	FittedTplMtm	double
 FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]
 FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]
-FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]	0
-FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]	0

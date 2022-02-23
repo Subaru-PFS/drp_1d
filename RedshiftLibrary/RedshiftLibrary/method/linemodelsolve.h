@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/bayesianSolve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/linemodel.h"

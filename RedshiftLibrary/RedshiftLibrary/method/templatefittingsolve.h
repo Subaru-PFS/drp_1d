@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/bayesianSolve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"

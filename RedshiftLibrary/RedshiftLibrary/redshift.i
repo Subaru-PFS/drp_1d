@@ -131,6 +131,7 @@
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -846,4 +847,11 @@ class CTplcombinationSolve : public CObjectSolve
 
  public:
   CTplcombinationSolve(TScopeStack &scope,std::string objectType);
+};
+
+class CLineMatchingSolve: public CObjectSolve
+{
+public:
+
+    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
 };
