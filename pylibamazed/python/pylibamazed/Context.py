@@ -36,6 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+import os.path
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
@@ -46,7 +47,8 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CTplcombinationSolve,
                                   CClassificationSolve,
                                   CReliabilitySolve,
-                                  CLineMeasSolve)
+                                  CLineMeasSolve,
+                                  CLineMatchingSolve)
 import pandas as pd
 import json
 
@@ -54,6 +56,7 @@ import json
 class Context:
 
     def __init__(self, config, parameters):
+        _check_config(config)
         self.calibration_library = CalibrationLibrary(parameters, config["calibration_dir"])
         self.calibration_library.load_all()
         self.process_flow_context = CProcessFlowContext()
@@ -74,15 +77,18 @@ class Context:
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
 
+
     def run(self, spectrum_reader):
         spectrum_reader.init()
         self.process_flow_context.setSpectrum(spectrum_reader.get_spectrum())
         if "linemeascatalog" in self.config:
             for object_type in self.config["linemeascatalog"].keys():
                 lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
-                redshift_ref = lm[lm.ProcessingID == spectrum_reader.source_id]["g.Redshift"].iloc[0]
-                velocity_abs = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityAbsorption"].iloc[0]
-                velocity_em = lm[lm.ProcessingID == spectrum_reader.source_id]["g.VelocityEmission"].iloc[0]
+                lm = lm[lm.ProcessingID == spectrum_reader.source_id]
+                columns = self.config["linemeas_catalog_columns"][object_type]
+                redshift_ref = lm[columns["Redshift"]].iloc[0]
+                velocity_abs = lm[columns["VelocityAbsorption"]].iloc[0]
+                velocity_em = lm[columns["VelocityEmission"]].iloc[0]
     #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
                 self.parameters[object_type]["redshiftref"] = redshift_ref
                 self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
@@ -132,3 +138,19 @@ class Context:
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
         solver.Compute(self.process_flow_context)
+
+
+def _check_config(config):
+    if "calibration_dir" not in config:
+        raise Exception("Config must contain 'calibration_dir' key")
+    if not os.path.exists(config["calibration_dir"]):
+        raise Exception("Calibration directory {} does not exist".format(config["calibration_dir"]))
+    if "linemeascatalog" in config:
+        if "linemeas_catalog_columns" not in config:
+            raise Exception("With a linemeas catalog Config must contain a linemeas_catalog_columns key")
+        for object_type in config["linemeascatalog"].keys():
+            if object_type not in config["linemeas_catalog_columns"]:
+                raise Exception("Config['linemeas_catalog_columns'] misses category {}".format(object_type))
+            for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
+                if attr not in config["linemeas_catalog_columns"][object_type]:
+                    raise Exception("Config['linemeas_catalog_columns'][{}] misses attribute".format(object_type, attr))
