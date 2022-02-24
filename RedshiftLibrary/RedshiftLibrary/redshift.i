@@ -666,7 +666,8 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       BAD_COUNTMATCH,
       BAD_TEMPLATECATALOG,
       INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE
+      OVERLAPRATE_NOTACCEPTABLE,
+      DZ_NOT_COMPUTABLE
     } ErrorCode;
 
 typedef struct{
