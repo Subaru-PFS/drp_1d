@@ -48,11 +48,12 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CClassificationSolve,
                                   CReliabilitySolve,
                                   CLineMeasSolve,
-                                  CLineMatchingSolve)
+                                  CLineMatchingSolve,
+                                  CFlagWarning)
 import pandas as pd
 import json
 
-
+zflag = CFlagWarning.GetInstance()
 class Context:
 
     def __init__(self, config, parameters):
@@ -100,6 +101,11 @@ class Context:
                 self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
         self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
         self.process_flow_context.Init()
+
+        #store flag in root object
+        resultStore = self.process_flow_context.GetResultStore()
+        resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
+        zflag.resetFlag()
 
         enable_classification = False
         enable_reliability = False

@@ -322,19 +322,24 @@ class ResultStoreOutput(AbstractOutput):
 
     def load_operator_result(self, data_spec, object_type, rank=None):
         if data_spec.level == "root":
-            or_type = self.results_store.GetGlobalResultType(data_spec.hdf5_dataset,
-                                                             data_spec.hdf5_dataset,
-                                                             data_spec.ResultStore_key)
-            if or_type == "CClassificationResult":
-                return self.results_store.GetClassificationResult(data_spec.hdf5_dataset,
-                                                                  data_spec.hdf5_dataset,
-                                                                  data_spec.ResultStore_key)
-            elif or_type == "CReliabilityResult":
-                return self.results_store.GetReliabilityResult(data_spec.hdf5_dataset,
-                                                                  data_spec.hdf5_dataset,
-                                                                  data_spec.ResultStore_key)
-            else:
-                raise Exception("Unknown OperatorResult type " + or_type)
+            if data_spec.ResultStore_key == "context_warningFlag":
+                return self.results_store.GetFlagResult(data_spec.hdf5_dataset,
+                                                        data_spec.hdf5_dataset,
+                                                        data_spec.ResultStore_key)
+            else :
+                or_type = self.results_store.GetGlobalResultType(data_spec.hdf5_dataset,
+                                                                data_spec.hdf5_dataset,
+                                                                data_spec.ResultStore_key)
+                if or_type == "CClassificationResult":
+                    return self.results_store.GetClassificationResult(data_spec.hdf5_dataset,
+                                                                    data_spec.hdf5_dataset,
+                                                                    data_spec.ResultStore_key)
+                elif or_type == "CReliabilityResult":
+                    return self.results_store.GetReliabilityResult(data_spec.hdf5_dataset,
+                                                                    data_spec.hdf5_dataset,
+                                                                    data_spec.ResultStore_key)
+                else:
+                    raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "object":
             if "linemeas" in data_spec.hdf5_dataset:
                 method = self.parameters[object_type]["linemeas_method"]
@@ -356,6 +361,11 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetModelSpectrumResult(object_type,
                                                                  method,
                                                                  data_spec.ResultStore_key)
+            elif or_type == "CFlagLogResult":
+                return self.results_store.GetFlagResult(object_type,
+                                                        self.get_solve_method(object_type),
+                                                        data_spec.ResultStore_key)
+
 
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)

@@ -39,6 +39,8 @@
 #include "RedshiftLibrary/method/solve.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/operator/flagResult.h"
 
 using namespace NSEpic;
 
@@ -85,6 +87,10 @@ void CSolve::Compute(CProcessFlowContext& context)
   {
     CAutoScope autoscope(scope,m_name);
     result = compute(inputContext,resultStore,scope);
+
+    resultStore->StoreScopedGlobalResult( "warningFlag", std::make_shared<const CFlagLogResult>(Flag.getBitMask()));
+    Flag.resetFlag();
+
     saveToResultStore(result,resultStore);
   }
 

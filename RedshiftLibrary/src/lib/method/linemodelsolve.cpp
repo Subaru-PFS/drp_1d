@@ -371,8 +371,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
                                                  m_opt_pdfcombination,
                                                  pdfz.m_postmargZResult->valEvidenceLog);
 
-
-    
     return lmsolveresult;
 }
 
