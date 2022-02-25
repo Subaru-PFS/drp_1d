@@ -126,19 +126,8 @@ def _openblas_build(path, prefix, options, extra_flags=''):
               "make -j{parallel} {extra_flags}; make install PREFIX={prefix} {extra_flags}".format(
                   path=path, prefix=prefix,
                   parallel=options.parallel,
+                  shared=1 if options.shared else 0,    
                   extra_flags=extra_flags))
-
-def _openblas_extra_flags():
-    _os = platform(terse=True).lower()
-    print("Working on platform : {}".format(_os))
-    if 'macos' in _os or _os.startswith('darwin'):
-        extflg = ""
-    elif _os == 'windows':
-        extflg = ""
-    else:
-        print("Set default CPU architeture to CORE2")
-        extflg = "TARGET=CORE2"
-    return extflg
 
 libDict = {
     "boost": {
@@ -151,14 +140,14 @@ libDict = {
     },
     "gsl": {
         "path":  "gsl-2.5",
-        "src": "http://ftp.igh.cnrs.fr/pub/gnu/gsl/gsl-2.5.tar.gz",
+        "src": "https://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz",
         "check_file": "libgsl",
         "build": _standard_build,
         "extra_flags": ''
     },
     "fftw": {
         "path":  "fftw-3.3.8",
-        "src": "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.8.tar.gz",
+        "src": "https://www.fftw.org/fftw-3.3.8.tar.gz",
         "check_file": "libfftw3",
         "build": _standard_build,
         "extra_flags": ""
@@ -172,12 +161,12 @@ libDict = {
         "extra_flags": ''
     },
     "openblas": {
-        "path": "openblas-0.3.7",
+        "path": "openblas-0.3.19",
         "src": "https://github.com/xianyi/OpenBLAS/archive/"
-        "v0.3.7.tar.gz",
+        "v0.3.19.tar.gz",
         "check_file": "libopenblas",
         "build": _openblas_build,
-        "extra_flags": _openblas_extra_flags()
+        "extra_flags": "NO_LAPACK=1"
     }
 
 }
@@ -196,36 +185,53 @@ def Main(argv):
 
     usage = "Download and install third party library libraries:\n\t"
     parser = argparse.ArgumentParser(description=usage)
-    parser.add_argument("--prefix", metavar='PREFIX',
+    parser.add_argument("--workdir", metavar='WORKDIR', default=os.getcwd(),
+                        help="working directory to build thirdparty")
+    parser.add_argument("--prefix", metavar='PREFIX', default="thirdparty",
                         help="install files in PREFIX")
+
     parser.add_argument("-j", "--parallel",
                         help="Parallel make flag", type=int,
                         default="1")
-    parser.add_argument("--static",
-                        help="Build static libraries", action="store_false",
-                        dest="shared", default=False)
-    parser.add_argument("--shared",
-                        help="Build shared libraries", action="store_true",
-                        dest="shared", default=False)
+    # parser.add_argument("--static",
+    #                     help="Build static libraries", action="store_true",
+    #                     dest="static")
+    # parser.add_argument("--shared",
+    #                     help="Build shared libraries", action="store_false",
+    #                     dest="shared")
     parser.add_argument('modules', metavar='NAME', choices=libDict.keys(),
                         nargs='*', help="Modules to build.")
     parser.add_argument('--extra_flags', default="",
                         help="Extra flags for building stage.")
+    parser.add_argument("--force",
+                        help="Force to build library even if it already exists", action="store_true")
+
 
     args = parser.parse_args()
+
+    #Add shared/static arguments for backward compatibility
+    args.shared = True
+    args.static = False
+
+    if os.path.isabs(args.prefix):
+        prefix = args.prefix
+    else:
+        prefix = os.path.join(os.getcwd(), args.prefix)
 
     print("Starting thirparties build...")
 
     for module in args.modules:
-        libPath = os.path.join(build_dir, libDict[module]["path"])
+        libPath = os.path.join(args.workdir, libDict[module]["path"])
         libSrc = libDict[module]["src"]
         build_method = libDict[module]['build']
         extra_flags = libDict[module]['extra_flags'] + " {extra_flags}".format(extra_flags=args.extra_flags)
         print("Extra flags : {extra_flags}".format(extra_flags=extra_flags))
-        if not _check_lib(module, args.prefix, args):
+        if not _check_lib(module, prefix, args) or args.force:
+            if args.force:
+                print("Build force by user.")
             DownloadHTTPFile(libSrc, libPath + ".tar.gz")
             ExtractTarGZ(libPath + ".tar.gz", libPath)
-            build_method(libPath, args.prefix, args, extra_flags)
+            build_method(libPath, prefix, args, extra_flags)
 
 
 Main(sys.argv)
