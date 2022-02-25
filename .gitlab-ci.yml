@@ -32,8 +32,9 @@ build-osx:
   script:
     - mkdir -p build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
     - make -j 2
+    - make install
   cache:
     key: osx
     policy: push
@@ -47,7 +48,6 @@ test-osx:
   allow_failure: true
   script:
     - cd build
-    - make install
     - make test
   cache:
     key: osx
@@ -59,9 +59,6 @@ test-osx:
   tags:
     - osx
   when: manual
-  before_script:
-    - cd build
-    - cd ..
   script:
     - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
@@ -147,8 +144,9 @@ push-rc-38-osx:
     - source /venv/p36/bin/activate
     - mkdir -p build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
     - make -j4
+    - make install
   cache:
     policy: push
     untracked: true
@@ -160,7 +158,7 @@ push-rc-38-osx:
     - source /venv/p36/bin/activate
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage -DCMAKE_PREFIX_PATH=/root/local"
     - make -j4
     - make test
     - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
@@ -175,7 +173,6 @@ push-rc-38-osx:
   allow_failure: true
   script:
     - cd build
-    - make install
     - make test
   cache:
     policy: pull
@@ -183,10 +180,6 @@ push-rc-38-osx:
 
 .wheel-manylinux:
   stage: build-wheel
-  before_script:
-    - cd build
-    - make install
-    - cd ..
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
