@@ -41,8 +41,9 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 
-#include <stdexcept>
 #include <algorithm>
+#include <gsl/gsl_const_mksa.h>
+#include <stdexcept>
 
 using namespace NSEpic;
 
@@ -57,6 +58,22 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
 
   // initialize min lambda
   m_minLambda = *std::min_element(m_lambda.cbegin(), m_lambda.cend());
+
+  // Angstrom to Herz conversion
+  const Float64 c = GSL_CONST_MKSA_SPEED_OF_LIGHT * 1e10; // angstrom s-1
+  m_freq.reserve(m_lambda.size());
+  std::transform(m_lambda.cbegin(), m_lambda.cend(), back_inserter(m_freq),
+                 [c](Float64 lambda) { return c / lambda; });
+
+  // compute the integral of transmission in Hz
+  m_transmision_sum = 0.0;
+  for (auto trans = m_transmission.cbegin() + 1, E = m_transmission.cend(),
+            freq = m_freq.cbegin() + 1;
+       trans != E; ++trans, ++freq) {
+    Float64 trapezArea = (*trans + *(trans - 1)) / 2.0;
+    trapezArea *= (*freq - *(freq - 1));
+    m_transmision_sum += trapezArea;
+  }
 }
 
 Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
@@ -72,12 +89,15 @@ Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
 
   Float64 sum = 0.0;
   for (auto flux = outFlux.cbegin() + 1, E = outFlux.cend(),
-            lambda = m_lambda.cbegin()+1;
-       flux != E; ++flux, ++lambda) {
-    Float64 trapezArea = (*flux + *(flux-1)) / 2.0;
-    trapezArea *= (*lambda - *(lambda-1));
+            freq = m_freq.cbegin() + 1;
+       flux != E; ++flux, ++freq) {
+    Float64 trapezArea = (*flux + *(flux - 1)) / 2.0;
+    trapezArea *= (*freq - *(freq - 1));
     sum += trapezArea;
   }
+
+  // convert the integrated flux to flux density per Hz
+  sum /= m_transmision_sum;
 
   return sum;
 }

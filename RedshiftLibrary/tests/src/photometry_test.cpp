@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(photometricbands)
     BOOST_CHECK(band.GetWavelength() == TFloat64List(lambda, lambda+n));
 
     const TFloat64List flux = {2., 2., 2., 3., 3., 3.};
-    BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 885.355, 1e-6 );
+    BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 2.369678596, 1e-6 );
 }
 
 BOOST_AUTO_TEST_CASE(photometricbandcatalog)
