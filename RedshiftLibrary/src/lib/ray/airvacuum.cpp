@@ -178,7 +178,7 @@ void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
@@ -191,7 +191,7 @@ void CAirVacCiddor1996::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
@@ -204,7 +204,7 @@ void CAirVacMorton2000::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
