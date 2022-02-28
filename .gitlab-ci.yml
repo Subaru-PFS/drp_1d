@@ -394,6 +394,7 @@ wheel36-manylinux2014:
 wheel37-manylinux2014:
   variables:
     PYTHON_VERSION: "37"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
@@ -401,6 +402,7 @@ wheel37-manylinux2014:
 wheel38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
