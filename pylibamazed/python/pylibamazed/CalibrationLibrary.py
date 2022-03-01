@@ -186,8 +186,7 @@ class CalibrationLibrary:
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
-        with open(os.path.join(self.calibration_dir,linemodel_params["tplratio_catalog"],"parameters.json")) as f: 
-            line_ratio_catalog_parameters = json.load(f)
+
         self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
         n_ebmv_coeffs = 1
         if self.parameters[object_type][method]["linemodel"]["tplratio_ismfit"]:
@@ -197,7 +196,10 @@ class CalibrationLibrary:
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f,sep='\t')
             name = f.split(os.sep)[-1][:-4]
-            line_ratio_catalog_parameter = line_ratio_catalog_parameters[name]
+            with open(os.path.join(self.calibration_dir,
+                                   linemodel_params["tplratio_catalog"],
+                                   name + ".json")) as f:
+                line_ratio_catalog_parameter = json.load(f)
             for k in range(n_ebmv_coeffs):
                 lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type])
                 for index,row in lr_catalog_df.iterrows():
