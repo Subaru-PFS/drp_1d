@@ -224,7 +224,6 @@ std::shared_ptr<const CFlagLogResult> COperatorResultStore::GetFlagResult(const 
     }
 
     std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
-    std::cout << oss.str();
 
     return std::dynamic_pointer_cast<const CFlagLogResult>(GetGlobalResult(oss.str()).lock());
 }

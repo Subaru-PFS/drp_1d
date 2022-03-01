@@ -39,8 +39,10 @@
 #ifndef _REDSHIFT_COMMON_RANGE_
 #define _REDSHIFT_COMMON_RANGE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <cmath>
 #include <vector>
@@ -185,12 +187,12 @@ template <typename T> class CRange
   {
     if (value < m_Begin || value > m_End)
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: value %.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VALUE_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": value "<<value<<" not inside ]"<<m_Begin<<","<<m_End<<"[");
         return false;
       }
     else if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
@@ -208,7 +210,7 @@ template <typename T> class CRange
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     
@@ -227,7 +229,7 @@ template <typename T> class CRange
   {
     if(m_End < ordered_values.front() || m_Begin > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     
@@ -240,7 +242,7 @@ template <typename T> class CRange
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if(i_min>i_max){
-        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: There is no sample inside range (min,max indices=[%d,%d]",i_min, i_max);
+        if (warning) Flag.warning(Flag.CRANGE_NO_INTERSECTION, Formatter()<<"CRange::"<<__func__<<": There is no sample inside range (min,max indices=["<<i_min<<","<<i_max<<"]");
         return false;
     }
     return true;

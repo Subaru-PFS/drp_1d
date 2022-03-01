@@ -49,6 +49,7 @@
 #include "RedshiftLibrary/operator/raymatchingresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/common/flag.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -364,7 +365,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
 
   if( iCmpt==cmptMax )
   {
-      Log.LogWarning( "Warning. Stopped the linematching dynamic cut loop..." );
+      Flag.warning(Flag.LINEMATCHING_REACHED_ENDLOOP, Formatter()<<"CMethodLineMatchingSolve::"<<__func__<<": Warning. Stopped the linematching dynamic cut loop..." );
   }
   return std::make_shared<CLineMatchingSolveResult>();
 }

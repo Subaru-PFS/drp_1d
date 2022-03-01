@@ -53,6 +53,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -78,7 +79,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
     {
         if(!rootFolder.string().empty())
         {
-            Log.LogWarning("    CPriorHelper: rootFolder path does not exist: %s", rootFolder.string().c_str());
+            Flag.warning(Flag.INVALID_FOLDER_PATH, Formatter()<<"    CPriorHelper::"<<__func__<<": rootFolder path does not exist: " << rootFolder.string().c_str());
             Log.LogDetail("    CPriorHelper: priors won't be used");
         }
         mInitFailed = true;

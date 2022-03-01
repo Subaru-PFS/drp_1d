@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 #include <cmath>
 #include <float.h>
@@ -162,7 +163,7 @@ bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
       // we should not raise an exception here 
       // (we can accept a missing candidate in second pass window)
       // The boolean return has to be tested by the caller
-      Log.LogWarning("          CExtremum::Find: FindAllPeaks returned empty MaxX");
+      Flag.warning(Flag.FINDER_NO_PEAKS, Formatter()<<"          CExtremum::"<<__func__<<": FindAllPeaks returned empty MaxX");
       return false;
     }
 
@@ -181,7 +182,7 @@ bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
       TFloat64List ret_prominences = Cut_Prominence_Merit(maxX, maxY, minX, minY);    
 
       if(maxX.size() == 0){
-        Log.LogWarning("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+        Flag.warning(Flag.FINDER_NO_PEAKS, Formatter()<<"        CExtremum::"<<__func__<<": Cut_Prominence_Merit returns empty MaxX");
         return false;
       }
     }

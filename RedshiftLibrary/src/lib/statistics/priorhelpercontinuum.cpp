@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/statistics/priorhelpercontinuum.h"
+#include "RedshiftLibrary/common/flag.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -76,7 +77,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     {
         if(!rootFolder.string().empty())
         {
-            Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
+            Flag.warning(Flag.INVALID_FOLDER_PATH, Formatter()<<"    CPriorHelperContinuum::"<<__func__<<": rootFolder path does not exist: " << rootFolder.string().c_str());
             Log.LogDetail("    CPriorHelperContinuum: priors won't be used");
         }
         mInitFailed = true;

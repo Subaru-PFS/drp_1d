@@ -85,6 +85,7 @@
 %shared_ptr(CRayCatalogsTplShape)
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
+%shared_ptr(CFlagWarning)
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 

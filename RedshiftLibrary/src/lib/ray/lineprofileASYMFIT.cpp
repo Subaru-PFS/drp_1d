@@ -38,6 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/ray/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 using namespace NSEpic;
 using namespace std;
 
@@ -50,7 +52,7 @@ CLineProfileASYM(ASYMFIT, nsigmasupport, params, centeringMethod)
 void CLineProfileASYMFIT::SetAsymParams(TAsymParams params)
 {
     if(std::isnan(params.sigma) || std::isnan(params.alpha) || std::isnan(params.delta)){
-        Log.LogWarning("CLineProfileASYMFIT::setAsymParams AsymFit params are NaN");
+        Flag.warning(Flag.ASYMFIT_NAN_PARAMS, Formatter()<<"CLineProfileASYMFIT::"<<__func__<<" AsymFit params are NaN");
     } 
     m_asym_sigma_coeff = params.sigma;
     m_asym_alpha = params.alpha;

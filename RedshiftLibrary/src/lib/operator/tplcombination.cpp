@@ -46,6 +46,8 @@
 #include  "RedshiftLibrary/extremum/extremum.h"
 #include  "RedshiftLibrary/common/indexing.h"
 #include  "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <math.h>
 #include <gsl/gsl_interp.h>
@@ -690,7 +692,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }if(oneValidStatusFoundIndex==-1)
     {
-        Log.LogWarning("  Operator-Tplcombination: STATUS WARNING: Not even one single valid fit/merit value found");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter()<<"  COperatorTplcombination::"<<__func__<<": STATUS WARNING: Not even one single valid fit/merit value found");
     }
 
 
@@ -706,7 +708,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    Tplcombination-operator: Loop Error - lst-square values not set even once");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter()<<"    COperatorTplcombination::"<<__func__<<": Loop Error - lst-square values not set even once");
     }
 
     //estimate CstLog for PDF estimation

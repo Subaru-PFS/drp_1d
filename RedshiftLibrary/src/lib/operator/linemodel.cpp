@@ -56,6 +56,8 @@
 
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
@@ -647,7 +649,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
     if (fftprocessing && ignoreLinesSupport==true)
     {
         ignoreLinesSupport=false;
-        Log.LogWarning("  Operator-Linemodel: unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
+        Flag.warning(Flag.IGNORELINESSUPPORT_DISABLED_FFT, Formatter()<<"  COperatorLineModel::"<<__func__<<": unable to ignoreLinesSupport if NOT templateFitting-operator is used. Disabled");
     }
     std::vector<CMask> maskList;
     if(ignoreLinesSupport)
@@ -830,7 +832,7 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
         {
 	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Linemodel: Negative continuum amplitude found at z="<< max_fitamplitudeSigma_z<<": best continuum tpl "<< fitValues.tplName<<", amplitude/error = "<< fitValues.fitAmplitudeSigma<<" & error = "<< fitValues.fitAmplitudeError);
         }else{
-            Log.LogWarning(" Operator-Linemodel: Switching to spectrum continuum since Negative continuum amplitude found at z=%.5f: best continuum tpl %s, amplitude/error = %e & error = %e", max_fitamplitudeSigma_z, fitValues.tplName.c_str(), fitValues.fitAmplitudeSigma, fitValues.fitAmplitudeError);
+            Flag.warning(Flag.FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP, Formatter()<<"  COperatorLineModel::"<<__func__<<": Switching to spectrum continuum since Negative continuum amplitude found at z="<<max_fitamplitudeSigma_z<<": best continuum tpl "<<fitValues.tplName.c_str()<<", amplitude/error = "<<fitValues.fitAmplitudeSigma<<" & error = "<<fitValues.fitAmplitudeError);
             m_opt_continuumcomponent = "fromspectrum";
             m_model->SetContinuumComponent("fromspectrum"); 
     }
@@ -998,8 +1000,8 @@ void COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLin
 
             if(m_result->ContinuumModelSolutions[idx].tplName=="")
             {
-                Log.LogWarning(" Saving first pass extremum w. ContinuumModelSolutions tplname=%s", m_result->ContinuumModelSolutions[idx].tplName.c_str());
-                Log.LogWarning(" Saving first pass extremum w. result idx=%d, w. m_result->Redshifts[idx]=%f", idx, m_result->Redshifts[idx]);
+                Flag.warning(Flag.TPL_NAME_EMPTY, Formatter()<<"COperatorLineModel::"<<__func__<<": Saving first pass extremum w. ContinuumModelSolutions tplname="<< m_result->ContinuumModelSolutions[idx].tplName.c_str());
+                Flag.warning(Flag.TPL_NAME_EMPTY, Formatter()<<"COperatorLineModel::"<<__func__<<": Saving first pass extremum w. result idx="<<idx<<", w. m_result->Redshifts[idx]="<< m_result->Redshifts[idx]);
             }
 
         }
