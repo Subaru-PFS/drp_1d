@@ -264,7 +264,8 @@ TFloat64Range CSpectrumLogRebinning::LogRebinTemplateCatalog(const std::string& 
 {
     TFloat64Range   redshiftRange = m_inputContext.GetParameterStore()->Get<TFloat64Range>(category + ".redshiftrange");
     UInt32          SSratio = 1;
-    if(m_inputContext.GetParameterStore()->Has<UInt32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio"))
+    if(m_inputContext.GetParameterStore()->Get<std::string>(category + ".method") == "LineModelSolve" &&
+       m_inputContext.GetParameterStore()->Has<UInt32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio") )
         SSratio = m_inputContext.GetParameterStore()->Get<UInt32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio");
     
     // compute the effective zrange of the new redshift grid
