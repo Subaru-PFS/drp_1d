@@ -68,10 +68,11 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
   // compute the integral of transmission in Hz
   m_transmision_sum = 0.0;
   for (auto trans = m_transmission.cbegin() + 1, E = m_transmission.cend(),
-            freq = m_freq.cbegin() + 1;
-       trans != E; ++trans, ++freq) {
-    Float64 trapezArea = (*trans + *(trans - 1)) / 2.0;
-    trapezArea *= (*freq - *(freq - 1));
+            freq = m_freq.cbegin() + 1, lbda = m_lambda.cbegin() + 1;
+       trans != E; ++trans, ++freq, ++lbda) {
+    // lambda factor below is to account for photon counting detector
+    Float64 trapezArea = (trans[0] * lbda[0] + trans[-1] * lbda[-1]) / 2.0;
+    trapezArea *= (freq[-1] - freq[0]);
     m_transmision_sum += trapezArea;
   }
 }
@@ -83,16 +84,26 @@ Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
                           "CPhotometryBand::IntegrateFlux: flux and "
                           "transmission sizes are different");
 
-  TAxisSampleList outFlux(m_transmission.size());
-  std::transform(inFlux.cbegin(), inFlux.cend(), m_transmission.cbegin(),
-                 outFlux.begin(), std::multiplies<Float64>{});
+  // convert flux from Flambda in Erg/s/cm2/Angstrom to Fnu in Erg/s/cm2/Hz
+  const Float64 c = GSL_CONST_MKSA_SPEED_OF_LIGHT * 1e10; // angstrom s-1
+  TAxisSampleList inFlux_nu(m_transmission.size());
+  std::transform(inFlux.cbegin(), inFlux.cend(), m_lambda.cbegin(),
+                 inFlux_nu.begin(), [c](Float64 Flambda, Float64 lambda) {
+                   return Flambda * lambda * lambda / c;
+                 });
+
+  // multiply by transmission
+  TAxisSampleList outFlux_nu(m_transmission.size());
+  std::transform(inFlux_nu.cbegin(), inFlux_nu.cend(), m_transmission.cbegin(),
+                 outFlux_nu.begin(), std::multiplies<Float64>{});
 
   Float64 sum = 0.0;
-  for (auto flux = outFlux.cbegin() + 1, E = outFlux.cend(),
-            freq = m_freq.cbegin() + 1;
-       flux != E; ++flux, ++freq) {
-    Float64 trapezArea = (*flux + *(flux - 1)) / 2.0;
-    trapezArea *= (*freq - *(freq - 1));
+  for (auto flux = outFlux_nu.cbegin() + 1, E = outFlux_nu.cend(),
+            freq = m_freq.cbegin() + 1, lbda = m_lambda.cbegin() + 1;
+       flux != E; ++flux, ++freq, ++lbda) {
+    // lbda factor below is to account for photon counting detector
+    Float64 trapezArea = (flux[0] * lbda[0] + flux[-1] * lbda[-1]) / 2.0;
+    trapezArea *= (freq[-1] - freq[0]);
     sum += trapezArea;
   }
 

@@ -65,7 +65,9 @@ BOOST_AUTO_TEST_CASE(photometricdata)
 
     BOOST_CHECK(phdat.GetFluxErr("band2") == 2e-18);
 
-    BOOST_CHECK(phdat.GetFluxOverErr2("band1") == 1e6);
+    BOOST_CHECK_CLOSE(phdat.GetOneOverErr2("band1"), 1e36, 1e-12);
+
+    BOOST_CHECK_CLOSE(phdat.GetFluxOverErr2("band1"), 1e6, 1e-12);
 
     BOOST_CHECK(phdat.GetNameList() == name);
 
@@ -87,7 +89,7 @@ BOOST_AUTO_TEST_CASE(photometricbands)
     BOOST_CHECK(band.GetWavelength() == TFloat64List(lambda, lambda+n));
 
     const TFloat64List flux = {2., 2., 2., 3., 3., 3.};
-    BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 2.369678596, 1e-6 );
+    BOOST_CHECK_CLOSE(band.IntegrateFlux(flux), 4.4202843563e-12, 1e-6 );
 }
 
 BOOST_AUTO_TEST_CASE(photometricbandcatalog)

@@ -119,7 +119,8 @@ protected:
 
     virtual void InitIsmIgmConfig( Float64 redshift,
                            const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin);
+                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin,
+                           Int32 EbmvListSize);
 
     virtual bool CheckLyaIsInCurrentRange(const TFloat64Range & currentRange) const {
         return  currentRange.GetBegin() > 1216.0;

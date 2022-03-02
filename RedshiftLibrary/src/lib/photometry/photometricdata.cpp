@@ -55,7 +55,8 @@ CPhotometricData::CPhotometricData(const TStringList & name,  const TFloat64List
     for (Int32 i=0; i<name.size(); i++){
         m_flux[name[i]] = flux[i];
         m_fluxErr[name[i]] = fluxerr[i];
-        m_fluxOverErr2[name[i]] = flux[i]*flux[i]/(fluxerr[i]*fluxerr[i]);
+        m_oneOverErr2[name[i]] = 1./(fluxerr[i]*fluxerr[i]);
+        m_fluxOverErr2[name[i]] = flux[i]*flux[i]*m_oneOverErr2[name[i]];
     }
 }
 
