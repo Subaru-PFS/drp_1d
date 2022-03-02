@@ -109,9 +109,9 @@ void CInputContext::RebinInputs()
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {
+      m_logGridStep = DBL_MAX;
       for (std::string cat:m_categories)
 	{
-	  m_logGridStep = DBL_MAX;
 	  if (fft_processing[cat])
 	    {
 	      Float64 redshift_step = m_ParameterStore->Get<Float64>( cat+".redshiftstep" );
@@ -119,7 +119,6 @@ void CInputContext::RebinInputs()
 	      if(redshift_step < m_logGridStep)
 		{
 		  m_logGridStep = redshift_step;
-
 		}
 	    }
 	}
