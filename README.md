@@ -1,48 +1,49 @@
 # pylibamazed
 
-## What is pylibamazed ?
+## About ?
 
-pylibamazed is a Python package that provides numerical algorithms dedicated to the analysis of 1D spectroscopic data of astronophysical sources.
+pylibamazed is a Python package wrapping numerical algorithms for the analysis of 1D spectroscopic data of astrophysical sources.
 
 ## Main features
 
 * Estimate source category (galaxy, star or QSO)
-* Classify source type (sub-classification into the source category, e.g. the spectral type of a star for star category)
+* Classify source type (sub-classification into the source category, e.g. the spectral type of a star for the star category)
 * Estimate redshift
 * Provide redshift reliability
-* Estimate de radial velocity
-* Measure flux of emission line
+* Estimate radial velocity
+* Measure fluxes of emission lines
 
-## Dependencies
+##Playing pylibamazed
+pylibamazed should work on Linux and OS X.
 
-`pylibamazed` depends on following third parties:
+### Dependencies
+
+The pylibamazed algorithms are mainly developped in C++ and wrapped in Python. These algorithms are dependant on the thirdparties listed below. It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install these thirdparties. To install third parties using pylibamazed internal script, refer to the related [third parties](#Third-parties-install-guide) section.
+
+Required third parties:
 * [boost](https://www.boost.org/) >=1.57
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
 * [openblas](https://www.openblas.net/) >= 0.3.19
 
-`pylibamazed` also depends on following python packages
+Required python packages:
 * [numpy](https://www.numpy.org/) >=1.16.0
 * [astropy](https://www.astropy.org/) >=3.1.1
 * [cython](https://cython.org/) >=0.17.0
 * [pandas](https://pandas.pydata.org/) >=1.0.0
 * [h5py](https://www.h5py.org/) >=2.9
 
-## Install
-
-The pylibamazed algorithms are widly developped in C++ and wrapped in Python. These algorithms are depending of known thirdparties listed above. It is recommanded to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties. To install third parties using pylibamazed internal script, refer to the related [third parties](#Third-parties-install-guide) section.
-
 ### Build and install
 
-To install pylibamazed from source you need following requirements in addition to the normal dependencies above.
+Prerequisites to install pylibamazed from source code:
 
 * [gcc](https://gcc.gnu.org/)
 * [python](https://www.python.org/) >=3.6
 * [cmake](https://cmake.org/) >=3.12
 * [swig](http://www.swig.org/) >=4.0
 
-To build the C++ part, in `pylibamazed` root directory execute:
+To build the C++ part, in `pylibamazed` root directory, run:
 
     mkdir build
     cd build
@@ -50,44 +51,44 @@ To build the C++ part, in `pylibamazed` root directory execute:
     make
     make install
 
-To run tests in `build` directory, execute:
+To run tests in `build` directory, run:
 
     make test
 
-To build and install `pylibamazed` python module, in `pylibamazed` root directory execute:
+To build and install `pylibamazed` python module, in `pylibamazed` root directory run:
 
     pip install .
 
 ### Build options
 
-Build process uses cmake tool
+The Build process uses the cmake tool
 
 #### -DCMAKE_BUILD_TYPE
 
-You can build either in `Release`, `Debug` or `Coverage` mode (defaults to `Release`).
+You can build the library either in `Release`, `Debug` or `Coverage` mode (default to `Release`).
 
-As an example, to build pylibamazed in Debug mode execute
+For instance to build pylibamazed in Debug mode, run: 
 
     cmake .. -DCMAKE_BUILD_TYPE=Debug
 
 #### -DCMAKE_INSTALL_PREFIX
 
-You can specify the absolute path to your install directory (defaults to `$HOME/.local`). If you are working with several versions of pylibamazed, it is hightly recommanded to specify a proper install directory for every version. 
+You can specify the absolute path to your installation directory (default to `$HOME/.local`). If you are working with several versions of pylibamazed, it is hightly recommended to specify a proper installation directory for each version. 
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/my/own/directory
 
 #### -DCMAKE_PREFIX_PATH
 
-If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify proper directory.
+If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the  corresponding directory as follows
 
     cmake .. -DCMAKE_PREFIX_PATH=/my/thirdparty/directory
 
 
 ## Additional documentation
 
-Documentation about the python API of this software can be found by building the provided documentation:
+The python API documentation could be generated as follows:
 
-Build documentation:
+Build the documentation:
 
     cd $ROOT_DIR/pylibamazed/doc
     make html
@@ -96,37 +97,37 @@ Then open in your web browser:
 
     $ROOT_DIR/pylibamazed/build/html/index.html
 
-## Third parties install guide
+## Third parties installation guide
 
-pylibamazed depends of several third parties. See [this section](#dependencies) for required third parties. It is recommanded to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
+As stated earlier pylibamazed depends on several third parties (refer to [this section](#dependencies) for the complete list). It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
 
     buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
-Names of third party to install must be in [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
 
-To install the fftw and cfitsio third parties into the `thirdparty` directory execute:
+For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
 
     python tools/buildandinstallthirdparty fftw cfitsio
 
 Other command line options:
 
-`--workdir`: specify working directory for third party building (absolute path)
+`--workdir`: specifies the working directory for the third party building (absolute path)
 
     python tools/buildandinstallthirdparty fftw cfitsio --workdir=/tmp
 
-`--prefix`: specify the install directory for third parties (absolute path)
+`--prefix`: specifies the installation directory for third parties (absolute path)
 
     python tools/buildandinstallthirdparty fftw cfitsio --prefix=/usr/local
 
-`-j`: parallel make flag
+`-j`: specifies the number of make jobs to run simultaneously 
 
     python tools/buildandinstallthirdparty fftw cfitsio -j 4
 
-`--extra_flags`: specify extra_flag to give to build stage of third party
+`--extra_flags`: specifies extra_flag to give to the build stage of third party
 
     python tools/buildandinstallthirdparty fftw cfitsio --extra_flags=
 
-`--force`: Force to build library even if it already exists
+`--force`: forces the library building and overwrites existing built library 
 
     python tools/buildandinstallthirdparty fftw cfitsio --force
 
