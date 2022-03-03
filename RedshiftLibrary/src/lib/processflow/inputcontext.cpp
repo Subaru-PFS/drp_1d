@@ -49,7 +49,6 @@ using namespace NSEpic;
 CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore):
   m_ParameterStore(std::move(paramStore))
 { 
-
 }
 /*
 Two cases exist:
@@ -79,16 +78,19 @@ Rebinning parameters for _Case2 should be extracted from m_Spectrum object, thus
 */
 void CInputContext::RebinInputs() 
 {
-    bool fft_processing_gal = m_ParameterStore->HasFFTProcessing(m_categories[0]); 
-    bool fft_processing_qso = m_ParameterStore->HasFFTProcessing(m_categories[1]);
-    bool fft_processing_star = m_ParameterStore->HasFFTProcessing(m_categories[2]);
-    
-    if(fft_processing_star)
+
+    std::map<std::string,bool> fft_processing;
+    m_use_LogLambaSpectrum = false;
+    for (std::string cat:m_categories)
+      {
+	fft_processing[cat]=m_ParameterStore->HasFFTProcessing(cat);
+	if (fft_processing[cat]) m_use_LogLambaSpectrum = true;
+      }
+    if(fft_processing.find("star")!= fft_processing.end() && fft_processing["star"])
     {
         throw GlobalException(INTERNAL_ERROR,"FFT processing is not yet supported for stars");
     }
 
-    m_use_LogLambaSpectrum = fft_processing_gal || fft_processing_qso || fft_processing_star;
 
     if(!m_use_LogLambaSpectrum) return;
 
@@ -107,10 +109,21 @@ void CInputContext::RebinInputs()
         m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
     }else
     {
-      Float64 zInputStep_gal = fft_processing_gal?m_ParameterStore->Get<Float64>( m_categories[0]+".redshiftstep" ):DBL_MAX;
-      Float64 zInputStep_qso = fft_processing_qso?m_ParameterStore->Get<Float64>( m_categories[1]+".redshiftstep" ):DBL_MAX;        
-      m_logGridStep = (zInputStep_gal>zInputStep_qso)?zInputStep_qso:zInputStep_gal;
+      m_logGridStep = DBL_MAX;
+      for (std::string cat:m_categories)
+	{
+	  if (fft_processing[cat])
+	    {
+	      Float64 redshift_step = m_ParameterStore->Get<Float64>( cat+".redshiftstep" );
+
+	      if(redshift_step < m_logGridStep)
+		{
+		  m_logGridStep = redshift_step;
+		}
+	    }
+	}
     }
+    Log.LogInfo(Formatter()<<"loggrid step=" << m_logGridStep);    
     std::string category;
     std::string errorRebinMethod = "rebinVariance";
     CSpectrumLogRebinning logReb(*this);
@@ -119,39 +132,33 @@ void CInputContext::RebinInputs()
       m_rebinnedSpectrum = logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
 
     TFloat64Range zrange;
-    if(fft_processing_gal){
-      zrange = logReb.LogRebinTemplateCatalog(m_categories[0]);
-      m_logRebin.insert({m_categories[0], SRebinResults{zrange}});
-    }
-    if(fft_processing_qso){
-      zrange = logReb.LogRebinTemplateCatalog(m_categories[1]);
-      m_logRebin.insert({m_categories[1], SRebinResults{zrange}});
-    }
+    for (std::string cat:m_categories)
+      {
+	if (fft_processing[cat])
+	  {
+	    zrange = logReb.LogRebinTemplateCatalog(cat);
+	    m_logRebin.insert({cat, SRebinResults{zrange}});
+	  }
+      }
 
     return;
 }
 
 void CInputContext::OrthogonalizeTemplates()
 {
-    bool orthog_gal = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[0]); 
-    bool orthog_qso = m_ParameterStore->HasToOrthogonalizeTemplates( m_categories[1]);
-
     Float64 lambda = (m_lambdaRange.GetBegin() + m_lambdaRange.GetEnd())/2;
     Float64 resolution = CLSFGaussianConstantResolution::computeResolution(lambda, m_Spectrum->GetLSF()->GetWidth(lambda));
     std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantResolutionArgs>(resolution);
     std::shared_ptr<const CLSF> lsf = LSFFactory.Create("GaussianConstantResolution", args);
 
-    if(orthog_gal)
-    {
-      CTemplatesOrthogonalization tplOrtho;
-      tplOrtho.Orthogonalize(*this, m_categories[0],lsf);
-    }
-    if(orthog_qso)
-    {
-      CTemplatesOrthogonalization tplOrtho_;//tplOrtho could be reused..TBC
-      tplOrtho_.Orthogonalize(*this, m_categories[1],lsf);
-    }
-    return;
+    for (std::string cat:m_categories)
+      {
+	if(m_ParameterStore->HasToOrthogonalizeTemplates(cat))
+	  {
+	    CTemplatesOrthogonalization tplOrtho;
+	    tplOrtho.Orthogonalize(*this, cat,lsf);
+	  }
+      }
 }
 
   void CInputContext::setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog)
@@ -166,6 +173,9 @@ void CInputContext::OrthogonalizeTemplates()
 
 void CInputContext::Init()
 {
+    m_categories = m_ParameterStore->GetList<std::string>("objects");
+    for(std::string cat:m_categories) Log.LogInfo(cat);
+
     bool enableInputSpcCorrect = m_ParameterStore->Get<bool>( "autocorrectinput");
     //non clamped lambdaRange: to be clamped depending on used spectra
     m_lambdaRange = m_ParameterStore->Get<TFloat64Range>("lambdarange");

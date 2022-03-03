@@ -57,11 +57,21 @@ class AbstractOutput:
             self.load_object_level(object_type)
             self.load_candidate_level(object_type)
 
-    def get_solve_method(self,object_type):
+    def get_solve_methods(self,object_type):
+        method = self.parameters[object_type]["method"]
+        linemeas_method = self.parameters[object_type]["linemeas_method"]
+        methods = []
+        if method:
+            methods.append(method)
+        if linemeas_method:
+            methods.append(linemeas_method)
+        return methods
+
+    def get_solve_method(self, object_type):
         return self.parameters[object_type]["method"]
 
     def get_attribute(self,object_type, dataset, attribute, rank = None):
-        if object_type in ["star","qso","galaxy"]:
+        if object_type:
             if rank is None:
                 return self.object_results[object_type][dataset][attribute]
             else:

@@ -57,10 +57,10 @@ using namespace std;
 /**
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
-CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType):
-  CSolve("linematchingsolve",scope,objectType)
+CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,std::string objectType):
+  CObjectSolve("LineMatchingSolve",scope,objectType)
 {    
-  Log.LogDebug ( "CMethodLineMatchingSolve::CMethodLineMatchingSolve()" );
+  Log.LogDebug ( "CLineMatchingSolve::CLineMatchingSolve()" );
 
   // Peak Detection
   m_winsize = 250.0;
@@ -84,13 +84,13 @@ CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::strin
 /**
  * Empty destructor.
  */
-CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
+CLineMatchingSolve::~CLineMatchingSolve()
 {
-  Log.LogDebug ( "CMethodLineMatchingSolve::~CMethodLineMatchingSolve()" );
+  Log.LogDebug ( "CLineMatchingSolve::~CLineMatchingSolve()" );
 }
 
 
-std::shared_ptr<CSolveResult> CMethodLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 								std::shared_ptr<COperatorResultStore> resultStore,
 								TScopeStack &scope)
 {
@@ -123,7 +123,7 @@ std::shared_ptr<CSolveResult> CMethodLineMatchingSolve::compute(std::shared_ptr<
  * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COperatorResultStore& resultStore,
+std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperatorResultStore& resultStore,
 									     std::shared_ptr<const CParameterStore> paramStore,
                                                                                const CSpectrum& spc,
                                                                                const TFloat64Range& lambdaRange,
@@ -369,7 +369,7 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
   return std::make_shared<CLineMatchingSolveResult>();
 }
 
-const std::string CMethodLineMatchingSolve::GetDescription()
+const std::string CLineMatchingSolve::GetDescription()
 {
     std::string desc;
     desc = "Method linematching:\n";

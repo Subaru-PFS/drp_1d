@@ -55,12 +55,12 @@
 using namespace NSEpic;
 using namespace std;
 
-CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,string objectType):
-  CSolve("templatefittingsolve",scope,objectType)
+CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("TemplateFittingSolve",scope,objectType)
 {
 }
 
-std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
@@ -90,7 +90,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>("photometry.weight");
   }
   if (fft_processing && use_photometry)
-    throw GlobalException(INTERNAL_ERROR, "CMethodTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
+    throw GlobalException(INTERNAL_ERROR, "CTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
 
   if(fft_processing)
     {
@@ -208,7 +208,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 }
 
 
-bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                    const CSpectrum& spc,
                                    const std::shared_ptr<const CTemplate> & tpl,
                                    Float64 overlapThreshold,
@@ -316,7 +316,7 @@ bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     return true;
 }
 
-ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const
+ChisquareArray CTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
 
@@ -397,7 +397,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
 
 
 std::shared_ptr<const ExtremaResult> 
-CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+CTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CTemplateCatalog& tplCatalog,
@@ -406,7 +406,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                std::string opt_interp)
 {
 
-    Log.LogDetail("CMethodTemplateFittingSolve::SaveExtremaResult: building chisquare array");
+    Log.LogDetail("CTemplateFittingSolve::SaveExtremaResult: building chisquare array");
     std::string scope = store->GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
@@ -426,7 +426,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
     {
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( r.second );
         if(TplFitResult->ChiSquare.size() != redshifts.size()){
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
         }
 
         bool foundBadStatus = false;
@@ -446,11 +446,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         }
         if(foundBadStatus)
         {
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
         }
         if(foundBadRedshift)
         {
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
         }
 
     }
@@ -511,7 +511,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                                             overlapThreshold);
         
         if(spcmodelPtr==nullptr)
-            throw GlobalException(INTERNAL_ERROR,"CMethodTemplateFittingSolve::SaveExtremaResult: Couldnt compute spectrum model");
+            throw GlobalException(INTERNAL_ERROR,"CTemplateFittingSolve::SaveExtremaResult: Couldnt compute spectrum model");
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
@@ -522,11 +522,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 }
 
 
-void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+void CTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
                                                        std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
-  Log.LogInfo("CMethodTemplateFittingSolve::StoreExtremaResults: Templatefitting, saving extrema results");
+  Log.LogInfo("CTemplateFittingSolve::StoreExtremaResults: Templatefitting, saving extrema results");
    
   return;
 }

@@ -43,9 +43,8 @@
 namespace NSEpic
 {
 
-  CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType,string calibrationPath):
-  CSolve("linemeassolve",scope,objectType),
-    m_calibrationPath(calibrationPath)
+  CLineMeasSolve::CLineMeasSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("LineMeasSolve",scope,objectType)
 {
 }
 
@@ -53,10 +52,10 @@ namespace NSEpic
   {
     //default is to read from the scoped paramStore
     Float64 rangeCenter = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftref" );
-    Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "dzhalf" );
+    Float64 halfRange = inputContext->GetParameterStore()->GetScoped<Float64>( "linemeas_dzhalf" );
 
     redshiftRange = TFloat64Range(rangeCenter-halfRange,rangeCenter+halfRange);
-    redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "redshiftstep" );
+    redshiftStep = inputContext->GetParameterStore()->GetScoped<Float64>( "linemeas_redshiftstep" );
     
   }
   
@@ -70,24 +69,26 @@ namespace NSEpic
                                                         TScopeStack &scope)
   {
     
-    CLineModelSolution cms;
+    CLineModelSolution bestModelSolution;
+    CContinuumModelSolution bestContinuumModelSolution;
     {
       CAutoScope autoscope(scope,"linemodel");
 
-      cms =m_linemodel.computeForLineMeas(inputContext,m_calibrationPath,m_redshifts);
+      bestModelSolution = m_linemodel.computeForLineMeas(inputContext,
+							 m_redshifts);
     }
-    cms.fillRayIds();
+    bestModelSolution.fillRayIds();
     /*
     const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
     CRayCatalog::TRayVector restRayList = restraycatalog.GetFilteredList(-1,-1); // TODO should be retrievable directly from inputContext, with approprate filters
 
-    std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(cms,
-                                                                                    cms.Redshift,
+    std::shared_ptr<CModelFittingResult> res = std::make_shared<CModelFittingResult>(bestModelSolution,
+                                                                                    bestModelSolution.Redshift,
                                                                                     1,
                                                                                     restRayList
                                                                                     );
     */
-    std::shared_ptr<CLineModelSolution> res = std::make_shared<CLineModelSolution>(cms);
+     std::shared_ptr<const CLineModelSolution> res = std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
     resultStore->StoreScopedGlobalResult("linemeas",res);
     resultStore->StoreScopedGlobalResult("linemeas_parameters",res);
     resultStore->StoreScopedGlobalResult("linemeas_model",m_linemodel.getFittedModel());

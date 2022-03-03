@@ -248,22 +248,15 @@ class CalibrationLibrary:
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
 
         """
-        for object_type in ["star", "galaxy", "qso", "linemeas"]:
-            linecatalog_loaded = False
-            lineratio_catalog_loaded = False
-            if self.parameters.get("enable" + object_type + "solve") is True:
-                self.load_templates_catalog(object_type)
-                method = self.parameters[object_type]["method"]
-                if method == "linemodelsolve" or method == "linemeassolve":
-                    self.load_linecatalog(object_type,method)
-                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
-                        self.load_line_ratio_catalog_list(object_type, method)
-                        lineratio_catalog_loaded = True
-                    linecatalog_loaded = True
-            if not linecatalog_loaded:
-                self.load_empty_line_catalog(object_type)
-            if not lineratio_catalog_loaded:
-                self.load_empty_line_ratio_catalog_list(object_type)
+        for object_type in self.parameters["objects"]:
+            self.load_templates_catalog(object_type)
+            method = self.parameters[object_type]["method"]
+            if not method:
+                method = self.parameters[object_type]["linemeas_method"]
+            if method == "LineModelSolve" or method == "LineMeasSolve":
+                self.load_linecatalog(object_type,method)
+                if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
+                    self.load_line_ratio_catalog_list(object_type, method)
 
         if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
             self.load_lsf()

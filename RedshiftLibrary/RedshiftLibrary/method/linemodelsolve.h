@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/linemodel.h"
@@ -60,11 +60,11 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve: public CSolve
+class CLineModelSolve: public CObjectSolve
 {
 public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
 
     bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
@@ -180,8 +180,6 @@ private:
     std::string m_opt_saveintermediateresults;
     Float64 m_opt_secondpass_halfwindowsize;
 
-    std::string m_calibrationPath;
-    std::string m_outputPdfRelDir;
     Float64 m_redshiftSeparation;
 
 };

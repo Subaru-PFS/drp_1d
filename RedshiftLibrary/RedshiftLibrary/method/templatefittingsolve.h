@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
@@ -59,7 +59,7 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-  class CMethodTemplateFittingSolve : public CSolve
+  class CTemplateFittingSolve : public CObjectSolve
 {
 
  public:
@@ -73,7 +73,7 @@ class CTemplateCatalog;
     };
 
 
-  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+  CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
 private:
 

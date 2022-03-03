@@ -36,34 +36,28 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _METHOD_CLASSIFICATION_
-#define _METHOD_CLASSIFICATION_
 
-#include "RedshiftLibrary/method/solveresult.h"
-#include "RedshiftLibrary/method/solve.h"
-#include "RedshiftLibrary/method/classificationresult.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 
+using namespace NSEpic;
 
-namespace NSEpic
+void CObjectSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
+  m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 
-  class CClassificationSolve:public CSolve
-  {
+  //m_redshiftSampling could be overwritten if fftprocessing is activated
+  // Warning for LineMeas :  we consider linemeas use the same redshiftsampling as the objectMethod
+  // if linemeas is called in standalone, redshiftsampling must be present in parameters
+  m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
 
-  public:
+  TFloat64Range redshiftRange;
+  Float64 redshiftStep;
+  GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+  Log.LogInfo(Formatter()<<"Init redshift range with " << redshiftRange << " and"<< redshiftStep);      
+  if(m_redshiftSampling=="log")
+    m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+  else  
+    m_redshifts = redshiftRange.SpreadOver( redshiftStep );
 
-    CClassificationSolve(TScopeStack &scope,std::string objectType);
-
-  private:
-  
-    std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
-                                          std::shared_ptr<COperatorResultStore> resultStore,
-                 TScopeStack &scope) override;
-    
-    std::string typeLabel = "U";
-
-
-  };
 }
 
-#endif

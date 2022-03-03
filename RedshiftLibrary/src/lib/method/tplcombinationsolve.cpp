@@ -50,14 +50,14 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodTplcombinationSolve::CMethodTplcombinationSolve(TScopeStack &scope,string objectType):
-  CSolve("tplcombinationsolve",scope,objectType)
+CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("TplcombinationSolve",scope,objectType)
 {
 }
 
 
 
-std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                                  std::shared_ptr<COperatorResultStore> resultStore,
                                                                                  TScopeStack &scope)
 
@@ -165,7 +165,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
 
 }
 
-bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                        const CSpectrum& spc,
                                        const CTemplateCatalog& tplCatalog,
                                        const TStringList& tplCategoryList,
@@ -295,7 +295,7 @@ bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     return true;
 }
 
-ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
+ChisquareArray CTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
                                                                const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
@@ -379,7 +379,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
     return chisquarearray;
 }
 std::shared_ptr<const TplCombinationExtremaResult> 
-CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+CTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
@@ -463,7 +463,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
 }
 
 
-void CMethodTplcombinationSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+void CTplcombinationSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
                                                        std::shared_ptr<const TplCombinationExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);

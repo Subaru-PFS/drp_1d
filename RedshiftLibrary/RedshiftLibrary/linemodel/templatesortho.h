@@ -82,7 +82,6 @@ private:
     bool m_enableOrtho;
     std::shared_ptr<const CLSF> m_LSF = nullptr;
     std::shared_ptr<CTemplate> OrthogonalizeTemplate(const CTemplate& inputTemplate,
-                                const std::string calibrationPath,
                                 const CRayCatalog::TRayVector &restRayList,
                                 const std::string &opt_fittingmethod,
                                 const std::string &widthType,

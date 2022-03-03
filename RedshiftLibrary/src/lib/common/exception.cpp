@@ -37,7 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/exception.h"
-
+//#include <boost/stacktrace.hpp>
+#include <sstream>
 using namespace NSEpic;
 
 

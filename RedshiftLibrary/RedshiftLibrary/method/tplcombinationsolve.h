@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
@@ -61,7 +61,7 @@ class CResultStore;
 /**
  * \ingroup Redshift
  */
-  class CMethodTplcombinationSolve : public CSolve
+  class CTplcombinationSolve : public CObjectSolve
 {
 
  public:
@@ -74,7 +74,7 @@ class CResultStore;
              nType_all = 4,
     };
 
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
 
     const std::string GetDescription() const;
 

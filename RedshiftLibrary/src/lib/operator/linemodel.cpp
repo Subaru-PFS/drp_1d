@@ -114,7 +114,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CSpectrum& logSampledSpectrum,//this is temporary
                                            const CTemplateCatalog &tplCatalog,
                                            const TStringList &tplCategoryList,
-                                           const std::string opt_calibrationPath,
                                            const CRayCatalog::TRayVector &restRayList,
                                            const CRayCatalogsTplShape& tplRatioCatalog,
                                            const TFloat64Range &lambdaRange,
@@ -156,7 +155,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                                         lambdaRange,
                                                         tplCatalog,
                                                         tplCategoryList,
-                                                        opt_calibrationPath,
                                                         restRayList,
                                                         opt_fittingmethod,
                                                         m_opt_continuumcomponent,
@@ -177,7 +175,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     CMultiRollModel model( spectrum,
                            tplCatalog,//orthoTplCatalog,
                            tplCategoryList,
-                           opt_calibrationPath,
                            restRayList,
                            opt_fittingmethod,
                            opt_continuumcomponent,
@@ -345,7 +342,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         PrecomputeContinuumFit(spectrum, logSampledSpectrum,
                     tplCatalog,
                     tplCategoryList,
-                    opt_calibrationPath,
                     lambdaRange,
                     largeGridRedshifts,
                     photBandCat,
@@ -584,7 +580,6 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const CSpectrum &logSampledSpectrum,
                                                 const CTemplateCatalog &tplCatalog,
                                                 const TStringList &tplCategoryList,
-                                                const std::string opt_calibrationPath,
                                                 const TFloat64Range &lambdaRange,
                                                 const TFloat64List& redshifts,
                                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -1020,7 +1015,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const CSpectrum &logSampledSpectrum,
                                             const CTemplateCatalog &tplCatalog,
                                             const TStringList &tplCategoryList,
-                                            const std::string opt_calibrationPath,
                                             const TFloat64Range &lambdaRange,
                                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                                             const Float64 photo_weight,
@@ -1079,7 +1073,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                 PrecomputeContinuumFit(spectrum, logSampledSpectrum,
                                 tplCatalog,
                                 tplCategoryList,
-                                opt_calibrationPath,
                                 lambdaRange,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 photBandCat,
@@ -2286,8 +2279,8 @@ void COperatorLineModel::fitVelocityByGroups(std::vector<Float64> velfitlist,
 }
 
 CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inputContext,
-                                                          std::string calibrationDir,
-                                                          TFloat64List& redshiftsGrid)
+							  const TFloat64List& redshiftsGrid
+							  )
 {
 
   const CSpectrum& spc=*(inputContext->GetSpectrum());
@@ -2297,7 +2290,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
-  TStringList tplCategoryList({"linemeas"});
+  TStringList tplCategoryList({"galaxy"});
   //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
   Float64 opt_nsigmasupport = params->GetScoped<Float64>("nsigmasupport"); // try with 16 (-> parameters.json)
@@ -2323,7 +2316,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
                                                     lambdaRange,
                                                     tplCatalog,
                                                     tplCategoryList,
-                                                    calibrationDir,
                                                     restRayList,
                                                     opt_fittingmethod,
                                                     opt_continuumcomponent,
@@ -2382,11 +2374,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
   CLineModelSolution modelSolution;
   CContinuumModelSolution continuumModelSolution;
   CLineModelSolution bestModelSolution;
-  CContinuumModelSolution bestContinuumModelSolution;
 
   Float64 bestScore=DBL_MAX;
   Float64 bestz=NAN;
-  for (Float64 &z:redshiftsGrid)
+  for (const Float64 &z:redshiftsGrid)
     {
       Log.LogDebug(Formatter()<<"test with z="<<z);
 
@@ -2395,7 +2386,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(std::shared_ptr<const 
         {
           bestScore = score;
           bestModelSolution = modelSolution;
-          bestContinuumModelSolution = continuumModelSolution;
+	  //          bestContinuumModelSolution = continuumModelSolution;
           bestz=z;
         }
     }

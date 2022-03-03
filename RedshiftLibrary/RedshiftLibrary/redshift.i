@@ -131,6 +131,7 @@
 #include "RedshiftLibrary/method/tplcombinationsolve.h"
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -352,6 +353,7 @@ public:
 
 };
 
+%template(TMapFloat64) std::map<std::string, Float64>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
@@ -796,6 +798,13 @@ class CSolve{
   CSolve()=delete;
     void Compute(CProcessFlowContext& context);
 };
+
+class CObjectSolve{
+ public:
+  CSolve()=delete;
+    void Compute(CProcessFlowContext& context);
+};
+
   class CClassificationSolve:public CSolve
   {
 
@@ -811,31 +820,38 @@ class CSolve{
 
     CReliabilitySolve(TScopeStack &scope,std::string objectType);
   };
-  class CLineModelSolve:public CSolve
+  class CLineModelSolve:public CObjectSolve
   {
 
   public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
   };
-  class CLineMeasSolve:public CSolve
+  class CLineMeasSolve:public CObjectSolve
   {
 
   public:
 
-    CLineMeasSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath);
+    CLineMeasSolve(TScopeStack &scope,std::string objectType);
   };
 
-  class CMethodTemplateFittingSolve : public CSolve
+  class CTemplateFittingSolve : public CObjectSolve
 {
   public:
 
-    CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
   };
 
-class CMethodTplcombinationSolve : public CSolve
+class CTplcombinationSolve : public CObjectSolve
 {
 
  public:
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
+};
+
+class CLineMatchingSolve: public CObjectSolve
+{
+public:
+
+    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
 };
