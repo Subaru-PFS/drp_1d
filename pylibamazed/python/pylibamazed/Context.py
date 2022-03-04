@@ -109,13 +109,13 @@ class Context:
         zflag.resetFlag()
 
         enable_classification = False
-        enable_reliability = False
+        reliabilities = dict()
         for object_type in self.parameters["objects"]:
             method = self.parameters[object_type]["method"]
             if method:
                 self.run_method(object_type, method)
                 enable_classification = True
-                enable_reliability = True
+
             if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
                 if not self.config["linemeascatalog"]:
                     output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
@@ -145,16 +145,18 @@ class Context:
                 if pdf.shape[0] != model.input_shape[1]:
                     raise ValueError('PDF and model shapes are not compatible')
                 # The model needs a PDF, not LogPDF
-                reliability = model.predict(np.exp(pdf[None, :, None]))[0, 1]
-                output.object_results[object_type]['reliability'] = reliability
+                reliabilities[object_type] = model.predict(np.exp(pdf[None, :, None]))[0, 1]
+
 
         if enable_classification:
             self.run_method("classification", "ClassificationSolve")
-        if enable_reliability:
-            self.run_method("reliability", "ReliabilitySolve")
 
         rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
-        del self.process_flow_context
+        for object_type in reliabilities.keys():
+            rso.object_results[object_type]['reliability'] = dict()
+            rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
+        
+	del self.process_flow_context
         return rso
 
     def run_method(self, object_type, method):
