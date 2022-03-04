@@ -49,8 +49,9 @@ CFlagLogResult::CFlagLogResult()
 }
 
 
-CFlagLogResult::CFlagLogResult(const UInt32 & _flagValue):
-    flagValue(_flagValue)
+CFlagLogResult::CFlagLogResult(const UInt32 & _flagValue, const std::vector<std::pair<CFlagWarning::WarningCode, std::string>> & _msgList):
+    flagValue(_flagValue),
+    msgList(_msgList)
 {
   this->m_type = "CFlagLogResult";
 }

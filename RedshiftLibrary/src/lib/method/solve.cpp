@@ -89,7 +89,7 @@ void CSolve::Compute(CProcessFlowContext& context)
     CAutoScope autoscope(scope,m_name);
     result = compute(inputContext,resultStore,scope);
 
-    resultStore->StoreScopedGlobalResult( "warningFlag", std::make_shared<const CFlagLogResult>(Flag.getBitMask()));
+    resultStore->StoreScopedGlobalResult( "warningFlag", std::make_shared<const CFlagLogResult>(Flag.getBitMask(), Flag.getListMessages()));
     Flag.resetFlag();
 
     saveToResultStore(result,resultStore);
