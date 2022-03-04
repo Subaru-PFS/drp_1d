@@ -85,6 +85,7 @@ public:
   
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
+    const TRayVector GetFilteredList(const std::string& typeFilter, const std::string& forceFilter) const;
     static const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( const TRayVector& filteredList );
 
     void Sort();

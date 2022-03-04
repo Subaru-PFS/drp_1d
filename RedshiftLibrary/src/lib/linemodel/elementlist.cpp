@@ -570,7 +570,7 @@ bool CLineModelElementList::addToSpectrumAmplitudeOffset(const CSpectrumSpectral
     return true;
 }
 
-Int32 CLineModelElementList::prepareAmplitudeOffset(const CSpectrumFluxAxis& spcFlux)
+Int32 CLineModelElementList::prepareAmplitudeOffset()
 {
     m_ampOffsetsCoeffs.clear();
     m_ampOffsetsIdxStart.clear();

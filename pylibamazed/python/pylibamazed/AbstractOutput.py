@@ -109,14 +109,14 @@ class AbstractOutput:
     def get_fitted_continuum_by_rank(self, object_type, rank):
         return self.object_dataframes[object_type]["continuum"][rank]
 
-    def get_fitted_model_by_rank(self, object_type, rank):
-        if object_type == "linemeas":
+    def get_fitted_model_by_rank(self, object_type, rank, method):
+        if method == "LineMeasSolve":
             return self.object_dataframes[object_type]["linemeas_model"]
         else:
             return self.object_dataframes[object_type]["model"][rank]
 
-    def get_fitted_rays_by_rank(self, object_type, rank):
-        if object_type == "linemeas":
+    def get_fitted_rays_by_rank(self, object_type, rank, method):
+        if method == "LineMeasSolve":
             return self.object_dataframes[object_type]["linemeas"]
         return self.object_dataframes[object_type]["fitted_rays"][rank]
 
