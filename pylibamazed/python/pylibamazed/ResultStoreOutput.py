@@ -196,7 +196,7 @@ class ResultStoreOutput(AbstractOutput):
                 else:
                     object_results_node.create_group(ds)
                     for index,ds_row in ds_attributes.iterrows():
-                        if self.has_attribute_in_result_store(ds_row, object_type, rank=None):
+                        if self.has_attribute(object_type,ds,ds_row["hdf5_name"]):
                             object_results_node.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][ds_row["hdf5_name"]]
                     
 
@@ -267,7 +267,7 @@ class ResultStoreOutput(AbstractOutput):
     def get_attribute_from_result_store(self, attribute_name, object_type, rank):
         rs = self.results_specifications
         rs = rs[rs["hdf5_name"] == attribute_name]
-        return self._get_attribute_from_result_store(rs[0],object_type,rank)
+        return self._get_attribute_from_result_store(rs.iloc[0], object_type, rank)
 
     def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
         if rank is not None:
