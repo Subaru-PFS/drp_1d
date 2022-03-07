@@ -62,8 +62,7 @@ CPdfMargZLogResult::CPdfMargZLogResult()
 CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
     Redshifts(redshifts),
     countTPL(redshifts.size()), // assumed 1 model per z
-    valProbaLog(redshifts.size(), -DBL_MAX),
-    valEvidenceLog(-1.0)
+    valProbaLog(redshifts.size(), -DBL_MAX)
 {
   this->m_type = "CPdfMargZLogResult";
 }

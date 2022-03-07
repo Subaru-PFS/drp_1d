@@ -198,7 +198,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
                         std::make_shared<CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
                                                                       extremaResult->m_ranked_candidates[0].second,
                                                                       m_opt_pdfcombination,
-                                                                      pdfz.m_postmargZResult->valEvidenceLog);
+                                                                      pdfz.m_postmargZResult->valMargEvidenceLog);
 
         return TemplateFittingSolveResult;
     }

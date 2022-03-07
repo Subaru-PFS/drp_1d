@@ -364,7 +364,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
     std::shared_ptr<CLineModelSolveResult> lmsolveresult = 
         std::make_shared<CLineModelSolveResult>( ExtremaResult->m_ranked_candidates[0].second, 
                                                  m_opt_pdfcombination,
-                                                 pdfz.m_postmargZResult->valEvidenceLog);
+                                                 pdfz.m_postmargZResult->valMargEvidenceLog);
 
     return lmsolveresult;
 }
