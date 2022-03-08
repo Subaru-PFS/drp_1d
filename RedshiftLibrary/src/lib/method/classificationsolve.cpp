@@ -45,7 +45,7 @@
 using namespace NSEpic;
 
 CClassificationSolve::CClassificationSolve(TScopeStack &scope,std::string objectType):
-  CSolve("Classification",scope,objectType)
+  CSolve("classification",scope,objectType)
 {
 }
 
