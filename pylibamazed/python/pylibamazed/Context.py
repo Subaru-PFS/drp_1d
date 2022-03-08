@@ -40,6 +40,7 @@ import os.path
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.Reliability import Reliability
 
 from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineModelSolve,
@@ -137,16 +138,8 @@ class Context:
                 self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
 
             if self.parameters[object_type].get("enable_reliability"):
-                output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
-                                           self.parameters,
-                                           auto_load=False)
-                pdf = output.get_attribute_from_result_store("PDFProbaLog", object_type, 0)
-                model = self.calibration_library.reliability_models[object_type]
-                if pdf.shape[0] != model.input_shape[1]:
-                    raise ValueError('PDF and model shapes are not compatible')
-                # The model needs a PDF, not LogPDF
-                reliabilities[object_type] = model.predict(np.exp(pdf[None, :, None]))[0, 1]
-
+                rel = Reliability(object_type, self.parameters,self.calibration_library)
+                reliabilities[object_type] = rel.Compute(self.process_flow_context)
 
         if enable_classification:
             self.run_method("classification", "ClassificationSolve")
@@ -155,8 +148,8 @@ class Context:
         for object_type in reliabilities.keys():
             rso.object_results[object_type]['reliability'] = dict()
             rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
-        
-	del self.process_flow_context
+
+        del self.process_flow_context
         return rso
 
     def run_method(self, object_type, method):
