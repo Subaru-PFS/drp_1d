@@ -61,6 +61,8 @@ class Context:
         self.calibration_library.load_all()
         self.process_flow_context = CProcessFlowContext()
         self.config = config
+        if "linemeascatalog" not in self.config:
+            self.config["linemeascatalog"] = {}
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
         for object_type in self.parameters["objects"]:
@@ -71,8 +73,8 @@ class Context:
                 self.process_flow_context.setLineRatioCatalogCatalog(object_type,
                                                                      self.calibration_library.line_ratio_catalog_lists[
                                                                          object_type])
-            if "linemeasmethod" in parameters[object_type] and parameters[object_type]["linemeasmethod"]:
-                self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs["linemeas"])
+            if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
+                self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs[object_type])
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
@@ -81,7 +83,7 @@ class Context:
     def run(self, spectrum_reader):
         spectrum_reader.init()
         self.process_flow_context.setSpectrum(spectrum_reader.get_spectrum())
-        if "linemeascatalog" in self.config:
+        if self.config.get("linemeascatalog"):
             for object_type in self.config["linemeascatalog"].keys():
                 lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
                 lm = lm[lm.ProcessingID == spectrum_reader.source_id]
@@ -105,7 +107,7 @@ class Context:
                 enable_classification = True
                 enable_reliability = True
             if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
-                if "linemeascatalog" not in self.config:
+                if not self.config["linemeascatalog"]:
                     output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
                                                self.parameters,
                                                auto_load=False)
