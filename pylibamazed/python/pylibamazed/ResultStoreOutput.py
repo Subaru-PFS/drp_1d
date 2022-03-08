@@ -166,9 +166,14 @@ class ResultStoreOutput(AbstractOutput):
                 ds_attributes = rs[rs["hdf5_dataset"]==ds]
                 dsg = hdf5_spectrum_node.create_group(ds)
                 for index, ds_row in ds_attributes.iterrows():
-                    if ds_row["hdf5_name"] in self.root_results[ds]:
-                        # we know we only have dimension = mono here
-                        dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
+                    if "<" in ds_row["hdf5_name"]:
+                        for object_type in self.parameters["objects"]:
+                            attr_name = ds_row["hdf5_name"].replace("<ObjectType>", object_type)
+                            dsg.attrs[attr_name] = self.root_results[ds][attr_name]
+                    else:
+                        if ds_row["hdf5_name"] in self.root_results[ds]:
+                            # we know we only have dimension = mono here
+                            dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
 
     def write_hdf5_object_level(self, object_type, object_results_node):
         rs = self.results_specifications
