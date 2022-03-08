@@ -426,24 +426,6 @@ std::string COperatorResultStore::GetScope( const COperatorResult&  result) cons
     return n;
 }
 
-void COperatorResultStore::test()
-{
-  std::shared_ptr<CPdfMargZLogResult> testResult = std::shared_ptr<CPdfMargZLogResult>(new CPdfMargZLogResult());
-  testResult->Redshifts.clear();
-  testResult->Redshifts.push_back(1.2);
-  testResult->Redshifts.push_back(3.4);
-  testResult->Redshifts.push_back(7.9);
-
-  testResult->valProbaLog.clear();
-  testResult->valProbaLog.push_back(27.4);
-  testResult->valProbaLog.push_back(67.8);
-  testResult->valProbaLog.push_back(92.7);
-  
-  StoreGlobalResult("","star.templatefittingsolve.solveResult",testResult);
-
-  std::shared_ptr<const COperatorResult> cor = GetSolveResult("star");
-  
-}
 
 
 void  COperatorResultStore::StoreScopedPerTemplateResult( const std::shared_ptr<const CTemplate> & t, const std::string& name, std::shared_ptr<const COperatorResult> result )
@@ -469,18 +451,8 @@ std::vector<std::string> COperatorResultStore::getProcessedObjectTypes() const
   return res;
 }
 
-std::shared_ptr<const COperatorResult> COperatorResultStore::GetSolveResult(const std::string& objectType) const
+std::weak_ptr<const COperatorResult> COperatorResultStore::GetSolveResult(const std::string& objectType, const std::string& method) const
 {
-      TResultsMap::const_iterator it;
-    for( it=m_GlobalResults.begin(); it != m_GlobalResults.end(); it++ )
-    {
-      std::string s = (*it).first;
-      std::size_t first_dot = s.find(".");
-      std::size_t second_dot = s.rfind(".");
-      std::string object_type = s.substr(0,first_dot);
-      std::string rs_name = s.substr(second_dot+1,s.size()-second_dot-1);
-      if(object_type == objectType && rs_name == "solveResult") 
-        return it->second;
-    }
-    throw GlobalException(UNKNOWN_ATTRIBUTE,Formatter() << "no solveResult found for objectType" <<objectType);
+  return GetGlobalResult(objectType, method, "solveResult");
+
 }

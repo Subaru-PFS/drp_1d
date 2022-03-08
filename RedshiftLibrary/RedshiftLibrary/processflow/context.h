@@ -92,7 +92,6 @@ public:
 
   TScopeStack                     m_ScopeStack;
 
-  void testResultStore(); 
 private:
 
     std::shared_ptr<COperatorResultStore> m_ResultStore;

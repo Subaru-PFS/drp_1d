@@ -391,7 +391,7 @@ public:
 
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
-  void testResultStore();
+ 
   TScopeStack  m_ScopeStack;
 
 };
@@ -491,8 +491,6 @@ class COperatorResultStore
 
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;
-
-  void test();
 
 };
 
