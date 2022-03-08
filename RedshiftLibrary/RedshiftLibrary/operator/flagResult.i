@@ -43,8 +43,8 @@ class CFlagLogResult : public COperatorResult
   CFlagLogResult();
 
     ~CFlagLogResult() = default;
-    CFlagLogResult(const UInt32 & flagValue, const std::vector<std::pair<CFlagWarning::WarningCode, std::string>> & msgList);
+    CFlagLogResult(UInt32 flagValue, TWarningMsgList msgList);
 
     UInt32         flagValue;
-    std::vector<std::pair<CFlagWarning::WarningCode, std::string>> msgList;
+    TWarningMsgList msgList;
 };

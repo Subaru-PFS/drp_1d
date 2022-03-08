@@ -463,7 +463,7 @@ void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shar
 
 void COperatorResultStore::StoreFlagResult( const std::string& name, UInt32 result )
 {
-    std::vector<std::pair<CFlagWarning::WarningCode, std::string>> msgList = Flag.getListMessages();
+    TWarningMsgList msgList = Flag.getListMessages();
     StoreGlobalResult( name, std::make_shared<const CFlagLogResult>(result, msgList));
 }
 

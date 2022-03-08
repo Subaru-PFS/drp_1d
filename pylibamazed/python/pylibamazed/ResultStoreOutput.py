@@ -73,7 +73,12 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["level"] == "root"]
         root_datasets = list(rs["hdf5_dataset"].unique())
         for ds in root_datasets:
-            if self.results_store.HasDataset(ds,ds,"solveResult"):
+            if ds == "context_warningFlag" :
+                ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                self.root_results[ds]=dict()
+                for index, ds_row in ds_attributes.iterrows():
+                    self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
+            elif self.results_store.HasDataset(ds,ds,"solveResult"):
                 ds_attributes = rs[rs["hdf5_dataset"] == ds]
                 self.root_results[ds]=dict()
                 for index, ds_row in ds_attributes.iterrows():
