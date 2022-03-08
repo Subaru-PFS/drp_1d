@@ -54,20 +54,21 @@ std::shared_ptr<CSolveResult> CClassificationSolve::compute(std::shared_ptr<cons
                                                             TScopeStack &scope)    
 {
 
-  std::map<std::string,std::shared_ptr<const CPdfSolveResult>> results;
+  std::map<std::string,std::weak_ptr<const CPdfSolveResult>> results;
   std::map<std::string,Float64> logEvidences;
   std::map<std::string,Float64> probas;
 
   for(const std::string &category:inputContext->m_categories)
     {
-      results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult(category));
+      const std::string &method = inputContext->GetParameterStore()->Get<std::string>(category + ".method");
+      results[category] = std::dynamic_pointer_cast<const CPdfSolveResult>(resultStore->GetSolveResult(category,method).lock());
       logEvidences[category] = -INFINITY;
     }
     std::shared_ptr<CClassificationResult> classifResult = std::make_shared<CClassificationResult>();
     Float64  MaxLogEvidence = -INFINITY;
   for(const std::string &category:inputContext->m_categories)
     {
-      logEvidences[category] = results[category]->getEvidence();
+      logEvidences[category] = results[category].lock()->getEvidence();
       if (logEvidences[category] > MaxLogEvidence)
 	{
 	  MaxLogEvidence = logEvidences[category];

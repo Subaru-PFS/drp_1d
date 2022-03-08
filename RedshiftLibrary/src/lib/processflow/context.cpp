@@ -84,7 +84,3 @@ void CProcessFlowContext::Init()
   m_inputContext->Init();
 }
 
-void CProcessFlowContext::testResultStore() {
-  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-    m_ResultStore->test();
-  }

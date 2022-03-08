@@ -174,7 +174,7 @@ public:
   
   int getNbRedshiftCandidates(const std::string& objectType,const std::string& method) const;
 
-  std::shared_ptr<const COperatorResult> GetSolveResult(const std::string& objectType) const;
+  std::weak_ptr<const COperatorResult> GetSolveResult(const std::string& objectType, const std::string& method) const;
   
   
   //From DataStore, above should be removed and integrated into these
@@ -185,8 +185,6 @@ public:
   
   std::string GetScope( const COperatorResult&  result) const;
   
-  void test();
-
   
 protected:
 
