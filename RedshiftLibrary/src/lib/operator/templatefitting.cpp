@@ -128,18 +128,15 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorTemplateFitting::BasicFit:: kStart="<<m_kStart<<", kEnd="<<m_kEnd);
 
     if (apply_ism || opt_extinction){          
-        InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin);
+        InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin, EbmvListSize);
     }
     
     Int32 iEbmvCoeffMin = EbmvList[0];
     Int32 iEbmvCoeffMax = EbmvList[EbmvListSize-1];
 
-    m_option_igmFastProcessing = (MeiksinList.size()==1 ? false : true);
+    m_option_igmFastProcessing = (MeiksinList.size()>1 ? true : false);
 
     m_forcedAmplitude = forcedAmplitude;
-    m_sumCross_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
-    m_sumT_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
-    m_sumS_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
 
     bool apply_priore = !logpriore.empty() && !tpl->CalzettiInitFailed() 
                         && (logpriore.size()==tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
@@ -235,9 +232,15 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
 void COperatorTemplateFitting::InitIsmIgmConfig(
         Float64 redshift,
         const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin,
+        Int32 EbmvListSize)
 {
     m_templateRebined_bf.InitIsmIgmConfig(m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+    
+    m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+    m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+    m_sumS_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+
 }
 
 TFittingResult 

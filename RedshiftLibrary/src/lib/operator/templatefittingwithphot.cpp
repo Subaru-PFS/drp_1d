@@ -78,7 +78,13 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
     throw GlobalException(
         INTERNAL_ERROR,
-        "COperatorTemplateFittingPhot: photometric bands not availables");
+        "COperatorTemplateFittingPhot: photometric band transmision not availables");
+  if (m_photBandCat->empty())
+    throw GlobalException(
+        INTERNAL_ERROR,
+        "COperatorTemplateFittingPhot: photometric bands transmission empty");
+
+
   if (m_spectrum.GetPhotData() == nullptr)
     throw GlobalException(INTERNAL_ERROR,
                           "COperatorTemplateFittingPhot: photometric data not "
@@ -159,15 +165,20 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
     const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
-        &igmCorrectionMeiksin) {
+        &igmCorrectionMeiksin,
+    Int32 EbmvListSize) {
 
   COperatorTemplateFitting::InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin);
+                                             igmCorrectionMeiksin, EbmvListSize);
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
     band.second.InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
                                  igmCorrectionMeiksin);
+
+  m_sumCross_outsideIGM_phot.resize(EbmvListSize);
+  m_sumS_outsideIGM_phot.resize(EbmvListSize);
+  m_sumT_outsideIGM_phot.resize(EbmvListSize);
 }
 
 bool COperatorTemplateFittingPhot::CheckLyaIsInCurrentRange(
@@ -275,6 +286,8 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
     // add to leastsquare sum
     const auto d = photData->GetFlux(bandName);
     const auto oneOverErr2 =
+        photData->GetOneOverErr2(bandName) * m_weight * m_weight;
+    const auto fluxOverErr2 =
         photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
@@ -286,7 +299,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
 
     sumCross_phot += d * integ_flux * oneOverErr2;
     sumT_phot += integ_flux * integ_flux * oneOverErr2;
-    sumS_phot += d * d * oneOverErr2;
+    sumS_phot += fluxOverErr2;
   }
 
   if (m_option_igmFastProcessing) {

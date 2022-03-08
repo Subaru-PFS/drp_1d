@@ -234,7 +234,11 @@ class CalibrationLibrary:
         paths = os.path.join(self.calibration_dir,
                              self.parameters["photometryTransmissionDir"],
                              "*")
+        if not "photometryBand" in self.parameters:
+            raise Exception("photometryBand parameter required")
         bands = self.parameters["photometryBand"]
+        if len(bands) == 0:
+            raise Exception("photometryBand parameter is empty")
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
