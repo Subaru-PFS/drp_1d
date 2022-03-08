@@ -297,7 +297,6 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   bool retSolve = Solve( resultStore,
                          useloglambdasampling?rebinnedSpc:spc, rebinnedSpc,
                          tplCatalog,
-                         m_categoryList,
                          std::move(restLineList),
                          tplRatioCatalog,
                          m_lambdaRange,
@@ -744,7 +743,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
-                             const TStringList& tplCategoryList,
                              const CRayCatalog::TRayVector& restLineList,
                              const CRayCatalogsTplShape& tplRatioCatalog,
                              const TFloat64Range& lambdaRange,
@@ -773,7 +771,10 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     //    }
 
     // Compute with linemodel operator
-    Int32 retInit = m_linemodel.Init(spc, redshifts, restLineList, m_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInit = m_linemodel.Init(spc, redshifts, restLineList, 
+                                    m_categoryList, 
+                                    m_opt_continuumcomponent, m_opt_nsigmasupport, 
+                                    m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInit!=0 )
     {
         throw GlobalException(INTERNAL_ERROR, "Linemodel, init failed. Aborting" );
@@ -836,7 +837,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     Int32 retFirstPass = m_linemodel.ComputeFirstPass(spc,
                                                     rebinnedSpc,
                                                     tplCatalog,
-                                                    tplCategoryList,
                                                     tplRatioCatalog,
                                                     lambdaRange,
                                                     photBandCat,
@@ -892,7 +892,9 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
     bool enableFirstpass_B = (m_opt_extremacountB>0) && (m_opt_continuumcomponent=="tplfit" || m_opt_continuumcomponent=="tplfitauto") && (m_opt_extremacountB>1);
     COperatorLineModel linemodel_fpb;
     std::string fpb_opt_continuumcomponent = "fromspectrum";//Note: this is hardocoded! given that condition for FPB relies on having "tplfit"
-    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, restLineList, fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+    Int32 retInitB = linemodel_fpb.Init(spc, redshifts, restLineList, 
+                                        m_categoryList,
+                                        fpb_opt_continuumcomponent, m_opt_nsigmasupport, m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
     if( retInitB!=0 )
     {
         Log.LogError( "Linemodel fpB, init failed. Aborting" );
@@ -926,7 +928,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(spc,
                                                             rebinnedSpc,
                                                             tplCatalog,
-                                                            tplCategoryList,
                                                             tplRatioCatalog,
                                                             lambdaRange,
                                                             photBandCat,
@@ -991,7 +992,6 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
         Int32 retSecondPass = m_linemodel.ComputeSecondPass(spc,
                                                           rebinnedSpc,
                                                           tplCatalog,
-                                                          tplCategoryList,
                                                           lambdaRange,
                                                           photBandCat,
                                                           photo_weight,

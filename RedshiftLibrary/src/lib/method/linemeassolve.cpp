@@ -70,9 +70,9 @@ namespace NSEpic
   {
     
     const CSpectrum& spc=*(inputContext->GetSpectrum());
-    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog("galaxy"));
+    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
     // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
-    const CRayCatalog::TRayVector restLineList = restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
+    const CRayCatalog::TRayVector  restLineList = restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
     Log.LogDebug("restLineList.size() = %d", restLineList.size());
 
     Float64 opt_nsigmasupport = inputContext->GetParameterStore()->GetScoped<Float64>("linemodel.nsigmasupport"); // try with 16 (-> parameters.json)
@@ -80,7 +80,8 @@ namespace NSEpic
 
     m_linemodel.Init(spc, 
                     m_redshifts, 
-                    std::move(restLineList), 
+                    std::move(restLineList),
+                    m_categoryList,
                     opt_continuumcomponent, 
                     opt_nsigmasupport);
 

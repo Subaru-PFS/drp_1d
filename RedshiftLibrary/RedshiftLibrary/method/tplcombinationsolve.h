@@ -87,7 +87,6 @@ private:
   bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
-               const TStringList& tplCategoryList,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
@@ -106,7 +105,6 @@ private:
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
                                                std::string opt_interp);

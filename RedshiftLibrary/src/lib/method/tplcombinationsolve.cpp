@@ -116,7 +116,6 @@ std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<cons
     Solve(resultStore,
           spc,
           tplCatalog,
-          m_categoryList,
           m_lambdaRange,
           m_redshifts,
           overlapThreshold,
@@ -147,7 +146,6 @@ std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<cons
                                         candidateResult->m_ranked_candidates,
                                         spc,
                                         tplCatalog,
-                                        m_categoryList,
                                         clampedLbdaRange,
                                         overlapThreshold,
                                         opt_interp);
@@ -168,7 +166,6 @@ std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<cons
 bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                        const CSpectrum& spc,
                                        const CTemplateCatalog& tplCatalog,
-                                       const TStringList& tplCategoryList,
                                        const TFloat64Range& lambdaRange,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
@@ -195,14 +192,14 @@ bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultSto
     }
 
     //prepare the list of components/templates
-    if(tplCategoryList.size()>1){
+    if(m_categoryList.size()>1){
         throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(m_categoryList);
     if (tplList.empty())
       {
-	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< tplCategoryList[0] <<" is empty");
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
       }
 
     //check all templates have same spectralAxis
@@ -384,7 +381,6 @@ CTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultSto
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
                                                std::string opt_interp)
@@ -418,11 +414,11 @@ CTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultSto
     }
 
     //prepare the list of components/templates
-    if(tplCategoryList.size()>1){
+    if(m_categoryList.size()>1){
       throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(m_categoryList);
 
     std::shared_ptr<TplCombinationExtremaResult> extremaResult = make_shared<TplCombinationExtremaResult>(ranked_zCandidates);
     Int32 extremumCount = ranked_zCandidates.size();

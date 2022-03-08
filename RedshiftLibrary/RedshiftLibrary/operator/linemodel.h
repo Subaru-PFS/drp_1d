@@ -72,6 +72,7 @@ public:
     Int32 Init( const CSpectrum& spectrum,
                 const TFloat64List& redshifts,
                 const CRayCatalog::TRayVector restLineCatalog,
+                const TStringList &tplCategoryList,
                 const std::string &opt_continuumcomponent,
                 const Float64 nsigmasupport, 
                 const Float64 halfwdwsize = NAN, 
@@ -82,7 +83,6 @@ public:
     void PrecomputeContinuumFit(const CSpectrum &spectrum,
                                 const CSpectrum &logSampledSpectrum,
                                 const CTemplateCatalog &tplCatalog,
-                                const TStringList &tplCategoryList,
                                 const TFloat64Range &lambdaRange,
                                 const TFloat64List& redshifts,
                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -93,7 +93,6 @@ public:
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
                            const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
-                           const TStringList &tplCategoryList,
                            const CRayCatalogsTplShape& tplRatioCatalog,
                            const TFloat64Range& lambdaRange,
                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
@@ -119,7 +118,6 @@ public:
     Int32 ComputeSecondPass(const CSpectrum& spectrum,
                             const CSpectrum &logSampledSpectrum,
                             const CTemplateCatalog &tplCatalog,
-                            const TStringList &tplCategoryList,
                             const TFloat64Range& lambdaRange,
                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                             const Float64 photo_weight,
@@ -175,7 +173,7 @@ public:
     Int32 m_maxModelSaveCount=20;
     Float64 m_secondPass_halfwindowsize; // = 0.005;
     Float64 m_extremaRedshiftSeparation; 
-
+    TStringList m_tplCategoryList;
 
     bool m_enableLoadContTemplate=false;
     Int32 m_iRollContaminated=-1;

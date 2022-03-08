@@ -113,7 +113,6 @@ void COperatorLineModel::CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& larg
 Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CSpectrum& logSampledSpectrum,//this is temporary
                                            const CTemplateCatalog &tplCatalog,
-                                           const TStringList &tplCategoryList,
                                            const CRayCatalogsTplShape& tplRatioCatalog,
                                            const TFloat64Range &lambdaRange,
                                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
@@ -153,7 +152,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     m_model = std::make_shared<CLineModelFitting>(      spectrum,
                                                         lambdaRange,
                                                         tplCatalog,
-                                                        tplCategoryList,
+                                                        m_tplCategoryList,
                                                         m_RestLineList,
                                                         opt_fittingmethod,
                                                         m_opt_continuumcomponent,
@@ -173,7 +172,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     /*
     CMultiRollModel model( spectrum,
                            tplCatalog,//orthoTplCatalog,
-                           tplCategoryList,
+                           m_tplCategoryList,
                            restRayList,
                            opt_fittingmethod,
                            opt_continuumcomponent,
@@ -340,7 +339,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         tplCatalog.m_orthogonal = 1;
         PrecomputeContinuumFit(spectrum, logSampledSpectrum,
                     tplCatalog,
-                    tplCategoryList,
                     lambdaRange,
                     largeGridRedshifts,
                     photBandCat,
@@ -577,7 +575,6 @@ bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
 void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
                                                 const CSpectrum &logSampledSpectrum,
                                                 const CTemplateCatalog &tplCatalog,
-                                                const TStringList &tplCategoryList,
                                                 const TFloat64Range &lambdaRange,
                                                 const TFloat64List& redshifts,
                                                 const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -693,15 +690,15 @@ void COperatorLineModel::PrecomputeContinuumFit(const CSpectrum &spectrum,
             meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
             EbmvCoeff =  m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
             //access any template and retrieve the ismcorrection object
-            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(tplCategoryList[0], 0)->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+            opt_tplfit_integer_chi2_ebmv = tplCatalog.GetTemplate(m_tplCategoryList[0], 0)->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
 
         }
     }          
 
     bool found = false; 
-    for (UInt32 i = 0; i < tplCategoryList.size(); i++)
+    for (UInt32 i = 0; i < m_tplCategoryList.size(); i++)
     {
-        std::string category = tplCategoryList[i];
+        std::string category = m_tplCategoryList[i];
         Log.LogDebug(Formatter()<<"Processing "<< tplCatalog.GetTemplateCount(category) << " templates");
 
         for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
@@ -1012,7 +1009,6 @@ void COperatorLineModel::Combine_firstpass_candidates(std::shared_ptr<const CLin
 Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
                                             const CSpectrum &logSampledSpectrum,
                                             const CTemplateCatalog &tplCatalog,
-                                            const TStringList &tplCategoryList,
                                             const TFloat64Range &lambdaRange,
                                             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
                                             const Float64 photo_weight,
@@ -1070,7 +1066,6 @@ Int32 COperatorLineModel::ComputeSecondPass(const CSpectrum &spectrum,
             for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++){    
                 PrecomputeContinuumFit(spectrum, logSampledSpectrum,
                                 tplCatalog,
-                                tplCategoryList,
                                 lambdaRange,
                                 m_firstpass_extremaResult->ExtendedRedshifts[i],
                                 photBandCat,
@@ -1974,12 +1969,14 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum, 
                                const TFloat64List &redshifts,
                                const CRayCatalog::TRayVector restLineList,
+                               const TStringList &tplCategoryList,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
                                const Float64 halfwdwsize,
                                const Float64 radius)
 {
     m_RestLineList = std::move(restLineList);
+    m_tplCategoryList = tplCategoryList;
     // initialize empty results so that it can be returned anyway in case of an
     // error
     m_result = std::make_shared<CLineModelResult>();
@@ -2289,7 +2286,7 @@ COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inpu
   std::shared_ptr<const CParameterStore> params = inputContext->GetParameterStore();
 
   std::shared_ptr<const CLSF> lsf= inputContext->GetSpectrum()->GetLSF();
-  TStringList tplCategoryList({"galaxy"});
+
   //  std::string opt_fittingmethod_ortho = params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType=params->GetScoped<std::string>("linewidthtype");
 
@@ -2310,7 +2307,7 @@ COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inpu
   m_model = std::make_shared<CLineModelFitting>(    spc,
                                                     lambdaRange,
                                                     tplCatalog,
-                                                    tplCategoryList,
+                                                    m_tplCategoryList,
                                                     m_RestLineList,
                                                     opt_fittingmethod,
                                                     opt_continuumcomponent,

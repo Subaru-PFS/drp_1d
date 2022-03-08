@@ -98,7 +98,6 @@ private:
                                                             const std::string & scopeStr,
                                                             const TCandidateZbyRank & ranked_zCandidates,
                                                             const CTemplateCatalog& tplCatalog,
-                                                            const TStringList& tplCategoryList,
                                                             Float64 overlapThreshold,
                                                             std::string opt_interp);
 
