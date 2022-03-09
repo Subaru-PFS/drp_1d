@@ -59,12 +59,15 @@ class Context:
         _check_config(config)
         self.calibration_library = CalibrationLibrary(parameters, config["calibration_dir"])
         self.calibration_library.load_all()
-        self.process_flow_context = CProcessFlowContext()
+        self.process_flow_context = None
         self.config = config
         if "linemeascatalog" not in self.config:
             self.config["linemeascatalog"] = {}
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
+
+    def init_context(self):
+        self.process_flow_context = CProcessFlowContext()
         for object_type in self.parameters["objects"]:
             if object_type in self.calibration_library.line_catalogs:
                 self.process_flow_context.setLineCatalog(object_type,
@@ -73,14 +76,14 @@ class Context:
                 self.process_flow_context.setLineRatioCatalogCatalog(object_type,
                                                                      self.calibration_library.line_ratio_catalog_lists[
                                                                          object_type])
-            if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
+            if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
                 self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs[object_type])
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
 
-
     def run(self, spectrum_reader):
+        self.init_context()
         spectrum_reader.init()
         self.process_flow_context.setSpectrum(spectrum_reader.get_spectrum())
         if self.config.get("linemeascatalog"):
@@ -130,7 +133,9 @@ class Context:
         if enable_reliability:
             self.run_method("reliability", "ReliabilitySolve")
 
-        return ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
+        rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
+        del self.process_flow_context
+        return rso
 
     def run_method(self, object_type, method):
 
