@@ -43,6 +43,8 @@
 #include "RedshiftLibrary/spectrum/combination.h"
 
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -163,7 +165,7 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     if (foundstra!=std::string::npos){
         substring_n = (Int32)foundstra;
     }else{
-        Log.LogWarning( "    multirollmodel: load roll hack - unable to find strTag=%s", strTag.c_str());
+        Flag.warning(Flag.MULTIROLL_STRTAG_NOTFOUND, Formatter()<<"    CMultiRollModel::"<<__func__<<": load roll hack - unable to find strTag="<< strTag.c_str());
         return spc;
     }
 

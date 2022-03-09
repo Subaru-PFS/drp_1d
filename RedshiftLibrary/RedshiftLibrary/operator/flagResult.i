@@ -36,42 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/ray/lineprofileASYMFIT.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/common/formatter.h"
-using namespace NSEpic;
-using namespace std;
-
-CLineProfileASYMFIT::CLineProfileASYMFIT(const Float64 nsigmasupport, TAsymParams params, const std::string centeringMethod):
-CLineProfileASYM(ASYMFIT, nsigmasupport, params, centeringMethod)
+class CFlagLogResult : public COperatorResult
 {
 
-}
- 
-void CLineProfileASYMFIT::SetAsymParams(TAsymParams params)
-{
-    if(std::isnan(params.sigma) || std::isnan(params.alpha) || std::isnan(params.delta)){
-        Flag.warning(Flag.ASYMFIT_NAN_PARAMS, Formatter()<<"CLineProfileASYMFIT::"<<__func__<<" AsymFit params are NaN");
-    } 
-    m_asym_sigma_coeff = params.sigma;
-    m_asym_alpha = params.alpha;
-    m_asym_delta = params.delta;
-}
+  public:
+  CFlagLogResult();
 
-void CLineProfileASYMFIT::resetAsymFitParams()
-{
-    m_asym_sigma_coeff = 2.;
-    m_asym_alpha = 0.;
-    m_asym_delta = 0.;
-}
- 
-bool CLineProfileASYMFIT::isAsymFit() const
-{
-    return 1;
-}
- 
-bool CLineProfileASYMFIT::isAsymFixed() const
-{
-    return 0;
-}
+    ~CFlagLogResult() = default;
+    CFlagLogResult(UInt32 flagValue, TWarningMsgList msgList);
+
+    UInt32         flagValue;
+    TWarningMsgList msgList;
+};

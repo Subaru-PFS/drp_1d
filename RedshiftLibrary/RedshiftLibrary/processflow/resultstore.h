@@ -62,6 +62,7 @@ class TExtremaResult;
 class CModelSpectrumResult;
 class CSpectraFluxResult;
 class CLineModelSolution;
+class CFlagLogResult;
 template<class T=TLineModelResult>  class CLineModelExtremaResult;
 template<class T=TTplCombinationResult>  class CTplCombinationExtremaResult;
   //  class CLineModelExtremaResult<TLineModelResult>;
@@ -126,6 +127,10 @@ public:
 								    const std::string& method,
 								    const std::string& name ) const;
 
+  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
+								    const std::string& method,
+								    const std::string& name ) const;
+
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
 							     const std::string& name ,
@@ -182,6 +187,7 @@ public:
 
   void StoreScopedPerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
   void StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
+  void StoreFlagResult( const std::string& name, UInt32  result );
   
   std::string GetScope( const COperatorResult&  result) const;
   

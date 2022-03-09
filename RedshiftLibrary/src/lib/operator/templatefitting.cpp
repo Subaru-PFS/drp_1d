@@ -46,6 +46,8 @@
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
@@ -558,7 +560,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
         }
     }if(oneValidStatusFoundIndex==-1)
     {
-        Log.LogWarning("  Operator-TemplateFitting: STATUS WARNING for %s: Not even one single valid fit/merit value found", tpl->GetName().c_str());
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter() << "  COperatorTemplateFitting::"<<__func__<<": STATUS WARNING for "<<tpl->GetName().c_str()<<": Not even one single valid fit/merit value found");
     }
 
 
@@ -574,7 +576,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    Operator-TemplateFitting: Loop Error - chisquare values not set even once");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter() <<"    COperatorTemplateFitting::"<<__func__<<": Loop Error - chisquare values not set even once");
     }
 
     //estimate CstLog for PDF estimation

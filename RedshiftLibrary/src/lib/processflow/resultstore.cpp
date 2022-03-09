@@ -49,6 +49,7 @@
 #include "RedshiftLibrary/operator/tplCombinationExtremaResult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/operator/flagResult.h"
 
 
 #include <boost/filesystem.hpp>
@@ -210,6 +211,23 @@ std::shared_ptr<const CPdfMargZLogResult> COperatorResultStore::GetPdfMargZLogRe
 
     return std::dynamic_pointer_cast<const CPdfMargZLogResult>(GetGlobalResult(oss.str()).lock());
 }
+
+std::shared_ptr<const CFlagLogResult> COperatorResultStore::GetFlagResult(const std::string& objectType,
+								    const std::string& method,
+								    const std::string& name ) const
+{
+    std::ostringstream oss;
+    if (objectType == name){
+      oss << name;
+    }else{
+      oss << objectType << "." << method << "." << name;
+    }
+
+    std::weak_ptr<const COperatorResult> cor = GetGlobalResult(oss.str());
+
+    return std::dynamic_pointer_cast<const CFlagLogResult>(GetGlobalResult(oss.str()).lock());
+}
+
 
 //std::shared_ptr<const CLineModelExtremaResult<TLineModelResult>>
 
@@ -441,6 +459,12 @@ void COperatorResultStore::StoreScopedGlobalResult( const std::string& name, std
 void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult> result )
 {
     StoreGlobalResult( "", name, result );
+}
+
+void COperatorResultStore::StoreFlagResult( const std::string& name, UInt32 result )
+{
+    TWarningMsgList msgList = Flag.getListMessages();
+    StoreGlobalResult( name, std::make_shared<const CFlagLogResult>(result, msgList));
 }
 
 

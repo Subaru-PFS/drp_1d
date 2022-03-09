@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -82,7 +83,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List & redshifts, const TFloat64List & 
                 }else{
                     if (deltaz_i < maxIter){                        
                         //Log.LogWarning("  Deltaz: Deltaz computation failed for half range %f", zRangeHalf);
-                        Log.LogWarning("  Deltaz: Deltaz computation failed for half range %i samples", half_samples_nb);
+                        Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED, Formatter()<<"  CDeltaz::"<<__func__<<": Deltaz computation failed for half range "<<half_samples_nb<<" samples");
                         deltaz_i++;
                     }
                     if(deltaz_i == maxIter - 1){

@@ -84,7 +84,8 @@
 %shared_ptr(CPhotBandCatalog)
 %shared_ptr(CRayCatalogsTplShape)
 %shared_ptr(CLineRatioCatalog)
-
+%shared_ptr(CFlagLogResult)
+%shared_ptr(CFlagWarning)
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -116,6 +117,7 @@
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
@@ -230,6 +232,43 @@ public:
 private:
    CLog();
    ~CLog();
+};
+
+class CFlagWarning {
+public:
+  typedef enum WarningCode
+    {
+      WARNING_NONE=0,
+      AIR_VACCUM_CONVERSION_IGNORED, //1
+      CRANGE_VALUE_OUTSIDERANGE, //2
+      CRANGE_VECTBORDERS_OUTSIDERANGE, //3
+      CRANGE_NO_INTERSECTION, //4
+      FINDER_NO_PEAKS, //5
+      STDESTIMATION_NO_MATCHING, //6
+      STDESTIMATION_FAILED, //7
+      MULTIROLL_STRTAG_NOTFOUND, //8
+      LINEMATCHING_REACHED_ENDLOOP, //9
+      FORCE_LOGSAMPLING_FFT,//10
+      IGNORELINESSUPPORT_DISABLED_FFT,//11
+      FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,//12
+      INVALID_MERIT_VALUES,//13
+      AIR_VACCUM_REACHED_MAX_ITERATIONS, //14
+      ASYMFIT_NAN_PARAMS,//15
+      DELTAZ_COMPUTATION_FAILED, //16
+      INVALID_FOLDER_PATH,//17
+      TPL_NAME_EMPTY,//18
+    }WarningCode;
+
+  static CFlagWarning& GetInstance();
+
+  void warning(WarningCode c, std::string message);
+  void warning(WarningCode c, const char* format, ... );
+  Int32 getBitMask();
+  void resetFlag();
+
+private:
+  CFlagWarning();
+  ~CFlagWarning();
 };
 
 class CLogConsoleHandler {
@@ -358,6 +397,7 @@ public:
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
 %include "operator/pdfMargZLogResult.i"
+%include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
@@ -423,6 +463,10 @@ class COperatorResultStore
                                                                        const std::string& name ) const;
 
   std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
+								    const std::string& method,
+								    const std::string& name ) const;
+
+  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;
 
@@ -492,6 +536,7 @@ class COperatorResultStore
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;
 
+  void StoreFlagResult( const std::string& name, UInt32  result );
 };
 
 

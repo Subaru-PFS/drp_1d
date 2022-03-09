@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -110,7 +111,7 @@ TFloat64List CAirVacuum::AirToVac(const TFloat64List & waveAir) const
 
     if (iter==maxiter)
     {
-        Log.LogWarning(Formatter() << "CAirVacuum::AirToVac reach max iteration, with precision: " << precision);
+        Flag.warning(Flag.AIR_VACCUM_REACHED_MAX_ITERATIONS, Formatter() << "CAirVacuum::"<<__func__<<" reach max iteration, with precision: " << precision);
     }
 
     return (waveVac);

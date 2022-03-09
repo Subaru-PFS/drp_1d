@@ -40,6 +40,8 @@
 
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 using namespace NSEpic;
 
 
@@ -188,12 +190,12 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
         Float64 ratio_thres = 1.5;
         if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
           {
-            Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+            Flag.warning(Flag.STDESTIMATION_NO_MATCHING, Formatter()<<"  TLineModelResult::"<<__func__<<": STD estimations outside lines do not match: ratio="<<ratioSTD<<", flux-STD="<<OutsideLinesSTDFlux<<", error-std="<<OutsideLinesSTDError);
           }else{
           Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
         }
       }else{
-      Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
+      Flag.warning(Flag.STDESTIMATION_FAILED, Formatter()<<"  TLineModelResult::"<<__func__<<": unable to get STD estimations..." );
     }
 
 

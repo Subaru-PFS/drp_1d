@@ -36,42 +36,65 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/ray/lineprofileASYMFIT.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/common/formatter.h"
-using namespace NSEpic;
-using namespace std;
+#ifndef _REDSHIFT_COMMON_FLAG_
+#define _REDSHIFT_COMMON_FLAG_
 
-CLineProfileASYMFIT::CLineProfileASYMFIT(const Float64 nsigmasupport, TAsymParams params, const std::string centeringMethod):
-CLineProfileASYM(ASYMFIT, nsigmasupport, params, centeringMethod)
+#include "RedshiftLibrary/common/singleton.h"
+#include "RedshiftLibrary/common/mutex.h"
+
+#include <vector>
+#include <cstdarg>
+
+#define Flag (CFlagWarning::GetInstance())
+
+namespace NSEpic
 {
 
-}
- 
-void CLineProfileASYMFIT::SetAsymParams(TAsymParams params)
+class CFlagWarning : public CSingleton<CFlagWarning>
 {
-    if(std::isnan(params.sigma) || std::isnan(params.alpha) || std::isnan(params.delta)){
-        Flag.warning(Flag.ASYMFIT_NAN_PARAMS, Formatter()<<"CLineProfileASYMFIT::"<<__func__<<" AsymFit params are NaN");
-    } 
-    m_asym_sigma_coeff = params.sigma;
-    m_asym_alpha = params.alpha;
-    m_asym_delta = params.delta;
-}
+public:
+    typedef enum WarningCode
+        {
+        WARNING_NONE=0,
+        AIR_VACCUM_CONVERSION_IGNORED, //1
+        CRANGE_VALUE_OUTSIDERANGE, //2
+        CRANGE_VECTBORDERS_OUTSIDERANGE, //3
+        CRANGE_NO_INTERSECTION, //4
+        FINDER_NO_PEAKS, //5
+        STDESTIMATION_NO_MATCHING, //6
+        STDESTIMATION_FAILED, //7
+        MULTIROLL_STRTAG_NOTFOUND, //8
+        LINEMATCHING_REACHED_ENDLOOP, //9
+        FORCE_LOGSAMPLING_FFT,//10
+        IGNORELINESSUPPORT_DISABLED_FFT,//11
+        FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,//12
+        INVALID_MERIT_VALUES,//13
+        AIR_VACCUM_REACHED_MAX_ITERATIONS, //14
+        ASYMFIT_NAN_PARAMS,//15
+        DELTAZ_COMPUTATION_FAILED, //16
+        INVALID_FOLDER_PATH,//17
+        TPL_NAME_EMPTY,//18
+        } WarningCode;
 
-void CLineProfileASYMFIT::resetAsymFitParams()
-{
-    m_asym_sigma_coeff = 2.;
-    m_asym_alpha = 0.;
-    m_asym_delta = 0.;
+    void warning(WarningCode c, std::string message);
+    void warning(WarningCode c, const char* format, ... );
+    
+    const std::vector<std::pair<WarningCode, std::string>>& getListMessages();
+    Int32 getBitMask();
+    void resetFlag();
+
+private:
+    friend class CSingleton<CFlagWarning>;
+
+    CFlagWarning();
+    ~CFlagWarning();
+
+    UInt32          m_flags;
+    Char*           m_WorkingBuffer;
+    std::vector<std::pair<WarningCode, std::string>> m_messageList;
+};
+
+typedef std::vector<std::pair<CFlagWarning::WarningCode, std::string>> TWarningMsgList;
+
 }
- 
-bool CLineProfileASYMFIT::isAsymFit() const
-{
-    return 1;
-}
- 
-bool CLineProfileASYMFIT::isAsymFixed() const
-{
-    return 0;
-}
+#endif

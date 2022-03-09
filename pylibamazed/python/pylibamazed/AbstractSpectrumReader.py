@@ -50,10 +50,13 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CLSFFactory,
                                   CPhotometricData,
                                   CLog,
+                                  CFlagWarning,
+                                  
                                   CTemplateCatalog)
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 zlog = CLog.GetInstance()
+zflag = CFlagWarning.GetInstance()
 
 
 class AbstractSpectrumReader:
@@ -222,7 +225,7 @@ class AbstractSpectrumReader:
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
         elif airvacuum_method != "" and self.w_frame == "vacuum":
-            zlog.LogWarning("Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
+            zflag.warning(zflag.AIR_VACCUM_CONVERSION_IGNORED, "Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
         if len(self.waves) == 1:

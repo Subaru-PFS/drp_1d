@@ -39,6 +39,9 @@
 #include "RedshiftLibrary/method/solve.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/operator/flagResult.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
 
@@ -60,7 +63,7 @@ void CSolve::GetRedshiftSampling(std::shared_ptr<const CInputContext> inputConte
 	redshiftStep = inputContext->m_logGridStep;
 	if(m_redshiftSampling=="lin"){
                 m_redshiftSampling = "log";
-                Log.LogWarning("m_redshift sampling value is forced to log since FFTprocessing is used");
+                Flag.warning(Flag.FORCE_LOGSAMPLING_FFT, Formatter()<<"CSolve::"<<__func__<<": m_redshift sampling value is forced to log since FFTprocessing is used");
         }
     }else{
       //default is to read from the scoped paramStore
@@ -85,6 +88,10 @@ void CSolve::Compute(CProcessFlowContext& context)
   {
     CAutoScope autoscope(scope,m_name);
     result = compute(inputContext,resultStore,scope);
+
+    resultStore->StoreScopedGlobalResult( "warningFlag", std::make_shared<const CFlagLogResult>(Flag.getBitMask(), Flag.getListMessages()));
+    Flag.resetFlag();
+
     saveToResultStore(result,resultStore);
   }
 
