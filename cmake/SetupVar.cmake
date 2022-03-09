@@ -23,9 +23,9 @@ message(STATUS "COVERAGE = " ${COVERAGE})
 # Compiler options
 #--------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -D_FORTIFY_SOURCE=2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto -D_FORTIFY_SOURCE=2 -Wmaybe-uninitialized")
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG_BUILD -Wl,--no-as-needed")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG_BUILD -Wmaybe-uninitialized -Wl,--no-as-needed")
 
 # set(CMAKE_CXX_FLAGS_COVERAGE "-O0 -g -fprofile-arcs -ftest-coverage --coverage")
 set(CMAKE_CXX_FLAGS_COVERAGE "-g -O0 --coverage")
