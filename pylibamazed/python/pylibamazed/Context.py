@@ -116,13 +116,13 @@ class Context:
                                                auto_load=False)
 
                     self.parameters[object_type]["redshiftref"] = output.get_attribute_from_result_store("Redshift",
-                                                                                                         "galaxy",
+                                                                                                         object_type,
                                                                                                          0)
                     vel_a = output.get_attribute_from_result_store("VelocityAbsorption",
-                                                                   "galaxy",
+                                                                   object_type,
                                                                    0)
                     vel_e = output.get_attribute_from_result_store("VelocityEmission",
-                                                                   "galaxy",
+                                                                   object_type,
                                                                    0)
                     self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = vel_a
                     self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
