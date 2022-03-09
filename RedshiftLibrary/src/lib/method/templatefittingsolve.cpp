@@ -188,7 +188,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
                                                tplCatalog,
-                                               m_categoryList,
                                                overlapThreshold,
                                                opt_interp);
 
@@ -401,7 +400,6 @@ CTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultSt
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                Float64 overlapThreshold,
                                                std::string opt_interp)
 {
@@ -500,7 +498,7 @@ CTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultSt
         //make sure tpl is non-rebinned
         bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
-        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(m_categoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = 
                             m_templateFittingOperator->ComputeSpectrumModel(tpl, 
                                                                             z,

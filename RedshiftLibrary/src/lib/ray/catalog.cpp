@@ -74,12 +74,12 @@ const CRayCatalog::TRayVector& CRayCatalog::GetList() const
 const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const
 {
 
-        TRayVector filteredList;
-        for( int i = 0; i< m_List.size(); i++ )
+        TRayVector filteredList; 
+        for( Int32 i = 0; i< m_List.size(); i++ )
         {
             if( typeFilter == -1 || typeFilter == m_List[i].GetType()){
                 if( forceFilter == -1 || forceFilter == m_List[i].GetForce()){
-                    filteredList.push_back(m_List[i]);
+                  filteredList.push_back(m_List[i]);
                 }
             }
         }
