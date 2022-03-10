@@ -40,6 +40,7 @@ import os.path
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
+from pylibamazed.Reliability import Reliability
 
 from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineModelSolve,
@@ -52,6 +53,7 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CFlagWarning)
 import pandas as pd
 import json
+import os
 
 zflag = CFlagWarning.GetInstance()
 class Context:
@@ -108,13 +110,13 @@ class Context:
         zflag.resetFlag()
 
         enable_classification = False
-        enable_reliability = False
+        reliabilities = dict()
         for object_type in self.parameters["objects"]:
             method = self.parameters[object_type]["method"]
             if method:
                 self.run_method(object_type, method)
                 enable_classification = True
-                enable_reliability = True
+
             if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
                 if not self.config["linemeascatalog"]:
                     output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
@@ -134,12 +136,19 @@ class Context:
                     self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
                     self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
                 self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
+
+            if self.parameters[object_type].get("enable_reliability") and object_type in self.calibration_library.reliability_models:
+                rel = Reliability(object_type, self.parameters,self.calibration_library)
+                reliabilities[object_type] = rel.Compute(self.process_flow_context)
+
         if enable_classification:
             self.run_method("classification", "ClassificationSolve")
-        if enable_reliability:
-            self.run_method("reliability", "ReliabilitySolve")
 
         rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
+        for object_type in reliabilities.keys():
+            rso.object_results[object_type]['reliability'] = dict()
+            rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
+
         del self.process_flow_context
         return rso
 

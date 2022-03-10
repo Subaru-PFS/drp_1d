@@ -47,11 +47,13 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CRayCatalog,CRayCatalogsTplShape,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
-                                  TAsymParams)
+                                  TAsymParams,
+                                  CFlagWarning)
 import numpy as np
 from astropy.io import fits
 import glob
 
+zflag = CFlagWarning.GetInstance()
 
 class CalibrationLibrary:
     """
@@ -76,6 +78,7 @@ class CalibrationLibrary:
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
         self.calzetti = pd.DataFrame()
+        self.reliability_models = {}
 
     def _load_templates(self, object_type, path):
         """
@@ -150,7 +153,7 @@ class CalibrationLibrary:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
             raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
-        
+
 
         self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
@@ -186,7 +189,6 @@ class CalibrationLibrary:
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
-
         self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
         n_ebmv_coeffs = 1
         if self.parameters[object_type][method]["linemodel"]["tplratio_ismfit"]:
@@ -215,7 +217,7 @@ class CalibrationLibrary:
                 lr_catalog.setIsmIndex(k)
                 lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
-            
+
     def load_empty_line_catalog(self, object_type):
         self.line_catalogs[object_type] = CRayCatalog()
 
@@ -263,6 +265,20 @@ class CalibrationLibrary:
                 self.load_linecatalog(object_type,method)
                 if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
                     self.load_line_ratio_catalog_list(object_type, method)
+
+            # Load the reliability model
+            if self.parameters[object_type].get("enable_reliability"):
+                try:
+                    # to avoid annoying messages about gpu/cuda availability
+                    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+                    from tensorflow.keras import models
+                except ImportError:
+                    zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
+                else:
+                    model_path = os.path.join(self.calibration_dir,
+                                              self.parameters[object_type]["reliability_model"])
+                    model = models.load_model(model_path)
+                    self.reliability_models[object_type] = model
 
         if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
             self.load_lsf()

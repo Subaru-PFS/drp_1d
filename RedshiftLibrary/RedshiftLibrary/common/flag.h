@@ -74,6 +74,7 @@ public:
         DELTAZ_COMPUTATION_FAILED, //16
         INVALID_FOLDER_PATH,//17
         TPL_NAME_EMPTY,//18
+	RELIABILITY_NEEDS_TENSORFLOW//19
         } WarningCode;
 
     void warning(WarningCode c, std::string message);
