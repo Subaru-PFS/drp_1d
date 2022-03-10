@@ -354,10 +354,10 @@ class CLineRatioCatalog : public CRayCatalog
  public:
   CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
   ~CLineRatioCatalog();
-  void addVelocity(const std::string& name, const Float64& value);
-  void setPrior(const Float64& prior);
+  void addVelocity(const std::string& name, Float64 value);
+  void setPrior(Float64 prior);
 
-  void setIsmIndex(const Float64& ismIndex);
+  void setIsmIndex(Float64 ismIndex);
 
 };
 

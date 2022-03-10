@@ -59,14 +59,14 @@ namespace NSEpic
 
     CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
 
-    void addVelocity(const std::string& name, const Float64& value);
-    void setPrior(const Float64& prior);
-    void setIsmIndex(const Float64& ismIndex);
+    void addVelocity(const std::string& name, Float64 value);
+    void setPrior(Float64 prior);
+    void setIsmIndex(Float64 ismIndex);
 
-    const Float64& getPrior(){return m_Prior;}
-    const std::string& getName(){return m_Name;}
-    const Int32& getIsmIndex(){ return m_IsmIndex;}
-    const Float64& getVelocity(const std::string&group);
+    Float64 getPrior() const {return m_Prior;}
+    const std::string& getName() const {return m_Name;}
+    Int32 getIsmIndex() const{ return m_IsmIndex;}
+    Float64 getVelocity(const std::string&group) const;
   private:
     //    CRayCatalog m_LineCatalog;
     std::string m_Name;

@@ -101,7 +101,6 @@ public:
     Float64 m_opt_fitcontinuum_maxCount = 2;//default value to 2
 private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
-    Int32 n_max_continuum_candidates=10000;
     Int32 n_continuum_candidates=0;
 
     std::vector<Float64> redshiftgrid;

@@ -52,7 +52,6 @@ class CRuleRatioRange : public CRule
 {
   public:
     CRuleRatioRange();
-    ~CRuleRatioRange();
     bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(bool EnabledArgument, ...);
 

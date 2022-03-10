@@ -80,7 +80,7 @@ public:
 
     std::shared_ptr<COperatorResult> getResult();
 
-    void PrecomputeContinuumFit(const CSpectrum &spectrum,
+    std::shared_ptr<CTemplatesFitStore> PrecomputeContinuumFit(const CSpectrum &spectrum,
                                 const CSpectrum &logSampledSpectrum,
                                 const CTemplateCatalog &tplCatalog,
                                 const TFloat64Range &lambdaRange,
@@ -250,7 +250,10 @@ private:
 
     bool AllAmplitudesAreZero(const TBoolList &amplitudesZero, Int32 nbZ);
 
-    Int32 interpolateLargeGridOnFineGrid(TFloat64List redshiftsLargeGrid, TFloat64List redshiftsFineGrid, TFloat64List meritLargeGrid, TFloat64List &meritFineGrid);
+    Int32 interpolateLargeGridOnFineGrid( const TFloat64List &redshiftsLargeGrid, 
+                                          const TFloat64List &redshiftsFineGrid,
+                                          const TFloat64List &meritLargeGrid, 
+                                          TFloat64List &meritFineGrid) const;
     
     std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 

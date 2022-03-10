@@ -53,8 +53,7 @@ namespace NSEpic {
 class CRuleSuperStrong : public CRule
 {
   public:
-    CRuleSuperStrong();
-    ~CRuleSuperStrong();
+
     bool Check(CLineModelElementList &LineModelElementList);
     void SetUp(bool EnabledArgument, ...);
 

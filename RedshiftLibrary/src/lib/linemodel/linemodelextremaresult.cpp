@@ -87,7 +87,7 @@ void TLineModelResult::updateFromLineModelSolution(const CLineModelSolution& cms
     Alv= cms.AbsorptionVelocity;
   }
 
-void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelFitting> lmel)
+void TLineModelResult::updateContinuumFromModel(const std::shared_ptr<const CLineModelFitting> &lmel)
   {
     FittedTplName= lmel->getFitContinuum_tplName();
     FittedTplAmplitude= lmel->getFitContinuum_tplAmplitude();
@@ -98,7 +98,7 @@ void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModel
     FittedTplMeiksinIdx= lmel->getFitContinuum_tplIgmMeiksinIdx();
   }
 
-void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelFitting> lmel)
+void TLineModelResult::updateTplRatioFromModel(const std::shared_ptr<const CLineModelFitting> &lmel)
   {
         FittedTplratioName = lmel->getTplshape_bestTplName();
         FittedTplratioIsmCoeff = lmel->getTplshape_bestTplIsmCoeff();
@@ -108,10 +108,13 @@ void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelF
 
   }
 
-void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int idx,const TFloat64Range &lambdaRange, int i_2pass)
+void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
+                                        const std::shared_ptr<const CLineModelResult> &lmresult,
+                                        bool estimateLeastSquareFast, int idx, 
+                                        const TFloat64Range &lambdaRange, int i_2pass)
   {
-    
-    // TODO : make all these getters const in CLineModelFitting before uncommenting this
+    Merit = lmresult->ChiSquare[idx];
+
     //LineModelSolutions
     Elv = lmel->GetVelocityEmission();
     Alv = lmel->GetVelocityAbsorption();

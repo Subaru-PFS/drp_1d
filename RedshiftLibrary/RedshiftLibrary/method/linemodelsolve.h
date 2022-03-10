@@ -85,16 +85,19 @@ public:
 
 private:
 
-    ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
-                                        std::string opt_rigidity,
-                                        std::string opt_combine,
-                                        Float64 opt_stronglinesprior,
-                                        Float64 opt_hapriorstrength,
-                                        Float64 opt_euclidNHaEmittersPriorStrength) const;
+    ChisquareArray BuildChisquareArray( const std::shared_ptr<const CLineModelResult> &result) const;
 
-   
-      void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
-                             std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
+    void  GetZpriorsOptions(bool & zPriorStrongLinePresence,
+                            bool & zPriorHaStrongestLine,
+                            bool & zPriorNLineSNR,
+                            Float64 & opt_nlines_snr_penalization_factor,
+                            bool & zPriorEuclidNHa) const;
+    
+    TFloat64List BuildZpriors(const std::shared_ptr<const CLineModelResult> &result,
+                              Int32 kTplShape=-1) const;
+
+    void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
+                              std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
     const CRayCatalog::TRayVector  FilterRestLineCatalog(const CRayCatalog& restraycatalog);

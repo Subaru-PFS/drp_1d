@@ -54,13 +54,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CRegulament::CRegulament()
-{
-}
-
-CRegulament::~CRegulament()
-{
-}
 void CRegulament::Apply( CLineModelElementList& LineModelElementList )
 {
   for(unique_ptr<CRule>& rule: m_RulesVector)
@@ -176,7 +169,7 @@ void CRegulament::EnableLogs( bool enable )
     m_RulesLog.clear();
 }
 
-std::vector<string> CRegulament::GetLogs( )
+const std::vector<string> & CRegulament::GetLogs( ) const
 {
     return m_RulesLog;
 }

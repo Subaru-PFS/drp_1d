@@ -50,16 +50,22 @@
 #include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
+#include <memory>
 
 namespace NSEpic
 {
+
+class CTemplatesFitStore;
 
 class CLineModelResult : public COperatorResult
 {
 public:
 
+    CLineModelResult() = default;
+
     void Init(TFloat64List redshifts,
                CRayCatalog::TRayVector restRays,
+               Int32 nTplContinuum,
                Int32 nTplshapes,
                TFloat64List tplshapesPriors);
    
@@ -71,6 +77,8 @@ public:
     Float64 getMinChiSquare() const;
     Float64 getMaxChiSquare() const;
     Int32 ResizeChisquareTplShapes( Int32 nTplshapes, Int32 nRedshifts );
+    void SetChisquareTplContinuumResult(Int32 index, const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
+    void SetChisquareTplContinuumResultFromPrevious(Int32 index);
     void SetChisquareTplshapeResult(Int32 index,
                                      const TFloat64List & chisquareTplshape,
                                      const TFloat64List & scaleMargCorrTplshape,
@@ -78,11 +86,12 @@ public:
                                      const TBoolList & strongHalphaELPresentTplshapes,
                                      const TInt32List & nLinesAboveSNRTplshape,
                                      const TFloat64List & priorLinesTplshape);
-    TFloat64List getChisquareTplshapeResult( Int32 index );
-    TFloat64List getScaleMargCorrTplshapeResult( Int32 index );
-    TBoolList getStrongELPresentTplshapeResult( Int32 index );
+    TFloat64List getChisquareTplContinuumResult(Int32 index_z);
+    TFloat64List getChisquareTplshapeResult( Int32 index_z );
+    TFloat64List getScaleMargCorrTplshapeResult( Int32 index_z );
+    TBoolList getStrongELPresentTplshapeResult( Int32 index_z );
     TBoolList getHaELPresentTplshapeResult( Int32 index_z );
-    TInt32List getNLinesAboveSNRTplshapeResult( Int32 index );
+    TInt32List getNLinesAboveSNRTplshapeResult( Int32 index_z );
     TFloat64List getPriorLinesTplshapeResult( Int32 index_z );
 
     //Merit results
@@ -99,6 +108,7 @@ public:
     std::vector<TInt32List> NLinesAboveSNRTplshapes; // full n_lines_above_snr results (for each tplshape)
     TFloat64List ChiSquareContinuum; // chi2 result for the continuum
     TFloat64List ScaleMargCorrectionContinuum; //  scale marginalization correction result for the continuum
+    std::vector<TFloat64List> ChiSquareTplContinuum; // chi2 for all continuum templates fited
 
     std::vector<CLineModelSolution> LineModelSolutions;
     std::vector<CContinuumModelSolution> ContinuumModelSolutions;

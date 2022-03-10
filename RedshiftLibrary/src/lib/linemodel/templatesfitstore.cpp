@@ -140,33 +140,17 @@ bool CTemplatesFitStore::Add(std::string tplName,
                                    return (val < lhs.merit);
                                  });
 
-    if(ipos==m_fitValues[idxz].cend()) 
-    {
-        if (m_fitValues[idxz].size()<n_max_continuum_candidates) {
-            Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at end position %d (merit=%e, ebmv=%e, imeiksin=%d)",
-                idxz,
-                redshift,
-                m_fitValues[idxz].size(),
-                tmpSValues.merit,
-                tmpSValues.ismEbmvCoeff,
-                tmpSValues.igmMeiksinIdx);
 
-            m_fitValues[idxz].push_back(tmpSValues);
-        } else {
-            //nothing to do, merit doesn't qualify the fit result to be stored
-        }        
-    } else {
-        Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d (merit=%e, ebmv=%e, imeiksin=%d)",
-                     idxz,
-                     redshift,
-                     std::distance(m_fitValues[idxz].begin(), ipos),
-                     tmpSValues.merit,
-                     tmpSValues.ismEbmvCoeff,
-                     tmpSValues.igmMeiksinIdx);
+    Log.LogDebug("CTemplatesFitStore::Add iz=%d (z=%f) - adding at pos=%d (merit=%e, ebmv=%e, imeiksin=%d)",
+                    idxz,
+                    redshift,
+                    std::distance(m_fitValues[idxz].begin(), ipos),
+                    tmpSValues.merit,
+                    tmpSValues.ismEbmvCoeff,
+                    tmpSValues.igmMeiksinIdx);
 
-        //insert the new SValue and move all the older candidates position according to ipos found
-        m_fitValues[idxz].insert(ipos, tmpSValues);
-    }
+    //insert the new SValue and move all the older candidates position according to ipos found
+    m_fitValues[idxz].insert(ipos, tmpSValues);
 
     //this is not very secure. it should be checked that all redshifts have the same fitValues count
     if(n_continuum_candidates<m_fitValues[idxz].size())
@@ -174,7 +158,6 @@ bool CTemplatesFitStore::Add(std::string tplName,
         n_continuum_candidates=m_fitValues[idxz].size();
         Log.LogDebug("CTemplatesFitStore::n_continuum_candidates set to %d)", n_continuum_candidates);
     }
-
 
     return true;
 }

@@ -77,18 +77,18 @@ public:
                                             Float64& mu, Float64& sigma, 
                                             bool doAsymfitdelta=true) const;
 
-    std::string GetElementTypeTag();
+    const std::string & GetElementTypeTag() const;
 
     void prepareSupport(const CSpectrumSpectralAxis &spectralAxis,
                                 Float64 redshift,
                                 const TFloat64Range &lambdaRange);
-    TInt32RangeList getSupport();
-    TInt32RangeList getTheoreticalSupport();
+    TInt32RangeList getSupport() const;
+    TInt32RangeList getTheoreticalSupport() const;
     void EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift,  const TFloat64Range &lambdaRange);
-    TInt32Range getSupportSubElt(Int32 subeIdx);
-    TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx);
+    TInt32Range getSupportSubElt(Int32 subeIdx) const;
+    TInt32Range getTheoreticalSupportSubElt(Int32 subeIdx) const;
 
-    TInt32Range
+    static TInt32Range
     EstimateIndexRange(const CSpectrumSpectralAxis &spectralAxis,
                        Float64 mu, const TFloat64Range &lambdaRange,
                        Float64 winsizeAngstrom);
@@ -96,7 +96,7 @@ public:
     Float64 GetContinuumAtCenterProfile(
         Int32 subeIdx, const CSpectrumSpectralAxis &spectralAxis,
         Float64 redshift, const CSpectrumFluxAxis &continuumfluxAxis,
-        const TPolynomCoeffs& line_polynomCoeffs);
+        const TPolynomCoeffs& line_polynomCoeffs) const;
 
     void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
@@ -110,41 +110,41 @@ public:
         Float64 min = -400., Float64 max = 400.);
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                                      Float64 continuumFlux,
-                                     Int32 kRaySupport = -1);
+                                     Int32 kRaySupport = -1) const;
     Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
                                                    Float64 redshift,
                                                    Float64 continuumFlux) const;
     Float64
     GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
-                                      Float64 continuumFluxUnscale);
+                                      Float64 continuumFluxUnscale) const;
     Float64
     GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                      Float64 continuumFlux);
+                                      Float64 continuumFlux) const;
     Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                            Float64 continuumFlux,
-                                           Float64 continuumFluxDerivZ);
+                                           Float64 continuumFluxDerivZ) const;
 
     void
     addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                        CSpectrumFluxAxis &modelfluxAxis,
                        const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift,
-                       Int32 lineIdx = undefIdx);
+                       Int32 lineIdx = undefIdx) const;
     void
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
                                const CSpectrumFluxAxis &continuumFluxAxis,
-                               Float64 redshift, bool emissionRay);
+                               Float64 redshift, bool emissionRay) const;
 
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Int32 lineIdx = undefIdx);
+                                   Int32 lineIdx = undefIdx) const;
 
-    Float64 GetNominalAmplitude(Int32 subeIdx);
+    Float64 GetNominalAmplitude(Int32 subeIdx) const;
     bool SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp);
-    Float64 GetFittedAmplitude(Int32 subeIdx);
-    Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx);
-    Float64 GetElementAmplitude();
-    Float64 GetElementError();
+    Float64 GetFittedAmplitude(Int32 subeIdx) const;
+    Float64 GetFittedAmplitudeErrorSigma(Int32 subeIdx) const;
+    Float64 GetElementAmplitude() const;
+    Float64 GetElementError() const;
 
     void SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR);
     void SetFittedAmplitude(Float64 A, Float64 SNR);
@@ -153,10 +153,10 @@ public:
     bool SetAbsLinesLimit(Float64 limit);
 
     void SetVelocityEmission(Float64 vel);
-    Float64 GetVelocityEmission();
+    Float64 GetVelocityEmission() const;
     void SetVelocityAbsorption(Float64 vel);
-    Float64 GetVelocityAbsorption();
-    Float64 GetVelocity();
+    Float64 GetVelocityAbsorption() const;
+    Float64 GetVelocity() const;
     void setVelocity(Float64 vel);
 
     void SetSourcesizeDispersion(Float64 sigma);
@@ -166,31 +166,31 @@ public:
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
     const TAsymParams GetAsymfitParams(UInt32 asymIdx=0) const;
     void resetAsymfitParams();
-    Int32 findElementIndex(Int32 LineCatalogIndex);
-    Int32 findElementIndex(const std::string& LineTagStr);
+    Int32 findElementIndex(Int32 LineCatalogIndex) const;
+    Int32 findElementIndex(const std::string& LineTagStr) const;
     const CLineProfile & getLineProfile(Int32 rayIdx) const;
 
-    Float64 GetSignFactor(Int32 subeIdx);
+    Float64 GetSignFactor(Int32 subeIdx) const;
 
-    Int32 GetSize();
-    std::vector<CRay> GetRays();
-    std::string GetRayName(Int32 subeIdx);
-    bool IsOutsideLambdaRange();
+    Int32 GetSize() const;
+    std::vector<CRay> GetRays() const;
+    const std::string & GetRayName(Int32 subeIdx) const;
+    bool IsOutsideLambdaRange() const;
     Float64 GetLineWidth(Float64 lambda, Float64 z = 0., bool isEmission=0) const;
-    bool IsOutsideLambdaRange(Int32 subeIdx);
+    bool IsOutsideLambdaRange(Int32 subeIdx) const;
 
     Float64 GetLineProfileDerivVel(const CLineProfile & profile, Float64 x, Float64 x0,
-                                   Float64 sigma, bool isEmission);
+                                   Float64 sigma, bool isEmission) const;
 
-    Float64 GetSumCross();
+    Float64 GetSumCross() const;
     void SetSumCross(Float64 val);
-    Float64 GetDtmFree();
+    Float64 GetDtmFree() const;
     void SetDtmFree(Float64 val);
-    Float64 GetSumGauss();
+    Float64 GetSumGauss() const;
     void SetSumGauss(Float64 val);
-    Float64 GetFitAmplitude();
+    Float64 GetFitAmplitude() const;
 
-  void debug(std::ostream& os);
+  void debug(std::ostream& os) const;
 
     std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?

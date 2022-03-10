@@ -54,9 +54,6 @@ CRule2SingleLinesAmplitude::CRule2SingleLinesAmplitude() :
 {
 }
 
-CRule2SingleLinesAmplitude::~CRule2SingleLinesAmplitude()
-{
-}
 
 void CRule2SingleLinesAmplitude::SetUp( bool EnabledArgument, ... )
 {
