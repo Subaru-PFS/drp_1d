@@ -81,7 +81,7 @@ public:
     ~CMultiRollModel();
 
     std::shared_ptr<CSpectrum> LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll, Int32 iRollOffset);
-    Int32 LoadFitContaminantTemplate(Int32 iRoll, CTemplate& tpl, const TFloat64Range& lambdaRange);
+    Int32 LoadFitContaminantTemplate(Int32 iRoll, CTemplate& tpl);
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult(Int32 iRoll);
 
     Int32 getTplshape_count();
@@ -90,17 +90,17 @@ public:
     TFloat64List GetChisquareTplshape();
     TFloat64List GetScaleMargTplshape();
     TBoolList GetStrongELPresentTplshape();
-    Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
+    Float64 getLeastSquareContinuumMerit();
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
     bool initTplratioCatalogs(const CRayCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit);
 
-    Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
-    Float64 getDTransposeD(const TFloat64Range& lambdaRange);
-    Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
+    Int32 getSpcNSamples();
+    Float64 getDTransposeD();
+    Float64 getLikelihood_cstLog();
     Float64 getScaleMargCorrection(Int32 idxLine=-1);
 
-    Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
+    Float64 EstimateMTransposeM();
     Float64 getCumulSNRStrongEL();
     Int32 GetNElements();
     Int32 GetModelNonZeroElementsNDdl();
@@ -138,7 +138,7 @@ public:
     void SetVelocityAbsorption(Float64 vel);
     void SetVelocityEmission(Float64 vel);
 
-    Float64 fit(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
+    Float64 fit(Float64 redshift, CLineModelSolution& modelSolution, Int32 contreest_iterations, bool enableLogging);
 
     std::vector<std::shared_ptr<CLineModelFitting> > m_models;
 

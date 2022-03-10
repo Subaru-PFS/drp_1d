@@ -226,7 +226,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         CLineModelSolution modelSolution;
         CContinuumModelSolution continuumModelSolution;
         model.fit( redshift,
-                   lambdaRange,
                    modelSolution,
                    continuumModelSolution,
                    contreest_iterations,
@@ -235,11 +234,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         //Restore the continuum estimation method
         spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
-        //get mtm and dtm cumulative vector and store it
-        TFloat64List lbda;
-        TFloat64List mtmCumul;
-        model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
-
+        //get mtm
+        Float64 mtm = model.EstimateMTransposeM();
 
         //Subtract the fitted model from the original template
         model.refreshModel();

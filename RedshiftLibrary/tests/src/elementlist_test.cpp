@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
 				       opt_rules,
 				       opt_rigidity);
 
-  model_fromspectrum.fit(0.5, range, solution, c_solution, iterations, false);
+  model_fromspectrum.fit(0.5, solution, c_solution, iterations, false);
 
   // tplfit
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");

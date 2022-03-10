@@ -150,9 +150,10 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     fclose( f );
     */
 
-
+    TFloat64Range clampedlambdaRange;
+    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
     m_model = std::make_shared<CLineModelFitting>(      spectrum,
-                                                        lambdaRange,
+                                                        clampedlambdaRange,
                                                         tplCatalog,
                                                         m_tplCategoryList,
                                                         m_RestLineList,
@@ -390,12 +391,11 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    // end of hack
     //    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    TFloat64Range clampedlambdaRange;
-    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
 
-    m_result->nSpcSamples = m_model->getSpcNSamples(clampedlambdaRange);
-    m_result->dTransposeD = m_model->getDTransposeD(clampedlambdaRange);
-    m_result->cstLog = m_model->getLikelihood_cstLog(clampedlambdaRange);
+
+    m_result->nSpcSamples = m_model->getSpcNSamples();
+    m_result->dTransposeD = m_model->getDTransposeD();
+    m_result->cstLog = m_model->getLikelihood_cstLog();
 
     Int32 contreest_iterations = 0;
     if (opt_continuumreest == "always")
@@ -437,7 +437,6 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
         if (m_enableFastFitLargeGrid == 0 || m_result->Redshifts[i] == largeGridRedshifts[indexLargeGrid])
         {
             m_result->ChiSquare[i] = m_model->fit(m_result->Redshifts[i],
-                                                  clampedlambdaRange,
                                                   m_result->LineModelSolutions[i],
                                                   m_result->ContinuumModelSolutions[i],
                                                   contreest_iterations,
@@ -469,7 +468,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                        m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
+                        m_model->getLeastSquareContinuumMerit();
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -504,7 +503,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[i] =
-                    m_model->getLeastSquareContinuumMerit(clampedlambdaRange);
+                    m_model->getLeastSquareContinuumMerit();
             } else
             {
                 m_result->ChiSquareContinuum[i] =
@@ -691,7 +690,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
         maskList.resize(redshiftsTplFit.size());
         for(Int32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
         {
-            m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, fftprocessing?logSampledSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
+            m_model->initModelAtZ(redshiftsTplFit[kztplfit], fftprocessing?logSampledSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
             maskList[kztplfit]=m_model->getOutsideLinesMask();
         }
 
@@ -1310,7 +1309,6 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
         if (!mlmfit_modelInfoSave)
         {
             m_result->ChiSquare[idx] = m_model->fit(m_result->Redshifts[idx],
-                                                    lambdaRange,
                                                     m_result->LineModelSolutions[idx],
                                                     m_result->ContinuumModelSolutions[idx],
                                                     contreest_iterations,
@@ -1325,7 +1323,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                                                  m_model->GetPriorLinesTplshape());
             if (!m_estimateLeastSquareFast)
             {
-                m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMerit(lambdaRange);
+                m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMerit();
             }else
             {
                 m_result->ChiSquareContinuum[idx] = m_model->getLeastSquareContinuumMeritFast();
@@ -1422,7 +1420,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
         }
 
         // code here has been moved to TLineModelResult::updateFromModel
-        ExtremaResult->m_ranked_candidates[i].second.updateFromModel(m_model,m_result,m_estimateLeastSquareFast,idx,lambdaRange,i_2pass);
+        ExtremaResult->m_ranked_candidates[i].second.updateFromModel(m_model,m_result,m_estimateLeastSquareFast,idx,i_2pass);
         
         // save the continuum tpl fitting results
         ExtremaResult->m_ranked_candidates[i].second.updateContinuumFromModel(m_model);
@@ -1541,7 +1539,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
         // model.LoadModelSolution(m_result->LineModelSolutions[idx]);
         m_model->fit(m_result->Redshifts[idx],
-                     lambdaRange,
                      m_result->LineModelSolutions[idx],
                      m_result->ContinuumModelSolutions[idx],
                      contreest_iterations, false);
@@ -1559,7 +1556,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
 
                 Log.LogInfo("  Operator-Linemodel: Lm fit for extrema %d",
                             i);
-                m_model->fit(m_result->Redshifts[idx], lambdaRange,
+                m_model->fit(m_result->Redshifts[idx],
                              m_result->LineModelSolutions[idx],
                              m_result->ContinuumModelSolutions[idx],
                              contreest_iterations, true);
@@ -1740,7 +1737,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                                 Float64 meritv;
                                 Float64 zTest = m_result->Redshifts[idzTest];
                                 meritv = m_model->fit(zTest,
-                                                      lambdaRange,
                                                       m_result->LineModelSolutions[idx], //maybe this member result should be replaced by an unused variable
                                                       m_result->ContinuumModelSolutions[idx], //maybe this member result should be replaced by an unused variable
                                                       contreest_iterations,
@@ -1965,7 +1961,6 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
 
             m_result->ChiSquare[iz] =
                     m_model->fit(m_result->Redshifts[iz],
-                                    lambdaRange,
                                     m_result->LineModelSolutions[iz],
                                     m_result->ContinuumModelSolutions[iz],
                                     contreest_iterations, false);
@@ -1983,7 +1978,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             if (!m_estimateLeastSquareFast)
             {
                 m_result->ChiSquareContinuum[iz] =
-                        m_model->getLeastSquareContinuumMerit(lambdaRange);
+                        m_model->getLeastSquareContinuumMerit();
             } else
             {
                 m_result->ChiSquareContinuum[iz] =
@@ -2335,9 +2330,12 @@ COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inpu
   const std::string& opt_continuumcomponent = "nocontinuum";//params->GetScoped<std::string>("continuumcomponent");
   spc.SetContinuumEstimationMethod("zero");
   m_opt_continuum_neg_amp_threshold = -1;// unused params->GetScoped<Float64>( "continuumfit.negativethreshold");
-    
+  
+  TFloat64Range clampedlambdaRange;
+  spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
+
   m_model = std::make_shared<CLineModelFitting>(    spc,
-                                                    lambdaRange,
+                                                    clampedlambdaRange,
                                                     tplCatalog,
                                                     m_tplCategoryList,
                                                     m_RestLineList,
@@ -2391,10 +2389,7 @@ COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inpu
     m_estimateLeastSquareFast = 0;
     m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
 
-    TFloat64Range clampedlambdaRange;
-    spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
-
-    m_model->initDtd(clampedlambdaRange);
+    m_model->initDtd();
     
     CLineModelSolution modelSolution;
     CContinuumModelSolution continuumModelSolution;
@@ -2406,7 +2401,7 @@ COperatorLineModel::computeForLineMeas(std::shared_ptr<const CInputContext> inpu
     {
       Log.LogDebug(Formatter()<<"test with z="<<z);
 
-      Float64 score = m_model->fit(z,lambdaRange,modelSolution, continuumModelSolution, 0,true);
+      Float64 score = m_model->fit(z,modelSolution, continuumModelSolution, 0,true);
 
       if (score < bestScore)
         {
