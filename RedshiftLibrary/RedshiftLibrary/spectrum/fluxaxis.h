@@ -59,17 +59,17 @@ public:
 
     CSpectrumFluxAxis() = default;
     //value =0. is a default value for flux and not for error.
-    explicit CSpectrumFluxAxis( UInt32 n, Float64 value = 0.0);
+    explicit CSpectrumFluxAxis( Int32 n, Float64 value = 0.0);
     CSpectrumFluxAxis( CSpectrumAxis otherFlux, CSpectrumNoiseAxis otherError );
-    CSpectrumFluxAxis( const Float64* samples, UInt32 n );
+    CSpectrumFluxAxis( const Float64* samples, Int32 n );
     CSpectrumFluxAxis( const TFloat64List & samples);
     CSpectrumFluxAxis( TFloat64List && samples);
-    CSpectrumFluxAxis( const Float64* samples, UInt32 n, const Float64* error, const UInt32 m);
+    CSpectrumFluxAxis( const Float64* samples, Int32 n, const Float64* error, const Int32 m);
 
     const CSpectrumNoiseAxis&      GetError() const;
     CSpectrumNoiseAxis&            GetError();
 
-    void                SetSize( UInt32 s );
+    void                SetSize( Int32 s );
     void                clear();
     bool                ApplyMeanSmooth( Int32 kernelHalfWidth );
     bool                ApplyMedianSmooth( Int32 kernelHalfWidth );

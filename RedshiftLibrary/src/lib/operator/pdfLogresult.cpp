@@ -56,7 +56,7 @@ CPdfLogResult::~CPdfLogResult()
 
 }
 
-void CPdfLogResult::SetSize( UInt32 n )
+void CPdfLogResult::SetSize( Int32 n )
 {
     Redshifts.resize(n);
     valProbaLog.resize(n);

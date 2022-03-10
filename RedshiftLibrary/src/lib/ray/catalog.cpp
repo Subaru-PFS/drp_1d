@@ -105,7 +105,7 @@ const CRayCatalog::TRayVector CRayCatalog::GetFilteredList(const std::string& ty
 const std::vector<CRayCatalog::TRayVector> CRayCatalog::ConvertToGroupList(const TRayVector& filteredList ) 
 {
 
-    std::vector<std::string> tags;
+    TStringList tags;
     for( int i = 0; i< filteredList.size(); i++ )
     {
         if(filteredList[i].GetGroupName() != "-1"){

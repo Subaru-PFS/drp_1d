@@ -49,7 +49,7 @@
 
 using namespace NSEpic;
 
-void CTemplateFittingResult::Init(UInt32 n)
+void CTemplateFittingResult::Init(Int32 n)
 {
     ChiSquare.resize( n );
     ChiSquarePhot.resize( n );
@@ -70,7 +70,7 @@ void CTemplateFittingResult::Init(UInt32 n)
     IgmMeiksinIdxIntermediate.resize(n );
 }
 
-void CTemplateFittingResult::Init( UInt32 n, Int32 EbmvListSize, Int32 MeiksinListSize)
+void CTemplateFittingResult::Init( Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize)
 {
     Init(n);
     InitIntermediate(EbmvListSize, MeiksinListSize);
@@ -87,7 +87,7 @@ void CTemplateFittingResult::InitIntermediate(Int32 EbmvListSize, Int32 MeiksinL
     IgmMeiksinIdxIntermediate.assign(IgmMeiksinIdxIntermediate.size(), _igmListList);
 }
 
-void CTemplateFittingResult::set_at_redshift(const UInt32 i, TFittingIsmIgmResult val)
+void CTemplateFittingResult::set_at_redshift(const Int32 i, TFittingIsmIgmResult val)
 {
     ChiSquare[i] = val.chiSquare;
     ChiSquarePhot[i] = val.chiSquare_phot;

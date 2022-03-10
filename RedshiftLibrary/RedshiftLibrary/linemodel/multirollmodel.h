@@ -85,10 +85,10 @@ public:
     std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult(Int32 iRoll);
 
     Int32 getTplshape_count();
-    std::vector<Float64> getTplshape_priors();
+    TFloat64List getTplshape_priors();
     std::string getTplshape_bestTplName();
-    std::vector<Float64> GetChisquareTplshape();
-    std::vector<Float64> GetScaleMargTplshape();
+    TFloat64List GetChisquareTplshape();
+    TFloat64List GetScaleMargTplshape();
     TBoolList GetStrongELPresentTplshape();
     Float64 getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange);
     Float64 getLeastSquareContinuumMeritFast();
@@ -120,7 +120,7 @@ public:
     Float64 GetVelocityEmission();
     Float64 GetVelocityAbsorption();
     TStringList GetModelRulesLog() const;
-    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType );
+    std::vector<TInt32List> GetModelVelfitGroups(Int32 lineType );
     void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
 
@@ -145,7 +145,7 @@ public:
 private:
 
     std::string m_opt_rigidity;
-    std::vector<Float64> m_chi2tplshape;
+    TFloat64List m_chi2tplshape;
     Int32 mIndexExportModel = 0;
 
 };

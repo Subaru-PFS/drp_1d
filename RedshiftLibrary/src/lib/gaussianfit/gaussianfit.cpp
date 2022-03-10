@@ -377,7 +377,7 @@ int CGaussianFit::GaussF( const gsl_vector *param, void *data, gsl_vector * f )
     const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
     const Float64* y = userData->spectrum->GetFluxAxis().GetSamples() + userData->studyRange->GetBegin();
     //const Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
-    std::vector<Float64> err( n );
+    TFloat64List err( n );
     if( true ) // WARNING: Hardcoded disable the use of err vect. = 1.0
       { 
         for ( Int32 i = 0; i < n; i++)
@@ -419,7 +419,7 @@ int CGaussianFit::GaussDF( const gsl_vector* param, void* data, gsl_matrix* J )
     Int32 n = userData->studyRange->GetLength();
     const Float64* x = userData->spectrum->GetSpectralAxis().GetSamples() + userData->studyRange->GetBegin();
     //Float64* err = userData->spectrum->GetFluxAxis().GetError() + userData->studyRange->GetBegin();
-    std::vector<Float64> err( n );
+    TFloat64List err( n );
     if( true ) //WARNING: Hardcoded disable the use of err vect. = 1.0
       {
         for( Int32 i=0; i<n; i++ )

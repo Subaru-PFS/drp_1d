@@ -111,7 +111,7 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
                                                                            std::string errorRebinMethod) const
 { 
     TFloat64Range lambdaRange_spc;
-    UInt32 loglambda_count_spc;
+    Int32 loglambda_count_spc;
     if(!spectrum->GetSpectralAxis().IsLogSampled() )
     {
         // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on reference grid)
@@ -169,17 +169,17 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
 /*
     Aims at computing the template lambda range once for all template catalog
 */
-UInt32 CSpectrumLogRebinning::InferTemplateRebinningSetup(const TFloat64Range& zrange, TFloat64Range& lambdaRange_tpl)const
+Int32 CSpectrumLogRebinning::InferTemplateRebinningSetup(const TFloat64Range& zrange, TFloat64Range& lambdaRange_tpl)const
 {
     Float64 loglbdamin = log( m_lambdaRange_ref.GetBegin()/(1.0 + zrange.GetEnd()));
     Float64 loglbdamax = log( m_lambdaRange_ref.GetEnd()/(1.0 + zrange.GetBegin()));
-    UInt32 _round = std::round((loglbdamax - loglbdamin)/m_logGridStep)+1;
+    Int32 _round = std::round((loglbdamax - loglbdamin)/m_logGridStep)+1;
     Float64 _neat = (loglbdamax - loglbdamin)/m_logGridStep + 1;//we expect to get an int value with no need to any rounding
     if( std::abs(_round - _neat)>1E-8)
     {
         throw GlobalException(INTERNAL_ERROR,"Problem in logrebinning setup");
     }
-    UInt32 loglambda_count_tpl = std::round((loglbdamax - loglbdamin)/m_logGridStep) + 1;
+    Int32 loglambda_count_tpl = std::round((loglbdamax - loglbdamin)/m_logGridStep) + 1;
 
     Float64 tgt_loglbdamax = loglbdamax;
     Float64 tgt_loglbdamin = loglbdamax - (loglambda_count_tpl-1)* m_logGridStep;
@@ -200,7 +200,7 @@ UInt32 CSpectrumLogRebinning::InferTemplateRebinningSetup(const TFloat64Range& z
 **/
 std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl, 
                                                                         TFloat64Range& lambdaRange_tpl, 
-                                                                        const UInt32  loglambda_count_tpl) const
+                                                                        const Int32  loglambda_count_tpl) const
 {
     Log.LogInfo("  Operator-TemplateFittingLog: Log-regular lambda resampling START for template %s", tpl->GetName().c_str());
     // check template coverage is enough for zrange and spectrum coverage
@@ -241,7 +241,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(std::sh
     return templateRebinedLog;
 }
 
-CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 count) const
+CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, Int32 count) const
 {//spreadoverlog expects m_Begin to be non-log value
     TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
     if(axis.size()!= count)
@@ -263,10 +263,10 @@ bool CSpectrumLogRebinning::CheckTemplateAlignment(const std::shared_ptr<const C
 TFloat64Range CSpectrumLogRebinning::LogRebinTemplateCatalog(const std::string& category) const
 {
     TFloat64Range   redshiftRange = m_inputContext.GetParameterStore()->Get<TFloat64Range>(category + ".redshiftrange");
-    UInt32          SSratio = 1;
+    Int32          SSratio = 1;
     if(m_inputContext.GetParameterStore()->Get<std::string>(category + ".method") == "LineModelSolve" &&
-       m_inputContext.GetParameterStore()->Has<UInt32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio") )
-        SSratio = m_inputContext.GetParameterStore()->Get<UInt32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio");
+       m_inputContext.GetParameterStore()->Has<Int32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio") )
+        SSratio = m_inputContext.GetParameterStore()->Get<Int32>( category + ".LineModelSolve.linemodel.firstpass.largegridstepratio");
     
     // compute the effective zrange of the new redshift grid
     // set the min to the initial min
@@ -281,7 +281,7 @@ TFloat64Range CSpectrumLogRebinning::LogRebinTemplateCatalog(const std::string& 
     }
     TFloat64Range zrange(zmin_new, zmax_new); //updating zrange based on the new logstep 
     TFloat64Range lambdaRange_tpl;
-    UInt32 loglambda_count_tpl = InferTemplateRebinningSetup(zrange, lambdaRange_tpl);
+    Int32 loglambda_count_tpl = InferTemplateRebinningSetup(zrange, lambdaRange_tpl);
     //rebin templates using previously identified parameters,
     // rebin only if rebinning parameters are different from previously used ones
     std::shared_ptr<CTemplateCatalog> tplcat = m_inputContext.GetTemplateCatalog();
@@ -289,10 +289,10 @@ TFloat64Range CSpectrumLogRebinning::LogRebinTemplateCatalog(const std::string& 
     tplcat->m_logsampling = true;
 
     // check existence of already  & correctly logsampled templates
-    const UInt32 ntpl = tplcat->GetTemplateCount(category);
+    const Int32 ntpl = tplcat->GetTemplateCount(category);
     if (ntpl>0)
     {        
-        for (UInt32 i=0; i<ntpl; i++)
+        for (Int32 i=0; i<ntpl; i++)
         {
             std::shared_ptr<const CTemplate> tpl = tplcat->GetTemplate(category, i);
             bool needrebinning = false;

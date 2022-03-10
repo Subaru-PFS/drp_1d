@@ -129,7 +129,7 @@ template <typename T> class CRange
         Int32 count = (GetLength() + epsilon) / delta;
 
         v.resize(count + 1);
-        for (UInt32 i = 0; i < v.size(); i++)
+        for (Int32 i = 0; i < v.size(); i++)
         {
             v[i] = GetBegin() + delta * i;
         }

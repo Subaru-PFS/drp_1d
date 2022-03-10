@@ -90,8 +90,8 @@ void CLineModelPassExtremaResult::Resize(Int32 size)
     GroupsALv.resize(size);
     for(Int32 ke=0; ke<size; ke++)
     {
-        GroupsELv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
-        GroupsALv[ke] = std::vector<Float64>(250, -1);   //WARNING: hardcoded ngroups max
+        GroupsELv[ke] = TFloat64List(250, -1);   //WARNING: hardcoded ngroups max
+        GroupsALv[ke] = TFloat64List(250, -1);   //WARNING: hardcoded ngroups max
     }
 
     FittedTplRedshift.resize(size);

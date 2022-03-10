@@ -90,7 +90,7 @@ private:
     CFlagWarning();
     ~CFlagWarning();
 
-    UInt32          m_flags;
+    Int32          m_flags;
     Char*           m_WorkingBuffer;
     std::vector<std::pair<WarningCode, std::string>> m_messageList;
 };

@@ -126,7 +126,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const std::string &opt_continuumreest,
                                            const std::string &opt_rules,
                                            const bool &opt_velocityFitting,
-                                           const UInt32 &opt_twosteplargegridstep_ratio,
+                                           const Int32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
                                            const std::string &opt_rigidity,
                                            const Float64 opt_haprior)
@@ -373,7 +373,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
     //    baselineResult->m_optio = 0;
     //    const CSpectrum& modelSpc = model.GetModelSpectrum();
-    //    UInt32 len = modelSpc.GetSampleCount();
+    //    Int32 len = modelSpc.GetSampleCount();
 
     //    baselineResult->fluxes.resize(len);
     //    baselineResult->wavel.resize(len);
@@ -423,8 +423,8 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //
     TBoolList allAmplitudesZero;
     Int32 indexLargeGrid = 0;
-    std::vector<Float64> calculatedLargeGridRedshifts;
-    std::vector<Float64> calculatedLargeGridMerits;
+    TFloat64List calculatedLargeGridRedshifts;
+    TFloat64List calculatedLargeGridMerits;
     std::vector<TFloat64List> calculatedChiSquareTplshapes(m_result->ChiSquareTplshapes.size());
     std::vector<TFloat64List> calculatedChisquareTplContinuum(m_result->ChiSquareTplContinuum.size());
 
@@ -621,10 +621,10 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
                 redshifts.back());
 
     std::shared_ptr<CTemplatesFitStore> tplfitStore = make_shared<CTemplatesFitStore>(redshifts);
-    const std::vector<Float64> & redshiftsTplFit = tplfitStore->GetRedshiftList();
+    const TFloat64List & redshiftsTplFit = tplfitStore->GetRedshiftList();
     Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: continuum tpl redshift list n=%d",redshiftsTplFit.size());
 
-    for(UInt32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
+    for(Int32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
     {
         Log.LogDebug("COperatorLineModel::PrecomputeContinuumFit: continuum tpl redshift list[%d] = %f",
                     kztplfit,
@@ -632,7 +632,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     }
 
     std::vector<std::shared_ptr<CTemplateFittingResult>> chisquareResultsAllTpl;
-    std::vector<std::string> chisquareResultsTplName;
+    TStringList chisquareResultsTplName;
 
     bool fftprocessing = m_model->GetPassNumber()==1 ? m_opt_tplfit_fftprocessing : m_opt_tplfit_fftprocessing_secondpass;
     Log.LogDebug(Formatter()<<"COperatorLineModel::PrecomputeContinuumFit: redshtplfitsize "<<redshiftsTplFit.size());
@@ -689,7 +689,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
                 boost::chrono::thread_clock::now();
 
         maskList.resize(redshiftsTplFit.size());
-        for(UInt32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
+        for(Int32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
         {
             m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, fftprocessing?logSampledSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
             maskList[kztplfit]=m_model->getOutsideLinesMask();
@@ -729,12 +729,12 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     }          
 
     bool found = false; 
-    for (UInt32 i = 0; i < m_tplCategoryList.size(); i++)
+    for (Int32 i = 0; i < m_tplCategoryList.size(); i++)
     {
         std::string category = m_tplCategoryList[i];
         Log.LogDebug(Formatter()<<"Processing "<< tplCatalog.GetTemplateCount(category) << " templates");
 
-        for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
+        for (Int32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
             Log.LogDebug(Formatter()<<"Processing tpl "<< tpl->GetName());
@@ -792,7 +792,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     {
         Float64 redshift = redshiftsTplFit[i];
 
-        for (UInt32 j = 0; j < chisquareResultsAllTpl.size(); j++)
+        for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++)
         {
             const auto &chisquareResult = chisquareResultsAllTpl[j];
 
@@ -1268,7 +1268,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
 
         if(m_enableWidthFitByGroups)
         {
-            std::vector<std::vector<Int32>> idxVelfitGroups;
+            std::vector<TInt32List> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
             idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Absorption);
@@ -1405,7 +1405,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                             CSpectraFluxResult>)new CSpectraFluxResult();
                     const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
-                    UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+                    Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
                     baselineResult->fluxes.resize(len);
                     baselineResult->wavel.resize(len);
@@ -1586,7 +1586,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                          CSpectraFluxResult>)new CSpectraFluxResult();
                  const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
-                UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+                Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
                 baselineResult_lmfit->fluxes.resize(len);
                 baselineResult_lmfit->wavel.resize(len);
@@ -1621,7 +1621,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                 m_model->SetForcedisableTplratioISMfit(m_model->m_opt_firstpass_forcedisableTplratioISMfit); //TODO: add new param for this ?
                 // m_model->m_enableAmplitudeOffsets = true;
                 // contreest_iterations = 1;
-                std::vector<std::vector<Int32>> idxVelfitGroups;
+                std::vector<TInt32List> idxVelfitGroups;
                 for (Int32 iLineType = 0; iLineType < 2; iLineType++)
                 {
                     Float64 vInfLim;
@@ -1669,7 +1669,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                     }
 
                     // Prepare velocity grid to be checked
-                    std::vector<Float64> velfitlist;
+                    TFloat64List velfitlist;
                     Int32 optVelfit = 0; //lin
                     //Int32 optVelfit = 1; //log todo ?
                     if(optVelfit==0)
@@ -1867,7 +1867,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
 
         if(m_enableWidthFitByGroups)
         {
-            std::vector<std::vector<Int32>> idxVelfitGroups;
+            std::vector<TInt32List> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
             idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(
@@ -2274,13 +2274,13 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(std::shared_ptr<const CI
   return clms;
 }
 
-void COperatorLineModel::fitVelocityByGroups(std::vector<Float64> velfitlist,
-                                            std::vector<Float64> zfitlist,
+void COperatorLineModel::fitVelocityByGroups(TFloat64List velfitlist,
+                                            TFloat64List zfitlist,
                                             Int32 rayType)
 {
   Int32 nVelSteps = velfitlist.size();
 
-  std::vector<std::vector<Int32>> idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(rayType);
+  std::vector<TInt32List> idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(rayType);
   TFloat64List GroupsV;
 
   for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)

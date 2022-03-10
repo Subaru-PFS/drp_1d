@@ -54,20 +54,20 @@ class CMask
 public:
 
     CMask() = default;
-    explicit CMask( UInt32 weightsCount );
+    explicit CMask( Int32 weightsCount );
 
     const Mask*     GetMasks() const;
     CMask&          operator &= ( const CMask& other );
-    UInt32          GetMasksCount() const;
-    Mask            operator[]( const UInt32 i ) const;
-    Mask&           operator[]( const UInt32 i );
+    Int32          GetMasksCount() const;
+    Mask            operator[]( const Int32 i ) const;
+    Mask&           operator[]( const Int32 i );
     Float64         CompouteOverlapRate( const CMask& other ) const;
     Float64         IntersectAndComputeOverlapRate( const CMask& other ) const;
 
     bool            IntersectWith( const CMask& other );
-    UInt32          GetMaskedSampleCount() const;
-    UInt32          GetUnMaskedSampleCount() const;
-    void            SetSize( UInt32 s );
+    Int32          GetMaskedSampleCount() const;
+    Int32          GetUnMaskedSampleCount() const;
+    void            SetSize( Int32 s );
 
 private:
 
@@ -76,19 +76,19 @@ private:
 };
 
 inline
-Mask CMask::operator[]( const UInt32 i ) const
+Mask CMask::operator[]( const Int32 i ) const
 {
     return m_Mask[i];
 }
 
 inline
-Mask& CMask::operator[]( const UInt32 i )
+Mask& CMask::operator[]( const Int32 i )
 {
     return m_Mask[i];
 }
 
 inline
-UInt32 CMask::GetMasksCount() const
+Int32 CMask::GetMasksCount() const
 {
     return m_Mask.size();
 }
@@ -100,22 +100,22 @@ const Mask* CMask::GetMasks() const
 }
 
 inline
-UInt32 CMask::GetMaskedSampleCount() const
+Int32 CMask::GetMaskedSampleCount() const
 {
     return m_Mask.size()-GetUnMaskedSampleCount();
 }
 
 inline
-void CMask::SetSize( UInt32 s )
+void CMask::SetSize( Int32 s )
 {
     m_Mask.resize( s );
 }
 
 inline
-UInt32 CMask::GetUnMaskedSampleCount() const
+Int32 CMask::GetUnMaskedSampleCount() const
 {
-    UInt32 n = 0;
-    for( UInt32 i=0;i<m_Mask.size();i++ )
+    Int32 n = 0;
+    for( Int32 i=0;i<(Int32)m_Mask.size();i++ )
     {
         n += m_Mask[i];
     }

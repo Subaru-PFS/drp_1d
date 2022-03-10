@@ -66,7 +66,7 @@ void CTemplatesFitStore::initFitValues()
     m_fitValues = std::vector<std::vector<SValues>>(redshiftgrid.size(), zfitvals);
 }
 
-const std::vector<Float64> & CTemplatesFitStore::GetRedshiftList() const 
+const TFloat64List & CTemplatesFitStore::GetRedshiftList() const 
 {
     return redshiftgrid;
 }

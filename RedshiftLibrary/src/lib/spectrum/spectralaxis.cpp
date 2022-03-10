@@ -50,7 +50,7 @@ using namespace std;
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( Int32 n, bool isLogScale ) :
     CSpectrumAxis( n ),
     m_isLogScale(isLogScale)
 {}
@@ -82,7 +82,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, bool isLo
 }
 
 //only used by client
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum) :
     CSpectrumAxis( samples, n )
 {
     if (AirVacuum != "")
@@ -101,7 +101,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origi
     ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Float64 value):
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( Int32 n, Float64 value):
     CSpectrumAxis(n,value)
 {}
 
@@ -121,7 +121,7 @@ void CSpectrumSpectralAxis::MaskAxis(const TFloat64List& mask, CSpectrumSpectral
     maskedSpcAxis.m_isLogSampled = indeterminate;
 
 }
-void CSpectrumSpectralAxis::SetSize( UInt32 s )
+void CSpectrumSpectralAxis::SetSize( Int32 s )
 {
     if(s<2) m_isSorted = true;
     else{if(GetSamplesCount()<s) resetAxisProperties();}
@@ -542,12 +542,12 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const
  }
 
 //still TODO: check end-to-end redshift coverage
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const
 {
     return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
 }
 
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio, TFloat64Range lambdarange) const
 {
     Int32 imin=-1, imax=m_Samples.size();
     lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
@@ -555,13 +555,13 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64R
 }
 
 /*@ssratio stands for sub-samplingRatio*/
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio, const TInt32Range & ilbda) const
 {
     if(!IsLogSampled())
     {
         throw GlobalException(INTERNAL_ERROR,"Cannot subsample spectrum!");
     }
-    UInt32 s = GetSamplesCount();
+    Int32 s = GetSamplesCount();
     if(ssratio==1) return TFloat64List(s, 1.);
     TFloat64List mask(s, 0.); 
     for(Int32 i=ilbda.GetEnd(); i>=ilbda.GetBegin();i-=ssratio){//ensure that z[0] remains the same
@@ -578,14 +578,14 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TIn
     auto lambda_redshift_modulo = logstep_int %rebinlogstep_int;
     auto modulo_2 = logstep_int - trunc(logstep_int/rebinlogstep_int)*rebinlogstep_int;
 */
-UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const
+Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const
 {
     if(!IsLogSampled())
     {
         throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
     }
 
-    UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
+    Int32 ratio = std::round(logstep/m_regularLogSamplingStep);
     modulo = logstep - ratio*m_regularLogSamplingStep;
     return ratio;
 }

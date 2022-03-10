@@ -267,7 +267,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 Float64 yi, ei;
                 //Important: hereinafter we assume that kStart_up can only be equal or higher than kStart when moving throw the igm curves
                 //this is valid only iif igm curves are loaded in the increasing ordre,i.e., from the least extinction curve to the highest extinction curve
-                UInt32 kStart_up = kStart;
+                Int32 kStart_up = kStart;
                 for(Int32 i = 0; i < n; i++)
                 {
                     if(!extinction[i]){
@@ -788,7 +788,7 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTplcombination::ComputeSpectrum
 
     const CSpectrumFluxAxis& extinction = identityTemplate.GetFluxAxis();
 
-    UInt32 modelSize = spectrum.GetSampleCount();
+    Int32 modelSize = spectrum.GetSampleCount();
     CSpectrumSpectralAxis modelSpcAxis = spectrum.GetSpectralAxis(); 
 
     CSpectrumFluxAxis modelFlux(modelSize, 0.0);
@@ -821,7 +821,7 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         sumLogNoise += log( error[j] );
@@ -833,7 +833,7 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
     return cstLog;
 }
 
-Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n)
+Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, Int32 kStart, Int32 n)
 {
     Float64 maxabsval = DBL_MIN;
     for (Int32 k = 0; k < n; k++)

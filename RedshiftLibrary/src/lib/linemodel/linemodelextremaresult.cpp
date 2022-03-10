@@ -155,7 +155,7 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
     Float64 cumulStrongELSNR = lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
     StrongELSNR = cumulStrongELSNR;
 
-    std::vector<std::string> strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
+    TStringList strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
     StrongELSNRAboveCut = strongELSNRAboveCut;
 
     Int32 nddl = lmel->GetNElements(); // get the total number of

@@ -59,7 +59,7 @@ public:
     CLogFileHandler( const char* filePath );
     ~CLogFileHandler();
 
-    void LogEntry( UInt32 lvl, const char* header, const char* msg );
+    void LogEntry( Int32 lvl, const char* header, const char* msg );
 
 private:
 

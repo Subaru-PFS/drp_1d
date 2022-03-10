@@ -96,7 +96,7 @@ private:
     TFloat64Range   m_ssLambdaRange;
 
     Float64 m_logstep;
-    UInt32 m_ssRatio;
+    Int32 m_ssRatio;
 
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
@@ -122,11 +122,11 @@ private:
                     const Float64& dtd);
 
     Int32 EstimateXtY(const TFloat64List& X, const TFloat64List& Y,
-                      UInt32 nshifts, TFloat64List& XtY, Int32 precomputedFFT=-1);
+                      Int32 nshifts, TFloat64List& XtY, Int32 precomputedFFT=-1);
     Int32 InitFFT(Int32 n);
-    Int32 EstimateXtYSlow(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts,
+    Int32 EstimateXtYSlow(const TFloat64List& X, const TFloat64List& Y, Int32 nShifts,
                           TFloat64List& XtY);
-    Int32 EstimateMtMFast(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts, TFloat64List& XtY);
+    Int32 EstimateMtMFast(const TFloat64List& X, const TFloat64List& Y, Int32 nShifts, TFloat64List& XtY);
 
     Int32 InterpolateResult(const TFloat64List& in, TFloat64List& inGrid,
                             const TFloat64List& tgtGrid, TFloat64List& out, Float64 defaultValue);

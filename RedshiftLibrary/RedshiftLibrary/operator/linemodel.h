@@ -104,7 +104,7 @@ public:
                            const std::string &opt_continuumreest="no",
                            const std::string &opt_rules="all",
                            const bool &opt_velocityFitting=false,
-                           const UInt32 &opt_twosteplargegridstep_ratio=10,
+                           const Int32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
                            const std::string &opt_rigidity="rules",
                            const Float64 opt_haprior = -1.);
@@ -226,8 +226,8 @@ public:
     CLineModelPassExtremaResult m_secondpass_parameters_extremaResult;
 
   CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
-  void fitVelocityByGroups(std::vector<Float64> velfitlist,
-                           std::vector<Float64> zfitlist,
+  void fitVelocityByGroups(TFloat64List velfitlist,
+                           TFloat64List zfitlist,
                            Int32 rayType);
 
   void setHapriorOption(Int32 opt);

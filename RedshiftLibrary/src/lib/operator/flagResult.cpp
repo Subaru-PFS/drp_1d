@@ -49,7 +49,7 @@ CFlagLogResult::CFlagLogResult()
 }
 
 
-CFlagLogResult::CFlagLogResult(UInt32  _flagValue, TWarningMsgList _msgList):
+CFlagLogResult::CFlagLogResult(Int32  _flagValue, TWarningMsgList _msgList):
     flagValue(_flagValue),
     msgList(std::move(_msgList))
 {

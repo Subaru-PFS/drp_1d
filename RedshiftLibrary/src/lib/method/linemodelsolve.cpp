@@ -431,7 +431,7 @@ TFloat64List CLineModelSolve::BuildZpriors( const std::shared_ptr<const CLineMod
     if(zPriorStrongLinePresence)
     {
         if (kTplShape==-1){
-            UInt32 lineTypeFilter = 1;// for emission lines only
+            Int32 lineTypeFilter = 1;// for emission lines only
             const TBoolList strongLinePresence = result->getStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
             zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, m_opt_stronglinesprior);
         }else{
@@ -458,19 +458,19 @@ TFloat64List CLineModelSolve::BuildZpriors( const std::shared_ptr<const CLineMod
 
     if(zPriorEuclidNHa)
     {
-        std::vector<Float64> zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, m_opt_euclidNHaEmittersPriorStrength);
+        TFloat64List zlogPriorNHa = zpriorhelper.GetEuclidNhaLogZPrior(result->Redshifts, m_opt_euclidNHaEmittersPriorStrength);
         zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNHa);
     }
 
     if(zPriorNLineSNR)
     {
-        std::vector<Float64> zlogPriorNLinesAboveSNR;
-        std::vector<Int32> n_lines_above_snr;
+        TFloat64List zlogPriorNLinesAboveSNR;
+        TInt32List n_lines_above_snr;
         if (kTplShape==-1){
-            const std::vector<Int32> n_lines_above_snr = result->getNLinesAboveSnrcut(result->LineModelSolutions);
+            const TInt32List n_lines_above_snr = result->getNLinesAboveSnrcut(result->LineModelSolutions);
             zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
         }else{
-            const std::vector<Int32>  &n_lines_above_snr = result->NLinesAboveSNRTplshapes[kTplShape];
+            const TInt32List  &n_lines_above_snr = result->NLinesAboveSNRTplshapes[kTplShape];
             zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(n_lines_above_snr, opt_nlines_snr_penalization_factor);
         }
         zpriors = zpriorhelper.CombineLogZPrior(zpriors, zlogPriorNLinesAboveSNR);
@@ -536,7 +536,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const 
                             maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
 
                     Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
-                    for ( UInt32 kz=0; kz<zsize; kz++ )
+                    for ( Int32 kz=0; kz<zsize; kz++ )
                         if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
                             logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
 
@@ -544,7 +544,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const 
                 }*/
 
                 if(zPriorLines && result->PriorLinesTplshapes[k].size()==zsize)
-                    for ( UInt32 kz=0; kz<zsize; kz++ )
+                    for ( Int32 kz=0; kz<zsize; kz++ )
                         logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
             }
 
@@ -624,7 +624,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -639,7 +639,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -653,7 +653,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->PriorLinesTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->PriorLinesTplshapes[km][kz];
@@ -665,7 +665,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
 
     //Save PriorContinuumTplshapes results
     std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, std::vector<Float64>() );
+    result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
     for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
     {
         result_chisquaretplshape->ChiSquare[kz] = result->ContinuumModelSolutions[kz].tplLogPrior;

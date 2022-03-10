@@ -90,7 +90,7 @@ public:
     void initFitValues();
     Int32 GetRedshiftIndex(Float64 z) const;
 
-    const std::vector<Float64> & GetRedshiftList() const;
+    const TFloat64List & GetRedshiftList() const;
     TemplateFitValues GetFitValues(Int32 idxz, Int32 continuumCandidateRank) const;
     TemplateFitValues GetFitValues(Float64 redshiftVal, Int32 continuumCandidateRank) const;
     Int32 GetContinuumCount() const;
@@ -103,7 +103,7 @@ private:
     std::vector<std::vector<SValues>>    m_fitValues; //[nz][n_continuum_candidates]
     Int32 n_continuum_candidates=0;
 
-    std::vector<Float64> redshiftgrid;
+    TFloat64List redshiftgrid;
 };
 
 

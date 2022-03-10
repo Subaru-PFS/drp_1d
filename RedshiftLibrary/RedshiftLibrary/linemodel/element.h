@@ -69,7 +69,7 @@ public:
                const Float64 velocityAbsorption, 
                TFloat64List nominalAmplitudes, 
                Float64 nominalWidth, 
-               TUInt32List catalogIndexes);
+               TInt32List catalogIndexes);
 
     Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta=true) const;
     Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x) const;
@@ -164,7 +164,7 @@ public:
     void SetLSF(const std::shared_ptr<const CLSF> & lsf);
 
     void SetAsymfitParams(TAsymParams params, Int32 indx=-99);//-99 means setting for all
-    const TAsymParams GetAsymfitParams(UInt32 asymIdx=0) const;
+    const TAsymParams GetAsymfitParams(Int32 asymIdx=0) const;
     void resetAsymfitParams();
     Int32 findElementIndex(Int32 LineCatalogIndex) const;
     Int32 findElementIndex(const std::string& LineTagStr) const;
@@ -194,7 +194,7 @@ public:
 
     std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
-    std::vector<Int32> m_LineCatalogIndexes;
+    TInt32List m_LineCatalogIndexes;
     std::string m_fittingGroupInfo;
 
   protected:
@@ -209,7 +209,7 @@ public:
     bool m_OutsideLambdaRange;
     std::string m_ElementType;
 
-    TUInt32List         m_asymLineIndices;//corresponds to indices of asymmetric lines, mainly LyA. Currently max 1 asymfit is found per linecatalog
+    TInt32List         m_asymLineIndices;//corresponds to indices of asymmetric lines, mainly LyA. Currently max 1 asymfit is found per linecatalog
 
     Float64 *m_dataExtinctionFlux = NULL;
     Float64 m_dataStepLambda = 0.1;

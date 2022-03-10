@@ -60,7 +60,7 @@ using namespace std;
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( UInt32 maxPeakCount,
+CExtremum::CExtremum( Int32 maxPeakCount,
                       Float64 peakSeparation, 
                       Float64 meritcut,
                       bool invertForMinSearch,
@@ -87,7 +87,7 @@ void CExtremum::SetXRange( const TFloat64Range& r )
 /**
  * Sets m_MaxPeakCount to n.
  */
-void CExtremum::SetMaxPeakCount( UInt32 n )
+void CExtremum::SetMaxPeakCount( Int32 n )
 {
     m_MaxPeakCount = n;
 }
@@ -405,7 +405,7 @@ bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 kee
   return true;
 }
 
-bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const
+bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, Int32 keepmin, TPointList& maxPoint)const
 {
   if(maxX.size()<= keepmin){
     for(Int32 i = 0; i<maxX.size(); i++){
@@ -542,7 +542,7 @@ bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yA
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
 */
 bool CExtremum::Truncate( TFloat64List& maxX, TFloat64List& maxY, TPointList& maxPoint) const {
-  UInt32 n = maxX.size();
+  Int32 n = maxX.size();
   n = std::min(m_MaxPeakCount, n);
   for (Int32 j = 0; j < n; j++) { 
     maxPoint.push_back(SPoint(maxX[m_sortedIndexes[j]], m_SignSearch * maxY[m_sortedIndexes[j]]) );

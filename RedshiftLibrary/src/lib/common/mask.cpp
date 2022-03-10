@@ -47,7 +47,7 @@ using namespace NSEpic;
 /**
  *
  */
-CMask::CMask( UInt32 weightsCount ) :
+CMask::CMask( Int32 weightsCount ) :
     m_Mask( weightsCount )
 {
 
@@ -61,7 +61,7 @@ CMask& CMask::operator &= ( const CMask& other )
     if( GetMasksCount() != other.GetMasksCount() )
         return *this;
 
-    for( UInt32 i = 0; i<GetMasksCount(); i++ )
+    for( Int32 i = 0; i<GetMasksCount(); i++ )
     {
         m_Mask[i] = other[i] & m_Mask[i];
     }
@@ -80,7 +80,7 @@ bool CMask::IntersectWith( const CMask& other )
     Mask* selfWeight = m_Mask.data();
     const Mask* otherWeight = other.GetMasks();
 
-    for( UInt32 j=0; j<GetMasksCount(); j++ )
+    for( Int32 j=0; j<GetMasksCount(); j++ )
     {
         selfWeight[j] = selfWeight[j] & otherWeight[j];
     }
@@ -108,7 +108,7 @@ Float64 CMask::CompouteOverlapRate( const CMask& other ) const
     const Mask* selfWeight = GetMasks();
     const Mask* otherWeight = other.GetMasks();
 
-    for( UInt32 i=0; i<GetMasksCount(); i++)
+    for( Int32 i=0; i<GetMasksCount(); i++)
     {
         //selfRate+=(Float64) selfWeight[i];
         //otherRate+=(Float64) otherWeight[i];
@@ -137,7 +137,7 @@ Float64 CMask::IntersectAndComputeOverlapRate( const CMask& other ) const
     const Mask* selfWeight = GetMasks();
     const Mask* otherWeight = other.GetMasks();
 
-    for( UInt32 i=0; i<GetMasksCount(); i++)
+    for( Int32 i=0; i<GetMasksCount(); i++)
     {
         selfRate+=(Int32) selfWeight[i];
         otherRate+=(Int32) (otherWeight[i]&selfWeight[i]);

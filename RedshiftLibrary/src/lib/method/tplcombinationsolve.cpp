@@ -204,7 +204,7 @@ bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultSto
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();
-    UInt32 axisSize = refSpcAxis.GetSamplesCount();
+    Int32 axisSize = refSpcAxis.GetSamplesCount();
     for(Int32 ktpl=1; ktpl<tplList.size(); ktpl++)
     {
         const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl]->GetSpectralAxis();
@@ -340,7 +340,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperat
         //check chi2 results status for this template
         {
             bool foundBadStatus = 0;
-            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+            for ( Int32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 if(result->Status[kz]!=COperator::nStatus_OK)
                 {
@@ -364,7 +364,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperat
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
                 chisquarearray.chisquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
                 TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                for ( Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }

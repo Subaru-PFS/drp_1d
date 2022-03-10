@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(SortByValSumProbaInt2)
     zcandidates["EXT5"].ValSumProba = 0.;
     zcandidates["EXT1"].ValSumProba = 0.;
     zcandidates["EXT2"].ValSumProba = 1.;
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : zcandidates){
         Ids.push_back(c.first); // keys = ids
         std::cout<< c.first <<"\n";

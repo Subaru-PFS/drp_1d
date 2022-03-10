@@ -56,8 +56,8 @@ class CTemplatesOrthoStore
 public:
 
     struct SOrthoFitting{
-        std::vector<Float64>    lambda;
-        std::vector<Float64>    mtmCumulative;
+        TFloat64List    lambda;
+        TFloat64List    mtmCumulative;
     };
 
     struct SCatalogDescription{

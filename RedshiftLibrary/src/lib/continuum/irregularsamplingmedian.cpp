@@ -69,7 +69,7 @@ void CContinuumIrregularSamplingMedian::SetMedianKernelWidth( Float32 width )
 /**
  * Sets m_MedianSmoothCycles to input.
  */
-void CContinuumIrregularSamplingMedian::SetMedianCycleCount( UInt32 count )
+void CContinuumIrregularSamplingMedian::SetMedianCycleCount( Int32 count )
 {
     m_MedianSmoothCycles = count;
 }

@@ -461,16 +461,16 @@ void COperatorResultStore::StoreGlobalResult( const std::string& name, std::shar
     StoreGlobalResult( "", name, result );
 }
 
-void COperatorResultStore::StoreFlagResult( const std::string& name, UInt32 result )
+void COperatorResultStore::StoreFlagResult( const std::string& name, Int32 result )
 {
     TWarningMsgList msgList = Flag.getListMessages();
     StoreGlobalResult( name, std::make_shared<const CFlagLogResult>(result, msgList));
 }
 
 
-std::vector<std::string> COperatorResultStore::getProcessedObjectTypes() const
+TStringList COperatorResultStore::getProcessedObjectTypes() const
 {
-  std::vector<std::string> res;
+  TStringList res;
 
   return res;
 }

@@ -46,7 +46,7 @@ using namespace NSEpic;
 using namespace std;
 
 
-CSpectrumNoiseAxis::CSpectrumNoiseAxis( UInt32 n ) :
+CSpectrumNoiseAxis::CSpectrumNoiseAxis( Int32 n ) :
     CSpectrumAxis( n, 1.0) 
 {
 
@@ -55,7 +55,7 @@ CSpectrumNoiseAxis::CSpectrumNoiseAxis( UInt32 n ) :
 bool CSpectrumNoiseAxis::Invert()
 {
     Int32 N = GetSamplesCount();
-    for( UInt32 i=0; i<N; i++ )
+    for( Int32 i=0; i<N; i++ )
     {
         m_Samples[i] = 1/m_Samples[i];
     }
@@ -63,7 +63,7 @@ bool CSpectrumNoiseAxis::Invert()
 }
 
 //default to 1. instead of O.
-void CSpectrumNoiseAxis::SetSize( UInt32 s, Float64 valueDef)
+void CSpectrumNoiseAxis::SetSize( Int32 s, Float64 valueDef)
 {
     m_Samples.assign( s, valueDef);
 }

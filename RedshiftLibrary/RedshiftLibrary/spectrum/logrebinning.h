@@ -61,14 +61,14 @@ public:
                                                         std::string errorRebinMethod="rebinVariance") const;
     std::shared_ptr<CTemplate>  LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl, 
                                                         TFloat64Range& lambdaRange_tpl, 
-                                                        const UInt32  loglambda_count_tpl) const;
+                                                        const Int32  loglambda_count_tpl) const;
     TFloat64Range LogRebinTemplateCatalog(const std::string& category) const;                                                    
     Float64 m_logGridStep; 
     TFloat64Range m_lambdaRange_ref;
 private:
     void  SetupRebinning( CSpectrum &spectrum, const TFloat64Range &lambdaRange);
-    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, UInt32 gridCount) const;
-    UInt32 InferTemplateRebinningSetup(const TFloat64Range& z_range, TFloat64Range& lambdaRange_tpl) const;
+    CSpectrumSpectralAxis  computeTargetLogSpectralAxis(const TFloat64Range & lambdarange, Int32 gridCount) const;
+    Int32 InferTemplateRebinningSetup(const TFloat64Range& z_range, TFloat64Range& lambdaRange_tpl) const;
     bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> & tpl, const TFloat64Range& lambdaRange_tpl) const;
     const std::string m_rebinMethod = "lin";
 

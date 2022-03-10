@@ -248,7 +248,7 @@ Int32 CMultiRollModel::getTplshape_count()
     }
 }
 
-std::vector<Float64> CMultiRollModel::getTplshape_priors()
+TFloat64List CMultiRollModel::getTplshape_priors()
 {
     if(m_models.size()>0)
     {
@@ -256,7 +256,7 @@ std::vector<Float64> CMultiRollModel::getTplshape_priors()
     }
     else
     {
-        std::vector<Float64> dumb;
+        TFloat64List dumb;
         return dumb;
     }
 }
@@ -352,7 +352,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
             /*
             //set amps from ref model
             Int32 irefModel = 0;
-            std::vector<Float64> amps;
+            TFloat64List amps;
             for(Int32 k=0; k<m_models[irefModel]->m_Elements.size(); k++)
             {
                 Float64 _amp = m_models[irefModel]->m_Elements[k]->GetElementAmplitude();
@@ -362,7 +362,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
             //*
             //estimate error weighted average amps over models
-            std::vector<Float64> amps;
+            TFloat64List amps;
             for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
             {
                 Float64 weightSum = 0;
@@ -386,8 +386,8 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
             /*
             //set amps from combined chi2 calculation: work in progress...
-            std::vector<Float64> dtm_combined;
-            std::vector<Float64> mtm_combined;
+            TFloat64List dtm_combined;
+            TFloat64List mtm_combined;
             for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
             {
                 dtm_combined.push_back(0.0);
@@ -398,7 +398,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
                     mtm_combined[k] += m_models[km]->m_Elements[k]->GetSumGauss();
                 }
             }
-            std::vector<Float64> amps;
+            TFloat64List amps;
             for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
             {
                 Float64 dtm = std::max(0.0, dtm_combined[k]);
@@ -430,12 +430,12 @@ Float64 CMultiRollModel::fit(Float64 redshift,
             //*/
         }else{
             Int32 nTplshape = m_models[0]->getTplshape_count();
-            //std::vector<Float64> chi2tplshape(nTplshape, DBL_MAX);
+            //TFloat64List chi2tplshape(nTplshape, DBL_MAX);
             Float64 minChi2Tplshape = DBL_MAX;
             Int32 iBestTplshape = -1;
 
 
-            std::vector<std::vector<Float64>> multifit_amps;
+            std::vector<TFloat64List> multifit_amps;
             for(Int32 kts=0; kts<nTplshape; kts++)
             {
 
@@ -470,9 +470,9 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
                 //*
                 //set amps from cumulated dtm, mtm
-                std::vector<Float64> amps(m_models.size(), 0.0);
-                std::vector<Float64> dtm_combined;
-                std::vector<Float64> mtm_combined;
+                TFloat64List amps(m_models.size(), 0.0);
+                TFloat64List dtm_combined;
+                TFloat64List mtm_combined;
                 for(Int32 k=0; k<m_models[0]->m_Elements.size(); k++)
                 {
                     dtm_combined.push_back(0.0);
@@ -572,17 +572,17 @@ Float64 CMultiRollModel::getScaleMargCorrection(Int32 idxLine)
     return valf;
 }
 
-std::vector<Float64> CMultiRollModel::GetChisquareTplshape()
+TFloat64List CMultiRollModel::GetChisquareTplshape()
 {
     /*
-    std::vector<Float64> chi2tplshape;
+    TFloat64List chi2tplshape;
     if(m_models.size()>0)
     {
         chi2tplshape = m_models[0]->GetChisquareTplshape();
     }
     for(Int32 km=1; km<m_models.size(); km++)
     {
-        std::vector<Float64> _chi2tplshape = m_models[km]->GetChisquareTplshape();
+        TFloat64List _chi2tplshape = m_models[km]->GetChisquareTplshape();
         for(Int32 ktpl=0; ktpl<_chi2tplshape.size(); ktpl++)
         {
             chi2tplshape[ktpl] += _chi2tplshape[ktpl];
@@ -594,16 +594,16 @@ std::vector<Float64> CMultiRollModel::GetChisquareTplshape()
     return m_chi2tplshape;
 }
 
-std::vector<Float64> CMultiRollModel::GetScaleMargTplshape()
+TFloat64List CMultiRollModel::GetScaleMargTplshape()
 {
-    std::vector<Float64> scaleMargtplshape;
+    TFloat64List scaleMargtplshape;
     if(m_models.size()>0)
     {
         scaleMargtplshape = m_models[0]->GetScaleMargTplshape();
     }
     for(Int32 km=1; km<m_models.size(); km++)
     {
-        std::vector<Float64> _scaleMargtplshape = m_models[km]->GetChisquareTplshape();
+        TFloat64List _scaleMargtplshape = m_models[km]->GetChisquareTplshape();
         for(Int32 ktpl=0; ktpl<_scaleMargtplshape.size(); ktpl++)
         {
             scaleMargtplshape[ktpl] += _scaleMargtplshape[ktpl];
@@ -759,7 +759,7 @@ Float64 CMultiRollModel::GetVelocityAbsorption()
     }
 }
 
-std::vector<std::vector<Int32>> CMultiRollModel::GetModelVelfitGroups( Int32 lineType )
+std::vector<TInt32List> CMultiRollModel::GetModelVelfitGroups( Int32 lineType )
 {
     if(m_models.size()>0)
     {
@@ -767,7 +767,7 @@ std::vector<std::vector<Int32>> CMultiRollModel::GetModelVelfitGroups( Int32 lin
     }
     else
     {
-        std::vector<std::vector<Int32>> dumb;
+        std::vector<TInt32List> dumb;
         return dumb;
     }
 }

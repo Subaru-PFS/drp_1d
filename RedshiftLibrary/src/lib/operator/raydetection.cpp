@@ -91,7 +91,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
     const CSpectrumSpectralAxis spectralAxis = spc.GetSpectralAxis();
 
-    UInt32 nPeaks = resPeaks.size();
+    Int32 nPeaks = resPeaks.size();
 
     auto result = std::make_shared<CLineDetectionResult>();
 
@@ -100,7 +100,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
     TGaussParamsList retestGaussParams;
 
     // filter the peaks with gaussian fit and create the detected rays catalog
-    for( UInt32 j=0; j<nPeaks; j++ )
+    for( Int32 j=0; j<nPeaks; j++ )
     {
         bool toAdd = true;
         //find gaussian fit
@@ -311,9 +311,9 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32R
     Int32 fitStop = peaksBorders[i].GetEnd()+1;
 
     Float64 width = fitStop - fitStart;
-    UInt32 center = fitStart + width/2;
-    UInt32 start = std::max( 0, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]-m_maxsize/2.0 ) );
-    UInt32 stop = std::min( (Int32) len, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]+m_maxsize/2.0 ) );
+    Int32 center = fitStart + width/2;
+    Int32 start = std::max( 0, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]-m_maxsize/2.0 ) );
+    Int32 stop = std::min( (Int32) len, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]+m_maxsize/2.0 ) );
     Int32 maxwinsizeIndexes = stop-start;
 
     if( width>maxwinsizeIndexes )
@@ -619,7 +619,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
  */
 Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
 {
-    std::vector<Float64> xdata;
+    TFloat64List xdata;
     Float64 xmadm = 0.0;
 
     xdata.resize( n );
@@ -634,14 +634,14 @@ Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
     if ( n & 1 )
     {
         // n is odd
-        UInt32 i1 = n >> 1; // i.e. int(n/2)
+        Int32 i1 = n >> 1; // i.e. int(n/2)
         xmadm = xdata[i1];
     }
     else
     {
         // n is even
-        UInt32 i1 = n/2 -1;
-        UInt32 i2 = n/2;
+        Int32 i1 = n/2 -1;
+        Int32 i2 = n/2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
 

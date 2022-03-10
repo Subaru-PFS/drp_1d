@@ -56,9 +56,9 @@ public:
     CSpectrumNoiseAxis(const CSpectrumAxis & other):CSpectrumAxis (other){};
     CSpectrumNoiseAxis(CSpectrumAxis && other):CSpectrumAxis (std::move(other)){};
 
-    explicit  CSpectrumNoiseAxis( UInt32 n );
+    explicit  CSpectrumNoiseAxis( Int32 n );
 
-    void                SetSize( UInt32 s, Float64 valueDef = 1.0);
+    void                SetSize( Int32 s, Float64 valueDef = 1.0);
     bool                Invert();
     CSpectrumNoiseAxis  extract(Int32 startIdx, Int32 endIdx) const;
 private:

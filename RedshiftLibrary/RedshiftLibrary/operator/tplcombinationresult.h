@@ -53,7 +53,7 @@ class CTplCombinationResult : public CTemplateFittingResult
 
 public:
 
-    void Init( UInt32 n, Int32 nISM, Int32 nIGM, Int32 componentSize);
+    void Init( Int32 n, Int32 nISM, Int32 nIGM, Int32 componentSize);
 
     //best fit results
     std::vector<TFloat64List>   FitAmplitude;

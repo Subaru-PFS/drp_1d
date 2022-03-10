@@ -47,5 +47,5 @@ CLineModelSolution::CLineModelSolution()
 
 void CLineModelSolution::fillRayIds()
 {
-  for (UInt32 j=0; j<Rays.size(); j++) rayId.emplace_back(Rays[j].GetID());
+  for (Int32 j=0; j<Rays.size(); j++) rayId.emplace_back(Rays[j].GetID());
 }

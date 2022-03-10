@@ -57,14 +57,14 @@ class CExtremum
 
 public:
     
-    CExtremum( UInt32 maxPeakCount=10,
+    CExtremum( Int32 maxPeakCount=10,
                 Float64 peakSeparation= 0.005*2, 
                 Float64 meritcut = -1, // <0 = no cut thresholding 
                 bool invertForMinSearch=false,
                 bool allow_extrema_at_border=true, 
                 const TFloat64Range& xRange=TFloat64Range());
 
-    void SetMaxPeakCount( UInt32 n );
+    void SetMaxPeakCount( Int32 n );
     void SetXRange( const TFloat64Range& r );
     void SetMeritCut( Float64 n );
     bool Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) const;
@@ -73,7 +73,7 @@ public:
     bool Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const;
     //made public to do unit tests
     bool Truncate( TFloat64List& xAxis, TFloat64List& yAxis, TPointList& maxPoint) const;
-    bool FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const;
+    bool FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, Int32 keepmin, TPointList& maxPoint)const;
     void SortIndexes(TFloat64List&  maxY) const;
 
 private:
@@ -83,7 +83,7 @@ private:
  
     bool verifyPeakSeparation( TFloat64List& maxX) const;
     bool verifyPeakSeparation( TPointList& maxPoint) const;
-    UInt32          m_MaxPeakCount;
+    Int32          m_MaxPeakCount;
     TFloat64Range   m_XRange;
     Float64         m_meritCut;
     const Float64   m_SignSearch;

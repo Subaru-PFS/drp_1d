@@ -138,12 +138,12 @@ COperatorTemplateFittingLog::~COperatorTemplateFittingLog()
 
 Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List& X,
                                                    const TFloat64List& Y,
-                                                   UInt32 nShifts,
+                                                   Int32 nShifts,
                                                    TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
-    UInt32 nX = X.size();
+    Int32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 k = 0; k < nShifts; k++)
     {
@@ -160,12 +160,12 @@ Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List& X,
 // only works for mtm, Y=model^2, X=1.
 Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
                                                    const TFloat64List &Y,
-                                                   UInt32 nShifts,
+                                                   Int32 nShifts,
                                                    TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
-    UInt32 nX = X.size();
+    Int32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 j = 0; j < nX; j++)
     {
@@ -186,7 +186,7 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
 
 Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
                                                const TFloat64List &Y,
-                                               UInt32 nshifts,
+                                               Int32 nshifts,
                                                TFloat64List &XtY,
                                                Int32 precomputedFFT)
 {
@@ -603,10 +603,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
             }
         }
 
-        UInt32 izmin = zindexesFullLstSquare[0];
+        Int32 izmin = zindexesFullLstSquare[0];
         for (Int32 k = 1; k < zindexesFullLstSquare.size(); k++)
         {
-            UInt32 izmax =  zindexesFullLstSquare[k];
+            Int32 izmax =  zindexesFullLstSquare[k];
             izrangelist.push_back(TInt32Range(izmin, izmax));
             izmin = izmax +1; //setting min for next range (one value overlapping)        
         }
@@ -614,11 +614,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
             izrangelist.push_back(TInt32Range(izmin, result->Redshifts.size() - 1));
     } else
     {
-        UInt32 izmin = 0;
-        UInt32 izmax = result->Redshifts.size() - 1;
+        Int32 izmin = 0;
+        Int32 izmax = result->Redshifts.size() - 1;
         izrangelist.push_back(TInt32Range(izmin, izmax));
     }
-    UInt32 nzranges = izrangelist.size();
+    Int32 nzranges = izrangelist.size();
 
     if (verboseLogFitAllz)
     {
@@ -686,9 +686,9 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
         FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
         // copy subresults into global results
-        for (UInt32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++)
+        for (Int32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++)
         {
-            UInt32 fullResultIdx = isubz + izrangelist[k].GetBegin();
+            Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
             result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
             result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
             result->FitAmplitudeError[fullResultIdx] = subresult->FitAmplitudeError[isubz];
@@ -820,13 +820,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List &inv_err2,
 {
     const TAxisSampleList & spectrumRebinedLambda = m_ssSpectrum.GetSpectralAxis().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedFluxRaw = m_ssSpectrum.GetFluxAxis().GetSamplesVector();
-    UInt32 nSpc = spectrumRebinedLambda.size();
+    Int32 nSpc = spectrumRebinedLambda.size();
 
     const TAxisSampleList & tplRebinedLambdaGlobal = m_templateRebined_bf.GetSpectralAxis().GetSamplesVector();
 
     Int32 kstart, kend;
     kstart = currentRange.GetBegin(); kend = currentRange.GetEnd();
-    UInt32 nTpl = kend - kstart + 1;
+    Int32 nTpl = kend - kstart + 1;
 
     TAxisSampleList spcRebinedFluxOverErr2(nSpc);
     for (Int32 j = 0; j < nSpc; j++)
@@ -1247,7 +1247,7 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
 
     const TFloat64Range spcRange = spcSpectralAxis.GetLambdaRange();//this is correct only if spcSpectralAxis is intersected with the input lambdaRange
     const TFloat64Range tplRange = tplSpectralAxis.GetLambdaRange();
-    const UInt32 tplsize = tplSpectralAxis.GetSamplesCount();
+    const Int32 tplsize = tplSpectralAxis.GetSamplesCount();
     const Float64 logstep = tplSpectralAxis.GetlogGridStep();
 
     Float64 zmax = (spcRange.GetBegin() - tplRange.GetBegin()) / tplRange.GetBegin(); //get maximum z reachable with given template & spectra

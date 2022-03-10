@@ -203,7 +203,6 @@ static PyObject* pAmzException;
 typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
-typedef unsigned int UInt32;
 
 const char* get_version();
 
@@ -275,13 +274,13 @@ private:
 class CLogConsoleHandler {
 public:
   CLogConsoleHandler();
-  void SetLevelMask( UInt32 mask );
+  void SetLevelMask( Int32 mask );
 };
 
 class CLogFileHandler {
 public:
   CLogFileHandler( const char* filePath );
-  void SetLevelMask( UInt32 mask );
+  void SetLevelMask( Int32 mask );
 };
 
 template <typename T>
@@ -297,10 +296,13 @@ typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
 typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Int32> TInt32List;
+typedef std::vector<std::string> TStringList;
+
 
 %template(TFloat64Range) CRange<Float64>;
 %template(TFloat64List) std::vector<Float64>;
 %template(TInt32List) std::vector<Int32>;
+%template(TStringList) std::vector<std::string>;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
@@ -537,7 +539,7 @@ class COperatorResultStore
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;
 
-  void StoreFlagResult( const std::string& name, UInt32  result );
+  void StoreFlagResult( const std::string& name, Int32  result );
 };
 
 
@@ -567,30 +569,30 @@ class CSpectrum
 
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
-%rename(CSpectrumAxis_empty) CSpectrumAxis(UInt32 n);
-%rename(CSpectrumAxis_withSpectrum) CSpectrumAxis(const Float64* samples, UInt32 n);
+%rename(CSpectrumAxis_empty) CSpectrumAxis(Int32 n);
+%rename(CSpectrumAxis_withSpectrum) CSpectrumAxis(const Float64* samples, Int32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 class CSpectrumAxis
 {
  public:
   CSpectrumAxis();
-  CSpectrumAxis( UInt32 n );
-  CSpectrumAxis(const Float64* samples, UInt32 n );
+  CSpectrumAxis( Int32 n );
+  CSpectrumAxis(const Float64* samples, Int32 n );
   Float64* GetSamples();
   const TAxisSampleList& GetSamplesVector() const;
-  UInt32 GetSamplesCount() const;
-  virtual void SetSize( UInt32 s );
+  Int32 GetSamplesCount() const;
+  virtual void SetSize( Int32 s );
 };
-%clear (const Float64* samples, UInt32 n);
+%clear (const Float64* samples, Int32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
-  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="" );
+  CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum="" );
 };
-%clear (const Float64* samples, UInt32 n);
+%clear (const Float64* samples, Int32 n);
 class CAirVacuum
 {
 public:
@@ -604,28 +606,28 @@ public:
     static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
 };
 
-//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
-%rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
-%rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
-%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, UInt32 n,
-                                                        const double* error, UInt32 m );
+%rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(Int32 n);
+%rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, Int32 n);
+%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, Int32 n,
+                                                        const double* error, Int32 m );
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
-%apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),
-                                      (const double* error, UInt32 m)}
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* samples, Int32 n),
+                                      (const double* error, Int32 m)}
 
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
   // CSpectrumFluxAxis(); // needs %rename
   CSpectrumFluxAxis();
-  CSpectrumFluxAxis( UInt32 n );
-  CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-  CSpectrumFluxAxis( const double* samples, UInt32 n,
-  		     const double* error, UInt32 m );
-  void SetSize( UInt32 s );
+  CSpectrumFluxAxis( Int32 n );
+  CSpectrumFluxAxis( const Float64* samples, Int32 n );
+  CSpectrumFluxAxis( const double* samples, Int32 n,
+  		     const double* error, Int32 m );
+  void SetSize( Int32 s );
 
 };
 
@@ -635,8 +637,8 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
   CSpectrumNoiseAxis();
 };
 
-//%clear (const Float64* samples, UInt32 n);
-//%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
+//%clear (const Float64* samples, Int32 n);
+//%clear (const Float64* _samples, const Float64* _samples, Int32 n);
 
 class CTemplate : public CSpectrum
 {
@@ -749,10 +751,6 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
   Float64 sourcesize;
   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
 };
-
-typedef std::vector<std::string> TStringList;
-
-%template(TStringList) std::vector<std::string>;
 
 class CPhotometricData
 {

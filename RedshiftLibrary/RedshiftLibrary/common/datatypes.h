@@ -51,16 +51,10 @@ namespace NSEpic {
 #define NULL (0)
 #endif
 
-typedef std::vector<std::string> TScopeStack;
-  
+
+typedef long long Int64;  
 typedef int Int32;
 typedef short Int16;
-typedef signed char Int8;
-typedef long long Int64;
-typedef unsigned long long UInt64;
-
-typedef unsigned int UInt32;
-typedef unsigned short UInt16;
 typedef unsigned char UInt8;
 typedef float Float32;
 typedef double Float64;
@@ -72,9 +66,8 @@ typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Int64> TInt64List;
 typedef std::vector<bool> TBoolList;
 typedef std::vector<Int32> TInt32List;
-typedef std::vector<UInt32> TUInt32List;
-typedef std::vector<UInt8> TUInt8List;
 typedef std::vector<std::string> TStringList;
+typedef TStringList TScopeStack;
 
 struct SPoint {
     SPoint()

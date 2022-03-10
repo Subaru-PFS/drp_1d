@@ -50,24 +50,24 @@ namespace NSEpic
     
   public:
     std::vector<TPolynomCoeffs> m_ampOffsetsCoeffs;
-    std::vector<Int32> m_ampOffsetsIdxStart;
-    std::vector<Int32> m_ampOffsetsIdxStop;
+    TInt32List m_ampOffsetsIdxStart;
+    TInt32List m_ampOffsetsIdxStop;
 
-    std::vector<Int32> m_elementsDisabledIndexes;
+    TInt32List m_elementsDisabledIndexes;
    
-    std::vector<UInt32> GetModelValidElementsIndexes() const;
+    TInt32List GetModelValidElementsIndexes() const;
 
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j) const;
 
-    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres) const;
+    TInt32List getOverlappingElements(Int32 ind , const TInt32List & excludedInd,Float64 redshift, Float64 overlapThres) const;
 
     Int32 GetModelValidElementsNDdl() const;
     Int32 GetModelNonZeroElementsNDdl() const;
 
      void SetSourcesizeDispersion(Float64 sizeArcsec);
     
-    std::vector<std::vector<Int32>> GetModelVelfitGroups(Int32 lineType) const;
+    std::vector<TInt32List> GetModelVelfitGroups(Int32 lineType) const;
 
     Int32 findElementIndex(const std::string& LineTagStr,Int32 linetype = -1) const;
     Int32 findElementIndex(const std::string& LineTagStr, 
@@ -75,12 +75,12 @@ namespace NSEpic
                           Int32& lineIdx) const;
     Int32 findElementIndex(Int32 LineCatalogIndex, 
                            Int32& lineIdx) const;
-    Float64 getModelErrorUnderElement( UInt32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis) const;
+    Float64 getModelErrorUnderElement( Int32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis) const;
 
-    std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx) const;
+    TInt32List getSupportIndexes(const TInt32List & EltsIdx) const;
 
-    Int32 getIndexAmpOffset(UInt32 index) const;
-    void setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPolynomCoeffs& line_polynomCoeffs);
+    Int32 getIndexAmpOffset(Int32 index) const;
+    void setAmplitudeOffsetsCoeffsAt(Int32 index, const TPolynomCoeffs& line_polynomCoeffs);
     Int32 prepareAmplitudeOffset();
     bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis) const;
 
@@ -90,10 +90,10 @@ namespace NSEpic
 
     void debug(std::ostream& os) const;
     
-    const std::shared_ptr<const CLineModelElement> operator[](UInt32 i) const {return m_Elements[i];}
-    std::shared_ptr<CLineModelElement> &operator[](UInt32 i) {return m_Elements[i];}
+    const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {return m_Elements[i];}
+    std::shared_ptr<CLineModelElement> &operator[](Int32 i) {return m_Elements[i];}
 
-    UInt32 size() const {return m_Elements.size();}
+    Int32 size() const {return m_Elements.size();}
     void push_back(const std::shared_ptr<CLineModelElement> &elt){ m_Elements.push_back(elt);}
   };
 }

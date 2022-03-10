@@ -97,7 +97,7 @@ public:
   TFloat64List            SigmaZ;    // sigmaz for each extrema
 
   TFloat64List            StrongELSNR;
-  std::vector<std::vector<std::string>>            StrongELSNRAboveCut;
+  std::vector<TStringList>            StrongELSNRAboveCut;
   TFloat64List            bic;    // bayesian information criterion for each extrema
   std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
   std::vector<CMask>      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
@@ -115,7 +115,7 @@ public:
   std::vector<TFloat64List>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
   //template ratio
-  std::vector<std::string>      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio
+  TStringList      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio
   TFloat64List      FittedTplratioAmplitude;   //amp of the best template fitted for tplcorr/tplratio
   TFloat64List      FittedTplratioDtm;   //dtm of the best template fitted for tplcorr/tplratio
   TFloat64List      FittedTplratioMtm;   //mtm of the best template fitted for tplcorr/tplratio

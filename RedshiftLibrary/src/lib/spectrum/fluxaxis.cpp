@@ -52,7 +52,7 @@ using namespace std;
 
 
 
-CSpectrumFluxAxis::CSpectrumFluxAxis( UInt32 n, Float64 value ) :
+CSpectrumFluxAxis::CSpectrumFluxAxis( Int32 n, Float64 value ) :
     CSpectrumAxis( n, value),
     m_StdError(n)
 {
@@ -65,7 +65,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( CSpectrumAxis otherFlux,  CSpectrumNoiseAx
 {}
 
 
-CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n ) :
+CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, Int32 n ) :
     CSpectrumAxis(samples, n ),
     m_StdError(n)
 {
@@ -86,8 +86,8 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List && samples) :
 
 }
 
-CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
-				      const Float64* error,  const UInt32 m) :
+CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, Int32 n,
+				      const Float64* error,  const Int32 m) :
     CSpectrumAxis( samples, n ),
     m_StdError( error, m )
 {
@@ -96,7 +96,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis( const Float64* samples, UInt32 n,
     }
 }
 
-void CSpectrumFluxAxis::SetSize( UInt32 s )
+void CSpectrumFluxAxis::SetSize( Int32 s )
 {
     CSpectrumAxis::SetSize( s );
     m_StdError.SetSize(s);
@@ -268,7 +268,7 @@ Float64  CSpectrumFluxAxis::ComputeRMSDiff( const CSpectrumFluxAxis& other )
 bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
 {
     Int32 N = GetSamplesCount();
-    for( UInt32 i=0; i<N; i++ )
+    for( Int32 i=0; i<N; i++ )
     {
         m_Samples[i] = m_Samples[i]-other[i];
     }
@@ -278,7 +278,7 @@ bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis& other)
 bool CSpectrumFluxAxis::Invert()
 {
     Int32 N = GetSamplesCount();
-    for( UInt32 i=0; i<N; i++ )
+    for( Int32 i=0; i<N; i++ )
     {
         m_Samples[i] = -m_Samples[i];
     }

@@ -54,7 +54,7 @@ CLogFileHandler::~CLogFileHandler()
     m_OutputStream.close();
 }
 
-void CLogFileHandler::LogEntry( UInt32 lvl, const char* header, const char* msg )
+void CLogFileHandler::LogEntry( Int32 lvl, const char* header, const char* msg )
 {
     if( header )
     {

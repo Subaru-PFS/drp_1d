@@ -46,10 +46,10 @@ using namespace NSEpic;
 using namespace std;
 
 
-CSpectrumAxis::CSpectrumAxis( const Float64* samples, UInt32 n ) :
+CSpectrumAxis::CSpectrumAxis( const Float64* samples, Int32 n ) :
     m_Samples( n )
 {
-    for( UInt32 i=0; i<n; i++ )
+    for( Int32 i=0; i<n; i++ )
     {
         m_Samples[i] = samples[i];
     }
@@ -64,7 +64,7 @@ CSpectrumAxis& CSpectrumAxis::operator*=(const Float64 op)
     return *this;
 }
 
-void CSpectrumAxis::SetSize( UInt32 s )
+void CSpectrumAxis::SetSize( Int32 s )
 {
     m_Samples.resize( s );
 }
@@ -74,7 +74,7 @@ void CSpectrumAxis::clear()
     m_Samples.clear();
 }
 
-UInt32 CSpectrumAxis::GetSamplesCount( )
+Int32 CSpectrumAxis::GetSamplesCount( )
 {
     return m_Samples.size();
 }
@@ -93,7 +93,7 @@ void CSpectrumAxis::maskVector(const TFloat64List& mask, const TFloat64List& inp
     if(mask.size()!=inputVector.size()){
         throw GlobalException(INTERNAL_ERROR,"CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
     }
-    UInt32 sum = UInt32(std::count(mask.begin(), mask.end(), 1));
+    Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
     outputVector.clear();
     outputVector.reserve(sum);
     for(Int32 i=0; i<mask.size(); i++)

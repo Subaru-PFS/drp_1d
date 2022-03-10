@@ -72,7 +72,7 @@ public:
 
     void SetMeanKernelWidth( Float32 width );
     void SetMedianKernelWidth( Float32 width );
-    void SetMedianCycleCount( UInt32 count );
+    void SetMedianCycleCount( Int32 count );
     void SetMedianEvenReflection( bool evenReflection );
 
     bool RemoveContinuum( const CSpectrum& s, CSpectrumFluxAxis& noContinuumFluxAxis ) const ;

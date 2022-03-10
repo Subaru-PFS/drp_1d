@@ -50,5 +50,5 @@ class CPdfMargZLogResult : public COperatorResult
     TFloat64List          valProbaLog;
     Float64               valEvidenceLog = NAN;
     Float64               valMargEvidenceLog = NAN;
-    UInt32 				  countTPL;
+    Int32 				  countTPL;
 };

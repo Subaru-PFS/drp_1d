@@ -275,7 +275,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snr
     Int32 nSol=0;
 
     TInt32List indexesSols;
-    for ( UInt32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
+    for ( Int32 j=0; j<LineModelSolutions[solutionIdx].Amplitudes.size(); j++)
     {
         //skip if already sol
         bool alreadysol = false;
@@ -322,12 +322,12 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snr
  * @param filterType: 1: emission only, 2 abs only, else: no filter
  * @return: a list of boolean values indicating if a strong is present (not outsidelambdarange for that z) for each redshift
  */
-TBoolList CLineModelResult::getStrongLinesPresence( UInt32 filterType, const std::vector<CLineModelSolution>& linemodelsols ) const
+TBoolList CLineModelResult::getStrongLinesPresence( Int32 filterType, const std::vector<CLineModelSolution>& linemodelsols ) const
 {
     TBoolList strongIsPresent(linemodelsols.size(), false);
-    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
+    for ( Int32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
-        for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
+        for ( Int32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
             if( !linemodelsols[solutionIdx].Rays[j].GetIsStrong() )
             {
@@ -360,7 +360,7 @@ TBoolList CLineModelResult::getStrongLinesPresence( UInt32 filterType, const std
 TInt32List CLineModelResult::getNLinesAboveSnrcut(const std::vector<CLineModelSolution>& linemodelsols ) const
 {
     TInt32List nlinesabove(linemodelsols.size(), 0);
-    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
+    for ( Int32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         nlinesabove[solutionIdx] = linemodelsols[solutionIdx].NLinesAboveSnrCut;
     }
@@ -380,11 +380,11 @@ TBoolList CLineModelResult::getStrongestLineIsHa(const std::vector<CLineModelSol
     linetags ltags;
     TBoolList isHaStrongest(linemodelsols.size(), false);
     std::string ampMaxLineTag = "";
-    for ( UInt32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
+    for ( Int32 solutionIdx=0; solutionIdx<linemodelsols.size(); solutionIdx++)
     {
         Float64 ampMax = -DBL_MAX;
         ampMaxLineTag = "undefined";
-        for ( UInt32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
+        for ( Int32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
             if(!linemodelsols[solutionIdx].Rays[j].GetIsEmission() ||
                 linemodelsols[solutionIdx].OutsideLambdaRange[j])

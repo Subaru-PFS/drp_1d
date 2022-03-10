@@ -58,7 +58,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID & candidates):
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List & redshifts)
 {
-    for (UInt32 i =0; i<redshifts.size(); ++i)
+    for (Int32 i =0; i<redshifts.size(); ++i)
     {
         const std::string Id = "EXT" + to_string(i);
         m_candidates[Id].Redshift = redshifts[i];
@@ -98,7 +98,7 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
     };
 
     // sort candidate keys (Ids) by decreasing redshifts
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
@@ -205,7 +205,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(TCandidateZbyRank & ranked_candidates
 {
 
     // sort m_candidates keys (Ids) by deacreasing integ proba
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
@@ -237,7 +237,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
   //     -> use a DEBUG directive ? 
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {
@@ -377,7 +377,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {

@@ -55,15 +55,15 @@ class CZweiModelResult : public COperatorResult
 
 public:
 
-    CZweiModelResult(std::vector<Float64> redshifts_s1, std::vector<Float64> redshifts_s2, std::vector<std::vector<Float64>> combined_merits);
+    CZweiModelResult(TFloat64List redshifts_s1, TFloat64List redshifts_s2, std::vector<TFloat64List> combined_merits);
     CZweiModelResult();
     virtual ~CZweiModelResult();
 
 
 private:
-    std::vector<Float64> m_redshifts_s1;
-    std::vector<Float64> m_redshifts_s2;
-    std::vector<std::vector<Float64>> m_combined_merits;
+    TFloat64List m_redshifts_s1;
+    TFloat64List m_redshifts_s2;
+    std::vector<TFloat64List> m_combined_merits;
 
 };
 
