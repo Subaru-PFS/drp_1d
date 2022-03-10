@@ -47,11 +47,13 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CRayCatalog,CRayCatalogsTplShape,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
-                                  TAsymParams)
+                                  TAsymParams,
+                                  CFlagWarning)
 import numpy as np
 from astropy.io import fits
 import glob
 
+zflag = CFlagWarning.GetInstance()
 
 class CalibrationLibrary:
     """
@@ -271,8 +273,7 @@ class CalibrationLibrary:
                     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
                     from tensorflow.keras import models
                 except ImportError:
-                    import warnings
-                    warnings.warn("Tensorflow is required to compute the reliability")
+                    zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
                 else:
                     model_path = os.path.join(self.calibration_dir,
                                               self.parameters[object_type]["reliability_model"])

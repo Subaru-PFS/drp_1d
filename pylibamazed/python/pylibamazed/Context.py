@@ -137,7 +137,7 @@ class Context:
                     self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
                 self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
 
-            if self.parameters[object_type].get("enable_reliability"):
+            if self.parameters[object_type].get("enable_reliability") and object_type in self.calibration_library.reliability_models:
                 rel = Reliability(object_type, self.parameters,self.calibration_library)
                 reliabilities[object_type] = rel.Compute(self.process_flow_context)
 
