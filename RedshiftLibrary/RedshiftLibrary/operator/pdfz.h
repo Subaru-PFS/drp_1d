@@ -92,7 +92,7 @@ public:
     // static member function to do calculation on pdfs
     ///////////////////////////////////////////////////
 
-    static Int32 getIndex( const std::vector<Float64> & redshifts, Float64 z );
+    static Int32 getIndex( const TFloat64List & redshifts, Float64 z );
 
     static void ComputePdf(const TFloat64List &merits, const TFloat64List &redshifts, const Float64 cstLog, const TFloat64List &zPrior, TFloat64List &logPdf, Float64 &logEvidence);
 

@@ -226,8 +226,8 @@ public:
     CLineModelPassExtremaResult m_secondpass_parameters_extremaResult;
 
   CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
-  void fitVelocityByGroups(std::vector<Float64> velfitlist,
-                           std::vector<Float64> zfitlist,
+  void fitVelocityByGroups(TFloat64List velfitlist,
+                           TFloat64List zfitlist,
                            Int32 rayType);
 
   void setHapriorOption(Int32 opt);

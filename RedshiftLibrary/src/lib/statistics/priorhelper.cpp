@@ -86,7 +86,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         return false;
     }
 
-    std::vector<std::string> EZTfilesPathList;
+    TStringList EZTfilesPathList;
     bfs::directory_iterator end_itr;
     std::string ezt_path = "";
     if(m_type==0)
@@ -104,7 +104,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         }
     }
 
-    std::vector<std::string> AGaussMeanfilesPathList;
+    TStringList AGaussMeanfilesPathList;
     for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
@@ -135,7 +135,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
 
-    std::vector<std::string> AGaussSigmafilesPathList;
+    TStringList AGaussSigmafilesPathList;
     for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
@@ -184,7 +184,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         bfs::path fPath = EZTfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -203,7 +203,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         bfs::path fPath = AGaussMeanfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -221,7 +221,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
         bfs::path fPath = AGaussSigmafilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -250,7 +250,7 @@ bool CPriorHelper::Init( std::string priorDirPath, Int32 type )
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: Pz path does not exist: "<<pz_fpath.string());
     }else{
-        std::vector<Float64> read_buffer;
+        TFloat64List read_buffer;
         bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
         if(!ret)
         {
@@ -325,7 +325,7 @@ bool CPriorHelper::SetTNameData(Int32 k, std::string tname)
     return true;
 }
 
-bool CPriorHelper::SetEZTData(Int32 k, const std::vector<std::vector<Float64>> & ezt_data)
+bool CPriorHelper::SetEZTData(Int32 k, const std::vector<TFloat64List> & ezt_data)
 {
     if(k>=m_data.size())
     {
@@ -343,7 +343,7 @@ bool CPriorHelper::SetEZTData(Int32 k, const std::vector<std::vector<Float64>> &
     return true;
 }
 
-bool CPriorHelper::SetAGaussmeanData(Int32 k, const  std::vector<std::vector<Float64>> & agaussmean_data)
+bool CPriorHelper::SetAGaussmeanData(Int32 k, const  std::vector<TFloat64List> & agaussmean_data)
 {
     if(k>=m_data.size())
     {
@@ -361,7 +361,7 @@ bool CPriorHelper::SetAGaussmeanData(Int32 k, const  std::vector<std::vector<Flo
     return true;
 }
 
-bool CPriorHelper::SetAGausssigmaData(Int32 k, const std::vector<std::vector<Float64>> & agausssigma_data)
+bool CPriorHelper::SetAGausssigmaData(Int32 k, const std::vector<TFloat64List> & agausssigma_data)
 {
     if(k>=m_data.size())
     {
@@ -379,7 +379,7 @@ bool CPriorHelper::SetAGausssigmaData(Int32 k, const std::vector<std::vector<Flo
     return true;
 }
 
-bool CPriorHelper::SetPzData(const std::vector<Float64> & z_data)
+bool CPriorHelper::SetPzData(const TFloat64List & z_data)
 {
     if(z_data.size()!=m_data_pz.size())
     {
@@ -395,7 +395,7 @@ bool CPriorHelper::SetPzData(const std::vector<Float64> & z_data)
 }
 
 
-bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
+bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<TFloat64List>& data)
 {
     bool verboseRead=false;
     Log.LogDetail(Formatter()<<"CPriorHelper: start load prior file: "<<filePath);
@@ -416,7 +416,7 @@ bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Flo
             if( !boost::starts_with( line, "#" ) )
             {
 
-                std::vector<Float64> lineVals;
+                TFloat64List lineVals;
                 std::istringstream iss( line );
                 for(Int32 icol=0; icol<m_nEbv; icol++)
                 {
@@ -451,7 +451,7 @@ bool CPriorHelper::LoadFileEZ( const char* filePath, std::vector<std::vector<Flo
     return loadSuccess;
 }
 
-bool CPriorHelper::LoadFileZ(const char* filePath , std::vector<Float64>& data)
+bool CPriorHelper::LoadFileZ(const char* filePath , TFloat64List& data)
 {
     bool verboseRead=false;
     Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
@@ -645,7 +645,7 @@ bool CPriorHelper::GetTZEPriorData(const std::string & tplname,
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelper: Bad EBV index requested =" << EBVIndexfilter  <<" nEBV="<< m_nEbv);
     }
-    std::vector<Float64> redshifts(1, redshift);
+    TFloat64List redshifts(1, redshift);
     TPriorZEList zePriorData;
     GetTplPriorData(tplname, redshifts, zePriorData, outsideZRangeExtensionMode);
 

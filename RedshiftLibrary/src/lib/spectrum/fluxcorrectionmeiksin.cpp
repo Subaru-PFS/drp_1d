@@ -72,7 +72,7 @@ bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const st
 {
     m_convolRange = convolRange;
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::vector<std::string> fileNamesList;
+    TStringList fileNamesList;
     fileNamesList.push_back("Meiksin_Var_curves_2.0.txt");
     fileNamesList.push_back("Meiksin_Var_curves_2.5.txt");
     fileNamesList.push_back("Meiksin_Var_curves_3.0.txt");

@@ -77,7 +77,7 @@ public:
     Float64            SigmaZ;    // sigmaz for each extrema
 
     Float64            StrongELSNR;
-    std::vector<std::string>            StrongELSNRAboveCut;
+    TStringList            StrongELSNRAboveCut;
     Float64            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
     CMask      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
@@ -87,12 +87,12 @@ public:
     //line width
     Float64      Elv;   //emission line width
     Float64      Alv;   //absorption line width
-    std::vector<Float64>      GroupsELv;   //per fitting group line width , EL
-    std::vector<Float64>      GroupsALv;   //per fitting group line width , AL
+    TFloat64List      GroupsELv;   //per fitting group line width , EL
+    TFloat64List      GroupsALv;   //per fitting group line width , AL
 
     //template continuum (+ base class)
     Float64      FittedTplRedshift;    //Redshift for the best template fitted for continuum
-    std::vector<Float64>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
+    TFloat64List      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio
     std::string      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio

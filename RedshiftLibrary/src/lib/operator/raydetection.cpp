@@ -619,7 +619,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
  */
 Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
 {
-    std::vector<Float64> xdata;
+    TFloat64List xdata;
     Float64 xmadm = 0.0;
 
     xdata.resize( n );

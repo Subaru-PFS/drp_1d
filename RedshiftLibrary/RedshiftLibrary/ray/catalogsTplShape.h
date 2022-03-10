@@ -69,10 +69,10 @@ public:
 
 
     //bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
-    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName) const;
+    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors, TFloat64List &amplitudesCorrected , std::string &bestTplName) const;
     CRayCatalog::TRayVector GetRestLinesList( Int32 index ) const;
     Int32 GetCatalogsCount() const;
-    const std::vector<Float64>& getCatalogsPriors();
+    const TFloat64List& getCatalogsPriors();
     std::string GetCatalogName(Int32 idx) const;
     Int32 GetIsmIndex(Int32 idx) const;
     Float64 GetIsmCoeff(Int32 idx) const;
@@ -95,7 +95,7 @@ private:
 
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
     std::vector<std::vector<TFloat64List>> m_RayCatalogLinesCorrespondingNominalAmp;
-  std::vector<Float64> m_catalogsPriors; // TODO temporary hack before reviewing getCatalogsPrior uses
+  TFloat64List m_catalogsPriors; // TODO temporary hack before reviewing getCatalogsPrior uses
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;

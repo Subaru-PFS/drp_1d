@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(Instance){
   CRay ray = CRay("O2",0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     CRay ray = CRay("Halpha",6564.61, 2, std::move(profilesym), 2,1.0, 0.5);
     std::vector<CRay> rs;
     rs.push_back(ray);
-    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    TFloat64List nominalAmplitudes = TFloat64List ();
     nominalAmplitudes.push_back(0.8);
-    std::vector<Int32> catalogIndexes;
+    TInt32List catalogIndexes;
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
@@ -150,9 +150,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
   CRay ray = CRay("Halpha",6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
@@ -185,9 +185,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   CRay ray = CRay("Halpha",6564.61, 2,profilesym->Clone(), 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CLineModelElement element = CLineModelElement(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<Int32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CLineModelElement element = CLineModelElement(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);

@@ -60,13 +60,13 @@ class CRegulament
     // > LinemodelElements, Float64 Redshift );
     bool CreateRulesFromJSONFiles(void);
     void EnableRulesAccordingToParameters(std::string Parameters);
-    const std::vector<std::string> & GetLogs() const;
+    const TStringList & GetLogs() const;
     void EnableLogs(bool enable);
 
   private:
     Float64 m_Redshift; 
     std::vector<std::unique_ptr<CRule>> m_RulesVector;
-    std::vector<std::string> m_RulesLog;
+    TStringList m_RulesLog;
     bool m_LogsEnabled = false;
 };
 } // namespace NSEpic

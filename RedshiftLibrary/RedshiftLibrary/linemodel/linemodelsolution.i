@@ -56,7 +56,7 @@
     TFloat64List FluxErrors;    //Flux error for each line
     TFloat64List FluxDirectIntegration;    //Flux obtained by direct integration for each line
     TFloat64List FluxDirectIntegrationError;    //Flux obtained by direct integration for each line
-    std::vector<Int32> rayId;
+    TInt32List rayId;
 
     Float64 snrHa;
     Float64 lfHa;
@@ -67,9 +67,9 @@
     TFloat64List LambdaObs;  //observed position in Angstrom
     TFloat64List Velocity;  //dispersion velocity in km/s
     TFloat64List Offset;    //line offset in km/s
-    std::vector<bool> OutsideLambdaRange;
+    TBoolList OutsideLambdaRange;
     std::vector<TInt32Range> fittingIndexRange;
-    std::vector<std::string> fittingGroupInfo;
+    TStringList fittingGroupInfo;
 
     Float64 LyaWidthCoeff;
     Float64 LyaAlpha;

@@ -85,9 +85,9 @@ Int32 CLineModelElementList::GetModelNonZeroElementsNDdl() const
 /**
  * \brief Returns the list of indexes of elements that fail IsOutsideLambdaRange.
  **/
-std::vector<Int32> CLineModelElementList::GetModelValidElementsIndexes() const
+TInt32List CLineModelElementList::GetModelValidElementsIndexes() const
 {
-    std::vector<Int32> nonZeroIndexes;
+    TInt32List nonZeroIndexes;
     for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         if(m_Elements[iElts]->IsOutsideLambdaRange() == true){
@@ -147,17 +147,17 @@ void CLineModelElementList::ResetElementIndexesDisabled()
  * \brief Returns the list of groups, with each group being a set of line indexes with the velcocity to be jointly
  * TEMPORARY-DEV: return all the indexes individually as  agroup
 **/
-std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int32 lineType ) const
+std::vector<TInt32List> CLineModelElementList::GetModelVelfitGroups( Int32 lineType ) const
 {
     bool verbose = false;
     if(verbose)
     {
         Log.LogDebug("    model: group tags for lineType=%d", lineType);
     }
-    std::vector<std::string> tags;
-    std::vector<Int32> nonGroupedLines;
+    TStringList tags;
+    TInt32List nonGroupedLines;
 
-    std::vector<Int32> nonZeroIndexes = GetModelValidElementsIndexes();
+    TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
     for(Int32 i=0; i<nonZeroIndexes.size(); i++)
     {
         Int32 iElts = nonZeroIndexes[i];
@@ -203,11 +203,11 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     //*/
 
     //add the grouped lines
-    std::vector<std::vector<Int32>> groups;
-    std::vector<std::string> groupsTags;
+    std::vector<TInt32List> groups;
+    TStringList groupsTags;
     for( Int32 itag = 0; itag<tags.size(); itag++)
     {
-        std::vector<Int32> _group;
+        TInt32List _group;
         for(Int32 i=0; i<nonZeroIndexes.size(); i++)
         {
             Int32 iElts = nonZeroIndexes[i];
@@ -235,7 +235,7 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
     nonGroupedLines.erase( std::unique( nonGroupedLines.begin(), nonGroupedLines.end() ), nonGroupedLines.end() );
     for( Int32 i = 0; i<nonGroupedLines.size(); i++)
     {
-        std::vector<Int32> _group;
+        TInt32List _group;
         _group.push_back(nonGroupedLines[i]);
         groups.push_back(_group);
         groupsTags.push_back("-1");
@@ -255,13 +255,13 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
 
     //Override velGroups from Catalog: => Individual lines as groups
     /*
-    std::vector<std::vector<Int32>> groups;
-    std::vector<Int32> nonZeroIndexes = GetModelValidElementsIndexes();
+    std::vector<TInt32List> groups;
+    TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
     for(Int32 i=0; i<nonZeroIndexes.size(); i++)
     {
         if(lineType == m_Elements[nonZeroIndexes[i]]->m_Rays[0].GetType())
         {
-            std::vector<Int32> gr;
+            TInt32List gr;
             gr.push_back(nonZeroIndexes[i]);
             groups.push_back(gr);
             //Log.LogInfo("Group %d, idx=%d", groups.size(), groups[groups.size()-1][0]);
@@ -276,9 +276,9 @@ std::vector<std::vector<Int32>> CLineModelElementList::GetModelVelfitGroups( Int
  * \brief Returns a sorted, de-duplicated list of indices of lines whose support overlap ind's support and are not listed in the argument excludedInd.
  **/
 
-std::vector<Int32> CLineModelElementList::getOverlappingElements(Int32 ind, const std::vector<Int32> & excludedInd,Float64 redshift,Float64 overlapThres) const
+TInt32List CLineModelElementList::getOverlappingElements(Int32 ind, const TInt32List & excludedInd,Float64 redshift,Float64 overlapThres) const
 {
-    std::vector<Int32> indexes;
+    TInt32List indexes;
 
     if(m_Elements[ind]->IsOutsideLambdaRange()){
         indexes.push_back(ind);
@@ -493,9 +493,9 @@ Float64 CLineModelElementList::getModelErrorUnderElement( Int32 eltId ,
  * For each EltsIdx entry, if the entry is not outside lambda range, get the support of each subelement.
  * For each selected support, get the sample index. Sort this list and remove multiple entries. Return this clean list.
  **/
-std::vector<Int32> CLineModelElementList::getSupportIndexes( const std::vector<Int32> & EltsIdx ) const
+TInt32List CLineModelElementList::getSupportIndexes( const TInt32List & EltsIdx ) const
 {
-    std::vector<Int32> indexes;
+    TInt32List indexes;
 
     TInt32RangeList support;
     for( Int32 i=0; i<EltsIdx.size(); i++ )
@@ -576,12 +576,12 @@ Int32 CLineModelElementList::prepareAmplitudeOffset()
     m_ampOffsetsIdxStart.clear();
     m_ampOffsetsIdxStop.clear();
 
-    std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
+    TInt32List validEltsIdx = GetModelValidElementsIndexes();
     if(validEltsIdx.size()<1)
     {
         return -1;
     }
-    std::vector<Int32> supportIdxes = getSupportIndexes( validEltsIdx );
+    TInt32List supportIdxes = getSupportIndexes( validEltsIdx );
     if(supportIdxes.size()<1)
     {
         return -1;

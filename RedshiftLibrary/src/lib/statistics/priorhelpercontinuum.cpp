@@ -84,7 +84,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         return false;
     }
 
-    std::vector<std::string> EZTfilesPathList;
+    TStringList EZTfilesPathList;
     bfs::directory_iterator end_itr;
     for ( bfs::directory_iterator itr( rootFolder/"prior_continuum_hist_Ebmvc_Z" ); itr != end_itr; ++itr )
     {
@@ -94,7 +94,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         }
     }
 
-    std::vector<std::string> AGaussMeanfilesPathList;
+    TStringList AGaussMeanfilesPathList;
     for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
@@ -109,7 +109,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
 
-    std::vector<std::string> AGaussSigmafilesPathList;
+    TStringList AGaussSigmafilesPathList;
     for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
@@ -142,7 +142,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         bfs::path fPath = EZTfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -161,7 +161,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         bfs::path fPath = AGaussMeanfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -179,7 +179,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         bfs::path fPath = AGaussSigmafilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -235,7 +235,7 @@ bool CPriorHelperContinuum::SetTNameData(Int32 k, std::string tname)
     return true;
 }
 
-bool CPriorHelperContinuum::SetEZTData(Int32 k, std::vector<std::vector<Float64>> ezt_data)
+bool CPriorHelperContinuum::SetEZTData(Int32 k, std::vector<TFloat64List> ezt_data)
 {
     if(k>=m_data.size())
     {
@@ -253,7 +253,7 @@ bool CPriorHelperContinuum::SetEZTData(Int32 k, std::vector<std::vector<Float64>
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGaussmeanData(Int32 k, std::vector<std::vector<Float64>> agaussmean_data)
+bool CPriorHelperContinuum::SetAGaussmeanData(Int32 k, std::vector<TFloat64List> agaussmean_data)
 {
     if(k>=m_data.size())
     {
@@ -271,7 +271,7 @@ bool CPriorHelperContinuum::SetAGaussmeanData(Int32 k, std::vector<std::vector<F
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGausssigmaData(Int32 k, std::vector<std::vector<Float64>> agausssigma_data)
+bool CPriorHelperContinuum::SetAGausssigmaData(Int32 k, std::vector<TFloat64List> agausssigma_data)
 {
     if(k>=m_data.size())
     {
@@ -289,7 +289,7 @@ bool CPriorHelperContinuum::SetAGausssigmaData(Int32 k, std::vector<std::vector<
     return true;
 }
 
-bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
+bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<TFloat64List>& data)
 {
     bool verboseRead=false;
     Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s", filePath);
@@ -310,7 +310,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
             if( !boost::starts_with( line, "#" ) )
             {
 
-                std::vector<Float64> lineVals;
+                TFloat64List lineVals;
                 std::istringstream iss( line );
                 for(Int32 icol=0; icol<m_nEbv; icol++)
                 {
@@ -354,7 +354,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
  * @return
  */
 bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
-                                            std::vector<Float64> redshifts,
+                                            TFloat64List redshifts,
                                             TPriorZEList& zePriorData,
                                             Int32 outsideZRangeExtensionMode)
 {

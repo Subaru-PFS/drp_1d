@@ -468,9 +468,9 @@ void COperatorResultStore::StoreFlagResult( const std::string& name, Int32 resul
 }
 
 
-std::vector<std::string> COperatorResultStore::getProcessedObjectTypes() const
+TStringList COperatorResultStore::getProcessedObjectTypes() const
 {
-  std::vector<std::string> res;
+  TStringList res;
 
   return res;
 }

@@ -55,9 +55,9 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
                         const std::string& widthType,
                         const Float64 velocityEmission,
                         const Float64 velocityAbsorption,
-                        std::vector<Float64> nominalAmplitudes,
+                        TFloat64List nominalAmplitudes,
                         Float64 nominalWidth,//corresponds to the lsf of type constant width
-                        std::vector<Int32> catalogIndexes ) : 
+                        TInt32List catalogIndexes ) : 
     m_Rays(rs),
     m_fittingGroupInfo("-1"),
     m_NominalWidth(nominalWidth),
@@ -466,7 +466,7 @@ void CLineModelElement::prepareSupport(const CSpectrumSpectralAxis& spectralAxis
 {
     Int32 nRays = m_Rays.size();
     m_OutsideLambdaRange = true;
-    m_RayIsActiveOnSupport.resize( nRays , std::vector<Int32>( nRays , 0.0 ) );
+    m_RayIsActiveOnSupport.resize( nRays , TInt32List( nRays , 0.0 ) );
     m_StartNoOverlap.resize(nRays, -1);
     m_EndNoOverlap.resize(nRays, -1);
     m_StartTheoretical.resize(nRays, -1);

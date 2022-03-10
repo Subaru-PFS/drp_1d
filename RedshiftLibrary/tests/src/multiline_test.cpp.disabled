@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(Instance) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   TInt32List catalogIndexes;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   TInt32List catalogIndexes;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   TInt32List catalogIndexes;
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll) {
   rs.push_back(ray);
   rs.push_back(ray2);
   rs.push_back(ray3);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   nominalAmplitudes.push_back(0.1);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   TInt32List catalogIndexes;
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
   TInt32List catalogIndexes;
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(fitAmplitude) {
   std::vector<CRay> rs;
   rs.push_back(ray);
   rs.push_back(ray2);
-  TFloat64List nominalAmplitudes = std::vector<Float64>();
+  TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(1);
   TInt32List catalogIndexes;

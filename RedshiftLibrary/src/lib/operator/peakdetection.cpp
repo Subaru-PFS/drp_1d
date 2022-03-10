@@ -197,8 +197,8 @@ void CPeakDetection::FindPossiblePeaks( const CSpectrumAxis& fluxAxis, const CSp
 {
     peakList.clear();
 
-    std::vector<Float64> med;
-    std::vector<Float64> xmad;
+    TFloat64List med;
+    TFloat64List xmad;
 
     med.reserve( fluxAxis.GetSamplesCount() );
     xmad.reserve( fluxAxis.GetSamplesCount() );

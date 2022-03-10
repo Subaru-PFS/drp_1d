@@ -61,7 +61,7 @@ public:
     virtual ~CLineDetectionResult();
 
     CRayCatalog RayCatalog;
-    std::vector<std::string> PeakListDetectionStatus;
+    TStringList PeakListDetectionStatus;
 };
 
 }

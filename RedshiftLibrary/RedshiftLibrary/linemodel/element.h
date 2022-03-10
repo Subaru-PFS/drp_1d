@@ -194,7 +194,7 @@ public:
 
     std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
-    std::vector<Int32> m_LineCatalogIndexes;
+    TInt32List m_LineCatalogIndexes;
     std::string m_fittingGroupInfo;
 
   protected:

@@ -87,7 +87,7 @@ class CInputContext
   std::map<std::string, SRebinResults> m_logRebin;
 
   // fill this from api, based on a new parameter in parameters.json we call object_types, it's a list consisting of the object types to process, it replaces enable<object_type>solve
-  std::vector<std::string> m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
+  TStringList m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog);

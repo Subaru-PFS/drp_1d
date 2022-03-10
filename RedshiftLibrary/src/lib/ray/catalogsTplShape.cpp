@@ -90,7 +90,7 @@ Int32 CRayCatalogsTplShape::GetCatalogsCount() const
     return m_lineRatioCatalogs.size();
 }
 
-const std::vector<Float64>&  CRayCatalogsTplShape::getCatalogsPriors()
+const TFloat64List&  CRayCatalogsTplShape::getCatalogsPriors()
 {
   if(m_catalogsPriors.empty())
     {
@@ -188,17 +188,17 @@ const CRayCatalog& CRayCatalogsTplShape::GetCatalog(Int32 iCatalog) const
 Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List & fittedErrors, TFloat64List &amplitudesCorrected, std::string& bestTplName) const
 {
     Float64 coeffMin = -1;
-    std::vector<Int32> mask;
-    std::vector<Float64> bestFitAmplitudes;
+    TInt32List mask;
+    TFloat64List bestFitAmplitudes;
     //bestFitAmplitudes.resize(restRayList.size());
     for(Int32 iCatalogs=0; iCatalogs<m_lineRatioCatalogs.size(); iCatalogs++)
     {
         CRayCatalog::TRayVector currentCatalogLineList = m_lineRatioCatalogs[iCatalogs].GetList();
 
         //create the amplitude float vectors
-        std::vector<Float64> tplshapeAmplitudes;
-        std::vector<Float64> linemodelAmplitudes;
-        std::vector<Float64> linemodelErrors;
+        TFloat64List tplshapeAmplitudes;
+        TFloat64List linemodelAmplitudes;
+        TFloat64List linemodelErrors;
 
         mask.resize(fittedAmplitudes.size());
 
@@ -236,7 +236,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
 
         if(linemodelAmplitudes.size()>1 && linemodelAmplitudes.size()==tplshapeAmplitudes.size())
         {
-            std::vector<Float64> ampsCorrected;
+            TFloat64List ampsCorrected;
             ampsCorrected.resize(linemodelAmplitudes.size());
             Float64 fit = GetFit(linemodelAmplitudes, linemodelErrors, tplshapeAmplitudes, ampsCorrected);
             if(fit>0.0 && !std::isnan(fit) && (fit<coeffMin || coeffMin==-1))

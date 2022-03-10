@@ -102,7 +102,7 @@ private:
         std::vector<TFloat64List>    IsmCalzettiCoeffInterm;
         std::vector<TInt32List>      IgmMeiksinIdxInterm;
         std::vector<std::vector<TFloat64List>>    fittingAmplitudesInterm; //intermediate amplitudes
-        std::vector<std::string> tplNames; //cause combination of templates
+        TStringList tplNames; //cause combination of templates
         Int32 IGMIdx;
         Float64 EbmvCoeff;
         Float64 SNR;

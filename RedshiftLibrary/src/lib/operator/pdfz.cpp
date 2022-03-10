@@ -419,7 +419,7 @@ Float64 COperatorPdfz::getSumTrapez(const TRedshiftList & redshifts,
     return sum;
 }
 
-Int32 COperatorPdfz::getIndex( const std::vector<Float64> & redshifts, Float64 z )
+Int32 COperatorPdfz::getIndex( const TFloat64List & redshifts, Float64 z )
 {
     Int32 solutionIdx=-1;
     for ( Int32 i2=0; i2<redshifts.size(); i2++)
@@ -536,7 +536,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray & chisquarearray)
         Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e", m_postmargZResult->valMargEvidenceLog);
 
     // marginalize: ie sum all PDFS
-    std::vector<Int32> nSum(zsize, 0);
+    TInt32List nSum(zsize, 0);
     for (Int32 km = 0; km < nmodel; km++)
     {
         if (verbose)
@@ -662,7 +662,7 @@ void COperatorPdfz::BestProba(const ChisquareArray & chisquarearray)
 
     // 2. prepare LogEvidence
     Float64 maxi = -DBL_MAX;
-    std::vector<Float64> smallVALUES(redshifts.size(), 0.0);
+    TFloat64List smallVALUES(redshifts.size(), 0.0);
     for (Int32 k = 0; k < redshifts.size(); k++)
     {
         smallVALUES[k] = m_postmargZResult->valProbaLog[k];

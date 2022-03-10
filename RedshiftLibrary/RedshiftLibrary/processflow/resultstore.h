@@ -175,7 +175,7 @@ public:
 								   const int& rank
 								   ) const  ;
 
-  std::vector<std::string> getProcessedObjectTypes() const;
+  TStringList getProcessedObjectTypes() const;
   
   int getNbRedshiftCandidates(const std::string& objectType,const std::string& method) const;
 

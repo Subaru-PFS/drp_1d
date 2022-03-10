@@ -55,7 +55,7 @@ struct lmfitdata {
     size_t n;
     Float64 * y;
     CLineModelFitting* linemodel;
-    std::vector<Int32> linemodel_samples_indexes;
+    TInt32List linemodel_samples_indexes;
     const Float64* observeGridContinuumFlux;
     CLmfitController* controller;
 };
@@ -67,8 +67,8 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
     //std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata *)data)->linemodel;
     CLineModelFitting* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
-    std::vector<Int32> elts_indexes = controller->getFilteredIdx();
-    std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
+    TInt32List elts_indexes = controller->getFilteredIdx();
+    TInt32List samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
     Float64 normFactor = controller->getNormFactor();
     //const Float64* observeGridContinuumFlux = ((struct lmfitdata *)data)->observeGridContinuumFlux;
 
@@ -77,7 +77,7 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
       linemodel->setRedshift(redshift , !controller->isNoContinuum());
       if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
          // a continuum is fit by linemodel , but not by lmfit
-         std::vector<Float64> polyCoeffs;
+         TFloat64List polyCoeffs;
          linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), linemodel->getFitContinuum_tplAmplitudeError(), polyCoeffs);
       }
     }
@@ -86,7 +86,7 @@ int lmfit_f (const gsl_vector * x, void *data, gsl_vector * f)
       Int32 idxContinuumTplAmp = controller->getIndContinuumAmp();
       Float64 continuumTplAmp = controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
       Float64 continuumTplAmpErr = -1.0; //controller->continuumAmpErr_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));
-      std::vector<Float64> polyCoeffs;
+      TFloat64List polyCoeffs;
       linemodel->setFitContinuum_tplAmplitude(continuumTplAmp, continuumTplAmpErr, polyCoeffs);
     }
 
@@ -129,8 +129,8 @@ int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
     //std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata *)data)->linemodel;
     CLineModelFitting* linemodel = ((struct lmfitdata *)data)->linemodel;
     CLmfitController* controller = ((struct lmfitdata *)data)->controller;
-    std::vector<Int32> elts_indexes = controller->getFilteredIdx();
-    std::vector<Int32> samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
+    TInt32List elts_indexes = controller->getFilteredIdx();
+    TInt32List samples_indexes = ((struct lmfitdata *)data)->linemodel_samples_indexes;
     Float64 normFactor = controller->getNormFactor();
     const Float64* observeGridContinuumFlux = ((struct lmfitdata *)data)->observeGridContinuumFlux;
 
@@ -141,7 +141,7 @@ int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
       linemodel->setRedshift(redshift ,false );
       if(!controller->isNoContinuum() && !controller->isContinuumFitted()){
         // a continuum is fit by linemodel , but not by lmfit
-          std::vector<Float64> polyCoeffs;
+          TFloat64List polyCoeffs;
          linemodel->setFitContinuum_tplAmplitude(linemodel->getFitContinuum_tplAmplitude(), linemodel->getFitContinuum_tplAmplitudeError(), polyCoeffs);
       }
     }
@@ -150,7 +150,7 @@ int lmfit_df (const gsl_vector * x, void *data, gsl_matrix * J)
       Int32 idxContinuumTplAmp = controller->getIndContinuumAmp();
       Float64 continuumTplAmp = controller->continuumAmp_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));///normFactor;
       Float64 continuumTplAmpErr = -1.0; //controller->continuumAmpErr_LmToModel(gsl_vector_get (x, idxContinuumTplAmp));
-      std::vector<Float64> polyCoeffs;
+      TFloat64List polyCoeffs;
       linemodel->setFitContinuum_tplAmplitude(continuumTplAmp, continuumTplAmpErr, polyCoeffs);
     }
 

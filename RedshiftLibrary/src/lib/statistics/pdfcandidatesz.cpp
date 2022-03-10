@@ -98,7 +98,7 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
     };
 
     // sort candidate keys (Ids) by decreasing redshifts
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
@@ -205,7 +205,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(TCandidateZbyRank & ranked_candidates
 {
 
     // sort m_candidates keys (Ids) by deacreasing integ proba
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }

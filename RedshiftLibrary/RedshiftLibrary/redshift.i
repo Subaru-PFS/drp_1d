@@ -203,7 +203,6 @@ static PyObject* pAmzException;
 typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
-typedef unsigned int Int32;
 
 const char* get_version();
 
@@ -297,10 +296,13 @@ typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
 typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Int32> TInt32List;
+typedef std::vector<std::string> TStringList;
+
 
 %template(TFloat64Range) CRange<Float64>;
 %template(TFloat64List) std::vector<Float64>;
 %template(TInt32List) std::vector<Int32>;
+%template(TStringList) std::vector<std::string>;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
@@ -749,10 +751,6 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
   Float64 sourcesize;
   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
 };
-
-typedef std::vector<std::string> TStringList;
-
-%template(TStringList) std::vector<std::string>;
 
 class CPhotometricData
 {

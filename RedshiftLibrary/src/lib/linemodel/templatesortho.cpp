@@ -103,7 +103,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     
     // check if log-sampled templates have changed and need ortho 
     bool need_ortho_logsampling = true;
-    std::vector<bool> samplingList {0,1};
+    TBoolList samplingList {0,1};
     if (!first_time_ortho && !differentLSF)
     {    
         tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
@@ -236,8 +236,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
         //get mtm and dtm cumulative vector and store it
-        std::vector<Float64> lbda;
-        std::vector<Float64> mtmCumul;
+        TFloat64List lbda;
+        TFloat64List mtmCumul;
         model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
 
 
