@@ -126,7 +126,7 @@ bool CRayCatalogsTplShape::GetCatalogVelocities(Int32 idx, Float64& elv, Float64
 bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList)
 {
     //first set all corresponding amplitudes to 0.0;
-    for( UInt32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
+    for( Int32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
     {
         Int32 nRays = LineModelElementList[iElts]->GetSize();
         TFloat64List thisCatLinesCorresp(nRays, 0.0); //is nRays cte among Elts?
@@ -146,7 +146,7 @@ bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
                 nominalAmp*=dustCoeff;
                 //find line in the elementList
                 Int32 nRays = LineModelElementList[iElts]->GetSize();
-                for(UInt32 j=0; j<nRays; j++){
+                for(Int32 j=0; j<nRays; j++){
 
                     if(LineModelElementList[iElts]->m_Rays[j].GetName() == currentCatalogLineList[kL].GetName())
                     {
@@ -158,13 +158,13 @@ bool CRayCatalogsTplShape::InitLineCorrespondingAmplitudes(const CLineModelEleme
     }
 
     //Now log the linesCorrespondingNominalAmp
-    for( UInt32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
+    for( Int32 iElts=0; iElts<LineModelElementList.size(); iElts++ )
     {
         for(Int32 k=0; k<GetCatalogsCount(); k++)
         {
 	  Log.LogDebug(Formatter()<<"log linesCorrespondingNominalAmp for "<<m_lineRatioCatalogs[k].getName()); 
             Int32 nRays = LineModelElementList[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++){
+            for(Int32 j=0; j<nRays; j++){
 	        Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k));
                 Float64 nomAmp = m_RayCatalogLinesCorrespondingNominalAmp[iElts][k][j];
                 std::string lineName = LineModelElementList[iElts]->m_Rays[j].GetName();
@@ -191,7 +191,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
     std::vector<Int32> mask;
     std::vector<Float64> bestFitAmplitudes;
     //bestFitAmplitudes.resize(restRayList.size());
-    for(UInt32 iCatalogs=0; iCatalogs<m_lineRatioCatalogs.size(); iCatalogs++)
+    for(Int32 iCatalogs=0; iCatalogs<m_lineRatioCatalogs.size(); iCatalogs++)
     {
         CRayCatalog::TRayVector currentCatalogLineList = m_lineRatioCatalogs[iCatalogs].GetList();
 
@@ -202,13 +202,13 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
 
         mask.resize(fittedAmplitudes.size());
 
-        for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
+        for( Int32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
         {
             if(fittedAmplitudes[iRestRay]>=0 && fittedErrors[iRestRay]>0)
             {
                 mask[iRestRay]=1;
                 Int32 iTplshapeRayFound = -1;
-                for(UInt32 itplshapeRay=0; itplshapeRay<currentCatalogLineList.size(); itplshapeRay++)
+                for(Int32 itplshapeRay=0; itplshapeRay<currentCatalogLineList.size(); itplshapeRay++)
                 {
                     std::string tplshapeRayName =  currentCatalogLineList[itplshapeRay].GetName();
                     std::string restRayName = restRayList[iRestRay].GetName();
@@ -254,7 +254,7 @@ Float64 CRayCatalogsTplShape::GetBestFit( const CRayCatalog::TRayVector& restRay
 
     //fill the corrected amplitudes vector
     Int32 iTplAmps = 0;
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
+    for( Int32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
     {
         if(mask[iRestRay]>0 && coeffMin>=0)
         {

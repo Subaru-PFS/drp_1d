@@ -70,7 +70,7 @@ public:
                TFloat64List tplshapesPriors);
    
     Int32 getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres, Float64 fitThres) const;
-    TBoolList getStrongLinesPresence( UInt32 filterType, const std::vector<CLineModelSolution>& linemodelsols ) const;
+    TBoolList getStrongLinesPresence( Int32 filterType, const std::vector<CLineModelSolution>& linemodelsols ) const;
     TBoolList getStrongestLineIsHa(const std::vector<CLineModelSolution>& linemodelsols ) const;
     TInt32List getNLinesAboveSnrcut(const std::vector<CLineModelSolution>& linemodelsols ) const;
 

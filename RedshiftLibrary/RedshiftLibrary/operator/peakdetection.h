@@ -65,7 +65,7 @@ class CPeakDetection
 
 public:
 
-    CPeakDetection( Float64 windowSize = 250.0, Float64 cut = 5.0, UInt32 medianSmoothHalfWidth = 1, UInt32 enlargeRate = 2.0 , Float64 detectionnoiseoffset=0.0);
+    CPeakDetection( Float64 windowSize = 250.0, Float64 cut = 5.0, Int32 medianSmoothHalfWidth = 1, Int32 enlargeRate = 2.0 , Float64 detectionnoiseoffset=0.0);
     ~CPeakDetection();
 
     std::shared_ptr<const CPeakDetectionResult> Compute( const CSpectrum& spectrum);
@@ -78,13 +78,13 @@ private:
 
     Float64 m_winsize;
     Float64 m_cut;
-    UInt32 m_medianSmoothHalfWidth;
-    UInt32 m_enlargeRate;
+    Int32 m_medianSmoothHalfWidth;
+    Int32 m_enlargeRate;
     Float64 m_detectionnoiseoffset;
 
     void FindPossiblePeaks(const CSpectrumAxis& smoothedFluxAxis, const CSpectrumSpectralAxis& spectralAxis, TInt32RangeList& peakList );
     void RedefineBorders( TInt32RangeList& peakList, const CSpectrumAxis& waves, const CSpectrumAxis& smoothFluxAxis, const CSpectrumAxis& fluxAxis );
-    TInt32Range FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, UInt32 enlargeRate, Int32 len );
+    TInt32Range FindGaussianFitStartAndStop( Int32 i, const TInt32RangeList& peaksBorders, Int32 enlargeRate, Int32 len );
     Float64 XMad( const TFloat64List::const_iterator &begin, const TFloat64List::const_iterator &end, Float64 median );
     Float64 XMad( const TFloat64List &x, Float64 median );
 

@@ -57,7 +57,7 @@ public:
         m_normalizePrior(normalizePrior), m_redshifts(redshifts) {};
     CZPrior(): CZPrior(false, {}) {};
 
-    TFloat64List GetConstantLogZPrior(UInt32 nredshifts) const;
+    TFloat64List GetConstantLogZPrior(Int32 nredshifts) const;
     TFloat64List GetStrongLinePresenceLogZPrior(const TBoolList & linePresence, const Float64 penalization_factor) const;
     TFloat64List GetNLinesSNRAboveCutLogZPrior(const TInt32List & nlinesAboveSNR, const Float64 penalization_factor) const;
     TFloat64List GetEuclidNhaLogZPrior(const TFloat64List & redshifts, const Float64 aCoeff) const;

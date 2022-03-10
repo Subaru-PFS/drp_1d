@@ -72,10 +72,10 @@ public:
     COperatorPdfz(const std::string & opt_combine,
                   Float64 peakSeparation = 0.0, // no minimal seaparation
                   Float64 meritcut = 0.0,  // no cut
-                  UInt32 maxCandidate=10, // max number of candidate at the end
+                  Int32 maxCandidate=10, // max number of candidate at the end
                   const std::string & Id_prefix="EXT",
                   bool allow_extrema_at_border=true,
-                  UInt32 maxPeakCount_per_window=0,  // <=0 will be set to maxCandidate (default to one window)
+                  Int32 maxPeakCount_per_window=0,  // <=0 will be set to maxCandidate (default to one window)
                   const std::vector<TFloat64List> & candidatesRedshifts = std::vector<TFloat64List>(1) ,
                   const TStringList & candidatesIds = TStringList(1)
                 );
@@ -122,8 +122,8 @@ private:
 
     const std::string m_opt_combine;
     TCandidateZRangebyID m_candidatesZRanges;
-    const UInt32 m_maxPeakCount_per_window;
-    const UInt32 m_maxCandidate;
+    const Int32 m_maxPeakCount_per_window;
+    const Int32 m_maxCandidate;
     const Float64  m_peakSeparation;
     const bool m_allow_extrema_at_border;
     const Float64  m_meritcut;

@@ -58,7 +58,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID & candidates):
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List & redshifts)
 {
-    for (UInt32 i =0; i<redshifts.size(); ++i)
+    for (Int32 i =0; i<redshifts.size(); ++i)
     {
         const std::string Id = "EXT" + to_string(i);
         m_candidates[Id].Redshift = redshifts[i];
@@ -237,7 +237,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
   //     -> use a DEBUG directive ? 
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {
@@ -377,7 +377,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {

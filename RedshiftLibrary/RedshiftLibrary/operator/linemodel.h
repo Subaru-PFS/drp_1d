@@ -104,7 +104,7 @@ public:
                            const std::string &opt_continuumreest="no",
                            const std::string &opt_rules="all",
                            const bool &opt_velocityFitting=false,
-                           const UInt32 &opt_twosteplargegridstep_ratio=10,
+                           const Int32 &opt_twosteplargegridstep_ratio=10,
                            const string &opt_twosteplargegridsampling="log",
                            const std::string &opt_rigidity="rules",
                            const Float64 opt_haprior = -1.);

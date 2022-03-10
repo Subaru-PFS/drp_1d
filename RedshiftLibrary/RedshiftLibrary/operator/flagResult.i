@@ -43,8 +43,8 @@ class CFlagLogResult : public COperatorResult
   CFlagLogResult();
 
     ~CFlagLogResult() = default;
-    CFlagLogResult(UInt32 flagValue, TWarningMsgList msgList);
+    CFlagLogResult(Int32 flagValue, TWarningMsgList msgList);
 
-    UInt32         flagValue;
+    Int32         flagValue;
     TWarningMsgList msgList;
 };

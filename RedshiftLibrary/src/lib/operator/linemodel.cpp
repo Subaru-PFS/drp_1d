@@ -126,7 +126,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const std::string &opt_continuumreest,
                                            const std::string &opt_rules,
                                            const bool &opt_velocityFitting,
-                                           const UInt32 &opt_twosteplargegridstep_ratio,
+                                           const Int32 &opt_twosteplargegridstep_ratio,
                                            const string &opt_twosteplargegridsampling,
                                            const std::string &opt_rigidity,
                                            const Float64 opt_haprior)
@@ -373,7 +373,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     //    (std::shared_ptr<CSpectraFluxResult>) new CSpectraFluxResult();
     //    baselineResult->m_optio = 0;
     //    const CSpectrum& modelSpc = model.GetModelSpectrum();
-    //    UInt32 len = modelSpc.GetSampleCount();
+    //    Int32 len = modelSpc.GetSampleCount();
 
     //    baselineResult->fluxes.resize(len);
     //    baselineResult->wavel.resize(len);
@@ -624,7 +624,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     const std::vector<Float64> & redshiftsTplFit = tplfitStore->GetRedshiftList();
     Log.LogInfo("COperatorLineModel::PrecomputeContinuumFit: continuum tpl redshift list n=%d",redshiftsTplFit.size());
 
-    for(UInt32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
+    for(Int32 kztplfit=0; kztplfit<std::min(Int32(redshiftsTplFit.size()), Int32(10)); kztplfit++)
     {
         Log.LogDebug("COperatorLineModel::PrecomputeContinuumFit: continuum tpl redshift list[%d] = %f",
                     kztplfit,
@@ -689,7 +689,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
                 boost::chrono::thread_clock::now();
 
         maskList.resize(redshiftsTplFit.size());
-        for(UInt32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
+        for(Int32 kztplfit=0; kztplfit<redshiftsTplFit.size(); kztplfit++)
         {
             m_model->initModelAtZ(redshiftsTplFit[kztplfit], clampedlambdaRange, fftprocessing?logSampledSpectrum.GetSpectralAxis():spectrum.GetSpectralAxis());
             maskList[kztplfit]=m_model->getOutsideLinesMask();
@@ -729,12 +729,12 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     }          
 
     bool found = false; 
-    for (UInt32 i = 0; i < m_tplCategoryList.size(); i++)
+    for (Int32 i = 0; i < m_tplCategoryList.size(); i++)
     {
         std::string category = m_tplCategoryList[i];
         Log.LogDebug(Formatter()<<"Processing "<< tplCatalog.GetTemplateCount(category) << " templates");
 
-        for (UInt32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
+        for (Int32 j = 0; j < tplCatalog.GetTemplateCount(category); j++)
         {
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate(category, j);
             Log.LogDebug(Formatter()<<"Processing tpl "<< tpl->GetName());
@@ -792,7 +792,7 @@ COperatorLineModel::PrecomputeContinuumFit( const CSpectrum &spectrum,
     {
         Float64 redshift = redshiftsTplFit[i];
 
-        for (UInt32 j = 0; j < chisquareResultsAllTpl.size(); j++)
+        for (Int32 j = 0; j < chisquareResultsAllTpl.size(); j++)
         {
             const auto &chisquareResult = chisquareResultsAllTpl[j];
 
@@ -1405,7 +1405,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                             CSpectraFluxResult>)new CSpectraFluxResult();
                     const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
-                    UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+                    Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
                     baselineResult->fluxes.resize(len);
                     baselineResult->wavel.resize(len);
@@ -1586,7 +1586,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                          CSpectraFluxResult>)new CSpectraFluxResult();
                  const CSpectrumFluxAxis &modelContinuumFluxAxis =
                         m_model->GetModelContinuum();
-                UInt32 len = modelContinuumFluxAxis.GetSamplesCount();
+                Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
                 baselineResult_lmfit->fluxes.resize(len);
                 baselineResult_lmfit->wavel.resize(len);

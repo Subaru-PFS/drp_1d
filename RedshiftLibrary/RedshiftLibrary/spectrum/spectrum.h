@@ -122,7 +122,7 @@ public:
     void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
     void                            SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
 
-    UInt32                          GetSampleCount() const;
+    Int32                          GetSampleCount() const;
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
@@ -210,7 +210,7 @@ protected:
 };
 
 inline
-UInt32 CSpectrum::GetSampleCount() const
+Int32 CSpectrum::GetSampleCount() const
 {
     return m_SpectralAxis.GetSamplesCount();
 }

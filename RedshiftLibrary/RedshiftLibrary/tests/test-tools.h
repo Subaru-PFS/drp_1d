@@ -55,26 +55,26 @@ enum TGenerationKind
   RANDOM, FLAT // Spectra
 };
 
-void generate_spectrum(NSEpic::CSpectrum &spectrum, NSEpic::UInt32 size,
+void generate_spectrum(NSEpic::CSpectrum &spectrum, NSEpic::Int32 size,
                        NSEpic::Float64 lambda_min, NSEpic::Float64 lambda_max,
                        NSEpic::Float64 mean=0.34,
                        TGenerationKind kind=RANDOM);
-boost::filesystem::path generate_spectrum_fits(NSEpic::UInt32 size,
+boost::filesystem::path generate_spectrum_fits(NSEpic::Int32 size,
                                                NSEpic::Float64 lambda_min,
                                                NSEpic::Float64 lambda_max,
                                                NSEpic::Float64 mean=0,
                                                TGenerationKind kind=RANDOM);
-boost::filesystem::path generate_noise_fits(NSEpic::UInt32 size,
+boost::filesystem::path generate_noise_fits(NSEpic::Int32 size,
                                             NSEpic::Float64 lambda_min,
                                             NSEpic::Float64 lambda_max,
                                             NSEpic::Float64 mean=0,
                                             TGenerationKind kind=RANDOM);
 boost::filesystem::path generate_bogus_fits_file();
 boost::filesystem::path generate_linecatalog_file(TGenerationKind kind);
-void generate_template(NSEpic::CTemplate &_template, NSEpic::UInt32 size,
+void generate_template(NSEpic::CTemplate &_template, NSEpic::Int32 size,
                        NSEpic::Float64 lambda_min, NSEpic::Float64 lambda_max);
 void generate_template_catalog(NSEpic::CTemplateCatalog &catalog,
-                               NSEpic::UInt32 template_size,
+                               NSEpic::Int32 template_size,
                                NSEpic::Float64 lambda_min,
                                NSEpic::Float64 lambda_max);
 boost::filesystem::path generate_calibration_dir();

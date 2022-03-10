@@ -76,7 +76,7 @@ CSpectrum::CSpectrum(const CSpectrum& other, const TFloat64List& mask):
     m_spcType(other.m_spcType),
     m_LSF(other.m_LSF),
     alreadyRemoved(other.alreadyRemoved),
-    m_SpectralAxis(UInt32(0), other.m_SpectralAxis.IsInLogScale())
+    m_SpectralAxis(Int32(0), other.m_SpectralAxis.IsInLogScale())
 {
     const CSpectrumNoiseAxis    &otherRawError = other.m_RawFluxAxis.GetError(),
                                 &otherContinuumError = other.m_ContinuumFluxAxis.GetError(),
@@ -810,7 +810,7 @@ bool CSpectrum::Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& 
     
     if(!IsValid()) throw GlobalException(INVALID_SPECTRUM,"Invalid spectrum with empty axes, non-matching size or unsorted spectral axis");
         
-    UInt32 s = targetSpectralAxis.GetSamplesCount();
+    Int32 s = targetSpectralAxis.GetSamplesCount();
     TFloat64Range logIntersectedLambdaRange( log( range.GetBegin() ), log( range.GetEnd() ) );
     TFloat64Range currentRange = logIntersectedLambdaRange;
     if(m_SpectralAxis.IsInLinearScale() != targetSpectralAxis.IsInLinearScale() ){

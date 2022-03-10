@@ -57,14 +57,14 @@ public:
     CLogHandler();
     virtual ~CLogHandler();
 
-    void    SetLevelMask( UInt32 mask );
-    UInt32  GetLevelMask() const;
+    void    SetLevelMask( Int32 mask );
+    Int32  GetLevelMask() const;
 
-    virtual void LogEntry( UInt32 lvl, const char* header, const char* msg ) = 0;
+    virtual void LogEntry( Int32 lvl, const char* header, const char* msg ) = 0;
 
 private:
 
-    UInt32      m_LevelMask;
+    Int32      m_LevelMask;
     CLog     &  m_Logger;
 
 };

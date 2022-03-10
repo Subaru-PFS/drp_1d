@@ -57,10 +57,10 @@ public:
     
     void                    Add( const std::shared_ptr<CTemplate> & tpl);
 
-    std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, UInt32 i ) const;
+    std::shared_ptr<const CTemplate>        GetTemplate( const std::string& category, Int32 i ) const;
     std::shared_ptr<const CTemplate>        GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const;
-    void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  UInt32 i);
-    void    ClearTemplates(const std::string & category,  bool opt_ortho, bool opt_logsampling, UInt32 i, bool alltemplates=false);
+    void    SetTemplate( const std::shared_ptr<CTemplate> & tpl,  Int32 i);
+    void    ClearTemplates(const std::string & category,  bool opt_ortho, bool opt_logsampling, Int32 i, bool alltemplates=false);
     void    ClearTemplateList(const std::string & category,  bool opt_ortho, bool opt_logsampling);
     void    resetCatalogState() const {m_logsampling=0;m_orthogonal=0;};
     
@@ -69,9 +69,9 @@ public:
     
     static TTemplateConstRefList const_TTemplateRefList_cast(const TTemplateRefList & list);
     TStringList             GetCategoryList() const;
-    UInt32                  GetTemplateCount( const std::string& category ) const;
-    UInt32                  GetTemplateCount( const std::string& category,bool opt_ortho, bool opt_logsampling  ) const;
-    UInt32                  GetNonNullTemplateCount( const std::string& category ) const;
+    Int32                  GetTemplateCount( const std::string& category ) const;
+    Int32                  GetTemplateCount( const std::string& category,bool opt_ortho, bool opt_logsampling  ) const;
+    Int32                  GetNonNullTemplateCount( const std::string& category ) const;
     void                    InitContinuumRemoval(const std::shared_ptr<const CParameterStore> &parameterStore);
     void                    InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                        const std::shared_ptr<const CLSF>& lsf);
@@ -82,7 +82,7 @@ private:
     // this const version must stay private, since it returns non const templates.
     TTemplateRefList GetTemplateList_( const TStringList& categoryList ) const; 
 
-    UInt32 GetNonNullTemplateCount( const std::string& category, bool opt_ortho, bool opt_logsampling ) const;
+    Int32 GetNonNullTemplateCount( const std::string& category, bool opt_ortho, bool opt_logsampling ) const;
 
           TTemplatesRefDict &    GetList();
     const TTemplatesRefDict &    GetList() const;
@@ -100,7 +100,7 @@ private:
  * Returns the contents of the i-th entry in the category item of m_List.
  */
 inline 
-std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, UInt32 i ) const
+std::shared_ptr<const CTemplate> CTemplateCatalog::GetTemplate( const std::string& category, Int32 i ) const
 {
     return GetList().at( category ).at(i);   
 }
@@ -146,7 +146,7 @@ TTemplatesRefDict & CTemplateCatalog::GetList()
 }
 
 inline
-UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category) const
+Int32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category) const
 {
     return GetNonNullTemplateCount(category, m_orthogonal, m_logsampling);
 }

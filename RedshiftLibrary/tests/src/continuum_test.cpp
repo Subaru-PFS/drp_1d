@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(median_test)
     // i = 0 : n_points = 2 in CMedian::Find
     BOOST_CHECK(y_out[0] == (y_in[0]+y_in[1])/(n_points-1));
     // i in [1,9] : n_points =3 in CMedian::Find
-    for(UInt32 i=1; i<y_out.size()-1; i++ ){
+    for(Int32 i=1; i<y_out.size()-1; i++ ){
         BOOST_CHECK(y_out[i] == y_in[i]);
     }
     // i = 10 : n_points = 2 in CMedian::Find
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(median_test)
     BOOST_CHECK(y_out[0] == (y_in[0]+y_in[1])/(n_points-1));
     // i in [1,9] : n_points = 3 in CMedian::Find
     TFloat64List y_in_sorted(3);
-    for(UInt32 i=1; i<y_out.size()-1; i++ ){
+    for(Int32 i=1; i<y_out.size()-1; i++ ){
         std::copy(y_in.begin()+(i-1), y_in.begin()+(i+2), y_in_sorted.begin());
         std::sort(y_in_sorted.begin(), y_in_sorted.end());
         BOOST_CHECK(y_out[i] == y_in_sorted[1]);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(mean_test)
     y_out = sample.MeanSmooth(y_in, n_range);
     BOOST_TEST_MESSAGE("n_range = 2");
     BOOST_CHECK(y_out.front() == y_in.front());
-    for(UInt32 i=1; i<y_out.size(); i++ ){
+    for(Int32 i=1; i<y_out.size(); i++ ){
         BOOST_CHECK(y_out[i] == (y_in[i]+y_in[i-1]) / n_range);
     }
     print_flux(y_out);
@@ -223,17 +223,17 @@ BOOST_AUTO_TEST_CASE(evenMirror_test)
     // first part    
     copy(y_in.begin(),y_in.begin()+Nreflex, y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i] == y_rev[i]);
     }
     // second part
-    for(UInt32 i=0; i<N; i++ ){
+    for(Int32 i=0; i<N; i++ ){
         BOOST_CHECK(y_out[i+Nreflex] == y_in[i]);
     }
     // third part
     copy(y_in.end()-Nreflex,y_in.end(), y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i+N+Nreflex] == y_rev[i]);
     }
     print_flux(y_out);
@@ -249,17 +249,17 @@ BOOST_AUTO_TEST_CASE(evenMirror_test)
     // first part    
     copy(y_in.begin(),y_in.begin()+Nreflex, y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i] == y_rev[i]);
     }
     // second part
-    for(UInt32 i=0; i<N; i++ ){
+    for(Int32 i=0; i<N; i++ ){
         BOOST_CHECK(y_out[i+Nreflex] == y_in[i]);
     }
     // third part
     copy(y_in.end()-Nreflex,y_in.end(), y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i+N+Nreflex] == y_rev[i]);
     }
     print_flux(y_out);
@@ -287,17 +287,17 @@ BOOST_AUTO_TEST_CASE(oddMirror_test)
     // first part    
     copy(y_in.begin(),y_in.begin()+Nreflex, y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i] == 2*y_in.front()-y_rev[i]);
     }
     // second part
-    for(UInt32 i=0; i<N; i++ ){
+    for(Int32 i=0; i<N; i++ ){
         BOOST_CHECK(y_out[i+Nreflex] == y_in[i]);
     }
     // third part
     copy(y_in.end()-Nreflex,y_in.end(), y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i+N+Nreflex] == 2*y_in.back()-y_rev[i]);
     }
     print_flux(y_out);
@@ -313,17 +313,17 @@ BOOST_AUTO_TEST_CASE(oddMirror_test)
     // first part    
     copy(y_in.begin(),y_in.begin()+Nreflex, y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i] == 2*y_in.front()-y_rev[i]);
     }
     // second part
-    for(UInt32 i=0; i<N; i++ ){
+    for(Int32 i=0; i<N; i++ ){
         BOOST_CHECK(y_out[i+Nreflex] == y_in[i]);
     }
     // third part
     copy(y_in.end()-Nreflex,y_in.end(), y_rev.begin());
     reverse(y_rev.begin(),y_rev.end());
-    for(UInt32 i=0; i<Nreflex; i++ ){
+    for(Int32 i=0; i<Nreflex; i++ ){
         BOOST_CHECK(y_out[i+N+Nreflex] == 2*y_in.back()-y_rev[i]);
     }
     print_flux(y_out);

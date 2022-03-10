@@ -57,7 +57,7 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
                         const Float64 velocityAbsorption,
                         std::vector<Float64> nominalAmplitudes,
                         Float64 nominalWidth,//corresponds to the lsf of type constant width
-                        std::vector<UInt32> catalogIndexes ) : 
+                        std::vector<Int32> catalogIndexes ) : 
     m_Rays(rs),
     m_fittingGroupInfo("-1"),
     m_NominalWidth(nominalWidth),
@@ -98,7 +98,7 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
     }
 
     std::transform( catalogIndexes.begin(), catalogIndexes.end(), std::back_inserter(m_LineCatalogIndexes), 
-                    [](UInt32 i){ return Int32(i);});
+                    [](Int32 i){ return Int32(i);});
 
     for(Int32 k2=0; k2<nRays; k2++)
     {
@@ -118,7 +118,7 @@ const std::string & CLineModelElement::GetElementTypeTag() const
 Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const
 {
     Int32 idx = undefIdx;
-    for( UInt32 iElts=0; iElts<m_LineCatalogIndexes.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_LineCatalogIndexes.size(); iElts++ )
     {
         if(m_LineCatalogIndexes[iElts] == LineCatalogIndex){
             idx = iElts;
@@ -280,7 +280,7 @@ void CLineModelElement::resetAsymfitParams()
         m_Rays[i].resetAsymFitParams();
 }
 
-const TAsymParams CLineModelElement::GetAsymfitParams(UInt32 idx) const
+const TAsymParams CLineModelElement::GetAsymfitParams(Int32 idx) const
 {
     if(!m_asymLineIndices.size())
         return {NAN, NAN, NAN};//case where no asymprofile in linecatalog
@@ -1376,7 +1376,7 @@ Int32 CLineModelElement::findElementIndex(const std::string& LineTagStr) const
 {
     Int32 idx = undefIdx;
     Int32 rays = m_Rays.size();
-    for( UInt32 iElts=0; iElts<rays; iElts++ )
+    for( Int32 iElts=0; iElts<rays; iElts++ )
     {
         std::string name = m_Rays[iElts].GetName();
         std::size_t foundstra = name.find(LineTagStr.c_str());

@@ -55,12 +55,12 @@ namespace NSEpic
 
     std::vector<Int32> m_elementsDisabledIndexes;
    
-    std::vector<UInt32> GetModelValidElementsIndexes() const;
+    std::vector<Int32> GetModelValidElementsIndexes() const;
 
     void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
     Float64 GetElementAmplitude(Int32 j) const;
 
-    std::vector<UInt32> getOverlappingElements(UInt32 ind , const std::vector<UInt32> & excludedInd,Float64 redshift, Float64 overlapThres) const;
+    std::vector<Int32> getOverlappingElements(Int32 ind , const std::vector<Int32> & excludedInd,Float64 redshift, Float64 overlapThres) const;
 
     Int32 GetModelValidElementsNDdl() const;
     Int32 GetModelNonZeroElementsNDdl() const;
@@ -75,12 +75,12 @@ namespace NSEpic
                           Int32& lineIdx) const;
     Int32 findElementIndex(Int32 LineCatalogIndex, 
                            Int32& lineIdx) const;
-    Float64 getModelErrorUnderElement( UInt32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis) const;
+    Float64 getModelErrorUnderElement( Int32 eltId,const CSpectrumFluxAxis& spcFluxAxis,const CSpectrumFluxAxis& modelFluxAxis) const;
 
-    std::vector<UInt32> getSupportIndexes(const std::vector<UInt32> & EltsIdx) const;
+    std::vector<Int32> getSupportIndexes(const std::vector<Int32> & EltsIdx) const;
 
-    Int32 getIndexAmpOffset(UInt32 index) const;
-    void setAmplitudeOffsetsCoeffsAt(UInt32 index, const TPolynomCoeffs& line_polynomCoeffs);
+    Int32 getIndexAmpOffset(Int32 index) const;
+    void setAmplitudeOffsetsCoeffsAt(Int32 index, const TPolynomCoeffs& line_polynomCoeffs);
     Int32 prepareAmplitudeOffset();
     bool addToSpectrumAmplitudeOffset(const CSpectrumSpectralAxis& spectralAxis,CSpectrumFluxAxis &modelfluxAxis) const;
 
@@ -90,10 +90,10 @@ namespace NSEpic
 
     void debug(std::ostream& os) const;
     
-    const std::shared_ptr<const CLineModelElement> operator[](UInt32 i) const {return m_Elements[i];}
-    std::shared_ptr<CLineModelElement> &operator[](UInt32 i) {return m_Elements[i];}
+    const std::shared_ptr<const CLineModelElement> operator[](Int32 i) const {return m_Elements[i];}
+    std::shared_ptr<CLineModelElement> &operator[](Int32 i) {return m_Elements[i];}
 
-    UInt32 size() const {return m_Elements.size();}
+    Int32 size() const {return m_Elements.size();}
     void push_back(const std::shared_ptr<CLineModelElement> &elt){ m_Elements.push_back(elt);}
   };
 }

@@ -46,9 +46,9 @@ using namespace std;
 #include <fstream>
 
 CRay::CRay(const string& name,
-           Float64 pos, UInt32 type,
+           Float64 pos, Int32 type,
            CLineProfile_ptr &&profile,
-           UInt32 force,
+           Int32 force,
            Float64 amp,
            Float64 width,
            Float64 cut ,
@@ -80,9 +80,9 @@ CRay::CRay(const string& name,
 
 CRay::CRay(const string& name,
         Float64 pos,
-        UInt32 type,
+        Int32 type,
         CLineProfile_ptr &&profile,
-        UInt32 force,
+        Int32 force,
         Float64 velocityOffset,
         bool enableVelocityOffsetFitting,
         const std::string& groupName,

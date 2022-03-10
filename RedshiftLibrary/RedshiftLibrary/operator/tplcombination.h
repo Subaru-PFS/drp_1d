@@ -143,7 +143,7 @@ private:
     Float64 ComputeXi2_bruteForce(const CSpectrumFluxAxis& correctedFlux, 
                                   const CSpectrumFluxAxis& spcFluxAxis,
                                   const Int32 imin_lbda);
-    Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n);
+    Float64 GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, Int32 kStart, Int32 n);
 };
 
 

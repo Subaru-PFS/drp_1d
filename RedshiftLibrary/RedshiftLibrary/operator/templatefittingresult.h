@@ -53,11 +53,11 @@ class CTemplateFittingResult : public COperatorResult
 
 public:
 
-    void Init( UInt32 n);
-    void Init( UInt32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
+    void Init( Int32 n);
+    void Init( Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
     void InitIntermediate(Int32 EbmvListSize, Int32 MeiksinListSize);
 
-    void set_at_redshift(const UInt32 i, const TFittingIsmIgmResult val);
+    void set_at_redshift(const Int32 i, const TFittingIsmIgmResult val);
 
     TFloat64List            Redshifts;
 

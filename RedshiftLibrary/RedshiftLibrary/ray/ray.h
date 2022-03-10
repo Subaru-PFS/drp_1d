@@ -76,9 +76,9 @@ public:
 
     CRay() = default;
     CRay( const std::string& name,
-          Float64 pos, UInt32 type,
+          Float64 pos, Int32 type,
           CLineProfile_ptr &&profile,
-          UInt32 force,
+          Int32 force,
           Float64 amp=-1.0,
           Float64 width=-1.0,
           Float64 cut=-1.0,
@@ -90,9 +90,9 @@ public:
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
     CRay( const std::string& name,
-          Float64 pos, UInt32 type,
+          Float64 pos, Int32 type,
           CLineProfile_ptr &&profile,
-          UInt32 force,
+          Int32 force,
 	  Float64 velocityOffset ,
 	  bool enableVelocityOffsetFitting,
           const std::string& groupName,

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrumFluxAxis object_FluxAxis;
   BOOST_CHECK(object_FluxAxis.GetSamplesCount() == 0);
 
-  UInt32 n = 10;
+  Int32 n = 10;
   CSpectrumFluxAxis object_FluxAxis2(n);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == n);
 
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   int indice = 0;
   bool sub;
 
-  for (UInt32 i = 0; i < 10; i++)
+  for (Int32 i = 0; i < 10; i++)
     {
       object_FluxAxisA.GetSamples()[i] = object_FluxAxisA.GetSamples()[i] - object_FluxAxisB.GetSamples()[i];
       indice++;
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   int indice2 = 0;
   bool inv;
 
-  for (UInt32 i = 0; i < 10; i++)
+  for (Int32 i = 0; i < 10; i++)
     {
       object_FluxAxisA.GetSamples()[i] = -object_FluxAxisA.GetSamples()[i];
 

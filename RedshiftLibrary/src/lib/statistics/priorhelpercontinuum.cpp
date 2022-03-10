@@ -95,7 +95,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     std::vector<std::string> AGaussMeanfilesPathList;
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -110,7 +110,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     std::vector<std::string> AGaussSigmafilesPathList;
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -129,7 +129,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
 
 
     //set the template names
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -137,7 +137,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     //read the EZT data from files
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fPathStr = (fPath).string();
@@ -156,7 +156,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
 
 
     //read the AGaussMean data from files
-    for(UInt32 k=0; k<AGaussMeanfilesPathList.size(); k++)
+    for(Int32 k=0; k<AGaussMeanfilesPathList.size(); k++)
     {
         bfs::path fPath = AGaussMeanfilesPathList[k];
         std::string fPathStr = (fPath).string();
@@ -174,7 +174,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     //read the AGaussSigma data from files
-    for(UInt32 k=0; k<AGaussSigmafilesPathList.size(); k++)
+    for(Int32 k=0; k<AGaussSigmafilesPathList.size(); k++)
     {
         bfs::path fPath = AGaussSigmafilesPathList[k];
         std::string fPathStr = (fPath).string();
@@ -200,16 +200,16 @@ bool CPriorHelperContinuum::SetBeta(Float64 beta)
     return true;
 }
 
-bool CPriorHelperContinuum::SetSize(UInt32 size)
+bool CPriorHelperContinuum::SetSize(Int32 size)
 {
     m_data.clear();
-    for(UInt32 k=0; k<size; k++)
+    for(Int32 k=0; k<size; k++)
     {
         TPriorZEList _zelist;
-        for(UInt32 kz=0; kz<m_nZ; kz++)
+        for(Int32 kz=0; kz<m_nZ; kz++)
         {
             std::vector<SPriorTZE> _elist;
-            for(UInt32 ke=0; ke<m_nEbv; ke++)
+            for(Int32 ke=0; ke<m_nEbv; ke++)
             {
                 SPriorTZE _tze;
                 _elist.push_back(_tze);
@@ -225,7 +225,7 @@ bool CPriorHelperContinuum::SetSize(UInt32 size)
 }
 
 
-bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
+bool CPriorHelperContinuum::SetTNameData(Int32 k, std::string tname)
 {
     if(k>=m_tplnames.size())
     {
@@ -235,16 +235,16 @@ bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
     return true;
 }
 
-bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_data)
+bool CPriorHelperContinuum::SetEZTData(Int32 k, std::vector<std::vector<Float64>> ezt_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetEZTData failed for k="<<k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].logpriorTZE = ezt_data[kz][ke];
         }
@@ -253,16 +253,16 @@ bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data)
+bool CPriorHelperContinuum::SetAGaussmeanData(Int32 k, std::vector<std::vector<Float64>> agaussmean_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgaussmeanData failed for k="<< k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].A_mean = agaussmean_data[kz][ke];
         }
@@ -271,16 +271,16 @@ bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data)
+bool CPriorHelperContinuum::SetAGausssigmaData(Int32 k, std::vector<std::vector<Float64>> agausssigma_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgausssigmaData failed for k="<<k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].A_sigma = agausssigma_data[kz][ke];
         }
@@ -312,7 +312,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
 
                 std::vector<Float64> lineVals;
                 std::istringstream iss( line );
-                for(UInt32 icol=0; icol<m_nEbv; icol++)
+                for(Int32 icol=0; icol<m_nEbv; icol++)
                 {
                     Float64 x;
                     iss >> x;
@@ -374,7 +374,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
     }
 
     //find idx for tplname
-    UInt32 idx=-1;
+    Int32 idx=-1;
     for(Int32 k=0; k<m_tplnames.size(); k++)
     {
         std::size_t foundstra = m_tplnames[k].find(tplname.c_str());
@@ -420,7 +420,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
            Log.LogDetail("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
        }
        TPriorEList dataz = m_data[idx][idz];
-       for(UInt32 icol=0; icol<m_nEbv; icol++)
+       for(Int32 icol=0; icol<m_nEbv; icol++)
        {
            if(verbose)
            {

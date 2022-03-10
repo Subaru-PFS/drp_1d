@@ -95,7 +95,7 @@ bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
 
     // check if only weak lines are in this solution set
     Int32 nStrong=0;
-    for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
+    for( Int32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         bool found  = matchingSolutionSet[i].RestRay.GetIsStrong();
         if(found==1){
@@ -110,7 +110,7 @@ bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     CRayCatalog::TRayVector strongRestRayList = m_RestCatalog.GetFilteredList(CRay::nType_Emission, CRay::nForce_Strong);
     CRayCatalog::TRayVector strongRestRaysInsideLambdaRangeList;
     Int32 ncatalog = strongRestRayList.size();
-    for( UInt32 c=0; c<ncatalog; c++ )
+    for( Int32 c=0; c<ncatalog; c++ )
     {
         Float64 lambda = strongRestRayList[c].GetPosition()*(1+z);
         if( lambda >= m_lambdaRange.GetBegin() && lambda <= m_lambdaRange.GetEnd() ){
@@ -127,7 +127,7 @@ bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     Float64 maxSnrWeak = 0.0;
     Float64 maxNoiseWeak = 0.0;
 
-    for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
+    for( Int32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         Float64 lambda = matchingSolutionSet[i].RestRay.GetPosition()*(1+z);
         TFloat64Range lambdarange(lambda-m_winsize/2.0, lambda+m_winsize/2.0);
@@ -145,7 +145,7 @@ bool CRules::checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
         }
     }
     //estimate the strong lines SNR
-    for( UInt32 c=0; c<strongRestRaysInsideLambdaRangeList.size(); c++ )
+    for( Int32 c=0; c<strongRestRaysInsideLambdaRangeList.size(); c++ )
     {
         Float64 lambda = strongRestRaysInsideLambdaRangeList[c].GetPosition()*(1+z);
         TFloat64Range lambdarange(lambda-m_winsize/2.0, lambda+m_winsize/2.0);
@@ -176,7 +176,7 @@ bool CRules::checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     Int32 founda=0;
     Int32 foundb=0;
     linetags ltags;
-    for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
+    for( Int32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
         std::size_t foundstra = name.find(ltags.oIIIa_em);
@@ -211,7 +211,7 @@ bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
     linetags ltags;
 
     //Float64 z = CRayMatchingResult::GetMeanRedshiftSolution(matchingSolutionSet);
-    for( UInt32 i=0; i<matchingSolutionSet.size(); i++ )
+    for( Int32 i=0; i<matchingSolutionSet.size(); i++ )
     {
         std::string name = matchingSolutionSet[i].RestRay.GetName();
         std::size_t foundstr = name.find(ltags.hbeta_em);
@@ -237,7 +237,7 @@ bool CRules::checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSo
 Float64 CRules::getRestRayLambda(std::string nametag){
     CRayCatalog::TRayVector restRayList = m_RestCatalog.GetFilteredList();
     Int32 ncatalog = restRayList.size();
-    for( UInt32 c=0; c<ncatalog; c++ )
+    for( Int32 c=0; c<ncatalog; c++ )
     {
         std::string name = restRayList[c].GetName();
         std::size_t foundstr = name.find(nametag.c_str());

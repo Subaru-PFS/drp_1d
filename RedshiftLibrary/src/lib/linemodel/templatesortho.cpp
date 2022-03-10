@@ -112,11 +112,11 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
             // check if logsampling has changed and thus need orthogonalization  
             // has it changed for all or some templates ? (if changed, the orthog template will be cleared)
             tplCatalog->m_orthogonal = 1;
-            UInt32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category); 
+            Int32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category); 
             if ( tpl_log_ortho_count> 0) //log-ortho list still there
             {
                 // check if ortho missing for some templates only
-                UInt32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
+                Int32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
                 if (nonNullCount == tpl_log_ortho_count) need_ortho_logsampling = false; //no need to recompute ortho
             }
         }
@@ -255,7 +255,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
         const CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
         CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
-        for(UInt32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
+        for(Int32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
             continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
         }
         tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));

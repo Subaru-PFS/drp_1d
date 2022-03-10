@@ -68,11 +68,11 @@ public:
     CSpectrumSpectralAxis(const CSpectrumAxis & other):CSpectrumAxis (other){};
     CSpectrumSpectralAxis(CSpectrumAxis && other):CSpectrumAxis (std::move(other)){};
 
-    CSpectrumSpectralAxis( UInt32 n, bool isLogScale = false);
-    CSpectrumSpectralAxis( UInt32 n, Float64 value);
+    CSpectrumSpectralAxis( Int32 n, bool isLogScale = false);
+    CSpectrumSpectralAxis( Int32 n, Float64 value);
     CSpectrumSpectralAxis( const TFloat64List & samples, bool isLogScale=false, std::string AirVacuum="" );
     CSpectrumSpectralAxis( TFloat64List && samples, bool isLogScale=false, std::string AirVacuum="" );
-    CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="");
+    CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum="");
     CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origin, Float64 redshift, EShiftDirection direction );
     CSpectrumSpectralAxis& operator*=(const Float64 op) override;
     CSpectrumSpectralAxis   extract(Int32 startIdx, Int32 endIdx) const;
@@ -104,14 +104,14 @@ public:
     bool                IsLogSampled()const;
     Float64             GetlogGridStep() const;
     void                RecomputePreciseLoglambda();
-    TFloat64List        GetSubSamplingMask(UInt32 ssratio) const;
-    TFloat64List        GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const;
-    TFloat64List        GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const;
-    UInt32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
+    TFloat64List        GetSubSamplingMask(Int32 ssratio) const;
+    TFloat64List        GetSubSamplingMask(Int32 ssratio, TFloat64Range lambdarange) const;
+    TFloat64List        GetSubSamplingMask(Int32 ssratio, const TInt32Range & ilbda) const;
+    Int32              GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const;
     bool                isSorted() const;
 
     void                MaskAxis(const TFloat64List& mask, CSpectrumSpectralAxis& maskedAxis) const;
-    void                SetSize( UInt32 s ) override;
+    void                SetSize( Int32 s ) override;
 private:
 
     mutable Float64     m_regularLogSamplingStep = NAN; //sampling log step with which sampling was validated in CheckLoglambdaSampling 

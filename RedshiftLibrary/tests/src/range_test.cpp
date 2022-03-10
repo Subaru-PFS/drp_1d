@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval)
     //    myVector.resize(15);
     
 
-    for(UInt32 i = 0; i < myVector.size(); i++)
+    for(Int32 i = 0; i < myVector.size(); i++)
     {
         myVector[i] = 1 + delta * i;
     }
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(Closed_interval)
 {
     Float64 delta = 1.0;
     std::vector<Float64> myVector(15);
-    for(UInt32 i = 0; i < myVector.size(); i++)
+    for(Int32 i = 0; i < myVector.size(); i++)
     {
         myVector[i] = 1 + delta * i;
     }

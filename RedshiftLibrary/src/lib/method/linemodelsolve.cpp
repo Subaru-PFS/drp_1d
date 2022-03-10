@@ -431,7 +431,7 @@ TFloat64List CLineModelSolve::BuildZpriors( const std::shared_ptr<const CLineMod
     if(zPriorStrongLinePresence)
     {
         if (kTplShape==-1){
-            UInt32 lineTypeFilter = 1;// for emission lines only
+            Int32 lineTypeFilter = 1;// for emission lines only
             const TBoolList strongLinePresence = result->getStrongLinesPresence(lineTypeFilter, result->LineModelSolutions);
             zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(strongLinePresence, m_opt_stronglinesprior);
         }else{
@@ -536,7 +536,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const 
                             maxscalemargcorr = result->ScaleMargCorrectionTplshapes[k][kz];
 
                     Log.LogDetail("%s: maxscalemargcorr= %e", __func__,  maxscalemargcorr);
-                    for ( UInt32 kz=0; kz<zsize; kz++ )
+                    for ( Int32 kz=0; kz<zsize; kz++ )
                         if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning, this is experimental.
                             logLikelihoodCorrected[kz] += result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
 
@@ -544,7 +544,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(const std::shared_ptr<const 
                 }*/
 
                 if(zPriorLines && result->PriorLinesTplshapes[k].size()==zsize)
-                    for ( UInt32 kz=0; kz<zsize; kz++ )
+                    for ( Int32 kz=0; kz<zsize; kz++ )
                         logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
             }
 

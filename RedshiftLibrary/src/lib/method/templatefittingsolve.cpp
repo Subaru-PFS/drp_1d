@@ -150,12 +150,12 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
 	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
       }
     
-    for( UInt32 i=0; i<m_categoryList.size(); i++ )
+    for( Int32 i=0; i<m_categoryList.size(); i++ )
     {
         std::string category = m_categoryList[i];
 
         Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
-        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        for( Int32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
@@ -358,7 +358,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const 
         //check chi2 results status for this template
         {
             bool foundBadStatus = 0;
-            for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+            for ( Int32 kz=0; kz<meritResult->Redshifts.size(); kz++)
             {
                 if(meritResult->Status[kz]!=COperator::nStatus_OK)
                 {
@@ -382,7 +382,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const 
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
                 chisquarearray.chisquares.emplace_back(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
                 TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
-                for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+                for ( Int32 kz=0; kz<meritResult->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
@@ -429,7 +429,7 @@ CTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultSt
 
         bool foundBadStatus = false;
         bool foundBadRedshift = false;
-        for ( UInt32 kz=0; kz<TplFitResult->Redshifts.size(); kz++)
+        for ( Int32 kz=0; kz<TplFitResult->Redshifts.size(); kz++)
         {
             if(TplFitResult->Status[kz]!=COperator::nStatus_OK)
             {

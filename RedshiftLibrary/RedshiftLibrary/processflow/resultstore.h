@@ -187,7 +187,7 @@ public:
 
   void StoreScopedPerTemplateResult( const std::shared_ptr<const CTemplate>& t, const std::string& name, std::shared_ptr<const COperatorResult>  result );
   void StoreScopedGlobalResult( const std::string& name, std::shared_ptr<const COperatorResult>  result );
-  void StoreFlagResult( const std::string& name, UInt32  result );
+  void StoreFlagResult( const std::string& name, Int32  result );
   
   std::string GetScope( const COperatorResult&  result) const;
   

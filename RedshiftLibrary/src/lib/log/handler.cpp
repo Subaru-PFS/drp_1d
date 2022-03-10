@@ -54,12 +54,12 @@ CLogHandler::~CLogHandler()
     m_Logger.RemoveHandler( *this );
 }
 
-void CLogHandler::SetLevelMask( UInt32 mask )
+void CLogHandler::SetLevelMask( Int32 mask )
 {
     m_LevelMask = mask;
 }
 
-UInt32 CLogHandler::GetLevelMask() const
+Int32 CLogHandler::GetLevelMask() const
 {
     return m_LevelMask;
 }
