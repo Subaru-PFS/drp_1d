@@ -36,7 +36,7 @@ build-osx:
     - make -j 2
     - make install
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: push
     untracked: true
 
@@ -50,7 +50,7 @@ test-osx:
     - cd build
     - make test
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -75,7 +75,7 @@ test-osx:
       - wheel/
     expire_in: 1 week
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -108,7 +108,7 @@ wheel38-osx:
   script:
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -229,74 +229,6 @@ push-rc-38-osx:
         -Dsonar.exclusions=*.xml
         -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
-# Manylinux1 stages
-
-.manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  variables:
-    PLATFORM: "manylinux1_x86_64"
-  when: manual
-  cache:
-    key: manylinux1
-
-build-manylinux1:
-  extends:
-    - .manylinux1
-    - .build-manylinux
-
-test-manylinux1:
-  extends:
-    - .manylinux1
-    - .test-manylinux
-
-wheel36-manylinux1:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-wheel37-manylinux1:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-wheel38-manylinux1:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-push-rc-36-manylinux1:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel36-manylinux1
-
-push-rc-37-manylinux1:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel37-manylinux1
-
-push-rc-38-manylinux1:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel38-manylinux1
-
 # Manylinux2010 stages
 
 .manylinux2010:
@@ -305,7 +237,7 @@ push-rc-38-manylinux1:
     PLATFORM: "manylinux2010_x86_64"
   when: manual
   cache:
-    key: manylinux2010
+    key: "manylinux2010-$CI_COMMIT_REF_SLUG"
 
 build-manylinux2010:
   extends:
@@ -372,7 +304,7 @@ push-rc-38-manylinux2010:
   variables:
     PLATFORM: "manylinux2014_x86_64"
   cache:
-    key: manylinux2014
+    key: "manylinux2014-$CI_COMMIT_REF_SLUG"
 
 build-manylinux2014:
   extends:
@@ -394,6 +326,7 @@ wheel36-manylinux2014:
 wheel37-manylinux2014:
   variables:
     PYTHON_VERSION: "37"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
@@ -401,6 +334,7 @@ wheel37-manylinux2014:
 wheel38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
