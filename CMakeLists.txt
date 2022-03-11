@@ -1,152 +1,139 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.12)
 PROJECT( cpf-redshift )
 
-# extra path for modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-include(SetupVar)
-include(gitrevision)
+# Dependencies requirements
+set(BOOST_MINIMUM_REQUIRED 1.57)
+set(CFISTIO_MINIMUM_REQUIRED 3.36)
+set(FFTW_MINIMUM_REQUIRED 3.3.8)
+set(OPENBLASS_MINIMUM_REQUIRED 0.3)
+set(GSL_MINIMUM_REQUIRED 2.5)
 
-message(STATUS "Using git revision : " ${GIT_REVISION})
+# Environment settings
+set( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
+message(STATUS "ROOT_DIR = " ${ROOT_DIR})
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR = " ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "CMAKE_BINARY_DIR = " ${CMAKE_BINARY_DIR})
 
-option(BUILD_STATIC_LIBS OFF)
-option(BUILD_TESTING "Build testings" ON)
-option(CODE_COVERAGE "Test code coverage" OFF)
+# Regular cmake tools
+FIND_PACKAGE(Python3 COMPONENTS Interpreter REQUIRED)
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+FIND_PACKAGE(PkgConfig REQUIRED)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
-  set(CODE_COVERAGE ON)
-endif()
-
-if(BUILD_STATIC_LIBS)
-  set(BUILD_SHARED_LIBS OFF)
-  set(BUILD_TESTING OFF)
-else()
-  set(BUILD_SHARED_LIBS ON)
-endif()
-
-message(STATUS "BUILD_STATIC_LIBS = " ${BUILD_STATIC_LIBS})
-message(STATUS "BUILD_TESTING = " ${BUILD_TESTING})
-message(STATUS "CODE_COVERAGE = " ${CODE_COVERAGE})
-
-if(BUILD_SHARED_LIBS)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -D_FORTIFY_SOURCE=2")
-  set(Boost_USE_STATIC_LIBS OFF)
-else()
-  set(Boost_USE_STATIC_LIBS ON)
-endif()
-
+# Install directory
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/local" CACHE PATH "" FORCE)
+  set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local/pylibamazed" CACHE PATH "" FORCE)
 endif()
-
 message(STATUS "CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
-SET( CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} )
+# Extra path for modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+
+# Define build flags
+include(SetupVar)
+
+# Get library revision
+include(gitrevision)
+message(STATUS "Using git revision : " ${GIT_REVISION})
+FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
+MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
+
+# Building environment
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/RedshiftLibrary)
 LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_INSTALL_PREFIX}/include)
 LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+if(CMAKE_PREFIX_PATH)
+  LIST(APPEND cpf-redshift_INCLUDE_DIR ${CMAKE_PREFIX_PATH}/include)
+  LIST(APPEND cpf-redshift_LINK_DIR ${CMAKE_PREFIX_PATH}/lib)
+endif()
 MESSAGE(STATUS "cpf-redshift_INCLUDE_DIR=" "${cpf-redshift_INCLUDE_DIR}")
 MESSAGE(STATUS "cpf-redshift_LINK_DIR=" "${cpf-redshift_LINK_DIR}")
 
-FIND_PACKAGE(Python3 COMPONENTS Interpreter)
-IF (NOT Python3_Interpreter_FOUND)
-  MESSAGE(FATAL_ERROR "Can't find Python3 interpreter")
-ENDIF()
-set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-
-LIST(FIND MISSING_THIRDPARTIES "boost" find_boost)
-LIST(FIND MISSING_THIRDPARTIES "cfitsio" find_cfitsio)
-LIST(FIND MISSING_THIRDPARTIES "gsl" find_gsl)
-LIST(FIND MISSING_THIRDPARTIES "fftw" find_fftw)
-LIST(FIND MISSING_THIRDPARTIES "openblas" find_openblas)
-
-FIND_PACKAGE(PkgConfig)
-
-IF(NOT find_boost GREATER -1)
-  FIND_PACKAGE(Boost 1.57 COMPONENTS filesystem system thread timer chrono program_options unit_test_framework)
-ENDIF()
-
-IF(NOT find_cfitsio GREATER -1)
-  pkg_check_modules(CFITSIO cfitsio>=3.36)
-ENDIF()
-
-IF(NOT find_gsl GREATER -1)
-  pkg_check_modules(GSL gsl>=2.5)
-ENDIF()
-
-IF(NOT find_fftw GREATER -1)
-  pkg_check_modules(FFTW fftw3>=3.3.8)
-ENDIF()
-
-IF(NOT find_openblas GREATER -1)
-  # Add specific PREFIX PATH for users on Appel osx managed by brew
-  SET(CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
-  SET(BLA_VENDOR OpenBLAS)
-  SET(BLA_STATIC OFF)
-  SET(BLA_F95 OFF)
-  FIND_PACKAGE(BLAS)
-ENDIF()
 
 #--------------------------------------------------------
-# Setup shortcut access directory
+# Setup thirdparties
 #--------------------------------------------------------
-SET( ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" )
 
-# Set up THIRDPARTY_LIBS
-IF (Boost_FOUND)
-  SET(BOOST_TARGET "RELEASE")
-
-  SET(boost_libs ${Boost_FILESYSTEM_LIBRARY_${BOOST_TARGET}}
-    ${Boost_SYSTEM_LIBRARY_${BOOST_TARGET}}
-    ${Boost_THREAD_LIBRARY_${BOOST_TARGET}}
-    ${Boost_TIMER_LIBRARY_${BOOST_TARGET}}
-    ${Boost_CHRONO_LIBRARY_${BOOST_TARGET}}
-    ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}})
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
-  LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
-ELSE()
-  LIST(APPEND MISSING_THIRDPARTIES "boost")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS pthread boost_filesystem
-    boost_system boost_thread boost_timer boost_chrono boost_program_options
-    boost_unit_test_framework)
+# install with rpath to find third-parties
+SET(CMAKE_MACOSX_RPATH 1)
+IF(CMAKE_PREFIX_PATH)
+  LIST(APPEND CMAKE_INSTALL_RPATH ${CMAKE_PREFIX_PATH}/lib)
 ENDIF()
 
-IF (CFITSIO_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
-  LIST(APPEND cpf-redshift_LINK_DIR ${CFITSIO_LIBRARY_DIRS})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
-ELSE()
-  LIST(APPEND MISSING_THIRDPARTIES "cfitsio")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS cfitsio)
-ENDIF()
+# Add specific PREFIX PATH for users on Appel osx managed by brew
+list(APPEND CMAKE_PREFIX_PATH /usr/local/opt/openblas/lib)
+LIST(APPEND CMAKE_INSTALL_RPATH /usr/local/opt/openblas/lib)
 
-IF (FFTW_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
-  LIST(APPEND cpf-redshift_LINK_DIR ${FFTW_LIBRARY_DIRS})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIRS})
-ELSE()
-  LIST(APPEND MISSING_THIRDPARTIES "fftw")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS fftw3)
-ENDIF()
+message(STATUS "CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
+message(STATUS "CMAKE_INSTALL_RPATH =  ${CMAKE_INSTALL_RPATH}")
 
-IF (BLAS_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
-ELSE()
-  LIST(APPEND MISSING_THIRDPARTIES "openblas")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS openblas)
-ENDIF()
+# Setup thirdparty directory : Boost
+find_package(Boost ${BOOST_MINIMUM_REQUIRED} COMPONENTS filesystem system thread timer chrono program_options unit_test_framework   REQUIRED)
+set(Boost_USE_STATIC_LIBS OFF)
+SET(BOOST_TARGET "RELEASE")
+SET(boost_libs ${Boost_FILESYSTEM_LIBRARY_${BOOST_TARGET}}
+  ${Boost_SYSTEM_LIBRARY_${BOOST_TARGET}}
+  ${Boost_THREAD_LIBRARY_${BOOST_TARGET}}
+  ${Boost_TIMER_LIBRARY_${BOOST_TARGET}}
+  ${Boost_CHRONO_LIBRARY_${BOOST_TARGET}}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}
+  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}})
+message(STATUS "Boost_FILESYSTEM_LIBRARY_${BOOST_TARGET} = ${Boost_FILESYSTEM_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_SYSTEM_LIBRARY_${BOOST_TARGET} = ${Boost_SYSTEM_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_THREAD_LIBRARY_${BOOST_TARGET} = ${Boost_THREAD_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_TIMER_LIBRARY_${BOOST_TARGET} = ${Boost_TIMER_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_CHRONO_LIBRARY_${BOOST_TARGET} = ${Boost_CHRONO_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET} = ${Boost_PROGRAM_OPTIONS_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET} = ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_${BOOST_TARGET}}")
+message(STATUS "Boost_LIBRARY_DIRS = ${Boost_LIBRARY_DIRS}")
+message(STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${boost_libs})
+LIST(APPEND cpf-redshift_LINK_DIR ${Boost_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
 
-IF (GSL_FOUND)
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
-  LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
-  LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
-ELSE()
-  LIST(APPEND MISSING_THIRDPARTIES "gsl")
-  LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
-ENDIF()
+# Setup thirdparty directory : CFITSIO
+pkg_check_modules(CFITSIO cfitsio>=${CFISTIO_MINIMUM_REQUIRED} REQUIRED)
+message(STATUS "Found cfitsio: ${CFITSIO_LINK_LIBRARIES}")
+message(STATUS "CFITSIO_LIBRARIES = ${CFITSIO_LIBRARIES}")
+message(STATUS "CFITSIO_LIBRARY_DIRS = ${CFITSIO_LIBRARY_DIRS}")
+message(STATUS "CFITSIO_INCLUDE_DIRS = ${CFITSIO_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${CFITSIO_LIBRARIES})
+LIST(APPEND cpf-redshift_LINK_DIR ${CFITSIO_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${CFITSIO_INCLUDE_DIRS})
 
-# use ccache if any
+# Setup thirdparty directory : FFTW
+pkg_check_modules(FFTW fftw3>=${FFTW_MINIMUM_REQUIRED} REQUIRED)
+message(STATUS "Found fftw3: ${FFTW_LINK_LIBRARIES}")
+message(STATUS "FFTW_LIBRARIES = ${FFTW_LIBRARIES}")
+message(STATUS "FFTW_LIBRARY_DIRS = ${FFTW_LIBRARY_DIRS}")
+message(STATUS "FFTW_INCLUDE_DIRS = ${FFTW_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${FFTW_LIBRARIES})
+LIST(APPEND cpf-redshift_LINK_DIR ${FFTW_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${FFTW_INCLUDE_DIRS})
+
+# Setup thirdparty directory : OpenBLAS
+set(BLA_VENDOR OpenBLAS)
+set(BLA_STATIC OFF)
+set(BLA_F95 OFF)
+find_package(BLAS REQUIRED)
+message(STATUS "BLAS_LIBRARIES = ${BLAS_LIBRARIES}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS ${BLAS_LIBRARIES})
+
+# Setup thirdparty directory : GSL
+pkg_check_modules(GSL gsl>=${GSL_MINIMUM_REQUIRED} REQUIRED)
+message(STATUS "Found gsl: ${GSL_LINK_LIBRARIES}")
+message(STATUS "GSL_LIBRARY_DIRS = ${GSL_LIBRARY_DIRS}")
+message(STATUS "GSL_INCLUDE_DIRS = ${GSL_INCLUDE_DIRS}")
+LIST(APPEND cpf-redshift_THIRDPARTY_LIBS gsl)
+LIST(APPEND cpf-redshift_LINK_DIR ${GSL_LIBRARY_DIRS})
+LIST(APPEND cpf-redshift_INCLUDE_DIR ${GSL_INCLUDE_DIRS})
+
+# Thirdparties setup summary
+MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
+
+#--------------------------------------------------------
+# Setting ccache
+#--------------------------------------------------------
+
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
@@ -155,48 +142,14 @@ if(CCACHE_FOUND)
   set(ENV{CXX} "ccache ${CMAKE_CXX_COMPILER}")
 endif(CCACHE_FOUND)
 
-IF(MISSING_THIRDPARTIES)
-  LIST(REMOVE_DUPLICATES MISSING_THIRDPARTIES)
-ENDIF()
-
-if(cpf-redshift_LINK_DIR)
-  list(REMOVE_DUPLICATES cpf-redshift_LINK_DIR)
-endif()
-
-#--------------------------------------------------------
-# Parse version, this will be used later to configure
-# cpf-redshift-version.cmake with the appropriate version number
-#--------------------------------------------------------
-
-FILE (STRINGS ${ROOT_DIR}/VERSION PROJECT_VERSION)
-MESSAGE( STATUS "pylibamazed version used: ${PROJECT_VERSION}" )
-
 #--------------------------------------------------------
 # Preprocessor and linker path
 #--------------------------------------------------------
 
+list(REMOVE_DUPLICATES cpf-redshift_INCLUDE_DIR)
 INCLUDE_DIRECTORIES( ${cpf-redshift_INCLUDE_DIR} )
+list(REMOVE_DUPLICATES cpf-redshift_LINK_DIR)
 LINK_DIRECTORIES( ${cpf-redshift_LINK_DIR} )
-
-#--------------------------------------------------------
-# Exported configuration variables
-#--------------------------------------------------------
-
-IF( MISSING_THIRDPARTIES )
-  MESSAGE( STATUS "Some library not found on system. Using thirdparty/ for ${MISSING_THIRDPARTIES}" )
-  set(PARALLEL_BUILD_FLAG "-j4")
-  ADD_SUBDIRECTORY( tools )
-ELSE()
-  MESSAGE( STATUS "Using system third-party libraries." )
-ENDIF()
-
-MESSAGE("Using third party libraries: " "${cpf-redshift_THIRDPARTY_LIBS}")
-
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
 
 #--------------------------------------------------------
 # Compile library
@@ -205,122 +158,94 @@ SET( LIB_NAME cpf-redshift )
 
 FILE( GLOB_RECURSE LIB_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/src/lib/*.cpp )
 
-# install with rpath to find third-parties
-SET(CMAKE_MACOSX_RPATH 1)
-SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# the RPATH to be used when installing, but only if it's not a system directory
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-  SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF("${isSystemDir}" STREQUAL "-1")
-
-IF(BUILD_SHARED_LIBS)
-  ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
-  TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
-  INSTALL( TARGETS ${LIB_NAME}
-    LIBRARY DESTINATION lib)
-ELSE()
-  ADD_LIBRARY( ${LIB_NAME}-static STATIC ${LIB_SOURCE_FILES} )
-  SET_TARGET_PROPERTIES(${LIB_NAME}-static PROPERTIES OUTPUT_NAME ${LIB_NAME})
-  TARGET_LINK_LIBRARIES(${LIB_NAME}-static ${cpf-redshift_THIRDPARTY_LIBS})
-  INSTALL( TARGETS ${LIB_NAME}-static
-    ARCHIVE DESTINATION lib)
-  SET(LIB_NAME ${LIB_NAME}-static)
-ENDIF()
+ADD_LIBRARY( ${LIB_NAME} SHARED ${LIB_SOURCE_FILES} )
+TARGET_LINK_LIBRARIES(${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS})
+INSTALL( TARGETS ${LIB_NAME} LIBRARY DESTINATION lib)
 
 #--------------------------------------------------------
 # Compile test
 #--------------------------------------------------------
-IF(BUILD_TESTING AND BUILD_SHARED_LIBS)
-ENABLE_TESTING()
+if(BUILD_TESTING)
+  ENABLE_TESTING()
 
-FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*_test.cpp )
-ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+  FILE( GLOB_RECURSE TEST_SOURCE_FILES ${ROOT_DIR}/RedshiftLibrary/tests/src/*_test.cpp )
+  ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 
-CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
-  ${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h)
+  CONFIGURE_FILE(${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h.in
+    ${ROOT_DIR}/RedshiftLibrary/tests/src/test-config.h)
 
-FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
-  GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
-  ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
-  TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${CMAKE_DL_LIBS})
-  ADD_TEST(NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
-  SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
-ENDFOREACH(TEST_SOURCE)
+  FOREACH(TEST_SOURCE ${TEST_SOURCE_FILES})
+    GET_FILENAME_COMPONENT(TEST_NAME ${TEST_SOURCE} NAME_WE)
+    ADD_EXECUTABLE( ${TEST_NAME} ${TEST_SOURCE} )
+    TARGET_LINK_LIBRARIES( ${TEST_NAME} ${LIB_NAME} ${cpf-redshift_THIRDPARTY_LIBS} ${CMAKE_DL_LIBS})
+    ADD_TEST(NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
+    SET_PROPERTY(SOURCE ${TEST_SOURCE} APPEND PROPERTY COMPILE_DEFINITIONS BOOST_TEST_MODULE=${TEST_NAME} )
+  ENDFOREACH(TEST_SOURCE)
 ENDIF()
 
 #--------------------------------------------------------
 # Generate coverage data : HTML and XML output
 #--------------------------------------------------------
-if(CODE_COVERAGE)
+if(BUILD_TYPE STREQUAL "coverage")
 
-find_program(GCOVR_EXECUTABLE gcovr REQUIRED)
-if(GCOVR_EXECUTABLE)
-  message(STATUS "Found gcovr: ${GCOVR_EXECUTABLE}")
-else()
-  message(FATAL_ERROR "Gcovr not found!")
-endif()
+  find_program(GCOVR_EXECUTABLE gcovr REQUIRED)
 
-# Create a coverage report in xml format
-set(GCOVR_XML_COMMAND ${GCOVR_EXECUTABLE} --filter ../RedshiftLibrary/src/lib/ --xml
-    --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml
-    --root ${CMAKE_BINARY_DIR}
-)
+  # Create a coverage report in xml format
+  set(GCOVR_XML_COMMAND ${GCOVR_EXECUTABLE} --xml
+      --filter ../RedshiftLibrary/src/lib/ --filter ../RedshiftLibrary/RedshiftLibrary/
+      --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml
+      --root ${CMAKE_BINARY_DIR}
+  )
 
-# Create a coverage report in html format
-set(GCOVR_HTML_COMMAND ${GCOVR_EXECUTABLE} --filter ../RedshiftLibrary/src/lib/ --html
-    --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html
-    --root ${CMAKE_BINARY_DIR}
-)
+  # Create a coverage report in html format
+  set(GCOVR_HTML_COMMAND ${GCOVR_EXECUTABLE} --html --html-details
+      --filter ../RedshiftLibrary/src/lib/ --filter ../RedshiftLibrary/RedshiftLibrary/
+      --exclude-unreachable-branches --print-summary -o ${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html
+      --root ${CMAKE_BINARY_DIR}
+  )
 
-# Target to run coverage tests with 'make coverage_xml' command
-add_custom_target(coverage_xml
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
-    COMMAND ${CMAKE_MAKE_PROGRAM} test
-    COMMAND ${GCOVR_XML_COMMAND}
-    COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERBATIM
-)
+  # Target to run coverage tests with 'make coverage_xml' command
+  add_custom_target(coverage_xml
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
+      COMMAND ${CMAKE_MAKE_PROGRAM} test
+      COMMAND ${GCOVR_XML_COMMAND}
+      COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      VERBATIM
+  )
 
-# Target to run coverage tests with 'make coverage_html' command
-add_custom_target(coverage_html
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
-    COMMAND ${CMAKE_MAKE_PROGRAM} test
-    COMMAND ${GCOVR_HTML_COMMAND}
-    COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERBATIM
-)
+  # Target to run coverage tests with 'make coverage_html' command
+  add_custom_target(coverage_html
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/coverage
+      COMMAND ${CMAKE_MAKE_PROGRAM} test
+      COMMAND ${GCOVR_HTML_COMMAND}
+      COMMENT "Coverage files have been output to ${CMAKE_CURRENT_SOURCE_DIR}/coverage"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      VERBATIM
+  )
 
-set(COVERAGE_REPORT_FILES
- "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html"
- "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml"
-)
+  set(COVERAGE_REPORT_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.html"
+  "${CMAKE_CURRENT_SOURCE_DIR}/coverage/coverage.xml"
+  )
 
-set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${COVERAGE_REPORT_FILES})
+  set_property(DIRECTORY PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${COVERAGE_REPORT_FILES})
 
-# Target to clean the coverage repository as well as generated .gcda and .gcno files
-add_custom_target(clean_coverage
-    COMMAND rm -rf ${COVERAGE_REPORT_FILES}
-    COMMAND find . -name "*.gcda" -exec rm -f {} \;
-    COMMAND find . -name "*.gcno" -exec rm -f {} \;
-    COMMENT "Removing generated coverage files"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    VERBATIM
-)
+  # Target to clean the coverage repository as well as generated .gcda and .gcno files
+  add_custom_target(clean_coverage
+      COMMAND rm -rf ${COVERAGE_REPORT_FILES}
+      COMMAND find . -name "*.gcda" -exec rm -f {} \;
+      COMMAND find . -name "*.gcno" -exec rm -f {} \;
+      COMMENT "Removing generated coverage files"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      VERBATIM
+  )
 endif()
 
 #--------------------------------------------------------
 # Install directive
 #--------------------------------------------------------
 
-#INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary DESTINATION include )
-#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config.cmake DESTINATION share/cmake )
-#INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/libamazed-config-version.cmake DESTINATION share/cmake )
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/auxdir/pylibamazed/results_specifications.csv ${CMAKE_CURRENT_SOURCE_DIR}/pylibamazed/python/pylibamazed/resources/results_specifications.csv COPYONLY)
 
 #--------------------------------------------------------
@@ -385,11 +310,3 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h.in
   ${CMAKE_CURRENT_SOURCE_DIR}/RedshiftLibrary/RedshiftLibrary/version.h
 )
-
-# Generate TAGS file if etags is installed
-find_program(ETAGS NAMES etags ctags)
-if(ETAGS)
-  message("Running " ${ETAGS})
-  execute_process(COMMAND find RedshiftLibrary/ ( -name *.cpp -o -name *.h -o -name *.hpp -o -name *.py -o -name *.c ) -not -name redshift.py -exec ${ETAGS} -a TAGS {} +
-    WORKING_DIRECTORY ${ROOT_DIR})
-endif(ETAGS)

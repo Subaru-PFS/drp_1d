@@ -1,107 +1,94 @@
 # pylibamazed
 
-## Requirements
+## About ?
 
-`pylibamazed` has the following strict requirements (base environment):
-* [gcc](https://gcc.gnu.org/)
-* [python](https://www.python.org/) >=3.6
-* [cmake](https://cmake.org/) >=3.12
-* [swig](http://www.swig.org/) >=4.0
+pylibamazed is a Python package wrapping numerical algorithms for the analysis of 1D spectroscopic data of astrophysical sources.
 
-## Dependencies
+## Main features
 
-`pylibamazed` depends on following third parties:
+* Estimate source category (galaxy, star or QSO)
+* Classify source type (sub-classification into the source category, e.g. the spectral type of a star for the star category)
+* Estimate redshift
+* Provide redshift reliability
+* Estimate radial velocity
+* Measure fluxes of emission lines
+
+##Playing pylibamazed
+pylibamazed should work on Linux and OS X.
+
+### Dependencies
+
+The pylibamazed algorithms are mainly developped in C++ and wrapped in Python. These algorithms are dependant on the thirdparties listed below. It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install these thirdparties. To install third parties using pylibamazed internal script, refer to the related [third parties](#Third-parties-install-guide) section.
+
+Required third parties:
 * [boost](https://www.boost.org/) >=1.57
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
+* [openblas](https://www.openblas.net/) >= 0.3.19
 
-`pylibamazed` also depends on following python packages
+Required python packages:
 * [numpy](https://www.numpy.org/) >=1.16.0
 * [astropy](https://www.astropy.org/) >=3.1.1
 * [cython](https://cython.org/) >=0.17.0
 * [pandas](https://pandas.pydata.org/) >=1.0.0
 * [h5py](https://www.h5py.org/) >=2.9
 
+### Build and install
 
-## Install
+Prerequisites to install pylibamazed from source code:
 
-To install the base environment on several plateform please refer to the related [base environment](#Base-environment-install-guide) section.
+* [gcc](https://gcc.gnu.org/)
+* [python](https://www.python.org/) >=3.6
+* [cmake](https://cmake.org/) >=3.12
+* [swig](http://www.swig.org/) >=4.0
 
-To install third parties refer to the related [third parties](#Third-parties-install-guide) section.
-
-
-### Download, build and install
-
-To build the c++ part, as a user, in `pylibamazed` root directory:
+To build the C++ part, in `pylibamazed` root directory, run:
 
     mkdir build
     cd build
     cmake ..
-    make -j4
+    make
     make install
 
-To run tests, use:
+To run tests in `build` directory, run:
 
     make test
 
-To build and install `pylibamazed` python module, in `pylibamazed` root directory:
+To build and install `pylibamazed` python module, in `pylibamazed` root directory run:
 
     pip install .
 
 ### Build options
 
-Build process uses cmake tool
+The Build process uses the cmake tool
 
 #### -DCMAKE_BUILD_TYPE
 
-You can build either in `Debug` or `Release` mode (defaults to `Release`).
+You can build the library either in `Release`, `Debug` or `Coverage` mode (default to `Release`).
 
-##### example : build in Debug mode
+For instance to build pylibamazed in Debug mode, run: 
 
-    cd $ROOT_DIR
-    mkdir build-debug
-    cd build-debug
     cmake .. -DCMAKE_BUILD_TYPE=Debug
-    make
-    make install
-
-##### example : build in Release  mode
-
-    cd $ROOT_DIR
-    mkdir build
-    cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release
-    make
-    make install
-
-
-#### -DBUILD_STATIC_LIBS
-
-You can build either static or shared library (defaults to shared library). To build a static library set the `BUILD_STATIC_LIBS` option to `ON`.
-Note that tests are disable with static library.
-
-    cmake .. -DBUILD_STATIC_LIBS=ON
-
 
 #### -DCMAKE_INSTALL_PREFIX
 
-You can specify install directory (defaults to `$HOME/local`).
+You can specify the absolute path to your installation directory (default to `$HOME/.local`). If you are working with several versions of pylibamazed, it is hightly recommended to specify a proper installation directory for each version. 
 
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+    cmake .. -DCMAKE_INSTALL_PREFIX=/my/own/directory
 
+#### -DCMAKE_PREFIX_PATH
 
-#### -DBUILD_TESTING
+If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the  corresponding directory as follows
 
-In order to disable test building, set the `BUILD_TESTING` option to `OFF`:
+    cmake .. -DCMAKE_PREFIX_PATH=/my/thirdparty/directory
 
-    cmake .. -DBUILD_TESTING=OFF
 
 ## Additional documentation
 
-Documentation about the python API of this software can be found by building the provided documentation:
+The python API documentation could be generated as follows:
 
-Build documentation:
+Build the documentation:
 
     cd $ROOT_DIR/pylibamazed/doc
     make html
@@ -110,32 +97,39 @@ Then open in your web browser:
 
     $ROOT_DIR/pylibamazed/build/html/index.html
 
-## Base environment install guide
+## Third parties installation guide
 
-This section helps people to install a base environment to install `pylibamazed` (useful for docker users). 
+As stated earlier pylibamazed depends on several third parties (refer to [this section](#dependencies) for the complete list). It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
 
-### Install dependencies on CentOS7
+    buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
 
-As root:
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
 
-    yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-    yum install -y git gcc-c++ make cmake3 swig boost-devel cfitsio-devel \
-      patchelf python36u python36u-libs python36u-devel python36u-pip
+For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
 
-### Install dependencies on Debian - buster
+    python tools/buildandinstallthirdparty fftw cfitsio
 
-As root:
+Other command line options:
 
-    apt-get update
-    apt-get install -y git g++ cmake swig pkg-config libboost-all-dev libgsl-dev \
-      libcfitsio-dev libfftw3-dev python3 python3-pip
+`--workdir`: specifies the working directory for the third party building (absolute path)
 
-### Install depencies on MacOS
+    python tools/buildandinstallthirdparty fftw cfitsio --workdir=/tmp
 
-Use `brew` as packet manager on MacOS:
+`--prefix`: specifies the installation directory for third parties (absolute path)
 
-    brew install gcc cmake swig boost cfitsio gsl fftw
+    python tools/buildandinstallthirdparty fftw cfitsio --prefix=/usr/local
 
+`-j`: specifies the number of make jobs to run simultaneously 
+
+    python tools/buildandinstallthirdparty fftw cfitsio -j 4
+
+`--extra_flags`: specifies extra_flag to give to the build stage of third party
+
+    python tools/buildandinstallthirdparty fftw cfitsio --extra_flags=
+
+`--force`: forces the library building and overwrites existing built library 
+
+    python tools/buildandinstallthirdparty fftw cfitsio --force
 
 ## Contacts
 
