@@ -41,12 +41,12 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 #include <gsl/gsl_const_mksa.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
@@ -63,7 +63,7 @@ class CLineModelElement
   };
 
 public:
-    CLineModelElement(std::vector<CRay> rs, 
+    CLineModelElement(std::vector<CLine> rs, 
                const std::string& widthType,
                const Float64 velocityEmission, 
                const Float64 velocityAbsorption, 
@@ -110,7 +110,7 @@ public:
         Float64 min = -400., Float64 max = 400.);
     Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
                                      Float64 continuumFlux,
-                                     Int32 kRaySupport = -1) const;
+                                     Int32 kLineSupport = -1) const;
     Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda,
                                                    Float64 redshift,
                                                    Float64 continuumFlux) const;
@@ -133,7 +133,7 @@ public:
     addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                                CSpectrumFluxAxis &modelfluxAxis,
                                const CSpectrumFluxAxis &continuumFluxAxis,
-                               Float64 redshift, bool emissionRay) const;
+                               Float64 redshift, bool emissionLine) const;
 
     void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
@@ -168,13 +168,13 @@ public:
     void resetAsymfitParams();
     Int32 findElementIndex(Int32 LineCatalogIndex) const;
     Int32 findElementIndex(const std::string& LineTagStr) const;
-    const CLineProfile & getLineProfile(Int32 rayIdx) const;
+    const CLineProfile & getLineProfile(Int32 lineIdx) const;
 
     Float64 GetSignFactor(Int32 subeIdx) const;
 
     Int32 GetSize() const;
-    std::vector<CRay> GetRays() const;
-    const std::string & GetRayName(Int32 subeIdx) const;
+    std::vector<CLine> GetLines() const;
+    const std::string & GetLineName(Int32 subeIdx) const;
     bool IsOutsideLambdaRange() const;
     Float64 GetLineWidth(Float64 lambda, Float64 z = 0., bool isEmission=0) const;
     bool IsOutsideLambdaRange(Int32 subeIdx) const;
@@ -192,7 +192,7 @@ public:
 
   void debug(std::ostream& os) const;
 
-    std::vector<CRay> m_Rays; // only used in multiline for now... tbd: should
+    std::vector<CLine> m_Lines; // only used in multiline for now... tbd: should
                               // be moved elsewhere ?
     TInt32List m_LineCatalogIndexes;
     std::string m_fittingGroupInfo;
@@ -225,7 +225,7 @@ public:
 
     std::shared_ptr<const CLSF> m_LSF;
 
-  std::vector<TInt32List>     m_RayIsActiveOnSupport;
+  std::vector<TInt32List>     m_LineIsActiveOnSupport;
   TFloat64List        m_SignFactors;
   TFloat64List        m_FittedAmplitudes;
   TFloat64List        m_FittedAmplitudeErrorSigmas;

@@ -76,8 +76,8 @@ public:
                const CSpectrum& spc,
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
-               const CRayCatalog::TRayVector& restraycatalog,
-               const CRayCatalogsTplShape& tplRatioCatalog,
+               const CLineCatalog::TLineVector& restlinecatalog,
+               const CLineCatalogsTplShape& tplRatioCatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -100,7 +100,7 @@ private:
                               std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
-    const CRayCatalog::TRayVector  FilterRestLineCatalog(const CRayCatalog& restraycatalog);
+    const CLineCatalog::TLineVector  FilterRestLineCatalog(const CLineCatalog& restlinecatalog);
 
     COperatorLineModel m_linemodel;
 

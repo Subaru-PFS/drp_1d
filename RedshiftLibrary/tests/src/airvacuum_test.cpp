@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/exception.h"
-#include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/line/airvacuum.h"
 
 
 #include <boost/test/unit_test.hpp>

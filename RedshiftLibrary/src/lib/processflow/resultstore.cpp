@@ -307,7 +307,7 @@ std::shared_ptr<const CLineModelSolution> COperatorResultStore::GetLineModelSolu
 										       ) const
     
 {
-  return std::dynamic_pointer_cast<const CLineModelSolution>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_rays"));
+  return std::dynamic_pointer_cast<const CLineModelSolution>(GetGlobalResult(objectType,method,name).lock()->getCandidate(rank,"fitted_lines"));
 }
 
 std::shared_ptr<const CModelSpectrumResult> COperatorResultStore::GetModelSpectrumResult(const std::string& objectType,

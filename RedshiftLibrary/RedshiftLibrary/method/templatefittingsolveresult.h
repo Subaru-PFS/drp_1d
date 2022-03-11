@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/method/solveresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 
 #include <memory>
 #include <vector>

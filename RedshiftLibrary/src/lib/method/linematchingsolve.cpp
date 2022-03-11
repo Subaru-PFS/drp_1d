@@ -43,10 +43,10 @@
 #include "RedshiftLibrary/method/linematchingsolveresult.h"
 #include "RedshiftLibrary/operator/peakdetection.h"
 #include "RedshiftLibrary/operator/peakdetectionresult.h"
-#include "RedshiftLibrary/operator/raydetection.h"
-#include "RedshiftLibrary/operator/raydetectionresult.h"
-#include "RedshiftLibrary/operator/raymatching.h"
-#include "RedshiftLibrary/operator/raymatchingresult.h"
+#include "RedshiftLibrary/operator/linedetection.h"
+#include "RedshiftLibrary/operator/linedetectionresult.h"
+#include "RedshiftLibrary/operator/linematching.h"
+#include "RedshiftLibrary/operator/linematchingresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/common/flag.h"
@@ -100,7 +100,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute(std::shared_ptr<const 
 		 *(inputContext->GetSpectrum().get()),
 		 m_lambdaRange,
 		 m_redshifts,
-		 *(inputContext->GetRayCatalog(m_objectType).get()));
+		 *(inputContext->GetLineCatalog(m_objectType).get()));
 		   
 }
 
@@ -117,7 +117,7 @@ std::shared_ptr<CSolveResult> CLineMatchingSolve::compute(std::shared_ptr<const 
  *
  * If the dynamic option is false, the following algorithm will be run:
  *
- * - If peaks are found, it will try to find lines in the peaks found, using a CLineDetection object (please note that this class is defined in raydetectionresult.h).
+ * - If peaks are found, it will try to find lines in the peaks found, using a CLineDetection object (please note that this class is defined in linedetectionresult.h).
  *
  * - If lines are found, it will try to match these lines to the catalogue of known lines and determine the redshift using this information.
  *
@@ -129,10 +129,10 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
                                                                                const CSpectrum& spc,
                                                                                const TFloat64Range& lambdaRange,
                                                                                const TFloat64Range& redshiftsRange,
-                                                                               const CRayCatalog& restRayCatalog )
+                                                                               const CLineCatalog& restLineCatalog )
 {
 
-  Int32 lineType = CRay::nType_Emission;
+  Int32 lineType = CLine::nType_Emission;
   std::string linetypeStr = "E";
 
   
@@ -151,14 +151,14 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
     m_strongcut = paramStore->GetScoped<Float64>( "linematching.strongcut");
     m_tol = paramStore->GetScoped<Float64>( "linematching.tol");
     m_winsize = paramStore->GetScoped<Float64>( "linematching.winsize");
-    lineType = CRay::nType_All;
+    lineType = CLine::nType_All;
     if( linetypeStr == "Absorption" )
       {
-	lineType = CRay::nType_Absorption;
+	lineType = CLine::nType_Absorption;
       }
     if( linetypeStr == "Emission" )
       {
-        lineType = CRay::nType_Emission;
+        lineType = CLine::nType_Emission;
       }
   }
   
@@ -195,15 +195,15 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
 
   CPeakDetection peakDetection ( m_winsize, m_detectioncut, 1, m_enlargeRate, m_detectionnoiseoffset );
   CSpectrum _spc = spc;
-  if( lineType == CRay::nType_Absorption )
+  if( lineType == CLine::nType_Absorption )
     {
-      Log.LogDebug ( "lineType == CRay::nType_Absorption" );
+      Log.LogDebug ( "lineType == CLine::nType_Absorption" );
       _spc.InvertFlux();
     }
 
-  if ( lineType == CRay::nType_Emission )
+  if ( lineType == CLine::nType_Emission )
     {
-      Log.LogDebug ( "lineType == CRay::nType_Emission" );
+      Log.LogDebug ( "lineType == CLine::nType_Emission" );
     }
 
   auto peakDetectionResult = peakDetection.Compute( _spc );
@@ -264,24 +264,24 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
       auto lineDetectionResult = lineDetection.Compute( _spc, lambdaRange, peakDetectionResult->PeakList, peakDetectionResult->EnlargedPeakList );
       if ( lineDetectionResult || ! m_dynamicLinematching)
       {
-          currentNumberOfPeaks = lineDetectionResult->RayCatalog.GetList().size();
+          currentNumberOfPeaks = lineDetectionResult->LineCatalog.GetList().size();
           if ( ! m_bypassDebug )
               Log.LogDebug ( "Found %d peaks.", currentNumberOfPeaks );
           if( currentNumberOfPeaks>=minimumNumberOfPeaks || numberOfPeaksBestBypass || ! m_dynamicLinematching )
           {
-              Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->RayCatalog.GetList().size() );
-              resultStore.StoreScopedGlobalResult( "raycatalog", lineDetectionResult );
+              Log.LogDebug ( "Storing %d lines from lineDetection in the result store.", lineDetectionResult->LineCatalog.GetList().size() );
+              resultStore.StoreScopedGlobalResult( "linecatalog", lineDetectionResult );
               // Since we know at least one peak that corresponds to a line, let's try to match to a catalogued template.
-              CRayMatching rayMatching;
-              Log.LogDebug ( "Now starting raymatching" );
-              auto rayMatchingResult = rayMatching.Compute( lineDetectionResult->RayCatalog, restRayCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
-              if( rayMatchingResult )
+              CLineMatching lineMatching;
+              Log.LogDebug ( "Now starting linematching" );
+              auto lineMatchingResult = lineMatching.Compute( lineDetectionResult->LineCatalog, restLineCatalog, redshiftsRange, m_minMatchNum, m_tol, lineType );
+              if( lineMatchingResult )
               {
-                  rayMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
-                  Log.LogDebug ( "CRayMatching yielded %d sets of solutions and %d sets of filtered solutions.", rayMatchingResult->SolutionSetList.size(), rayMatchingResult->FilteredSolutionSetList.size() );
+                  lineMatchingResult->FilterWithRules( _spc, lambdaRange, m_winsize );
+                  Log.LogDebug ( "CLineMatching yielded %d sets of solutions and %d sets of filtered solutions.", lineMatchingResult->SolutionSetList.size(), lineMatchingResult->FilteredSolutionSetList.size() );
                   // Store matching results
-                  resultStore.StoreScopedGlobalResult( "raymatching", rayMatchingResult );
-                  rayMatchingResult->GetBestRedshift ( bestRedshift, bestMatchingNumber );
+                  resultStore.StoreScopedGlobalResult( "linematching", lineMatchingResult );
+                  lineMatchingResult->GetBestRedshift ( bestRedshift, bestMatchingNumber );
                   Log.LogDebug ( "bestRedshift == %f, bestMatchingNumber == %d", bestRedshift, bestMatchingNumber );
                   if( bestRedshift != -1.0 )
                   {
@@ -291,7 +291,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperator
                   {
                       return std::make_shared<CLineMatchingSolveResult>();
                   }
-              } // rayMatchingResult
+              } // lineMatchingResult
               else if(! m_dynamicLinematching)
               {
                   return std::make_shared<CLineMatchingSolveResult>();

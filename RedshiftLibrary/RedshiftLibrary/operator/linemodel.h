@@ -53,7 +53,7 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 
@@ -71,7 +71,7 @@ public:
 
     Int32 Init( const CSpectrum& spectrum,
                 const TFloat64List& redshifts,
-                const CRayCatalog::TRayVector restLineCatalog,
+                const CLineCatalog::TLineVector restLineCatalog,
                 const TStringList &tplCategoryList,
                 const std::string &opt_continuumcomponent,
                 const Float64 nsigmasupport, 
@@ -93,7 +93,7 @@ public:
     Int32 ComputeFirstPass(const CSpectrum& spectrum,
                            const CSpectrum& logSampledSpc,
                            const CTemplateCatalog &tplCatalog,
-                           const CRayCatalogsTplShape& tplRatioCatalog,
+                           const CLineCatalogsTplShape& tplRatioCatalog,
                            const TFloat64Range& lambdaRange,
                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
                            const Float64 photo_weight,
@@ -228,7 +228,7 @@ public:
   CLineModelSolution fitWidthByGroups(std::shared_ptr<const CInputContext> context,Float64 redshift);
   void fitVelocityByGroups(TFloat64List velfitlist,
                            TFloat64List zfitlist,
-                           Int32 rayType);
+                           Int32 lineType);
 
   void setHapriorOption(Int32 opt);
   const CSpectrum& getFittedModelWithoutcontinuum(Float64 z, 
@@ -237,7 +237,7 @@ private:
 
     std::shared_ptr<CLineModelResult> m_result;
     std::shared_ptr<CLineModelFitting> m_model;
-    CRayCatalog::TRayVector m_RestLineList;
+    CLineCatalog::TLineVector m_RestLineList;
     TFloat64List m_sortedRedshifts;
     Int32 m_enableFastFitLargeGrid = 0;
     Int32 m_estimateLeastSquareFast = 0;

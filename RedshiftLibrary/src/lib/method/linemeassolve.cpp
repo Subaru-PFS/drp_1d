@@ -70,9 +70,9 @@ namespace NSEpic
   {
     
     const CSpectrum& spc=*(inputContext->GetSpectrum());
-    const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
-    // We keep only emission rays, absorption rays are not handled yet (need to manage continuum appropriately)
-    const CRayCatalog::TRayVector  restLineList = restraycatalog.GetFilteredList(CRay::nType_Emission,-1);
+    const CLineCatalog& restlinecatalog=*(inputContext->GetLineCatalog(m_objectType));
+    // We keep only emission lines, absorption lines are not handled yet (need to manage continuum appropriately)
+    const CLineCatalog::TLineVector  restLineList = restlinecatalog.GetFilteredList(CLine::nType_Emission,-1);
     Log.LogDebug("restLineList.size() = %d", restLineList.size());
 
     Float64 opt_nsigmasupport = inputContext->GetParameterStore()->GetScoped<Float64>("linemodel.nsigmasupport"); // try with 16 (-> parameters.json)
@@ -94,7 +94,7 @@ namespace NSEpic
                                       m_redshifts, 
                                       bestz);
     }
-    bestModelSolution.fillRayIds();
+    bestModelSolution.fillLineIds();
     std::shared_ptr<const CModelSpectrumResult>  modelspc = 
         std::make_shared<const CModelSpectrumResult>(m_linemodel.getFittedModelWithoutcontinuum(bestz, bestModelSolution)); 
     std::shared_ptr<const CLineModelSolution> res = std::make_shared<CLineModelSolution>(std::move(bestModelSolution));

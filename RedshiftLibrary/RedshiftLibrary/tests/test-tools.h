@@ -50,7 +50,7 @@ namespace CPFTest
 
 enum TGenerationKind
 { FULL, HA, DUMB, // Spectra
-  GOOD_SIMPLE, GOOD_FULL, ELRATIO, SUPERSTRONG, // RayCatalog
+  GOOD_SIMPLE, GOOD_FULL, ELRATIO, SUPERSTRONG, // LineCatalog
   BAD_1, BAD_2, BAD_3,
   RANDOM, FLAT // Spectra
 };
@@ -78,7 +78,7 @@ void generate_template_catalog(NSEpic::CTemplateCatalog &catalog,
                                NSEpic::Float64 lambda_min,
                                NSEpic::Float64 lambda_max);
 boost::filesystem::path generate_calibration_dir();
-boost::filesystem::path generate_ray_catalog(TGenerationKind kind);
+boost::filesystem::path generate_line_catalog(TGenerationKind kind);
 
 } // namespace CPFTest
 

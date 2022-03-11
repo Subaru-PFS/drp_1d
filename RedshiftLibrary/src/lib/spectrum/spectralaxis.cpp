@@ -42,7 +42,7 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/line/airvacuum.h"
 #include <cmath>
 using namespace NSEpic;
 using namespace std;

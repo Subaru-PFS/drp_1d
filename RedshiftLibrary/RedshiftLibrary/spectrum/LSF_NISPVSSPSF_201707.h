@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 namespace NSEpic
 {
   /**

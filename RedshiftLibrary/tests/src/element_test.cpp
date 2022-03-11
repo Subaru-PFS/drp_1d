@@ -37,8 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/ray/ray.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/common/exception.h"
@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_SUITE(test_element)
 
 BOOST_AUTO_TEST_CASE(Instance){
   CLineProfile_ptr profilesym = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
-  CRay ray = CRay("O2",0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
+  CLine line = CLine("O2",0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
+  std::vector<CLine> rs;
+  rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
   TInt32List catalogIndexes;
@@ -100,9 +100,9 @@ BOOST_AUTO_TEST_CASE(Instance){
 
 BOOST_AUTO_TEST_CASE(GetLineWidth){
     CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
-    CRay ray = CRay("Halpha",6564.61, 2, std::move(profilesym), 2,1.0, 0.5);
-    std::vector<CRay> rs;
-    rs.push_back(ray);
+    CLine line = CLine("Halpha",6564.61, 2, std::move(profilesym), 2,1.0, 0.5);
+    std::vector<CLine> rs;
+    rs.push_back(line);
     TFloat64List nominalAmplitudes = TFloat64List ();
     nominalAmplitudes.push_back(0.8);
     TInt32List catalogIndexes;
@@ -141,15 +141,15 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
     BOOST_CHECK_CLOSE( 6.61532, elementNip.GetLineWidth(10000., 1., true), 0.001);
     BOOST_CHECK_CLOSE( 6.61534, elementNip.GetLineWidth(10000., 1., false), 0.001);
     */
-    //BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false, CRay::EXTINCT), 0.001);
+    //BOOST_CHECK_CLOSE( 600., elementNip.GetLineWidth(10000., 1., false, CLine::EXTINCT), 0.001);
 
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfile){
   CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
-  CRay ray = CRay("Halpha",6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
+  CLine line = CLine("Halpha",6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
+  std::vector<CLine> rs;
+  rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
   TInt32List catalogIndexes;
@@ -182,9 +182,9 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   
   CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
 
-  CRay ray = CRay("Halpha",6564.61, 2,profilesym->Clone(), 2,1.0, 0.5);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
+  CLine line = CLine("Halpha",6564.61, 2,profilesym->Clone(), 2,1.0, 0.5);
+  std::vector<CLine> rs;
+  rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
   TInt32List catalogIndexes;
@@ -218,9 +218,9 @@ BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
   CLineProfile_ptr profileasym{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(8.))};
 
 /*
-  CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
+  CLine line = CLine("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
+  std::vector<CLine> rs;
+  rs.push_back(line);
   TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
   TInt32List catalogIndexes;

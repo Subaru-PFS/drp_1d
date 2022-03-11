@@ -45,7 +45,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
@@ -82,7 +82,7 @@ private:
     bool m_enableOrtho;
     std::shared_ptr<const CLSF> m_LSF = nullptr;
     std::shared_ptr<CTemplate> OrthogonalizeTemplate(const CTemplate& inputTemplate,
-                                const CRayCatalog::TRayVector &restRayList,
+                                const CLineCatalog::TLineVector &restLineList,
                                 const std::string &opt_fittingmethod,
                                 const std::string &widthType,
                                 const Float64 opt_nsigmasupport,

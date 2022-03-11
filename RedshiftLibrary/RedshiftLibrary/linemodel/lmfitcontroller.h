@@ -40,7 +40,7 @@
 #define _REDSHIFT_LINEMODEL_LMFITCONTROLLER_
 
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic

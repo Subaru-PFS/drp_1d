@@ -36,7 +36,7 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/raydetection.h"
+#include "RedshiftLibrary/operator/linedetection.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
@@ -52,7 +52,7 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(gaussianfit_test)
 
-void addRay(CSpectrumFluxAxis& spectrumFluxAxis, Float64 sigma, Float64 mu, Float64 A){
+void addLine(CSpectrumFluxAxis& spectrumFluxAxis, Float64 sigma, Float64 mu, Float64 A){
   for(Int32 k=mu-sigma*5; k<=mu+sigma*5; k++){
     spectrumFluxAxis[k]+=A*exp(-(k-mu)*(k-mu)/(2*sigma*sigma));
   }
@@ -77,10 +77,10 @@ BOOST_AUTO_TEST_CASE(GaussianFit){
     error[k]=0.5;
   }
 
-  addRay(modelfluxAxis, 4.,40.,1.5);
-  addRay(modelfluxAxis, 4.,80.,4.5);
-  addRay(modelfluxAxis, 3.2,120.85,-5.0);
-  addRay(modelfluxAxis, 2.,155.5,2.5);
+  addLine(modelfluxAxis, 4.,40.,1.5);
+  addLine(modelfluxAxis, 4.,80.,4.5);
+  addLine(modelfluxAxis, 3.2,120.85,-5.0);
+  addLine(modelfluxAxis, 2.,155.5,2.5);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 

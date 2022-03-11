@@ -58,8 +58,8 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                  const CTemplateCatalog& tplCatalog,
                                  const TStringList& tplCategoryList,
                                  const std::string calibrationPath,
-                                 const CRayCatalog::TRayVector& restRayList,
-                                 const CRayCatalogsTplShape& tplRatioCatalog,
+                                 const CLineCatalog::TLineVector& restLineList,
+                                 const CLineCatalogsTplShape& tplRatioCatalog,
                                  const std::string& opt_fittingmethod,
                                  const std::string& opt_continuumcomponent,
                                  const Float64 opt_continuum_neg_threshold,
@@ -110,7 +110,7 @@ CMultiRollModel::CMultiRollModel(const CSpectrum& spectrum,
                                                                     lambdaRange,
                                                                     tplCatalog,
                                                                     tplCategoryList,
-                                                                    restRayList,
+                                                                    restLineList,
                                                                     opt_fittingmethod,
                                                                     opt_continuumcomponent,
                                                                     opt_continuum_neg_threshold,
@@ -216,7 +216,7 @@ Int32 CMultiRollModel::setPassMode(Int32 iPass)
 }
 
 
-bool CMultiRollModel::initTplratioCatalogs(const CRayCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit)
+bool CMultiRollModel::initTplratioCatalogs(const CLineCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit)
 {
     bool ret=-1;
     for(Int32 km=0; km<m_models.size(); km++)

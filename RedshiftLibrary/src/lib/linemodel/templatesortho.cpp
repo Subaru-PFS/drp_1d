@@ -69,13 +69,13 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     }
 
     Int32 typeFilter = -1;
-    if (opt_linetypefilter == "A") typeFilter = CRay::nType_Absorption;
-    else if (opt_linetypefilter == "E")typeFilter = CRay::nType_Emission;
-    Int32 forceFilter = -1; // CRay::nForce_Strong;
+    if (opt_linetypefilter == "A") typeFilter = CLine::nType_Absorption;
+    else if (opt_linetypefilter == "E")typeFilter = CLine::nType_Emission;
+    Int32 forceFilter = -1; // CLine::nForce_Strong;
     if (opt_lineforcefilter == "S")
-    forceFilter = CRay::nForce_Strong;
+    forceFilter = CLine::nForce_Strong;
 
-    CRayCatalog::TRayVector restRayList = inputContext.GetRayCatalog(category)->GetFilteredList(typeFilter, forceFilter);
+    CLineCatalog::TLineVector restLineList = inputContext.GetLineCatalog(category)->GetFilteredList(typeFilter, forceFilter);
     // prepare continuum templates catalog
     std::string opt_fittingmethod="hybrid";
 
@@ -148,7 +148,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
             if (partial && tplCatalog->GetTemplate(category, i)) break; //ortho template  is already there  
             Log.LogDetail(Formatter()<<"    TplOrthogonalization: now processing tpl"<<tpl.GetName() );
             std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(tpl,
-                                                                        restRayList,
+                                                                        restLineList,
                                                                         opt_fittingmethod,
                                                                         widthType,
                                                                         opt_nsigmasupport,
@@ -176,7 +176,7 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
  * @return
  */
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputTemplate,
-                            const CRayCatalog::TRayVector &restRayList,
+                            const CLineCatalog::TLineVector &restLineList,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_lineWidthType,
                             const Float64 opt_nsigmasupport,
@@ -209,7 +209,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
                                      lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
-                                     restRayList,
+                                     restLineList,
                                      opt_fittingmethod,
                                      opt_continuumcomponent,
                                      opt_continuum_neg_threshold,

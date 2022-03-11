@@ -52,7 +52,7 @@
 %shared_ptr(CLogHandler)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
-%shared_ptr(CRayCatalog)
+%shared_ptr(CLineCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CLSFGaussianVariableWidth)
@@ -82,7 +82,7 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
-%shared_ptr(CRayCatalogsTplShape)
+%shared_ptr(CLineCatalogsTplShape)
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
@@ -102,11 +102,11 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-#include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/ray/lineRatioCatalog.h"
-#include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/airvacuum.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/lineRatioCatalog.h"
+#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/airvacuum.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
@@ -321,12 +321,12 @@ class PC
 
 };
 
-class CRayCatalog
+class CLineCatalog
 {
 public:
-  CRayCatalog();
-  CRayCatalog(Float64 nSigmaSupport);
-  void AddRayFromParams(const std::string& name,
+  CLineCatalog();
+  CLineCatalog(Float64 nSigmaSupport);
+  void AddLineFromParams(const std::string& name,
 			const Float64& position,
 			const std::string& type,
 			const std::string& force,
@@ -352,10 +352,10 @@ typedef struct {
     } TAsymParams;
 
 
-class CLineRatioCatalog : public CRayCatalog
+class CLineRatioCatalog : public CLineCatalog
 {
  public:
-  CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+  CLineRatioCatalog(const std::string& name, const CLineCatalog& lineCatalog);
   ~CLineRatioCatalog();
   void addVelocity(const std::string& name, Float64 value);
   void setPrior(Float64 prior);
@@ -364,11 +364,11 @@ class CLineRatioCatalog : public CRayCatalog
 
 };
 
-class CRayCatalogsTplShape
+class CLineCatalogsTplShape
 {
 
 public:
-  CRayCatalogsTplShape();
+  CLineCatalogsTplShape();
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
 
 };
@@ -426,8 +426,8 @@ class CProcessFlowContext {
 public:
   CProcessFlowContext();
   void Init();
-  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog); 
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog); 
   void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}

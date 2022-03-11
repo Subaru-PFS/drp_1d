@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
 
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include <cmath>
 

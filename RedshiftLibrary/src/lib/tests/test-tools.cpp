@@ -374,9 +374,9 @@ bfs::path CPFTest::generate_calibration_dir()
 }
 
 /**
- * Generate a ray catalog file
+ * Generate a line catalog file
  */
-bfs::path CPFTest::generate_ray_catalog(TGenerationKind kind)
+bfs::path CPFTest::generate_line_catalog(TGenerationKind kind)
 {
     string good_simple =
         "#version:0.4.0\t(autoconverted)\n"

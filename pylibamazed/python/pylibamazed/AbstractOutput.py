@@ -115,10 +115,10 @@ class AbstractOutput:
         else:
             return self.object_dataframes[object_type]["model"][rank]
 
-    def get_fitted_rays_by_rank(self, object_type, rank, method):
+    def get_fitted_lines_by_rank(self, object_type, rank, method):
         if method == "LineMeasSolve":
             return self.object_dataframes[object_type]["linemeas"]
-        return self.object_dataframes[object_type]["fitted_rays"][rank]
+        return self.object_dataframes[object_type]["fitted_lines"][rank]
 
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....

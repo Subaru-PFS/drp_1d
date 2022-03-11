@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/line/line.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
@@ -103,7 +103,7 @@ bool CLmfitController::isRedshiftFitted(){
 
 // return if the linetype (given in argument) is fitted by lmfit.
 bool CLmfitController::isLineTypeVelocityFitted(Int32 lineType){
-  if(lineType ==CRay::nType_Emission){
+  if(lineType ==CLine::nType_Emission){
     return isEmissionVelocityFitted();
   }else{
     return isAbsorptionVelocityFitted();

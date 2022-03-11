@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/operator.h"
 
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/continuum/indexes.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
@@ -64,7 +64,7 @@ public:
     CLineModelResult() = default;
 
     void Init(TFloat64List redshifts,
-               CRayCatalog::TRayVector restRays,
+               CLineCatalog::TLineVector restLines,
                Int32 nTplContinuum,
                Int32 nTplshapes,
                TFloat64List tplshapesPriors);
@@ -114,7 +114,7 @@ public:
     std::vector<CContinuumModelSolution> ContinuumModelSolutions;
 
     COperator::TStatusList  Status;
-    CRayCatalog::TRayVector restRayList;
+    CLineCatalog::TLineVector restLineList;
     Int32 nSpcSamples = 0;
     Float64 dTransposeD = 0.0;
     Float64 cstLog = 0.0;

@@ -45,9 +45,9 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 
-#include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/regulament.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/regulament.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include "RedshiftLibrary/operator/templatefitting.h"
@@ -65,7 +65,7 @@
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
-#include "RedshiftLibrary/ray/linetags.h"
+#include "RedshiftLibrary/line/linetags.h"
 
 #include <memory>
 namespace NSEpic
@@ -84,7 +84,7 @@ public:
                         const TFloat64Range& lambdaRange,
                         const CTemplateCatalog& tplCatalog,
                         const TStringList& tplCategoryList,
-                        const CRayCatalog::TRayVector& restRayList,
+                        const CLineCatalog::TLineVector& restLineList,
                         const std::string& opt_fittingmethod,
                         const std::string &opt_continuumcomponent,
                         const Float64 opt_continuum_neg_threshold,
@@ -95,9 +95,9 @@ public:
                         const std::string &opt_rules,
                         const std::string &opt_rigidity);
 
-    void LoadCatalog(const CRayCatalog::TRayVector& restRayList);
-    void LoadCatalogOneMultiline(const CRayCatalog::TRayVector& restRayList);
-    void LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVector& restRayList);
+    void LoadCatalog(const CLineCatalog::TLineVector& restLineList);
+    void LoadCatalogOneMultiline(const CLineCatalog::TLineVector& restLineList);
+    void LoadCatalogTwoMultilinesAE(const CLineCatalog::TLineVector& restLineList);
 
     void LogCatalogInfos();
 
@@ -186,8 +186,8 @@ public:
     void SetVelocityEmissionOneElement(Float64 vel, Int32 idxElt);
     void SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxElt);
 
-  void setVelocity(Float64 vel,Int32 rayType);
-  void setVelocity(Float64 vel, Int32 idxElt,Int32 rayType);
+  void setVelocity(Float64 vel,Int32 lineType);
+  void setVelocity(Float64 vel, Int32 idxElt,Int32 lineType);
 
     Float64 GetVelocityEmission() const;
     Float64 GetVelocityAbsorption() const;
@@ -284,7 +284,7 @@ public:
     CLineModelElementList m_Elements;
     const CSpectrum & m_inputSpc;
     CSpectrum m_SpectrumModel;  //model
-    const CRayCatalog::TRayVector& m_RestRayList;
+    const CLineCatalog::TLineVector& m_RestLineList;
     CSpectrum m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
     const TStringList & GetModelRulesLog() const;
@@ -294,7 +294,7 @@ public:
 
     void SetForcedisableTplratioISMfit(bool opt);
 
-    CRayCatalogsTplShape m_CatalogTplShape;
+    CLineCatalogsTplShape m_CatalogTplShape;
     TFloat64List m_ChisquareTplshape;
     std::vector<TFloat64List> m_FittedAmpTplshape;
     std::vector<TFloat64List> m_FittedErrorTplshape;
@@ -357,7 +357,7 @@ private:
     bool SetMultilineNominalAmplitudes(Int32 iLine);
     bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
     Int32  setLyaProfile(Float64 redshift, 
-                          const CRayCatalog::TRayVector& rayList,
+                          const CLineCatalog::TLineVector& lineList,
                           bool tplratio=false);
     TAsymParams   FitAsymParameters(const Float64& redshift, 
                                     const Int32& idxLyaE,
@@ -371,10 +371,10 @@ private:
     TInt32List ReestimateContinuumUnderLines(const TInt32List & EltsIdx);
     void refreshModelAfterContReestimation(const TInt32List & EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum) const;
 
-    TInt32List findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, const std::string &strTag, Int32 type) const;
+    TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector& restLineList, const std::string &strTag, Int32 type) const;
     TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
     void           applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs& polynom_coeffs);
-    void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
+    void addDoubleLine(const CLine &r1, const CLine &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     Int32 improveBalmerFit();
     void applyRules(bool enableLogs=false);

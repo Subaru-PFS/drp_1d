@@ -44,7 +44,7 @@
 
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
@@ -67,8 +67,8 @@ public:
                     const CTemplateCatalog& tplCatalog,
                     const TStringList& tplCategoryList,
                     const std::string calibrationPath,
-                    const CRayCatalog::TRayVector& restRayList,
-                    const CRayCatalogsTplShape& tplRatioCatalog,
+                    const CLineCatalog::TLineVector& restLineList,
+                    const CLineCatalogsTplShape& tplRatioCatalog,
                     const std::string& opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
                     const Float64 opt_continuum_neg_threshold,
@@ -93,7 +93,7 @@ public:
     Float64 getLeastSquareContinuumMerit();
     Float64 getLeastSquareContinuumMeritFast();
     Float64 getContinuumScaleMargCorrection();
-    bool initTplratioCatalogs(const CRayCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit);
+    bool initTplratioCatalogs(const CLineCatalogsTplShape& tplRatioCatalog, Int32 opt_tplratio_ismFit);
 
     Int32 getSpcNSamples();
     Float64 getDTransposeD();
