@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(Statistics_zprior)
 
 TFloat64List genRedshifts(Int32 size){
   TFloat64List redshifts(size);
-  for (UInt32 i = 0; i < redshifts.size(); i++){
+  for (Int32 i = 0; i < redshifts.size(); i++){
     redshifts[i] = i*0.1;
   }
   return redshifts;
@@ -86,14 +86,14 @@ BOOST_AUTO_TEST_CASE(GetConstantLogZPrior_test)
     TFloat64List logzPrior;
     
     logzPrior = zprior.GetConstantLogZPrior(redshifts.size());
-    for (UInt32 i=0 ; i<logzPrior.size() ; i++){
+    for (Int32 i=0 ; i<logzPrior.size() ; i++){
       BOOST_CHECK(logzPrior[i] == 0.0);
     }
 
     //GetConstantLogZPrior with normalization
     CZPrior zprior_2 = CZPrior(true, redshifts);
     logzPrior = zprior_2.GetConstantLogZPrior(redshifts.size());
-    for (UInt32 i=1 ; i<logzPrior.size() ; i++){
+    for (Int32 i=1 ; i<logzPrior.size() ; i++){
       BOOST_CHECK_CLOSE((logzPrior[i] - logzPrior[i-1]) , 0.0, precision);
     }
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(GetStrongLinePresenceLogZPrior_test)
     //GetStrongLinePresenceLogZPrior
     //without normalization
     TFloat64List logzPrior = zprior.GetStrongLinePresenceLogZPrior(linePresence, penalization_factor);
-    for (UInt32 i=0 ; i<logzPrior.size() ; i++){
+    for (Int32 i=0 ; i<logzPrior.size() ; i++){
       if (i == 3 || i == 4 || i == 5)
         BOOST_CHECK(logzPrior[i] == 0.);
       else
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(GetNLinesSNRAboveCutLogZPrior_test)
     TFloat64List logzPrior = zprior.GetNLinesSNRAboveCutLogZPrior(nlinesAboveSNR, penalization_factor);
 
     BOOST_CHECK(logzPrior[0] == 0.);
-    for (UInt32 i=1 ; i<logzPrior.size() ; i++){
+    for (Int32 i=1 ; i<logzPrior.size() ; i++){
       BOOST_CHECK_CLOSE(logzPrior[i] , log(penalization_factor), precision);
     }
 }
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(GetEuclidNhaLogZPrior_test)
 
     aCoeff = 0.5;
     TFloat64List logzPrior = zprior.GetEuclidNhaLogZPrior(redshifts, aCoeff);
-    for (UInt32 i=1 ; i<logzPrior.size() ; i++){
+    for (Int32 i=1 ; i<logzPrior.size() ; i++){
       BOOST_CHECK_CLOSE(logzPrior[i] , logzprior_ref[i], precision);
     }
 }
