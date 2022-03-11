@@ -36,6 +36,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+from distutils.log import error
 import os.path
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
@@ -66,6 +67,8 @@ class Context:
         self.config = config
         if "linemeascatalog" not in self.config:
             self.config["linemeascatalog"] = {}
+        else:
+            _check_LinemeasValidity(config, parameters)
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
 
@@ -176,3 +179,12 @@ def _check_config(config):
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
                     raise Exception("Config['linemeas_catalog_columns'][{}] misses attribute".format(object_type, attr))
+
+def _check_LinemeasValidity(config, parameters):
+    if not config["linemeascatalog"]:
+        return
+    for object_type in parameters["objects"]:
+        method = parameters[object_type]["method"]
+        if method == "LineModelSolve":
+            if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
+                raise Exception("Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")
