@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.30.0 (2022-03-11)
+### Added
+* [6754] : Add generic object categories
+* [7027] : Save new output results for linemeas method
+* [7056] : Save first pass PDF
+* [6716] : Add account for polynom contribution to continuum flux
+* [6683] : Add linemodel first pass data to hdf5 result file
+* [6724] : Add linemeas for QSO
+* [5638] : Add processing warning flags
+### Changed
+* [6499] : Optimizing processing time, when using hAlpha priors
+* [6965] : Change processflow context API
+* [5811] : Change invalid values for output results (mainly from -1 to NaN)
+* [6856] : Change line catalog and line ratio catalog file formats
+* [6963] : Change reliability model
+### Fixed
+* [6982] : Fix photometry flux unit (compute photometric flux in density/Hz)
+* [5936] : Fix heap-buffer-overflow in fluxes computation
+* [7019] : Fix best model solution for Linemeas, by selecting the minimum Chi2 value
+* [6893] : Fix memory leak in raydetection
+* [6503] : Fix star/qso/galaxy classification
+
+## 0.28.2 (2022-01-21)
+### Fixed
+* [6986] : Fix photometric data loading
+
+## 0.28.1 (2022-01-13)
+### Fixed
+* [6841] : Fix LSF type in API
+* [6970] : Fix python Unit Test
+
 ## 0.28.0 (2021-12-14)
 ### Added
 * [6783] : Add `AbstractSpectrumReader`, abstract class for writing spectrum reader adaptated for user instrument file.
