@@ -213,9 +213,6 @@ class ResultStoreOutput(AbstractOutput):
 
     def write_hdf5(self,hdf5_root,spectrum_id):
         obs = hdf5_root.create_group(spectrum_id)
-        obs.attrs["user_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_utime
-        obs.attrs["system_time"] = resource.getrusage(resource.RUSAGE_SELF).ru_stime
-        obs.attrs["memory_used"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
         self.write_hdf5_root(obs)
 
