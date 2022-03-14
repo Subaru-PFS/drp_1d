@@ -258,7 +258,7 @@ class AbstractSpectrumReader:
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[0].SetName(self.source_id)
 
-        ctx = CProcessFlowContext()
+        ctx = CProcessFlowContext.GetInstance()
         ctx.setSpectrum(self._spectra[0])
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
@@ -285,7 +285,4 @@ class AbstractSpectrumReader:
             flux = tuple([float(f) for f in self.photometric_data[0].Flux])
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
-
-        del ctx
-
 

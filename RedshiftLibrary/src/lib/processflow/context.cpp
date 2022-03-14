@@ -84,3 +84,7 @@ void CProcessFlowContext::Init()
   m_inputContext->Init();
 }
 
+void CProcessFlowContext::reset()
+{
+  m_ResultStore->reset();
+}
