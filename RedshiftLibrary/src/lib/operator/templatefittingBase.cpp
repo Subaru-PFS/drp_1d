@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefittingBase.h"
-#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 using namespace NSEpic;
