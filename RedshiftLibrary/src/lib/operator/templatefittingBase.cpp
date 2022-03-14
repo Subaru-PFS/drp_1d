@@ -37,7 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefittingBase.h"
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
+
 using namespace NSEpic;
 using namespace std;
 
@@ -196,6 +198,5 @@ void COperatorTemplateFittingBase::RebinTemplate(
 // get z at which igm starts given that LyA starts at lbda_rest=1216
 Float64
 COperatorTemplateFittingBase::GetIGMStartingRedshiftValue(Float64 spcLbda0) {
-  Float64 lbdarest_lya = 1216.;
-  return spcLbda0 / lbdarest_lya - 1; // check the rounding thing
+  return spcLbda0 / RESTLAMBDA_LYA - 1; // check the rounding thing
 }

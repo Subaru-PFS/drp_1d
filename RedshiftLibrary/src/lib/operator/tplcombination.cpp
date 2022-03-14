@@ -231,7 +231,7 @@ void COperatorTplcombination::BasicFit(
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
     if (opt_extinction == 1 && !DisextinctData) {
-      if (currentRange.GetBegin() / (1 + redshift) > 1216)
+      if (currentRange.GetBegin() / (1 + redshift) > RESTLAMBDA_LYA)
         igmCorrectionAppliedOnce = false;
       else {
         igmCorrectionAppliedOnce =

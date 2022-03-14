@@ -40,6 +40,7 @@
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/templatefittingBase.h"
@@ -122,7 +123,7 @@ protected:
 
   virtual bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const {
-    return currentRange.GetBegin() > 1216.0;
+    return currentRange.GetBegin() > RESTLAMBDA_LYA;
   };
 
   virtual bool ApplyMeiksinCoeff(Int32 meiksinIdx) {

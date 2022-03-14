@@ -872,7 +872,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // wavelength appear
   Int32 enableIGM = m_enableIGM;
   Int32 overrideNIGMTobesaved = -1;
-  if (tplRebinedLambdaGlobal[kstart] > 1216. && nIGM > 1) {
+  if (tplRebinedLambdaGlobal[kstart] > RESTLAMBDA_LYA && nIGM > 1) {
     overrideNIGMTobesaved = nIGM;
     nIGM = 1;
     enableIGM = 0;
