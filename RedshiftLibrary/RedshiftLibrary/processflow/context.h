@@ -79,6 +79,10 @@ public:
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_inputContext->setPhotBandCatalog(photBandCatalog);}
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog) { m_inputContext->setLineCatalog(objectType,catalog);}
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog) { m_inputContext->setLineRatioCatalogCatalog(objectType,catalog);}
+  void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin){
+    m_inputContext->setfluxCorrectionMeiksin(igmcorrectionMeiksin);
+  };
+
   void Init();
   void reset();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);

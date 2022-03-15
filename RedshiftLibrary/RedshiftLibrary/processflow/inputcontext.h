@@ -91,10 +91,10 @@ class CInputContext
 
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog);
-    void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
-
+  void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin);
   void Init();
 
   void resetSpectrumSpecific();
@@ -106,6 +106,7 @@ private:
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::shared_ptr<CLineCatalog>> m_lineCatalogs;
   std::map<std::string, std::shared_ptr<CLineCatalogsTplShape>> m_lineRatioCatalogCatalogs;
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmcorrectionMeiksin;
 
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;

@@ -87,6 +87,7 @@ class Context:
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)
+        self.process_flow_context.setfluxCorrectionMeiksin(self.calibration_library.meiksin)
 
     def run(self, spectrum_reader):
         self.init_context()

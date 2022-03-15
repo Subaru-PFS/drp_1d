@@ -48,7 +48,9 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   TAsymParams,
-                                  CFlagWarning)
+                                  CFlagWarning,MeiksinCorrection,
+                                  CSpectrumFluxCorrectionMeiksin,
+                                  VecTFloat64List, VecMeiksinCorrection)
 import numpy as np
 from astropy.io import fits
 import glob
@@ -78,6 +80,7 @@ class CalibrationLibrary:
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
         self.calzetti = pd.DataFrame()
+        self.meiksin = {}
         self.reliability_models = {}
 
     def _load_templates(self, object_type, path):
@@ -252,10 +255,33 @@ class CalibrationLibrary:
         calzetti_df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
         # self.calzetti =
 
+    # Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
+    # i.e., from the least extinction curve to the highest extinction curve 
+    def load_Meiksin(self):
+        zbins = [2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0]
+        columns =['restlambda', 'flux0', 'flux1', 'flux2','flux3', 'flux4', 'flux5', 'flux6']
+        #we'd better create a map between meiksin curves and their zbin
+        meiksinCorrectionCurves = VecMeiksinCorrection()
+        for z in zbins: 
+            filename = "Meiksin_Var_curves_"+str(z)+".tsv"
+            meiksin_df = pd.read_csv(os.path.join(self.calibration_dir,"igm/IGM_variation_curves_meiksin", filename ),sep='\t', header=None, names=columns)
+            fluxcorr = VecTFloat64List()#matrix
+            #fluxcorr = meiksin_df.iloc[: , -7:].to_numpy()
+            for r in meiksin_df:
+                if r == 'restlambda':
+                    continue
+                fluxcorr.append(meiksin_df[r].to_numpy())
+            meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
+        self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
+
+        #apply convolution?maybe a bit later in contextFlow?
+
+
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
 
         """
+        self.load_Meiksin()
         for object_type in self.parameters["objects"]:
             self.load_templates_catalog(object_type)
             method = self.parameters[object_type]["method"]

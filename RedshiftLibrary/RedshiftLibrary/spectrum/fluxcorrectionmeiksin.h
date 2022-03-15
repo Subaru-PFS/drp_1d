@@ -49,7 +49,15 @@
 
 namespace NSEpic
 {
-
+    typedef struct MeiksinCorrection{ 
+        MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr):
+                        lbda(_lbda),
+                        fluxcorr(_fluxcorr){};
+        
+        MeiksinCorrection()=default;
+        TFloat64List lbda; // wavelength
+        std::vector<TFloat64List> fluxcorr; // 7 flux correction lists
+    } MeiksinCorrection;
 /**
  * \ingroup Redshift
  */
@@ -58,32 +66,27 @@ class CSpectrumFluxCorrectionMeiksin
 
 public:
 
-    struct MeiksinCorrection{
-        TFloat64List lbda; // wavelength
-        std::vector<TFloat64List> fluxcorr; // 7 flux correction lists
-    };
-
     CSpectrumFluxCorrectionMeiksin();
-    ~CSpectrumFluxCorrectionMeiksin();
+    CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCorves);
+    ~CSpectrumFluxCorrectionMeiksin() = default;
 
-    bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
-    bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
-    TFloat64List Convolve(const TFloat64List& arr, const TFloat64List& kernel);
-    TFloat64List ApplyAdaptativeKernel(const TFloat64List& arr, 
+    void init(  const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
+    TFloat64List convolve(const TFloat64List& arr, const TFloat64List& kernel);
+    TFloat64List applyAdaptativeKernel(const TFloat64List& arr, 
                                         const Float64 z_center, 
                                         const std::shared_ptr<const CLSF>& lsf,
                                         const TFloat64List& lambdas);
-    void ConvolveAll(const std::shared_ptr<const CLSF>& lsf);
+    void convolveAll(const std::shared_ptr<const CLSF>& lsf);
     
-    Int32 GetIdxCount() const;
-    Int32 GetRedshiftIndex(Float64 z) const;
+    Int32 getIdxCount() const;
+    Int32 getRedshiftIndex(Float64 z) const;
 
-    TFloat64List GetSegmentsStartRedshiftList() const;
-    TFloat64List         GetLSFProfileVector(Float64 lambda0_rest, 
+    TFloat64List getSegmentsStartRedshiftList() const;
+    TFloat64List getLSFProfileVector(Float64 lambda0_rest, 
                                              Float64 z_bin_meiksin, 
                                              const std::shared_ptr<const CLSF>& lsf);//for convolution
-    Float64 GetLambdaMin() const;
-    Float64 GetLambdaMax() const;
+    Float64 getLambdaMin() const;
+    Float64 getLambdaMax() const;
     bool meiksinInitFailed = false;
     TFloat64Range m_convolRange;
     std::vector<MeiksinCorrection> m_corrections;
@@ -95,24 +98,24 @@ private:
 
 };
 
-inline TFloat64List CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList() const
+inline TFloat64List CSpectrumFluxCorrectionMeiksin::getSegmentsStartRedshiftList() const
 {
     TFloat64List zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                                        4.5, 5.0, 5.5, 6.0, 6.5};
     return zstartlist;
 };
 
-inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMin() const
+inline Float64 CSpectrumFluxCorrectionMeiksin::getLambdaMin() const
 {
     return m_LambdaMin;
 }
 
-inline Float64 CSpectrumFluxCorrectionMeiksin::GetLambdaMax() const 
+inline Float64 CSpectrumFluxCorrectionMeiksin::getLambdaMax() const 
 {
     return m_LambdaMax;
 }
 
-inline Int32 CSpectrumFluxCorrectionMeiksin::GetIdxCount() const
+inline Int32 CSpectrumFluxCorrectionMeiksin::getIdxCount() const
 {
     return 7; //harcoded value from the number of cols in the ascii files
 }

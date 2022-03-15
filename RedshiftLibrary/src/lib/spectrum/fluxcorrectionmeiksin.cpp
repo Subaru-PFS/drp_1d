@@ -57,121 +57,32 @@ using namespace std;
 using namespace boost;
 
 
-CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin()
+CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin()//should be removed
 {
     m_LambdaMin = 200.0;
     m_LambdaMax = 1299.0;
 }
 
-CSpectrumFluxCorrectionMeiksin::~CSpectrumFluxCorrectionMeiksin()
-{
+CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCorves):
+m_rawCorrections(std::move(meiksinCorrectionCorves)),
+m_LambdaMin(200.0),
+m_LambdaMax(1299.0)
+{}
 
-}
-
-bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
+void CSpectrumFluxCorrectionMeiksin::init(const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
 {
     m_convolRange = convolRange;
-    bfs::path calibrationFolder( calibrationPath.c_str() );
-    TStringList fileNamesList;
-    fileNamesList.push_back("Meiksin_Var_curves_2.0.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_2.5.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_3.0.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_3.5.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_4.0.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_4.5.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_5.0.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_5.5.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_6.0.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_6.5.txt");
-    fileNamesList.push_back("Meiksin_Var_curves_7.0.txt");
-
-    for(Int32 k=0; k<fileNamesList.size(); k++)
-    {
-        bfs::path fPath = ( calibrationFolder/"igm"/"IGM_variation_curves_meiksin"/fileNamesList[k].c_str() ).string();
-        std::string fPathStr = (fPath).string();
-
-        bool ret = LoadCurvesinIncreasingExtinctionOrder(fPathStr.c_str());
-        if(!ret)
-        {
-            Log.LogError("Unable to load the Meiksin flux correction data. aborting...");
-            meiksinInitFailed = true;
-            return false;
-        }
-        meiksinInitFailed = false;
-    }
-
-    ConvolveAll(lsf);
-    return true;
+    convolveAll(lsf);
 }
-
 /**
- * Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
- * i.e., from the least extinction curve to the highest extinction curve 
- *         
- * */
-bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
-{
-    bool loadSuccess=true;
-    std::ifstream file;
-    file.open( filePath, std::ifstream::in );
-    bool fileOpenFailed = file.rdstate() & std::ios_base::failbit;
-    if(fileOpenFailed)
-    {
-        loadSuccess = false;
-    }else
-    {
-        MeiksinCorrection _correction;
-        TFloat64List fluxcorr0;
-        TFloat64List fluxcorr1;
-        TFloat64List fluxcorr2;
-        TFloat64List fluxcorr3;
-        TFloat64List fluxcorr4;
-        TFloat64List fluxcorr5;
-        TFloat64List fluxcorr6;
-
-        std::string line;
-        // Read file line by line
-        while( getline( file, line ) )
-        {
-            if( !boost::starts_with( line, "#" ) )
-            {
-                std::istringstream iss( line );
-                Float64 x, y0, y1, y2, y3, y4, y5, y6;
-                iss >> x >> y0 >> y1 >> y2 >> y3 >> y4 >> y5 >> y6;
-                _correction.lbda.push_back(x);
-                fluxcorr0.push_back(y0);
-                fluxcorr1.push_back(y1);
-                fluxcorr2.push_back(y2);
-                fluxcorr3.push_back(y3);
-                fluxcorr4.push_back(y4);
-                fluxcorr5.push_back(y5);
-                fluxcorr6.push_back(y6);
-            }
-        }
-        file.close();
-        _correction.fluxcorr.push_back(std::move(fluxcorr0));
-        _correction.fluxcorr.push_back(std::move(fluxcorr1));
-        _correction.fluxcorr.push_back(std::move(fluxcorr2));
-        _correction.fluxcorr.push_back(std::move(fluxcorr3));
-        _correction.fluxcorr.push_back(std::move(fluxcorr4));
-        _correction.fluxcorr.push_back(std::move(fluxcorr5));
-        _correction.fluxcorr.push_back(std::move(fluxcorr6));
-
-        m_rawCorrections.push_back(std::move(_correction));
-    }
-
-    return loadSuccess;
-}
-
-/**
- * @brief CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex
+ * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex
  * @param z
  *
  * Returns the index corresponding to the table to be used for that redshift value
  *
  * @return
  */
-Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
+Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const
 {
     Int32 index = -1;
 
@@ -191,7 +102,7 @@ Int32 CSpectrumFluxCorrectionMeiksin::GetRedshiftIndex(Float64 z) const
 }
 
 //TBC once validated
-TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0_rest, Float64 z_bin_meiksin, const std::shared_ptr<const CLSF>& lsf )
+TFloat64List CSpectrumFluxCorrectionMeiksin::getLSFProfileVector(Float64 lambda0_rest, Float64 z_bin_meiksin, const std::shared_ptr<const CLSF>& lsf )
 {
     if(!lsf->IsValid()){
         throw GlobalException(INTERNAL_ERROR,"LSF is not valid");
@@ -230,7 +141,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0
  * f*g[0] = f[0].g[0]
  * f*g[1] = f[0].g[1] + f[1].g[0] = sum(f[i].g[j]) for i, j belonging the intersection
 */
-TFloat64List CSpectrumFluxCorrectionMeiksin::Convolve(const TFloat64List& arr, const TFloat64List& kernel)
+TFloat64List CSpectrumFluxCorrectionMeiksin::convolve(const TFloat64List& arr, const TFloat64List& kernel)
 {
     if(!arr.size() || !kernel.size())
     {
@@ -259,7 +170,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::Convolve(const TFloat64List& arr, c
 }
 //loop over lambda values
 //for each lambda0, compute kernel_lambda0 and then multiply it by the igm curve
-TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat64List& arr, 
+TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(const TFloat64List& arr, 
                                                                  const Float64 z_center, 
                                                                  const std::shared_ptr<const CLSF>& lsf,
                                                                  const TFloat64List& lambdas)
@@ -283,7 +194,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
     for(Int32 i = i_min; i <= i_max; i++){
         Float64 lambda0 = lambdas[i];//lambda restframe
         //compute the adpative kernel at lambda0
-        GetLSFProfileVector(lambda0, z_center, lsf);//resulting kernel saved in m_kernel
+        getLSFProfileVector(lambda0, z_center, lsf);//resulting kernel saved in m_kernel
         Nhalf = int(m_kernel.size()/2);
         if(!m_kernel.size()){
             throw GlobalException(INTERNAL_ERROR,"Cannot convolve: either kernel or array is empty. ");
@@ -310,12 +221,12 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::ApplyAdaptativeKernel(const TFloat6
 /**
  * convolve only on m_convolRange/(1+zbin_meiksin), while keeping vector size
 */
-void CSpectrumFluxCorrectionMeiksin::ConvolveAll(const std::shared_ptr<const CLSF>& lsf)
+void CSpectrumFluxCorrectionMeiksin::convolveAll(const std::shared_ptr<const CLSF>& lsf)
 {
     //to be decided if we create two objects or we keep one m_correction
     m_corrections.resize(m_rawCorrections.size());
 
-    TFloat64List meiksin_Bins = GetSegmentsStartRedshiftList();
+    TFloat64List meiksin_Bins = getSegmentsStartRedshiftList();
     Float64 zstep = meiksin_Bins[2]-meiksin_Bins[1];
 
     //iterate over the redshift list
@@ -329,7 +240,7 @@ void CSpectrumFluxCorrectionMeiksin::ConvolveAll(const std::shared_ptr<const CLS
         
         for(Int32 j = 0; j<m_rawCorrections[i].fluxcorr.size(); j++) //iterating over the different curves
         {   
-            TFloat64List a = ApplyAdaptativeKernel(m_rawCorrections[i].fluxcorr[j], z_center, lsf, m_corrections[i].lbda);
+            TFloat64List a = applyAdaptativeKernel(m_rawCorrections[i].fluxcorr[j], z_center, lsf, m_corrections[i].lbda);
             m_corrections[i].fluxcorr.push_back(std::move(a));
         }
     }

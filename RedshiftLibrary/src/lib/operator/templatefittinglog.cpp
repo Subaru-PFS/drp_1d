@@ -578,7 +578,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
     { 
         Float64 zmax_firstRange = GetIGMStartingRedshiftValue(m_ssSpectrum.GetSpectralAxis()[0]);
         zindexesFullLstSquare.push_back(0); // first index is always a mandatory full Lstsq Calculation case
-        TFloat64List zlistsegments = m_templateRebined_bf.m_igmCorrectionMeiksin->GetSegmentsStartRedshiftList();
+        TFloat64List zlistsegments = m_templateRebined_bf.m_igmCorrectionMeiksin->getSegmentsStartRedshiftList();
         for (Int32 k = 0; k < zlistsegments.size(); k++)
         {
             Int32 i_min = -1;

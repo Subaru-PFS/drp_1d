@@ -259,9 +259,9 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
     {
         if(m_meiksinIdx > -1){
             Int32 kLbdaMeiksin = 0;
-            if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
+            if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin->getLambdaMin())
             {
-                kLbdaMeiksin = Int32(SpectralAxis[k] - m_igmCorrectionMeiksin->GetLambdaMin());
+                kLbdaMeiksin = Int32(SpectralAxis[k] - m_igmCorrectionMeiksin->getLambdaMin());
             }else //if lambda lower than min meiksin value, use lower meiksin value
             {
                 kLbdaMeiksin = 0;
@@ -357,7 +357,7 @@ void CTemplate::InitIsmIgmConfig( Int32 kstart, Int32 kend, Float64 redshift,
 
     if (!MeiksinInitFailed())
     {
-        m_meiksinRedshiftIdx = m_igmCorrectionMeiksin->GetRedshiftIndex(redshift); //index for IGM Meiksin redshift range
+        m_meiksinRedshiftIdx = m_igmCorrectionMeiksin->getRedshiftIndex(redshift); //index for IGM Meiksin redshift range
     
         // get last index in spectral axis where igm can be applied
         m_Igm_kend = GetIgmEndIndex(m_IsmIgm_kstart, m_Ism_kend);
@@ -385,7 +385,7 @@ Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const
     // get last index in spectral axis where igm can be applied
     TAxisSampleList::const_iterator istart = m_SpectralAxis.GetSamplesVector().begin()+kstart;
     TAxisSampleList::const_iterator iend = m_SpectralAxis.GetSamplesVector().begin()+kend+1;
-    TAxisSampleList::const_iterator it = std::upper_bound(istart, iend, m_igmCorrectionMeiksin->GetLambdaMax());
+    TAxisSampleList::const_iterator it = std::upper_bound(istart, iend, m_igmCorrectionMeiksin->getLambdaMax());
     return (it == istart) ? -1 : it - 1 - m_SpectralAxis.GetSamplesVector().begin(); // should be -1 if not applicable (lambdamax< lmabd[kstart]) 
 }
 
@@ -413,7 +413,7 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
     Int32 MeiksinListSize = 1;
     if(opt_extinction && !keepigmism)
     {
-        MeiksinListSize = m_igmCorrectionMeiksin->GetIdxCount();
+        MeiksinListSize = m_igmCorrectionMeiksin->getIdxCount();
     }
     MeiksinList.resize(MeiksinListSize);
     if(opt_extinction)
