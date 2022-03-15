@@ -42,12 +42,11 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/line.h"
-
 #include <string>
 #include <vector>
 
 namespace NSEpic {
-
+class CSpectrumFluxCorrectionMeiksin;
 /**
  * \ingroup Redshift
  * Line catalog allow to store multiple lines description in a single text file.
@@ -72,7 +71,9 @@ public:
       const TAsymParams &asymParams, const std::string &groupName,
       const Float64 &nominalAmplitude, const std::string &velocityGroup,
       const Float64 &velocityOffset, const bool &enableVelocityFit,
-      const Int32 &id, const std::string &str_id);
+      const Int32 &id, const std::string &str_id,
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection =
+          nullptr);
 
   const TLineVector &GetList() const;
   const TLineVector GetFilteredList(Int32 typeFilter = -1,
@@ -84,11 +85,12 @@ public:
 
   void Sort();
 
-  void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
+  void setProfileAndParams(const std::string &profile, TAsymParams params);
 
   void setLineAmplitude(const std::string &str_id,
                         const Float64 &nominalAmplitude);
-
+  void convertLineProfiles2SYMIGM(
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
   void debug(std::ostream &os);
 
 protected:

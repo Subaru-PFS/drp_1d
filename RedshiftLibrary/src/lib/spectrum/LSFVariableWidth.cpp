@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/spectrum/LSFVariableWidth.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/indexing.h"
+#include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/log/log.h"
 using namespace NSEpic;
 using namespace std;

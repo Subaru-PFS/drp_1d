@@ -40,9 +40,8 @@
 #define _REDSHIFT_SPECTRUM_FLUXCORRECTIONMEIKSIN_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
-#include "RedshiftLibrary/spectrum/LSF.h"
-
 namespace fluxcorrectionmeiksin_test { // boost test suite
 // all boost_auto_test_case that use private method
 class correction_multiply_test;
@@ -52,6 +51,7 @@ class correction_multiply_test_CteResolution25_4_incontext;
 class correction_test;
 } // namespace fluxcorrectionmeiksin_test
 namespace NSEpic {
+class CLSF;
 typedef struct MeiksinCorrection {
   MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr)
       : lbda(_lbda), fluxcorr(_fluxcorr){};
@@ -78,11 +78,15 @@ public:
   }; // harcoded value from the number of cols in the ascii files
   Int32 getRedshiftIndex(Float64 z) const;
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
-    return m_corrections[zIdx].fluxcorr[meiksinIdx][lbdaIdx];
+    return m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaIdx);
   };
+
   const TFloat64List &getRedshiftBins() const { return m_zbins; };
+
   Float64 getLambdaMin() const { return m_LambdaMin; };
   Float64 getLambdaMax() const { return m_LambdaMax; };
+  Float64 getCorrection(Float64 redshift, Int32 meiksinIdx,
+                        Float64 lambda) const;
 
 private:
   friend class fluxcorrectionmeiksin_test::correction_multiply_test;

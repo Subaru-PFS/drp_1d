@@ -39,7 +39,7 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
-
+#include "RedshiftLibrary/spectrum/LSF.h"
 using namespace NSEpic;
 
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
@@ -47,6 +47,23 @@ CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     : m_rawCorrections(std::move(meiksinCorrectionCurves)),
       m_LambdaMin(m_rawCorrections[0].lbda.front()), m_LambdaMax(1215.),
       m_zbins(std::move(zbins)) {}
+
+Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
+    Float64 redshift, Int32 meiksinIdx, Float64 lambdaRest) const {
+
+  if (lambdaRest > RESTLAMBDA_LYA) // && meiksinIdx == -1)
+    return 1.;
+
+  if (meiksinIdx == -1)
+    THROWG(INTERNAL_ERROR, "igmIdx cannot be negative");
+  Int32 zIdx = getRedshiftIndex(redshift);
+  if (zIdx == -1)
+    return 1.;
+  Int32 lbdaIdx = -1;
+  TFloat64Index::getClosestLowerIndex(m_corrections[zIdx].fluxcorr[meiksinIdx],
+                                      lambdaRest, lbdaIdx);
+  return getCorrection(zIdx, meiksinIdx, lbdaIdx);
+}
 
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex

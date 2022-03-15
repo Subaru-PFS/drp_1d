@@ -46,8 +46,7 @@
 #include "RedshiftLibrary/line/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/line/lineprofileLOR.h"
 #include "RedshiftLibrary/line/lineprofileSYM.h"
-
-#include <cmath>
+#include "RedshiftLibrary/line/lineprofileSYMIGM.h"
 #include <string>
 
 namespace NSEpic {
@@ -56,6 +55,7 @@ namespace NSEpic {
  * \ingroup Redshift
  * Represent a Single Line.
  */
+class CSpectrumFluxCorrectionMeiksin;
 class CLine {
 
 public:
@@ -113,8 +113,10 @@ public:
   Float64 GetAmpFitError() const;
   TAsymParams GetAsymParams() const;
   void SetAsymParams(TAsymParams asymParams);
-  void setAsymProfileAndParams(const std::string &profileName,
-                               TAsymParams asymParams, Float64 nSigmaSupport);
+  void setProfileAndParams(const std::string &profileName,
+                           TAsymParams asymParams, Float64 nSigmaSupport,
+                           std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+                               igmcorrectionMeiksin = nullptr);
   void resetAsymFitParams();
   void setNominalAmplitude(const Float64 &ampl) { m_NominalAmplitude = ampl; }
 

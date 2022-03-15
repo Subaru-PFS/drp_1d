@@ -41,9 +41,13 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
+#include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include <cmath>
 #include <string>
 namespace NSEpic {
+class CSpectrumFluxCorrectionMeiksin;
+
 /**
  * struct that holds ASYMFIXED profile parameters
  */
@@ -69,26 +73,35 @@ enum TProfile {
   LOR,
   ASYM,
   ASYMFIT,
+  SYMIGM
   // ASYMFIXED,//doesnt exist anymore since merged with ASYM
 };
 /**
  * \ingroup Redshift
  * Abstract class for different line profiles
  */
+
 class CLineProfile {
 
 public:
   CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
   CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
                const TProfile = NONE);
-  virtual Float64 GetLineProfile(Float64 x, Float64 x0,
-                                 Float64 sigma) const = 0;
-  virtual Float64 GetLineFlux(Float64 A, Float64 sigma) const = 0;
+  virtual Float64 GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
+                                 Float64 redshift = NAN,
+                                 Int32 igmIdx = -1) const = 0;
+
+  virtual Float64 GetLineFlux(Float64 A, const Float64 sigma,
+                              Float64 redshift = NAN, Float64 mu = NAN,
+                              Int32 igmIdx = -1) const = 0;
+
   virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                       Float64 redshift,
-                                       Float64 sigma) const = 0;
-  virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                           Float64 sigma) const = 0;
+                                       Float64 redshift, Float64 sigma,
+                                       Int32 igmIdx = -1) const = 0;
+
+  virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma,
+                                           Float64 redshift = NAN,
+                                           Int32 igmIdx = -1) const = 0;
   virtual Float64 GetNSigmaSupport() const;
 
   const TProfile &GetName() const;
@@ -98,6 +111,8 @@ public:
   virtual bool isAsymFixed() const;
   virtual void SetAsymParams(TAsymParams params){};
   virtual void resetAsymFitParams();
+
+  virtual Int32 getIGMIdxCount() const;
   CLineProfile(const CLineProfile &other) = default;
   CLineProfile(CLineProfile &&other) = default;
   CLineProfile &operator=(const CLineProfile &other) = default;
@@ -145,5 +160,9 @@ inline bool CLineProfile::isAsymFixed() const {
 }
 inline void CLineProfile::resetAsymFitParams() { return; }
 
+inline Int32 CLineProfile::getIGMIdxCount() const {
+  THROWG(INTERNAL_ERROR, "getIGMIdxCount is not defined "
+                         "for non-SYMIGM lineprofile");
+}
 } // namespace NSEpic
 #endif

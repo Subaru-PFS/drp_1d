@@ -99,8 +99,8 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
   return m0;
 }
 
-Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0,
-                                         Float64 sigma) const {
+Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
+                                         Float64 redshift, Int32 igmIdx) const {
   if (!isValid()) {
     THROWG(INTERNAL_ERROR, "LineProfile is not valid");
   }
@@ -116,13 +116,15 @@ Float64 CLineProfileASYM::GetNSigmaSupport() const {
   return m_nsigmasupport * m_asym_sigma_coeff * m_constSigma;
 }
 
-Float64 CLineProfileASYM::GetLineFlux(Float64 A, Float64 sigma) const {
+Float64 CLineProfileASYM::GetLineFlux(Float64 A, const Float64 sigma,
+                                      Float64 redshift, Float64 mu,
+                                      Int32 igmIdx) const {
   return A * sigma * m_asym_sigma_coeff * sqrt(2 * M_PI);
 }
 
 Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0,
-                                               Float64 redshift,
-                                               Float64 sigma) const {
+                                               Float64 redshift, Float64 sigma,
+                                               Int32 igmIdx) const {
   if (!isValid()) {
     THROWG(INTERNAL_ERROR, "LineProfile is not valid");
   }
@@ -141,7 +143,9 @@ Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0,
 }
 
 Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                                   Float64 sigma) const {
+                                                   Float64 sigma,
+                                                   Float64 redshift,
+                                                   Int32 igmIdx) const {
   if (!isValid()) {
     THROWG(INTERNAL_ERROR, "LineProfile is not valid");
   }

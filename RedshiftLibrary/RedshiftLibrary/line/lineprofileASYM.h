@@ -53,13 +53,17 @@ public:
                    const TAsymParams params = ASYM_DEFAULT_PARAMS,
                    const std::string centeringMethod = "none");
 
-  Float64 GetLineProfile(Float64 x, Float64 x0,
-                         const Float64 sigma) const override;
-  Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;
+  Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma,
+                         Float64 redshift = NAN,
+                         Int32 igmIdx = -1) const override;
+  Float64 GetLineFlux(Float64 A, const Float64 sigma, Float64 redshift = NAN,
+                      Float64 mu = NAN, Int32 igmIdx = -1) const override;
   Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                               const Float64 sigma) const override;
-  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                   const Float64 sigma) const override;
+                               const Float64 sigma,
+                               Int32 igmIdx = -1) const override;
+  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma,
+                                   Float64 redshift,
+                                   Int32 igmIdx) const override;
   Float64 GetNSigmaSupport() const override;
 
   Float64 GetAsymDelta() const override;

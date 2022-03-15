@@ -39,8 +39,8 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/log/log.h"
-
 #include <algorithm> // std::sort
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
@@ -157,8 +157,9 @@ void CLineCatalog::AddLineFromParams(
     const TAsymParams &asymParams, const std::string &groupName,
     const Float64 &nominalAmplitude, const std::string &velocityGroup,
     const Float64 &velocityOffset, const bool &enableVelocityFit,
-    const Int32 &id, const std::string &str_id) {
-  int etype = -1;
+    const Int32 &id, const std::string &str_id,
+    const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
+  Int32 etype = -1;
   if (type == "E")
     etype = 2;
   else if (type == "A")
@@ -167,7 +168,7 @@ void CLineCatalog::AddLineFromParams(
     THROWG(INTERNAL_ERROR,
            Formatter() << "Bad line type, should be in {A,E} : " << type);
 
-  int eforce = -1;
+  Int32 eforce = -1;
   if (force == "W")
     eforce = 1;
   else if (force == "S")
@@ -179,23 +180,25 @@ void CLineCatalog::AddLineFromParams(
   TAsymParams _asymFitParams = {2., 2., 0.};
   std::unique_ptr<CLineProfile> profile;
 
-  if (profileName.find("ASYMFIXED") != std::string::npos) {
+  if (profileName.find("ASYMFIXED") != std::string::npos)
     profile = std::unique_ptr<CLineProfileASYM>(
         new CLineProfileASYM(m_nSigmaSupport, asymParams, "mean"));
-  } else if (profileName == "SYM")
+  else if (profileName == "SYM")
     profile =
         std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(m_nSigmaSupport));
   else if (profileName == "LOR")
     profile =
         std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(m_nSigmaSupport));
-  else if (profileName == "ASYM") {
-
+  else if (profileName == "ASYM")
     profile = std::unique_ptr<CLineProfileASYM>(
         new CLineProfileASYM(m_nSigmaSupport, _asymParams, "none"));
-  } else if (profileName == "ASYMFIT") {
+  else if (profileName == "ASYMFIT")
     profile = std::unique_ptr<CLineProfileASYMFIT>(
         new CLineProfileASYMFIT(m_nSigmaSupport, _asymFitParams, "mean"));
-  } else {
+  else if (profileName == "SYMIGM")
+    profile = std::unique_ptr<CLineProfileSYMIGM>(
+        new CLineProfileSYMIGM(igmcorrection, m_nSigmaSupport));
+  else {
     THROWG(INTERNAL_ERROR, Formatter() << "Profile name " << profileName
                                        << " is no recognized.");
   }
@@ -218,15 +221,31 @@ void CLineCatalog::setLineAmplitude(const std::string &str_id,
                                      << " does not exist in catalog");
 }
 
-void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
-                                           TAsymParams params) {
+/**
+ * @brief only called for tplRatio catalogs
+ * hereinafter we consider that only one ASYMFIT profile exists in linecatalog
+ * and that it corresponds to Lya
+ * @param profile
+ * @param params
+ */
+void CLineCatalog::setProfileAndParams(const std::string &profile,
+                                       TAsymParams params) {
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
     if (it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed())
-      return it->setAsymProfileAndParams(profile, params, m_nSigmaSupport);
+      return it->setProfileAndParams(profile, params, m_nSigmaSupport);
   }
-  THROWG(INTERNAL_ERROR,
-         "Cannot set asym parameters on this catalog, lyA does not exist");
+}
+
+void CLineCatalog::convertLineProfiles2SYMIGM(
+    const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection) {
+  linetags ltags;
+  TLineVector::iterator it;
+  for (it = m_List.begin(); it != m_List.end(); ++it) {
+    if (it->GetName() == ltags.lya_em || it->GetPosition() < RESTLAMBDA_LYA)
+      it->setProfileAndParams("SYMIGM", TAsymParams{NAN, NAN, NAN},
+                              m_nSigmaSupport, igmcorrection);
+  }
 }
 
 void CLineCatalog::debug(std::ostream &os) {

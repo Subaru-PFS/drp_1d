@@ -228,7 +228,10 @@ void COperatorTplcombination::BasicFit(
     bool igmCorrectionAppliedOnce = false;
     // applyMeiksin on all templates
     if (opt_extinction == 1 && !DisextinctData) {
-      if (currentRange.GetBegin() / (1 + redshift) > RESTLAMBDA_LYA)
+      if (currentRange.GetBegin() / (1 + redshift) >
+          RESTLAMBDA_LYA) // bug??: why dividing by (1+z) if currentRange is
+                          // already in restframe??
+        // if(COperatorTemplateFitting::CheckLyaIsInCurrentRange(currentRange))
         igmCorrectionAppliedOnce = false;
       else {
         igmCorrectionAppliedOnce =

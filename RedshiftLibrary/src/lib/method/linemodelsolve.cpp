@@ -87,6 +87,14 @@ bool CLineModelSolve::PopulateParameters(
       parameterStore->GetScoped<std::string>("linemodel.lineforcefilter");
   m_opt_fittingmethod =
       parameterStore->GetScoped<std::string>("linemodel.fittingmethod");
+
+  m_opt_igmfit = parameterStore->GetScoped<bool>(
+      "linemodel.igmfit"); // TODO: merge it with
+                           // @linemodel.continuumfit.igmfit@ note that this
+                           // latter is conditionned to using "tplfit*" for
+                           // continuum?! Do we really want to igm independing
+                           // from continuum component?
+
   m_opt_secondpasslcfittingmethod = parameterStore->GetScoped<std::string>(
       "linemodel.secondpasslcfittingmethod");
   m_opt_skipsecondpass =
@@ -150,6 +158,11 @@ bool CLineModelSolve::PopulateParameters(
             "linemodel.continuumfit.priors.catalog_dirpath"); // no priors by
                                                               // default
   }
+
+  /*if(m_opt_igmfit!=m_opt_tplfit_igmfit)
+      throw GlobalException(INCOHERENT_INPUTPARAMETERS, "igmfit should be
+     activated for both continuum and linemodel");*/
+
   m_opt_rigidity = parameterStore->GetScoped<std::string>("linemodel.rigidity");
 
   if (m_opt_rigidity == "tplshape") {
@@ -933,6 +946,7 @@ bool CLineModelSolve::Solve(
   if (retInit != 0) {
     THROWG(INTERNAL_ERROR, "Linemodel, init failed. Aborting");
   }
+  m_linemodel.m_opt_igmfit = m_opt_igmfit;
   m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
   //
   if (m_opt_continuumcomponent == "tplfit" ||

@@ -36,21 +36,26 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINE_PROFILE_LOR_
-#define _REDSHIFT_LINE_PROFILE_LOR_
+#ifndef _REDSHIFT_LINE_PROFILE_SYMIGM_
+#define _REDSHIFT_LINE_PROFILE_SYMIGM_
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
-#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/line/lineprofileSYM.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
 #include <math.h>
 #include <string>
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
  */
-class CLineProfileLOR : public CLineProfile {
+class CLineProfileSYMIGM : public CLineProfileSYM {
 public:
-  CLineProfileLOR(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+  CLineProfileSYMIGM(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+                         &igmcorrectionMeiksin,
+                     const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+
   Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma,
                          Float64 redshift = NAN,
                          Int32 igmIdx = -1) const override;
@@ -62,12 +67,15 @@ public:
   Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma,
                                    Float64 redshift,
                                    Int32 igmIdx) const override;
-  Float64 GetNSigmaSupport() const override;
+  Int32 getIGMIdxCount() const override;
 
 private:
   CLineProfile *CloneImplementation() const override {
-    return new CLineProfileLOR(*this);
+    return new CLineProfileSYMIGM(*this);
   }
+  std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+  void MeiksinInitFailed() const;
+  Int32 getIGMCorrection(Float64 x, Float64 redshift, Int32 igmIdx) const;
 };
 } // namespace NSEpic
 #endif

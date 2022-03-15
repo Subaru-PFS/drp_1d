@@ -175,7 +175,7 @@ public:
 
   bool m_opt_tplfit_fftprocessing =
       false; // we cant set it as the default since not taken into account when
-             // deiding on rebinning
+             // deciding on rebinning
   bool m_opt_tplfit_fftprocessing_secondpass = false; // true;
   bool m_opt_tplfit_use_photometry = false;
   Int32 m_opt_tplfit_dustFit = 1;
@@ -187,7 +187,7 @@ public:
   Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
   std::string m_opt_tplfit_continuumprior_dirpath = "";
-
+  bool m_opt_igmfit = false;
   Int32 m_opt_tplratio_ismFit = 1;
   Int32 m_opt_firstpass_tplratio_ismFit = 0;
   Int32 m_opt_firstpass_multiplecontinuumfit_disable = 1;

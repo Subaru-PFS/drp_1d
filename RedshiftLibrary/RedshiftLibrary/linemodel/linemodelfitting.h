@@ -88,7 +88,8 @@ public:
                     Float64 velocityEmission, Float64 velocityAbsorption,
                     const std::string &opt_rules,
                     const std::string &opt_rigidity,
-                    Int32 amplitudeOffsetsDegree = 2);
+                    Int32 amplitudeOffsetsDegree = 2,
+                    const bool opt_igmfit = false);
 
   void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
   void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
@@ -328,7 +329,9 @@ public:
   bool m_opt_enable_improveBalmerFit = false;
   Float64 m_opt_haprior = -1.;
   void setHaPriorOption(Float64 opt) { m_opt_haprior = opt; };
-
+  void setIgmIndex(Int32 igmIdx) {
+    m_fitContinuum_tplFitMeiksinIdx = igmIdx;
+  }; // only used for template orthogonalization
 private:
   Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis &spectralAxis,
                             const CSpectrumFluxAxis &spcFluxAxisNoContinuum,
@@ -363,9 +366,12 @@ private:
   Int32 setLyaProfile(Float64 redshift,
                       const CLineCatalog::TLineVector &lineList,
                       bool tplratio = false);
-  TAsymParams FitAsymParameters(const Float64 &redshift, const Int32 &idxLyaE,
+  TAsymParams fitAsymParameters(const Float64 &redshift, const Int32 &idxLyaE,
                                 const TInt32List &filterEltsIdxLya,
                                 const Int32 &idxLineLyaE);
+  Int32 fitAsymIGMCorrection(const Float64 &redshift, const Int32 &idxLyaE,
+                             const TInt32List &filterEltsIdxLya,
+                             const Int32 &idxLineLyaE);
   void SetLSF();
 
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
@@ -439,6 +445,7 @@ private:
   std::string m_rulesoption;
   std::string m_rigidity;
   bool m_forcedisableTplratioISMfit = false;
+  bool m_opt_igmfit;
 
   CTemplateCatalog m_tplCatalog;
   TStringList m_tplCategoryList;

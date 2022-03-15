@@ -67,8 +67,8 @@ public:
 
   Float64 GetObservedPosition(Int32 subeIdx, Float64 redshift,
                               bool doAsymfitdelta = true) const;
-  Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift,
-                                   Float64 x) const;
+  Float64 GetLineProfileAtRedshift(Int32 subeIdx, Float64 redshift, Float64 x,
+                                   Int32 tplFitMeiksinIdx) const;
   void getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift,
                                        Float64 &mu, Float64 &sigma,
                                        bool doAsymfitdelta = true) const;
@@ -98,36 +98,44 @@ public:
   void fitAmplitude(const CSpectrumSpectralAxis &spectralAxis,
                     const CSpectrumFluxAxis &fluxAxis,
                     const CSpectrumFluxAxis &continuumfluxAxis,
-                    Float64 redshift, Int32 lineIdx = undefIdx);
+                    Float64 redshift, Int32 tplFitMeiksinIdx,
+                    Int32 lineIdx = undefIdx);
   void fitAmplitudeAndLambdaOffset(const CSpectrumSpectralAxis &spectralAxis,
                                    const CSpectrumFluxAxis &fluxAxis,
                                    const CSpectrumFluxAxis &continuumfluxAxis,
-                                   Float64 redshift, Int32 lineIdx = undefIdx,
+                                   Float64 redshift, Int32 tplFitMeiksinIdx,
+                                   Int32 lineIdx = undefIdx,
                                    bool enableOffsetFitting = true,
                                    Float64 step = 25., Float64 min = -400.,
                                    Float64 max = 400.);
   Float64 getModelAtLambda(Float64 lambda, Float64 redshift,
-                           Float64 continuumFlux,
+                           Float64 continuumFlux, Int32 tplFitMeiksinIdx,
                            Int32 kLineSupport = -1) const;
   Float64 GetModelDerivAmplitudeAtLambda(Float64 lambda, Float64 redshift,
-                                         Float64 continuumFlux) const;
+                                         Float64 continuumFlux,
+                                         Int32 tplFitMeiksinIdx) const;
   Float64 GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift,
-                                            Float64 continuumFluxUnscale) const;
+                                            Float64 continuumFluxUnscale,
+                                            Int32 tplFitMeiksinIdx) const;
   Float64 GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift,
-                                            Float64 continuumFlux) const;
+                                            Float64 continuumFlux,
+                                            Int32 tplFitMeiksinIdx) const;
   Float64 GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
                                  Float64 continuumFlux,
-                                 Float64 continuumFluxDerivZ) const;
+                                 Float64 continuumFluxDerivZ,
+                                 Int32 tplFitMeiksinIdx) const;
 
   void addToSpectrumModel(const CSpectrumSpectralAxis &modelspectralAxis,
                           CSpectrumFluxAxis &modelfluxAxis,
                           const CSpectrumFluxAxis &continuumfluxAxis,
-                          Float64 redshift, Int32 lineIdx = undefIdx) const;
+                          Float64 redshift, Int32 tplFitMeiksinIdx,
+                          Int32 lineIdx = undefIdx) const;
   void
   addToSpectrumModelDerivVel(const CSpectrumSpectralAxis &modelspectralAxis,
                              CSpectrumFluxAxis &modelfluxAxis,
                              const CSpectrumFluxAxis &continuumFluxAxis,
-                             Float64 redshift, bool emissionLine) const;
+                             Float64 redshift, bool emissionLine,
+                             Int32 tplFitMeiksinIdx) const;
 
   void initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis,
                          const CSpectrumFluxAxis &continuumfluxAxis,
@@ -174,8 +182,9 @@ public:
   bool IsOutsideLambdaRange(Int32 subeIdx) const;
 
   Float64 GetLineProfileDerivVel(const CLineProfile &profile, Float64 x,
-                                 Float64 x0, Float64 sigma,
-                                 bool isEmission) const;
+                                 Float64 x0, Float64 sigma, bool isEmission,
+                                 Float64 redshift,
+                                 Int32 tplFitMeiksinIdx) const;
 
   Float64 GetSumCross() const;
   void SetSumCross(Float64 val);

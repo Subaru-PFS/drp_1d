@@ -41,10 +41,11 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/lineprofile.h"
-#include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 namespace NSEpic {
 class CLineProfile;
+class CSpectrumFluxCorrectionMeiksin;
+class CLSF;
 
 struct TLSFArguments {
   // std::string type;
