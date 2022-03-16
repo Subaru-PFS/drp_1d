@@ -21,9 +21,9 @@ VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	
 StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double
 LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double
 LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double
-FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]
-FittedRaysID	fitted_rays	i	extrema_results	multi	False	candidate	lineId	list[int]
-FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	Fluxs	list[double]
+FittedLineLambda	fitted_lines	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]
+FittedLineID	fitted_lines	i	extrema_results	multi	False	candidate	lineId	list[int]
+FittedLineFlux	fitted_lines	f8	extrema_results	multi	False	candidate	Fluxs	list[double]
 ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]
 ModelFlux	model	f8	extrema_results	multi	False	candidate	ModelFlux	list[double]
 BestContinuumLambda	continuum	f8	extrema_results	multi	False	candidate	wavel	list[double]
