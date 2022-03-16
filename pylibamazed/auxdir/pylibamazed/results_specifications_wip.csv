@@ -13,15 +13,7 @@ ModelMeiksinIdx	model_parameters	i	FALSE	mono	False	candidate	IgmIdx	int	star/ga
 ModelTplName	model_parameters	S40	FALSE	mono	False	candidate	Name	string	star/galaxy	templatefittingsolve	FALSE
 ModelDustCoeff	model_parameters	f8	FALSE	mono	False	candidate	IsmCoeff	double	star/galaxy	templatefittingsolve	FALSE
 ModelAmplitude	model_parameters	f8	FALSE	mono	False	candidate	Amp	double	star/galaxy	templatefittingsolve	FALSE
-FirstpassRedshift	model_parameters	f8	firstpass_extrema	mono	True	candidate	Redshift	double	galaxy	linemodelsolve	FALSE
-FirstpassProbaDensity	model_parameters	f8	firstpass_extrema	mono	True	candidate	RedshiftProbaDensity	double	galaxy	linemodelsolve	FALSE
-FirstpassContinuumName	model_parameters	S40	firstpass_extrema	mono	True	candidate	FittedTplName	string	galaxy	linemodelsolve	FALSE
-FirstpassContinuumIsmCoeff	model_parameters	f8	firstpass_extrema	mono	True	candidate	FittedTplDustCoeff	double	galaxy	linemodelsolve	FALSE
-FirstpassContinuumIgmIndex	model_parameters	i	firstpass_extrema	mono	True	candidate	FittedTplMeiksinIdx	int	galaxy	linemodelsolve	FALSE
-FirstpassContinuumAmplitude	model_parameters	f8	firstpass_extrema	mono	True	candidate	FittedTplAmplitude	double	galaxy	linemodelsolve	FALSE
-FirstpassContinuumAmplitudeUncertainty	model_parameters	f8	firstpass_extrema	mono	True	candidate	FittedTplAmplitudeUncertainty	double	galaxy	linemodelsolve	FALSE
-FirstpassVelocityEmission	model_parameters	f8	firstpass_extrema	mono	True	candidate	Elv	double	galaxy	linemodelsolve	FALSE
-FirstpassVelocityAbsorption	model_parameters	f8	firstpass_extrema	mono	True	candidate	Alv	double	galaxy	linemodelsolve	FALSE
-FirstpassFittedTemplateDtM	model_parameters	f8	firstpass_extrema	mono	True	candidate	FittedTplDtM	double	galaxy	linemodelsolve	FALSE
-FirstpassFittedTemplateMtM	model_parameters	f8	firstpass_extrema	mono	True	candidate	FittedTpltMtM	double	galaxy	linemodelsolve	FALSE
 FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate		list[double]	galaxy	linemodelsolve	FALSE
+Linemeas_ContinuumCoeffX0	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff0	list[double]			
+Linemeas_ContinuumCoeffX1	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff1	list[double]			
+Linemeas_ContinuumCoeffX2	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff2	list[double]			

@@ -50,14 +50,14 @@ using namespace NSEpic;
 using namespace std;
 
 
-CMethodTplcombinationSolve::CMethodTplcombinationSolve(TScopeStack &scope,string objectType):
-  CSolve("tplcombinationsolve",scope,objectType)
+CTplcombinationSolve::CTplcombinationSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("TplcombinationSolve",scope,objectType)
 {
 }
 
 
 
-std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                                  std::shared_ptr<COperatorResultStore> resultStore,
                                                                                  TScopeStack &scope)
 
@@ -67,7 +67,7 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     const CSpectrum& spc=*(inputContext->GetSpectrum());
     const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
 
-    Bool storeResult = false;
+    bool storeResult = false;
     m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>("extremaredshiftseparation");
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
     m_opt_pdfcombination = inputContext->GetParameterStore()->GetScoped<std::string>( "pdfcombination");
@@ -116,7 +116,6 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
     Solve(resultStore,
           spc,
           tplCatalog,
-          m_categoryList,
           m_lambdaRange,
           m_redshifts,
           overlapThreshold,
@@ -147,7 +146,6 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
                                         candidateResult->m_ranked_candidates,
                                         spc,
                                         tplCatalog,
-                                        m_categoryList,
                                         clampedLbdaRange,
                                         overlapThreshold,
                                         opt_interp);
@@ -158,23 +156,22 @@ std::shared_ptr<CSolveResult> CMethodTplcombinationSolve::compute(std::shared_pt
       std::make_shared<CTplCombinationSolveResult>( resultStore->GetCurrentScopeName(),
 						    extremaResult->m_ranked_candidates[0].second,
 						    m_opt_pdfcombination,
-						    pdfz.m_postmargZResult->valEvidenceLog
+						    pdfz.m_postmargZResult->valMargEvidenceLog
 						    );
 
     return solveResult;
 
 }
 
-Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                        const CSpectrum& spc,
                                        const CTemplateCatalog& tplCatalog,
-                                       const TStringList& tplCategoryList,
                                        const TFloat64Range& lambdaRange,
                                        const TFloat64List& redshifts,
                                        Float64 overlapThreshold,
-                                       std::vector<CMask> maskList,
+                                       const std::vector<CMask> &maskList,
                                        EType spctype,
-                                       std::string opt_interp,
+                                       const std::string &opt_interp,
                                        bool opt_extinction,
                                        bool opt_dustFitting)
 {
@@ -195,19 +192,19 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     }
 
     //prepare the list of components/templates
-    if(tplCategoryList.size()>1){
+    if(m_categoryList.size()>1){
         throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(m_categoryList);
     if (tplList.empty())
       {
-	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< tplCategoryList[0] <<" is empty");
+	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
       }
 
     //check all templates have same spectralAxis
     const CSpectrumSpectralAxis& refSpcAxis = tplList[0]->GetSpectralAxis();
-    UInt32 axisSize = refSpcAxis.GetSamplesCount();
+    Int32 axisSize = refSpcAxis.GetSamplesCount();
     for(Int32 ktpl=1; ktpl<tplList.size(); ktpl++)
     {
         const CSpectrumSpectralAxis& currentSpcAxis = tplList[ktpl]->GetSpectralAxis();
@@ -295,7 +292,7 @@ Bool CMethodTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> res
     return true;
 }
 
-ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
+ChisquareArray CTplcombinationSolve::BuildChisquareArray(std::shared_ptr<COperatorResultStore> store,
                                                                const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
@@ -342,8 +339,8 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
 
         //check chi2 results status for this template
         {
-            Bool foundBadStatus = 0;
-            for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+            bool foundBadStatus = 0;
+            for ( Int32 kz=0; kz<result->Redshifts.size(); kz++)
             {
                 if(result->Status[kz]!=COperator::nStatus_OK)
                 {
@@ -367,7 +364,7 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
                 chisquarearray.chisquares.emplace_back(result->ChiSquareIntermediate.size(), DBL_MAX);
                 TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
-                for ( UInt32 kz=0; kz<result->Redshifts.size(); kz++)
+                for ( Int32 kz=0; kz<result->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = result->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
@@ -379,12 +376,11 @@ ChisquareArray CMethodTplcombinationSolve::BuildChisquareArray(std::shared_ptr<C
     return chisquarearray;
 }
 std::shared_ptr<const TplCombinationExtremaResult> 
-CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+CTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
                                                std::string opt_interp)
@@ -404,13 +400,13 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     auto TplFitResult = std::dynamic_pointer_cast<const CTplCombinationResult>( results.lock());
     const TFloat64List & redshifts = TplFitResult->Redshifts;
 
-    Bool foundRedshiftAtLeastOnce = false;
+    bool foundRedshiftAtLeastOnce = false;
 
     if(TplFitResult->ChiSquare.size() != redshifts.size()){
         throw GlobalException(INTERNAL_ERROR,"CTplCombinationSolve::SaveExtremaResult, templatefitting results has wrong size");
     }
 
-    Bool foundBadStatus = false;
+    bool foundBadStatus = false;
 
     if(foundBadStatus)
     {
@@ -418,11 +414,11 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
     }
 
     //prepare the list of components/templates
-    if(tplCategoryList.size()>1){
+    if(m_categoryList.size()>1){
       throw GlobalException(INTERNAL_ERROR,"Multiple categories are passed for tplcombinationsolve. Only one is required");
     }
 
-    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(tplCategoryList);
+    const TTemplateConstRefList & tplList = tplCatalog.GetTemplateList(m_categoryList);
 
     std::shared_ptr<TplCombinationExtremaResult> extremaResult = make_shared<TplCombinationExtremaResult>(ranked_zCandidates);
     Int32 extremumCount = ranked_zCandidates.size();
@@ -444,7 +440,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
         extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior= NAN;
         extremaResult->m_ranked_candidates[i].second.FittedTplSNR= TplFitResult->SNR[idx];
         //make sure tpl is non-rebinned
-        Bool currentSampling = tplCatalog.m_logsampling;
+        bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = m_tplcombinationOperator.ComputeSpectrumModel(spc, tplList, 
                                                         z,
@@ -463,7 +459,7 @@ CMethodTplcombinationSolve::SaveExtremaResult(std::shared_ptr<const COperatorRes
 }
 
 
-void CMethodTplcombinationSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+void CTplcombinationSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
                                                        std::shared_ptr<const TplCombinationExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);

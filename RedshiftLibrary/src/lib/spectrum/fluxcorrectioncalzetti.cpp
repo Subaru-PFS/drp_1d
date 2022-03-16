@@ -68,7 +68,7 @@ CSpectrumFluxCorrectionCalzetti::~CSpectrumFluxCorrectionCalzetti()
 {
 }
 
-Bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n)
+bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n)
 {
     //load calzetti data
     bfs::path calibrationFolder( calibrationPath.c_str() );

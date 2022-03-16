@@ -72,11 +72,11 @@ public:
     const std::string m_scope;
     //std::string m_name;
 
-  std::string m_tplName = "-1";
-  Float64 m_amplitude = 0.0;
-  Float64 m_amplitudeError = -1.0;
-  Float64 m_EbmvCoeff = -1.0;
-  Int32   m_meiksinIdx = -1.0;
+  std::string m_tplName = "undefined";
+  Float64 m_amplitude = NAN;
+  Float64 m_amplitudeError = NAN;
+  Float64 m_EbmvCoeff = NAN;
+  Int32   m_meiksinIdx = -1;
 
   //Not sure it is necessary here
   Float64   m_fittingSNR = NAN;

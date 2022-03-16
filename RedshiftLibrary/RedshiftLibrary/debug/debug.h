@@ -53,7 +53,7 @@ namespace NSEpic
 
 
 // Internal usage should not be used directly
-void DebugLogCodeInformation( String file, UInt32 line, String func );
+void DebugLogCodeInformation( String file, Int32 line, String func );
 void DebugLogInfo( String format, ... );
 void DebugLogWarning( String format, ... );
 void DebugLogError( String format, ... );

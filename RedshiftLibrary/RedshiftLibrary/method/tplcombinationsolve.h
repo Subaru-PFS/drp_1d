@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
 #include "RedshiftLibrary/method/tplcombinationsolveresult.h"
 
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/tplcombination.h"
@@ -61,7 +61,7 @@ class CResultStore;
 /**
  * \ingroup Redshift
  */
-  class CMethodTplcombinationSolve : public CSolve
+  class CTplcombinationSolve : public CObjectSolve
 {
 
  public:
@@ -74,7 +74,7 @@ class CResultStore;
              nType_all = 4,
     };
 
-  CMethodTplcombinationSolve(TScopeStack &scope,std::string objectType);
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
 
     const std::string GetDescription() const;
 
@@ -84,16 +84,15 @@ class CResultStore;
 
 private:
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CTemplateCatalog& tplCatalog,
-               const TStringList& tplCategoryList,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                Float64 overlapThreshold,
-               std::vector<CMask> maskList,
+               const std::vector<CMask> &maskList,
                EType spctype=nType_raw,
-               std::string opt_interp="lin",
+               const std::string &opt_interp="lin",
                bool opt_extinction=false,
                bool opt_dustFitting=false);
     
@@ -106,7 +105,6 @@ private:
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CSpectrum& spc,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                const TFloat64Range& lambdaRange,
                                                Float64 overlapThreshold,
                                                std::string opt_interp);

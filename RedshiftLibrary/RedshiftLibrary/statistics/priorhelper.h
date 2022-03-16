@@ -98,28 +98,28 @@ public:
 
 private:
 
-    bool LoadFileEZ(const char* filePath , std::vector<std::vector<Float64>>& data);
-    bool LoadFileZ(const char* filePath , std::vector<Float64>& data);
+    bool LoadFileEZ(const char* filePath , std::vector<TFloat64List>& data);
+    bool LoadFileZ(const char* filePath , TFloat64List& data);
 
-    bool SetSize(UInt32 size);
-    bool SetTNameData(UInt32 k, std::string tname);
-    bool SetEZTData(UInt32 k, const std::vector<std::vector<Float64>> & ezt_data);
-    bool SetAGaussmeanData(UInt32 k,const std::vector<std::vector<Float64>> & agaussmean_data);
-    bool SetAGausssigmaData(UInt32 k, const std::vector<std::vector<Float64>> & agausssigma_data);
-    bool SetPzData(const std::vector<Float64> & z_data);
+    bool SetSize(Int32 size);
+    bool SetTNameData(Int32 k, std::string tname);
+    bool SetEZTData(Int32 k, const std::vector<TFloat64List> & ezt_data);
+    bool SetAGaussmeanData(Int32 k,const std::vector<TFloat64List> & agaussmean_data);
+    bool SetAGausssigmaData(Int32 k, const std::vector<TFloat64List> & agausssigma_data);
+    bool SetPzData(const TFloat64List & z_data);
 
 
     Int32 m_type; //0=Continuum, 1=Lines
 
     TPriorTZEList m_data;
-    std::vector<Float64> m_data_pz;
-    std::vector<std::string> m_tplnames;
+    TFloat64List m_data_pz;
+    TStringList m_tplnames;
 
-    UInt32 m_nZ = 24;
+    Int32 m_nZ = 24;
     Float64 m_dz = 0.25;
     Float64 m_z0 = 0.0;
 
-    UInt32 m_nEbv = 10;
+    Int32 m_nEbv = 10;
 
     Float64 m_deltaA = (1e-13 - 1e-20);
 

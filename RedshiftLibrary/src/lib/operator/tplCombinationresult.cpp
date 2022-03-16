@@ -40,7 +40,7 @@
 #include <cfloat>
 using namespace NSEpic;
 
-void CTplCombinationResult::Init(UInt32 n , Int32 EbmvListSize, Int32 MeiksinListSize, Int32 componentSize)
+void CTplCombinationResult::Init(Int32 n , Int32 EbmvListSize, Int32 MeiksinListSize, Int32 componentSize)
 {
     ChiSquare.resize(n);
     ChiSquarePhot.resize(n);

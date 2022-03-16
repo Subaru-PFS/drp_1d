@@ -135,7 +135,7 @@ bool CContinuumIndexesPrior::Init( std::string calibrationPath )
             if( !boost::starts_with( line, "#" ) )
             {
                 std::istringstream csvStream( line );
-                std::vector<Float64> csvColumn;
+                TFloat64List csvColumn;
                 string csvElement;
                 while( getline(csvStream, csvElement, '\t') )
                 {

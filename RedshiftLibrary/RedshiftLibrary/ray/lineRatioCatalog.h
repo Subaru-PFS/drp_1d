@@ -36,22 +36,46 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/continuum/continuum.h"
+#ifndef _LINE_RATIO_CATALOG_H_
+#define _LINE_RATIO_CATALOG_H_
 
-using namespace NSEpic;
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
-/**
- * Empty constructor.
- */
-CContinuum::CContinuum()
+#include <boost/format.hpp>
+
+#include <vector>
+#include <string>
+
+namespace NSEpic
 {
 
+  class CLineRatioCatalog : public CRayCatalog
+  {
+  public:
+
+    CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+
+    void addVelocity(const std::string& name, Float64 value);
+    void setPrior(Float64 prior);
+    void setIsmIndex(Float64 ismIndex);
+
+    Float64 getPrior() const {return m_Prior;}
+    const std::string& getName() const {return m_Name;}
+    Int32 getIsmIndex() const{ return m_IsmIndex;}
+    Float64 getVelocity(const std::string&group) const;
+  private:
+    //    CRayCatalog m_LineCatalog;
+    std::string m_Name;
+    std::map<std::string, Float64> m_Velocities;
+    Float64 m_Prior = 1;
+    Int32 m_IsmIndex = 0;
+    
+    
+  };
 }
 
-/**
- * Empty destructor.
- */
-CContinuum::~CContinuum()
-{
-
-}
+#endif

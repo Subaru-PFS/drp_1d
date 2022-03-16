@@ -32,10 +32,11 @@ build-osx:
   script:
     - mkdir -p build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
     - make -j 2
+    - make install
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: push
     untracked: true
 
@@ -47,10 +48,9 @@ test-osx:
   allow_failure: true
   script:
     - cd build
-    - make install
     - make test
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -59,9 +59,6 @@ test-osx:
   tags:
     - osx
   when: manual
-  before_script:
-    - cd build
-    - cd ..
   script:
     - source /Users/grunner/venv/amazed$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
@@ -78,7 +75,7 @@ test-osx:
       - wheel/
     expire_in: 1 week
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -111,7 +108,7 @@ wheel38-osx:
   script:
     - twine upload --repository-url $TWINE_REPOSITORY_URL --verbose --skip-existing --disable-progress-bar wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
   cache:
-    key: osx
+    key: "osx-$CI_COMMIT_REF_SLUG"
     policy: pull
     untracked: true
 
@@ -147,8 +144,9 @@ push-rc-38-osx:
     - source /venv/p36/bin/activate
     - mkdir -p build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_INSTALL_PREFIX=$CI_PROJECT_DIR
     - make -j4
+    - make install
   cache:
     policy: push
     untracked: true
@@ -160,7 +158,7 @@ push-rc-38-osx:
     - source /venv/p36/bin/activate
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage -DCMAKE_PREFIX_PATH=/root/local"
     - make -j4
     - make test
     - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
@@ -175,7 +173,6 @@ push-rc-38-osx:
   allow_failure: true
   script:
     - cd build
-    - make install
     - make test
   cache:
     policy: pull
@@ -183,10 +180,6 @@ push-rc-38-osx:
 
 .wheel-manylinux:
   stage: build-wheel
-  before_script:
-    - cd build
-    - make install
-    - cd ..
   script:
     - source /venv/p$PYTHON_VERSION/bin/activate
     - python setup.py bdist_wheel
@@ -236,74 +229,6 @@ push-rc-38-osx:
         -Dsonar.exclusions=*.xml
         -Dsonar.cxx.coverage.reportPath=build/coverage.xml
 
-# Manylinux1 stages
-
-.manylinux1:
-  image: $IMAGE_BUILD_DIR/amazed-manylinux1
-  variables:
-    PLATFORM: "manylinux1_x86_64"
-  when: manual
-  cache:
-    key: manylinux1
-
-build-manylinux1:
-  extends:
-    - .manylinux1
-    - .build-manylinux
-
-test-manylinux1:
-  extends:
-    - .manylinux1
-    - .test-manylinux
-
-wheel36-manylinux1:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-wheel37-manylinux1:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-wheel38-manylinux1:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux1
-    - .wheel-manylinux
-
-push-rc-36-manylinux1:
-  variables:
-    PYTHON_VERSION: "36"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel36-manylinux1
-
-push-rc-37-manylinux1:
-  variables:
-    PYTHON_VERSION: "37"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel37-manylinux1
-
-push-rc-38-manylinux1:
-  variables:
-    PYTHON_VERSION: "38"
-  extends:
-    - .manylinux1
-    - .push-rc-manylinux
-  dependencies:
-    - wheel38-manylinux1
-
 # Manylinux2010 stages
 
 .manylinux2010:
@@ -312,7 +237,7 @@ push-rc-38-manylinux1:
     PLATFORM: "manylinux2010_x86_64"
   when: manual
   cache:
-    key: manylinux2010
+    key: "manylinux2010-$CI_COMMIT_REF_SLUG"
 
 build-manylinux2010:
   extends:
@@ -379,7 +304,7 @@ push-rc-38-manylinux2010:
   variables:
     PLATFORM: "manylinux2014_x86_64"
   cache:
-    key: manylinux2014
+    key: "manylinux2014-$CI_COMMIT_REF_SLUG"
 
 build-manylinux2014:
   extends:
@@ -401,6 +326,7 @@ wheel36-manylinux2014:
 wheel37-manylinux2014:
   variables:
     PYTHON_VERSION: "37"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux
@@ -408,6 +334,7 @@ wheel37-manylinux2014:
 wheel38-manylinux2014:
   variables:
     PYTHON_VERSION: "38"
+  when: manual
   extends:
     - .manylinux2014
     - .wheel-manylinux

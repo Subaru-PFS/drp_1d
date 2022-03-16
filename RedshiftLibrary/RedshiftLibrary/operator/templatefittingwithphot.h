@@ -76,7 +76,8 @@ private:
                         const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
                             &ismCorrectionCalzetti,
                         const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
-                            &igmCorrectionMeiksin) override;
+                            &igmCorrectionMeiksin,
+                        Int32 EbmvListSize) override;
 
   bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;

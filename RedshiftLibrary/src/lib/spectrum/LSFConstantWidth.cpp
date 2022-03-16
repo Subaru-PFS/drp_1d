@@ -46,7 +46,7 @@ using namespace std;
  * Constructor.
  */
 CLSFGaussianConstantWidth::CLSFGaussianConstantWidth(const Float64 width):
-    CLSF(GaussianConstantWidth, std::make_shared<CLineProfileSYM>()),
+    CLSF(GaussianConstantWidth, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
     m_width(width)
 {
     IsValid();

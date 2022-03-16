@@ -49,6 +49,7 @@
 #include "RedshiftLibrary/operator/raymatchingresult.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
+#include "RedshiftLibrary/common/flag.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -57,10 +58,10 @@ using namespace std;
 /**
  * \brief This constructor will attribute values to this method's parameters with default values.
  */
-CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType):
-  CSolve("linematchingsolve",scope,objectType)
+CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,std::string objectType):
+  CObjectSolve("LineMatchingSolve",scope,objectType)
 {    
-  Log.LogDebug ( "CMethodLineMatchingSolve::CMethodLineMatchingSolve()" );
+  Log.LogDebug ( "CLineMatchingSolve::CLineMatchingSolve()" );
 
   // Peak Detection
   m_winsize = 250.0;
@@ -84,13 +85,13 @@ CMethodLineMatchingSolve::CMethodLineMatchingSolve(TScopeStack &scope,std::strin
 /**
  * Empty destructor.
  */
-CMethodLineMatchingSolve::~CMethodLineMatchingSolve()
+CLineMatchingSolve::~CLineMatchingSolve()
 {
-  Log.LogDebug ( "CMethodLineMatchingSolve::~CMethodLineMatchingSolve()" );
+  Log.LogDebug ( "CLineMatchingSolve::~CLineMatchingSolve()" );
 }
 
 
-std::shared_ptr<CSolveResult> CMethodLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 								std::shared_ptr<COperatorResultStore> resultStore,
 								TScopeStack &scope)
 {
@@ -123,7 +124,7 @@ std::shared_ptr<CSolveResult> CMethodLineMatchingSolve::compute(std::shared_ptr<
  * If the dynamic option is true, the line detection is run several times, with the parameters being varied withing physically meaningful values.
  * When either a threshold number of peaks is detected, or all parameters are exhaustively searched, the algorithm continues as normal.
  */
-std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COperatorResultStore& resultStore,
+std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute( COperatorResultStore& resultStore,
 									     std::shared_ptr<const CParameterStore> paramStore,
                                                                                const CSpectrum& spc,
                                                                                const TFloat64Range& lambdaRange,
@@ -140,8 +141,8 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
     m_cut = paramStore->GetScoped<Float64>( "linematching.cut");
     m_detectioncut = paramStore->GetScoped<Float64>( "linematching.detectioncut");
     m_detectionnoiseoffset = paramStore->GetScoped<Float64>( "linematching.detectionnoiseoffset");
-    m_disablegaussianfitqualitycheck = paramStore->GetScoped<Bool>( "linematching.disablegaussianfitqualitycheck");
-    m_dynamicLinematching = paramStore->GetScoped<Bool>( "linematching.dynamicLinematching");
+    m_disablegaussianfitqualitycheck = paramStore->GetScoped<bool>( "linematching.disablegaussianfitqualitycheck");
+    m_dynamicLinematching = paramStore->GetScoped<bool>( "linematching.dynamicLinematching");
     m_enlargeRate = paramStore->GetScoped<Float64>( "linematching.enlargeRate");
     linetypeStr = paramStore->GetScoped<std::string>( "linematching.linetype");
     m_maxsize = paramStore->GetScoped<Float64>( "linematching.maxsize");
@@ -205,7 +206,7 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
       Log.LogDebug ( "lineType == CRay::nType_Emission" );
     }
 
-  auto peakDetectionResult = peakDetection.Compute( _spc, lambdaRange );
+  auto peakDetectionResult = peakDetection.Compute( _spc );
   if( peakDetectionResult )
     {
       Log.LogDebug ( "Storing %d peaks from PeakList in the result store.", peakDetectionResult->PeakList.size() );
@@ -232,9 +233,9 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
   Float64 minimumFwhhMaximum = 1e1;
   Float64 minimumFwhhStep = ( minimumFwhhMaximum - minimumFwhhMinimum ) / 5;
   Int32 minimumNumberOfPeaks = 200;
-  Bool newValues = false;
+  bool newValues = false;
   Int32 numberOfPeaksBest = -1;
-  Bool numberOfPeaksBestBypass = false;
+  bool numberOfPeaksBestBypass = false;
   Int32 previousNumberOfPeaks = -1;
   Float64 strongcutBest = m_strongcut;
   auto strongcutCurrent = m_strongcut;
@@ -285,15 +286,15 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
                   if( bestRedshift != -1.0 )
                   {
                       Log.LogDebug ( "return std::shared_ptr<const CLineMatchingSolveResult>( new CLineMatchingSolveResult() );" );
-                      return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                      return std::make_shared<CLineMatchingSolveResult>();
                   }else if(! m_dynamicLinematching)
                   {
-                      return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                      return std::make_shared<CLineMatchingSolveResult>();
                   }
               } // rayMatchingResult
               else if(! m_dynamicLinematching)
               {
-                  return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+                  return std::make_shared<CLineMatchingSolveResult>();
               }
           } // minimumNumberOfPeaks
       } // lineDetectionResult
@@ -364,12 +365,12 @@ std::shared_ptr<CLineMatchingSolveResult> CMethodLineMatchingSolve::Compute( COp
 
   if( iCmpt==cmptMax )
   {
-      Log.LogWarning( "Warning. Stopped the linematching dynamic cut loop..." );
+      Flag.warning(Flag.LINEMATCHING_REACHED_ENDLOOP, Formatter()<<"CMethodLineMatchingSolve::"<<__func__<<": Warning. Stopped the linematching dynamic cut loop..." );
   }
-  return std::shared_ptr<CLineMatchingSolveResult>( new CLineMatchingSolveResult() );
+  return std::make_shared<CLineMatchingSolveResult>();
 }
 
-const std::string CMethodLineMatchingSolve::GetDescription()
+const std::string CLineMatchingSolve::GetDescription()
 {
     std::string desc;
     desc = "Method linematching:\n";

@@ -40,7 +40,6 @@
 
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/indexing.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -139,12 +138,12 @@ COperatorTemplateFittingLog::~COperatorTemplateFittingLog()
 
 Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List& X,
                                                    const TFloat64List& Y,
-                                                   UInt32 nShifts,
+                                                   Int32 nShifts,
                                                    TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
-    UInt32 nX = X.size();
+    Int32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 k = 0; k < nShifts; k++)
     {
@@ -161,12 +160,12 @@ Int32 COperatorTemplateFittingLog::EstimateXtYSlow(const TFloat64List& X,
 // only works for mtm, Y=model^2, X=1.
 Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
                                                    const TFloat64List &Y,
-                                                   UInt32 nShifts,
+                                                   Int32 nShifts,
                                                    TFloat64List &XtY)
 {
     XtY.resize(nShifts);
 
-    UInt32 nX = X.size();
+    Int32 nX = X.size();
     Float64 xty = 0.0;
     for (Int32 j = 0; j < nX; j++)
     {
@@ -187,7 +186,7 @@ Int32 COperatorTemplateFittingLog::EstimateMtMFast(const TFloat64List &X,
 
 Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
                                                const TFloat64List &Y,
-                                               UInt32 nshifts,
+                                               Int32 nshifts,
                                                TFloat64List &XtY,
                                                Int32 precomputedFFT)
 {
@@ -565,10 +564,9 @@ void COperatorTemplateFittingLog::freeFFTPlans()
  * @return
  */
 Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResult> result,
-                                           TInt32List MeiksinList,
-                                           TInt32List EbmvList,
-                                           CMask spcMaskAdditional,
-                                           CPriorHelper::TPriorZEList logpriorze)
+                                           const TInt32List &MeiksinList,
+                                           const TInt32List &EbmvList,
+                                           const CPriorHelper::TPriorZEList &logpriorze)
 {
     bool verboseLogFitAllz = true;
 
@@ -605,10 +603,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
             }
         }
 
-        UInt32 izmin = zindexesFullLstSquare[0];
+        Int32 izmin = zindexesFullLstSquare[0];
         for (Int32 k = 1; k < zindexesFullLstSquare.size(); k++)
         {
-            UInt32 izmax =  zindexesFullLstSquare[k];
+            Int32 izmax =  zindexesFullLstSquare[k];
             izrangelist.push_back(TInt32Range(izmin, izmax));
             izmin = izmax +1; //setting min for next range (one value overlapping)        
         }
@@ -616,11 +614,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
             izrangelist.push_back(TInt32Range(izmin, result->Redshifts.size() - 1));
     } else
     {
-        UInt32 izmin = 0;
-        UInt32 izmax = result->Redshifts.size() - 1;
+        Int32 izmin = 0;
+        Int32 izmax = result->Redshifts.size() - 1;
         izrangelist.push_back(TInt32Range(izmin, izmax));
     }
-    UInt32 nzranges = izrangelist.size();
+    Int32 nzranges = izrangelist.size();
 
     if (verboseLogFitAllz)
     {
@@ -688,9 +686,9 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
         FitRangez(inv_err2, ilbda, subresult, MeiksinList, EbmvList, dtd);
 
         // copy subresults into global results
-        for (UInt32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++)
+        for (Int32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++)
         {
-            UInt32 fullResultIdx = isubz + izrangelist[k].GetBegin();
+            Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
             result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
             result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
             result->FitAmplitudeError[fullResultIdx] = subresult->FitAmplitudeError[isubz];
@@ -711,7 +709,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
                     kism_best = m_templateRebined_bf.m_ismCorrectionCalzetti->GetEbmvIndex(subresult->FitEbmvCoeff[isubz]);
                 }
 
-                CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];
+                const CPriorHelper::SPriorTZE &pTZE = logpriorze[fullResultIdx][kism_best];
                 logprior += -2.0*pTZE.betaTE*pTZE.logprior_precompTE;
                 logprior += -2.0*pTZE.betaA*pTZE.logprior_precompA;
                 logprior += -2.0*pTZE.betaZ*pTZE.logprior_precompZ;
@@ -813,22 +811,22 @@ Int32 COperatorTemplateFittingLog::FitAllz(std::shared_ptr<CTemplateFittingResul
  * @param EbmvList
  * @return
  */
-Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List & inv_err2,
-                                             TInt32Range& currentRange,
-                                             std::shared_ptr<CTemplateFittingResult> result,
-                                             TInt32List MeiksinList,
-                                             TInt32List EbmvList,
+Int32 COperatorTemplateFittingLog::FitRangez(const TFloat64List &inv_err2,
+                                             const TInt32Range &currentRange,
+                                             const std::shared_ptr<CTemplateFittingResult> &result,
+                                             const TInt32List &MeiksinList,
+                                             const TInt32List &EbmvList,
                                              const Float64& dtd)
 {
     const TAxisSampleList & spectrumRebinedLambda = m_ssSpectrum.GetSpectralAxis().GetSamplesVector();
     const TAxisSampleList & spectrumRebinedFluxRaw = m_ssSpectrum.GetFluxAxis().GetSamplesVector();
-    UInt32 nSpc = spectrumRebinedLambda.size();
+    Int32 nSpc = spectrumRebinedLambda.size();
 
     const TAxisSampleList & tplRebinedLambdaGlobal = m_templateRebined_bf.GetSpectralAxis().GetSamplesVector();
 
     Int32 kstart, kend;
     kstart = currentRange.GetBegin(); kend = currentRange.GetEnd();
-    UInt32 nTpl = kend - kstart + 1;
+    Int32 nTpl = kend - kstart + 1;
 
     TAxisSampleList spcRebinedFluxOverErr2(nSpc);
     for (Int32 j = 0; j < nSpc; j++)
@@ -1249,7 +1247,7 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
 
     const TFloat64Range spcRange = spcSpectralAxis.GetLambdaRange();//this is correct only if spcSpectralAxis is intersected with the input lambdaRange
     const TFloat64Range tplRange = tplSpectralAxis.GetLambdaRange();
-    const UInt32 tplsize = tplSpectralAxis.GetSamplesCount();
+    const Int32 tplsize = tplSpectralAxis.GetSamplesCount();
     const Float64 logstep = tplSpectralAxis.GetlogGridStep();
 
     Float64 zmax = (spcRange.GetBegin() - tplRange.GetBegin()) / tplRange.GetBegin(); //get maximum z reachable with given template & spectra
@@ -1288,12 +1286,12 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex( const CSpectrumSp
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const std::shared_ptr<const CTemplate> &logSampledTpl,
                                                                     Float64 overlapThreshold,
-                                                                    std::vector<CMask> additional_spcMasks,
+                                                                    const std::vector<CMask> & additional_spcMasks,
                                                                     std::string opt_interp,
                                                                     Int32 opt_extinction,
                                                                     Int32 opt_dustFitting,
-                                                                    CPriorHelper::TPriorZEList logpriorze,
-                                                                    Bool keepigmism,
+                                                                    const CPriorHelper::TPriorZEList &logpriorze,
+                                                                    bool keepigmism,
                                                                     Float64 FitEbmvCoeff,
                                                                     Int32 FitMeiksinIdx)
 {
@@ -1370,7 +1368,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(const std:
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< m_redshifts.size());
     }
 
-    Int32 retFit = FitAllz(result, MeiksinList, EbmvList, CMask(), logpriorze);
+    Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
     
     if (retFit != 0)
     {

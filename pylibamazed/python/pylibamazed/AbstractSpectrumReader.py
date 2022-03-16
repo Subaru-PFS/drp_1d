@@ -49,10 +49,14 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   TLSFGaussianVarWidthArgs,
                                   CLSFFactory,
                                   CPhotometricData,
-                                  CLog)
+                                  CLog,
+                                  CFlagWarning,
+                                  
+                                  CTemplateCatalog)
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 zlog = CLog.GetInstance()
+zflag = CFlagWarning.GetInstance()
 
 
 class AbstractSpectrumReader:
@@ -85,7 +89,7 @@ class AbstractSpectrumReader:
         self.photometric_data = []
         self._spectra = []
         self.w_frame = 'vacuum'
-        self.parameters = parameters
+        self.parameters = parameters.copy()
         self.calibration_library = calibration_library
         self.source_id = source_id
 
@@ -145,7 +149,7 @@ class AbstractSpectrumReader:
         self.load_error(resource)
         self.load_lsf(resource)
         self.load_photometry(resource)
-        self.init()
+
 
     def get_spectrum(self):
         """
@@ -221,7 +225,7 @@ class AbstractSpectrumReader:
         if airvacuum_method == "" and self.w_frame == "air":
             airvacuum_method = "Morton2000"
         elif airvacuum_method != "" and self.w_frame == "vacuum":
-            zlog.LogWarning("Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
+            zflag.warning(zflag.AIR_VACCUM_CONVERSION_IGNORED, "Air vaccum method " + airvacuum_method + " ignored, spectrum already in vacuum")
             airvacuum_method = ""
 
         if len(self.waves) == 1:
@@ -255,6 +259,7 @@ class AbstractSpectrumReader:
         self._spectra[0].SetName(self.source_id)
 
         ctx = CProcessFlowContext()
+        ctx.setSpectrum(self._spectra[0])
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
             self.parameters["LSF"]["LSFType"] = self.lsf_type
@@ -276,9 +281,9 @@ class AbstractSpectrumReader:
         lsf = lsf_factory.Create(self.parameters["LSF"]["LSFType"], lsf_args)
         self._spectra[0].SetLSF(lsf)
         if len(self.photometric_data) > 0 and len(self.photometric_data[0]) > 0:
-            names = tuple(self.photometry.Name)
-            flux = tuple([float(f) for f in self.photometry.Flux])
-            fluxerr = tuple([float(f) for f in self.photometry.Error])
+            names = tuple(self.photometric_data[0].Name)
+            flux = tuple([float(f) for f in self.photometric_data[0].Flux])
+            fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
 
         del ctx

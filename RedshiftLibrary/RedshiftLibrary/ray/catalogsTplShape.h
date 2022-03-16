@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/ray/ray.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
@@ -62,41 +63,39 @@ class CRayCatalogsTplShape
 
 public:
 
-    Bool Init(std::string calibrationPath, 
-              std::string opt_tplratioCatRelPath, 
-              Int32 enableISMCalzetti,
+    bool Init(Int32 enableISMCalzetti,
               std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
               Float64 nsigmasupport);
 
-    Bool Load( const char* dirPath );
-    bool LoadVelocities( const char* filepath, Int32 k );
-    bool LoadPrior( const char* filepath, Int32 k );
 
-    //Bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
-    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, std::vector<Float64> fittedAmplitudes, std::vector<Float64> fittedErrors, std::vector<Float64> &amplitudesCorrected , std::string &bestTplName);
-    CRayCatalog::TRayVector GetRestLinesList( const Int32 index );
-    Int32 GetCatalogsCount();
-    const std::vector<Float64> & getCatalogsPriors();
-    std::string GetCatalogName(Int32 idx);
-    Int32 GetIsmIndex(Int32 idx);
-    Float64 GetIsmCoeff(Int32 idx);
+    //bool AreCatalogsAligned( const CRayCatalog::TRayVector& restRayList, Int32 typeFilter, Int32 forceFilter  );
+    Float64 GetBestFit(const CRayCatalog::TRayVector& restRayList, const TFloat64List &fittedAmplitudes, const TFloat64List &fittedErrors, TFloat64List &amplitudesCorrected , std::string &bestTplName) const;
+    CRayCatalog::TRayVector GetRestLinesList( Int32 index ) const;
+    Int32 GetCatalogsCount() const;
+    const TFloat64List& getCatalogsPriors();
+    std::string GetCatalogName(Int32 idx) const;
+    Int32 GetIsmIndex(Int32 idx) const;
+    Float64 GetIsmCoeff(Int32 idx) const;
 
-    Bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv );
-    Bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
-    const CRayCatalog& GetCatalog(Int32 icatlog);
-    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance(){return m_RayCatalogLinesCorrespondingNominalAmp;};
+    bool GetCatalogVelocities(Int32 idx, Float64& elv, Float64& alv ) const;
+    bool InitLineCorrespondingAmplitudes(const CLineModelElementList &LineModelElementList);
+    const CRayCatalog& GetCatalog(Int32 icatlog) const;
+    const std::vector<std::vector<TFloat64List>>& getNominalAmplitudeCorrespondance() const
+  {
+    return m_RayCatalogLinesCorrespondingNominalAmp;
+  };
+
+  void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog)
+  {
+    m_lineRatioCatalogs.push_back(lr_catalog);
+  }
 private:
-    Float64 GetFit(std::vector<Float64> ampsLM, std::vector<Float64> errLM, std::vector<Float64> ampsTPL , std::vector<Float64> &ampsCorrected);
+    Float64 GetFit(const TFloat64List &ampsLM, const TFloat64List &errLM, const TFloat64List &ampsTPL , TFloat64List &ampsCorrected) const;
 
-    std::string tplshapedcatalog_relpath;
 
-    std::vector<std::string> m_RayCatalogNames;
-    std::vector<CRayCatalog> m_RayCatalogList;
+  std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
     std::vector<std::vector<TFloat64List>> m_RayCatalogLinesCorrespondingNominalAmp;
-    std::vector<Float64> m_ELvelocities;
-    std::vector<Float64> m_ABSvelocities;
-    std::vector<Float64> m_Priors;
-    std::vector<Int32> m_IsmIndexes;
+  TFloat64List m_catalogsPriors; // TODO temporary hack before reviewing getCatalogsPrior uses
 
     std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;

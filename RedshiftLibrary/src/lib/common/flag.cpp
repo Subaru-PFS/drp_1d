@@ -36,62 +36,52 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RAY_CATALOGSOFFSETS_
-#define _REDSHIFT_RAY_CATALOGSOFFSETS_
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/log/log.h"
 
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/ray.h"
-#include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
+#define FLAG_MSG_WORKING_BUFFER_SIZE 4096
 
+using namespace NSEpic;
 
-#include <boost/format.hpp>
-
-#include <vector>
-#include <string>
-
-namespace NSEpic
+CFlagWarning::CFlagWarning( )
 {
-
-/**
- * \ingroup Redshift
- */
-class CLineCatalogsOffsets
-{
-
-public:
-
-    struct SOffsetsCatalog
-    {
-        std::string filePath;
-        std::vector<Float64> Offsets;
-        std::vector<std::string> FittingMode;
-        std::vector<std::string> Names;
-    };
-
-    CLineCatalogsOffsets();
-    ~CLineCatalogsOffsets();
-    void Init(std::string calibrationPath, std::string offsetsCatalogsRelPath);
-
-    Bool SetLinesOffsets(CLineModelElementList& LineModelElementList, Int32 index);
-
-    // Hack: select/bypass stack automatically from its name in the reference_stack catalog
-    Bool SetLinesOffsetsAutoSelectStack(CLineModelElementList& LineModelElementList, std::string spectrumName);
-    Int32 AutoSelectStackFromReferenceFile(std::string spectrumName);
-
-private:
-
-    void Load( const char* dirPath );
-    Bool LoadCatalog( const char* filePath );
-
-    std::string m_Catalogs_relpath;
-    std::string m_Calibration_path;
-
-    std::vector<SOffsetsCatalog> m_OffsetsCatalog;
-
-};
-
-
+    m_WorkingBuffer = new Char[FLAG_MSG_WORKING_BUFFER_SIZE];
 }
 
-#endif
+CFlagWarning::~CFlagWarning()
+{
+    delete [] m_WorkingBuffer;
+}
+
+void CFlagWarning::warning(CFlagWarning::WarningCode c, std::string message){
+    m_flags |= (1 << c);
+    m_messageList.push_back(make_pair(c, message));
+    Log.LogWarning(message);
+}
+
+
+void CFlagWarning::warning(CFlagWarning::WarningCode c, const char* format, ... ){
+    m_flags |= (1 << c);
+    
+    va_list args;
+    va_start( args, format );
+    vsnprintf( m_WorkingBuffer, FLAG_MSG_WORKING_BUFFER_SIZE, format, args );
+    va_end( args );
+
+    std::string message(m_WorkingBuffer);
+    m_messageList.push_back(make_pair(c, message));
+    Log.LogWarning( message );
+}
+
+Int32 CFlagWarning::getBitMask(){
+    return m_flags;
+}
+
+void CFlagWarning::resetFlag(){
+    m_flags = 0;
+    m_messageList.clear();
+}
+
+const TWarningMsgList& CFlagWarning::getListMessages(){
+    return m_messageList;
+}

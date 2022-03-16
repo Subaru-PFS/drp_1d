@@ -54,7 +54,7 @@ void CZPrior::NormalizePrior(TFloat64List & logzPrior) const
 }
 
 // setting cte priors for all redshift values
-TFloat64List CZPrior::GetConstantLogZPrior(UInt32 nredshifts) const
+TFloat64List CZPrior::GetConstantLogZPrior(Int32 nredshifts) const
 {
     TFloat64List logzPrior(nredshifts, 0.0);
 
@@ -69,14 +69,11 @@ TFloat64List CZPrior::GetStrongLinePresenceLogZPrior(const TBoolList & linePrese
     Float64 logprobaPresent = 0.0;
     Float64 logprobaAbsent = log(penalization_factor);
     TFloat64List logzPrior(linePresence.size(), logprobaAbsent);
-    for (UInt32 kz = 0; kz < linePresence.size(); kz++)
+    for (Int32 kz = 0; kz < linePresence.size(); kz++)
     {
         if (linePresence[kz])
         {
             logzPrior[kz] = logprobaPresent;
-        } else
-        {
-            logzPrior[kz] = logprobaAbsent;
         }
     }
 
@@ -93,7 +90,7 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(const TInt32List &  nlinesAb
     Float64 logprobaPresent = 0.0;
     Float64 logprobaAbsent = log(penalization_factor);
     TFloat64List logzPrior(nz, logprobaAbsent);
-    for (UInt32 kz = 0; kz < nz; kz++)
+    for (Int32 kz = 0; kz < nz; kz++)
     {
         if (nlinesAboveSNR[kz] >= nlinesThres)
         {
@@ -122,7 +119,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
 
     Float64 maxP = -DBL_MAX;
     Float64 minP = DBL_MAX;
-    for (UInt32 kz = 0; kz < redshifts.size(); kz++)
+    for (Int32 kz = 0; kz < redshifts.size(); kz++)
     {
         Float64 z = redshifts[kz];
         Float64 z2 = z*z;
@@ -141,7 +138,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList & redshifts, con
                       - 2288.98457865 );
 
         //shape prior at low z, left of the bell
-        Bool enable_low_z_flat = false;
+        bool enable_low_z_flat = false;
         if(enable_low_z_flat && z<0.7204452872044528){
             zPrior[kz]=20367.877916402278;
         }else if(zPrior[kz]<0){
@@ -198,15 +195,10 @@ TFloat64List CZPrior::CombineLogZPrior(const TFloat64List & logprior1, const TFl
 
     TFloat64List logzPriorCombined(n);
 
-    Float64 maxi = DBL_MIN;
-    for (UInt32 k = 0; k < n; k++)
+    for (Int32 k = 0; k < n; k++)
     {
         Float64 val = logprior1[k] + logprior2[k];
         logzPriorCombined[k] = val;
-        if (maxi < val)
-        {
-            maxi = val;
-        }
     }
 
     if (m_normalizePrior) NormalizePrior(logzPriorCombined);

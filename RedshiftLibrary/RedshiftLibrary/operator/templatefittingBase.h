@@ -75,12 +75,12 @@ public:
 
     virtual  std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & tpl,
                                                        Float64 overlapThreshold,
-                                                       std::vector<CMask> additional_spcMasks,
+                                                       const std::vector<CMask> &additional_spcMasks,
                                                        std::string opt_interp,
                                                        Int32 opt_extinction,
                                                        Int32 opt_dustFitting,
-                                                       CPriorHelper::TPriorZEList logprior=CPriorHelper::TPriorZEList(),
-                                                       Bool keepigmism = false,
+                                                       const CPriorHelper::TPriorZEList &logprior=CPriorHelper::TPriorZEList(),
+                                                       bool keepigmism = false,
                                                        Float64 FitEbmvCoeff=-1.,
                                                        Int32 FitMeiksinIdx=-1) = 0;
 

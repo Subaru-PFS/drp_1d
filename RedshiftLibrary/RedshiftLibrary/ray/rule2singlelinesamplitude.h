@@ -53,9 +53,9 @@ class CRule2SingleLinesAmplitude : public CRule
 {
   public:
     CRule2SingleLinesAmplitude();
-    ~CRule2SingleLinesAmplitude();
-    Bool Check(CLineModelElementList &LineModelElementList);
-    void SetUp(Bool EnabledArgument, ...);
+
+    bool Check(CLineModelElementList &LineModelElementList);
+    void SetUp(bool EnabledArgument, ...);
 
   private:
     Int32 m_LineType;

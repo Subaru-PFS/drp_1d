@@ -67,9 +67,9 @@ public:
     Int32 check(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
 private:
 
-    Bool checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
-    Bool checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
-    Bool checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
+    bool checkRule01(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
+    bool checkRule02(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
+    bool checkRule03(Float64 z, CRayMatchingResult::TSolutionSet& matchingSolutionSet);
 
     Float64 getRestRayLambda(std::string nametag);
 

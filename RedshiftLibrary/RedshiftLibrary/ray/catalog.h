@@ -40,6 +40,7 @@
 #define _REDSHIFT_RAY_CATALOG_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/ray/ray.h"
 
 #include <vector>
@@ -52,11 +53,6 @@ namespace NSEpic
  * \ingroup Redshift
  * Line catalog allow to store multiple lines description in a single text file.
  *
- * - Each line of the file represent a single Line
- * - Each line begenning with a # is a comment, and is skipped by the parser
- * - Format for each line is as follow:
- *        [Position in agstrum]   [Name of the line]                   [A/E]       [W/S]
- *        ex: 10320   [SII]                   E       W
  */
 class CRayCatalog
 {
@@ -64,24 +60,47 @@ class CRayCatalog
 public:
 
     typedef std::vector<CRay> TRayVector;
+  CRayCatalog(Float64 sigmaSupport);
+  virtual ~CRayCatalog() = default; 
+  CRayCatalog() = default;//TODO remove in 7007
+  CRayCatalog(const CRayCatalog & other) = default; 
+  CRayCatalog(CRayCatalog && other) = default; 
+  CRayCatalog& operator=(const CRayCatalog& other) = default;  
+  CRayCatalog& operator=(CRayCatalog&& other) = default; 
 
-    CRayCatalog();
-    ~CRayCatalog();
-
-
-    Bool Add( const CRay& r );
-    void Load( const char* filePath, Float64 nsigmasupport=8.);
-    Bool Save( const char* filePath );
+  void Add( const CRay& r );
+  void AddRayFromParams(const std::string& name,
+			const Float64& position,
+			const std::string& type,
+			const std::string& force,
+			const std::string& profile,
+			const TAsymParams& asymParams,
+			const std::string& groupName,
+			const Float64& nominalAmplitude,
+			const std::string& velocityGroup,
+			const Float64& velocityOffset,
+			const bool& enableVelocityFit,
+			const Int32& id,
+			const std::string& str_id);
+  
     const TRayVector& GetList() const;
     const TRayVector GetFilteredList(Int32 typeFilter = -1, Int32 forceFilter=-1) const;
-    const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( TRayVector filteredList ) const;
+    const TRayVector GetFilteredList(const std::string& typeFilter, const std::string& forceFilter) const;
+    static const std::vector<CRayCatalog::TRayVector> ConvertToGroupList( const TRayVector& filteredList );
 
     void Sort();
 
-private:
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
+
+  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+
+  void debug(std::ostream& os);
+protected:
 
     TRayVector m_List;
+  //    std::map<std::string, TRayVector> rayGroups; TODO use this map to handle velocity groups
 
+  Float64 m_nSigmaSupport=N_SIGMA_SUPPORT;
 };
 
 }

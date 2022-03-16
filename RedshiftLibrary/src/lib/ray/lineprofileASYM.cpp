@@ -66,7 +66,7 @@ CLineProfileASYM::CLineProfileASYM(const TProfile pltype, const Float64 nsigmasu
 }
 
   
-Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc)
+Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc) const
 {
     sigma = sigma*m_asym_sigma_coeff;
     Float64 delta = m_asym_alpha/std::sqrt(1.+m_asym_alpha*m_asym_alpha);
@@ -97,7 +97,7 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64& sigma, Float64& xsurc)
 }
 
  
-Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma) const
 {
     if(!isValid())
     {
@@ -114,12 +114,12 @@ Float64 CLineProfileASYM::GetNSigmaSupport()const {
     return m_nsigmasupport*m_asym_sigma_coeff*m_constSigma;
 }
  
-Float64 CLineProfileASYM::GetLineFlux(Float64 A, Float64 sigma)
+Float64 CLineProfileASYM::GetLineFlux(Float64 A, Float64 sigma) const
 {
     return A*sigma*m_asym_sigma_coeff*sqrt(2*M_PI);
 }
  
-Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, Float64 sigma)
+Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift, Float64 sigma) const
 {
     if(!isValid())
     {
@@ -137,7 +137,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 re
 }
 
  
-Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma)
+Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma) const 
 {
     if(!isValid())
     {
@@ -165,25 +165,25 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0, Float6
     return val;
 }
  
-Bool CLineProfileASYM::isAsymFixed()
+bool CLineProfileASYM::isAsymFixed() const
 { //probably we need to clean this
     return 1;
 }
- 
-Bool CLineProfileASYM::isAsymFit()
-{ //probably we need to clean this
+
+bool CLineProfileASYM::isAsymFit() const
+{
     return 0;
 }
- 
-Float64 CLineProfileASYM::GetAsymDelta(){
+Float64 CLineProfileASYM::GetAsymDelta() const{
     return m_asym_delta;//default. Mainly used for asymfit/fixed
 }
  
-const TAsymParams CLineProfileASYM::GetAsymParams()
+const TAsymParams CLineProfileASYM::GetAsymParams() const
 {
     return {m_asym_sigma_coeff, m_asym_alpha, m_asym_delta};//default. Mainly used for asymfit/fixed
 }
-Bool CLineProfileASYM::isValid()
+
+bool CLineProfileASYM::isValid() const
 {
     if(std::isnan(m_asym_sigma_coeff) || std::isnan(m_asym_alpha) || std::isnan(m_asym_alpha)){
         return 0;

@@ -43,7 +43,7 @@ using namespace NSEpic;
 using namespace std;
   
 CLSFGaussianNISPSIM2016::CLSFGaussianNISPSIM2016():
-    CLSF(GaussianNISPSIM2016, std::make_shared<CLineProfileSYM>())
+    CLSF(GaussianNISPSIM2016, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()))
 {
     
 }

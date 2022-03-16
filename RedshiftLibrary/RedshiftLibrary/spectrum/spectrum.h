@@ -95,7 +95,7 @@ public:
     const std::string&              GetName() const;
     const EType                     GetType() const;
 
-    Bool InvertFlux();
+    bool InvertFlux();
 
     const CSpectrumSpectralAxis&    GetSpectralAxis() const;
     const CSpectrumFluxAxis&        GetFluxAxis() const;
@@ -118,11 +118,11 @@ public:
     bool                            IsEmpty() const;
     bool                            IsValid()const;
     void                            ValidateSpectrum(TFloat64Range lambdaRange, 
-                                                    Bool enableInputSpcCorrect);
+                                                    bool enableInputSpcCorrect);
     void                            SetLSF(const std::shared_ptr<const CLSF>& lsf);
     void                            SetPhotData(const std::shared_ptr<const CPhotometricData>& photData);
 
-    UInt32                          GetSampleCount() const;
+    Int32                          GetSampleCount() const;
     Float64                         GetResolution() const;
     Float64                         GetMeanResolution() const;
     TLambdaRange                    GetLambdaRange() const;
@@ -131,28 +131,30 @@ public:
     bool                            GetMeanAndStdFluxInRange( TFloat64Range wlRange, Float64& mean, Float64& std ) const;
     bool                            GetLinearRegInRange( TFloat64Range wlRange,  Float64& a, Float64& b) const;
 
-    Bool                            ConvertToLogScale();
-    Bool                            ConvertToLinearScale();
+    bool                            ConvertToLogScale();
+    bool                            ConvertToLinearScale();
 
-    Bool                            RemoveContinuum( CContinuum& remover ) const;
-    const Bool                      checkFlux(Float64 flux, Int32 index) const;
-    const Bool                      checkNoise(Float64 error, Int32 index) const;
-    const Bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
-    const Bool                      IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
-    Bool                            correctSpectrum(Float64 LambdaMin, Float64 LambdaMax, Float64 coeffCorr=10.0);
+    bool                            RemoveContinuum( CContinuum& remover ) const;
+    const bool                      checkFlux(Float64 flux, Int32 index) const;
+    const bool                      checkNoise(Float64 error, Int32 index) const;
+    const bool                      IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const;
+    const bool                      IsNoiseValid(Float64 LambdaMin, Float64 LambdaMax) const;
+    bool                            correctSpectrum(Float64 LambdaMin, Float64 LambdaMax, Float64 coeffCorr=10.0);
 
     const std::string&       	    GetFullPath() const;
     const Float64                   GetMedianWinsize() const;
+    const bool                      GetMedianEvenReflection() const;
     const std::string&              GetContinuumEstimationMethod() const;
 
     void 			                SetFullPath(const char* nameP);
     void 			                SetMedianWinsize(Float64 winsize);
+    void                            SetMedianEvenReflection(bool even);
     void                            SetContinuumEstimationMethod(std::string method) const;
     void                            SetContinuumEstimationMethod(const CSpectrumFluxAxis &ContinuumFluxAxis);
 
     void                            ScaleFluxAxis(Float64 scale);
 
-    Bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
+    bool                            Rebin( const TFloat64Range& range, const CSpectrumSpectralAxis& targetSpectralAxis,
                                            CSpectrum& rebinedSpectrum, CMask& rebinedMask, const std::string & opt_interp = "lin",
                                            const std::string & opt_error_interp="no" ) const;
     CSpectrum                       extract(Int32 startIdx, Int32 endIdx) const;
@@ -171,14 +173,14 @@ protected:
 
     void                            EstimateContinuum() const;
     void                            ResetContinuum() const;
-    Bool                            RebinFineGrid() const;
+    bool                            RebinFineGrid() const;
     void                            ClearFineGrid() const;
 
 
     const Float64                   m_dLambdaFineGrid = 0.1; //oversampling step for fine grid
                                                              //check if enough to be private
     mutable TFloat64List            m_pfgFlux;
-    mutable Bool                    m_FineGridInterpolated = false;
+    mutable bool                    m_FineGridInterpolated = false;
 
     std::string                     m_Name;
     std::string                     m_FullPath;
@@ -186,6 +188,7 @@ protected:
     // Continuum removal parameters
     mutable Float64                         m_medianWindowSize;
     mutable std::string                     m_estimationMethod;
+    mutable bool                            m_medianEvenReflection;
 
     mutable EType                   m_spcType = nType_raw;
     CSpectrumFluxAxis               m_RawFluxAxis;
@@ -207,7 +210,7 @@ protected:
 };
 
 inline
-UInt32 CSpectrum::GetSampleCount() const
+Int32 CSpectrum::GetSampleCount() const
 {
     return m_SpectralAxis.GetSamplesCount();
 }
@@ -335,7 +338,7 @@ bool CSpectrum::IsEmpty()const
 inline
 bool CSpectrum::IsValid()const
 {
-    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty();
+    return m_SpectralAxis.GetSamplesCount() == GetFluxAxis().GetSamplesCount() && !IsEmpty() && m_SpectralAxis.isSorted();
 }
 
 inline
@@ -369,6 +372,7 @@ CSpectrum  CSpectrum::extract(Int32 startIdx, Int32 endIdx) const
     spc.m_Name = m_Name;
     spc.m_estimationMethod = m_estimationMethod;
     spc.m_medianWindowSize = m_medianWindowSize;
+    spc.m_medianEvenReflection = m_medianEvenReflection;
     return spc;
 }
 

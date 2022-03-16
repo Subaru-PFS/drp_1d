@@ -39,8 +39,10 @@
 #ifndef _REDSHIFT_COMMON_RANGE_
 #define _REDSHIFT_COMMON_RANGE_
 
-#include <RedshiftLibrary/common/datatypes.h>
-#include <RedshiftLibrary/log/log.h>
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <cmath>
 #include <vector>
@@ -67,7 +69,7 @@ template <typename T> class CRange
 
     ~CRange() {}
 
-    Bool GetIsEmpty() const { return m_Begin == m_End; }
+    bool GetIsEmpty() const { return m_Begin == m_End; }
 
     void Set(const T &b, const T &e)
     {
@@ -92,12 +94,12 @@ template <typename T> class CRange
 
     T GetLength() const { return m_End - m_Begin; }
 
-    Bool IntersectWith(const CRange<T> r)
+    bool IntersectWith(const CRange<T> r)
     {
         return Intersect(*this, r, *this);
     }
 
-    static Bool Intersect(const CRange<T> &a, const CRange<T> b,
+    static bool Intersect(const CRange<T> &a, const CRange<T> b,
                           CRange<T> &intersect)
     {
         if ((a.GetBegin() >= b.GetBegin() && a.GetBegin() <= b.GetEnd()) ||
@@ -113,7 +115,7 @@ template <typename T> class CRange
         return false;
     }
 
-    std::vector<T> SpreadOver(Float64 delta) const
+    std::vector<T> SpreadOver(T delta) const
     {
         std::vector<T> v;
 
@@ -127,7 +129,7 @@ template <typename T> class CRange
         Int32 count = (GetLength() + epsilon) / delta;
 
         v.resize(count + 1);
-        for (UInt32 i = 0; i < v.size(); i++)
+        for (Int32 i = 0; i < v.size(); i++)
         {
             v[i] = GetBegin() + delta * i;
         }
@@ -135,18 +137,20 @@ template <typename T> class CRange
         return v;
     }
 
-    std::vector<T> SpreadOverLog(Float64 delta, Float64 offset=0.) const
+    std::vector<T> SpreadOverLog(T delta, T offset=0.) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
+
         std::vector<T> v;
-        if (GetIsEmpty() || delta == 0.0 || GetLength() < delta)
+        if (GetIsEmpty() || delta == 0.0 || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
         {
             v.resize(1);
             v[0] = m_Begin;
             return v;
         }
 
-        Float64 x = m_Begin + offset;
-        Float64 edelta = exp(delta);
+        T x = m_Begin + offset;
+        T edelta = exp(delta);
         Int32 count = 0;
         Int32 maxCount = 1e8;
         while (x < (m_End + offset + epsilon) && count < maxCount)
@@ -158,8 +162,9 @@ template <typename T> class CRange
         return v;
     }  
     //spread over log (z+1)
-    std::vector<T> SpreadOverLogZplusOne(Float64 delta) const
+    std::vector<T> SpreadOverLogZplusOne(T delta) const
     {
+        static_assert(std::is_same<T, Float64>::value,"not implemented");// compile time check 
         return SpreadOverLog(delta, 1.);
     }
     //  template<typename T>
@@ -172,7 +177,8 @@ template <typename T> class CRange
   friend std::istream& operator>> (std::istream &in, CRange<T> &range)
   {
     in >> range.m_Begin;
-    in >> range.m_End;
+    range.m_End = range.m_Begin;
+
     return in;
  }
 
@@ -181,12 +187,12 @@ template <typename T> class CRange
   {
     if (value < m_Begin || value > m_End)
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: value %.5f not inside ]%.5f,%.5f[",value,m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VALUE_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": value "<<value<<" not inside ]"<<m_Begin<<","<<m_End<<"[");
         return false;
       }
     else if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     typename std::vector<T>::const_iterator it = std::lower_bound(ordered_values.begin(),ordered_values.end(),value);
@@ -204,7 +210,7 @@ template <typename T> class CRange
   {
     if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     
@@ -218,38 +224,12 @@ template <typename T> class CRange
     return true;
   }
 
-    bool getExactEnclosingIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
-  {
-    if(m_Begin < ordered_values.front() || m_End > ordered_values.back())
-      {
-        if (warning) Log.LogWarning("CRange::getEnclosingIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
-        return false;
-      }
-    
-    typename std::vector<T>::const_iterator it_min = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_Begin);
-    typename std::vector<T>::const_iterator it_max = std::lower_bound(ordered_values.begin(),ordered_values.end(),m_End);
-
-    if(*it_min != m_Begin)
-      {
-        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_Begin);
-        return false;
-      }
-    if(*it_max != m_End)
-     {
-        if (warning) Log.LogWarning("CRange::getExactEnclosingIntervalIndices: Cannot find %.5f in ordered_values",m_End);
-        return false;
-      }
-
-    i_min = it_min - ordered_values.begin();
-    i_max = it_max - ordered_values.begin();
-    return true;
-  }
   //closed refers to having i_min referring to m_Begin index or higher and i_max referring to m_End index or lower  
   bool getClosedIntervalIndices(const std::vector<T>& ordered_values,Int32& i_min,Int32& i_max, bool warning=true) const
   {
     if(m_End < ordered_values.front() || m_Begin > ordered_values.back())
       {
-        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: ]%.5f,%.5f[ not inside ordered_values",m_Begin,m_End);
+        if (warning) Flag.warning(Flag.CRANGE_VECTBORDERS_OUTSIDERANGE, Formatter()<<"CRange::"<<__func__<<": ]"<<m_Begin<<","<<m_End<<"[ not inside ordered_values");
         return false;
       }
     
@@ -262,7 +242,7 @@ template <typename T> class CRange
     i_min = it_min - ordered_values.begin();
     i_max = it_max - ordered_values.begin();
     if(i_min>i_max){
-        if (warning) Log.LogWarning("CRange::getClosedIntervalIndices: There is no sample inside range (min,max indices=[%d,%d]",i_min, i_max);
+        if (warning) Flag.warning(Flag.CRANGE_NO_INTERSECTION, Formatter()<<"CRange::"<<__func__<<": There is no sample inside range (min,max indices=["<<i_min<<","<<i_max<<"]");
         return false;
     }
     return true;

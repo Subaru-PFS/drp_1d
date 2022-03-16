@@ -46,6 +46,7 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(range_test)
 
 //-----------------------------------------------------------------------------
+Float64 precision = 1e-12;
 
 BOOST_AUTO_TEST_CASE(range_test_int1)
 {
@@ -53,6 +54,11 @@ BOOST_AUTO_TEST_CASE(range_test_int1)
   CRange<Int32> range2(0, 3);
   CRange<Int32> range3;
   bool result;
+
+  //Test on : CRange(const std::vector<T> & v)
+  TInt32List myVector = {1, 2, 3};
+  CRange<Int32> range4(myVector);
+  BOOST_CHECK((range4.GetBegin() == 1 && range4.GetEnd() == 3));
 
   //test on : Bool GetIsEmpty() const
   BOOST_CHECK(range2.GetIsEmpty() == false);
@@ -72,7 +78,7 @@ BOOST_AUTO_TEST_CASE(range_test_int1)
   //test on : T GetLength() const
   BOOST_CHECK(range2.GetLength() == 3);
 
-  //test on : static Bool Intersect(...)
+  //test on : static bool Intersect(...)
   // range1 = [-5, -1]
   // range2 = [0, 3]
   range1.Set(-5, -1);
@@ -114,6 +120,85 @@ BOOST_AUTO_TEST_CASE(range_test_int1)
   range1.Set(2, 4);
   result = CRange<Int32>::Intersect(range1, range2, range3);
   BOOST_CHECK((result == true && range3.GetBegin() == 2 && range3.GetEnd() == 3));
+
+  //test on : Bool IntersectWith(...)
+  // fRange1 = [1, 2]
+  // fRange2 = [0, 3]
+  CRange<Float64> fRange1;
+  CRange<Float64> fRange2;
+  fRange1.Set(1., 2.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == true && fRange2.GetBegin() == 1. && fRange2.GetEnd() == 2.));
+
+  // fRange1 = [-1, 2]
+  // fRange2 = [0, 3]
+  fRange1.Set(-1., 2.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == true && fRange2.GetBegin() == 0. && fRange2.GetEnd() == 2.));
+
+  // fRange1 = [1, 4]
+  // fRange2 = [0, 3]
+  fRange1.Set(1., 4.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == true && fRange2.GetBegin() == 1. && fRange2.GetEnd() == 3.));
+
+  // fRange1 = [-1, 4]
+  // fRange2 = [0, 3]
+  fRange1.Set(-1., 4.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == true && fRange2.GetBegin() == 0. && fRange2.GetEnd() == 3.));
+
+  // fRange1 = [-4, -1]
+  // fRange2 = [0, 3]
+  fRange1.Set(-4., -1.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == false && fRange2.GetBegin() == 0. && fRange2.GetEnd() == 3.));
+
+  // fRange1 = [4, 7]
+  // fRange2 = [0, 3]
+  fRange1.Set(4., 7.);
+  fRange2.Set(0., 3.);
+  result = fRange2.IntersectWith(fRange1);
+  BOOST_CHECK((result == false && fRange2.GetBegin() == 0. && fRange2.GetEnd() == 3.));
+}
+
+//-----------------------------------------------------------------------------
+
+// TEST ON OPERATORS
+BOOST_AUTO_TEST_CASE(Operator_test)
+{
+    TFloat64Range range1(1,3);
+    TFloat64Range range2;
+    std::stringstream in;
+    std::stringstream out;
+
+    out << range1;
+    BOOST_CHECK(out.str() == "[1,3]");
+
+    in.str("4");
+    in >> range1;
+    BOOST_CHECK((range1.GetBegin() == 4 && range1.GetEnd() == 4));
+
+    range1.Set(1, 3);
+    range2 = range1+3;
+    BOOST_CHECK((range2.GetBegin() == 4 && range2.GetEnd() == 6));
+
+    range1.Set(1, 3);
+    range2 = range1-1;
+    BOOST_CHECK((range2.GetBegin() == 0 && range2.GetEnd() == 2));
+
+    range1.Set(1, 3);
+    range2 = range1*3;
+    BOOST_CHECK((range2.GetBegin() == 3 && range2.GetEnd() == 9));
+
+    range1.Set(1, 3);
+    range2 = range1/2;
+    BOOST_CHECK((range2.GetBegin() == 0.5 && range2.GetEnd() == 1.5));
 }
 
 //-----------------------------------------------------------------------------
@@ -126,20 +211,15 @@ BOOST_AUTO_TEST_CASE(SpreadOver_Int32_test1)
     Float64 delta = 3.0;
 
     // Known vector
-    std::vector<Int32> myVector;
+    TInt32List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Int32> myRange(1, 1);
     BOOST_CHECK(myRange.GetIsEmpty() == true);
 
-    std::vector<Int32> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TInt32List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -152,20 +232,13 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test2)
     Float64 delta = 0.0;
 
     // Known vector
-    std::vector<Int32> myVector;
+    TInt32List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Int32> myRange(1, 10);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
-    std::vector<Int32> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TInt32List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -178,20 +251,15 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test3)
     Float64 delta = 7.0;
 
     // Known vector
-    std::vector<Int32> myVector;
+    TInt32List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Int32> myRange(1, 3);
     BOOST_CHECK(myRange.GetIsEmpty() == false);
 
-    std::vector<Int32> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TInt32List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -203,24 +271,16 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test4)
 {
     Float64 delta = 2.0;
 
-    // Known vector
-    std::vector<Int32> myVector;
-    myVector.resize(6);
-    for(UInt32 i = 0; i < myVector.size(); i++)
-    {
-        myVector[i] = 1 + delta * i;
-    }
-
     CRange<Int32> myRange(1, 11);
     BOOST_CHECK(myRange.GetIsEmpty() == false);
     BOOST_CHECK(myRange.GetLength() == 10);
 
-    std::vector<Int32> functionResult = myRange.SpreadOver(delta);
-    // BOOST_CHECK(functionResult.size() == 1);
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
+    TInt32List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(functionResult.front() == myRange.GetBegin());
+    for (int i = 0; i< functionResult.size() - 1; i++){
+        BOOST_CHECK(functionResult[i+1]-functionResult[i] == delta);
     }
+    BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
 }
 
 //-----------------------------------------------------------------------------
@@ -233,20 +293,15 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test1)
     Float64 delta = 3.0;
 
     // Known vector
-    std::vector<Float64> myVector;
+    TFloat64List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Float64> myRange(1, 1);
     BOOST_CHECK(myRange.GetIsEmpty() == true);
 
-    std::vector<Float64> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TFloat64List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -259,20 +314,13 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test2)
     Float64 delta = 0.0;
 
     // Known vector
-    std::vector<Float64> myVector;
+    TFloat64List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Float64> myRange(1, 10);
-    BOOST_CHECK(myRange.GetIsEmpty() == false);
-
-    std::vector<Float64> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TFloat64List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -285,20 +333,15 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test3)
     Float64 delta = 7.0;
 
     // Known vector
-    std::vector<Float64> myVector;
+    TFloat64List myVector;
     myVector.resize(1);
     myVector[0] = 1;
 
     CRange<Float64> myRange(1, 3);
     BOOST_CHECK(myRange.GetIsEmpty() == false);
 
-    std::vector<Float64> functionResult = myRange.SpreadOver(delta);
-    BOOST_CHECK(functionResult.size() == 1);
-
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
-    }
+    TFloat64List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK(myVector == functionResult);
 }
 
 //-----------------------------------------------------------------------------
@@ -310,37 +353,129 @@ BOOST_AUTO_TEST_CASE(SpreadOver_float_test4)
 {
     Float64 delta = 2.0;
 
-    // Known vector
-    std::vector<Float64> myVector;
-    myVector.resize(6);
-    for(UInt32 i = 0; i < myVector.size(); i++)
-    {
-        myVector[i] = 1 + delta * i;
-    }
-
     CRange<Float64> myRange(1, 11);
     BOOST_CHECK(myRange.GetIsEmpty() == false);
     BOOST_CHECK(myRange.GetLength() == 10);
 
-    std::vector<Float64> functionResult = myRange.SpreadOver(delta);
-    // BOOST_CHECK(functionResult.size() == 1);
-    for (int i = 0; i < myVector.size(); ++i)
-    {
-        BOOST_CHECK(myVector[i] == functionResult[i]);
+    TFloat64List functionResult = myRange.SpreadOver(delta);
+    BOOST_CHECK_CLOSE(functionResult.front() , myRange.GetBegin(), precision);
+    for (int i = 0; i< functionResult.size() - 1; i++){
+        BOOST_CHECK_CLOSE(functionResult[i+1]-functionResult[i], delta, precision);
     }
+    BOOST_CHECK(myRange.GetEnd() - functionResult.back() < delta);
 }
+//-----------------------------------------------------------------------------
 
+// TEST 1
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
+//       TRUE            FALSE              FALSE
+BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test1)
+{
+    Float64 delta = 0.5;
+    Float64 offset = 0.1;
+
+    // reference
+    TFloat64List myVector;
+    myVector.resize(1);
+    myVector[0] = 1;
+
+    // test
+    TFloat64Range myRange(1, 1);
+    BOOST_CHECK(myRange.GetIsEmpty() == true);
+
+    TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
+    BOOST_CHECK(myVector == functionResult);
+}
+//-----------------------------------------------------------------------------
+
+// TEST 2
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
+//       FALSE            TRUE              FALSE
+BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test2)
+{
+    Float64 delta = 0.0;
+    Float64 offset = 0.1;
+
+    // Known vector
+    TFloat64List myVector;
+    myVector.resize(1);
+    myVector[0] = 1;
+
+    TFloat64Range myRange(1, 3);
+    TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
+    BOOST_CHECK(myVector == functionResult);
+}
+//-----------------------------------------------------------------------------
+
+// TEST 3
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
+//       FALSE            FALSE              TRUE
+BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test3)
+{
+    Float64 delta = 5.0;
+    Float64 offset = 0.1;
+
+    // Known vector
+    TFloat64List myVector;
+    myVector.resize(1);
+    myVector[0] = 1;
+
+    TFloat64Range myRange(1, 3);
+    TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
+    BOOST_CHECK(myVector == functionResult);
+}
+//-----------------------------------------------------------------------------
+
+// TEST 4
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
+//       FALSE            FALSE              FALSE
+BOOST_AUTO_TEST_CASE(SpreadOverLog_Float_test4)
+{
+    Float64 delta = 0.5;
+    Float64 offset = 0.1;
+    
+    // test
+    TFloat64Range myRange(1,11);
+    BOOST_CHECK(myRange.GetIsEmpty() == false);
+    BOOST_CHECK(myRange.GetLength() == 10);    
+    
+    TFloat64List functionResult = myRange.SpreadOverLog(delta, offset);
+    BOOST_CHECK_CLOSE(functionResult.front() , myRange.GetBegin(), precision);
+    for (int i = 0; i< functionResult.size() - 1; i++){
+        BOOST_CHECK_CLOSE((functionResult[i+1]+offset)/(functionResult[i]+offset) ,exp(delta), precision);
+    }
+    BOOST_CHECK((myRange.GetEnd() + offset)/(functionResult.back()+offset) < exp(delta));
+}
+//-----------------------------------------------------------------------------
+
+// TEST SpreadOverLogZplusOne --> offset is locked to one
+// if(GetIsEmpty() || delta == 0.0  || GetLength() < (GetBegin() + offset)*exp(delta) - (GetBegin() + offset) + epsilon)
+//       FALSE            FALSE              FALSE
+BOOST_AUTO_TEST_CASE(SpreadOverLogZPlusOne_test)
+{
+    Float64 delta = 0.5;
+        
+    // test
+    TFloat64Range myRange(1,11);
+    BOOST_CHECK(myRange.GetIsEmpty() == false);
+    BOOST_CHECK(myRange.GetLength() == 10);    
+    
+    TFloat64List functionResult = myRange.SpreadOverLogZplusOne(delta);
+    TFloat64List functionResult2 = myRange.SpreadOverLog(delta, 1.);
+    BOOST_CHECK(functionResult2 == functionResult);
+}
+//-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(Enclosing_interval)
 {
     Float64 delta = 1.0;
 
     // Known vector
-    std::vector<Float64> myVector(15);
+    TFloat64List myVector(15);
     //    myVector.resize(15);
     
 
-    for(UInt32 i = 0; i < myVector.size(); i++)
+    for(Int32 i = 0; i < myVector.size(); i++)
     {
         myVector[i] = 1 + delta * i;
     }
@@ -374,21 +509,90 @@ BOOST_AUTO_TEST_CASE(Enclosing_interval)
     BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
     BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
 
+    //Check warning
+    range= TFloat64Range(9,10.3);    
+    bool result = range.getEnclosingIntervalIndices(myVector, target, i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    range= TFloat64Range(6,7.5);    
+    result = range.getEnclosingIntervalIndices(myVector, target, i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    range= TFloat64Range(0,10.3);    
+    result = range.getEnclosingIntervalIndices(myVector, target, i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    range= TFloat64Range(6,16);    
+    result = range.getEnclosingIntervalIndices(myVector, target, i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    // -- TEST WITHOUT TARGET --
+
+    //Check warning
+    range= TFloat64Range(0,10.3);    
+    result = range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    range= TFloat64Range(6,16);    
+    result = range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    // TEST OK
+    range= TFloat64Range(6.5,10.3);    
+    range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+    range= TFloat64Range(6,10.3);
+    range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+    range= TFloat64Range(6.5,10);
+    range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
+
+    range= TFloat64Range(6,10);
+    range.getEnclosingIntervalIndices(myVector,i_min,i_max);
+
+    BOOST_CHECK( myVector[i_min] <= range.GetBegin());
+    BOOST_CHECK( myVector[i_max] >= range.GetEnd());
+    BOOST_CHECK( myVector[i_min+1] > range.GetBegin());
+    BOOST_CHECK( myVector[i_max-1] < range.GetEnd());
 }
+
 BOOST_AUTO_TEST_CASE(Closed_interval)
 {
     Float64 delta = 1.0;
-    std::vector<Float64> myVector(15);
-    for(UInt32 i = 0; i < myVector.size(); i++)
+    TFloat64List myVector(15);
+    for(Int32 i = 0; i < myVector.size(); i++)
     {
         myVector[i] = 1 + delta * i;
     }
 
     const Float64 target = 8.;
     Int32 i_min = -1, i_max = -1;
+
+    //Check warning
+    TFloat64Range range= TFloat64Range(20,25);  
+    bool result = range.getClosedIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK(result == 0);
+
+    range= TFloat64Range(-10,-5);  
+    result = range.getClosedIntervalIndices(myVector,i_min,i_max);
+    BOOST_CHECK(result == 0);
     
     //range borders belong to orderded values
-    TFloat64Range range = TFloat64Range(6.5,10.3);    
+    range = TFloat64Range(6.5,10.3);    
     range.getClosedIntervalIndices(myVector,i_min,i_max);
     BOOST_CHECK( myVector[i_min] >= range.GetBegin());
     BOOST_CHECK( myVector[i_max] <= range.GetEnd());

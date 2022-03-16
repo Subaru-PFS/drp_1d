@@ -48,33 +48,20 @@ using namespace NSEpic;
 using namespace std;
 
 /**
- * Constructor, zeroes flags.
- */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis() :
-    m_SpectralFlags( 0 )
-{
-
-}
-
-/**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( UInt32 n, Bool isLogScale ) :
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( Int32 n, bool isLogScale ) :
     CSpectrumAxis( n ),
-    m_SpectralFlags( 0 )
-{
-    if( isLogScale )
-        m_SpectralFlags |= nFLags_LogScale;
-}
+    m_isLogScale(isLogScale)
+{}
 
 /**
  * Constructor, flags log scale when set.
  */
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool isLogScale, std::string AirVacuum) :
-    CSpectrumAxis(samples)
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, bool isLogScale, std::string AirVacuum) :
+    CSpectrumAxis(samples),    
+    m_isLogScale(isLogScale)
 {
-    if( isLogScale )
-        m_SpectralFlags |= nFLags_LogScale;
     if (AirVacuum != "")
     {
         m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);        
@@ -82,11 +69,11 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const TFloat64List & samples, Bool
     }
 }
 
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, Bool isLogScale, std::string AirVacuum) :
-    CSpectrumAxis(std::move(samples))
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, bool isLogScale, std::string AirVacuum) :
+    CSpectrumAxis(std::move(samples)),
+    m_isLogScale(isLogScale)
 {
-    if( isLogScale )
-        m_SpectralFlags |= nFLags_LogScale;
+
     if (AirVacuum != "") 
     {
         m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);   
@@ -95,9 +82,8 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( TFloat64List && samples, Bool isLo
 }
 
 //only used by client
-CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum) :
-    CSpectrumAxis( samples, n ),
-    m_SpectralFlags( 0 )
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum) :
+    CSpectrumAxis( samples, n )
 {
     if (AirVacuum != "")
     {
@@ -115,6 +101,31 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis( const CSpectrumSpectralAxis& origi
     ShiftByWaveLength( origin, wavelengthOffset, direction );
 }
 
+CSpectrumSpectralAxis::CSpectrumSpectralAxis( Int32 n, Float64 value):
+    CSpectrumAxis(n,value)
+{}
+
+CSpectrumSpectralAxis& CSpectrumSpectralAxis::operator*=(const Float64 op)
+{
+    CSpectrumAxis::operator*=(op);
+    if(op<0 && !indeterminate(m_isSorted)) m_isSorted =!m_isSorted;
+    if(!op) m_isSorted = (GetSamplesCount()<2);
+    if(m_isLogScale) m_isLogSampled = indeterminate;
+    return *this;
+}
+void CSpectrumSpectralAxis::MaskAxis(const TFloat64List& mask, CSpectrumSpectralAxis& maskedSpcAxis) const 
+{
+    CSpectrumAxis::MaskAxis(mask, maskedSpcAxis);
+    maskedSpcAxis.m_isSorted = m_isSorted;
+    if(maskedSpcAxis.GetSamplesCount()<2) maskedSpcAxis.m_isSorted = true;
+    maskedSpcAxis.m_isLogSampled = indeterminate;
+
+}
+void CSpectrumSpectralAxis::SetSize( Int32 s )
+{
+    if(s<2) m_isSorted = true;
+    else{if(GetSamplesCount()<s) resetAxisProperties();}
+}
 /**
  * Shift current axis the input offset in the input direction.
  */
@@ -126,12 +137,19 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( Float64 wavelengthOffset, EShiftD
 /**
  * Copy the input axis samples and shift the axis the specified offset in the specidifed direction.
  */
-void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, Float64 wavelengthOffset, EShiftDirection direction )
+void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& origin, 
+                                               Float64 wavelengthOffset, 
+                                               EShiftDirection direction )
 {
-    Int32 nSamples = origin.GetSamplesCount();
-    m_SpectralFlags = 0;
-    m_Samples.resize(nSamples);
+    if(wavelengthOffset<0.)
+        throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::ShiftByWaveLength: wavelengthOffset can not be negative");
 
+    Int32 nSamples = origin.GetSamplesCount();
+    m_Samples.resize(nSamples);
+    
+    m_isSorted      = origin.m_isSorted;
+    m_isLogSampled  = origin.m_isLogSampled;
+    m_isLogScale    = origin.m_isLogScale;
     const Float64* originSamples = origin.GetSamples();
 
     DebugAssert( direction == nShiftForward || direction == nShiftBackward );
@@ -149,7 +167,6 @@ void CSpectrumSpectralAxis::ShiftByWaveLength( const CSpectrumSpectralAxis& orig
     if( origin.IsInLogScale() )
     {
         wavelengthOffset = log( wavelengthOffset );
-        m_SpectralFlags |= nFLags_LogScale;
 
         if( direction == nShiftForward )
         {
@@ -194,7 +211,7 @@ void CSpectrumSpectralAxis::ApplyOffset( Float64 wavelengthOffset )
     {
         m_Samples[i] += wavelengthOffset;
     }
-
+    if(!wavelengthOffset)  m_isLogSampled = false;
 }
 
 /**
@@ -253,17 +270,17 @@ Float64 CSpectrumSpectralAxis::GetMeanResolution() const
 /**
  *
  */
-Bool CSpectrumSpectralAxis::IsInLogScale() const
+bool CSpectrumSpectralAxis::IsInLogScale() const
 {
-    return m_SpectralFlags & nFLags_LogScale;
+    return m_isLogScale;
 }
 
 /**
  *
  */
-Bool CSpectrumSpectralAxis::IsInLinearScale() const
+bool CSpectrumSpectralAxis::IsInLinearScale() const
 {
-    return !(m_SpectralFlags & nFLags_LogScale);
+    return !m_isLogScale;;
 }
 
 /**
@@ -274,7 +291,7 @@ TLambdaRange CSpectrumSpectralAxis::GetLambdaRange() const
     if( m_Samples.size() < 2 )
         return TLambdaRange( 0.0, 0.0 );
 
-    if( m_SpectralFlags & nFLags_LogScale )
+    if(  m_isLogScale )
     {
         return TLambdaRange( exp( m_Samples[0] ), exp( m_Samples[m_Samples.size()-1] ) );
     }
@@ -289,7 +306,7 @@ void CSpectrumSpectralAxis::GetMask( const TFloat64Range& lambdaRange,  CMask& m
 {
     TFloat64Range range = lambdaRange;
 
-    if( m_SpectralFlags & nFLags_LogScale )
+    if(  m_isLogScale )
         range.Set( log( range.GetBegin() ), log( range.GetEnd() ) );
 
     mask.SetSize( m_Samples.size() );
@@ -315,7 +332,7 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat6
 {
     TFloat64Range range = lambdaRange;
 
-    if( m_SpectralFlags & nFLags_LogScale )
+    if(  m_isLogScale )
         range.Set( log( range.GetBegin() ), log( range.GetEnd() ) );
 
     Int32 selfRate=0;
@@ -344,7 +361,7 @@ Float64 CSpectrumSpectralAxis::IntersectMaskAndComputeOverlapRate( const TFloat6
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
+bool CSpectrumSpectralAxis::ClampLambdaRange( const TFloat64Range& range, TFloat64Range& clampedRange ) const
 {
     TFloat64Range effectiveRange = GetLambdaRange();
 
@@ -405,9 +422,9 @@ Int32 CSpectrumSpectralAxis::GetIndexAtWaveLength( Float64 waveLength ) const
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ConvertToLinearScale()
+bool CSpectrumSpectralAxis::ConvertToLinearScale()
 {
-    if( ( m_SpectralFlags & nFLags_LogScale ) == false )
+    if( !m_isLogScale )
         return true;
     Int32 nSamples = GetSamplesCount();
 
@@ -416,17 +433,16 @@ Bool CSpectrumSpectralAxis::ConvertToLinearScale()
         m_Samples[i] = exp( m_Samples[i] );
     }
 
-    m_SpectralFlags &= ~ nFLags_LogScale;
-
+    m_isLogScale = false;
     return true;
 }
 
 /**
  *
  */
-Bool CSpectrumSpectralAxis::ConvertToLogScale()
+bool CSpectrumSpectralAxis::ConvertToLogScale()
 {
-    if( m_SpectralFlags & nFLags_LogScale )
+    if( m_isLogScale )
         return true;
     Int32 nSamples = GetSamplesCount();
 
@@ -435,20 +451,19 @@ Bool CSpectrumSpectralAxis::ConvertToLogScale()
         m_Samples[i] = log( m_Samples[i] );
     }
 
-    m_SpectralFlags |= nFLags_LogScale;
-
+    m_isLogScale = true;
     return true;
 }
 
 void CSpectrumSpectralAxis::SetLogScale() 
 {
-    m_SpectralFlags |= nFLags_LogScale;
+    m_isLogScale = true;
 }
 
 /**
  * Check if spectralAxis is well rebinned in log
 */
-Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
+bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
 {
     Float64 logGridStep;
     if(IsInLogScale())
@@ -473,7 +488,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
 
         if (relativeErrAbs > relativelogGridStepTol)
         {//return without setting anything
-            m_SpectralFlags &= ~ nFLags_LogSampled; // unsetting
+            m_isLogSampled = false; // unsetting
             Log.LogDebug("   CSpectrumSpectralAxis::CheckLoglambdaSampling: Log-regular lambda check FAILED");
 
             return false;
@@ -482,7 +497,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
     }
     //  recompute log step with more precision:
     m_regularLogSamplingStep = log(m_Samples.back()/m_Samples.front())/(GetSamplesCount()-1); 
-    m_SpectralFlags |= nFLags_LogSampled;
+    m_isLogSampled = true;
     Log.LogDetail("   CSpectrumSpectralAxis::CheckLoglambdaSampling: max Abs Relative Error (log lbda step)= %f", maxAbsRelativeError);
 
     return true;
@@ -493,7 +508,7 @@ Bool CSpectrumSpectralAxis::CheckLoglambdaSampling() const
  * In the actual version we consider that a spectral axis can be log sampled while having its values in Angstrom (i.e., non-log)
  * 
 */
-Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
+bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
 {       
     if (!IsLogSampled() )
         return false;
@@ -507,12 +522,12 @@ Bool CSpectrumSpectralAxis::IsLogSampled(Float64 logGridstep) const
     return true;
 }
 
-Bool CSpectrumSpectralAxis::IsLogSampled() const
+bool CSpectrumSpectralAxis::IsLogSampled() const
 {
-    if(!(m_SpectralFlags & nFLags_LogSampled)) 
+    if(indeterminate(m_isLogSampled)) 
         CheckLoglambdaSampling();
 
-    return m_SpectralFlags & nFLags_LogSampled;
+    return bool(m_isLogSampled);
 }
 
 
@@ -527,12 +542,12 @@ Float64 CSpectrumSpectralAxis::GetlogGridStep() const
  }
 
 //still TODO: check end-to-end redshift coverage
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio) const
 {
     return GetSubSamplingMask(ssratio, TInt32Range(0, GetSamplesCount()-1));
 }
 
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64Range lambdarange) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio, TFloat64Range lambdarange) const
 {
     Int32 imin=-1, imax=m_Samples.size();
     lambdarange.getClosedIntervalIndices(m_Samples, imin, imax, false);
@@ -540,13 +555,13 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, TFloat64R
 }
 
 /*@ssratio stands for sub-samplingRatio*/
-TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TInt32Range & ilbda) const
+TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio, const TInt32Range & ilbda) const
 {
     if(!IsLogSampled())
     {
         throw GlobalException(INTERNAL_ERROR,"Cannot subsample spectrum!");
     }
-    UInt32 s = GetSamplesCount();
+    Int32 s = GetSamplesCount();
     if(ssratio==1) return TFloat64List(s, 1.);
     TFloat64List mask(s, 0.); 
     for(Int32 i=ilbda.GetEnd(); i>=ilbda.GetBegin();i-=ssratio){//ensure that z[0] remains the same
@@ -563,14 +578,14 @@ TFloat64List CSpectrumSpectralAxis::GetSubSamplingMask(UInt32 ssratio, const TIn
     auto lambda_redshift_modulo = logstep_int %rebinlogstep_int;
     auto modulo_2 = logstep_int - trunc(logstep_int/rebinlogstep_int)*rebinlogstep_int;
 */
-UInt32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const
+Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep, Float64& modulo) const
 {
     if(!IsLogSampled())
     {
         throw GlobalException(INTERNAL_ERROR,"CSpectrumSpectralAxis::GetIntegerRatio: axis is not logsampled, thus cannot get integer ratio");
     }
 
-    UInt32 ratio = std::round(logstep/m_regularLogSamplingStep);
+    Int32 ratio = std::round(logstep/m_regularLogSamplingStep);
     modulo = logstep - ratio*m_regularLogSamplingStep;
     return ratio;
 }
@@ -611,4 +626,27 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda()
     Float64 new_regularLogSamplingStep=(new_lend-new_lstart)/nm1;
     m_Samples = new_lrange.SpreadOverLog(new_regularLogSamplingStep);
     m_regularLogSamplingStep = new_regularLogSamplingStep;
+}
+
+/**
+ * @brief Check if spectral axis is sorted in the increasing order
+ * empty or constant vectors are considered as non-sorted
+ */
+bool CSpectrumSpectralAxis::isSorted() const
+{
+    if(!indeterminate(m_isSorted)) return bool(m_isSorted);
+    //first time checking
+    m_isSorted = false;
+    if(std::is_sorted(std::begin(m_Samples), std::end(m_Samples))){
+        auto it = std::adjacent_find(m_Samples.begin(), m_Samples.end());//look for duplicates
+        if(it == m_Samples.end()) //no duplicates
+            m_isSorted = true;
+    }
+    return bool(m_isSorted);
+}
+void CSpectrumSpectralAxis::resetAxisProperties()
+{
+    //reset states since m_Samples is going to change
+    m_isSorted = indeterminate;
+    m_isLogSampled = indeterminate;
 }

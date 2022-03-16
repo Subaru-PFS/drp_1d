@@ -68,11 +68,11 @@ CSpectrumFluxCorrectionMeiksin::~CSpectrumFluxCorrectionMeiksin()
 
 }
 
-Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
+bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& convolRange)
 {
     m_convolRange = convolRange;
     bfs::path calibrationFolder( calibrationPath.c_str() );
-    std::vector<std::string> fileNamesList;
+    TStringList fileNamesList;
     fileNamesList.push_back("Meiksin_Var_curves_2.0.txt");
     fileNamesList.push_back("Meiksin_Var_curves_2.5.txt");
     fileNamesList.push_back("Meiksin_Var_curves_3.0.txt");
@@ -85,7 +85,7 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const st
     fileNamesList.push_back("Meiksin_Var_curves_6.5.txt");
     fileNamesList.push_back("Meiksin_Var_curves_7.0.txt");
 
-    for(UInt32 k=0; k<fileNamesList.size(); k++)
+    for(Int32 k=0; k<fileNamesList.size(); k++)
     {
         bfs::path fPath = ( calibrationFolder/"igm"/"IGM_variation_curves_meiksin"/fileNamesList[k].c_str() ).string();
         std::string fPathStr = (fPath).string();
@@ -109,7 +109,7 @@ Bool CSpectrumFluxCorrectionMeiksin::Init( std::string calibrationPath, const st
  * i.e., from the least extinction curve to the highest extinction curve 
  *         
  * */
-Bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
+bool CSpectrumFluxCorrectionMeiksin::LoadCurvesinIncreasingExtinctionOrder( const char* filePath )
 {
     bool loadSuccess=true;
     std::ifstream file;
@@ -198,7 +198,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::GetLSFProfileVector(Float64 lambda0
     }
     Float64 lambda0_obs = lambda0_rest*(1+z_bin_meiksin);
     Float64 sigma_obs = lsf->GetWidth(lambda0_obs);
-    Float64 sigmaSupport = lsf->GetProfile()->GetNSigmaSupport();
+    Float64 sigmaSupport = lsf->GetProfile().GetNSigmaSupport();
 
     Float64 lbdastep_rest = 1.;//value in angstrom based on calibration-igm files
     Int32 Nhalf = std::round(sigmaSupport*sigma_obs/(1+z_bin_meiksin)/lbdastep_rest);

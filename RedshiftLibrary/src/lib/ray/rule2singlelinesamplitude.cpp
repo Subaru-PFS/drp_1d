@@ -54,11 +54,8 @@ CRule2SingleLinesAmplitude::CRule2SingleLinesAmplitude() :
 {
 }
 
-CRule2SingleLinesAmplitude::~CRule2SingleLinesAmplitude()
-{
-}
 
-void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
+void CRule2SingleLinesAmplitude::SetUp( bool EnabledArgument, ... )
 {
   Name = "balmersingle";
   Enabled = EnabledArgument;
@@ -81,7 +78,7 @@ void CRule2SingleLinesAmplitude::SetUp( Bool EnabledArgument, ... )
  **/
 void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElementList )
 {
-    Int32 iA = LineModelElementList.FindElementIndex( m_LineA, m_LineType );
+    Int32 iA = LineModelElementList.findElementIndex( m_LineA, m_LineType );
   if( iA==-1 )
     {
       Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineA.c_str() );
@@ -92,7 +89,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
       Log.LogDebug( "Rule %s: line %s has size < 1.", Name.c_str(), m_LineA.c_str() );
       iA=-1;
     }
-  Int32 iB = LineModelElementList.FindElementIndex( m_LineB, m_LineType );
+  Int32 iB = LineModelElementList.findElementIndex( m_LineB, m_LineType );
   if( iB==-1 )
     {
       Log.LogDebug( "Rule %s: line %s not found.", Name.c_str(), m_LineB.c_str() );
@@ -180,7 +177,7 @@ void CRule2SingleLinesAmplitude::Correct( CLineModelElementList& LineModelElemen
   }
 }
 
-Bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
+bool CRule2SingleLinesAmplitude::Check( CLineModelElementList& LineModelElementList )
 {
   return false;
 }

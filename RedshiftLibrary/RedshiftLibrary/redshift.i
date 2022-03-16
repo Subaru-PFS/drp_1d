@@ -79,8 +79,13 @@
 %shared_ptr(TLSFGaussianNISPVSSPSF201707Args)
 %shared_ptr(CLineModelSolution)
 %shared_ptr(CPhotometricData)
+%shared_ptr(CPhotometricBand)
+%shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
-
+%shared_ptr(CRayCatalogsTplShape)
+%shared_ptr(CLineRatioCatalog)
+%shared_ptr(CFlagLogResult)
+%shared_ptr(CFlagWarning)
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -96,10 +101,12 @@
 #include "RedshiftLibrary/log/filehandler.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/context.h"
-#include "RedshiftLibrary/processflow/processflow.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
+#include "RedshiftLibrary/ray/catalogsTplShape.h"
 #include "RedshiftLibrary/ray/airvacuum.h"
+#include "RedshiftLibrary/ray/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
@@ -110,6 +117,7 @@
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
+#include "RedshiftLibrary/operator/flagResult.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
@@ -119,6 +127,13 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/photometry/photometricdata.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
+#include "RedshiftLibrary/method/linemodelsolve.h"
+#include "RedshiftLibrary/method/templatefittingsolve.h"
+#include "RedshiftLibrary/method/linemeassolve.h"
+#include "RedshiftLibrary/method/tplcombinationsolve.h"
+#include "RedshiftLibrary/method/reliabilitysolve.h"
+#include "RedshiftLibrary/method/classificationsolve.h"
+#include "RedshiftLibrary/method/linematchingsolve.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -188,7 +203,6 @@ static PyObject* pAmzException;
 typedef double Float64;
 typedef long long Int64;
 typedef int Int32;
-typedef unsigned int UInt32;
 
 const char* get_version();
 
@@ -219,16 +233,54 @@ private:
    ~CLog();
 };
 
+class CFlagWarning {
+public:
+  typedef enum WarningCode
+    {
+      WARNING_NONE=0,
+      AIR_VACCUM_CONVERSION_IGNORED, //1
+      CRANGE_VALUE_OUTSIDERANGE, //2
+      CRANGE_VECTBORDERS_OUTSIDERANGE, //3
+      CRANGE_NO_INTERSECTION, //4
+      FINDER_NO_PEAKS, //5
+      STDESTIMATION_NO_MATCHING, //6
+      STDESTIMATION_FAILED, //7
+      MULTIROLL_STRTAG_NOTFOUND, //8
+      LINEMATCHING_REACHED_ENDLOOP, //9
+      FORCE_LOGSAMPLING_FFT,//10
+      IGNORELINESSUPPORT_DISABLED_FFT,//11
+      FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,//12
+      INVALID_MERIT_VALUES,//13
+      AIR_VACCUM_REACHED_MAX_ITERATIONS, //14
+      ASYMFIT_NAN_PARAMS,//15
+      DELTAZ_COMPUTATION_FAILED, //16
+      INVALID_FOLDER_PATH,//17
+      TPL_NAME_EMPTY,//18
+      RELIABILITY_NEEDS_TENSORFLOW//19
+    }WarningCode;
+
+  static CFlagWarning& GetInstance();
+
+  void warning(WarningCode c, std::string message);
+  void warning(WarningCode c, const char* format, ... );
+  Int32 getBitMask();
+  void resetFlag();
+
+private:
+  CFlagWarning();
+  ~CFlagWarning();
+};
+
 class CLogConsoleHandler {
 public:
   CLogConsoleHandler();
-  void SetLevelMask( UInt32 mask );
+  void SetLevelMask( Int32 mask );
 };
 
 class CLogFileHandler {
 public:
   CLogFileHandler( const char* filePath );
-  void SetLevelMask( UInt32 mask );
+  void SetLevelMask( Int32 mask );
 };
 
 template <typename T>
@@ -244,10 +296,13 @@ typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
 typedef std::vector<Float64> TFloat64List;
 typedef std::vector<Int32> TInt32List;
+typedef std::vector<std::string> TStringList;
+
 
 %template(TFloat64Range) CRange<Float64>;
 %template(TFloat64List) std::vector<Float64>;
 %template(TInt32List) std::vector<Int32>;
+%template(TStringList) std::vector<std::string>;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
@@ -269,8 +324,53 @@ class PC
 class CRayCatalog
 {
 public:
-    void Load( const char* filePath );
-    bool Save( const char* filePath );
+  CRayCatalog();
+  CRayCatalog(Float64 nSigmaSupport);
+  void AddRayFromParams(const std::string& name,
+			const Float64& position,
+			const std::string& type,
+			const std::string& force,
+			const std::string& profile,
+			const TAsymParams& asymParams,
+			const std::string& groupName,
+			const Float64& nominalAmplitude,
+			const std::string& velocityGroup,
+			const Float64& velocityOffset,
+			const bool& enableVelocityFit,
+			const Int32& id,
+			const std::string& str_id);
+
+  void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
+
+
+};
+
+typedef struct {
+  TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
+        Float64 sigma, alpha, delta;
+    } TAsymParams;
+
+
+class CLineRatioCatalog : public CRayCatalog
+{
+ public:
+  CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+  ~CLineRatioCatalog();
+  void addVelocity(const std::string& name, Float64 value);
+  void setPrior(Float64 prior);
+
+  void setIsmIndex(Float64 ismIndex);
+
+};
+
+class CRayCatalogsTplShape
+{
+
+public:
+  CRayCatalogsTplShape();
+  void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
+
 };
 
 %catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
@@ -295,10 +395,12 @@ public:
 
 };
 
+%template(TMapFloat64) std::map<std::string, Float64>;
 
 %include "method/classificationresult.i"
 %include "method/reliabilityresult.i"
 %include "operator/pdfMargZLogResult.i"
+%include "operator/flagResult.i"
 %include "statistics/pdfcandidatesz.i"
 %include "operator/extremaresult.i"
 %include "operator/tplCombinationExtremaResult.i"
@@ -323,15 +425,20 @@ public:
 class CProcessFlowContext {
 public:
   CProcessFlowContext();
-  void Init(std::shared_ptr<CSpectrum> spectrum,
-            std::shared_ptr<CTemplateCatalog> templateCatalog,
-            std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-            std::shared_ptr<CRayCatalog> qso_rayCatalog,
-            std::shared_ptr<CPhotBandCatalog> photBandCatalog={});
+  void Init();
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog); 
+  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
+
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
-  void testResultStore();
+ 
+  TScopeStack  m_ScopeStack;
+
 };
+
 
 
 class CParameterStore : public CScopeStore
@@ -343,13 +450,6 @@ class CParameterStore : public CScopeStore
 };
 
 %template(Get_string) CParameterStore::Get<std::string>;
-
-class CProcessFlow {
-public:
-  CProcessFlow();
-  void Process( CProcessFlowContext& ctx );
-};
-
 
 class COperatorResultStore
 {
@@ -366,6 +466,10 @@ class COperatorResultStore
                                                                        const std::string& name ) const;
 
   std::shared_ptr<const CPdfMargZLogResult> GetPdfMargZLogResult(const std::string& objectType,
+								    const std::string& method,
+								    const std::string& name ) const;
+
+  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
 								    const std::string& method,
 								    const std::string& name ) const;
 
@@ -435,8 +539,7 @@ class COperatorResultStore
   int getNbRedshiftCandidates(const std::string& objectType,
 			      const std::string& method) const;
 
-  void test();
-
+  void StoreFlagResult( const std::string& name, Int32  result );
 };
 
 
@@ -466,30 +569,30 @@ class CSpectrum
 
 
 %rename(CSpectrumAxis_default) CSpectrumAxis();
-%rename(CSpectrumAxis_empty) CSpectrumAxis(UInt32 n);
-%rename(CSpectrumAxis_withSpectrum) CSpectrumAxis(const Float64* samples, UInt32 n);
+%rename(CSpectrumAxis_empty) CSpectrumAxis(Int32 n);
+%rename(CSpectrumAxis_withSpectrum) CSpectrumAxis(const Float64* samples, Int32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 class CSpectrumAxis
 {
  public:
   CSpectrumAxis();
-  CSpectrumAxis( UInt32 n );
-  CSpectrumAxis(const Float64* samples, UInt32 n );
+  CSpectrumAxis( Int32 n );
+  CSpectrumAxis(const Float64* samples, Int32 n );
   Float64* GetSamples();
   const TAxisSampleList& GetSamplesVector() const;
-  UInt32 GetSamplesCount() const;
-  virtual void SetSize( UInt32 s );
+  Int32 GetSamplesCount() const;
+  virtual void SetSize( Int32 s );
 };
-%clear (const Float64* samples, UInt32 n);
+%clear (const Float64* samples, Int32 n);
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 class CSpectrumSpectralAxis : public CSpectrumAxis {
  public:
   // CSpectrumSpectralAxis(); // needs %rename
-  CSpectrumSpectralAxis( const Float64* samples, UInt32 n, std::string AirVacuum="" );
+  CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum="" );
 };
-%clear (const Float64* samples, UInt32 n);
+%clear (const Float64* samples, Int32 n);
 class CAirVacuum
 {
 public:
@@ -503,28 +606,28 @@ public:
     static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
 };
 
-//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)};
+//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
-%rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(UInt32 n);
-%rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, UInt32 n);
-%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, UInt32 n,
-                                                        const double* error, UInt32 m );
+%rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(Int32 n);
+%rename(CSpectrumFluxAxis_withSpectrum) CSpectrumFluxAxis(const Float64* samples, Int32 n);
+%rename(CSpectrumFluxAxis_withError) CSpectrumFluxAxis( const double* samples, Int32 n,
+                                                        const double* error, Int32 m );
 
-%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, UInt32 n)}
-%apply (double* IN_ARRAY1, int DIM1) {(const double* samples, UInt32 n),
-                                      (const double* error, UInt32 m)}
+%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* samples, Int32 n),
+                                      (const double* error, Int32 m)}
 
 class CSpectrumFluxAxis : public CSpectrumAxis
 {
  public:
   // CSpectrumFluxAxis(); // needs %rename
   CSpectrumFluxAxis();
-  CSpectrumFluxAxis( UInt32 n );
-  CSpectrumFluxAxis( const Float64* samples, UInt32 n );
-  CSpectrumFluxAxis( const double* samples, UInt32 n,
-  		     const double* error, UInt32 m );
-  void SetSize( UInt32 s );
+  CSpectrumFluxAxis( Int32 n );
+  CSpectrumFluxAxis( const Float64* samples, Int32 n );
+  CSpectrumFluxAxis( const double* samples, Int32 n,
+  		     const double* error, Int32 m );
+  void SetSize( Int32 s );
 
 };
 
@@ -534,8 +637,8 @@ class  CSpectrumNoiseAxis : public CSpectrumAxis
   CSpectrumNoiseAxis();
 };
 
-//%clear (const Float64* samples, UInt32 n);
-//%clear (const Float64* _samples, const Float64* _samples, UInt32 n);
+//%clear (const Float64* samples, Int32 n);
+//%clear (const Float64* _samples, const Float64* _samples, Int32 n);
 
 class CTemplate : public CSpectrum
 {
@@ -611,7 +714,8 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       BAD_COUNTMATCH,
       BAD_TEMPLATECATALOG,
       INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE
+      OVERLAPRATE_NOTACCEPTABLE,
+      DZ_NOT_COMPUTABLE
     } ErrorCode;
 
 typedef struct{
@@ -647,10 +751,6 @@ struct TLSFGaussianNISPVSSPSF201707Args : virtual TLSFArguments
   Float64 sourcesize;
   TLSFGaussianNISPVSSPSF201707Args(const std::shared_ptr<const CParameterStore>& parameterStore);
 };
-
-typedef std::vector<std::string> TStringList;
-
-%template(TStringList) std::vector<std::string>;
 
 class CPhotometricData
 {
@@ -735,4 +835,65 @@ class CSolveDescription
   static const std::string GetDescription(const std::string& method);
 };
 
+class CSolve{
+ public:
+  CSolve()=delete;
+    void Compute(CProcessFlowContext& context);
+};
 
+class CObjectSolve{
+ public:
+  CSolve()=delete;
+    void Compute(CProcessFlowContext& context);
+};
+
+  class CClassificationSolve:public CSolve
+  {
+
+  public:
+
+    CClassificationSolve(TScopeStack &scope,std::string objectType);
+
+  };
+  class CReliabilitySolve:public CSolve
+  {
+
+  public:
+
+    CReliabilitySolve(TScopeStack &scope,std::string objectType);
+  };
+  class CLineModelSolve:public CObjectSolve
+  {
+
+  public:
+
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
+  };
+  class CLineMeasSolve:public CObjectSolve
+  {
+
+  public:
+
+    CLineMeasSolve(TScopeStack &scope,std::string objectType);
+  };
+
+  class CTemplateFittingSolve : public CObjectSolve
+{
+  public:
+
+    CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+  };
+
+class CTplcombinationSolve : public CObjectSolve
+{
+
+ public:
+  CTplcombinationSolve(TScopeStack &scope,std::string objectType);
+};
+
+class CLineMatchingSolve: public CObjectSolve
+{
+public:
+
+    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+};

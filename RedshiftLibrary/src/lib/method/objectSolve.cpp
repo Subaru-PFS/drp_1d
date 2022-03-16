@@ -36,38 +36,28 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/modelrulesresult.h"
 
-#include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <string>
-#include <fstream>
-#include <iomanip>      // std::setprecision
-
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 
 using namespace NSEpic;
 
-/**
- * \brief Empty constructor.
- **/
-CModelRulesResult::CModelRulesResult(TStringList logStrings)
+void CObjectSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 {
-    LogStrings = logStrings;
-}
+  m_lambdaRange=inputContext->m_lambdaRange;//non-clamped
 
-/**
- * \brief Empty constructor.
- **/
-CModelRulesResult::CModelRulesResult()
-{
-}
+  //m_redshiftSampling could be overwritten if fftprocessing is activated
+  // Warning for LineMeas :  we consider linemeas use the same redshiftsampling as the objectMethod
+  // if linemeas is called in standalone, redshiftsampling must be present in parameters
+  m_redshiftSampling=inputContext->GetParameterStore()->GetScoped<std::string>("redshiftsampling");
 
-/**
- * \brief Empty destructor.
- **/
-CModelRulesResult::~CModelRulesResult()
-{
+  TFloat64Range redshiftRange;
+  Float64 redshiftStep;
+  GetRedshiftSampling(inputContext, redshiftRange, redshiftStep);
+  Log.LogInfo(Formatter()<<"Init redshift range with " << redshiftRange << " and"<< redshiftStep);      
+  if(m_redshiftSampling=="log")
+    m_redshifts = redshiftRange.SpreadOverLogZplusOne( redshiftStep ); //experimental: spreadover a grid at delta/(1+z), unusable because PDF needs regular z-step
+  else  
+    m_redshifts = redshiftRange.SpreadOver( redshiftStep );
+
 }
 

@@ -44,9 +44,10 @@
 #include  "RedshiftLibrary/spectrum/tools.h"
 #include  "RedshiftLibrary/common/mask.h"
 #include  "RedshiftLibrary/extremum/extremum.h"
-#include  "RedshiftLibrary/common/quicksort.h"
 #include  "RedshiftLibrary/common/indexing.h"
 #include  "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <math.h>
 #include <gsl/gsl_interp.h>
@@ -102,7 +103,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                                        Int32 opt_extinction,
                                        Int32 opt_dustFitting,
                                        CMask spcMaskAdditional,
-                                       CPriorHelper::TPriorEList logpriore,
+                                       const CPriorHelper::TPriorEList& logpriore,
                                        const TInt32List& MeiksinList,
                                        const TInt32List& EbmvList)
 {
@@ -177,8 +178,8 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
         Log.LogDetail("  Operator-Tplcombination: Linear fitting, found normalization Factor=%e", normFactor);
     }
 
-    Bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
-    Bool igmLoopUseless_WavelengthRange = false;
+    bool option_igmFastProcessing = (MeiksinList.size()==1 ? false : true); //TODO
+    bool igmLoopUseless_WavelengthRange = false;
     fittingResults.chisquare = INFINITY;//final best Xi2 value
     Float64 chisq, SNR;
     Float64 dtd_complement = 0.;//value mainly relevant with DisextinctData method
@@ -189,7 +190,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
      * 
      * TODO: keep the first method once we completely validate the equivalence of both method
     */
-    Bool DisextinctData = false; // true = option 1; false = option 2
+    bool DisextinctData = false; // true = option 1; false = option 2
     //create a template with cte flux = 1, to be used only when disextincting data and noise
     CTemplate identityTemplate("identity", "idle", m_templatesRebined_bf[0].GetSpectralAxis(), std::move(CSpectrumFluxAxis(m_templatesRebined_bf[0].GetSampleCount(), 1)));
     // Prepare the fit data, once for all
@@ -266,7 +267,7 @@ void COperatorTplcombination::BasicFit(const CSpectrum& spectrum,
                 Float64 yi, ei;
                 //Important: hereinafter we assume that kStart_up can only be equal or higher than kStart when moving throw the igm curves
                 //this is valid only iif igm curves are loaded in the increasing ordre,i.e., from the least extinction curve to the highest extinction curve
-                UInt32 kStart_up = kStart;
+                Int32 kStart_up = kStart;
                 for(Int32 i = 0; i < n; i++)
                 {
                     if(!extinction[i]){
@@ -503,12 +504,12 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
                                                                   const TFloat64Range& lambdaRange,
                                                                   const TFloat64List& redshifts,
                                                                   Float64 overlapThreshold,
-                                                                  std::vector<CMask> additional_spcMasks,
-                                                                  std::string opt_interp,
+                                                                  const std::vector<CMask> &additional_spcMasks,
+                                                                  const std::string &opt_interp,
                                                                   Int32 opt_extinction,
                                                                   Int32 opt_dustFitting,
-                                                                  CPriorHelper::TPriorZEList logpriorze,
-                                                                  Bool keepigmism,
+                                                                  const CPriorHelper::TPriorZEList &logpriorze,
+                                                                  bool keepigmism,
                                                                   Float64 FitEbmvCoeff,
                                                                   Int32 FitMeiksinIdx)
 {
@@ -569,23 +570,15 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize, componentCount);
     result->Redshifts = sortedRedshifts;
 
-    CMask additional_spcMask(spectrum.GetSampleCount());
-    CMask default_spcMask(spectrum.GetSampleCount());
     //default mask
-    for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
-    {
-        default_spcMask[km] = 1.0;
-    }
-    bool useDefaultMask = 0;
-    if(additional_spcMasks.size()!=sortedRedshifts.size())
-    {
-        useDefaultMask=true;
-    }
-    if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
-    {
-        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: using default mask, masks-list size="<<additional_spcMasks.size()<<"didn't match the input redshift-list size="<<sortedRedshifts.size());
+    bool useDefaultMask = additional_spcMasks.size()!=sortedRedshifts.size() ? true : false;
+    CMask default_spcMask(spectrum.GetSampleCount());
+    if (useDefaultMask)
+        for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
+            default_spcMask[km] = 1.0;
 
-    }
+    if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-Tplcombination: masks-list size="<<additional_spcMasks.size()<<"didn't match the input redshift-list size="<<sortedRedshifts.size());
 
     TFloat64Range clampedlambdaRange;
     spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange );
@@ -593,19 +586,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
     TFloat64List _ampList(componentCount, NAN);
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        //default mask
-        if(useDefaultMask)
-        {
-            additional_spcMask = default_spcMask;
-        }else{
-            //masks from the input masks list
-            additional_spcMask = additional_spcMasks[sortedIndexes[i]];
-        }
-        CPriorHelper::TPriorEList logp;
-        if(logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size())
-        {
-            logp = logpriorze[i];
-        }
+        const CMask &additional_spcMask = useDefaultMask ? default_spcMask : additional_spcMasks[sortedIndexes[i]];
+
+        const CPriorHelper::TPriorEList &logp = logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size() ? logpriorze[i] : CPriorHelper::TPriorEList();
+
         Float64 redshift = result->Redshifts[i];
 
         //initializing fittingResults: could be moved to another function
@@ -708,7 +692,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }if(oneValidStatusFoundIndex==-1)
     {
-        Log.LogWarning("  Operator-Tplcombination: STATUS WARNING: Not even one single valid fit/merit value found");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter()<<"  COperatorTplcombination::"<<__func__<<": STATUS WARNING: Not even one single valid fit/merit value found");
     }
 
 
@@ -724,7 +708,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    Tplcombination-operator: Loop Error - lst-square values not set even once");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter()<<"    COperatorTplcombination::"<<__func__<<": Loop Error - lst-square values not set even once");
     }
 
     //estimate CstLog for PDF estimation
@@ -804,7 +788,7 @@ std::shared_ptr<CModelSpectrumResult>   COperatorTplcombination::ComputeSpectrum
 
     const CSpectrumFluxAxis& extinction = identityTemplate.GetFluxAxis();
 
-    UInt32 modelSize = spectrum.GetSampleCount();
+    Int32 modelSize = spectrum.GetSampleCount();
     CSpectrumSpectralAxis modelSpcAxis = spectrum.GetSpectralAxis(); 
 
     CSpectrumFluxAxis modelFlux(modelSize, 0.0);
@@ -837,7 +821,7 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         sumLogNoise += log( error[j] );
@@ -849,7 +833,7 @@ Float64 COperatorTplcombination::EstimateLikelihoodCstLog(const CSpectrum& spect
     return cstLog;
 }
 
-Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, UInt32 kStart, UInt32 n)
+Float64 COperatorTplcombination::GetNormFactor(const CSpectrumFluxAxis spcFluxAxis, Int32 kStart, Int32 n)
 {
     Float64 maxabsval = DBL_MIN;
     for (Int32 k = 0; k < n; k++)

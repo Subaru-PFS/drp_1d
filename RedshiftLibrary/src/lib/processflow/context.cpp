@@ -64,6 +64,7 @@ CProcessFlowContext::CProcessFlowContext()
     gsl_set_error_handler(NewHandler);
     m_parameterStore = std::make_shared<CParameterStore>(m_ScopeStack);
     m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
+    m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
 CProcessFlowContext::~CProcessFlowContext()
@@ -77,39 +78,9 @@ std::shared_ptr<const CParameterStore> CProcessFlowContext::LoadParameterStore(c
   return m_parameterStore;
 }
 
-void CProcessFlowContext::Init(std::shared_ptr<CSpectrum> spectrum,
-                               std::shared_ptr<CTemplateCatalog> templateCatalog,
-                               std::shared_ptr<CRayCatalog> galaxy_rayCatalog,
-                               std::shared_ptr<CRayCatalog> qso_rayCatalog,
-                               std::shared_ptr<CPhotBandCatalog> photBandCatalog
-                               )
+void CProcessFlowContext::Init()
 {
   Log.LogInfo("Processing context initialization");
-  try
-    {
-      m_inputContext = std::make_shared<const CInputContext>( spectrum,
-                                                              templateCatalog,
-                                                              galaxy_rayCatalog,
-                                                              qso_rayCatalog,
-                                                              photBandCatalog,
-                                                              m_parameterStore);
-    }
-  catch(GlobalException const&e)
-    {
-      throw e;
-    }    
-  catch(ParameterException const&e)
-    {
-      throw e;
-    }    
-  catch(std::exception const&e)
-    {
-      throw GlobalException(EXTERNAL_LIB_ERROR,Formatter()<<"ProcessFlow encountered an external lib error :"<<e.what());
-    }    
-
+  m_inputContext->Init();
 }
 
-void CProcessFlowContext::testResultStore() {
-  m_ResultStore = std::make_shared<COperatorResultStore>(m_ScopeStack);
-    m_ResultStore->test();
-  }

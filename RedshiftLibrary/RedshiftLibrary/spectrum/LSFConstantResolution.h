@@ -56,9 +56,9 @@ namespace NSEpic
         bool                IsValid() const override;
 
         static std::shared_ptr<CLSF>   make_LSF(const std::shared_ptr<const TLSFArguments>& args);
-
+        static Float64 computeResolution(Float64 lambda, Float64 width);
     private:
-        const Float64 m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35;
+        static constexpr Float64 m_instrumentResolutionEmpiricalFactor = 230.0/325.0/2.35;
         //CLineProfile_ptr m_profile{std::make_shared<CLineProfileSYM>()}; // default to sym
         const Float64 m_Resolution;
   };

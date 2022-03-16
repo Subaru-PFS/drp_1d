@@ -40,6 +40,8 @@
 
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
+#include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 using namespace NSEpic;
 
 
@@ -85,7 +87,7 @@ void TLineModelResult::updateFromLineModelSolution(const CLineModelSolution& cms
     Alv= cms.AbsorptionVelocity;
   }
 
-void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModelFitting> lmel)
+void TLineModelResult::updateContinuumFromModel(const std::shared_ptr<const CLineModelFitting> &lmel)
   {
     FittedTplName= lmel->getFitContinuum_tplName();
     FittedTplAmplitude= lmel->getFitContinuum_tplAmplitude();
@@ -96,7 +98,7 @@ void TLineModelResult::updateContinuumFromModel(std::shared_ptr<const CLineModel
     FittedTplMeiksinIdx= lmel->getFitContinuum_tplIgmMeiksinIdx();
   }
 
-void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelFitting> lmel)
+void TLineModelResult::updateTplRatioFromModel(const std::shared_ptr<const CLineModelFitting> &lmel)
   {
         FittedTplratioName = lmel->getTplshape_bestTplName();
         FittedTplratioIsmCoeff = lmel->getTplshape_bestTplIsmCoeff();
@@ -106,10 +108,13 @@ void TLineModelResult::updateTplRatioFromModel(std::shared_ptr<const CLineModelF
 
   }
 
-void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int idx,const TFloat64Range &lambdaRange, int i_2pass)
+void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
+                                        const std::shared_ptr<const CLineModelResult> &lmresult,
+                                        bool estimateLeastSquareFast, int idx, 
+                                        const TFloat64Range &lambdaRange, int i_2pass)
   {
-    
-    // TODO : make all these getters const in CLineModelFitting before uncommenting this
+    Merit = lmresult->ChiSquare[idx];
+
     //LineModelSolutions
     Elv = lmel->GetVelocityEmission();
     Alv = lmel->GetVelocityAbsorption();
@@ -145,12 +150,12 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
     CorrScaleMarg = corrScaleMarg;
 
     static Float64 cutThres = 3.0;
-    Int32 nValidLines = lmresult->GetNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
+    Int32 nValidLines = lmresult->getNLinesOverCutThreshold(i_2pass, cutThres, cutThres);
     NLinesOverThreshold = nValidLines; // m/Float64(1+nValidLines);
     Float64 cumulStrongELSNR = lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
     StrongELSNR = cumulStrongELSNR;
 
-    std::vector<std::string> strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
+    TStringList strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
     StrongELSNRAboveCut = strongELSNRAboveCut;
 
     Int32 nddl = lmel->GetNElements(); // get the total number of
@@ -159,13 +164,13 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
     // the fitted model
     NDof =
       lmel->m_Elements.GetModelNonZeroElementsNDdl();
-
-    Float64 bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
+  
+    Float64 _bic = lmresult->ChiSquare[idx] + nddl * log(lmresult->nSpcSamples); // BIC
     // Float64 aic = m + 2*nddl; //AIC
-    bic = bic;
+    bic = _bic;
     // lmresult->bic = aic + (2*nddl*(nddl+1) )/(nsamples-nddl-1);
     // //AICc, better when nsamples small
-
+  
     // compute continuum indexes
     // TODO VB is this useful/necessary now ? if there is a computation it should be done before
     //NB AA commented to avoid adding spectrum to getFromModel arguments
@@ -181,19 +186,19 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
 
     OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1, lambdaRange);
     OutsideLinesSTDError = lmel->getOutsideLinesSTD(2, lambdaRange);
-    Float64 ratioSTD = -1;
+
     if(OutsideLinesSTDError>0.0)
       {
-        ratioSTD = OutsideLinesSTDFlux/OutsideLinesSTDError;
+        Float64 ratioSTD = OutsideLinesSTDFlux/OutsideLinesSTDError;
         Float64 ratio_thres = 1.5;
         if(abs(ratioSTD)>ratio_thres || abs(ratioSTD)<1./ratio_thres)
           {
-            Log.LogWarning( "  Operator-Linemodel: STD estimations outside lines do not match: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
+            Flag.warning(Flag.STDESTIMATION_NO_MATCHING, Formatter()<<"  TLineModelResult::"<<__func__<<": STD estimations outside lines do not match: ratio="<<ratioSTD<<", flux-STD="<<OutsideLinesSTDFlux<<", error-std="<<OutsideLinesSTDError);
           }else{
           Log.LogInfo( "  Operator-Linemodel: STD estimations outside lines found matching: ratio=%e, flux-STD=%e, error-std=%e", ratioSTD, OutsideLinesSTDFlux, OutsideLinesSTDError);
         }
       }else{
-      Log.LogWarning( "  Operator-Linemodel: unable to get STD estimations..." );
+      Flag.warning(Flag.STDESTIMATION_FAILED, Formatter()<<"  TLineModelResult::"<<__func__<<": unable to get STD estimations..." );
     }
 
 
@@ -203,8 +208,9 @@ void TLineModelResult::updateFromModel(std::shared_ptr<CLineModelFitting> lmel,s
 
 
 std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(const int& rank,const std::string& dataset) const{
-      if (dataset == "model_parameters")  return std::make_shared<const TLineModelResult>(this->m_ranked_candidates[rank].second);
-      else if (dataset == "fitted_rays")
+      if (dataset == "model_parameters" || dataset == "fp_model_parameters")  
+          return std::make_shared<const TLineModelResult>(this->m_ranked_candidates[rank].second);
+      else if (dataset == "fitted_rays" || dataset == "fp_fitted_rays" )
 	{
 	  std::shared_ptr<const COperatorResult> cop =  this->m_savedModelFittingResults[rank];
 	  return cop;
@@ -216,8 +222,8 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(cons
     }
     
 const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::string& dataset) const {
-      if (dataset == "model_parameters")      return this->m_ranked_candidates[0].second.getType();
-      else if (dataset == "fitted_rays")  return this->m_savedModelFittingResults[0]->getType();
+      if (dataset == "model_parameters" || dataset == "fp_model_parameters")      return this->m_ranked_candidates[0].second.getType();
+      else if (dataset == "fitted_rays" || dataset == "fp_fitted_rays" )  return this->m_savedModelFittingResults[0]->getType();
       else if (dataset == "model")  return this->m_savedModelSpectrumResults[0]->getType();
       else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[0]->getType();
       else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
@@ -225,6 +231,6 @@ const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::st
 
 bool LineModelExtremaResult::HasCandidateDataset(const std::string& dataset) const
 {
-  return (dataset == "model_parameters" || dataset == "model" ||
-	  dataset == "continuum" || dataset == "fitted_rays");
+  return (dataset == "model_parameters" || dataset == "model" || dataset == "fp_model_parameters"||
+	  dataset == "continuum" || dataset == "fitted_rays" || dataset == "fp_fitted_rays" );
 }

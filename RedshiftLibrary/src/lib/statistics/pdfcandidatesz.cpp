@@ -58,7 +58,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID & candidates):
 
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List & redshifts)
 {
-    for (UInt32 i =0; i<redshifts.size(); ++i)
+    for (Int32 i =0; i<redshifts.size(); ++i)
     {
         const std::string Id = "EXT" + to_string(i);
         m_candidates[Id].Redshift = redshifts[i];
@@ -76,7 +76,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List & redshifts)
 */
 TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange, TCandidateZRangebyID & ranges)
 {
-    Bool nodz = false;
+    bool nodz = false;
     Int32 n = m_candidates.size();
 
     ranges.clear();
@@ -98,7 +98,7 @@ TStringList CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange
     };
 
     // sort candidate keys (Ids) by decreasing redshifts
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
@@ -182,7 +182,7 @@ std::shared_ptr<PdfCandidatesZResult> CPdfCandidatesZ::Compute(TRedshiftList con
                 cand.ValSumProba = 0;
                 continue;
             }            
-            Bool GaussFitok = getCandidateRobustGaussFit( PdfRedshifts, PdfProbaLog, zranges[Id], cand);
+            bool GaussFitok = getCandidateRobustGaussFit( PdfRedshifts, PdfProbaLog, zranges[Id], cand);
             if(GaussFitok)
             {
                 cand.ValSumProba = cand.GaussAmp*cand.GaussSigma*sqrt(2*M_PI);
@@ -205,7 +205,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(TCandidateZbyRank & ranked_candidates
 {
 
     // sort m_candidates keys (Ids) by deacreasing integ proba
-    std::vector<std::string> Ids;
+    TStringList Ids;
     for (const auto & c : m_candidates){
         Ids.push_back(c.first); // keys = ids
     }
@@ -226,7 +226,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(TCandidateZbyRank & ranked_candidates
  * @param zrange corresponds to the concerned range
  * @return -1.0 if error, else sum around the candidate
  */
-Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
+bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
                                      const TFloat64List & valprobalog,
                                      const TFloat64Range & zrange,
                                      TCandidateZ & candidate
@@ -237,7 +237,7 @@ Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
   //     -> use a DEBUG directive ? 
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {
@@ -268,7 +268,7 @@ Bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList & redshifts,
 
 
 //TODO: this requires a deeper check to include the updates window support range
-Bool CPdfCandidatesZ::getCandidateRobustGaussFit(const TRedshiftList & redshifts,
+bool CPdfCandidatesZ::getCandidateRobustGaussFit(const TRedshiftList & redshifts,
                                         const TFloat64List & valprobalog,
                                         const TFloat64Range & zrange,
                                         TCandidateZ & candidate) const
@@ -368,7 +368,7 @@ int pdfz_lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J)
 //** gaussian fit end**//
 
 
-Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
+bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
                                   const TFloat64List & valprobalog,
                                   const TFloat64Range & zrange,
                                   TCandidateZ & candidate) const
@@ -377,7 +377,7 @@ Bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList & redshifts,
     Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - Starting pdf peaks gaussian fitting");
 
     // check that redshifts are sorted
-    for (UInt32 k = 1; k < redshifts.size(); k++)
+    for (Int32 k = 1; k < redshifts.size(); k++)
     {
         if (redshifts[k] < redshifts[k - 1])
         {

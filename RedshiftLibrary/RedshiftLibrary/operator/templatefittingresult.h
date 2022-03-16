@@ -53,11 +53,11 @@ class CTemplateFittingResult : public COperatorResult
 
 public:
 
-    void Init( UInt32 n);
-    void Init( UInt32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
+    void Init( Int32 n);
+    void Init( Int32 n, Int32 EbmvListSize, Int32 MeiksinListSize);
     void InitIntermediate(Int32 EbmvListSize, Int32 MeiksinListSize);
 
-    void set_at_redshift(const UInt32 i, const TFittingIsmIgmResult val);
+    void set_at_redshift(const Int32 i, const TFittingIsmIgmResult val);
 
     TFloat64List            Redshifts;
 
@@ -80,7 +80,7 @@ public:
     //TODO: std::vector<std::vector<TFloat64List>> LogPriorIntermediate
     //TODO: std::vector<std::vector<TFloat64List>> AmpIntermediate //is needed for correct prior use in marg. mode tplmodel method
 
-    Float64                 CstLog;
+    Float64                 CstLog = NAN;
     TFloat64List            SNR;
     TFloat64List            Overlap;
     COperator::TStatusList  Status;

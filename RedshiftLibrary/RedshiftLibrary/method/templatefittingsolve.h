@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_TEMPLATEFITTINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/method/templatefittingsolveresult.h"
@@ -59,7 +59,7 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-  class CMethodTemplateFittingSolve : public CSolve
+  class CTemplateFittingSolve : public CObjectSolve
 {
 
  public:
@@ -73,7 +73,7 @@ class CTemplateCatalog;
     };
 
 
-  CMethodTemplateFittingSolve(TScopeStack &scope,std::string objectType);
+  CTemplateFittingSolve(TScopeStack &scope,std::string objectType);
 
 private:
 
@@ -82,7 +82,7 @@ private:
                                         TScopeStack &scope) override;
 
 
-  Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const std::shared_ptr<const CTemplate> & tpl,
                Float64 overlapThreshold,
@@ -98,7 +98,6 @@ private:
                                                             const std::string & scopeStr,
                                                             const TCandidateZbyRank & ranked_zCandidates,
                                                             const CTemplateCatalog& tplCatalog,
-                                                            const TStringList& tplCategoryList,
                                                             Float64 overlapThreshold,
                                                             std::string opt_interp);
 
@@ -110,7 +109,7 @@ private:
     std::string m_opt_pdfcombination;
     Float64 m_redshiftSeparation;
     Int64 m_opt_maxCandidate;
-    Bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
+    bool m_opt_enableSaveIntermediateTemplateFittingResults=false;
 
 };
 

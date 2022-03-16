@@ -9,8 +9,8 @@ version = open(version_file).read().strip()
 
 gitrevision_file = os.path.join(root_dir, 'RedshiftLibrary/RedshiftLibrary/version.h')
 gitrevision = open(gitrevision_file).readline().split()[2].replace('"','').replace("-",".").strip()
-if gitrevision: 
-    gitrevision_python="+git"+gitrevision 
+if gitrevision:
+    gitrevision_python="+git"+gitrevision
 else:
     gitrevision_python=''
 
@@ -25,7 +25,7 @@ class CustomBuild(build):
 
 setup(
     name="pylibamazed",
-    version=__version__, 
+    version=__version__,
     author="LAM - Laboratoire d'Astrophysique de Marseille",
     author_email="amazed-support@lam.fr",
     description=("AMAZED python library."),
@@ -39,6 +39,9 @@ setup(
     setup_requires=['setuptools-git-versioning>=1.2.0', 'numpy>=1.16.0', 'astropy>=3.1.1', 'cython>=0.17.0', 'pandas>=1.0.0', 'h5py>=2.9'],
     install_requires=['setuptools-git-versioning>=1.2.0', 'numpy>=1.16.0', 'astropy>=3.1.1', 'cython>=0.17.0', 'pandas>=1.0.0', 'h5py>=2.9'],
     tests_require=['pytest-runner', 'pytest', ],
+    extras_require={
+        "reliability": ["tensorflow>=2.4.0"],
+    },
     py_modules=['pylibamazed/redshift'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",

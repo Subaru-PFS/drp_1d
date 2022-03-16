@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/continuum/median.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 
 #include "RedshiftLibrary/log/log.h"
@@ -55,7 +54,7 @@ using namespace boost::filesystem;
 /**
  * Variable instantiator constructor.
  */
-CTemplateCatalog::CTemplateCatalog( Bool sampling )
+CTemplateCatalog::CTemplateCatalog( bool sampling )
 {
     m_logsampling = sampling;
 }
@@ -89,9 +88,9 @@ TTemplateRefList CTemplateCatalog::GetTemplateList_( const TStringList& category
 
 std::shared_ptr<const CTemplate>  CTemplateCatalog::GetTemplateByName(const TStringList& tplCategoryList, const std::string tplName ) const
 {
-    for( UInt32 i=0; i<tplCategoryList.size(); i++ )
+    for( Int32 i=0; i<tplCategoryList.size(); i++ )
     {
-        for( UInt32 j=0; j<GetTemplateCount( tplCategoryList[i] ); j++ )
+        for( Int32 j=0; j<GetTemplateCount( tplCategoryList[i] ); j++ )
         {
             std::shared_ptr<const CTemplate> tpl = GetTemplate( tplCategoryList[i], j );
             if(tpl->GetName() == tplName){
@@ -118,24 +117,24 @@ TStringList CTemplateCatalog::GetCategoryList() const
 /**
  * Returns the size of the category entry in m_List.
  */
-UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
+Int32 CTemplateCatalog::GetTemplateCount( const std::string& category ) const
 {   
     return GetTemplateCount(category, m_orthogonal, m_logsampling);
 }
 
-UInt32 CTemplateCatalog::GetTemplateCount( const std::string& category,Bool opt_ortho, Bool opt_logsampling  ) const
+Int32 CTemplateCatalog::GetTemplateCount( const std::string& category,bool opt_ortho, bool opt_logsampling  ) const
 {   
     if(!GetList(opt_ortho, opt_logsampling).count(category))
         return 0;
     return GetList(opt_ortho, opt_logsampling).at( category ).size();
 }
 
-UInt32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, Bool opt_ortho, Bool opt_logsampling ) const
+Int32 CTemplateCatalog::GetNonNullTemplateCount( const std::string& category, bool opt_ortho, bool opt_logsampling ) const
 {   
     if (!GetTemplateCount(category, opt_ortho, opt_logsampling)) return 0;
 
     const TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
-    UInt32 count = 0;
+    Int32 count = 0;
     for (auto tpl:tplList.at(category)) if (tpl) count++;
     
     return count;
@@ -155,7 +154,7 @@ void CTemplateCatalog::Add( const std::shared_ptr<CTemplate> & r)
     GetList()[r->GetCategory()].push_back( r );
 }
 
-void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt32 i)
+void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, Int32 i)
 {
     const std::string category = tpl->GetCategory();
 
@@ -169,13 +168,13 @@ void CTemplateCatalog::SetTemplate( const std::shared_ptr<CTemplate> & tpl, UInt
 }
 
 // clear all templates in a category
-void CTemplateCatalog::ClearTemplateList(const std::string & category, Bool opt_ortho, Bool opt_logsampling)
+void CTemplateCatalog::ClearTemplateList(const std::string & category, bool opt_ortho, bool opt_logsampling)
 {
     ClearTemplates(category, opt_ortho, opt_logsampling, 0, true);
 }
 
 // clear one template in a category
-void CTemplateCatalog::ClearTemplates(const std::string & category, Bool opt_ortho, Bool opt_logsampling, UInt32 i, Bool alltemplates)
+void CTemplateCatalog::ClearTemplates(const std::string & category, bool opt_ortho, bool opt_logsampling, Int32 i, bool alltemplates)
 {
     if(!GetTemplateCount(category, opt_ortho, opt_logsampling)) return;
     TTemplatesRefDict & tplList =  GetList(opt_ortho, opt_logsampling);
@@ -209,12 +208,14 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 {
     std::string ContinuumRemovalMethod = parameterStore->Get<std::string>("templateCatalog.continuumRemoval.method");
     Float64 medianKernelWidth = parameterStore->Get<Float64>("templateCatalog.continuumRemoval.medianKernelWidth");
+    bool medianEvenReflection = parameterStore->Get<bool>("templateCatalog.continuumRemoval.medianEvenReflection");
     for(auto it : GetList(0,0))
     {             
         const TTemplateRefList  & TplList = it.second;
         for (auto tpl : TplList){
             tpl->SetContinuumEstimationMethod(ContinuumRemovalMethod);
             tpl->SetMedianWinsize(medianKernelWidth);
+            tpl->SetMedianEvenReflection(medianEvenReflection);
         }
     }
 }
@@ -223,9 +224,9 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
                                   const std::shared_ptr<const CLSF>& lsf)
 {
-    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");;
+    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");
     Float64 ebmv_step  = parameterStore->Get<Float64>( "ebmv.step");
-    UInt32  ebmv_n     = parameterStore->Get<UInt32>( "ebmv.count");
+    Int32  ebmv_n     = parameterStore->Get<Int32>( "ebmv.count");
     std::string calibrationPath = parameterStore->Get<std::string>( "calibrationDir");
 
     //ISM

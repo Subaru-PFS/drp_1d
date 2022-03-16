@@ -54,7 +54,7 @@ public:
     CPdfLogResult();
     virtual ~CPdfLogResult();
 
-    void SetSize( UInt32 n );
+    void SetSize( Int32 n );
 
     TFloat64List           		Redshifts;
     TFloat64List           		valProbaLog;

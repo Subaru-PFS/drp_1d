@@ -65,6 +65,7 @@
 
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
+#include "RedshiftLibrary/ray/linetags.h"
 
 #include <memory>
 namespace NSEpic
@@ -83,7 +84,6 @@ public:
                         const TFloat64Range& lambdaRange,
                         const CTemplateCatalog& tplCatalog,
                         const TStringList& tplCategoryList,
-                        const std::string calibrationPath,
                         const CRayCatalog::TRayVector& restRayList,
                         const std::string& opt_fittingmethod,
                         const std::string &opt_continuumcomponent,
@@ -108,7 +108,7 @@ public:
     void LoadFitContinuum(const TFloat64Range& lambdaRange, Int32 icontinuum, Int32 autoSelect);
     void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
     Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate>& tpl, Float64 zcontinuum);
-    Bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
+    bool SolveContinuum(const std::shared_ptr<const CTemplate>& tpl,
                         const TFloat64List& redshifts,
                         Float64 overlapThreshold,
                         std::vector<CMask> maskList,
@@ -130,11 +130,12 @@ public:
     Float64 getFitContinuum_snr() const;
     Float64 getFitContinuum_tplMerit() const;
     Float64 getFitContinuum_tplMeritPhot() const;
-    void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs);
+    void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const TFloat64List & polyCoeffs);
     Float64 getFitContinuum_tplIsmEbmvCoeff() const;
     Float64 getFitContinuum_tplIgmMeiksinIdx() const;
     void SetContinuumComponent(std::string component);
     Int32 SetFitContinuum_FitStore(const std::shared_ptr<const CTemplatesFitStore> & fitStore);
+    const std::shared_ptr<const CTemplatesFitStore> & GetFitContinuum_FitStore() const;
     Int32 SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
     void SetFitContinuum_SNRMax(Float64 snr_max);
     void SetFitContinuum_Option(Int32 opt);
@@ -150,34 +151,35 @@ public:
                                    Float64 tplfit_dtm,
                                    Float64 tplfit_mtm,
                                    Float64 tplfit_logprior,
-                                   const std::vector<Float64> & polyCoeffs);
+                                   const TFloat64List & polyCoeffs);
 
     Int32 LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl);
-    std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult();
+    std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult() const;
 
-    Bool initDtd(const TFloat64Range& lambdaRange);
-    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent);
-    Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange);
-    Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange);
+    bool initDtd(const TFloat64Range& lambdaRange);
+    Float64 EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent) const;
+    Float64 EstimateMTransposeM(const TFloat64Range& lambdaRange) const;
+    Float64 EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange) const;
     Float64 getDTransposeD(const TFloat64Range& lambdaRange);
     Float64 getLikelihood_cstLog(const TFloat64Range& lambdaRange);
-    Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul);
+    Int32 getMTransposeMCumulative(const TFloat64Range& lambdaRange, TFloat64List & lbda, TFloat64List & mtmCumul) const;
 
     const std::string & getTplshape_bestTplName() const ;
     Float64 getTplshape_bestTplIsmCoeff() const ;
     Float64 getTplshape_bestAmplitude() const ;
     Float64 getTplshape_bestDtm() const ;
     Float64 getTplshape_bestMtm() const ;
-    Int32 getTplshape_count();
-    const std::vector<Float64> & getTplshape_priors();
-    const std::vector<Float64> & GetChisquareTplshape() const ;
-    std::vector<Float64> GetPriorLinesTplshape() const ;
-    const std::vector<Float64> & GetScaleMargTplshape() const ;
+    Int32 getTplshape_count() const;
+    const TFloat64List & getTplshape_priors();
+    const TFloat64List & GetChisquareTplshape() const ;
+    TFloat64List GetPriorLinesTplshape() const ;
+    const TFloat64List & GetScaleMargTplshape() const ;
     const TBoolList & GetStrongELPresentTplshape() const ;
-    const std::vector<Int32> & GetNLinesAboveSNRTplshape() const ;
+    const TBoolList & getHaELPresentTplshape() const;
+    const TInt32List & GetNLinesAboveSNRTplshape() const ;
     Int32 SetTplshape_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper);
 
-    Int32 GetNElements();
+    Int32 GetNElements() const;
 
 
     void SetVelocityEmission(Float64 vel);
@@ -188,12 +190,12 @@ public:
   void setVelocity(Float64 vel,Int32 rayType);
   void setVelocity(Float64 vel, Int32 idxElt,Int32 rayType);
 
-    Float64 GetVelocityEmission();
-    Float64 GetVelocityAbsorption();
+    Float64 GetVelocityEmission() const;
+    Float64 GetVelocityAbsorption() const;
     Int32 ApplyVelocityBound(Float64 inf, Float64 sup);
 
 
-    Bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
+    bool initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis);
 
     Float64 fit(Float64 redshift,
                 const TFloat64Range& lambdaRange,
@@ -201,58 +203,56 @@ public:
                 CContinuumModelSolution &continuumModelSolution,
                 Int32 contreest_iterations=0,
                 bool enableLogging=0);
-
-    Bool initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit);
-    void initLambdaOffsets(std::string offsetsCatalogsRelPath);
-
-    Bool setTplshapeModel(Int32 itplshape, Bool enableSetVelocity=false);
-    Bool setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts);
+    TFloat64Range& getLambdaRange(){return m_dTransposeDLambdaRange;};
+    bool initTplratioCatalogs(Int32 opt_tplratio_ismFit);
+   
+    bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity=false);
+    bool setTplshapeAmplitude(const TFloat64List & ampsElts, const TFloat64List & errorsElts);
 
     std::vector<CLmfitController*> createLmfitControllers( const TFloat64Range& lambdaRange);
-    void fitWithModelSelection(Float64 redshift, const TFloat64Range& lambdaRange, CLineModelSolution &modelSolution);
-    void SetFittingMethod(std::string fitMethod);
+    void SetFittingMethod(const std::string &fitMethod);
     void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit, Int32 outsidelinemask, Int32 observedFrame);
 
     void SetAbsLinesLimit(Float64 limit);
     void SetLeastSquareFastEstimationEnabled(Int32 enabled);
 
-    Float64 GetRedshift();
+    Float64 GetRedshift() const;
 
     void reinitModel();
     void refreshModel(Int32 lineTypeFilter=-1);
-    void getModel(CSpectrumFluxAxis& modelfluxAxis, Int32 lineTypeFilter=-1);
-    void reinitModelUnderElements(const std::vector<UInt32> & filterEltsIdx, Int32 lineIdx=-1);
+    CSpectrumFluxAxis getModel(Int32 lineTypeFilter=-1) const;
+    void reinitModelUnderElements(const TInt32List & filterEltsIdx, Int32 lineIdx=-1);
     void refreshModelInitAllGrid();
-    void refreshModelUnderElements(const std::vector<UInt32> & filterEltsIdx, Int32 lineIdx=-1);
-    void refreshModelDerivVelUnderElements(const std::vector<UInt32> & filterEltsIdx);
-    void refreshModelDerivVelAbsorptionUnderElements(const std::vector<UInt32> & filterEltsIdx);
-    void refreshModelDerivVelEmissionUnderElements(const std::vector<UInt32> & filterEltsIdx);
+    void refreshModelUnderElements(const TInt32List & filterEltsIdx, Int32 lineIdx=-1);
+    void refreshModelDerivVelUnderElements(const TInt32List & filterEltsIdx);
+    void refreshModelDerivVelAbsorptionUnderElements(const TInt32List & filterEltsIdx);
+    void refreshModelDerivVelEmissionUnderElements(const TInt32List & filterEltsIdx);
 
    
     void setModelSpcObservedOnSupportZeroOutside(const TFloat64Range &lambdaRange);
-    CMask getOutsideLinesMask();
-    Float64 getOutsideLinesSTD(Int32 which, TFloat64Range lambdarange);
+    CMask getOutsideLinesMask() const;
+    Float64 getOutsideLinesSTD(Int32 which, const TFloat64Range &lambdarange) const;
 
 
-    Int32 getSpcNSamples(const TFloat64Range& lambdaRange);
-    Float64 getLeastSquareMeritFast(Int32 idxLine=-1);
-    Float64 getLeastSquareContinuumMeritFast();
-    Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange);
-    Float64 getLeastSquareContinuumMerit(const TFloat64Range &lambdaRange);
-    Float64 getLeastSquareMeritUnderElements();
-    Float64 getScaleMargCorrection(Int32 idxLine=-1);
-    Float64 getContinuumScaleMargCorrection();
-    Float64 getStrongerMultipleELAmpCoeff();
-    std::vector<std::string> getLinesAboveSNR(Float64 snrcut=3.5);
-    Float64 getCumulSNRStrongEL();
-    Float64 getCumulSNROnRange( TInt32Range idxRange );
-    bool GetModelStrongEmissionLinePresent();
-    bool GetModelHaStrongest();
+    Int32 getSpcNSamples(const TFloat64Range& lambdaRange) const;
+    Float64 getLeastSquareMeritFast(Int32 idxLine=-1) const;
+    Float64 getLeastSquareContinuumMeritFast() const;
+    Float64 getLeastSquareMerit(const TFloat64Range &lambdaRange) const;
+    Float64 getLeastSquareContinuumMerit(const TFloat64Range &lambdaRange) const;
+    Float64 getLeastSquareMeritUnderElements() const;
+    Float64 getScaleMargCorrection(Int32 idxLine=-1) const;
+    Float64 getContinuumScaleMargCorrection() const;
+    Float64 getStrongerMultipleELAmpCoeff() const;
+    TStringList getLinesAboveSNR(Float64 snrcut=3.5) const;
+    Float64 getCumulSNRStrongEL() const;
+    Float64 getCumulSNROnRange( TInt32Range idxRange ) const;
+    bool GetModelStrongEmissionLinePresent() const;
+    bool GetModelHaStrongest() const;
    
-    Float64 getContinuumMeanUnderElement(UInt32 eltId);
-    Int32 LoadModelSolution(const CLineModelSolution&  modelSolution);
+    Float64 getContinuumMeanUnderElement(Int32 eltId) const;
+    void LoadModelSolution(const CLineModelSolution&  modelSolution);
     CLineModelSolution GetModelSolution(Int32 opt_level=0);
-    CContinuumModelSolution GetContinuumModelSolution();
+    CContinuumModelSolution GetContinuumModelSolution() const;
     const CSpectrum&    GetModelSpectrum() const;
     CSpectrum GetSpectrumModelContinuum() const;
     const CSpectrum&    GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter=-1);
@@ -261,22 +261,22 @@ public:
                                    const TInt32List & subeIdx_list,
                                    Int32 opt_cont_substract_abslinesmodel,
                                    Float64& fluxdi,
-                                   Float64& snrdi);
+                                   Float64& snrdi) const;
     const CSpectrumFluxAxis&    GetModelContinuum() const;
-    Float64 getModelFluxVal(UInt32 idx) const;
-    Float64 getModelFluxDerivEltVal(UInt32 DerivEltIdx, UInt32 idx) const;
-    Float64 getModelFluxDerivContinuumAmpEltVal(UInt32 DerivEltIdx, UInt32 idx) const;
-    Float64 getModelFluxDerivZContinuumVal(UInt32 idx)const;
+    Float64 getModelFluxVal(Int32 idx) const;
+    Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
+    Float64 getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx, Int32 idx) const;
+    Float64 getModelFluxDerivZContinuumVal(Int32 idx)const;
     //void calculateUnscaleContinuumDerivZ();
-    Float64 getModelFluxDerivZEltValNoContinuum(UInt32 DerivEltIdx, UInt32 idx) const;
-    Float64 getModelFluxDerivZEltVal(UInt32 DerivEltIdx, UInt32 idx, Float64 continuumFluxDerivZ) const;
-    Float64 getModelFluxDerivVelVal(UInt32 idx) const;
-    Float64 getModelFluxDerivVelEmissionVal(UInt32 idx) const;
-    Float64 getModelFluxDerivVelAbsorptionVal(UInt32 idx) const;
+    Float64 getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx, Int32 idx) const;
+    Float64 getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const;
+    Float64 getModelFluxDerivVelVal(Int32 idx) const;
+    Float64 getModelFluxDerivVelEmissionVal(Int32 idx) const;
+    Float64 getModelFluxDerivVelAbsorptionVal(Int32 idx) const;
     Int32 estimateMeanSqFluxAndGradient(const Float64* varPack,
                                         const Float64 normFactor,
-                                        const std::vector<UInt32> & filteredEltsIdx,
-                                        const std::vector<UInt32> & xInds,
+                                        const TInt32List & filteredEltsIdx,
+                                        const TInt32List & xInds,
                                         Int32 lineType,
                                         Float64 *fluxdata,
                                         Float64* msqBuffer,
@@ -286,26 +286,26 @@ public:
     CLineModelElementList m_Elements;
     const CSpectrum & m_inputSpc;
     CSpectrum m_SpectrumModel;  //model
-    CRayCatalog::TRayVector m_RestRayList;
+    const CRayCatalog::TRayVector& m_RestRayList;
     CSpectrum m_SpcCorrectedUnderLines;  //observed spectrum corrected under the lines
 
-    TStringList GetModelRulesLog();
+    const TStringList & GetModelRulesLog() const;
 
     Int32 setPassMode(Int32 iPass);
-    Int32 GetPassNumber();
+    Int32 GetPassNumber() const;
 
     void SetForcedisableTplratioISMfit(bool opt);
 
     CRayCatalogsTplShape m_CatalogTplShape;
-    std::vector<Float64> m_ChisquareTplshape;
-    std::vector<std::vector<Float64>> m_FittedAmpTplshape;
-    std::vector<std::vector<Float64>> m_FittedErrorTplshape;
-    std::vector<std::vector<Float64>> m_MtmTplshape;
-    std::vector<std::vector<Float64>> m_DtmTplshape;
-    std::vector<std::vector<Float64>> m_LyaAsymCoeffTplshape;
-    std::vector<std::vector<Float64>> m_LyaWidthCoeffTplshape;
-    std::vector<std::vector<Float64>> m_LyaDeltaCoeffTplshape;
-    std::vector<std::vector<Float64>> m_LinesLogPriorTplshape;
+    TFloat64List m_ChisquareTplshape;
+    std::vector<TFloat64List> m_FittedAmpTplshape;
+    std::vector<TFloat64List> m_FittedErrorTplshape;
+    std::vector<TFloat64List> m_MtmTplshape;
+    std::vector<TFloat64List> m_DtmTplshape;
+    std::vector<TFloat64List> m_LyaAsymCoeffTplshape;
+    std::vector<TFloat64List> m_LyaWidthCoeffTplshape;
+    std::vector<TFloat64List> m_LyaDeltaCoeffTplshape;
+    std::vector<TFloat64List> m_LinesLogPriorTplshape;
 
     Int32 m_pass = 1;
     bool m_enableAmplitudeOffsets;
@@ -334,52 +334,49 @@ public:
     std::string m_opt_secondpass_fittingmethod = "hybrid";
 
     bool m_opt_enable_improveBalmerFit=false;
-
+    Float64 m_opt_haprior = -1.;
+    void setHaPriorOption(Float64 opt){m_opt_haprior = opt;};
 private:
 
     Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift);
     void fitAmplitudesSimplex();
     Int32 fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController * controller);
-    Int32 fitAmplitudesLinSolve(const std::vector<UInt32> & EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted);
-    Int32 fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted, Bool enableOffsetFitting);
+    Int32 fitAmplitudesLinSolve(const TInt32List & EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, TFloat64List &ampsfitted, TFloat64List &errorsfitted);
+    Int32 fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis, const CSpectrumFluxAxis &fluxAxis, const CSpectrumFluxAxis& continuumfluxAxis, TFloat64List &ampsfitted, TFloat64List &errorsfitted, bool enableOffsetFitting);
 
-    Int32 fitAmplitudesLinesAndContinuumLinSolve(const std::vector<UInt32> & EltsIdx,
+    Int32 fitAmplitudesLinesAndContinuumLinSolve(const TInt32List & EltsIdx,
                                                  const TFloat64Range& lambdaRange,
                                                  const CSpectrumSpectralAxis& spectralAxis,
                                                  const CSpectrumFluxAxis& fluxAxis,
                                                  const CSpectrumFluxAxis& continuumfluxAxis,
-                                                 std::vector<Float64>& ampsfitted,
-                                                 std::vector<Float64>& errorsfitted,
+                                                 TFloat64List& ampsfitted,
+                                                 TFloat64List& errorsfitted,
                                                  Float64 &chisquare,
                                                  Int32 polyOrder=-1);
 
     bool m_forceDisableLyaFitting=false;
     bool m_forceLyaFitting=false;
 
-    Bool setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
-                                        bool forceLyaFitting,
-                                        const Float64 nsigmasupport);
-
-    Bool SetMultilineNominalAmplitudes(Int32 iLine);
-    Bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
-   
-    Int32 setLyaProfile( Float64 redshift, const CSpectrumSpectralAxis& spectralAxis );
-    TAsymParams   FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
-                                    const Float64& redshift, 
-                                    const UInt32& idxLyaE,
-                                    const TUInt32List& filterEltsIdxLya, 
-                                    const UInt32& idxLineLyaE);
+    bool SetMultilineNominalAmplitudes(Int32 iLine);
+    bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
+    Int32  setLyaProfile(Float64 redshift, 
+                          const CRayCatalog::TRayVector& rayList,
+                          bool tplratio=false);
+    TAsymParams   FitAsymParameters(const Float64& redshift, 
+                                    const Int32& idxLyaE,
+                                    const TInt32List& filterEltsIdxLya, 
+                                    const Int32& idxLineLyaE);
     void SetLSF();
 
-    Float64 GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx);
-    std::vector<UInt32> getOverlappingElementsBySupport(UInt32 ind , Float64 overlapThres=0.1);
-    std::vector<UInt32> ReestimateContinuumApprox(const std::vector<UInt32> & EltsIdx);
-    std::vector<UInt32> ReestimateContinuumUnderLines(const std::vector<UInt32> & EltsIdx);
-    void refreshModelAfterContReestimation(const std::vector<UInt32> & EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum);
+    Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex, const TInt32List & EltsIdx) const;
+    TInt32List getOverlappingElementsBySupport(Int32 ind , Float64 overlapThres=0.1) const;
+    TInt32List ReestimateContinuumApprox(const TInt32List & EltsIdx);
+    TInt32List ReestimateContinuumUnderLines(const TInt32List & EltsIdx);
+    void refreshModelAfterContReestimation(const TInt32List & EltsIdx, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum) const;
 
-    std::vector<UInt32> findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type);
-
-
+    TInt32List findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, const std::string &strTag, Int32 type) const;
+    TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
+    void           applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs& polynom_coeffs);
     void addDoubleLine(const CRay &r1, const CRay &r2, Int32 index1, Int32 index2, Float64 nominalWidth, Float64 a1, Float64 a2);
 
     Int32 improveBalmerFit();
@@ -387,9 +384,10 @@ private:
     CRegulament m_Regulament;
 
 
-    std::vector<Float64> m_ScaleMargCorrTplshape;
+    TFloat64List m_ScaleMargCorrTplshape;
     TBoolList m_StrongELPresentTplshape;
-    std::vector<Int32> m_NLinesAboveSNRTplshape;
+    TBoolList m_StrongHalphaELPresentTplshape;
+    TInt32List m_NLinesAboveSNRTplshape;
 
     Float64 m_Redshift;
 
@@ -417,7 +415,6 @@ private:
     Float64 m_nominalWidthDefaultEmission;
     Float64 m_nominalWidthDefaultAbsorption;
 
-    std::string m_calibrationPath;
     std::string m_fittingmethod;
 
     std::string m_rulesoption;
@@ -454,8 +451,8 @@ private:
     Float64 m_fitContinuum_tplFitDtM = NAN;
     Float64 m_fitContinuum_tplFitMtM = NAN;
     Float64 m_fitContinuum_tplFitLogprior = NAN;
-    Float64 m_fitContinuum_tplFitSNRMax=0.0;
-    std::vector<Float64> m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
+    Float64 m_fitContinuum_tplFitSNRMax=NAN;
+    TFloat64List m_fitContinuum_tplFitPolyCoeffs;   // only used with m_fitContinuum_option==2 for now
     bool m_forcedisableMultipleContinuumfit=false;
     Float64 m_fitContinuum_tplFitAlpha=0.;
     std::shared_ptr<const CPriorHelper> m_fitContinuum_priorhelper;
@@ -467,6 +464,8 @@ private:
     bool m_lmfit_fitAbsorptionVelocity;
 
     const TFloat64Range m_lambdaRange;
+    
+    linetags ltags;
 };
 
 }

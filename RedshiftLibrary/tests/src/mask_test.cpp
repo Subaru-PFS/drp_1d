@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Mask1)
   mask[2] = 2;
   mask[3] = 3;
 
-  for (UInt8 n = 0; n < mask.GetMasksCount(); n++) {
+  for (Int32 n = 0; n < (Int32)mask.GetMasksCount(); n++) {
     BOOST_CHECK( mask[n] == n );
   }
 

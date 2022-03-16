@@ -66,8 +66,8 @@ public:
     CSpectrumFluxCorrectionMeiksin();
     ~CSpectrumFluxCorrectionMeiksin();
 
-    Bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
-    Bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
+    bool LoadCurvesinIncreasingExtinctionOrder( const char* filePath );
+    bool Init( std::string calibrationPath, const std::shared_ptr<const CLSF>& lsf, TFloat64Range& lambdaRange);
     TFloat64List Convolve(const TFloat64List& arr, const TFloat64List& kernel);
     TFloat64List ApplyAdaptativeKernel(const TFloat64List& arr, 
                                         const Float64 z_center, 
@@ -78,7 +78,7 @@ public:
     Int32 GetIdxCount() const;
     Int32 GetRedshiftIndex(Float64 z) const;
 
-    std::vector<Float64> GetSegmentsStartRedshiftList() const;
+    TFloat64List GetSegmentsStartRedshiftList() const;
     TFloat64List         GetLSFProfileVector(Float64 lambda0_rest, 
                                              Float64 z_bin_meiksin, 
                                              const std::shared_ptr<const CLSF>& lsf);//for convolution
@@ -95,9 +95,9 @@ private:
 
 };
 
-inline std::vector<Float64> CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList() const
+inline TFloat64List CSpectrumFluxCorrectionMeiksin::GetSegmentsStartRedshiftList() const
 {
-    std::vector<Float64> zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
+    TFloat64List zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
                                        4.5, 5.0, 5.5, 6.0, 6.5};
     return zstartlist;
 };

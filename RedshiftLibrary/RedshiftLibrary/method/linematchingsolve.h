@@ -40,7 +40,7 @@
 #define _REDSHIFT_METHOD_LINEMATCHINGSOLVE_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/method/linematchingsolveresult.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
@@ -57,13 +57,13 @@ class CParameterStore;
  * \class CMethodLineMatchingSolve
  * \brief Solver method based on matching peaks to the lines catalogue.
  */
-  class CMethodLineMatchingSolve: public CSolve
+  class CLineMatchingSolve: public CObjectSolve
 {
 
 public:
 
-    CMethodLineMatchingSolve(TScopeStack &scope,std::string objectType);
-    ~CMethodLineMatchingSolve();
+    CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+    ~CLineMatchingSolve();
 
   std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
 					std::shared_ptr<COperatorResultStore> resultStore,
@@ -91,13 +91,13 @@ private:
     Float64 m_enlargeRate;
 
     // Line Matching
-    Bool m_disablegaussianfitqualitycheck;
-    Bool m_dynamicLinematching;
+    bool m_disablegaussianfitqualitycheck;
+    bool m_dynamicLinematching;
     Int64 m_minMatchNum;
     Float64 m_tol;
 
     // Log
-    Bool m_bypassDebug; // If True, debug messages are suppressed even if the --verbose flag is passed.
+    bool m_bypassDebug; // If True, debug messages are suppressed even if the --verbose flag is passed.
 };
 
 }

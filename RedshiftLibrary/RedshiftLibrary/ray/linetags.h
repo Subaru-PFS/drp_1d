@@ -38,7 +38,7 @@
 // ============================================================================
 #ifndef _REDSHIFT_RAY_LINETAGS_
 #define _REDSHIFT_RAY_LINETAGS_
-
+#include <string>
 namespace NSEpic
 {
 

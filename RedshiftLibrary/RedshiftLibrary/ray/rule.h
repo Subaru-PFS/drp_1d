@@ -53,14 +53,19 @@ class CLineModelElementList;
   class CRule
   {
   public:
-    Bool Enabled;
+    bool Enabled;
     std::string Name;
     
-    CRule ( );
-    virtual ~CRule();
+    CRule() : Enabled(false) {};
+    virtual ~CRule() = default;
+    CRule(const CRule&) = default;
+    CRule(CRule &&) = default;
+    CRule & operator=(const CRule &) = default;
+    CRule & operator=(CRule &&) = default;
+
     void Apply( CLineModelElementList& LineModelElementList );
-    virtual Bool Check( CLineModelElementList& LineModelElementList ) = 0;
-    virtual void SetUp( Bool EnabledArgument, ... ) = 0;
+    virtual bool Check( CLineModelElementList& LineModelElementList ) = 0;
+    virtual void SetUp( bool EnabledArgument, ... ) = 0;
     std::string GetLogs();
   private:
     virtual void Correct( CLineModelElementList& LineModelElementList ) = 0;

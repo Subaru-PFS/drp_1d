@@ -41,8 +41,9 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 
-#include <stdexcept>
 #include <algorithm>
+#include <gsl/gsl_const_mksa.h>
+#include <stdexcept>
 
 using namespace NSEpic;
 
@@ -57,6 +58,23 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
 
   // initialize min lambda
   m_minLambda = *std::min_element(m_lambda.cbegin(), m_lambda.cend());
+
+  // Angstrom to Herz conversion
+  const Float64 c = GSL_CONST_MKSA_SPEED_OF_LIGHT * 1e10; // angstrom s-1
+  m_freq.reserve(m_lambda.size());
+  std::transform(m_lambda.cbegin(), m_lambda.cend(), back_inserter(m_freq),
+                 [c](Float64 lambda) { return c / lambda; });
+
+  // compute the integral of transmission in Hz
+  m_transmision_sum = 0.0;
+  for (auto trans = m_transmission.cbegin() + 1, E = m_transmission.cend(),
+            freq = m_freq.cbegin() + 1, lbda = m_lambda.cbegin() + 1;
+       trans != E; ++trans, ++freq, ++lbda) {
+    // lambda factor below is to account for photon counting detector
+    Float64 trapezArea = (trans[0] * lbda[0] + trans[-1] * lbda[-1]) / 2.0;
+    trapezArea *= (freq[-1] - freq[0]);
+    m_transmision_sum += trapezArea;
+  }
 }
 
 Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
@@ -66,18 +84,31 @@ Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
                           "CPhotometryBand::IntegrateFlux: flux and "
                           "transmission sizes are different");
 
-  TAxisSampleList outFlux(m_transmission.size());
-  std::transform(inFlux.cbegin(), inFlux.cend(), m_transmission.cbegin(),
-                 outFlux.begin(), std::multiplies<Float64>{});
+  // convert flux from Flambda in Erg/s/cm2/Angstrom to Fnu in Erg/s/cm2/Hz
+  const Float64 c = GSL_CONST_MKSA_SPEED_OF_LIGHT * 1e10; // angstrom s-1
+  TAxisSampleList inFlux_nu(m_transmission.size());
+  std::transform(inFlux.cbegin(), inFlux.cend(), m_lambda.cbegin(),
+                 inFlux_nu.begin(), [c](Float64 Flambda, Float64 lambda) {
+                   return Flambda * lambda * lambda / c;
+                 });
+
+  // multiply by transmission
+  TAxisSampleList outFlux_nu(m_transmission.size());
+  std::transform(inFlux_nu.cbegin(), inFlux_nu.cend(), m_transmission.cbegin(),
+                 outFlux_nu.begin(), std::multiplies<Float64>{});
 
   Float64 sum = 0.0;
-  for (auto flux = outFlux.cbegin() + 1, E = outFlux.cend(),
-            lambda = m_lambda.cbegin()+1;
-       flux != E; ++flux, ++lambda) {
-    Float64 trapezArea = (*flux + *(flux-1)) / 2.0;
-    trapezArea *= (*lambda - *(lambda-1));
+  for (auto flux = outFlux_nu.cbegin() + 1, E = outFlux_nu.cend(),
+            freq = m_freq.cbegin() + 1, lbda = m_lambda.cbegin() + 1;
+       flux != E; ++flux, ++freq, ++lbda) {
+    // lbda factor below is to account for photon counting detector
+    Float64 trapezArea = (flux[0] * lbda[0] + flux[-1] * lbda[-1]) / 2.0;
+    trapezArea *= (freq[-1] - freq[0]);
     sum += trapezArea;
   }
+
+  // convert the integrated flux to flux density per Hz
+  sum /= m_transmision_sum;
 
   return sum;
 }

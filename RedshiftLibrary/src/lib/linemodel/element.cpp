@@ -55,19 +55,30 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
                         const std::string& widthType,
                         const Float64 velocityEmission,
                         const Float64 velocityAbsorption,
-                        std::vector<Float64> nominalAmplitudes,
+                        TFloat64List nominalAmplitudes,
                         Float64 nominalWidth,//corresponds to the lsf of type constant width
-                        std::vector<UInt32> catalogIndexes ) : 
+                        TInt32List catalogIndexes ) : 
+    m_Rays(rs),
+    m_fittingGroupInfo("-1"),
+    m_NominalWidth(nominalWidth),
     m_VelocityEmission(velocityEmission),
     m_VelocityAbsorption(velocityAbsorption),
-    m_dataExtinctionFlux(NULL),
-    m_OutsideLambdaRange(true),
-    m_fittingGroupInfo("-1"),
+    
+
     m_OutsideLambdaRangeOverlapThreshold(0.33),//33% overlap minimum in order to keep the line
-    //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
-    m_NominalAmplitudes(nominalAmplitudes)
+    m_OutsideLambdaRange(true),                //example: 0.33 means 66% of the line is allowed to be outside the spectrum with the line still considered inside the lambda range
+    
+    m_ElementType("CLineModelElement"),
+
+    m_dataExtinctionFlux(NULL),
+    m_SignFactors(rs.size()),
+    m_FittedAmplitudes(rs.size()),
+    m_FittedAmplitudeErrorSigmas(rs.size()),
+    m_NominalAmplitudes(nominalAmplitudes),
+    m_absLinesLimit(1.0) //-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
+
 {
-      if( widthType == "instrumentdriven"){
+    if( widthType == "instrumentdriven"){
         m_LineWidthType = INSTRUMENTDRIVEN;
     } else if( widthType == "combined"){
         m_LineWidthType = COMBINED;
@@ -77,19 +88,7 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
         throw GlobalException(INTERNAL_ERROR,Formatter()<<"Unknown LineWidthType"<<widthType);
     }
 
-    //TODO:below variables should be initialized throw CLineModelElt rather than here
-    std::transform (rs.begin(), rs.end(), std::back_inserter(m_Rays), 
-                                                        []( CRay &c){return c.clone();});
-
-    m_ElementType = "CLineModelElement";
-    m_absLinesLimit=-1.0;//-1: disable the ABS lines amplitude cut, any other value is used as a limit for the abs line coeff (typically: 1.0)
-    m_sumCross = 0.;
-    m_sumGauss = 0.;
-    m_dtmFree = 0.;
-    m_NominalWidth = nominalWidth;
-
     Int32 nRays = m_Rays.size();
-    m_SignFactors.resize(nRays);
     for(Int32 i=0; i<nRays; i++)
     {
         if( m_Rays[i].GetType()==CRay::nType_Emission )
@@ -98,36 +97,28 @@ CLineModelElement::CLineModelElement( std::vector<CRay> rs,
             m_SignFactors[i] = -1.0;
     }
 
-    for(int i=0; i<catalogIndexes.size(); i++)
-    {
-        m_LineCatalogIndexes.push_back(catalogIndexes[i]);
-    }
+    std::transform( catalogIndexes.begin(), catalogIndexes.end(), std::back_inserter(m_LineCatalogIndexes), 
+                    [](Int32 i){ return Int32(i);});
 
-    if(m_FittedAmplitudes.size()!=nRays)
-    {
-        m_FittedAmplitudes.resize(nRays);
-        m_FittedAmplitudeErrorSigmas.resize(nRays);
-        m_profile.resize(nRays);
-    }
     for(Int32 k2=0; k2<nRays; k2++)
     {
-        m_profile[k2] = m_Rays[k2].GetProfile();
-        if(m_profile[k2]->isAsymFit())
+        if(getLineProfile(k2).isAsymFit())
             m_asymLineIndices.push_back(k2);
     }
-    SetFittedAmplitude(-1.0, -1.0);
+
+    SetFittedAmplitude(NAN, NAN);
 }
 
 
-std::string CLineModelElement::GetElementTypeTag()
+const std::string & CLineModelElement::GetElementTypeTag() const
 {
     return m_ElementType;
 }
 
-Int32 CLineModelElement::FindElementIndex(Int32 LineCatalogIndex)
+Int32 CLineModelElement::findElementIndex(Int32 LineCatalogIndex) const
 {
-    Int32 idx = -1;
-    for( UInt32 iElts=0; iElts<m_LineCatalogIndexes.size(); iElts++ )
+    Int32 idx = undefIdx;
+    for( Int32 iElts=0; iElts<m_LineCatalogIndexes.size(); iElts++ )
     {
         if(m_LineCatalogIndexes[iElts] == LineCatalogIndex){
             idx = iElts;
@@ -138,21 +129,22 @@ Int32 CLineModelElement::FindElementIndex(Int32 LineCatalogIndex)
     return idx;
 }
 
-Int32 CLineModelElement::GetSize()
+Int32 CLineModelElement::GetSize() const
 {
-    return (Int32)m_LineCatalogIndexes.size();
+    return m_LineCatalogIndexes.size();
 }
 
-bool CLineModelElement::IsOutsideLambdaRange()
+bool CLineModelElement::IsOutsideLambdaRange() const
 {
     return m_OutsideLambdaRange;
 }
+
 //redirecting to the lsf method for computing instrument responce
 /**
  * Get instrumental response (including source response) from LSF
  * combine quadratically with the instrinsic width of the Line itself. The line width in this case represents to the velocity
  * */
-Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Bool isEmission) const
+Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, bool isEmission) const
 {
     const Float64 c = m_speedOfLightInVacuum;
     Float64 v = isEmission ? m_VelocityEmission : m_VelocityAbsorption;
@@ -181,7 +173,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z, Boo
     Float64 sigma = sqrt(instrumentSigma*instrumentSigma + velocitySigma*velocitySigma);
     return sigma;
 }
-Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>& profile, Float64 x, Float64 x0, Float64 sigma, Bool isEmission)
+
+Float64 CLineModelElement::GetLineProfileDerivVel(const CLineProfile & profile, Float64 x, Float64 x0, Float64 sigma, bool isEmission) const
 {
     const Float64 c = m_speedOfLightInVacuum;
     const Float64 pfsSimuCompensationFactor = 1.0;
@@ -196,14 +189,15 @@ Float64 CLineModelElement::GetLineProfileDerivVel(std::shared_ptr<CLineProfile>&
         case COMBINED:
     //    case NISPSIM2016:
     //    case NISPVSSPSF201707: //not supported as of 2017-07
-            return v_to_sigma * v_to_sigma * v /sigma * profile->GetLineProfileDerivSigma( x, x0, sigma);
+            return v_to_sigma * v_to_sigma * v /sigma * profile.GetLineProfileDerivSigma( x, x0, sigma);
         case VELOCITYDRIVEN:
-            return v_to_sigma * profile->GetLineProfileDerivSigma( x, x0, sigma);
+            return v_to_sigma * profile.GetLineProfileDerivSigma( x, x0, sigma);
         default:
 	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Invalid LineWidthType : "<< m_LineWidthType);
     }
     return 0.0;
 }
+
 //TODO: check if below can be removed
 //this is called from CLineModelFitting: thus the call should be redirected to the new lsf class
 void CLineModelElement::SetSourcesizeDispersion(Float64 sigma)
@@ -227,44 +221,41 @@ void CLineModelElement::SetVelocityAbsorption(Float64 vel)
     m_VelocityAbsorption = vel;
 }
 
-Float64 CLineModelElement::GetVelocityEmission()
+Float64 CLineModelElement::GetVelocityEmission() const
 {
     return m_VelocityEmission;
 }
 
-Float64 CLineModelElement::GetVelocityAbsorption()
+Float64 CLineModelElement::GetVelocityAbsorption() const
 {
     return m_VelocityAbsorption;
 }
 
-Float64 CLineModelElement::GetVelocity()
+Float64 CLineModelElement::GetVelocity() const
 {
-    Float64 vel=-1;
-    if(m_Rays.size()>0)
-    {
-        if(m_Rays[0].GetIsEmission())
-        {
-            vel = m_VelocityEmission;
-        }else{
-            vel = m_VelocityAbsorption;
-        }
-    }
-    return vel;
+    if(!m_Rays.size()) return NAN;
+
+    bool isEmissionRay = m_Rays[0].GetIsEmission();
+    return isEmissionRay?m_VelocityEmission:m_VelocityAbsorption;
 }
 
 void CLineModelElement::setVelocity(Float64 vel)
 {
-    if(m_Rays.size()>0)
-    {
-        if(m_Rays[0].GetIsEmission())
-        {
-            m_VelocityEmission = vel;
-        }else{
-            m_VelocityAbsorption = vel;
-        }
-    }
-    else throw GlobalException(INTERNAL_ERROR,"Empty line model element, could not set velocity");
+    if(!m_Rays.size()) throw GlobalException(INTERNAL_ERROR,"Empty line model element, could not set velocity");
 
+    if(m_Rays[0].GetIsEmission())
+    {
+        m_VelocityEmission = vel;
+    }else{
+        m_VelocityAbsorption = vel;
+    }
+}
+
+const CLineProfile & CLineModelElement::getLineProfile(Int32 rayIdx) const
+{
+    if(rayIdx > m_Rays.size()-1)
+        throw GlobalException(INTERNAL_ERROR,"CLineModelElement::getLineProfile out-of-bound index");
+    return m_Rays[rayIdx].GetProfile();
 }
 
 //wrapper function 
@@ -275,8 +266,10 @@ void CLineModelElement::SetAsymfitParams(TAsymParams params, Int32 idx)
         m_Rays[idx].SetAsymParams(params);
     }
     else{
-        for(auto i : m_asymLineIndices)
+        for(auto i : m_asymLineIndices){
             m_Rays[i].SetAsymParams(params);
+            //m_profile[i]->SetAsymParams(params);
+        }
     }
     return;
 }
@@ -287,14 +280,14 @@ void CLineModelElement::resetAsymfitParams()
         m_Rays[i].resetAsymFitParams();
 }
 
-const TAsymParams CLineModelElement::GetAsymfitParams(UInt32 idx)
+const TAsymParams CLineModelElement::GetAsymfitParams(Int32 idx) const
 {
     if(!m_asymLineIndices.size())
         return {NAN, NAN, NAN};//case where no asymprofile in linecatalog
     return m_Rays[m_asymLineIndices[idx]].GetAsymParams();
 }
 
-Float64 CLineModelElement::GetSumCross()
+Float64 CLineModelElement::GetSumCross() const
 {
     return m_sumCross;
 }
@@ -304,7 +297,7 @@ void CLineModelElement::SetSumCross(Float64 val)
     m_sumCross=val;
 }
 
-Float64 CLineModelElement::GetDtmFree()
+Float64 CLineModelElement::GetDtmFree() const
 {
     return m_dtmFree;
 }
@@ -314,7 +307,7 @@ void CLineModelElement::SetDtmFree(Float64 val)
     m_dtmFree=val;
 }
 
-Float64 CLineModelElement::GetSumGauss()
+Float64 CLineModelElement::GetSumGauss() const
 {
     return m_sumGauss;
 }
@@ -324,7 +317,7 @@ void CLineModelElement::SetSumGauss(Float64 val)
     m_sumGauss=val;
 }
 
-Float64 CLineModelElement::GetFitAmplitude()
+Float64 CLineModelElement::GetFitAmplitude() const
 {
     return m_fitAmplitude;
 }
@@ -335,19 +328,18 @@ Float64 CLineModelElement::GetFitAmplitude()
 /**
  * \brief If the argument is greater than or equal to the size of m_Rays, returns the string "-1". Otherwise returns a call to the m_Rays GetName.
  **/
-std::string CLineModelElement::GetRayName(Int32 subeIdx)
+const std::string & CLineModelElement::GetRayName(Int32 subeIdx) const
 {
     if(subeIdx>=m_Rays.size())
-    {
-        return "-1";
-    }
+        throw GlobalException(INTERNAL_ERROR, "CLineModelElement::GetRayName: invalid index");
+
     return m_Rays[subeIdx].GetName();
 }
 
 /**
  * \brief Returns the content of the m_SignFactors with index equal to the argument.
  **/
-Float64 CLineModelElement::GetSignFactor(Int32 subeIdx)
+Float64 CLineModelElement::GetSignFactor(Int32 subeIdx) const
 {
     return m_SignFactors[subeIdx];
 }
@@ -365,21 +357,28 @@ bool CLineModelElement::SetAbsLinesLimit(Float64 limit)
  * @param redshift
  * @param lambdaRange
  * @param continuumfluxAxis
+ * Add up polynome contribution below lines 
  * @return the continuum flux val at the sub element center wavelength. Error returns -999/-9999 if center profile not in range
  *
  */
-Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, CSpectrumFluxAxis &continuumfluxAxis)
+Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, 
+                                                      const CSpectrumSpectralAxis& spectralAxis, 
+                                                      Float64 redshift, 
+                                                      const CSpectrumFluxAxis &continuumfluxAxis,
+                                                      const TPolynomCoeffs& line_polynomCoeffs) const
 {
     Float64 mu = GetObservedPosition(subeIdx, redshift);
 
     Int32 IdxCenterProfile = spectralAxis.GetIndexAtWaveLength(mu);
     if(IdxCenterProfile<0 || IdxCenterProfile>continuumfluxAxis.GetSamplesCount()-1)
     {
-        return -9999.0;
+        return NAN;
     }
 
-    Float64 cont = continuumfluxAxis[IdxCenterProfile];
-
+    Float64 cont = continuumfluxAxis[IdxCenterProfile] + 
+                   line_polynomCoeffs.x0 + 
+                   line_polynomCoeffs.x1*spectralAxis[IdxCenterProfile]+ 
+                   line_polynomCoeffs.x2*spectralAxis[IdxCenterProfile]*spectralAxis[IdxCenterProfile];
     return cont;
 }
 
@@ -389,15 +388,14 @@ Float64 CLineModelElement::GetContinuumAtCenterProfile(Int32 subeIdx, const CSpe
  **/
 void CLineModelElement::EstimateTheoreticalSupport(Int32 subeIdx, const CSpectrumSpectralAxis& spectralAxis, Float64 redshift, const TFloat64Range &lambdaRange)
 {
-    Float64 mu = NAN;
-    Float64 sigma = NAN;
+    Float64 mu =  GetObservedPosition(subeIdx, redshift);
     if( !m_LSF->checkAvailability(mu) )
     {
         m_OutsideLambdaRangeList[subeIdx] = true; 
         return;
     }
-    getWidth(subeIdx, redshift, mu, sigma, true);// do not apply Lya asym offset
-    Float64 winsize = m_profile[subeIdx]->GetNSigmaSupport()*sigma;
+    Float64 sigma = GetLineWidth(mu, redshift, m_Rays[subeIdx].GetIsEmission());
+    Float64 winsize = getLineProfile(subeIdx).GetNSigmaSupport()*sigma;
     TInt32Range supportRange = EstimateIndexRange(spectralAxis, mu, lambdaRange, winsize);
 
     m_StartTheoretical[subeIdx] = supportRange.GetBegin();
@@ -468,7 +466,7 @@ void CLineModelElement::prepareSupport(const CSpectrumSpectralAxis& spectralAxis
 {
     Int32 nRays = m_Rays.size();
     m_OutsideLambdaRange = true;
-    m_RayIsActiveOnSupport.resize( nRays , std::vector<Int32>( nRays , 0.0 ) );
+    m_RayIsActiveOnSupport.resize( nRays , TInt32List( nRays , 0.0 ) );
     m_StartNoOverlap.resize(nRays, -1);
     m_EndNoOverlap.resize(nRays, -1);
     m_StartTheoretical.resize(nRays, -1);
@@ -601,7 +599,7 @@ void CLineModelElement::prepareSupport(const CSpectrumSpectralAxis& spectralAxis
     //init the fitted amplitude values
     for(Int32 k=0; k<nRays; k++){
         if(m_OutsideLambdaRangeList[k]){
-            m_FittedAmplitudes[k] = -1.0;
+            m_FittedAmplitudes[k] = NAN;
         }
     }
 }
@@ -609,7 +607,7 @@ void CLineModelElement::prepareSupport(const CSpectrumSpectralAxis& spectralAxis
 /**
  * \brief Creates an empty list of ranges as the return value. If not m_OutsideLambdaRange, for each m_Rays element which is also not outside lambda range, add its support to the return value.
  **/
-TInt32RangeList CLineModelElement::getSupport()
+TInt32RangeList CLineModelElement::getSupport() const
 {
     TInt32RangeList support;
     Int32 nRays = m_Rays.size();
@@ -627,7 +625,7 @@ TInt32RangeList CLineModelElement::getSupport()
     return support;
 }
 
-TInt32RangeList CLineModelElement::getTheoreticalSupport()
+TInt32RangeList CLineModelElement::getTheoreticalSupport() const
 {
     TInt32RangeList support;
     Int32 nRays = m_Rays.size();
@@ -649,7 +647,7 @@ TInt32RangeList CLineModelElement::getTheoreticalSupport()
 /**
  * \brief Creates an empty list of ranges as the return value. If not m_OutsideLambdaRange, for each m_Rays element belonging to the argument subeIdx which is also not outside lambda range, add its support to the return value.
  **/
-TInt32Range CLineModelElement::getSupportSubElt(Int32 subeIdx)
+TInt32Range CLineModelElement::getSupportSubElt(Int32 subeIdx) const
 {
     /*
     TInt32Range support;
@@ -666,7 +664,7 @@ TInt32Range CLineModelElement::getSupportSubElt(Int32 subeIdx)
 /**
  * \brief Returns the theoretical support of the line (sub-element).
  **/
-TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 subeIdx)
+TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 subeIdx) const
 {
     /*
     TInt32Range support;
@@ -683,9 +681,9 @@ TInt32Range CLineModelElement::getTheoreticalSupportSubElt(Int32 subeIdx)
 /**
  * \brief Calls GetLineWidth using the arguments and a calculated argument mu.
  **/
-void CLineModelElement::getWidth(Int32 subeIdx, Float64 redshift, 
-                                 Float64& mu, Float64& sigma, 
-                                 Bool doAsymfitdelta) const
+void CLineModelElement::getObservedPositionAndLineWidth(Int32 subeIdx, Float64 redshift, 
+                                                        Float64& mu, Float64& sigma, 
+                                                        bool doAsymfitdelta) const
 {
     mu = GetObservedPosition(subeIdx, redshift, doAsymfitdelta);
     if( !m_LSF->checkAvailability(mu) )
@@ -699,7 +697,7 @@ void CLineModelElement::getWidth(Int32 subeIdx, Float64 redshift,
 /**
  * \brief Get the observed position of the sub-element subeIdx for a given redshift
  **/
-Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, Bool doAsymfitdelta) const
+Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, bool doAsymfitdelta) const
 {
     Float64 dzOffset = m_Rays[subeIdx].GetOffset()/m_speedOfLightInVacuum;
 
@@ -708,8 +706,7 @@ Float64 CLineModelElement::GetObservedPosition(Int32 subeIdx, Float64 redshift, 
     // deals with delta of asym profile
     if (doAsymfitdelta)
     {
-        std::shared_ptr<CLineProfile> profile = m_Rays[subeIdx].GetProfile();
-        mu -= profile->GetAsymDelta();
+        mu -= m_Rays[subeIdx].GetProfile().GetAsymDelta();
     }
     return mu;
 }
@@ -721,14 +718,14 @@ Float64 CLineModelElement::GetLineProfileAtRedshift(Int32 subeIdx, Float64 redsh
 {
     Float64 mu = NAN;
     Float64 sigma = NAN;
-    getWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
-    return m_profile[subeIdx]->GetLineProfile(x, mu, sigma);
+    getObservedPositionAndLineWidth(subeIdx, redshift, mu, sigma, false);// do not apply Lya asym offset
+    return getLineProfile(subeIdx).GetLineProfile(x, mu, sigma);
 }
 
 /**
  * \brief Returns a copy of m_Rays.
  **/
-std::vector<CRay> CLineModelElement::GetRays()
+std::vector<CRay> CLineModelElement::GetRays() const
 {
     std::vector<CRay> rays;
     for(Int32 k=0; k<m_Rays.size(); k++){
@@ -740,7 +737,7 @@ std::vector<CRay> CLineModelElement::GetRays()
 /**
  * \brief Returns the fitted amplitude for the argument index.
  **/
-Float64 CLineModelElement::GetFittedAmplitude(Int32 subeIdx)
+Float64 CLineModelElement::GetFittedAmplitude(Int32 subeIdx) const
 {
     return m_FittedAmplitudes[subeIdx];
 }
@@ -748,7 +745,7 @@ Float64 CLineModelElement::GetFittedAmplitude(Int32 subeIdx)
 /**
  * \brief Returns the fitted amplitude error for the argument index.
  **/
-Float64 CLineModelElement::GetFittedAmplitudeErrorSigma(Int32 subeIdx)
+Float64 CLineModelElement::GetFittedAmplitudeErrorSigma(Int32 subeIdx) const
 {
     return m_FittedAmplitudeErrorSigmas[subeIdx];
 }
@@ -756,11 +753,11 @@ Float64 CLineModelElement::GetFittedAmplitudeErrorSigma(Int32 subeIdx)
 /**
  * \brief Returns -1.0 if m_OutsideLambdaRange, and the fitted amplitude / nominal amplitude of the first element otherwise.
  **/
-Float64 CLineModelElement::GetElementAmplitude()
+Float64 CLineModelElement::GetElementAmplitude() const
 {
   if( m_OutsideLambdaRange )
   {
-      return -1.0;
+      return NAN;
   }
   for(Int32 k=0; k<m_Rays.size(); k++)
   {
@@ -769,18 +766,18 @@ Float64 CLineModelElement::GetElementAmplitude()
           return m_FittedAmplitudes[k]/m_NominalAmplitudes[k];
       }
   }
-  return -1.0;
+  return NAN;
 }
 
 
 /**
- * \brief Returns -1.0 if m_OutsideLambdaRange, and the fitted error / nominal amplitude of the first element otherwise.
+ * \brief Returns NAN if m_OutsideLambdaRange, and the fitted error / nominal amplitude of the first element otherwise.
  **/
-Float64 CLineModelElement::GetElementError()
+Float64 CLineModelElement::GetElementError() const
 {
   if( m_OutsideLambdaRange )
   {
-      return -1.0;
+      return NAN;
   }
   for(Int32 k=0; k<m_Rays.size(); k++)
   {
@@ -789,13 +786,13 @@ Float64 CLineModelElement::GetElementError()
           return m_FittedAmplitudeErrorSigmas[k]/m_NominalAmplitudes[k];
       }
   }
-  return -1.0;
+  return NAN;
 }
 
 /**
  * \brief Returns the nominal amplitude with index subeIdx.
  **/
-Float64 CLineModelElement::GetNominalAmplitude(Int32 subeIdx)
+Float64 CLineModelElement::GetNominalAmplitude(Int32 subeIdx) const 
 {
     return m_NominalAmplitudes[subeIdx];
 }
@@ -812,9 +809,12 @@ bool CLineModelElement::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp)
 //WARNING: setfittedamplitude should not be applied to sub element individually ?
 void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR)
 {
+    if(subeIdx == undefIdx || subeIdx >= m_FittedAmplitudes.size())
+      throw GlobalException(INTERNAL_ERROR,"CLineModelElement::SetFittedAmplitude: out-of-bound index"); 
+
     if(m_OutsideLambdaRangeList[subeIdx])
     {
-        m_FittedAmplitudes[subeIdx] = -1;
+        m_FittedAmplitudes[subeIdx] = NAN;
     }
     m_FittedAmplitudes[subeIdx] = A*m_NominalAmplitudes[subeIdx];
     // limit the absorption to 0.0-1.0, so that it's never <0
@@ -832,40 +832,30 @@ void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A, Float64 SNR
  **/
 void CLineModelElement::SetFittedAmplitude(Float64 A, Float64 SNR)
 {
-    if(m_OutsideLambdaRange)
+    if(isnan(A) || m_OutsideLambdaRange)
     {
-        for(Int32 k=0; k<m_Rays.size(); k++)
-        {
-            // This separation in distinct negative values is to facilitate unit testing. All negative amplitudes should be considered invalid.
-            if(A<0.0)
-            {
-                m_FittedAmplitudes[k] = A;
-                m_FittedAmplitudeErrorSigmas[k] = A;
-            }
-            else
-            {
-                m_FittedAmplitudes[k] = -1.0 -A;
-                m_FittedAmplitudeErrorSigmas[k] = -1.0 -A;
-            }
-
-        }
+        m_FittedAmplitudes.resize(m_Rays.size(), NAN);
+        m_FittedAmplitudeErrorSigmas.resize(m_Rays.size(), NAN);
         return;
     }
-    A = std::max(0.0, A);
-    m_fitAmplitude = A;
+
+    m_fitAmplitude = std::max(0.,A);//force amplitudes to zero if negative
     for(Int32 k=0; k<m_Rays.size(); k++)
     {
         if(m_OutsideLambdaRangeList[k])
         {
-            m_FittedAmplitudes[k] = -1.0;
+            m_FittedAmplitudes[k] = NAN;
+            m_FittedAmplitudeErrorSigmas[k] = NAN;
+            continue;
         }
         m_FittedAmplitudes[k] = A*m_NominalAmplitudes[k];
         // limit the absorption to 0.0-1.0, so that it's never <0
-        //*
-        if(m_SignFactors[k]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[k]>m_absLinesLimit){
+
+        if(m_SignFactors[k]==-1 && m_absLinesLimit>0.0 && m_FittedAmplitudes[k]>m_absLinesLimit)
+        {
             m_FittedAmplitudes[k]=m_absLinesLimit;
         }
-        //*/
+
         m_FittedAmplitudeErrorSigmas[k] = SNR*m_NominalAmplitudes[k]; //todo: check correct formulation for Error
     }
 }
@@ -998,11 +988,8 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
     m_sumGauss = 0.0;
     m_dtmFree = 0.0;
 
-    for(Int32 k=0; k<nRays; k++)
-    {
-        m_FittedAmplitudes[k] = -1.0;
-        m_FittedAmplitudeErrorSigmas[k] = -1.0;
-    }
+    m_FittedAmplitudes = TFloat64List(nRays, NAN);
+    m_FittedAmplitudeErrorSigmas = TFloat64List(nRays, NAN);
 
     if(m_OutsideLambdaRange)
     {
@@ -1036,7 +1023,7 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
         {
             continue;
         }
-        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx!=undefIdx && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
             continue;
         }
@@ -1053,11 +1040,7 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
 
             for(Int32 k2=0; k2<nRays; k2++)
             { //loop for the signal synthesis
-                if(m_OutsideLambdaRangeList[k2])
-                {
-                    continue;
-                }
-                if(m_RayIsActiveOnSupport[k2][k]==0)
+                if(m_OutsideLambdaRangeList[k2] || !m_RayIsActiveOnSupport[k2][k])
                 {
                     continue;
                 }
@@ -1078,9 +1061,9 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
 
     if ( num==0 || m_sumGauss==0 )
     {
+        Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:     num=%d, mtm=%f", num, m_sumGauss);
         if(m_verbose)
         {
-            Log.LogDebug("    multiline failed:     num=%d, mtm=%f", num, m_sumGauss);
             for(Int32 k2=0; k2<nRays; k2++)
             {
                 Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2, m_NominalAmplitudes[k2]);
@@ -1124,7 +1107,7 @@ void CLineModelElement::fitAmplitude(const CSpectrumSpectralAxis& spectralAxis,
 /**
  * \brief Adds to the model's flux, at each ray not outside lambda range, the value contained in the corresponding lambda for each catalog line.
  **/
-void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx )
+void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift, Int32 lineIdx ) const
 {
     if(m_OutsideLambdaRange)
     {
@@ -1141,7 +1124,7 @@ void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelsp
             continue;
         }
 
-        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx!=undefIdx && !(m_RayIsActiveOnSupport[k][lineIdx]))
         {
             continue;
         }
@@ -1159,7 +1142,8 @@ void CLineModelElement::addToSpectrumModel( const CSpectrumSpectralAxis& modelsp
     return;
 }
 
-void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay)
+void CLineModelElement::addToSpectrumModelDerivVel( const CSpectrumSpectralAxis& modelspectralAxis, CSpectrumFluxAxis& modelfluxAxis, 
+                                                    const CSpectrumFluxAxis& continuumfluxAxis, Float64 redshift, bool emissionRay) const
 {
     if(m_OutsideLambdaRange){
         return;
@@ -1174,20 +1158,23 @@ void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& 
         if((emissionRay ^ m_Rays[k].GetIsEmission())){
             continue;
         }
+        Float64 A = m_FittedAmplitudes[k];
+        if(isnan(A)) continue;
+            //throw GlobalException(INTERNAL_ERROR,"FittedAmplitude cannot be NAN");//to be uncommented
 
         for(Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
         {
 
             Float64 x = spectral[i];
-            Float64 A = m_FittedAmplitudes[k];
+
             Float64 mu = NAN;
             Float64 sigma = NAN;
-            getWidth(k, redshift, mu, sigma, false);
+            getObservedPositionAndLineWidth(k, redshift, mu, sigma, false);
 
             if(m_SignFactors[k]==-1){
-                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(m_profile[k], x, mu, sigma, m_Rays[k].GetIsEmission());
+                flux[i] += m_SignFactors[k] * A * continuumfluxAxis[i] * GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma, m_Rays[k].GetIsEmission());
             }else{
-                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(m_profile[k], x, mu, sigma,  m_Rays[k].GetIsEmission());
+                flux[i] += m_SignFactors[k] * A * GetLineProfileDerivVel(getLineProfile(k), x, mu, sigma,  m_Rays[k].GetIsEmission());
             }
         }
     }
@@ -1197,7 +1184,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(const CSpectrumSpectralAxis& 
 /**
  * \brief Returns the sum of the amplitude of each ray on redshifted lambda.
  **/
-Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport)
+Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Int32 kRaySupport) const
 {
     if(m_OutsideLambdaRange)
     {
@@ -1220,17 +1207,17 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift, Fl
         }
 
         Float64 A = m_FittedAmplitudes[k2];
-        if(A>0.0)
-        {
-            if(m_SignFactors[k2]==-1){
-                Yi += m_SignFactors[k2] * continuumFlux * A * GetLineProfileAtRedshift(k2, redshift, x);
-            }else{
-                Yi += m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
-            }
-            if(isnan(Yi)){
-                Log.LogError("Ray nb: %d adn GetLineProfileAtRedshift: %f", k2, GetLineProfileAtRedshift(k2, redshift, x));
-            }
+        if(isnan(A)) continue;
+            //throw GlobalException(INTERNAL_ERROR,"FittedAmplitude cannot be NAN");
+        if(A<0.) continue;
+        
+        Float64 fluxval = m_SignFactors[k2] * A * GetLineProfileAtRedshift(k2, redshift, x);
+        Yi += m_SignFactors[k2]==-1 ? continuumFlux * fluxval : fluxval;
+
+        if(isnan(Yi)){
+            Log.LogError("Ray nb: %d adn GetLineProfileAtRedshift: %f", k2, GetLineProfileAtRedshift(k2, redshift, x));
         }
+        
     }
     return Yi;
 }
@@ -1250,16 +1237,13 @@ Float64 CLineModelElement::GetModelDerivAmplitudeAtLambda(Float64 lambda, Float6
             continue;
         }
 
-        if(m_SignFactors[k2]==-1){
-            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * continuumFlux * GetLineProfileAtRedshift(k2, redshift, x);
-        }else{
-            Yi += m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfileAtRedshift(k2, redshift, x);
-        }
+        Float64 fluxval = m_SignFactors[k2] * m_NominalAmplitudes[k2] * GetLineProfileAtRedshift(k2, redshift, x);
+        Yi += m_SignFactors[k2]==-1 ? continuumFlux * fluxval : fluxval;
     }
     return Yi;
 }
 
-Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale)
+Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFluxUnscale) const
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -1279,6 +1263,9 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Flo
         }
 
         Float64 A = m_FittedAmplitudes[k2];
+        if(isnan(A)) continue;
+            //throw GlobalException(INTERNAL_ERROR,"FittedAmplitude cannot be NAN");
+
         Yi += m_SignFactors[k2] *continuumFluxUnscale* A * GetLineProfileAtRedshift(k2, redshift, x);
 
     }
@@ -1288,7 +1275,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(Float64 lambda, Flo
 /* Given the value of the partial deriv of the flux of this multiline at the given lamda when
  * The continuum is not a variable of z
  */
-Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux)
+Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Float64 redshift, Float64 continuumFlux) const
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -1303,17 +1290,18 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Flo
             continue;
         }
         Float64 A = m_FittedAmplitudes[k2];
+        if(isnan(A)) continue;
+            //throw GlobalException(INTERNAL_ERROR,"FittedAmplitude cannot be NAN");
+
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 mu = NAN;
         Float64 sigma = NAN;
-        getWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
+        getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
-        if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
-        }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
-        }
+        Float64 fluxval = m_SignFactors[k2] * A *  getLineProfile(k2).GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
+        Yi += m_SignFactors[k2]==-1 ? continuumFlux * fluxval : fluxval;
+
     }
     return Yi;
 }
@@ -1321,7 +1309,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(Float64 lambda, Flo
 /* Given the value of the partial deriv of the flux of this multiline at the given lamda when
  * The continuum is a variable of z
  */
-Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ)
+Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift, Float64 continuumFlux, Float64 continuumFluxDerivZ) const
 {
     if(m_OutsideLambdaRange){
         return 0.0;
@@ -1336,17 +1324,21 @@ Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshi
                 continue;
         }
         Float64 A = m_FittedAmplitudes[k2];
+        if(isnan(A)) continue;
+            //throw GlobalException(INTERNAL_ERROR,"FittedAmplitude cannot be NAN");
+
         Float64 dzOffset = m_Rays[k2].GetOffset()/m_speedOfLightInVacuum;
         Float64 lamdba0 = m_Rays[k2].GetPosition() * (1+dzOffset);
         Float64 mu = NAN;
         Float64 sigma = NAN;
-        getWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
+        getObservedPositionAndLineWidth(k2, redshift, mu, sigma, false);// do not apply Lya asym offset
 
+        Float64 fluxval = m_SignFactors[k2] * A * getLineProfile(k2).GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
         if(m_SignFactors[k2]==1){
-            Yi += m_SignFactors[k2] * A * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma);
+            Yi += fluxval;
         }else{
-            Yi += m_SignFactors[k2] * A * continuumFlux * m_profile[k2]->GetLineProfileDerivZ( x, lamdba0, redshift, sigma)
-                  + m_SignFactors[k2] * A * continuumFluxDerivZ * m_profile[k2]->GetLineProfile( x, mu, sigma);
+            Yi += continuumFlux * fluxval
+                  + m_SignFactors[k2] * A * continuumFluxDerivZ * getLineProfile(k2).GetLineProfile( x, mu, sigma);
         }
     }
     return Yi;
@@ -1355,7 +1347,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshi
 /**
  * \brief For rays inside lambda range, sets the flux to the continuum flux.
  **/
-void CLineModelElement::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx)
+void CLineModelElement::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, const CSpectrumFluxAxis &continuumfluxAxis, Int32 lineIdx) const
 {
     if(m_OutsideLambdaRange)
     {
@@ -1368,7 +1360,7 @@ void CLineModelElement::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, cons
         if(m_OutsideLambdaRangeList[k])
             continue;
 
-        if( lineIdx>-1 && !(m_RayIsActiveOnSupport[k][lineIdx]))
+        if( lineIdx!=undefIdx && !(m_RayIsActiveOnSupport[k][lineIdx]))
             continue;
 
         for(Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++)
@@ -1380,11 +1372,11 @@ void CLineModelElement::initSpectrumModel(CSpectrumFluxAxis &modelfluxAxis, cons
 /**
  * \brief Returns the index corresponding to the first ray whose GetName method returns LineTagStr.
  **/
-Int32 CLineModelElement::FindElementIndex(std::string LineTagStr)
+Int32 CLineModelElement::findElementIndex(const std::string& LineTagStr) const
 {
-    Int32 idx = -1;
+    Int32 idx = undefIdx;
     Int32 rays = m_Rays.size();
-    for( UInt32 iElts=0; iElts<rays; iElts++ )
+    for( Int32 iElts=0; iElts<rays; iElts++ )
     {
         std::string name = m_Rays[iElts].GetName();
         std::size_t foundstra = name.find(LineTagStr.c_str());
@@ -1421,7 +1413,20 @@ void CLineModelElement::LimitFittedAmplitude(Int32 subeIdx, Float64 limit)
 /**
  * \brief Returns whether the ray with index subeIdx is outside the lambda range.
  **/
-bool CLineModelElement::IsOutsideLambdaRange(Int32 subeIdx)
+bool CLineModelElement::IsOutsideLambdaRange(Int32 subeIdx) const //IsOutsideLambdaRange
 {
     return m_OutsideLambdaRangeList[subeIdx];
+}
+
+void CLineModelElement::debug(std::ostream &os) const
+{
+  os<<m_fittingGroupInfo<<"\t";
+  os<<GetVelocityAbsorption()<< "\t"<< GetVelocityEmission()<< "\n";
+    for(const CRay& ray:m_Rays) ray.Save(os);
+  /*
+  for(int i=0;i<GetSize();i++)
+    {
+      os << GetRayName(i)<< "\t"<< GetNominalAmplitude(i)<< "\t" << getLineProfile(i).GetName()<<"\t"<< GetSignFactor(i)<< "\n";
+    }
+  */
 }
