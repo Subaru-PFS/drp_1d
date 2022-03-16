@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(GetConstantLogZPrior_test)
     TFloat64List logzPrior;
     
     logzPrior = zprior.GetConstantLogZPrior(redshifts.size());
-    for (Int32 i=0 ; i<logzPrior.size() ; i++){
-      BOOST_CHECK(logzPrior[i] == 0.0);
+    for (Int32 i=1 ; i<logzPrior.size() ; i++){
+      BOOST_CHECK_CLOSE((logzPrior[i] - logzPrior[i-1]) , 0.0, precision);
     }
 
     //GetConstantLogZPrior with normalization
@@ -150,18 +150,28 @@ BOOST_AUTO_TEST_CASE(CombineLogZPrior_test)
 BOOST_AUTO_TEST_CASE(GetNLinesSNRAboveCutLogZPrior_test)
 {
     CZPrior zprior;
-
-    TInt32List nlinesAboveSNR(5, 1);
-    nlinesAboveSNR[0] = 5;
+    TInt32List nlinesAboveSNR = {0,0,0,5,5,5,0,0,0};
     Float64 penalization_factor = 0.5;
-
+    
+    //GetNLinesSNRAboveCutLogZPrior_test
     //without normalization
     TFloat64List logzPrior = zprior.GetNLinesSNRAboveCutLogZPrior(nlinesAboveSNR, penalization_factor);
-
-    BOOST_CHECK(logzPrior[0] == 0.);
-    for (Int32 i=1 ; i<logzPrior.size() ; i++){
-      BOOST_CHECK_CLOSE(logzPrior[i] , log(penalization_factor), precision);
+    for (Int32 i=0 ; i<logzPrior.size() ; i++){
+      if (i == 3 || i == 4 || i == 5)
+        BOOST_CHECK(logzPrior[i] == 0.);
+      else
+        BOOST_CHECK_CLOSE(logzPrior[i] , log(penalization_factor), precision);
     }
+
+    //GetNLinesSNRAboveCutLogZPrior_test
+    //with normalization
+    TFloat64List redshifts = genRedshifts(9);
+    CZPrior zprior_ref = CZPrior(true, redshifts);
+    zprior_ref.NormalizePrior(logzPrior);
+
+    CZPrior zprior_2 = CZPrior(true, redshifts);
+    TFloat64List logzPrior_2 = zprior_2.GetNLinesSNRAboveCutLogZPrior(nlinesAboveSNR, penalization_factor);
+    BOOST_CHECK(logzPrior_2 == logzPrior);  
 }
 
 BOOST_AUTO_TEST_CASE(GetEuclidNhaLogZPrior_test)
