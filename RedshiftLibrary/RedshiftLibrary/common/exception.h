@@ -43,8 +43,9 @@
 #include <iostream>
 #include <string>
 //#include <boost/stacktrace.hpp>
-
+#include "RedshiftLibrary/common/datatypes.h"
 namespace NSEpic {
+
 typedef enum ErrorCode {
   INTERNAL_ERROR = 0,
   EXTERNAL_LIB_ERROR,

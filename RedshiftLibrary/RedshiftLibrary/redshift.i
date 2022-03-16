@@ -696,29 +696,6 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       CLSFFactory();
       ~CLSFFactory() = default;
 };
-  typedef enum ErrorCode
-    {
-      INTERNAL_ERROR=0,
-      EXTERNAL_LIB_ERROR,
-      INVALID_SPECTRA_FLUX,
-      INVALID_NOISE	,
-      SMALL_WAVELENGTH_RANGE ,
-      NEGATIVE_CONTINUUMFIT	,
-      BAD_CONTINUUMFIT	,
-      NULL_AMPLITUDES	,
-      PEAK_NOT_FOUND_PDF	,
-      MAX_AT_BORDER_PDF	,
-      UNKNOWN_PARAMETER  ,
-      BAD_PARAMETER_VALUE,
-      UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG,
-      BAD_LOGSAMPLEDSPECTRUM,
-      BAD_COUNTMATCH,
-      BAD_TEMPLATECATALOG,
-      INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE,
-      DZ_NOT_COMPUTABLE
-    } ErrorCode;
 
 typedef struct{
     virtual ~TLSFArguments(){};
@@ -788,11 +765,35 @@ public:
     TStringList GetNameList() const;
     TStringList GetNameListSortedByLambda() const;
 };
-
+ //struct ErrorCode {
+  typedef enum ErrorCode{
+    //enum{
+      INTERNAL_ERROR=0,
+      EXTERNAL_LIB_ERROR,
+      INVALID_SPECTRA_FLUX,
+      INVALID_NOISE	,
+      SMALL_WAVELENGTH_RANGE ,
+      NEGATIVE_CONTINUUMFIT	,
+      BAD_CONTINUUMFIT	,
+      NULL_AMPLITUDES	,
+      PEAK_NOT_FOUND_PDF	,
+      MAX_AT_BORDER_PDF	,
+      UNKNOWN_PARAMETER  ,
+      BAD_PARAMETER_VALUE,
+      UNKNOWN_ATTRIBUTE ,
+      BAD_LINECATALOG,
+      BAD_LOGSAMPLEDSPECTRUM,
+      BAD_COUNTMATCH,
+      BAD_TEMPLATECATALOG,
+      INVALID_SPECTRUM,
+      OVERLAPRATE_NOTACCEPTABLE,
+      DZ_NOT_COMPUTABLE
+    }ErrorCode;
+//}; 
 class AmzException : public std::exception
 {
 
- public:
+ public: 
   AmzException(ErrorCode ec,std::string message);
   virtual ~AmzException();
  

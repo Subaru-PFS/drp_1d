@@ -51,10 +51,13 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CReliabilitySolve,
                                   CLineMeasSolve,
                                   CLineMatchingSolve,
-                                  CFlagWarning)
+                                  CFlagWarning,
+                                  GlobalException)
 import pandas as pd
 import json
 import os
+
+import pylibamazed.redshift as amz
 
 zflag = CFlagWarning.GetInstance()
 class Context:
