@@ -77,11 +77,13 @@ BOOST_AUTO_TEST_CASE(photometricbands)
 {
     const Float64 trans[] = {.2, .5, .99, .99, .4, .1};
     const Float64 lambda[]= { 2000., 2200., 2321., 2430., 2554., 2603.};
+    const Float64 lambda_tmp[]= { 2000., 2200., 2321., 2430., 2554., 2603., 0.};
+
     const Int32 n = sizeof(trans)/sizeof(trans[0]);
     
     BOOST_CHECK_NO_THROW(CPhotometricBand(trans,n,lambda,n));
     BOOST_CHECK_NO_THROW(CPhotometricBand(TFloat64List(trans,trans+n),TFloat64List(lambda,lambda+n)));
-    BOOST_CHECK_THROW(CPhotometricBand(trans,n,lambda,n+1), GlobalException);
+    BOOST_CHECK_THROW(CPhotometricBand(trans,n,lambda_tmp,n+1), GlobalException);
 
     CPhotometricBand band(trans,n,lambda,n);
     BOOST_CHECK(band.GetMinLambda() == 2000.);
