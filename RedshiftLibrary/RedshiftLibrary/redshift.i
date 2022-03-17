@@ -87,6 +87,7 @@
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
 %shared_ptr(CSpectrumFluxCorrectionMeiksin)
+%shared_ptr(CSpectrumFluxCorrectionCalzetti) 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -136,6 +137,7 @@
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -449,6 +451,8 @@ public:
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
   void reset();
   void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
+  void setfluxCorrectionCalzetti(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
+
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
@@ -930,4 +934,15 @@ class CSpectrumFluxCorrectionMeiksin
 {
   public:
     CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCurves);
+};
+
+typedef struct {
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr);
+  TFloat64List lbda;
+  TFloat64List fluxcorr; 
+}CalzettiCorrection;
+class CSpectrumFluxCorrectionCalzetti
+{
+  public:
+    CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
 };

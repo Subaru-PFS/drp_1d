@@ -221,19 +221,9 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 }
 
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
-                                  const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin)
+void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
+                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
 {
-    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");
-    Float64 ebmv_step  = parameterStore->Get<Float64>( "ebmv.step");
-    Int32  ebmv_n     = parameterStore->Get<Int32>( "ebmv.count");
-    std::string calibrationPath = parameterStore->Get<std::string>( "calibrationDir");
-
-    //ISM
-    auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-    ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
-    //IGM: move to api
-
     for(auto it : GetList(0,0))
     {             
         const TTemplateRefList  & TplList = it.second;

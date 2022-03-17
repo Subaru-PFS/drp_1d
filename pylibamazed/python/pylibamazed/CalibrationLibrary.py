@@ -50,7 +50,8 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   TAsymParams,
                                   CFlagWarning,MeiksinCorrection,
                                   CSpectrumFluxCorrectionMeiksin,
-                                  VecTFloat64List, VecMeiksinCorrection)
+                                  VecTFloat64List, VecMeiksinCorrection,
+                                  CSpectrumFluxCorrectionCalzetti, CalzettiCorrection)
 import numpy as np
 from astropy.io import fits
 import glob
@@ -252,8 +253,9 @@ class CalibrationLibrary:
                                                                   np.array(df["lambda"])))
 
     def load_calzetti(self):
-        calzetti_df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
-        # self.calzetti =
+        df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
+        _calzetti = CalzettiCorrection(df['lambda'].astype(float), df['flux'])
+        self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti, self.parameters["ebmv"]["start"], self.parameters["ebmv"]["step"], self.parameters["ebmv"]["count"])
 
     # Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
     # i.e., from the least extinction curve to the highest extinction curve 
@@ -282,6 +284,7 @@ class CalibrationLibrary:
 
         """
         self.load_Meiksin()
+        self.load_calzetti()
         for object_type in self.parameters["objects"]:
             self.load_templates_catalog(object_type)
             method = self.parameters[object_type]["method"]

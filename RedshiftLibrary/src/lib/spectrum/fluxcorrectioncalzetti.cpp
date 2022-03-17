@@ -58,15 +58,29 @@ using namespace std;
 using namespace boost;
 
 
-CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti()
+CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, 
+                                                                Float64 ebmv_start, 
+                                                                Float64 ebmv_step, 
+                                                                Float64 ebmv_n):
+m_dataCalzetti(std::move(_calzettiCorr.fluxcorr)),
+m_nEbmvCoeff(ebmv_n),
+m_EbmvCoeffStep(ebmv_step),
+m_EbmvCoeffStart(ebmv_start)
 {
-    m_LambdaMin = 100.0;
-    m_LambdaMax = 99999.0;
+    m_LambdaMin = m_dataCalzetti.front();
+    m_LambdaMax = m_dataCalzetti.back();
+
+    m_dataDustCoeff.resize(m_nEbmvCoeff*m_dataCalzetti.size());
+    for(Int32 kDust=0; kDust<m_nEbmvCoeff; kDust++)
+    {
+        Float64 coeffEBMV = GetEbmvValue(kDust);
+        for(Int32 kCalzetti=0; kCalzetti<m_dataCalzetti.size(); kCalzetti++)
+        {
+            m_dataDustCoeff[kDust*m_dataCalzetti.size()+kCalzetti] = pow(10.0, -0.4*m_dataCalzetti[kCalzetti]*coeffEBMV);
+        }
+    }
 }
 
-CSpectrumFluxCorrectionCalzetti::~CSpectrumFluxCorrectionCalzetti()
-{
-}
 
 bool CSpectrumFluxCorrectionCalzetti::Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n)
 {

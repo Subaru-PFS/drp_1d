@@ -82,6 +82,10 @@ public:
   void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin){
     m_inputContext->setfluxCorrectionMeiksin(igmcorrectionMeiksin);
   };
+  void setfluxCorrectionCalzetti(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismcorrectionCalzetti){
+    m_inputContext->setfluxCorrectionCalzetti(ismcorrectionCalzetti);
+  };
+
 
   void Init();
   void reset();

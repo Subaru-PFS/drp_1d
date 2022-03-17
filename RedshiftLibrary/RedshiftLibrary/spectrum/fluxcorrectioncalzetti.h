@@ -49,7 +49,13 @@
 
 namespace NSEpic
 {
-
+typedef struct CalzettiCorrection{
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr):
+                        lbda(_lbda),
+                        fluxcorr(_fluxcorr){};
+  TFloat64List lbda;
+  TFloat64List fluxcorr; 
+}CalzettiCorrection;
 /**
  * \ingroup Redshift
  */
@@ -57,9 +63,8 @@ class CSpectrumFluxCorrectionCalzetti
 {
 
 public:
-    CSpectrumFluxCorrectionCalzetti();
-    ~CSpectrumFluxCorrectionCalzetti();
-
+    CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
+CSpectrumFluxCorrectionCalzetti() = default;
     bool Init( std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n );
     bool LoadFile( const char* filePath );
 

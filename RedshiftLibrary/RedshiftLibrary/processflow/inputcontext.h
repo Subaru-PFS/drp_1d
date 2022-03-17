@@ -95,6 +95,7 @@ class CInputContext
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
   void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin);
+  void setfluxCorrectionCalzetti(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismcorrectionCalzetti);
   void Init();
 
   void resetSpectrumSpecific();
@@ -107,7 +108,7 @@ private:
   std::map<std::string, std::shared_ptr<CLineCatalog>> m_lineCatalogs;
   std::map<std::string, std::shared_ptr<CLineCatalogsTplShape>> m_lineRatioCatalogCatalogs;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmcorrectionMeiksin;
-
+  std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismcorrectionCalzetti;
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
   void OrthogonalizeTemplates();

@@ -176,6 +176,11 @@ void CInputContext::OrthogonalizeTemplates()
     m_igmcorrectionMeiksin = igmcorrectionMeiksin;
   }
 
+  void CInputContext::setfluxCorrectionCalzetti(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismcorrectionCalzetti)
+  {
+    m_ismcorrectionCalzetti = ismcorrectionCalzetti;
+  }
+
 void CInputContext::Init()
 {
     m_categories = m_ParameterStore->GetList<std::string>("objects");
@@ -198,7 +203,7 @@ void CInputContext::Init()
     m_TemplateCatalog->m_logsampling = 0; m_TemplateCatalog->m_orthogonal = 0; 
     if(m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)->CalzettiInitFailed())
     {
-        m_TemplateCatalog->InitIsmIgm(m_ParameterStore,  m_igmcorrectionMeiksin);
+        m_TemplateCatalog->InitIsmIgm(m_igmcorrectionMeiksin, m_ismcorrectionCalzetti);
     }
     else
       {
