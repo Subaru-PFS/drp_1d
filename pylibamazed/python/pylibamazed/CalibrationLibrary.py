@@ -81,8 +81,8 @@ class CalibrationLibrary:
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
         self.calzetti = pd.DataFrame()
-        self.meiksin = {}
-        self.reliability_models = {}
+        self.meiksin = None
+        self.reliability_models = None
 
     def _load_templates(self, object_type, path):
         """
@@ -275,8 +275,6 @@ class CalibrationLibrary:
                 fluxcorr.append(meiksin_df[r].to_numpy())
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
-
-        #apply convolution?maybe a bit later in contextFlow?
 
 
     def load_all(self):

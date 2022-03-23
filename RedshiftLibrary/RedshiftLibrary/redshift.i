@@ -309,17 +309,6 @@ typedef std::vector<std::string> TStringList;
 %template(TStringList) std::vector<std::string>;
 %template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 
-/* //to check if we clean
-// In pop()
-%typemap(out) std::vector<std::vector<std::vector<Float64>> >::value_type { 
-$result = SWIG_NewPointerObj(SWIG_as_voidptr(&$1), $descriptor(std::vector<std::vector<Float64>>), 0 |  0 ); 
-} 
-
-// In front(), back(), __getitem__()
-%typemap(out) std::vector<std::vector<std::vector<Float64>> >::value_type & { 
-    $result = SWIG_NewPointerObj(SWIG_as_voidptr($1), $descriptor(std::vector<std::vector<Float64>>), 0 |  0 ); 
-} 
-*/
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
 %apply Int64 &OUTPUT { Int64& out_long };
