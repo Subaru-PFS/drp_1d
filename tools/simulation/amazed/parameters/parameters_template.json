@@ -1,39 +1,39 @@
 {
-    "lambdaRange": [
-        "lambdaRangeMinxxx",
-        "lambdaRangeMaxxxx"
-    ],
-    "redshiftRange": [
-        "redshiftRangeMinxxx",
-        "redshiftRangeMaxxxx"
-    ],
-    "redshiftStep": "0.0001",
-    "smoothWidth": "0",
-    "method": "linemodel",
-    "templateCategoryList": [
-        "emission",
-        "galaxy",
-        "star",
-        "qso"
-    ],
-    "continuumRemoval": {
-        "method": "raw"
-    },
-    "linemodelsolve": {
-        "linemodel": {
-            "linetypefilter": "no",
-            "lineforcefilter": "no",
-            "fittingmethod": "fromfile",
-            "continuumcomponent": "fromspectrum",
-            "linewidthtype": "linewidthtypexxx",
-            "instrumentresolution": "instresolutionionxxx",
-            "velocityemission": "velocityemissionxxx",
-            "velocityabsorption": "velocityabsorptionxxx",
-            "continuumreestimation": "no",
-            "rules": "rulesxxx",
-            "extremacount": "10",
-            "velocityfit": "no"
-        }
-    },
-    "SaveIntermediateResults": "all"
+  "lambdaRange": [
+    "lambdaRangeMinxxx",
+    "lambdaRangeMaxxxx"
+  ],
+  "redshiftRange": [
+    "redshiftRangeMinxxx",
+    "redshiftRangeMaxxxx"
+  ],
+  "redshiftStep": "0.0001",
+  "smoothWidth": "0",
+  "method": "linemodel",
+  "templateCategoryList": [
+    "emission",
+    "galaxy",
+    "star",
+    "qso"
+  ],
+  "continuumRemoval": {
+    "method": "raw"
+  },
+  "linemodelsolve": {
+    "linemodel": {
+      "linetypefilter": "no",
+      "lineforcefilter": "no",
+      "fittingmethod": "fromfile",
+      "continuumcomponent": "fromspectrum",
+      "linewidthtype": "linewidthtypexxx",
+      "instrumentresolution": "instresolutionionxxx",
+      "velocityemission": "velocityemissionxxx",
+      "velocityabsorption": "velocityabsorptionxxx",
+      "continuumreestimation": "no",
+      "rules": "rulesxxx",
+      "extremacount": "10",
+      "velocityfit": "no"
+    }
+  },
+  "SaveIntermediateResults": "all"
 }
