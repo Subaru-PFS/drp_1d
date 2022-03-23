@@ -110,9 +110,9 @@ public:
     return ret;  
   }
 
-  template<typename T> T GetListScoped(const std::string& name) const
+  template<typename T> std::vector<T> GetListScoped(const std::string& name) const
   {
-    if (Has<T>(GetScopedName(name)))    return GetList<T>(GetScopedName(name));
+    if (HasScoped<T>(name))    return GetList<T>(GetScopedName(name));
     else return GetList<T>(name);
   }
 
