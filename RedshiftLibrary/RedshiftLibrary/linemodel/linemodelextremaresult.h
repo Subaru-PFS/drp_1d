@@ -40,7 +40,7 @@
 #define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
 #include "RedshiftLibrary/operator/extremaresult.h"
-#include "RedshiftLibrary/ray/catalog.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 
 //#include "RedshiftLibrary/operator/modelspectrumresult.h>

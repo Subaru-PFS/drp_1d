@@ -161,12 +161,12 @@ void CInputContext::OrthogonalizeTemplates()
       }
 }
 
-  void CInputContext::setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog)
+  void CInputContext::setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog)
   {
     m_lineCatalogs[objectType]=catalog;
   }
 
-  void CInputContext::setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog)
+  void CInputContext::setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog)
   {
     m_lineRatioCatalogCatalogs[objectType]=catalog;
   }

@@ -40,8 +40,8 @@
 #define _REDSHIFT_SPECTRUM_LSF_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
-#include "RedshiftLibrary/ray/lineprofileSYM.h"
+#include "RedshiftLibrary/line/lineprofile.h"
+#include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 namespace NSEpic
 {

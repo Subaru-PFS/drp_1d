@@ -115,7 +115,7 @@ void COperatorLineModel::CreateRedshiftLargeGrid(Int32 ratio, TFloat64List& larg
 Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
                                            const CSpectrum& logSampledSpectrum,//this is temporary
                                            const CTemplateCatalog &tplCatalog,
-                                           const CRayCatalogsTplShape& tplRatioCatalog,
+                                           const CLineCatalogsTplShape& tplRatioCatalog,
                                            const TFloat64Range &lambdaRange,
                                            const std::shared_ptr<const CPhotBandCatalog> & photBandCat,
                                            const Float64 photo_weight,
@@ -176,7 +176,7 @@ Int32 COperatorLineModel::ComputeFirstPass(const CSpectrum &spectrum,
     CMultiRollModel model( spectrum,
                            tplCatalog,//orthoTplCatalog,
                            m_tplCategoryList,
-                           restRayList,
+                           restLineList,
                            opt_fittingmethod,
                            opt_continuumcomponent,
                            opt_lineWidthType,
@@ -597,9 +597,9 @@ bool COperatorLineModel::AllAmplitudesAreZero(const TBoolList &amplitudesZero, I
 
 /**
  * Estimate once for all the continuum amplitude which is only dependent from the tplName, ism and igm indexes. 
- * This is useful when the model fitting option corresponds to fitting separately the continuum and the rays.
- * In such case, playing with (fit) Rays parameters (velocity, line offsets, rays amps, etc.) do not affect continuum amplitudes..
- * thus we can save time  by fitting once-for-all the continuum amplitudes, prior to fitting the rays.
+ * This is useful when the model fitting option corresponds to fitting separately the continuum and the lines.
+ * In such case, playing with (fit) Lines parameters (velocity, line offsets, lines amps, etc.) do not affect continuum amplitudes..
+ * thus we can save time  by fitting once-for-all the continuum amplitudes, prior to fitting the lines.
  * @candidateIdx@ is also an indicator of pass mode
  * */
 std::shared_ptr<CTemplatesFitStore> 
@@ -958,7 +958,7 @@ std::shared_ptr<const LineModelExtremaResult> COperatorLineModel::saveFirstPassE
         //for saving velocities: use CLineModelSolution
         ExtremaResult->m_ranked_candidates[i].second.updateFromLineModelSolution(m_result->LineModelSolutions[idx]);
         
-        m_result->LineModelSolutions[idx].fillRayIds();
+        m_result->LineModelSolutions[idx].fillLineIds();
         ExtremaResult->m_savedModelFittingResults[i] = std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
     }
 
@@ -1270,7 +1270,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
             std::vector<TInt32List> idxVelfitGroups;
             //absorption
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Absorption);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CLine::nType_Absorption);
             std::string alv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1284,7 +1284,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
             Log.LogInfo("    Operator-Linemodel: saveResults with groups alv=%s", alv_list_str.c_str());
             //emission
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Emission);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CLine::nType_Emission);
             std::string elv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1376,7 +1376,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
                         lineTypeFilter = -1;
                     } else if (overrideModelSavedType == 2)
                     {
-                        lineTypeFilter = CRay::nType_Emission;
+                        lineTypeFilter = CLine::nType_Emission;
                     }
                     resultspcmodel = std::make_shared<CModelSpectrumResult>(m_model->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
                 }
@@ -1386,7 +1386,7 @@ std::shared_ptr<LineModelExtremaResult> COperatorLineModel::SaveExtremaResults(c
 
                 ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
-		m_result->LineModelSolutions[idx].fillRayIds();
+		m_result->LineModelSolutions[idx].fillLineIds();
                 ExtremaResult->m_savedModelFittingResults[i] = std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
            
                 // CModelRulesResult
@@ -1635,7 +1635,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         if (m_enableWidthFitByGroups)
                         {
                             idxVelfitGroups.clear();
-                            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Absorption);
+                            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CLine::nType_Absorption);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups ABSORPTION - n = %d",
                                         idxVelfitGroups.size());
                             if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
@@ -1655,7 +1655,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(const CSpectrum &spectrum
                         {
                             idxVelfitGroups.clear();
                             idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(
-                                        CRay::nType_Emission);
+                                        CLine::nType_Emission);
                             Log.LogDetail("  Operator-Linemodel: VelfitGroups EMISSION - n = %d",
                                         idxVelfitGroups.size());
                             if (m_firstpass_extremaResult->size() > 1 && idxVelfitGroups.size() > 1)
@@ -1867,7 +1867,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             //absorption
             idxVelfitGroups.clear();
             idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(
-                        CRay::nType_Absorption);
+                        CLine::nType_Absorption);
             std::string alv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1881,7 +1881,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
             Log.LogInfo("    Operator-Linemodel: recompute with groups alv=%s", alv_list_str.c_str());
             //emission
             idxVelfitGroups.clear();
-            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CRay::nType_Emission);
+            idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(CLine::nType_Emission);
             std::string elv_list_str = "";
             for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
             {
@@ -1995,7 +1995,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(const TFloat64Range &lambdaR
 
 Int32 COperatorLineModel::Init(const CSpectrum &spectrum, 
                                const TFloat64List &redshifts,
-                               const CRayCatalog::TRayVector restLineList,
+                               const CLineCatalog::TLineVector restLineList,
                                const TStringList &tplCategoryList,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
@@ -2261,8 +2261,8 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(std::shared_ptr<const CI
     }
   TFloat64List zList = TFloat64Range(redshift-opt_manvelfit_dzmin,redshift+opt_manvelfit_dzmax).SpreadOver(opt_manvelfit_dzstep);
 
-  fitVelocityByGroups(velFitEList,zList,CRay::nType_Emission);
-  fitVelocityByGroups(velFitAList,zList,CRay::nType_Absorption);
+  fitVelocityByGroups(velFitEList,zList,CLine::nType_Emission);
+  fitVelocityByGroups(velFitAList,zList,CLine::nType_Absorption);
 
 */
     CLineModelSolution clms;
@@ -2271,11 +2271,11 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(std::shared_ptr<const CI
 
 void COperatorLineModel::fitVelocityByGroups(TFloat64List velfitlist,
                                             TFloat64List zfitlist,
-                                            Int32 rayType)
+                                            Int32 lineType)
 {
   Int32 nVelSteps = velfitlist.size();
 
-  std::vector<TInt32List> idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(rayType);
+  std::vector<TInt32List> idxVelfitGroups = m_model->m_Elements.GetModelVelfitGroups(lineType);
   TFloat64List GroupsV;
 
   for (Int32 kgroup = 0; kgroup < idxVelfitGroups.size(); kgroup++)
@@ -2293,7 +2293,7 @@ void COperatorLineModel::fitVelocityByGroups(TFloat64List velfitlist,
               Float64 vTest = velfitlist[kv];
               for (Int32 ke = 0; ke < idxVelfitGroups[kgroup].size(); ke++)
                 {
-                  m_model->setVelocity(vTest,idxVelfitGroups[kgroup][ke],rayType);
+                  m_model->setVelocity(vTest,idxVelfitGroups[kgroup][ke],lineType);
                 }
             }
         }

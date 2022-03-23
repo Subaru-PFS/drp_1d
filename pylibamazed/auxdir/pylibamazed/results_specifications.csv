@@ -21,9 +21,9 @@ VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	
 StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double
 LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double
 LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double
-FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]
-FittedRaysID	fitted_rays	i	extrema_results	multi	False	candidate	rayId	list[int]
-FittedRaysFlux	fitted_rays	f8	extrema_results	multi	False	candidate	Fluxs	list[double]
+FittedLineLambda	fitted_lines	f8	extrema_results	multi	True	candidate	LambdaObs	list[double]
+FittedLineID	fitted_lines	i	extrema_results	multi	False	candidate	lineId	list[int]
+FittedLineFlux	fitted_lines	f8	extrema_results	multi	False	candidate	Fluxs	list[double]
 ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]
 ModelFlux	model	f8	extrema_results	multi	False	candidate	ModelFlux	list[double]
 BestContinuumLambda	continuum	f8	extrema_results	multi	False	candidate	wavel	list[double]
@@ -44,7 +44,7 @@ PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]
 ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]
 ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]
 LinemeasLineLambda	linemeas	f8	linemeas	multi	True	object	LambdaObs	list[double]
-LinemeasLineID	linemeas	i	linemeas	multi	False	object	rayId	list[int]
+LinemeasLineID	linemeas	i	linemeas	multi	False	object	lineId	list[int]
 LinemeasLineFlux	linemeas	f8	linemeas	multi	False	object	Fluxs	list[double]
 LinemeasLineFluxDirectIntegration	linemeas	f8	linemeas	multi	False	object	FluxDirectIntegration	list[double]
 LinemeasLineFluxDirectIntegrationError	linemeas	f8	linemeas	multi	False	object	FluxDirectIntegrationError	list[double]

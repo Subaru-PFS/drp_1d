@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/peakdetectionresult.h"
-#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/line/line.h"
 
 using namespace NSEpic;
 

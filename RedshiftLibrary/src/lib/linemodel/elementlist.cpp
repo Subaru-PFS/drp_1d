@@ -161,17 +161,17 @@ std::vector<TInt32List> CLineModelElementList::GetModelVelfitGroups( Int32 lineT
     for(Int32 i=0; i<nonZeroIndexes.size(); i++)
     {
         Int32 iElts = nonZeroIndexes[i];
-        Int32 nRays = m_Elements[iElts]->GetSize();
-        for(Int32 iSubElts=0; iSubElts<nRays; iSubElts++)
+        Int32 nLines = m_Elements[iElts]->GetSize();
+        for(Int32 iSubElts=0; iSubElts<nLines; iSubElts++)
         {
             if(verbose)
             {
                 Log.LogDebug("    model: group tags - lineType=%d", lineType);
-                Log.LogDebug("    model: group tags - m_Elements[iElts]->m_Rays[iSubElts].GetType()=%d", m_Elements[iElts]->m_Rays[iSubElts].GetType());
+                Log.LogDebug("    model: group tags - m_Elements[iElts]->m_Lines[iSubElts].GetType()=%d", m_Elements[iElts]->m_Lines[iSubElts].GetType());
             }
-            if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
+            if(lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType())
             {
-                std::string _tag = m_Elements[iElts]->m_Rays[iSubElts].GetVelGroupName();
+                std::string _tag = m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
                 if(_tag != "-1"){
                     tags.push_back(_tag);
                 }else{
@@ -211,12 +211,12 @@ std::vector<TInt32List> CLineModelElementList::GetModelVelfitGroups( Int32 lineT
         for(Int32 i=0; i<nonZeroIndexes.size(); i++)
         {
             Int32 iElts = nonZeroIndexes[i];
-            Int32 nRays = m_Elements[iElts]->GetSize();
-            for(Int32 iSubElts=0; iSubElts<nRays; iSubElts++)
+            Int32 nLines = m_Elements[iElts]->GetSize();
+            for(Int32 iSubElts=0; iSubElts<nLines; iSubElts++)
             {
-                if(lineType == m_Elements[iElts]->m_Rays[iSubElts].GetType())
+                if(lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType())
                 {
-                    std::string _tag = m_Elements[iElts]->m_Rays[iSubElts].GetVelGroupName();
+                    std::string _tag = m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
                     if(_tag == tags[itag]){
                         _group.push_back(iElts);
                     }
@@ -259,7 +259,7 @@ std::vector<TInt32List> CLineModelElementList::GetModelVelfitGroups( Int32 lineT
     TInt32List nonZeroIndexes = GetModelValidElementsIndexes();
     for(Int32 i=0; i<nonZeroIndexes.size(); i++)
     {
-        if(lineType == m_Elements[nonZeroIndexes[i]]->m_Rays[0].GetType())
+        if(lineType == m_Elements[nonZeroIndexes[i]]->m_Lines[0].GetType())
         {
             TInt32List gr;
             gr.push_back(nonZeroIndexes[i]);
@@ -285,8 +285,8 @@ TInt32List CLineModelElementList::getOverlappingElements(Int32 ind, const TInt32
         return indexes;
     }
 
-    std::vector<CRay> raysRef = m_Elements[ind]->GetRays();
-    Int32 linetypeRef = raysRef[0].GetType();
+    std::vector<CLine> linesRef = m_Elements[ind]->GetLines();
+    Int32 linetypeRef = linesRef[0].GetType();
 
     Int32 xinf=0;
     Int32 yinf=0;
@@ -295,7 +295,7 @@ TInt32List CLineModelElementList::getOverlappingElements(Int32 ind, const TInt32
     for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         //check linetype
-        if(m_Elements[iElts]->m_Rays[0].GetType() != linetypeRef){
+        if(m_Elements[iElts]->m_Lines[0].GetType() != linetypeRef){
             continue;
         }
 
@@ -317,22 +317,22 @@ TInt32List CLineModelElementList::getOverlappingElements(Int32 ind, const TInt32
             continue;
         }
 
-        std::vector<CRay> raysElt = m_Elements[iElts]->GetRays();
+        std::vector<CLine> linesElt = m_Elements[iElts]->GetLines();
 
-        for( Int32 iRayElt=0; iRayElt<raysElt.size(); iRayElt++ )
+        for( Int32 iLineElt=0; iLineElt<linesElt.size(); iLineElt++ )
         {
-            for( Int32 iRayRef=0; iRayRef<raysRef.size(); iRayRef++ )
+            for( Int32 iLineRef=0; iLineRef<linesRef.size(); iLineRef++ )
             {
-                Float64 muRef = raysRef[iRayRef].GetPosition()*(1+redshift);
-                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, redshift, raysRef[iRayRef].GetIsEmission());
-                Float64 winsizeRef = raysRef[iRayRef].GetProfile().GetNSigmaSupport()*cRef;
+                Float64 muRef = linesRef[iLineRef].GetPosition()*(1+redshift);
+                Float64 cRef = m_Elements[ind]->GetLineWidth(muRef, redshift, linesRef[iLineRef].GetIsEmission());
+                Float64 winsizeRef = linesRef[iLineRef].GetProfile().GetNSigmaSupport()*cRef;
                 Float64 overlapSizeMin = winsizeRef*overlapThres;
                 xinf = muRef-winsizeRef/2.0;
                 xsup = muRef+winsizeRef/2.0;
 
-                Float64 muElt = raysElt[iRayElt].GetPosition()*(1+redshift);
-                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, redshift, raysElt[iRayElt].GetIsEmission());
-                Float64 winsizeElt = raysElt[iRayElt].GetProfile().GetNSigmaSupport()*cElt;
+                Float64 muElt = linesElt[iLineElt].GetPosition()*(1+redshift);
+                Float64 cElt = m_Elements[iElts]->GetLineWidth(muElt, redshift, linesElt[iLineElt].GetIsEmission());
+                Float64 winsizeElt = linesElt[iLineElt].GetProfile().GetNSigmaSupport()*cElt;
                 yinf = muElt-winsizeElt/2.0;
                 ysup = muElt+winsizeElt/2.0;
 
@@ -416,7 +416,7 @@ Int32 CLineModelElementList::findElementIndex(const std::string& LineTagStr, Int
         lineIdx = m_Elements[iElts]->findElementIndex(LineTagStr);
         if(lineIdx == undefIdx) continue;
 
-        if( linetype!=-1 && m_Elements[iElts]->m_Rays[lineIdx].GetType() != linetype)
+        if( linetype!=-1 && m_Elements[iElts]->m_Lines[lineIdx].GetType() != linetype)
             continue;
 
         idx = iElts;

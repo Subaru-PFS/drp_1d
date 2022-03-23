@@ -63,7 +63,7 @@ namespace NSEpic
     virtual void saveToResultStore(std::shared_ptr<CSolveResult>,std::shared_ptr<COperatorResultStore> resultStore) const;
 
     // this method should implement at least populateParameters
-    virtual void checkOrInit(){}//=0; // here we retrieve parameters for parameterStore to put them directly in local variables or into operators, rayCatalog and/or tplCatalog can also be checked
+    virtual void checkOrInit(){}//=0; // here we retrieve parameters for parameterStore to put them directly in local variables or into operators, lineCatalog and/or tplCatalog can also be checked
 
     const TStringList  m_categoryList; 
     TFloat64Range m_lambdaRange;

@@ -46,7 +46,7 @@
   
     TFloat64List ElementId;     //id of the linemodel element it is part of
     TFloat64List Amplitudes;
-    std::vector<CRay> Rays;
+    std::vector<CLine> Lines;
     TFloat64List Errors;    //noise sigma
     TFloat64List FittingError;    //ModelLeastSquare error under each line
     TFloat64List CenterContinuumFlux;    //Continuum flux value at the center of each line
@@ -56,7 +56,7 @@
     TFloat64List FluxErrors;    //Flux error for each line
     TFloat64List FluxDirectIntegration;    //Flux obtained by direct integration for each line
     TFloat64List FluxDirectIntegrationError;    //Flux obtained by direct integration for each line
-    TInt32List rayId;
+    TInt32List lineId;
 
     Float64 snrHa;
     Float64 lfHa;
@@ -84,6 +84,6 @@
     TFloat64List continuum_pCeoff2;
 
     Int32 nDDL;
-    void fillRayIds();
+    void fillLineIds();
       
 };

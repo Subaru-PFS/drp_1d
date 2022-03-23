@@ -280,9 +280,9 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   const CSpectrum& rebinnedSpc=*(inputContext->GetRebinnedSpectrum());
   const CSpectrum& spc=*(inputContext->GetSpectrum());
   const CTemplateCatalog& tplCatalog=*(inputContext->GetTemplateCatalog());
-  const CRayCatalog& restraycatalog=*(inputContext->GetRayCatalog(m_objectType));
+  const CLineCatalog& restlinecatalog=*(inputContext->GetLineCatalog(m_objectType));
   const auto &photBandCat = inputContext->GetPhotBandCatalog();
-  const CRayCatalogsTplShape& tplRatioCatalog=*(inputContext->GetTemplateRatioCatalog(m_objectType));
+  const CLineCatalogsTplShape& tplRatioCatalog=*(inputContext->GetTemplateRatioCatalog(m_objectType));
 
   PopulateParameters( inputContext->GetParameterStore() );
 
@@ -291,7 +291,7 @@ std::shared_ptr<CSolveResult> CLineModelSolve::compute(std::shared_ptr<const CIn
   bool useloglambdasampling = inputContext->GetParameterStore()->GetScoped<bool>("linemodel.useloglambdasampling");
   useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
 
-  CRayCatalog::TRayVector restLineList = restraycatalog.GetFilteredList(m_opt_linetypefilter, m_opt_lineforcefilter);
+  CLineCatalog::TLineVector restLineList = restlinecatalog.GetFilteredList(m_opt_linetypefilter, m_opt_lineforcefilter);
   Log.LogDebug("restLineList.size() = %d", restLineList.size());
 
   bool retSolve = Solve( resultStore,
@@ -624,7 +624,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ChiSquareTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restLineList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ChiSquareTplshapes[km][kz];
@@ -639,7 +639,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->ScaleMargCorrectionTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restLineList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->ScaleMargCorrectionTplshapes[km][kz];
@@ -653,7 +653,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
     for(Int32 km=0; km<result->PriorLinesTplshapes.size(); km++)
     {
         std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-        result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
+        result_chisquaretplshape->Init( result->Redshifts, result->restLineList, 0, 0, TFloat64List() );
         for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
         {
             result_chisquaretplshape->ChiSquare[kz] = result->PriorLinesTplshapes[km][kz];
@@ -665,7 +665,7 @@ void CLineModelSolve::StoreChisquareTplShapeResults(std::shared_ptr<COperatorRes
 
     //Save PriorContinuumTplshapes results
     std::shared_ptr<CLineModelResult> result_chisquaretplshape = std::shared_ptr<CLineModelResult>( new CLineModelResult() );
-    result_chisquaretplshape->Init( result->Redshifts, result->restRayList, 0, 0, TFloat64List() );
+    result_chisquaretplshape->Init( result->Redshifts, result->restLineList, 0, 0, TFloat64List() );
     for(Int32 kz=0; kz<result->Redshifts.size(); kz++)
     {
         result_chisquaretplshape->ChiSquare[kz] = result->ContinuumModelSolutions[kz].tplLogPrior;
@@ -772,8 +772,8 @@ bool CLineModelSolve::Solve( std::shared_ptr<COperatorResultStore> resultStore,
                              const CSpectrum& spc,
                              const CSpectrum& rebinnedSpc,
                              const CTemplateCatalog& tplCatalog,
-                             const CRayCatalog::TRayVector& restLineList,
-                             const CRayCatalogsTplShape& tplRatioCatalog,
+                             const CLineCatalog::TLineVector& restLineList,
+                             const CLineCatalogsTplShape& tplRatioCatalog,
                              const TFloat64Range& lambdaRange,
                              const TFloat64List& redshifts,
                              const std::shared_ptr<const CPhotBandCatalog> &photBandCat,

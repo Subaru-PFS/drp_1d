@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/operator/raydetectionresult.h"
-#include "RedshiftLibrary/ray/ray.h"
+#include "RedshiftLibrary/operator/linedetectionresult.h"
+#include "RedshiftLibrary/line/line.h"
 
 using namespace NSEpic;
 

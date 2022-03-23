@@ -39,7 +39,7 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/ray/linetags.h"
+#include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 
 #include <string>
@@ -54,12 +54,12 @@ using namespace NSEpic;
  *  - setting the redshift grid
  *  - setting the size of chisquare vectors
  * @param redshifts
- * @param restRays
+ * @param restLines
  * @param nTplshapes
  * @return
  */
 void CLineModelResult::Init(TFloat64List redshifts,
-                              CRayCatalog::TRayVector restRays,
+                              CLineCatalog::TLineVector restLines,
                               Int32 nTemplates,
                               Int32 nTplshapes,
                               TFloat64List tplshapesPriors)
@@ -74,7 +74,7 @@ void CLineModelResult::Init(TFloat64List redshifts,
     ChiSquare.resize( nResults );
     ScaleMargCorrection.resize( nResults );
     Redshifts = std::move(redshifts);
-    restRayList = std::move(restRays);
+    restLineList = std::move(restLines);
     LineModelSolutions.resize( nResults );
     ContinuumModelSolutions.resize( nResults );
     
@@ -291,11 +291,11 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snr
         {
             continue;
         }
-        if( !LineModelSolutions[solutionIdx].Rays[j].GetIsStrong() )
+        if( !LineModelSolutions[solutionIdx].Lines[j].GetIsStrong() )
         {
             continue;
         }
-        if( !LineModelSolutions[solutionIdx].Rays[j].GetIsEmission() )
+        if( !LineModelSolutions[solutionIdx].Lines[j].GetIsEmission() )
         {
             continue;
         }
@@ -329,14 +329,14 @@ TBoolList CLineModelResult::getStrongLinesPresence( Int32 filterType, const std:
     {
         for ( Int32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
-            if( !linemodelsols[solutionIdx].Rays[j].GetIsStrong() )
+            if( !linemodelsols[solutionIdx].Lines[j].GetIsStrong() )
             {
                 continue;
             }
 
-            if(filterType==1 && !linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+            if(filterType==1 && !linemodelsols[solutionIdx].Lines[j].GetIsEmission() )
                 continue;
-            else if(filterType==2 && linemodelsols[solutionIdx].Rays[j].GetIsEmission() )
+            else if(filterType==2 && linemodelsols[solutionIdx].Lines[j].GetIsEmission() )
                 continue;
             
 
@@ -386,15 +386,15 @@ TBoolList CLineModelResult::getStrongestLineIsHa(const std::vector<CLineModelSol
         ampMaxLineTag = "undefined";
         for ( Int32 j=0; j<linemodelsols[solutionIdx].Amplitudes.size(); j++)
         {
-            if(!linemodelsols[solutionIdx].Rays[j].GetIsEmission() ||
+            if(!linemodelsols[solutionIdx].Lines[j].GetIsEmission() ||
                 linemodelsols[solutionIdx].OutsideLambdaRange[j])
                 continue;
 
-            Log.LogDebug("    linemodelresult: using ray for max amp search=%s", linemodelsols[solutionIdx].Rays[j].GetName().c_str());
+            Log.LogDebug("    linemodelresult: using line for max amp search=%s", linemodelsols[solutionIdx].Lines[j].GetName().c_str());
             if(linemodelsols[solutionIdx].Amplitudes[j]>ampMax)
             {
                 ampMax = linemodelsols[solutionIdx].Amplitudes[j];
-                ampMaxLineTag = linemodelsols[solutionIdx].Rays[j].GetName().c_str();
+                ampMaxLineTag = linemodelsols[solutionIdx].Lines[j].GetName().c_str();
             }
         }
 

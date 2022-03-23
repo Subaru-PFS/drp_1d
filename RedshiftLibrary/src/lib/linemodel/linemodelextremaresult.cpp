@@ -210,7 +210,7 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
 std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(const int& rank,const std::string& dataset) const{
       if (dataset == "model_parameters" || dataset == "fp_model_parameters")  
           return std::make_shared<const TLineModelResult>(this->m_ranked_candidates[rank].second);
-      else if (dataset == "fitted_rays" || dataset == "fp_fitted_rays" )
+      else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines" )
 	{
 	  std::shared_ptr<const COperatorResult> cop =  this->m_savedModelFittingResults[rank];
 	  return cop;
@@ -223,7 +223,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(cons
     
 const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::string& dataset) const {
       if (dataset == "model_parameters" || dataset == "fp_model_parameters")      return this->m_ranked_candidates[0].second.getType();
-      else if (dataset == "fitted_rays" || dataset == "fp_fitted_rays" )  return this->m_savedModelFittingResults[0]->getType();
+      else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines" )  return this->m_savedModelFittingResults[0]->getType();
       else if (dataset == "model")  return this->m_savedModelSpectrumResults[0]->getType();
       else if (dataset == "continuum")  return this->m_savedModelContinuumSpectrumResults[0]->getType();
       else   throw GlobalException(UNKNOWN_ATTRIBUTE,"Unknown dataset");
@@ -232,5 +232,5 @@ const std::string& LineModelExtremaResult::getCandidateDatasetType(const std::st
 bool LineModelExtremaResult::HasCandidateDataset(const std::string& dataset) const
 {
   return (dataset == "model_parameters" || dataset == "model" || dataset == "fp_model_parameters"||
-	  dataset == "continuum" || dataset == "fitted_rays" || dataset == "fp_fitted_rays" );
+	  dataset == "continuum" || dataset == "fitted_lines" || dataset == "fp_fitted_lines" );
 }

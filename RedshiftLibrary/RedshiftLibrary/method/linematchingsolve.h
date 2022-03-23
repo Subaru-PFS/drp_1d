@@ -74,7 +74,7 @@ public:
                                                        const CSpectrum& spc, 
                                                        const TFloat64Range& lambdaRange, 
                                                        const TFloat64Range& redshiftsRange, 
-                                                       const CRayCatalog& restRayCatalog);
+                                                       const CLineCatalog& restLineCatalog);
 
     const std::string GetDescription();
 

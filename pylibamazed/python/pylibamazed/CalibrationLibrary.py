@@ -44,7 +44,7 @@ import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CTemplate, CTemplateCatalog,
-                                  CRayCatalog,CRayCatalogsTplShape,
+                                  CLineCatalog,CLineCatalogsTplShape,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   TAsymParams,
@@ -59,7 +59,7 @@ class CalibrationLibrary:
     """
     Class containing all calibration data necessary for the run, according to parameters.
     It includes templates, line catalogs, lambda_offsets (for line catalogs), and template ratios (i.e. linecatalogs
-    with amplitude ratio for each ray
+    with amplitude ratio for each line
 
     :param parameters: parameters
     :type parameters: dict
@@ -148,7 +148,7 @@ class CalibrationLibrary:
             raise Exception(line_catalog_file + " cannot be found")
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        self.line_catalogs[object_type] = CRayCatalog()
+        self.line_catalogs[object_type] = CLineCatalog()
         try:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
@@ -163,7 +163,7 @@ class CalibrationLibrary:
                 asymParams = TAsymParams(2., 2., 0.)
             else:
                 asymParams = TAsymParams(0, 0, 0)
-            self.line_catalogs[object_type].AddRayFromParams(row.Name,
+            self.line_catalogs[object_type].AddLineFromParams(row.Name,
                                                              row.WaveLength,
                                                              row.Type,
                                                              row.Force,
@@ -189,7 +189,7 @@ class CalibrationLibrary:
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
-        self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
         n_ebmv_coeffs = 1
         if self.parameters[object_type][method]["linemodel"]["tplratio_ismfit"]:
             n_ebmv_coeffs = self.parameters["ebmv"]["count"]
@@ -219,10 +219,10 @@ class CalibrationLibrary:
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
 
     def load_empty_line_catalog(self, object_type):
-        self.line_catalogs[object_type] = CRayCatalog()
+        self.line_catalogs[object_type] = CLineCatalog()
 
     def load_empty_line_ratio_catalog_list(self, object_type):
-        self.line_ratio_catalog_lists[object_type] = CRayCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
 
     def load_lsf(self):
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":

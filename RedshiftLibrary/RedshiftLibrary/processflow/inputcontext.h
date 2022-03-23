@@ -49,10 +49,10 @@ namespace NSEpic
 class CSpectrumLogRebinning;//forward declaration
 class CSpectrum;
 class CTemplateCatalog;
-class CRayCatalog;
+class CLineCatalog;
 class CParameterStore;
 class CPhotBandCatalog;
-class CRayCatalogsTplShape;
+class CLineCatalogsTplShape;
   
 class CInputContext
 {
@@ -63,8 +63,8 @@ class CInputContext
   std::shared_ptr<const CSpectrum> GetSpectrum() const {return m_Spectrum;}
   std::shared_ptr<const CSpectrum>  GetRebinnedSpectrum() const {return m_rebinnedSpectrum;}
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
-  std::shared_ptr<const CRayCatalogsTplShape>  GetTemplateRatioCatalog(const std::string &objectType) const ;
-  std::shared_ptr<const CRayCatalog> GetRayCatalog(const std::string &objectType) const;
+  std::shared_ptr<const CLineCatalogsTplShape>  GetTemplateRatioCatalog(const std::string &objectType) const ;
+  std::shared_ptr<const CLineCatalog> GetLineCatalog(const std::string &objectType) const;
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog() const {return m_photBandCatalog;}
   std::shared_ptr<const CParameterStore> GetParameterStore() const {return m_ParameterStore;}
 
@@ -72,8 +72,8 @@ class CInputContext
   std::shared_ptr<CSpectrum>  GetSpectrum() {return m_Spectrum;}
   std::shared_ptr<CSpectrum>  GetRebinnedSpectrum() {return m_rebinnedSpectrum;}
   std::shared_ptr<CTemplateCatalog>  GetTemplateCatalog() {m_TemplateCatalog->resetCatalogState();return m_TemplateCatalog;}
-  std::shared_ptr<CRayCatalogsTplShape>  GetTemplateRatioCatalog(const std::string& objectType);
-  std::shared_ptr<CRayCatalog>  GetRayCatalog(const std::string &objectType);
+  std::shared_ptr<CLineCatalogsTplShape>  GetTemplateRatioCatalog(const std::string& objectType);
+  std::shared_ptr<CLineCatalog>  GetLineCatalog(const std::string &objectType);
   std::shared_ptr<CPhotBandCatalog> GetPhotBandCatalog() {return m_photBandCatalog;}
   std::shared_ptr<CParameterStore> GetParameterStore() {return m_ParameterStore;}
 
@@ -89,8 +89,8 @@ class CInputContext
   // fill this from api, based on a new parameter in parameters.json we call object_types, it's a list consisting of the object types to process, it replaces enable<object_type>solve
   TStringList m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
-  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog);
+  void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog);
     void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
@@ -102,8 +102,8 @@ private:
   std::shared_ptr<CSpectrum> m_Spectrum;
   std::shared_ptr<CSpectrum> m_rebinnedSpectrum;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
-  std::map<std::string, std::shared_ptr<CRayCatalog>> m_lineCatalogs;
-  std::map<std::string, std::shared_ptr<CRayCatalogsTplShape>> m_lineRatioCatalogCatalogs;
+  std::map<std::string, std::shared_ptr<CLineCatalog>> m_lineCatalogs;
+  std::map<std::string, std::shared_ptr<CLineCatalogsTplShape>> m_lineRatioCatalogCatalogs;
 
   std::shared_ptr<CParameterStore> m_ParameterStore;
   std::shared_ptr<CPhotBandCatalog> m_photBandCatalog;
@@ -112,28 +112,28 @@ private:
 };
 
 inline
-std::shared_ptr<const CRayCatalog> CInputContext::GetRayCatalog(const std::string &objectType) const 
+std::shared_ptr<const CLineCatalog> CInputContext::GetLineCatalog(const std::string &objectType) const 
 {
-  return const_cast<CInputContext*>(this)->GetRayCatalog(objectType); 
+  return const_cast<CInputContext*>(this)->GetLineCatalog(objectType); 
 }
 
 inline
-std::shared_ptr<CRayCatalog> CInputContext::GetRayCatalog(const std::string &objectType)  
+std::shared_ptr<CLineCatalog> CInputContext::GetLineCatalog(const std::string &objectType)  
 {
   //  if (std::findm_categories.find(objectType))
-  // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetRayCatalog: invalid object type");
+  // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetLineCatalog: invalid object type");
   return m_lineCatalogs[objectType];
 
 }
 
 inline
-std::shared_ptr<const CRayCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const 
+std::shared_ptr<const CLineCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const 
 {
   return const_cast<CInputContext*>(this)->GetTemplateRatioCatalog(objectType); 
 }
 
 inline
-std::shared_ptr<CRayCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType)  
+std::shared_ptr<CLineCatalogsTplShape> CInputContext::GetTemplateRatioCatalog(const std::string &objectType)  
 {
   //  if (std::findm_categories.find(objectType))
   // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog: invalid object type");
