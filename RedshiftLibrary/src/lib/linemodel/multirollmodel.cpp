@@ -192,11 +192,11 @@ std::shared_ptr<CSpectrum> CMultiRollModel::LoadRollSpectrum(std::string refSpcF
     return spc;
 }
 
-Int32 CMultiRollModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl, const TFloat64Range& lambdaRange)
+Int32 CMultiRollModel::LoadFitContaminantTemplate(Int32 iRoll, CTemplate &tpl)
 {
     if(m_models.size()>iRoll)
     {
-        return m_models[iRoll]->LoadFitContaminantTemplate(lambdaRange, tpl);
+        return m_models[iRoll]->LoadFitContaminantTemplate(tpl);
     }
     return 0;
 }
@@ -261,11 +261,11 @@ TFloat64List CMultiRollModel::getTplshape_priors()
     }
 }
 
-Int32 CMultiRollModel::getSpcNSamples(const TFloat64Range& lambdaRange)
+Int32 CMultiRollModel::getSpcNSamples()
 {
     if(m_models.size()>0)
     {
-        return m_models[0]->getSpcNSamples(lambdaRange);
+        return m_models[0]->getSpcNSamples();
     }
     else
     {
@@ -283,23 +283,23 @@ Int32 CMultiRollModel::SetFitContinuum_FitStore(std::shared_ptr<const CTemplates
     return ret;
 }
 
-Float64 CMultiRollModel::getDTransposeD(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::getDTransposeD()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += m_models[km]->getDTransposeD(lambdaRange);
+        valf += m_models[km]->getDTransposeD();
     }
     return valf;
 }
 
 //TODO
-Float64 CMultiRollModel::getLikelihood_cstLog(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::getLikelihood_cstLog()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += 0.0;//m_models[km]->getLikelihood_cstLog(lambdaRange);
+        valf += 0.0;//m_models[km]->getLikelihood_cstLog();
         //TODO: this is a log value to be combined !
     }
     return valf;
@@ -324,7 +324,6 @@ void CMultiRollModel::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 //TODO: this fitting function needs to be fine tuned for this multimodel use case.
 //TBD First-order 0: only use individual fitting method: get the mtm, and dtm values for each model, then estimate the amplitude accordingly for all models
 Float64 CMultiRollModel::fit(Float64 redshift,
-                             const TFloat64Range& lambdaRange,
                              CLineModelSolution& modelSolution,
                              Int32 contreest_iterations,
                              bool enableLogging)
@@ -336,7 +335,6 @@ Float64 CMultiRollModel::fit(Float64 redshift,
         CLineModelSolution _modelSolution;
         CContinuumModelSolution continuumModelSolution;
         merit += m_models[km]->fit(redshift,
-                                   lambdaRange,
                                    _modelSolution,
                                    continuumModelSolution,
                                    contreest_iterations,
@@ -424,7 +422,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
             Float64 valf=0.0;
             for(Int32 km=0; km<m_models.size(); km++)
             {
-                valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+                valf += m_models[km]->getLeastSquareMerit();
             }
             merit=valf;
             //*/
@@ -523,7 +521,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
                 Float64 valf=0.0;
                 for(Int32 km=0; km<m_models.size(); km++)
                 {
-                    valf += m_models[km]->getLeastSquareMerit(lambdaRange);
+                    valf += m_models[km]->getLeastSquareMerit();
                 }
 
                 if(enableLogging)
@@ -633,12 +631,12 @@ TBoolList CMultiRollModel::GetStrongELPresentTplshape()
     return strongElPresentplshape;
 }
 
-Float64 CMultiRollModel::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::getLeastSquareContinuumMerit()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += m_models[km]->getLeastSquareContinuumMerit(lambdaRange);
+        valf += m_models[km]->getLeastSquareContinuumMerit();
     }
     return valf;
 }
@@ -838,12 +836,12 @@ void CMultiRollModel::SetVelocityEmission(Float64 vel)
 }
 
 
-Float64 CMultiRollModel::EstimateMTransposeM(const TFloat64Range& lambdaRange)
+Float64 CMultiRollModel::EstimateMTransposeM()
 {
     Float64 valf=0.0;
     for(Int32 km=0; km<m_models.size(); km++)
     {
-        valf += m_models[km]->EstimateMTransposeM(lambdaRange);
+        valf += m_models[km]->EstimateMTransposeM();
     }
     return valf;
 }

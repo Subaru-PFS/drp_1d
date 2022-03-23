@@ -111,7 +111,7 @@ void TLineModelResult::updateTplRatioFromModel(const std::shared_ptr<const CLine
 void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
                                         const std::shared_ptr<const CLineModelResult> &lmresult,
                                         bool estimateLeastSquareFast, int idx, 
-                                        const TFloat64Range &lambdaRange, int i_2pass)
+                                        int i_2pass)
   {
     Merit = lmresult->ChiSquare[idx];
 
@@ -122,7 +122,7 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
     if (!estimateLeastSquareFast)
       {
         MeritContinuum =
-          lmel->getLeastSquareContinuumMerit(lambdaRange);
+          lmel->getLeastSquareContinuumMerit();
       } else
       {
         MeritContinuum =
@@ -143,7 +143,7 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
 
     // store the model norm
     mTransposeM =
-      lmel->EstimateMTransposeM(lambdaRange);
+      lmel->EstimateMTransposeM();
 
     // scale marginalization correction
     Float64 corrScaleMarg = lmel->getScaleMargCorrection(); //
@@ -184,8 +184,8 @@ void TLineModelResult::updateFromModel( const std::shared_ptr<const CLineModelFi
     OutsideLinesMask =
       lmel->getOutsideLinesMask();
 
-    OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1, lambdaRange);
-    OutsideLinesSTDError = lmel->getOutsideLinesSTD(2, lambdaRange);
+    OutsideLinesSTDFlux = lmel->getOutsideLinesSTD(1);
+    OutsideLinesSTDError = lmel->getOutsideLinesSTD(2);
 
     if(OutsideLinesSTDError>0.0)
       {

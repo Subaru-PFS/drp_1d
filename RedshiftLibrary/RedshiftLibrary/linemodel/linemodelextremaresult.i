@@ -57,7 +57,7 @@ public:
 
   void updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
                         const std::shared_ptr<const CLineModelResult> &lmresult,
-                        bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
+                        bool estimateLeastSquareFast,int indx,int i_2pass);
  
     Float64            MeritContinuum; // best continum  chi2
     Float64            Merit; // fullmodel best chi2
