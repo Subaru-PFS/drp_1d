@@ -433,16 +433,17 @@ public:
   static CProcessFlowContext& GetInstance();
 
   void Init();
-  void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog); 
-  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
-  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
-  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
+  void setLineCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalog> &catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
+  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
+  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
+  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
   void reset();
-  void setfluxCorrectionMeiksin(std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
-  void setfluxCorrectionCalzetti(std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
 
-  std::shared_ptr<COperatorResultStore> GetResultStore();
+
+  const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
   TScopeStack  m_ScopeStack;

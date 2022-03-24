@@ -78,25 +78,26 @@ public:
   }
 
   // mutable getters
-  std::shared_ptr<CSpectrum> GetSpectrum() { return m_Spectrum; }
-  std::shared_ptr<CSpectrum> GetRebinnedSpectrum() {
+  const std::shared_ptr<CSpectrum> &GetSpectrum() { return m_Spectrum; }
+  const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum() {
     return m_rebinnedSpectrum;
   }
-  std::shared_ptr<CTemplateCatalog> GetTemplateCatalog() {
+  const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     m_TemplateCatalog->resetCatalogState();
     return m_TemplateCatalog;
   }
-  std::shared_ptr<CLineCatalogsTplShape>
+  const std::shared_ptr<CLineCatalogsTplShape> &
   GetTemplateRatioCatalog(const std::string &objectType);
-  std::shared_ptr<CLineCatalog> GetLineCatalog(const std::string &objectType);
-  std::shared_ptr<CPhotBandCatalog> GetPhotBandCatalog() {
+  const std::shared_ptr<CLineCatalog> &
+  GetLineCatalog(const std::string &objectType);
+  const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
-  std::shared_ptr<CParameterStore> GetParameterStore() {
+  const std::shared_ptr<CParameterStore> &GetParameterStore() {
     return m_ParameterStore;
   }
 
-  void SetRebinnedSpectrum(std::shared_ptr<CSpectrum> rebinnedSpc) {
+  void SetRebinnedSpectrum(const std::shared_ptr<CSpectrum> &rebinnedSpc) {
     m_rebinnedSpectrum = rebinnedSpc;
   }
   TFloat64Range m_lambdaRange;
@@ -114,10 +115,10 @@ public:
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
   void setLineCatalog(const std::string &objectType,
-                      std::shared_ptr<CLineCatalog> catalog);
-  void
-  setLineRatioCatalogCatalog(const std::string &objectType,
-                             std::shared_ptr<CLineCatalogsTplShape> catalog);
+                      const std::shared_ptr<CLineCatalog> &catalog);
+  void setLineRatioCatalogCatalog(
+      const std::string &objectType,
+      const std::shared_ptr<CLineCatalogsTplShape> &catalog);
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
     m_TemplateCatalog = templateCatalog;
@@ -162,7 +163,7 @@ CInputContext::GetLineCatalog(const std::string &objectType) const {
   return const_cast<CInputContext *>(this)->GetLineCatalog(objectType);
 }
 
-inline std::shared_ptr<CLineCatalog>
+inline const std::shared_ptr<CLineCatalog> &
 CInputContext::GetLineCatalog(const std::string &objectType) {
   //  if (std::findm_categories.find(objectType))
   // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetLineCatalog:
@@ -175,7 +176,7 @@ CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const {
   return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(objectType);
 }
 
-inline std::shared_ptr<CLineCatalogsTplShape>
+inline const std::shared_ptr<CLineCatalogsTplShape> &
 CInputContext::GetTemplateRatioCatalog(const std::string &objectType) {
   //  if (std::findm_categories.find(objectType))
   // throw

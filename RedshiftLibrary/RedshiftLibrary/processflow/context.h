@@ -85,12 +85,12 @@ public:
     m_inputContext->setPhotBandCatalog(photBandCatalog);
   }
   void setLineCatalog(const std::string &objectType,
-                      std::shared_ptr<CLineCatalog> catalog) {
+                      const std::shared_ptr<CLineCatalog> &catalog) {
     m_inputContext->setLineCatalog(objectType, catalog);
   }
   void
   setLineRatioCatalogCatalog(const std::string &objectType,
-                             std::shared_ptr<CLineCatalogsTplShape> catalog) {
+                             const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
     m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
   }
   void
@@ -128,7 +128,7 @@ public:
   std::shared_ptr<const CInputContext> GetInputContext() const {
     return m_inputContext;
   }
-  std::shared_ptr<COperatorResultStore> GetResultStore() {
+  const std::shared_ptr<COperatorResultStore> &GetResultStore() {
     return m_ResultStore;
   }
 

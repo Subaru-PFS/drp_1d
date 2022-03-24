@@ -119,6 +119,8 @@ public:
     virtual bool                IsValid() const = 0;
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
     Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;
+    TFloat64List                getRestFrameProfileVector(Float64 lambda0_rest, Float64 z) const;
+
     void                        SetSourcesizeDispersion(Float64 sigma) const{};//empty default implementation
     const CLineProfile &        GetProfile() const;                      
     const TLSFType  m_name;

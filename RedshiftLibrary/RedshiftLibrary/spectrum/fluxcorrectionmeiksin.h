@@ -43,6 +43,14 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 
+namespace fluxcorrectionmeiksin_test{ // boost test suite
+  //all boost_auto_test_case that use private method
+  class correction_multiply_test;
+  class correction_multiply_test_CteResolution;
+  class correction_multiply_test_CteResolution25_4;
+  class correction_multiply_test_CteResolution25_4_incontext;
+  class correction_test;
+}
 namespace NSEpic {
 typedef struct MeiksinCorrection {
   MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr)
@@ -59,54 +67,48 @@ class CSpectrumFluxCorrectionMeiksin {
 
 public:
   CSpectrumFluxCorrectionMeiksin(
-      std::vector<MeiksinCorrection> meiksinCorrectionCorves);
+      std::vector<MeiksinCorrection> meiksinCorrectionCurves);
 
-  void init(const std::shared_ptr<const CLSF> &lsf, TFloat64Range &lambdaRange);
-  TFloat64List convolve(const TFloat64List &arr, const TFloat64List &kernel);
+  void convolveByLSF(const std::shared_ptr<const CLSF> &lsf,
+                     const TFloat64Range &lambdaRange);
+  bool isConvolved() { return m_convolved; };
+  Int32 getIdxCount() const {
+    return 7;
+  }; // harcoded value from the number of cols in the ascii files
+  Int32 getRedshiftIndex(Float64 z) const;
+  Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
+    return m_corrections[zIdx].fluxcorr[meiksinIdx][lbdaIdx];
+  };
+  TFloat64List getSegmentsStartRedshiftList() const;
+  Float64 getLambdaMin() const { return m_LambdaMin; };
+  Float64 getLambdaMax() const { return m_LambdaMax; };
+
+private:  
+  friend class fluxcorrectionmeiksin_test::correction_multiply_test;
+  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution;
+  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution25_4;
+  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution25_4_incontext;
+  friend class fluxcorrectionmeiksin_test::correction_test;
+
   TFloat64List applyAdaptativeKernel(const TFloat64List &arr,
                                      const Float64 z_center,
                                      const std::shared_ptr<const CLSF> &lsf,
                                      const TFloat64List &lambdas);
-  void convolveAll(const std::shared_ptr<const CLSF> &lsf);
 
-  Int32 getIdxCount() const;
-  Int32 getRedshiftIndex(Float64 z) const;
-
-  TFloat64List getSegmentsStartRedshiftList() const;
-  TFloat64List getLSFProfileVector(
-      Float64 lambda0_rest, Float64 z_bin_meiksin,
-      const std::shared_ptr<const CLSF> &lsf); // for convolution
-  Float64 getLambdaMin() const;
-  Float64 getLambdaMax() const;
-  bool meiksinInitFailed = false;
-  TFloat64Range m_convolRange;
-  std::vector<MeiksinCorrection> m_corrections;
-
-private:
   std::vector<MeiksinCorrection> m_rawCorrections;
+  std::vector<MeiksinCorrection> m_corrections;
   Float64 m_LambdaMin;
   Float64 m_LambdaMax;
-  TFloat64List m_kernel;
+  TFloat64Range m_convolRange;
+  bool m_convolved = false;
 };
 
 inline TFloat64List
 CSpectrumFluxCorrectionMeiksin::getSegmentsStartRedshiftList() const {
-  TFloat64List zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
-                             4.5, 5.0, 5.5, 6.0, 6.5};
+  static const TFloat64List zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
+                                          4.5, 5.0, 5.5, 6.0, 6.5};
   return zstartlist;
 };
-
-inline Float64 CSpectrumFluxCorrectionMeiksin::getLambdaMin() const {
-  return m_LambdaMin;
-}
-
-inline Float64 CSpectrumFluxCorrectionMeiksin::getLambdaMax() const {
-  return m_LambdaMax;
-}
-
-inline Int32 CSpectrumFluxCorrectionMeiksin::getIdxCount() const {
-  return 7; // harcoded value from the number of cols in the ascii files
-}
 
 } // namespace NSEpic
 

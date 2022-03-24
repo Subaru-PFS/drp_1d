@@ -47,11 +47,7 @@ CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     : m_rawCorrections(std::move(meiksinCorrectionCurves)), m_LambdaMin(200.0),
       m_LambdaMax(1299.0) {}
 
-void CSpectrumFluxCorrectionMeiksin::init(
-    const std::shared_ptr<const CLSF> &lsf, TFloat64Range &convolRange) {
-  m_convolRange = convolRange;
-  convolveAll(lsf);
-}
+
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex
  * @param z
@@ -77,76 +73,6 @@ Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
   return index;
 }
 
-// TBC once validated
-TFloat64List CSpectrumFluxCorrectionMeiksin::getLSFProfileVector(
-    Float64 lambda0_rest, Float64 z_bin_meiksin,
-    const std::shared_ptr<const CLSF> &lsf) {
-  if (!lsf->IsValid()) {
-    throw GlobalException(INTERNAL_ERROR, "LSF is not valid");
-  }
-  Float64 lambda0_obs = lambda0_rest * (1 + z_bin_meiksin);
-  Float64 sigma_obs = lsf->GetWidth(lambda0_obs);
-  Float64 sigmaSupport = lsf->GetProfile().GetNSigmaSupport();
-
-  Float64 lbdastep_rest = 1.; // value in angstrom based on calibration-igm
-                              // files
-  Int32 Nhalf = std::round(sigmaSupport * sigma_obs / (1 + z_bin_meiksin) /
-                           lbdastep_rest);
-  Int32 len = 2 * Nhalf + 1;
-
-  // change to observedframe
-  TFloat64List lambdas_obs(len);
-  for (Int32 i = 0; i < len; i++) {
-    lambdas_obs[i] =
-        (lambda0_rest + (i - Nhalf) * lbdastep_rest) * (1 + z_bin_meiksin);
-  }
-  Float64 norm = 0, v;
-  m_kernel.resize(len);
-  for (Int32 i = 0; i < len; i++) {
-    // getLineProfile expects lbda in observedframe
-    v = lsf->GetLineProfile(lambdas_obs[i], lambda0_obs, sigma_obs);
-    m_kernel[i] = v;
-    norm += v;
-  }
-  // normalizing  values
-  Float64 inv_norm = 1 / norm;
-  for (Int32 i = 0; i < len; i++) {
-    m_kernel[i] *= inv_norm;
-  }
-  return m_kernel;
-}
-/**
- * f*g[0] = f[0].g[0]
- * f*g[1] = f[0].g[1] + f[1].g[0] = sum(f[i].g[j]) for i, j belonging the
- * intersection
- */
-TFloat64List
-CSpectrumFluxCorrectionMeiksin::convolve(const TFloat64List &arr,
-                                         const TFloat64List &kernel) {
-  if (!arr.size() || !kernel.size()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "Cannot convolve: either kernel or array is empty. ");
-  }
-  Int32 n = arr.size(), Nhalf = int(kernel.size() / 2);
-  TFloat64List convolvedArr(n);
-
-  Float64 tmp;
-  for (Int32 i = 0; i < n; i++) {
-    tmp = 0.0;                              // sum over the intersection area
-    for (Int32 j = -Nhalf; j <= Nhalf; j++) // center kernel at arr[i]
-    {
-      if (i + j >= 0) {
-        if (i + j >= n) {
-          tmp += kernel[Nhalf + j];
-        } else {
-          tmp += arr[i + j] * kernel[Nhalf + j];
-        }
-      }
-    }
-    convolvedArr[i] = tmp;
-  }
-  return convolvedArr;
-}
 // loop over lambda values
 // for each lambda0, compute kernel_lambda0 and then multiply it by the igm
 // curve
@@ -175,10 +101,9 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(
   for (Int32 i = i_min; i <= i_max; i++) {
     Float64 lambda0 = lambdas[i]; // lambda restframe
     // compute the adpative kernel at lambda0
-    getLSFProfileVector(lambda0, z_center,
-                        lsf); // resulting kernel saved in m_kernel
-    Nhalf = int(m_kernel.size() / 2);
-    if (!m_kernel.size()) {
+    TFloat64List kernel = lsf->getRestFrameProfileVector(lambda0, z_center);
+    Nhalf = int(kernel.size() / 2);
+    if (!kernel.size()) {
       throw GlobalException(
           INTERNAL_ERROR, "Cannot convolve: either kernel or array is empty. ");
     }
@@ -188,12 +113,12 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(
     {
       if (i + j >= 0) {
         if (i + j >= n) {
-          tmp += m_kernel[Nhalf + j];
+          tmp += kernel[Nhalf + j];
         } else {
-          tmp += arr[i + j] * m_kernel[Nhalf + j];
+          tmp += arr[i + j] * kernel[Nhalf + j];
         }
       } else {
-        tmp += arr[0] * m_kernel[Nhalf + j];
+        tmp += arr[0] * kernel[Nhalf + j];
       }
     }
     convolvedArr[i] = tmp;
@@ -203,9 +128,11 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(
 /**
  * convolve only on m_convolRange/(1+zbin_meiksin), while keeping vector size
  */
-void CSpectrumFluxCorrectionMeiksin::convolveAll(
-    const std::shared_ptr<const CLSF> &lsf) {
-  // to be decided if we create two objects or we keep one m_correction
+void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
+    const std::shared_ptr<const CLSF> &lsf, const TFloat64Range &convolRange) {
+
+  m_convolRange = convolRange;
+
   m_corrections.resize(m_rawCorrections.size());
 
   TFloat64List meiksin_Bins = getSegmentsStartRedshiftList();
@@ -230,5 +157,7 @@ void CSpectrumFluxCorrectionMeiksin::convolveAll(
       m_corrections[i].fluxcorr.push_back(std::move(a));
     }
   }
+
+  m_convolved = true;
   return;
 }

@@ -162,9 +162,9 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 
 void COperatorTemplateFittingPhot::InitIsmIgmConfig(
     Float64 redshift,
-    const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
-    const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
     Int32 EbmvListSize) {
 

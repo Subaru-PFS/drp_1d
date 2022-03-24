@@ -233,8 +233,8 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
 
 void COperatorTemplateFitting::InitIsmIgmConfig(
         Float64 redshift,
-        const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin,
+        const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
+        const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin,
         Int32 EbmvListSize)
 {
     m_templateRebined_bf.InitIsmIgmConfig(m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);

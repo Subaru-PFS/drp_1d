@@ -53,7 +53,7 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   VecTFloat64List, VecMeiksinCorrection,
                                   CSpectrumFluxCorrectionCalzetti, CalzettiCorrection)
 import numpy as np
-from astropy.io import fits
+from astropy.io import fits, ascii
 import glob
 
 zflag = CFlagWarning.GetInstance()
@@ -80,7 +80,7 @@ class CalibrationLibrary:
         self.lambda_offsets = dict()
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
-        self.calzetti = pd.DataFrame()
+        self.calzetti = None
         self.meiksin = None
         self.reliability_models = None
 
@@ -253,8 +253,8 @@ class CalibrationLibrary:
                                                                   np.array(df["lambda"])))
 
     def load_calzetti(self):
-        df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
-        _calzetti = CalzettiCorrection(df['lambda'].astype(float), df['flux'])
+        df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
+        _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
         self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti, self.parameters["ebmv"]["start"], self.parameters["ebmv"]["step"], self.parameters["ebmv"]["count"])
 
     # Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
@@ -265,14 +265,9 @@ class CalibrationLibrary:
         #we'd better create a map between meiksin curves and their zbin
         meiksinCorrectionCurves = VecMeiksinCorrection()
         for z in zbins: 
-            filename = "Meiksin_Var_curves_"+str(z)+".tsv"
-            meiksin_df = pd.read_csv(os.path.join(self.calibration_dir,"igm/IGM_variation_curves_meiksin", filename ),sep='\t', header=None, names=columns)
-            fluxcorr = VecTFloat64List()#matrix
-            #fluxcorr = meiksin_df.iloc[: , -7:].to_numpy()
-            for r in meiksin_df:
-                if r == 'restlambda':
-                    continue
-                fluxcorr.append(meiksin_df[r].to_numpy())
+            filename = f"Meiksin_Var_curves_{z}.txt"
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin", filename), names=columns)
+            fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
 

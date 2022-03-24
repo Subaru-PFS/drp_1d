@@ -168,14 +168,15 @@ void CInputContext::OrthogonalizeTemplates() {
   }
 }
 
-void CInputContext::setLineCatalog(const std::string &objectType,
-                                   std::shared_ptr<CLineCatalog> catalog) {
+void CInputContext::setLineCatalog(
+    const std::string &objectType,
+    const std::shared_ptr<CLineCatalog> &catalog) {
   m_lineCatalogs[objectType] = catalog;
 }
 
 void CInputContext::setLineRatioCatalogCatalog(
     const std::string &objectType,
-    std::shared_ptr<CLineCatalogsTplShape> catalog) {
+    const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
   m_lineRatioCatalogCatalogs[objectType] = catalog;
 }
 
@@ -194,7 +195,12 @@ void CInputContext::Init() {
   // set template continuum removal parameters
   m_TemplateCatalog->InitContinuumRemoval(m_ParameterStore);
 
-  m_igmcorrectionMeiksin->init(m_Spectrum->GetLSF(), m_lambdaRange);
+  // convolve IGM by LSF
+  if (!m_igmcorrectionMeiksin->isConvolved() ||
+      m_ParameterStore->Get<std::string>("LSF.LSFType") ==
+          "FROMSPECTRUMDATA")
+    m_igmcorrectionMeiksin->convolveByLSF(m_Spectrum->GetLSF(), m_lambdaRange);
+
   // Calzetti ISM & Meiksin IGM initialization, for only original templates,
   // only when lsf changes notably when LSFType is fromspectrumdata
   // or the first time InitIsmIgm is called
@@ -204,13 +210,6 @@ void CInputContext::Init() {
           ->CalzettiInitFailed()) {
     m_TemplateCatalog->InitIsmIgm(m_igmcorrectionMeiksin,
                                   m_ismcorrectionCalzetti);
-  } else {
-    if (m_ParameterStore->Get<std::string>("LSF.LSFType") ==
-        "FROMSPECTRUMDATA") // redo the convolution
-    {
-      m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)
-          ->m_igmCorrectionMeiksin->convolveAll(m_Spectrum->GetLSF());
-    }
   }
 
   RebinInputs();

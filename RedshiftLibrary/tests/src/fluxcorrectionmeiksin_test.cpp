@@ -47,7 +47,7 @@
 using namespace NSEpic;
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(Convolve_test)
+BOOST_AUTO_TEST_SUITE(fluxcorrectionmeiksin_test)
 TFloat64Range _lbdaRange = {200., 1299.};
 Float64 lbdaStep = 1;
 TFloat64List fluxcorr = { // 2.0_1
@@ -384,43 +384,6 @@ fakeFluxCorrectionMeiksin(TFloat64List igmLambdas, TFloat64List fluxcorr) {
   corrections.push_back(MeiksinCorrection(igmLambdas, {fluxcorr}));
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj(corrections);
   return fluxMeiksinObj;
-}
-
-BOOST_AUTO_TEST_CASE(Convolve_test) {
-  TFloat64List arr = {1, 4, 2, 5}, kernel = {3, 4, 1};
-  CSpectrumFluxCorrectionMeiksin spc = fakeFluxCorrectionMeiksin(arr, arr);
-  TFloat64List conv = spc.convolve(arr, kernel);
-  TFloat64List expectedRes = {8, 21, 25, 27};
-  BOOST_CHECK_EQUAL_COLLECTIONS(conv.begin(), conv.end(), expectedRes.begin(),
-                                expectedRes.end());
-}
-
-BOOST_AUTO_TEST_CASE(Convolve_test_empty) {
-  TFloat64List arr = {}, kernel = {3, 4, 1};
-  CSpectrumFluxCorrectionMeiksin spc = fakeFluxCorrectionMeiksin(arr, arr);
-  BOOST_CHECK_EXCEPTION(spc.convolve(arr, kernel), GlobalException,
-                        correctMessage);
-}
-
-BOOST_AUTO_TEST_CASE(Convolve_test_identity) {
-  TFloat64List arr = {1, 4, 2, 5}, kernel = {1};
-  CSpectrumFluxCorrectionMeiksin spc = fakeFluxCorrectionMeiksin(arr, arr);
-  TFloat64List conv = spc.convolve(arr, kernel);
-  BOOST_CHECK_EQUAL_COLLECTIONS(conv.begin(), conv.end(), conv.begin(),
-                                conv.end());
-}
-
-BOOST_AUTO_TEST_CASE(correction_Convolve_test) {
-  // create a gaussian kernel
-  Float64 sigma = 1.;
-  TFloat64List kernel = {0, 1, 0};
-  TFloat64List arr = {1, 4, 2, 5};
-  CSpectrumFluxCorrectionMeiksin spc = fakeFluxCorrectionMeiksin(arr, arr);
-  TFloat64List conv = spc.convolve(fluxcorr, kernel);
-
-  BOOST_CHECK_EQUAL(conv.size(), fluxcorr.size());
-  BOOST_CHECK_EQUAL_COLLECTIONS(fluxcorr.begin(), fluxcorr.end(), conv.begin(),
-                                conv.end());
 }
 
 BOOST_AUTO_TEST_CASE(correction_multiply_test) {

@@ -59,8 +59,7 @@ public:
                                   Float64 ebmv_start, Float64 ebmv_step,
                                   Float64 ebmv_n);
   CSpectrumFluxCorrectionCalzetti() = default;
-  bool Init(std::string calibrationPath, Float64 ebmv_start, Float64 ebmv_step,
-            Float64 ebmv_n);
+
   bool LoadFile(const char *filePath);
 
   Float64 GetLambdaMin() const;
@@ -78,7 +77,6 @@ public:
   Float64 m_EbmvCoeffStep;
   Float64 m_EbmvCoeffStart;
   TFloat64List m_dataDustCoeff;
-  bool calzettiInitFailed = false;
 
 private:
   Float64 m_LambdaMin;

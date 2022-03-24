@@ -221,16 +221,15 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 }
 
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
-                                  const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
+void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
+                                  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
 {
     for(auto it : GetList(0,0))
     {             
         const TTemplateRefList  & TplList = it.second;
         for (auto tpl : TplList)
             tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-        if(it.first != "star")//no igm for stars
-            for (auto tpl : TplList)
-                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+        for (auto tpl : TplList)
+            tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
     }
 }

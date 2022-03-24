@@ -59,7 +59,7 @@ using namespace boost;
 
 
 bool CLineCatalogsTplShape::Init(Int32 enableISMCalzetti, 
-                                std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+                                const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> &ismCorrectionCalzetti,
                                 Float64 nsigmasupport)
 {
     m_nsigmasupport = nsigmasupport;
