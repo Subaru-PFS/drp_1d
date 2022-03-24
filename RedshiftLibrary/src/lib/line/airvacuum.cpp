@@ -158,7 +158,11 @@ TFloat64List CAirVacuum::AirRefractiveIndex(const TFloat64List & waveVac) const
 
 void CAirVacEdlen1953::CheckWaveRange(const TFloat64List & wave) const
 {
-    if (*std::min_element(wave.begin(), wave.end()) < 2000.0)
+    auto it = std::min_element(wave.begin(), wave.end());
+    if(it== wave.end()) 
+        throw GlobalException(INTERNAL_ERROR, "CAirVacEdlen1966::CheckWaveRange: Empty vector");
+        
+    if (*it < 2000.0)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacEdlen1953::CheckWaveRange: some wavelengths are below 2000 Angstroem");
     }
@@ -166,7 +170,11 @@ void CAirVacEdlen1953::CheckWaveRange(const TFloat64List & wave) const
 
 void CAirVacEdlen1966::CheckWaveRange(const TFloat64List & wave) const
 {
-    if (*std::min_element(wave.begin(), wave.end()) < 2000.0)
+    auto it = std::min_element(wave.begin(), wave.end());
+    if(it== wave.end()) 
+        throw GlobalException(INTERNAL_ERROR, "CAirVacEdlen1966::CheckWaveRange: Empty vector");
+        
+    if (*it < 2000.0)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacEdlen1966::CheckWaveRange: some wavelengths are below 2000 Angstroem");
     }
@@ -174,7 +182,11 @@ void CAirVacEdlen1966::CheckWaveRange(const TFloat64List & wave) const
 
 void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List & wave) const
 {
-    if (*std::min_element(wave.begin(), wave.end()) < 2300.0)
+    auto it = std::min_element(wave.begin(), wave.end());
+    if(it== wave.end()) 
+        throw GlobalException(INTERNAL_ERROR, "CAirVacPeckReeder1972::CheckWaveRange: Empty vector");
+        
+    if (*it < 3000.0)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
     }
@@ -187,7 +199,11 @@ void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List & wave) const
 
 void CAirVacCiddor1996::CheckWaveRange(const TFloat64List & wave) const
 {
-    if (*std::min_element(wave.begin(), wave.end()) < 3000.0)
+    auto it = std::min_element(wave.begin(), wave.end());
+    if(it== wave.end()) 
+        throw GlobalException(INTERNAL_ERROR, "CAirVacMorton2000::CheckWaveRange: Empty vector");
+        
+    if (*it < 3000.0)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
@@ -200,7 +216,11 @@ void CAirVacCiddor1996::CheckWaveRange(const TFloat64List & wave) const
 
 void CAirVacMorton2000::CheckWaveRange(const TFloat64List & wave) const
 {
-    if (*std::min_element(wave.begin(), wave.end()) < 3000.0)
+    auto it = std::min_element(wave.begin(), wave.end());
+    if(it== wave.end()) 
+        throw GlobalException(INTERNAL_ERROR, "CAirVacMorton2000::CheckWaveRange: Empty vector");
+
+    if (*it < 3000.0)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
