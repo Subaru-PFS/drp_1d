@@ -90,7 +90,7 @@ public:
 class CAirVacEdlen1966: public CAirVacuum
 {
 public:
-    CAirVacEdlen1966(): CAirVacuum(8.34213E-5, 2.406030E-2, 1.5997E-4, 130.0, 38.9, "Edlen1953") {};
+    CAirVacEdlen1966(): CAirVacuum(8.34213E-5, 2.406030E-2, 1.5997E-4, 130.0, 38.9, "Edlen1966") {};
     void CheckWaveRange(const TFloat64List & wave) const override;
 
 };

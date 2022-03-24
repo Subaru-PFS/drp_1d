@@ -50,6 +50,8 @@ BOOST_AUTO_TEST_SUITE(CAirVacuum)
 
 Float64 precision = 1e-2;
 TFloat64List lambda = {6330., 16000.};
+TFloat64List bad_lambda_left = {1000., 2000.};
+TFloat64List bad_lambda_right = {20000., 21000.};
 
 BOOST_AUTO_TEST_CASE(Edlen1953)
 {
@@ -68,6 +70,20 @@ BOOST_AUTO_TEST_CASE(Edlen1953)
   TFloat64List lambdaVac = converter.AirToVac(lambdaAir);
   BOOST_CHECK_CLOSE(lambdaVac[0], lambda[0], precision);
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
+
+  //test Get
+  auto converter_2 = CAirVacuumConverter::Get("Edlen1953");
+  TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
+  BOOST_CHECK(n == n_2);
+
+  TFloat64List lambdaAir_2 = converter_2->VacToAir(lambda);
+  BOOST_CHECK(lambdaAir == lambdaAir_2);
+
+  TFloat64List lambdaVac_2 = converter_2->AirToVac(lambdaAir);
+  BOOST_CHECK(lambdaVac == lambdaVac_2);
+
+  //test Throw
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
 
 }
 
@@ -89,6 +105,20 @@ BOOST_AUTO_TEST_CASE(Edlen1966)
   BOOST_CHECK_CLOSE(lambdaVac[0], lambda[0], precision);
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
+  //test Get
+  auto converter_2 = CAirVacuumConverter::Get("Edlen1966");
+  TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
+  BOOST_CHECK(n == n_2);
+
+  TFloat64List lambdaAir_2 = converter_2->VacToAir(lambda);
+  BOOST_CHECK(lambdaAir == lambdaAir_2);
+
+  TFloat64List lambdaVac_2 = converter_2->AirToVac(lambdaAir);
+  BOOST_CHECK(lambdaVac == lambdaVac_2);
+
+  //test Throw
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+
 }
 
 BOOST_AUTO_TEST_CASE(PeckReeder1972)
@@ -108,6 +138,21 @@ BOOST_AUTO_TEST_CASE(PeckReeder1972)
   TFloat64List lambdaVac = converter.AirToVac(lambdaAir);
   BOOST_CHECK_CLOSE(lambdaVac[0], lambda[0], precision);
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
+
+  //test Get
+  auto converter_2 = CAirVacuumConverter::Get("PeckReeder1972");
+  TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
+  BOOST_CHECK(n == n_2);
+
+  TFloat64List lambdaAir_2 = converter_2->VacToAir(lambda);
+  BOOST_CHECK(lambdaAir == lambdaAir_2);
+
+  TFloat64List lambdaVac_2 = converter_2->AirToVac(lambdaAir);
+  BOOST_CHECK(lambdaVac == lambdaVac_2);
+
+  //test Throw
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
 
 }
 
@@ -129,6 +174,21 @@ BOOST_AUTO_TEST_CASE(Ciddor1996)
   BOOST_CHECK_CLOSE(lambdaVac[0], lambda[0], precision);
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
 
+  //test Get
+  auto converter_2 = CAirVacuumConverter::Get("Ciddor1996");
+  TFloat64List n_2 = converter_2->AirRefractiveIndex(lambda);
+  BOOST_CHECK(n == n_2);
+
+  TFloat64List lambdaAir_2 = converter_2->VacToAir(lambda);
+  BOOST_CHECK(lambdaAir == lambdaAir_2);
+
+  TFloat64List lambdaVac_2 = converter_2->AirToVac(lambdaAir);
+  BOOST_CHECK(lambdaVac == lambdaVac_2);
+
+  //test Throw
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
+
 }
 
 BOOST_AUTO_TEST_CASE(Morton2000)
@@ -148,6 +208,10 @@ BOOST_AUTO_TEST_CASE(Morton2000)
   TFloat64List lambdaVac = converter.AirToVac(lambdaAir);
   BOOST_CHECK_CLOSE(lambdaVac[0], lambda[0], precision);
   BOOST_CHECK_CLOSE(lambdaVac[1], lambda[1], precision);
+
+  //test Throw
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_left), GlobalException);
+  BOOST_CHECK_THROW(converter.VacToAir(bad_lambda_right), GlobalException);
 
 }
 //}
