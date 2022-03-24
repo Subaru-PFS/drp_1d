@@ -41,6 +41,12 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 
+namespace Statistics_zprior { //boost_test_suite
+    //all boost_auto_test_case that use private method
+    class NormalizePrior_test;
+    class GetStrongLinePresenceLogZPrior_test;
+    class GetNLinesSNRAboveCutLogZPrior_test;
+}
 namespace NSEpic
 {
 
@@ -64,6 +70,10 @@ public:
     TFloat64List CombineLogZPrior(const TFloat64List & logprior1, const TFloat64List & logprior2) const;
 
 private:
+    friend class Statistics_zprior::NormalizePrior_test;
+    friend class Statistics_zprior::GetStrongLinePresenceLogZPrior_test;
+    friend class Statistics_zprior::GetNLinesSNRAboveCutLogZPrior_test;
+
     void NormalizePrior(TFloat64List & logzPrior) const;
 
     const TFloat64List & m_redshifts;

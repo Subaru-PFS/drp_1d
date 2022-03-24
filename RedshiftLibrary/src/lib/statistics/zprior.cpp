@@ -96,9 +96,6 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(const TInt32List &  nlinesAb
         {
             logzPrior[kz] = logprobaPresent;
             //Log.LogDetail("ZPrior: Prior: nlinesAboveSNR[kz] >= nlinesThres for kz=%d", kz);
-        } else
-        {
-            logzPrior[kz] = logprobaAbsent;
         }
     }
 
