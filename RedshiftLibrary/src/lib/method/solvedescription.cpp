@@ -73,7 +73,7 @@ const std::string CSolveDescription::GetDescription(const std::string& method)
         desc.append("\tparam: linemodel.tplratio.priors.betaZ = <float value>\n");
         desc.append("\tparam: linemodel.tplratio.priors.catalog_dirpath = <path>\n");
 
-        desc.append("\tparam: linemodel.offsets_catalog = <relative path>\n");
+
         desc.append("\tparam: linemodel.enableLSF = {""false"",""true""}\n");
         desc.append("\tparam: linemodel.linewidthtype = {""instrumentdriven"", ""velocitydriven"",  ""combined"",  ""nispvsspsf201707"", ""fixed""}\n");
         desc.append("\tparam: linemodel.nsigmasupport = <float value>\n");

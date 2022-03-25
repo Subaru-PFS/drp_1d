@@ -54,10 +54,11 @@ namespace NSEpic
             CLineProfileASYMFIT(const Float64 nsigmasupport = 8.0, 
                                 TAsymParams params = {2., 2., 0.},
                                 const std::string centeringMethod = "mean");
-            Bool    isAsymFit() override;
-            Bool    isAsymFixed() override;
+            bool    isAsymFit() const override;
+            bool    isAsymFixed() const override;
             void    SetAsymParams(TAsymParams params) override;
             void resetAsymFitParams() override;
+
         private:
             CLineProfile* CloneImplementation() const override { return new CLineProfileASYMFIT(*this);}
     };

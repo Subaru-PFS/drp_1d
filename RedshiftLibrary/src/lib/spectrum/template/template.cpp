@@ -174,7 +174,7 @@ const std::string& CTemplate::GetCategory() const
 /**
  * Saves the template in the given filePath.
  */
-Bool CTemplate::Save( const char* filePath ) const
+bool CTemplate::Save( const char* filePath ) const
 {
     std::fstream file;
 
@@ -184,19 +184,18 @@ Bool CTemplate::Save( const char* filePath ) const
         return false;
     }
 
-    const CSpectrumSpectralAxis& spectralAxis = GetSpectralAxis();
-    CSpectrumSpectralAxis spectralAxisCopy(spectralAxis);
-    bool logScale = spectralAxisCopy.IsInLogScale();
+    CSpectrumSpectralAxis spectralAxis = GetSpectralAxis();
+    bool logScale = spectralAxis.IsInLogScale();
     //alway save in Linear Scale
     if(logScale)
     {
-        spectralAxisCopy.ConvertToLinearScale();
+        spectralAxis.ConvertToLinearScale();
     }
     const CSpectrumFluxAxis& fluxAxis = GetFluxAxis();
     for ( Int32 i=0; i<GetSampleCount(); i++)
     {
         file.precision(10);
-        file  <<  spectralAxisCopy[i] << "\t" ;
+        file  <<  as_const(spectralAxis)[i] << "\t" ;
 
         file.precision(10);
         file<< fluxAxis[i] << std::endl;
@@ -220,15 +219,17 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust)
     m_kDust = kDust;
 
     CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
+    const CSpectrumSpectralAxis & SpectralAxis = m_SpectralAxis;
+    const CSpectrumFluxAxis & NoIsmIgmFluxAxis = m_NoIsmIgmFluxAxis;
 
     for(Int32 k =m_IsmIgm_kstart; k < m_Ism_kend + 1; k++)
     {
         if(m_kDust > -1)
-            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->GetDustCoeff( kDust, m_SpectralAxis[k]); 
+            m_computedDustCoeff[k] = m_ismCorrectionCalzetti->GetDustCoeff( kDust, SpectralAxis[k]); 
         else
             m_computedDustCoeff[k] = 1.0; 
         
-        FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+        FluxAxis[k] = NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
     }
     return true;
 }
@@ -251,6 +252,8 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
         return false;
         
     CSpectrumFluxAxis & FluxAxis = GetFluxAxis_();
+    const auto & SpectralAxis = m_SpectralAxis;
+    const auto & NoIsmIgmFluxAxis = m_NoIsmIgmFluxAxis;
 
     for(Int32 k = m_IsmIgm_kstart; k <= m_Igm_kend; k++)
     {
@@ -258,7 +261,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
             Int32 kLbdaMeiksin = 0;
             if(m_SpectralAxis[k] >= m_igmCorrectionMeiksin->GetLambdaMin())
             {
-                kLbdaMeiksin = Int32(m_SpectralAxis[k] - m_igmCorrectionMeiksin->GetLambdaMin());
+                kLbdaMeiksin = Int32(SpectralAxis[k] - m_igmCorrectionMeiksin->GetLambdaMin());
             }else //if lambda lower than min meiksin value, use lower meiksin value
             {
                 kLbdaMeiksin = 0;
@@ -268,7 +271,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx)
         else 
             m_computedMeiksingCoeff[k] = 1.0;
         
-        FluxAxis[k] = m_NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
+        FluxAxis[k] = NoIsmIgmFluxAxis[k]*m_computedMeiksingCoeff[k]*m_computedDustCoeff[k];
     }
     return true;
 }
@@ -396,7 +399,7 @@ void  CTemplate::GetIsmIgmIdxList(Int32 opt_extinction,
                             Int32 opt_dustFitting,
                             TInt32List& MeiksinList, //return 
                             TInt32List& EbmvList, //return
-                            Bool keepigmism,
+                            bool keepigmism,
                             Float64 FitEbmvCoeff,
                             Int32 FitMeiksinIdx)const
 {

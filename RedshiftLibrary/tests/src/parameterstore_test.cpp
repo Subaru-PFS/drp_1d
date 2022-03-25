@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore1)
   store.Set( "string", "string");
   store.Set( "Float64", 12.3);
   store.Set( "Int64", Int64(12));
-  store.Set( "Bool", Bool(true));
+  store.Set( "bool", bool(true));
 
   boost::filesystem::path _path = boost::filesystem::unique_path("file_%%%%%%%%%%");
   BOOST_CHECK_NO_THROW(store.Save(_path.c_str()));
@@ -81,13 +81,13 @@ BOOST_AUTO_TEST_CASE(ParameterStore1)
 
   TFloat64List float64_list_ = store.GetList<Float64>("TFloat64List");
   TInt64List int64_list_ = store.GetList<Int64>("TInt64List");
-  TBoolList bool_list_ = store.GetList<Bool>("TBoolList");
+  TBoolList bool_list_ = store.GetList<bool>("TBoolList");
   TStringList string_list_ = store.GetList<std::string>("TStringList");
   TFloat64Range float64range_ = store.Get<TFloat64Range>("TFloat64Range");
   std::string string_ = store.Get<std::string>("string");
   Float64 float64_ = store.Get<Float64>("Float64");
   Int64 int64_ = store.Get<Int64>("Int64");
-  Bool bool_ = store.Get<Bool>("Bool");
+  bool bool_ = store.Get<bool>("bool");
 
   Float64 f, f_;
   BOOST_FOREACH(boost::tie(f, f_), boost::combine(float64_list, float64_list_)) {
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore1)
     BOOST_CHECK( i == i_ );
   }
 
-  Bool b, b_;
+  bool b, b_;
   BOOST_FOREACH(boost::tie(b, b_), boost::combine(bool_list, bool_list_)) {
     BOOST_TEST_MESSAGE("comparing " << b << " with " << b_);
     BOOST_CHECK( b == b_ );

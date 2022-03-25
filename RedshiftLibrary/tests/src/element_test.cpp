@@ -52,13 +52,13 @@ using namespace NSEpic;
 BOOST_AUTO_TEST_SUITE(test_element)
 
 BOOST_AUTO_TEST_CASE(Instance){
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-  CRay ray = CRay("O2",0.1, 1, profilesym, 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
+  CLineProfile_ptr profilesym = std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM());
+  CRay ray = CRay("O2",0.1, 1, std::move(profilesym), 2, 0.2, 0.3, 0.4 ,0.5 , 0.6, 0.7, "group", 0.8);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<UInt32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
@@ -99,13 +99,13 @@ BOOST_AUTO_TEST_CASE(Instance){
 }
 
 BOOST_AUTO_TEST_CASE(GetLineWidth){
-    std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-    CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
+    CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
+    CRay ray = CRay("Halpha",6564.61, 2, std::move(profilesym), 2,1.0, 0.5);
     std::vector<CRay> rs;
     rs.push_back(ray);
-    std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+    TFloat64List nominalAmplitudes = TFloat64List ();
     nominalAmplitudes.push_back(0.8);
-    std::vector<UInt32> catalogIndexes;
+    TInt32List catalogIndexes;
     catalogIndexes.push_back(1);
     catalogIndexes.push_back(0);
 
@@ -146,13 +146,13 @@ BOOST_AUTO_TEST_CASE(GetLineWidth){
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfile){
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-  CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2, 1.0, 0.5);
+  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
+  CRay ray = CRay("Halpha",6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<UInt32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
 
@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
 
   CLineModelElement element = CLineModelElement(rs,  "combined", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
 
-  std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(nsigmasupport)};
-  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
-  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFixedParams, "mean")};
-  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymFitParams, "mean")};
+  CLineProfile_ptr profilelor{std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(nsigmasupport))};
+  CLineProfile_ptr profileasym{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymParams, "none"))};
+  CLineProfile_ptr profileasymfit{std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(nsigmasupport, _asymFixedParams, "mean"))};
+  CLineProfile_ptr profileasymfixed{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymFitParams, "mean"))};
 
   BOOST_CHECK_CLOSE(0.237755, profilesym->GetLineProfile(6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.2581961, profilelor->GetLineProfile(6564.61, 6568., 2. ), 0.001);
@@ -180,14 +180,14 @@ BOOST_AUTO_TEST_CASE(GetLineProfile){
 
 BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
+  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
 
-  CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
+  CRay ray = CRay("Halpha",6564.61, 2,profilesym->Clone(), 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<UInt32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CLineModelElement element = CLineModelElement(rs,  "velocitydriven", 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);
@@ -198,9 +198,10 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
   TAsymParams _asymFixedParams = {2., 2., 0.};
   TAsymParams _asymFitParams = {2., 2., 0.};
 
-  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymParams, "none")};
-  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(nsigmasupport, _asymFixedParams, "mean")};
-  std::shared_ptr<CLineProfile> profileasymfixed{std::make_shared<CLineProfileASYM>(nsigmasupport, _asymFitParams, "mean")};
+  CLineProfile_ptr profileasym{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymParams, "none"))};
+  CLineProfile_ptr profileasymfit{std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(nsigmasupport, _asymFixedParams, "mean"))};
+  CLineProfile_ptr profileasymfixed{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(nsigmasupport, _asymFitParams, "mean"))};
+
 
   BOOST_CHECK_CLOSE(0.34153872866337925, profilesym->GetLineProfileDerivSigma(6564.61, 6568., 2. ), 0.001);
   BOOST_CHECK_CLOSE(0.24081246138668605, profileasym->GetLineProfileDerivSigma( 6564.61, 6565., 2. ), 0.001);
@@ -211,17 +212,18 @@ BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma){
 
 BOOST_AUTO_TEST_CASE(GetNSigmaSupport){
 
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>(8.0)};
-  std::shared_ptr<CLineProfile> profilelor{std::make_shared<CLineProfileLOR>(16.)};
-  std::shared_ptr<CLineProfile> profileasym{std::make_shared<CLineProfileASYM>(8.)};
-  std::shared_ptr<CLineProfile> profileasymfit{std::make_shared<CLineProfileASYMFIT>(40.)};
+  CLineProfile_ptr profilelor{std::unique_ptr<CLineProfileLOR>(new CLineProfileLOR(16.))};
+  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM(8.))};
+  CLineProfile_ptr profileasymfit{std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(40.))};
+  CLineProfile_ptr profileasym{std::unique_ptr<CLineProfileASYM>(new CLineProfileASYM(8.))};
+
 /*
   CRay ray = CRay("Halpha",6564.61, 2, profilesym, 2,1.0, 0.5);
   std::vector<CRay> rs;
   rs.push_back(ray);
-  std::vector<Float64> nominalAmplitudes = std::vector<Float64> ();
+  TFloat64List nominalAmplitudes = TFloat64List ();
   nominalAmplitudes.push_back(0.8);
-  std::vector<UInt32> catalogIndexes;
+  TInt32List catalogIndexes;
   catalogIndexes.push_back(1);
   catalogIndexes.push_back(0);
   CLineModelElement element = CLineModelElement(rs,  "nispsim2016", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes, 1.2,catalogIndexes);

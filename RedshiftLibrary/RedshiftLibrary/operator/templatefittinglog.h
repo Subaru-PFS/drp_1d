@@ -70,12 +70,12 @@ public:
 
     std::shared_ptr<COperatorResult> Compute( const std::shared_ptr<const CTemplate> & logSampledTpl,
                                               Float64 overlapThreshold,
-                                              std::vector<CMask> additional_spcMasks,
+                                              const std::vector<CMask> & additional_spcMasks,
                                               std::string opt_interp,
                                               Int32 opt_extinction=0,
-                                              Int32 opt_dustFitting=0,
-                                              CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList(),
-                                              Bool keepigmism = false,
+                                              Int32 opt_dustFitting=-1,
+                                              const CPriorHelper::TPriorZEList &logpriorze=CPriorHelper::TPriorZEList(),
+                                              bool keepigmism = false,
                                               Float64 FitEbmvCoeff=-1.,
                                               Int32 FitMeiksinIdx=-1) override;
 
@@ -96,38 +96,37 @@ private:
     TFloat64Range   m_ssLambdaRange;
 
     Float64 m_logstep;
-    UInt32 m_ssRatio;
+    Int32 m_ssRatio;
 
     //hardcoded config: FIT_RANGEZ
     bool verboseLogFitFitRangez = false;
     bool verboseExportFitRangez = false;
     bool verboseExportFitRangez_model = false;
-    UInt32 exportIGMIdx = 5;
-    UInt32 exportISMIdx = -1;
+    Int32 exportIGMIdx = 5;
+    Int32 exportISMIdx = -1;
 
     //hardcoded config: XTY_FFT
     bool verboseLogXtYFFT = false;
     bool verboseExportXtYFFT = false;
 
     Int32 FitAllz(std::shared_ptr<CTemplateFittingResult> result,
-                  TInt32List MeiksinList=TInt32List(1, 0),
-                  TInt32List EbmvList=TInt32List(1, 0),
-                  CMask spcMaskAdditional=CMask(),
-                  CPriorHelper::TPriorZEList logpriorze=CPriorHelper::TPriorZEList());
+                  const TInt32List &MeiksinList=TInt32List(1, 0),
+                  const TInt32List &EbmvList=TInt32List(1, 0),
+                  const CPriorHelper::TPriorZEList &logpriorze=CPriorHelper::TPriorZEList());
 
-    Int32 FitRangez(const TFloat64List & inv_err2,
-                    TInt32Range& range,
-                    std::shared_ptr<CTemplateFittingResult> result,
-                    TInt32List MeiksinList,
-                    TInt32List EbmvList,
+    Int32 FitRangez(const TFloat64List &inv_err2,
+                    const TInt32Range &range,
+                    const std::shared_ptr<CTemplateFittingResult> &result,
+                    const TInt32List &MeiksinList,
+                    const TInt32List &EbmvList,
                     const Float64& dtd);
 
     Int32 EstimateXtY(const TFloat64List& X, const TFloat64List& Y,
-                      UInt32 nshifts, TFloat64List& XtY, Int32 precomputedFFT=-1);
+                      Int32 nshifts, TFloat64List& XtY, Int32 precomputedFFT=-1);
     Int32 InitFFT(Int32 n);
-    Int32 EstimateXtYSlow(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts,
+    Int32 EstimateXtYSlow(const TFloat64List& X, const TFloat64List& Y, Int32 nShifts,
                           TFloat64List& XtY);
-    Int32 EstimateMtMFast(const TFloat64List& X, const TFloat64List& Y, UInt32 nShifts, TFloat64List& XtY);
+    Int32 EstimateMtMFast(const TFloat64List& X, const TFloat64List& Y, Int32 nShifts, TFloat64List& XtY);
 
     Int32 InterpolateResult(const TFloat64List& in, TFloat64List& inGrid,
                             const TFloat64List& tgtGrid, TFloat64List& out, Float64 defaultValue);
@@ -135,8 +134,8 @@ private:
     void freeFFTPlans();
     void freeFFTPrecomputedBuffers();
 
-    Bool m_enableISM = 1;
-    Bool m_enableIGM = 1; 
+    bool m_enableISM = true;
+    bool m_enableIGM = true; 
 
     //buffers for fft computation
     Int32 m_nPaddedSamples =0;

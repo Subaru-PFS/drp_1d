@@ -55,12 +55,12 @@
 using namespace NSEpic;
 using namespace std;
 
-CMethodTemplateFittingSolve::CMethodTemplateFittingSolve(TScopeStack &scope,string objectType):
-  CSolve("templatefittingsolve",scope,objectType)
+CTemplateFittingSolve::CTemplateFittingSolve(TScopeStack &scope,string objectType):
+  CObjectSolve("TemplateFittingSolve",scope,objectType)
 {
 }
 
-std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
+std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                                                    std::shared_ptr<COperatorResultStore> resultStore,
                                                                    TScopeStack &scope)
 {
@@ -71,7 +71,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
   
   m_redshiftSeparation = inputContext->GetParameterStore()->Get<Float64>( "extremaredshiftseparation");//todo: deci
 
-  Bool storeResult = false;
+  bool storeResult = false;
   Float64 overlapThreshold=inputContext->GetParameterStore()->GetScoped<Float64>( "overlapThreshold");
   std::string opt_spcComponent = inputContext->GetParameterStore()->GetScoped<std::string>( "spectrum.component");
   std::string opt_interp = inputContext->GetParameterStore()->GetScoped<std::string>( "interpolation");
@@ -90,7 +90,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
         photometry_weight = inputContext->GetParameterStore()->GetScoped<Float64>("photometry.weight");
   }
   if (fft_processing && use_photometry)
-    throw GlobalException(INTERNAL_ERROR, "CMethodTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
+    throw GlobalException(INTERNAL_ERROR, "CTemplateFittingSolve::compute: fftprocessing not implemented with photometry enabled");
 
   if(fft_processing)
     {
@@ -150,12 +150,12 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 	throw GlobalException(BAD_TEMPLATECATALOG,Formatter()<<"Template catalog for category "<< m_categoryList[0] <<" is empty");
       }
     
-    for( UInt32 i=0; i<m_categoryList.size(); i++ )
+    for( Int32 i=0; i<m_categoryList.size(); i++ )
     {
         std::string category = m_categoryList[i];
 
         Log.LogInfo( "   trying %s (%d templates)", category.c_str(), tplCatalog.GetTemplateCount( category ));
-        for( UInt32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
+        for( Int32 j=0; j<tplCatalog.GetTemplateCount( category ); j++ )
         {
             std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplate( category, j );
 
@@ -188,7 +188,6 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                         SaveExtremaResult( resultStore, scopeStr,
                                                candidateResult->m_ranked_candidates,
                                                tplCatalog,
-                                               m_categoryList,
                                                overlapThreshold,
                                                opt_interp);
 
@@ -199,7 +198,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
                         std::make_shared<CTemplateFittingSolveResult>(resultStore->GetCurrentScopeName(),
                                                                       extremaResult->m_ranked_candidates[0].second,
                                                                       m_opt_pdfcombination,
-                                                                      pdfz.m_postmargZResult->valEvidenceLog);
+                                                                      pdfz.m_postmargZResult->valMargEvidenceLog);
 
         return TemplateFittingSolveResult;
     }
@@ -208,7 +207,7 @@ std::shared_ptr<CSolveResult> CMethodTemplateFittingSolve::compute(std::shared_p
 }
 
 
-Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
+bool CTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultStore,
                                    const CSpectrum& spc,
                                    const std::shared_ptr<const CTemplate> & tpl,
                                    Float64 overlapThreshold,
@@ -316,7 +315,7 @@ Bool CMethodTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> re
     return true;
 }
 
-ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const
+ChisquareArray CTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<const COperatorResultStore> store, const std::string & scopeStr) const
 {
     ChisquareArray chisquarearray;
 
@@ -358,8 +357,8 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
 
         //check chi2 results status for this template
         {
-            Bool foundBadStatus = 0;
-            for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+            bool foundBadStatus = 0;
+            for ( Int32 kz=0; kz<meritResult->Redshifts.size(); kz++)
             {
                 if(meritResult->Status[kz]!=COperator::nStatus_OK)
                 {
@@ -383,7 +382,7 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
                 //correct chi2 for ampl. marg. if necessary: todo add switch, currently deactivated
                 chisquarearray.chisquares.emplace_back(meritResult->ChiSquareIntermediate.size(), DBL_MAX);
                 TFloat64List & logLikelihoodCorrected = chisquarearray.chisquares.back();
-                for ( UInt32 kz=0; kz<meritResult->Redshifts.size(); kz++)
+                for ( Int32 kz=0; kz<meritResult->Redshifts.size(); kz++)
                 {
                     logLikelihoodCorrected[kz] = meritResult->ChiSquareIntermediate[kz][kism][kigm];// + resultXXX->ScaleMargCorrectionTplshapes[][]?;
                 }
@@ -397,16 +396,15 @@ ChisquareArray CMethodTemplateFittingSolve::BuildChisquareArray(std::shared_ptr<
 
 
 std::shared_ptr<const ExtremaResult> 
-CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
+CTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
                                                const std::string & scopeStr,
                                                const TCandidateZbyRank & ranked_zCandidates,
                                                const CTemplateCatalog& tplCatalog,
-                                               const TStringList& tplCategoryList,
                                                Float64 overlapThreshold,
                                                std::string opt_interp)
 {
 
-    Log.LogDetail("CMethodTemplateFittingSolve::SaveExtremaResult: building chisquare array");
+    Log.LogDetail("CTemplateFittingSolve::SaveExtremaResult: building chisquare array");
     std::string scope = store->GetCurrentScopeName() + ".";
     scope.append(scopeStr.c_str());
 
@@ -414,7 +412,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 
     TOperatorResultMap results = store->GetPerTemplateResult(scope.c_str());
 
-    //Bool foundRedshiftAtLeastOnce = false;
+    //bool foundRedshiftAtLeastOnce = false;
 
     Int32 extremumCount = ranked_zCandidates.size();
     
@@ -426,12 +424,12 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
     {
         auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>( r.second );
         if(TplFitResult->ChiSquare.size() != redshifts.size()){
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult, templatefitting results (for tpl="<< r.first.c_str()<<") has wrong size");
         }
 
-        Bool foundBadStatus = false;
-        Bool foundBadRedshift = false;
-        for ( UInt32 kz=0; kz<TplFitResult->Redshifts.size(); kz++)
+        bool foundBadStatus = false;
+        bool foundBadRedshift = false;
+        for ( Int32 kz=0; kz<TplFitResult->Redshifts.size(); kz++)
         {
             if(TplFitResult->Status[kz]!=COperator::nStatus_OK)
             {
@@ -446,11 +444,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
         }
         if(foundBadStatus)
         {
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult: Found bad status result... for tpl="<< r.first.c_str());
         }
         if(foundBadRedshift)
         {
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CMethodTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CTemplateFittingSolve::SaveExtremaResult: redshift vector is not the same for tpl="<< r.first.c_str());
         }
 
     }
@@ -498,9 +496,9 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
             FitSNR = abs(TplFitResult->FitDtM[idx])/sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
         extremaResult->m_ranked_candidates[i].second.FittedTplSNR= FitSNR;
         //make sure tpl is non-rebinned
-        Bool currentSampling = tplCatalog.m_logsampling;
+        bool currentSampling = tplCatalog.m_logsampling;
         tplCatalog.m_logsampling=false;
-        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(tplCategoryList, tplName);
+        std::shared_ptr<const CTemplate> tpl = tplCatalog.GetTemplateByName(m_categoryList, tplName);
         std::shared_ptr<CModelSpectrumResult> spcmodelPtr = 
                             m_templateFittingOperator->ComputeSpectrumModel(tpl, 
                                                                             z,
@@ -511,7 +509,7 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
                                                                             overlapThreshold);
         
         if(spcmodelPtr==nullptr)
-            throw GlobalException(INTERNAL_ERROR,"CMethodTemplateFittingSolve::SaveExtremaResult: Couldnt compute spectrum model");
+            throw GlobalException(INTERNAL_ERROR,"CTemplateFittingSolve::SaveExtremaResult: Couldnt compute spectrum model");
         tplCatalog.m_logsampling = currentSampling;                                                
         extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
 
@@ -522,11 +520,11 @@ CMethodTemplateFittingSolve::SaveExtremaResult(std::shared_ptr<const COperatorRe
 }
 
 
-void CMethodTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
+void CTemplateFittingSolve::StoreExtremaResults( std::shared_ptr<COperatorResultStore> resultStore, 
                                                        std::shared_ptr<const ExtremaResult> & extremaResult) const
 {
   resultStore->StoreScopedGlobalResult("extrema_results",extremaResult);
-  Log.LogInfo("CMethodTemplateFittingSolve::StoreExtremaResults: Templatefitting, saving extrema results");
+  Log.LogInfo("CTemplateFittingSolve::StoreExtremaResults: Templatefitting, saving extrema results");
    
   return;
 }

@@ -41,7 +41,7 @@
 
 #include <RedshiftLibrary/common/datatypes.h>
 
-#include <RedshiftLibrary/method/solve.h>
+#include <RedshiftLibrary/method/objectSolve.h>
 #include <RedshiftLibrary/method/linemeassolveresult.h>
 #include <RedshiftLibrary/spectrum/template/template.h>
 #include <RedshiftLibrary/operator/linemodel.h>
@@ -58,13 +58,12 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-  class CLineMeasSolve : public CSolve
+  class CLineMeasSolve : public CObjectSolve
 {
 
 public:
 
-  CLineMeasSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
-  ~CLineMeasSolve();
+  CLineMeasSolve(TScopeStack &scope,std::string objectType);
 
   void solve();
   void Init();
@@ -75,8 +74,6 @@ public:
   void GetRedshiftSampling(std::shared_ptr<const CInputContext> inputContext, TFloat64Range& redshiftRange, Float64& redshiftStep); 
 protected:
   COperatorLineModel m_linemodel;
-
-  std::string m_calibrationPath;
 
   /*
   TRedshiftList m_redshiftRange;

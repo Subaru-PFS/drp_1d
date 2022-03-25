@@ -65,7 +65,8 @@ namespace NSEpic {
       BAD_COUNTMATCH,
       BAD_TEMPLATECATALOG,
       INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE
+      OVERLAPRATE_NOTACCEPTABLE,
+      DZ_NOT_COMPUTABLE
     } ErrorCode;
 
   class AmzException : public std::exception 
@@ -86,9 +87,9 @@ namespace NSEpic {
       return _msg.c_str();
     }
 
-    void getMessage(std::string &msg)
+    const std::string & getMessage()
     {
-      msg = _msg;
+      return _msg;
     }
 
     ErrorCode getErrorCode(){return code;}
@@ -145,9 +146,9 @@ namespace NSEpic {
       AmzException(e){}
 
     virtual ~ParameterException();
-    void getMessage(std::string &msg)
+    const std::string & getMessage()
     {
-      msg = _msg;
+      return _msg;
     }
   };
 

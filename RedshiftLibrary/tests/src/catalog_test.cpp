@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(LoadCatalog)
     //BOOST_CHECK(expected.size() == tplRef.size());
 
     // look up expected template names in catalog
-    for (UInt32 i=0; i<expected.size(); i++)
+    for (Int32 i=0; i<expected.size(); i++)
     {
         found = false;
-        for (UInt32 j=0; j<tplRef.size(); j++)
+        for (Int32 j=0; j<tplRef.size(); j++)
         {
             if (tplRef[j]->GetName() == expected[i])
             {

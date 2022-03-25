@@ -1,8 +1,7 @@
 ###############################################
 # Ignore files created by cmake
 ###############################################
-build/
-build-debug/
+build*/
 RedshiftLibrary/RedshiftLibrary/version.h
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.cpp
 RedshiftLibrary/RedshiftLibrary/redshift_wrap.h
@@ -52,6 +51,7 @@ pkgconfig
 
 # Temp files
 *~
+tmp/
 
 # Index files
 TAGS

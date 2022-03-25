@@ -78,9 +78,9 @@ public:
     return Has<T>(GetScopedName(name));
   }
 
-  Bool HasFFTProcessing(const std::string &objectType) const;  
-  Bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
-  Bool EnableTemplateOrthogonalization(const std::string &objectType) const;
+  bool HasFFTProcessing(const std::string &objectType) const;  
+  bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
+  bool EnableTemplateOrthogonalization(const std::string &objectType) const;
     
   template<typename T> T Get(const std::string& name) const
   {
@@ -124,7 +124,7 @@ public:
     void Set( const std::string& name, const std::string& v );
     void Set( const std::string& name, Float64 v );
     void Set( const std::string& name, Int64 v );
-    void Set( const std::string& name, Bool v );
+    void Set( const std::string& name, bool v );
 
     void Save( const std::string& path ) const;
     void FromString(const std::string& json);

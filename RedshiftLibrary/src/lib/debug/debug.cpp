@@ -85,7 +85,7 @@ void NSEpic::DebugLogError( String format, ... )
 /**
  * Traceback print.
  */
-void NSEpic::DebugLogCodeInformation( String file, UInt32 line, String func )
+void NSEpic::DebugLogCodeInformation( String file, Int32 line, String func )
 {
     Log.LogInfo( "%s()\n%s:%d", func, file, line );
 }

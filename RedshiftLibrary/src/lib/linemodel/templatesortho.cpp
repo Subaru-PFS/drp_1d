@@ -51,19 +51,18 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     m_LSF = lsf;
     m_enableOrtho = inputContext.GetParameterStore()->EnableTemplateOrthogonalization(category);
 
-    std::string widthType = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linewidthtype"); 
-    Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.nsigmasupport");
-    Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityemission");
-    Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>( category + ".linemodelsolve.linemodel.velocityabsorption");
-    std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rules");
-    std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.rigidity");
-    std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.linetypefilter");
-    std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".linemodelsolve.linemodel.lineforcefilter");
-    const std::string calibrationPath = inputContext.GetParameterStore()->Get<std::string>("calibrationDir");
+    std::string widthType = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.linewidthtype"); 
+    Float64 opt_nsigmasupport = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.nsigmasupport");
+    Float64 velocityEmission = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.velocityemission");
+    Float64 velocityAbsorption = inputContext.GetParameterStore()->Get<Float64>( category + ".LineModelSolve.linemodel.velocityabsorption");
+    std::string opt_rules = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.rules");
+    std::string opt_rigidity = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.rigidity");
+    std::string opt_linetypefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.linetypefilter");
+    std::string opt_lineforcefilter = inputContext.GetParameterStore()->Get<std::string>( category + ".LineModelSolve.linemodel.lineforcefilter");
     std::string rigidity = opt_rigidity.c_str();
     std::string rules = opt_rules.c_str();
     //temporary options override to be removed when full tpl ortho is implemented
-    Bool enableOverride = true;
+    bool enableOverride = true;
     if(enableOverride){
         rigidity = "rules";
         rules = "no";
@@ -82,33 +81,29 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
 
     //retrieve templateCatalog
     std::shared_ptr<CTemplateCatalog> tplCatalog = inputContext.GetTemplateCatalog();
-    Bool currentsampling = tplCatalog->m_logsampling; 
+    bool currentsampling = tplCatalog->m_logsampling; 
 
     // check if category never orthogonalized
-    Bool first_time_ortho = !tplCatalog->GetTemplateCount(category,true,false);
+    bool first_time_ortho = !tplCatalog->GetTemplateCount(category,true,false);
 
     //check if LSF has changed, if yes reorthog all
     bool differentLSF = false;
-    std::vector<Bool> samplingList {0,1};
-
-    if(!first_time_ortho)
+    Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
+    if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // true also if m_ortho_LSFWidth is NAN
     {
-        Float64 lambda = (inputContext.m_lambdaRange.GetBegin() + inputContext.m_lambdaRange.GetEnd())/2;
-        if(std::isnan(tplCatalog->m_ortho_LSFWidth)){ //first time orthogonalizing - do it for all
-            tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); 
-            differentLSF = true;
-        }else{ // not first time
-            if(tplCatalog->m_ortho_LSFWidth != m_LSF->GetWidth(lambda)) // ortho setting changed - do it for all
-            {   
-                differentLSF = true;
-                tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
-                tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
-                tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda);
-            }
-        }
+        differentLSF = true;
+        tplCatalog->m_ortho_LSFWidth = m_LSF->GetWidth(lambda); // thus initialize if m_ortho_LSFWidth is NAN
     }
+   
+    if(!first_time_ortho && differentLSF)
+    {            
+        tplCatalog->ClearTemplateList(category, 1, 0);//clear orthog templates - non-rebinned
+        tplCatalog->ClearTemplateList(category, 1, 1);//clear orthog templates - rebinned
+    }
+    
     // check if log-sampled templates have changed and need ortho 
-    Bool need_ortho_logsampling = true;
+    bool need_ortho_logsampling = true;
+    TBoolList samplingList {0,1};
     if (!first_time_ortho && !differentLSF)
     {    
         tplCatalog->m_logsampling = 1; tplCatalog->m_orthogonal = 0;//orig log
@@ -117,11 +112,11 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
             // check if logsampling has changed and thus need orthogonalization  
             // has it changed for all or some templates ? (if changed, the orthog template will be cleared)
             tplCatalog->m_orthogonal = 1;
-            UInt32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category); 
+            Int32 tpl_log_ortho_count = tplCatalog->GetTemplateCount(category); 
             if ( tpl_log_ortho_count> 0) //log-ortho list still there
             {
                 // check if ortho missing for some templates only
-                UInt32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
+                Int32 nonNullCount = tplCatalog->GetNonNullTemplateCount(category);
                 if (nonNullCount == tpl_log_ortho_count) need_ortho_logsampling = false; //no need to recompute ortho
             }
         }
@@ -132,28 +127,27 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
     }
     //check first if category has been orthogonalized at least a first time
 
-    Bool needOrthogonalization = first_time_ortho | need_ortho_logsampling | differentLSF;
+    bool needOrthogonalization = first_time_ortho | need_ortho_logsampling | differentLSF;
     if(!needOrthogonalization) {
         tplCatalog->m_logsampling = currentsampling;
         tplCatalog->m_orthogonal = 0; 
         return;
     }
 
-    for(Bool sampling:samplingList)
+    for(bool sampling:samplingList)
     {
         tplCatalog->m_logsampling = sampling;
         //orthogonalize all templates
         tplCatalog->m_orthogonal = 0;
         const TTemplateConstRefList TplList = std::const_pointer_cast<const CTemplateCatalog>(tplCatalog)->GetTemplateList(TStringList{category});
         tplCatalog->m_orthogonal = 1;
-        Bool partial = (sampling && tplCatalog->GetTemplateCount(category)) ? true :false; //need to replace only some of the ortho
+        bool partial = (sampling && tplCatalog->GetTemplateCount(category)) ? true :false; //need to replace only some of the ortho
         for (Int32 i=0; i< TplList.size(); i++)
         {
             const CTemplate tpl = *TplList[i];
             if (partial && tplCatalog->GetTemplate(category, i)) break; //ortho template  is already there  
             Log.LogDetail(Formatter()<<"    TplOrthogonalization: now processing tpl"<<tpl.GetName() );
             std::shared_ptr<CTemplate> _orthoTpl = OrthogonalizeTemplate(tpl,
-                                                                        calibrationPath,
                                                                         restRayList,
                                                                         opt_fittingmethod,
                                                                         widthType,
@@ -182,7 +176,6 @@ void CTemplatesOrthogonalization::Orthogonalize(CInputContext& inputContext,
  * @return
  */
 std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(const CTemplate& inputTemplate,
-                            const std::string opt_calibrationPath,
                             const CRayCatalog::TRayVector &restRayList,
                             const std::string &opt_fittingmethod,
                             const std::string &opt_lineWidthType,
@@ -216,7 +209,6 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
                                      lambdaRange,
                                      tplCatalogUnused,
                                      tplCategoryListUnused,
-                                     opt_calibrationPath,
                                      restRayList,
                                      opt_fittingmethod,
                                      opt_continuumcomponent,
@@ -230,7 +222,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
         Float64 redshift = 0.0;
         Float64 contreest_iterations = 0;
-        Bool enableLogging=true;
+        bool enableLogging=true;
         CLineModelSolution modelSolution;
         CContinuumModelSolution continuumModelSolution;
         model.fit( redshift,
@@ -244,8 +236,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
         spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
         //get mtm and dtm cumulative vector and store it
-        std::vector<Float64> lbda;
-        std::vector<Float64> mtmCumul;
+        TFloat64List lbda;
+        TFloat64List mtmCumul;
         model.getMTransposeMCumulative(lambdaRange, lbda, mtmCumul);
 
 
@@ -263,7 +255,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(co
 
         const CSpectrumFluxAxis& modelFluxAxis = modelSpc.GetFluxAxis();
         CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
-        for(UInt32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
+        for(Int32 i=0; i<continuumOrthoFluxAxis.GetSamplesCount(); i++){
             continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
         }
         tplOrtho->SetFluxAxis(std::move(continuumOrthoFluxAxis));

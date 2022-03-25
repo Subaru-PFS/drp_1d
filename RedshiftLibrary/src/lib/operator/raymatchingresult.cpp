@@ -72,7 +72,7 @@ CRayMatchingResult::~CRayMatchingResult()
  *      * lambda range not able to cover the strong lines
  * @return
  */
-Bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const
+bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumber ) const
 {
   Int32 thresMatchingNumber = 2; //minimum matching number for a solution
   TSolutionSetList selectedResults = GetSolutionsListOverNumber( thresMatchingNumber-1 );
@@ -81,7 +81,7 @@ Bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumb
     {
       int iStrongMax = -1;
       int nStrongMax = -1;
-      for( UInt32 iSol=0; iSol<selectedResults.size(); iSol++ )
+      for( Int32 iSol=0; iSol<selectedResults.size(); iSol++ )
 	{
 	  int currentNStrongRestLines = getNStrongRestLines( selectedResults[iSol] );
 	  if( currentNStrongRestLines>nStrongMax )
@@ -119,7 +119,7 @@ Bool CRayMatchingResult::GetBestRedshift( Float64& Redshift, Int32& MatchingNumb
  *
  * @return
  */
-Bool CRayMatchingResult::GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const
+bool CRayMatchingResult::GetBestMatchNumRedshift( Float64& Redshift, Int32& MatchingNumber ) const
 {
   MatchingNumber = GetMaxMatchingNumber();
   TSolutionSetList selectedResults = GetSolutionsListOverNumber( MatchingNumber-1 );
@@ -142,7 +142,7 @@ CRayMatchingResult::TSolutionSetList CRayMatchingResult::GetSolutionsListOverNum
 {
   //select results by matching number
   TSolutionSetList selectedResults;
-  for( UInt32 iSol=0; iSol<SolutionSetList.size(); iSol++ )
+  for( Int32 iSol=0; iSol<SolutionSetList.size(); iSol++ )
     {
       TSolutionSet currentSet = SolutionSetList[iSol];
       if( currentSet.size()>number )
@@ -160,7 +160,7 @@ TFloat64List CRayMatchingResult::GetAverageRedshiftListOverNumber( Int32 number 
 {
   TFloat64List selectedRedshift;
   CRayMatchingResult::TSolutionSetList selectedResults = GetSolutionsListOverNumber( number );
-  for( UInt32 j=0; j<selectedResults.size(); j++ )
+  for( Int32 j=0; j<selectedResults.size(); j++ )
     {
       Float64 z = GetMeanRedshiftSolution( selectedResults[j] );
       selectedRedshift.push_back( z );
@@ -175,7 +175,7 @@ TFloat64List CRayMatchingResult::GetRoundedRedshiftCandidatesOverNumber( Int32 n
 {
   TFloat64List selectedRedshift = GetAverageRedshiftListOverNumber( number );
   TFloat64List roundedRedshift;
-  for( UInt32 j=0; j<selectedRedshift.size(); j++ )
+  for( Int32 j=0; j<selectedRedshift.size(); j++ )
     {
       Float64 zround = Float64( int( selectedRedshift[j]/step+0.5f )*step );
       roundedRedshift.push_back( zround );
@@ -191,7 +191,7 @@ TFloat64List CRayMatchingResult::GetExtendedRedshiftCandidatesOverNumber( Int32 
   TFloat64List roundedRedshift = GetRoundedRedshiftCandidatesOverNumber( number, step );
   TFloat64List extendedRedshifts;
   Int32 halfk = rangeWidth/step/2.0;
-  for( UInt32 j=0; j<roundedRedshift.size(); j++ )
+  for( Int32 j=0; j<roundedRedshift.size(); j++ )
     {
       for( Int32 k=-halfk; k<halfk; k++ )
 	{
@@ -216,7 +216,7 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolutionByIndex( Int32 index ) const
 
   Float64 redshiftMean = 0.0;
   const TSolutionSet& currentSet = SolutionSetList[index];
-  for( UInt32 i=0; i<currentSet.size(); i++ )
+  for( Int32 i=0; i<currentSet.size(); i++ )
     {
       redshiftMean += currentSet[i].Redshift;
     }
@@ -231,7 +231,7 @@ Float64 CRayMatchingResult::GetMeanRedshiftSolution( const TSolutionSet& s ) con
 {
   TSolutionSet currentSet = s;
   Float64 redshiftMean=0.0;
-  for( UInt32 i=0; i<currentSet.size(); i++ )
+  for( Int32 i=0; i<currentSet.size(); i++ )
     {
       redshiftMean += currentSet[i].Redshift;
     }
@@ -251,10 +251,10 @@ Int32 CRayMatchingResult::getNStrongRestLines( const TSolutionSet& s ) const
   TSolutionSet currentSet = s;
   Int32 nStrong=0;
   Float64 tol = 0.11;
-  for( UInt32 i=0; i<currentSet.size(); i++ )
+  for( Int32 i=0; i<currentSet.size(); i++ )
     {
       Int32 found  = 0;
-      for( UInt32 c=0; c<ncatalog; c++ )
+      for( Int32 c=0; c<ncatalog; c++ )
 	{
 	  if( fabs( currentSet[i].RestRay.GetPosition()-strongRestRayList[c].GetPosition() )<tol )
 	    {
@@ -282,7 +282,7 @@ Int32 CRayMatchingResult::GetMaxMatchingNumber() const
     }
 
   Int32 maxNumber = 0;
-  for( UInt32 i=0; i<SolutionSetList.size(); i++ )
+  for( Int32 i=0; i<SolutionSetList.size(); i++ )
     {
       TSolutionSet currentSet = SolutionSetList[i];
       if( maxNumber<currentSet.size() )
@@ -308,7 +308,7 @@ void CRayMatchingResult::FilterWithRules( CSpectrum spc, TFloat64Range lambdaRan
   CRules rules( spc, m_DetectedCatalog, m_RestCatalog, lambdaRange, winsize );
   TSolutionSetList _solutionSetList;
   Log.LogDebug( "There are %d solutions to test.", SolutionSetList.size( ) );
-  for( UInt32 i=0; i<SolutionSetList.size() ; i++ )
+  for( Int32 i=0; i<SolutionSetList.size() ; i++ )
     {
       TSolutionSet currentSet = SolutionSetList[i];
       Float64 z = GetMeanRedshiftSolution( currentSet ); 

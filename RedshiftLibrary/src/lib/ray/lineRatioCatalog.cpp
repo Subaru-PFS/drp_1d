@@ -36,51 +36,41 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_CONTINUUM_MEDIAN_
-#define _REDSHIFT_CONTINUUM_MEDIAN_
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/ray/lineRatioCatalog.h"
 
-#include "RedshiftLibrary/continuum/continuum.h"
+using namespace NSEpic;
 
-namespace NSEpic {
 
-class CSpectrumFluxAxis;
-
-/**
- * \ingroup Redshift
- * Continuum estimated by enlarging spectrum with copies of itself, and applying
- *the median method to it.
- **/
-class CContinuumMedian : public CContinuum
+CLineRatioCatalog::CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog):
+  CRayCatalog(lineCatalog),
+  m_Name(name)
 {
+  for(CRay& line:m_List)
+    {
+      line.setNominalAmplitude(0.);
+    }
+  // TODO set all nominalAmplitudes to 0
+  
+}
 
-  public:
-    CContinuumMedian();
-    ~CContinuumMedian();
+void CLineRatioCatalog::addVelocity(const std::string& name, Float64 value)
+{
+  if(!m_Velocities.emplace(name,value).second)
+    throw GlobalException(INTERNAL_ERROR,Formatter()<< "Velocity for group " << name << " already exists");
+}
 
-    void SetMeanKernelWidth(Float32 width);
-    void SetMedianKernelWidth(Float32 width);
-    void SetMedianCycleCount(UInt32 count);
+void CLineRatioCatalog::setPrior(Float64 prior)
+{
+  m_Prior = prior;
+}
+void CLineRatioCatalog::setIsmIndex(Float64 ismIndex)
+{
+  m_IsmIndex = ismIndex;
+}
+    
+Float64 CLineRatioCatalog::getVelocity(const std::string& velGroup) const
+{
+  return m_Velocities.at(velGroup);
+}
 
-    Bool RemoveContinuum(const CSpectrum &s,
-                         CSpectrumFluxAxis &noContinuumFluxAxis);
-
-  private:
-    Int32 MedianSmooth(const Float64 *y, Int32 n_points, Int32 n_range,
-                       Float64 *y_out);
-
-    Int32 MeanSmooth(const Float64 *y, Int32 N, Int32 n, Float64 *y_out);
-
-    Int32 OddMirror(const Float64 *y_input, Int32 N, Int32 Nreflex,
-                    Float64 *y_out);
-    Int32 EvenMirror(const Float64 *y_input, Int32 N, Int32 Nreflex,
-                     Float64 *y_out);
-
-    Int32 m_MeanSmoothAmplitude;
-    Int32 m_MedianSmoothCycles;
-    Int32 m_MedianSmoothAmplitude;
-    Bool m_Even;
-};
-
-} // namespace NSEpic
-
-#endif

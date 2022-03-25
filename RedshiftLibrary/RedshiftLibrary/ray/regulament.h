@@ -54,21 +54,19 @@ class CLineModelElementList;
 class CRegulament
 {
   public:
-    CRegulament();
-    ~CRegulament();
 
     void Apply(CLineModelElementList &LineModelElementList);
     // void ApplyWithRedshift( std::vector<boost::shared_ptr<CLineModelElement>
     // > LinemodelElements, Float64 Redshift );
-    Bool CreateRulesFromJSONFiles(void);
+    bool CreateRulesFromJSONFiles(void);
     void EnableRulesAccordingToParameters(std::string Parameters);
-    std::vector<std::string> GetLogs();
+    const TStringList & GetLogs() const;
     void EnableLogs(bool enable);
 
   private:
     Float64 m_Redshift; 
     std::vector<std::unique_ptr<CRule>> m_RulesVector;
-    std::vector<std::string> m_RulesLog;
+    TStringList m_RulesLog;
     bool m_LogsEnabled = false;
 };
 } // namespace NSEpic

@@ -45,8 +45,9 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/common/formatter.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
@@ -120,7 +121,7 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
                     result.overlapRate,
                     overlapThreshold);
     
-    bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>0) ? true : false);
+    bool apply_ism = ( (opt_dustFitting==-10 || opt_dustFitting>-1) ? true : false);
     
     bool kStartEnd_ok = currentRange.getClosedIntervalIndices(m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart, m_kEnd);
     if (!kStartEnd_ok)
@@ -129,18 +130,15 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"COperatorTemplateFitting::BasicFit:: kStart="<<m_kStart<<", kEnd="<<m_kEnd);
 
     if (apply_ism || opt_extinction){          
-        InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin);
+        InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti, tpl->m_igmCorrectionMeiksin, EbmvListSize);
     }
     
     Int32 iEbmvCoeffMin = EbmvList[0];
     Int32 iEbmvCoeffMax = EbmvList[EbmvListSize-1];
 
-    m_option_igmFastProcessing = (MeiksinList.size()==1 ? false : true);
+    m_option_igmFastProcessing = (MeiksinList.size()>1 ? true : false);
 
     m_forcedAmplitude = forcedAmplitude;
-    m_sumCross_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
-    m_sumT_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
-    m_sumS_outsideIGM = TFloat64List(EbmvList.size(), 0.0);
 
     bool apply_priore = !logpriore.empty() && !tpl->CalzettiInitFailed() 
                         && (logpriore.size()==tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
@@ -148,7 +146,7 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
     CPriorHelper::SPriorTZE logpriorTZEempty = {};
 
     //Loop on the meiksin Idx
-    Bool igmLoopUseless_WavelengthRange = false;
+    bool igmLoopUseless_WavelengthRange = false;
     for(Int32 kM=0; kM<MeiksinListSize; kM++)
     {
         if(igmLoopUseless_WavelengthRange)
@@ -236,9 +234,15 @@ COperatorTemplateFitting::BasicFit(const std::shared_ptr<const CTemplate>& tpl,
 void COperatorTemplateFitting::InitIsmIgmConfig(
         Float64 redshift,
         const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti,
-        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin)
+        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin,
+        Int32 EbmvListSize)
 {
     m_templateRebined_bf.InitIsmIgmConfig(m_kStart, m_kEnd, redshift, ismCorrectionCalzetti, igmCorrectionMeiksin);
+    
+    m_sumCross_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+    m_sumT_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+    m_sumS_outsideIGM = TFloat64List(EbmvListSize, 0.0);
+
 }
 
 TFittingResult 
@@ -422,12 +426,12 @@ COperatorTemplateFitting::ComputeAmplitudeAndChi2( TFittingResult & fitResult,
  **/
 std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::shared_ptr<const CTemplate> & tpl,
                                                               Float64 overlapThreshold,
-                                                              std::vector<CMask> additional_spcMasks,
+                                                              const std::vector<CMask> &additional_spcMasks,
                                                               std::string opt_interp,
                                                               Int32 opt_extinction,
                                                               Int32 opt_dustFitting,
-                                                              CPriorHelper::TPriorZEList logpriorze,
-                                                              Bool keepigmism,
+                                                              const CPriorHelper::TPriorZEList &logpriorze,
+                                                              bool keepigmism,
                                                               Float64 FitEbmvCoeff,
                                                               Int32 FitMeiksinIdx)
 {
@@ -477,43 +481,26 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
     result->Init(sortedRedshifts.size());
     result->Redshifts = sortedRedshifts;
 
-    CMask additional_spcMask(m_spectrum.GetSampleCount());
-    CMask default_spcMask(m_spectrum.GetSampleCount());
     //default mask
-    for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
-    {
-        default_spcMask[km] = 1.0;
-    }
-    bool useDefaultMask = 0;
-    if(additional_spcMasks.size()!=sortedRedshifts.size())
-    {
-        useDefaultMask=true;
-    }
+    bool useDefaultMask = additional_spcMasks.size()!=sortedRedshifts.size() ? true : false;
+    CMask default_spcMask(m_spectrum.GetSampleCount());
+    if (useDefaultMask)
+        for(Int32 km=0; km<default_spcMask.GetMasksCount(); km++)
+            default_spcMask[km] = 1.0;
+
     if(additional_spcMasks.size()!=sortedRedshifts.size() && additional_spcMasks.size()!=0)
-    {
-        Log.LogError("  Operator-TemplateFitting: using default mask, masks-list size (%d) didn't match the input redshift-list (%d) !)", additional_spcMasks.size(), sortedRedshifts.size());
-    }
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: masks-list size ("<<additional_spcMasks.size()<<") didn't match the input redshift-list ("<<sortedRedshifts.size()<<") !)");
+    
     if(logpriorze.size()>0 && logpriorze.size()!=sortedRedshifts.size())
-    {
-      throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< sortedRedshifts.size());
-    }
+        throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFitting: prior list size("<<logpriorze.size()<<") didn't match the input redshift-list size :"<< sortedRedshifts.size());
+
     for (Int32 i=0;i<sortedRedshifts.size();i++)
     {
-        //default mask
-        if(useDefaultMask)
-        {
-            additional_spcMask = default_spcMask;
-        }else{
-            //masks from the input masks list
-            additional_spcMask = additional_spcMasks[sortedIndexes[i]];
-        }
-        CPriorHelper::TPriorEList logp;
-        if(logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size())
-        {
-            logp = logpriorze[i];
-        }
+        const CPriorHelper::TPriorEList &logp = logpriorze.size()>0 && logpriorze.size()==sortedRedshifts.size() ? logpriorze[i] : CPriorHelper::TPriorEList();
 
         Float64 redshift = result->Redshifts[i];
+
+        const CMask &additional_spcMask = useDefaultMask ? default_spcMask : additional_spcMasks[sortedIndexes[i]];
 
         TFittingIsmIgmResult result_z = BasicFit(   tpl,
                                                     redshift,
@@ -573,7 +560,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
         }
     }if(oneValidStatusFoundIndex==-1)
     {
-        Log.LogWarning("  Operator-TemplateFitting: STATUS WARNING for %s: Not even one single valid fit/merit value found", tpl->GetName().c_str());
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter() << "  COperatorTemplateFitting::"<<__func__<<": STATUS WARNING for "<<tpl->GetName().c_str()<<": Not even one single valid fit/merit value found");
     }
 
 
@@ -589,7 +576,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(const std::sh
         }
     }if(loopErrorStatusFoundIndex!=-1)
     {
-        Log.LogWarning("    Operator-TemplateFitting: Loop Error - chisquare values not set even once");
+        Flag.warning(Flag.INVALID_MERIT_VALUES, Formatter() <<"    COperatorTemplateFitting::"<<__func__<<": Loop Error - chisquare values not set even once");
     }
 
     //estimate CstLog for PDF estimation

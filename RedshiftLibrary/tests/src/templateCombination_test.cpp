@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(TemplateCombination)
 BOOST_AUTO_TEST_CASE(inverseMatrix)
 {
 /*
-    UInt32 dim = 3;
+    Int32 dim = 3;
     cov = gsl_matrix_alloc (dim, dim);
     TFloatList _cov(1.0, 0.6, 0.0,
                     0.0, 1.5, 1.0,

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   CSpectrumFluxAxis object_FluxAxis;
   BOOST_CHECK(object_FluxAxis.GetSamplesCount() == 0);
 
-  UInt32 n = 10;
+  Int32 n = 10;
   CSpectrumFluxAxis object_FluxAxis2(n);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == n);
 
@@ -125,8 +125,7 @@ BOOST_AUTO_TEST_CASE(calcul)
 
 
   // cas 3
-
-  CSpectrumSpectralAxis sourceSpectralAxis3(n, 1);
+  CSpectrumSpectralAxis sourceSpectralAxis3(lbdaList, 1);
 
   CSpectrum object_CSpectrum3(sourceSpectralAxis3, sourceFluxAxis);
   CSpectrum rebinnedSpectrum3;
@@ -310,12 +309,12 @@ BOOST_AUTO_TEST_CASE(calcul)
   //--------------------//
   // test Subtract
 
-  Bool resultSubtract = object_FluxAxisA.Subtract(object_FluxAxisB);
+  bool resultSubtract = object_FluxAxisA.Subtract(object_FluxAxisB);
 
   int indice = 0;
   bool sub;
 
-  for (UInt32 i = 0; i < 10; i++)
+  for (Int32 i = 0; i < 10; i++)
     {
       object_FluxAxisA.GetSamples()[i] = object_FluxAxisA.GetSamples()[i] - object_FluxAxisB.GetSamples()[i];
       indice++;
@@ -332,12 +331,12 @@ BOOST_AUTO_TEST_CASE(calcul)
   //--------------------//
   // test Invert
 
-  Bool resultInvert = object_FluxAxisA.Invert();
+  bool resultInvert = object_FluxAxisA.Invert();
 
   int indice2 = 0;
   bool inv;
 
-  for (UInt32 i = 0; i < 10; i++)
+  for (Int32 i = 0; i < 10; i++)
     {
       object_FluxAxisA.GetSamples()[i] = -object_FluxAxisA.GetSamples()[i];
 
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   const CSpectrumNoiseAxis empty_error;
 
   object_FluxAxisA.GetError() = error;
-  Bool resultComputeMeanAndSDev_cas1 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
+  bool resultComputeMeanAndSDev_cas1 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas1 == false);
 
   for (int i=0;i<10;i++) {
@@ -377,7 +376,7 @@ BOOST_AUTO_TEST_CASE(calcul)
   }
 
   object_FluxAxisA.GetError() = empty_error;
-  Bool resultComputeMeanAndSDev_cas2 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
+  bool resultComputeMeanAndSDev_cas2 =  object_FluxAxisA.ComputeMeanAndSDev(Mask, mean, sdev);
   BOOST_CHECK(resultComputeMeanAndSDev_cas2 == false);
 }
 

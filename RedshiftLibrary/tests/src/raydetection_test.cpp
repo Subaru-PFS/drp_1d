@@ -44,6 +44,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
+#include "RedshiftLibrary/common/exception.h"
 
 #include <limits>
 #include <iostream>
@@ -54,61 +55,20 @@ using namespace NSEpic;
 
 BOOST_AUTO_TEST_SUITE(test_raydetection)
 
-
-//http://bloglitb.blogspot.fr/2010/07/access-to-private-members-thats-easy.html
-// allow to acces to private method
-template<typename Tag>
-struct result {
-  /* export it ... */
-  typedef typename Tag::type type;
-  static type ptr;
-};
-
-template<typename Tag>
-typename result<Tag>::type result<Tag>::ptr;
-
-template<typename Tag, typename Tag::type p>
-struct rob : result<Tag> {
-  /* fill it ... */
-  struct filler {
-    filler() {
-      result<Tag>::ptr = p; }
-  };
-  static filler filler_obj;
-};
-
-template<typename Tag, typename Tag::type p>
-typename rob<Tag, p>::filler rob<Tag, p>::filler_obj;
-
-
-struct CLineDetectionXMadFind { typedef Float64(CLineDetection::*type)(const Float64* x, Int32 n, Float64 median ); };
-template class rob<CLineDetectionXMadFind, &CLineDetection::XMadFind>;
-
-
-struct CLineDetectionRemoveStrongFromSpectra { typedef bool(CLineDetection::*type)(const CSpectrum& spectrum, CLineDetectionResult& result,  CRayCatalog::TRayVector strongLines, TInt32RangeList selectedretestPeaks, CLineDetection::TGaussParamsList selectedgaussparams, Float64 winsize, Float64 cut); };
-template class rob<CLineDetectionRemoveStrongFromSpectra, &CLineDetection::RemoveStrongFromSpectra>;
-
-
-struct CLineDetectionRetest { typedef bool(CLineDetection::*type)( const CSpectrum& spectrum, CLineDetectionResult& result, TInt32RangeList retestPeaks,  CLineDetection::TGaussParamsList retestGaussParams, CRayCatalog::TRayVector strongLines, Int32 winsize, Float64 cut); };
-template class rob<CLineDetectionRetest, &CLineDetection::Retest>;
-
-struct CLineDetectionLimitGaussianFitStartAndStop { typedef TInt32Range(CLineDetection::*type)(Int32 i, const TInt32RangeList& peaksBorders, Int32 len, const CSpectrumSpectralAxis spectralAxis ); };
-template class rob<CLineDetectionLimitGaussianFitStartAndStop, &CLineDetection::LimitGaussianFitStartAndStop>;
-
 BOOST_AUTO_TEST_CASE(XMadFind){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
 
-  Float64* x = (Float64*) calloc( 5, sizeof( Float64 ) );
+  TFloat64List x(10);
   x[0] = 5.;
   x[1] = 2.5;
   x[2] = 1.5;
   x[3] = 4.5;
   x[4] = 3.;
 
-  Float64 returnValue = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x, 5 , 3.);
+  Float64 returnValue = lineDetection.XMadFind(x.data(), 5 , 3.);
   BOOST_CHECK_CLOSE( returnValue, 1.5, 1e-12);
 
-  x = (Float64*) calloc( 10, sizeof( Float64 ) );
+  x.resize(10);
   x[0] = 1.;
   x[1] = 1.;
   x[2] = 2.;
@@ -118,27 +78,26 @@ BOOST_AUTO_TEST_CASE(XMadFind){
   x[6] = 2.;
   x[7] = 1.;
   x[8] = 1.;
-  x[9] = 1.;
-
+  x[9] = 1.;  
+  
   CMedian<Float64> medianProcessor;
-  Float64 med = medianProcessor.Find( x, 10 );
+  Float64 med = medianProcessor.Find( x );
   BOOST_CHECK_CLOSE( med, 1.5, 1e-12);
 
-  Float64 xmed = (lineDetection.*result<CLineDetectionXMadFind>::ptr)(x, 5 , med);
+  Float64 xmed = lineDetection.XMadFind(x.data(), 5 , med);
   BOOST_CHECK_CLOSE( xmed, 0.5, 1e-12);
-  free(x);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeFluxes){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   CSpectrum spc = CSpectrum();
-  CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(10, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  CSpectrumSpectralAxis spectralAxis(10, false );
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<spectralAxis.GetSamplesCount(); k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
 
-  CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(10);
+  CSpectrumFluxAxis modelfluxAxis(10);
   Float64* modelSamples = modelfluxAxis.GetSamples();
   modelSamples[0] = 1.;
   modelSamples[1] = 1.;
@@ -153,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
 
   spc.SetSpectralAndFluxAxes(std::move(spectralAxis), modelfluxAxis);
   Float64 winsize = 10000.;
-  TInt32Range range = TInt32Range(0,10);
+  TInt32Range range = TInt32Range(0,9);
   TFloat64List mask = TFloat64List();
 
   Float64 maxFluxnoContinuum = 5.;
@@ -201,7 +160,7 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   BOOST_CHECK_CLOSE( noise, 0.5, 1e-12);
   BOOST_CHECK_CLOSE( maxFluxnoContinuum, 1.5, 1e-12);
 
-  range = TInt32Range(0,10);
+  range = TInt32Range(0,9);
   CSpectrumNoiseAxis& error = modelfluxAxis.GetError();
   error[0] = 0.5;
   error[1] = 0.3;
@@ -219,15 +178,21 @@ BOOST_AUTO_TEST_CASE(ComputeFluxes){
   BOOST_CHECK_CLOSE( ratioAmp, 3.4/0.66, 1e-12);
   BOOST_CHECK_CLOSE( noise, 0.6, 1e-12);
   BOOST_CHECK_CLOSE( maxFluxnoContinuum, 3.4, 1e-12);
+
+  range = TInt32Range(0,10);
+  BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask, &maxFluxnoContinuum, &noise), GlobalException);
+
+  range = TInt32Range(-2,9);
+  BOOST_CHECK_THROW(lineDetection.ComputeFluxes(spc, winsize, range, mask, &maxFluxnoContinuum, &noise), GlobalException);
 }
 
 BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
@@ -240,8 +205,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   for(Int32 k=mu1-10; k<=mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1));
   }
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-  CRay ray1 = CRay("Ray1",mu1, 2, profilesym, 2, A1, sigma1, 5.6);
+  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
+  CRay ray1 = CRay("Ray1",mu1, 2, profilesym->Clone(), 2, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -249,7 +214,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   for(Int32 k=mu2-10; k<=mu2+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1));
   }
-  CRay ray2 = CRay("Ray2",mu2, 2, profilesym, 2, A2, sigma2, 5.8);
+  CRay ray2 = CRay("Ray2",mu2, 2, profilesym->Clone(), 2, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 
@@ -268,7 +233,7 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   Float64 winsize = 100.;
   Float64 cut = -3.;
 
-  (lineDetection.*result<CLineDetectionRemoveStrongFromSpectra>::ptr)(spc, lineDetectionResult, strongLines, selectedretestPeaks, selectedgaussparams, winsize, cut);
+  lineDetection.RemoveStrongFromSpectra(spc, lineDetectionResult, strongLines, selectedretestPeaks, selectedgaussparams, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult.RayCatalog.GetList().size(), 2);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetCut(), 1.7505788080267244, 1e-12);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetCut(), 2, 1e-12);
@@ -278,8 +243,8 @@ BOOST_AUTO_TEST_CASE(RemoveStrongFromSpectra){
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetPosition(), 7.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetWidth(), 1.0, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetIsStrong() == false);
 }
@@ -288,9 +253,9 @@ BOOST_AUTO_TEST_CASE(Retest){
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,0.9, true);
   Int32 n = 200;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
@@ -302,8 +267,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=mu1-10; k<=mu1+10; k++){
     modelfluxAxis[k]+=A1/(sigma1 *2.506597694086548) *exp(-(k-mu1)*(k-mu1)/(2*sigma1*sigma1));
   }
-  std::shared_ptr<CLineProfile> profilesym{std::make_shared<CLineProfileSYM>()};
-  CRay ray1 = CRay("Ray1",mu1, 2, profilesym, 2, A1, sigma1, 5.6);
+  CLineProfile_ptr profilesym{std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()) };
+  CRay ray1 = CRay("Ray1",mu1, 2, profilesym->Clone(), 2, A1, sigma1, 5.6);
 
   Float64 sigma2 = 0.5;
   Float64 mu2 = 70.;
@@ -311,7 +276,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   for(Int32 k=mu2-10; k<=mu2+10; k++){
     modelfluxAxis[k]+=A2/(sigma2 *2.506597694086548) *exp(-(k-mu2)*(k-mu2)/(2*sigma2*sigma2));
   }
-  CRay ray2 = CRay("Ray2",mu2, 2, profilesym, 2, A2, sigma2, 5.8);
+  CRay ray2 = CRay("Ray2",mu2, 2, profilesym->Clone(), 2, A2, sigma2, 5.8);
 
   CSpectrum spc = CSpectrum(std::move(spectralAxis),std::move(modelfluxAxis));
 
@@ -331,7 +296,7 @@ BOOST_AUTO_TEST_CASE(Retest){
   Float64 winsize = 100.;
   Float64 cut = -3.;
 
-  (lineDetection.*result<CLineDetectionRetest>::ptr)(spc, lineDetectionResult, retestPeaks, selectedgaussparams, strongLines, winsize, cut);
+  lineDetection.Retest(spc, lineDetectionResult, retestPeaks, selectedgaussparams, strongLines, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult.RayCatalog.GetList().size() , 2);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetCut(), 1.7505788080267244, 1e-12);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetCut(), 1.6729987967017514, 1e-12);
@@ -341,8 +306,8 @@ BOOST_AUTO_TEST_CASE(Retest){
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetPosition(), 7.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[1].GetWidth(), 1.0, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[1].GetIsStrong() == false);
 
@@ -362,13 +327,13 @@ BOOST_AUTO_TEST_CASE(Retest){
   spc.SetFluxAxis(std::move(modelfluxAxis));
 
   CLineDetectionResult lineDetectionResult2;
-  (lineDetection.*result<CLineDetectionRetest>::ptr)(spc, lineDetectionResult2, retestPeaks2, selectedgaussparams, strongLines, winsize, cut);
+  lineDetection.Retest(spc, lineDetectionResult2, retestPeaks2, selectedgaussparams, strongLines, winsize, cut);
   BOOST_CHECK_EQUAL(lineDetectionResult2.RayCatalog.GetList().size(), 1);
   BOOST_CHECK_CLOSE(lineDetectionResult2.RayCatalog.GetList()[0].GetCut(), 1.7505788080267244, 1e-12);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetAmplitude(), 0.3, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetPosition(), 2.0, 1e-6);
   BOOST_CHECK_CLOSE(lineDetectionResult.RayCatalog.GetList()[0].GetWidth(), 0.2, 1e-6);
-  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(lineDetectionResult.RayCatalog.GetList()[0].GetIsStrong() == false);
 }
 
@@ -388,23 +353,23 @@ BOOST_AUTO_TEST_CASE(LimitGaussianFitStartAndStop){
   peak.push_back(TInt32Range(190,230));
 
   CLineDetection lineDetection = CLineDetection( CRay::nType_Emission,0.5,0.6,0.7,0.8,40, true);
-  TInt32Range range = (lineDetection.*result<CLineDetectionLimitGaussianFitStartAndStop>::ptr)( 0,  peak, n, spectralAxis);
+  TInt32Range range = lineDetection.LimitGaussianFitStartAndStop( 0,  peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 0);
   BOOST_CHECK_EQUAL(range.GetEnd(), 30);
 
-  range = (lineDetection.*result<CLineDetectionLimitGaussianFitStartAndStop>::ptr)( 1,  peak, n, spectralAxis);
+  range = lineDetection.LimitGaussianFitStartAndStop( 1,  peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 35);
   BOOST_CHECK_EQUAL(range.GetEnd(), 70);
 
-  range = (lineDetection.*result<CLineDetectionLimitGaussianFitStartAndStop>::ptr)( 2,  peak, n, spectralAxis);
+  range = lineDetection.LimitGaussianFitStartAndStop( 2,  peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 80);
   BOOST_CHECK_EQUAL(range.GetEnd(), 120);
 
-  range = (lineDetection.*result<CLineDetectionLimitGaussianFitStartAndStop>::ptr)( 3,  peak, n, spectralAxis);
+  range = lineDetection.LimitGaussianFitStartAndStop( 3,  peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 160);
   BOOST_CHECK_EQUAL(range.GetEnd(), 190);
 
-  range = (lineDetection.*result<CLineDetectionLimitGaussianFitStartAndStop>::ptr)( 4,  peak, n, spectralAxis);
+  range = lineDetection.LimitGaussianFitStartAndStop( 4,  peak, n, spectralAxis);
   BOOST_CHECK_EQUAL(range.GetBegin(), 200);
   BOOST_CHECK_EQUAL(range.GetEnd(), 230);
 }
@@ -420,9 +385,9 @@ BOOST_AUTO_TEST_CASE(Compute){
 
   Int32 n = 2000;
   CSpectrumSpectralAxis spectralAxis = CSpectrumSpectralAxis(n, false );
-  Float64* fluxAxis = spectralAxis.GetSamples();
+  Float64* spcAxis = spectralAxis.GetSamples();
   for(Int32 k=0; k<n; k++){
-    fluxAxis[k]=k;
+    spcAxis[k]=k;
   }
   CSpectrumFluxAxis modelfluxAxis = CSpectrumFluxAxis(n);
   for(Int32 k=0; k<n; k++){
@@ -482,7 +447,7 @@ BOOST_AUTO_TEST_CASE(Compute){
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetAmplitude(), 1.5, 1e-6);
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetPosition(), 40.0, 1e-6);
   BOOST_CHECK_CLOSE(res->RayCatalog.GetList()[0].GetWidth(), 4.0, 1e-6);
-  BOOST_CHECK(res->RayCatalog.GetList()[0].GetProfile()->GetName() == profilesym->GetName());
+  BOOST_CHECK(res->RayCatalog.GetList()[0].GetProfile().GetName() == profilesym->GetName());
   BOOST_CHECK(res->RayCatalog.GetList()[0].GetIsStrong() == true);
   BOOST_CHECK(res->RayCatalog.GetList()[0].GetIsEmission() == true);
 }

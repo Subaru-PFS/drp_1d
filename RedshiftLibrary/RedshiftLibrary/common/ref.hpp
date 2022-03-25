@@ -109,7 +109,7 @@ void CRef<DataType>::AcquirePointer( const void* n )
 }
 
 template <class DataType>
-Bool CRef<DataType>::IsValid() const
+bool CRef<DataType>::IsValid() const
 {
     return m_Pointer != NULL;
 }

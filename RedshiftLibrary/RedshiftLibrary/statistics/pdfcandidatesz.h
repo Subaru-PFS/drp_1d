@@ -80,17 +80,17 @@ public:
 
 private:
 
-    Bool getCandidateSumTrapez(const TRedshiftList &redshifts,
+    bool getCandidateSumTrapez(const TRedshiftList &redshifts,
                                   const TFloat64List &valprobalog,
                                   const TFloat64Range  &zrange,
                                   TCandidateZ & candidate) const;//default: zwidth_left = zwidth_right
 
-    Bool getCandidateRobustGaussFit(const TRedshiftList &redshifts,
+    bool getCandidateRobustGaussFit(const TRedshiftList &redshifts,
                                     const TFloat64List &valprobalog,
                                     const TFloat64Range &zrange,
                                     TCandidateZ & candidate) const;
     
-    Bool getCandidateGaussFit(const TRedshiftList &redshifts,
+    bool getCandidateGaussFit(const TRedshiftList &redshifts,
                               const TFloat64List &valprobalog,
                               const TFloat64Range &zrange,
                               TCandidateZ & candidate) const;

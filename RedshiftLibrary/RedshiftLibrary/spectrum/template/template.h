@@ -82,7 +82,7 @@ public:
 
     const std::string&  GetCategory() const;
 
-    Bool Save(const char *filePath ) const;
+    bool Save(const char *filePath ) const;
 
     bool ApplyDustCoeff(Int32 kDust);
     bool ApplyMeiksinCoeff(Int32 meiksinIdx); 
@@ -117,7 +117,7 @@ public:
                       Int32 opt_dustFitting,
                       TInt32List& MeiksinList, //return 
                       TInt32List& EbmvList, //return
-                      Bool keepigmism = 0,
+                      bool keepigmism = 0,
                       Float64 FitEbmvCoeff = NAN,
                       Int32 FitMeiksinIdx = -1) const;
 private:

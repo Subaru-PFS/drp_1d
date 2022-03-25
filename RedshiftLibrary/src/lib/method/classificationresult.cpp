@@ -65,21 +65,14 @@ void CClassificationResult::SetTypeLabel( std::string lbl )
     m_TypeLabel = lbl;
 }
 
-void CClassificationResult::SetG(Float64 evidence, Float64 prob)
+void CClassificationResult::SetEvidence(const std::string& object_type,Float64 evidence)
 {
-    m_evidence_galaxy = evidence;
-    m_prob_galaxy = prob;
+  m_evidences[object_type] = evidence;
+
 }
 
-void CClassificationResult::SetS(Float64 evidence, Float64 prob)
+void CClassificationResult::SetProba(const std::string& object_type,Float64 prob)
 {
-    m_evidence_star = evidence;
-    m_prob_star = prob;
-}
-
-void CClassificationResult::SetQ(Float64 evidence, Float64 prob)
-{
-    m_evidence_qso = evidence;
-    m_prob_qso = prob;
+  m_proba[object_type]=prob;
 }
 

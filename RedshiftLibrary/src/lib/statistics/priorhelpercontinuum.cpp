@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/statistics/priorhelpercontinuum.h"
+#include "RedshiftLibrary/common/flag.h"
 
 #include <algorithm>    // std::sort
 #include <boost/tokenizer.hpp>
@@ -76,14 +77,14 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     {
         if(!rootFolder.string().empty())
         {
-            Log.LogWarning("    CPriorHelperContinuum: rootFolder path does not exist: %s", rootFolder.string().c_str());
+            Flag.warning(Flag.INVALID_FOLDER_PATH, Formatter()<<"    CPriorHelperContinuum::"<<__func__<<": rootFolder path does not exist: " << rootFolder.string().c_str());
             Log.LogDetail("    CPriorHelperContinuum: priors won't be used");
         }
         mInitFailed = true;
         return false;
     }
 
-    std::vector<std::string> EZTfilesPathList;
+    TStringList EZTfilesPathList;
     bfs::directory_iterator end_itr;
     for ( bfs::directory_iterator itr( rootFolder/"prior_continuum_hist_Ebmvc_Z" ); itr != end_itr; ++itr )
     {
@@ -93,8 +94,8 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         }
     }
 
-    std::vector<std::string> AGaussMeanfilesPathList;
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    TStringList AGaussMeanfilesPathList;
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -108,8 +109,8 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
         AGaussMeanfilesPathList.push_back(agaussfpath.string());
     }
 
-    std::vector<std::string> AGaussSigmafilesPathList;
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    TStringList AGaussSigmafilesPathList;
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -128,7 +129,7 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
 
 
     //set the template names
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fNameStr = fPath.filename().c_str();
@@ -136,12 +137,12 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     //read the EZT data from files
-    for(UInt32 k=0; k<EZTfilesPathList.size(); k++)
+    for(Int32 k=0; k<EZTfilesPathList.size(); k++)
     {
         bfs::path fPath = EZTfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -155,12 +156,12 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
 
 
     //read the AGaussMean data from files
-    for(UInt32 k=0; k<AGaussMeanfilesPathList.size(); k++)
+    for(Int32 k=0; k<AGaussMeanfilesPathList.size(); k++)
     {
         bfs::path fPath = AGaussMeanfilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -173,12 +174,12 @@ bool CPriorHelperContinuum::Init( std::string priorDirPath )
     }
 
     //read the AGaussSigma data from files
-    for(UInt32 k=0; k<AGaussSigmafilesPathList.size(); k++)
+    for(Int32 k=0; k<AGaussSigmafilesPathList.size(); k++)
     {
         bfs::path fPath = AGaussSigmafilesPathList[k];
         std::string fPathStr = (fPath).string();
 
-        std::vector<std::vector<Float64>> read_buffer;
+        std::vector<TFloat64List> read_buffer;
         bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
         if(!ret)
         {
@@ -199,16 +200,16 @@ bool CPriorHelperContinuum::SetBeta(Float64 beta)
     return true;
 }
 
-bool CPriorHelperContinuum::SetSize(UInt32 size)
+bool CPriorHelperContinuum::SetSize(Int32 size)
 {
     m_data.clear();
-    for(UInt32 k=0; k<size; k++)
+    for(Int32 k=0; k<size; k++)
     {
         TPriorZEList _zelist;
-        for(UInt32 kz=0; kz<m_nZ; kz++)
+        for(Int32 kz=0; kz<m_nZ; kz++)
         {
             std::vector<SPriorTZE> _elist;
-            for(UInt32 ke=0; ke<m_nEbv; ke++)
+            for(Int32 ke=0; ke<m_nEbv; ke++)
             {
                 SPriorTZE _tze;
                 _elist.push_back(_tze);
@@ -224,7 +225,7 @@ bool CPriorHelperContinuum::SetSize(UInt32 size)
 }
 
 
-bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
+bool CPriorHelperContinuum::SetTNameData(Int32 k, std::string tname)
 {
     if(k>=m_tplnames.size())
     {
@@ -234,16 +235,16 @@ bool CPriorHelperContinuum::SetTNameData(UInt32 k, std::string tname)
     return true;
 }
 
-bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64>> ezt_data)
+bool CPriorHelperContinuum::SetEZTData(Int32 k, std::vector<TFloat64List> ezt_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetEZTData failed for k="<<k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].logpriorTZE = ezt_data[kz][ke];
         }
@@ -252,16 +253,16 @@ bool CPriorHelperContinuum::SetEZTData(UInt32 k, std::vector<std::vector<Float64
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<Float64>> agaussmean_data)
+bool CPriorHelperContinuum::SetAGaussmeanData(Int32 k, std::vector<TFloat64List> agaussmean_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgaussmeanData failed for k="<< k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].A_mean = agaussmean_data[kz][ke];
         }
@@ -270,16 +271,16 @@ bool CPriorHelperContinuum::SetAGaussmeanData(UInt32 k, std::vector<std::vector<
     return true;
 }
 
-bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector<Float64>> agausssigma_data)
+bool CPriorHelperContinuum::SetAGausssigmaData(Int32 k, std::vector<TFloat64List> agausssigma_data)
 {
     if(k>=m_data.size())
     {
       throw GlobalException(INTERNAL_ERROR,Formatter()<<"CPriorHelperContinuum: SetAgausssigmaData failed for k="<<k);
     }
 
-    for(UInt32 kz=0; kz<m_nZ; kz++)
+    for(Int32 kz=0; kz<m_nZ; kz++)
     {
-        for(UInt32 ke=0; ke<m_nEbv; ke++)
+        for(Int32 ke=0; ke<m_nEbv; ke++)
         {
             m_data[k][kz][ke].A_sigma = agausssigma_data[kz][ke];
         }
@@ -288,7 +289,7 @@ bool CPriorHelperContinuum::SetAGausssigmaData(UInt32 k, std::vector<std::vector
     return true;
 }
 
-bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::vector<Float64>>& data)
+bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<TFloat64List>& data)
 {
     bool verboseRead=false;
     Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s", filePath);
@@ -309,9 +310,9 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
             if( !boost::starts_with( line, "#" ) )
             {
 
-                std::vector<Float64> lineVals;
+                TFloat64List lineVals;
                 std::istringstream iss( line );
-                for(UInt32 icol=0; icol<m_nEbv; icol++)
+                for(Int32 icol=0; icol<m_nEbv; icol++)
                 {
                     Float64 x;
                     iss >> x;
@@ -353,7 +354,7 @@ bool CPriorHelperContinuum::LoadFileEZ( const char* filePath, std::vector<std::v
  * @return
  */
 bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
-                                            std::vector<Float64> redshifts,
+                                            TFloat64List redshifts,
                                             TPriorZEList& zePriorData,
                                             Int32 outsideZRangeExtensionMode)
 {
@@ -373,7 +374,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
     }
 
     //find idx for tplname
-    UInt32 idx=-1;
+    Int32 idx=-1;
     for(Int32 k=0; k<m_tplnames.size(); k++)
     {
         std::size_t foundstra = m_tplnames[k].find(tplname.c_str());
@@ -419,7 +420,7 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
            Log.LogDetail("    CPriorHelperContinuum: get prior for z=%f: found idz=%d", redshifts[kz], idz);
        }
        TPriorEList dataz = m_data[idx][idz];
-       for(UInt32 icol=0; icol<m_nEbv; icol++)
+       for(Int32 icol=0; icol<m_nEbv; icol++)
        {
            if(verbose)
            {

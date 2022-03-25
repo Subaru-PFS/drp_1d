@@ -36,39 +36,15 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_COMMON_QUICKSORT_
-#define _REDSHIFT_COMMON_QUICKSORT_
-
-#include "RedshiftLibrary/common/datatypes.h"
-
-#include <algorithm>
-#include <vector>
-
-using namespace std;
-
-namespace NSEpic {
-
-/**
- * \ingroup Redshift
- * Quicksort algorithm
- */
-template <typename T> class CQuickSort
+class CFlagLogResult : public COperatorResult
 {
 
   public:
-    CQuickSort();
-    ~CQuickSort();
+  CFlagLogResult();
 
-    void Sort(T *arr, Int32 n) const;
-    void SortIndexes(const T *arr, Int32 *index, Int32 n) const;
+    ~CFlagLogResult() = default;
+    CFlagLogResult(Int32 flagValue, TWarningMsgList msgList);
 
-  private:
-    void Sort(T *arr, Int32 beg, Int32 end) const;
-    void SortIndexes(T *arr, Int32 *index, Int32 beg, Int32 end) const;
+    Int32         flagValue;
+    TWarningMsgList msgList;
 };
-
-#include <RedshiftLibrary/common/quicksort.hpp>
-
-} // namespace NSEpic
-
-#endif

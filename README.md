@@ -16,6 +16,7 @@ The **pylibamazed** library for Subaru-PFS project.
 * [cfitsio](https://heasarc.gsfc.nasa.gov/fitsio/) >=3.36
 * [gsl](https://www.gnu.org/software/gsl/) >=2.5
 * [fftw](http://www.fftw.org/) >=3.3.8
+* [openblas](https://www.openblas.net/) >= 0.3.19
 
 `drp_1d` also depends on following python packages
 * [numpy](https://www.numpy.org/) >=1.16.0
@@ -41,11 +42,6 @@ As root:
       libcfitsio-dev libfftw3-dev python3 python3-pip
 
 
-### Installing depencies on MacOS
-
-Use `brew` as packet manager on MacOS:
-
-    brew install gcc cmake swig boost cfitsio gsl fftw
 
 ### Installing python dependencies
 
@@ -72,6 +68,10 @@ You can specify install directory with `CMAKE_INSTALL_PREFIX` (defaults to `$HOM
 
     cmake .. -DCMAKE_INSTALL_PREFIX=/my/path/local
 
+If the thirdparties are not installed in a regular directory, you can specify the path to find thirdparties. If some thirdparties have been installed with the internal pylibamazed script, you must specify the  corresponding directory as follows
+
+    cmake .. -DCMAKE_PREFIX_PATH=/my/thirdparty/directory    
+
 ### Installing pylibamazed python module from pip
 
 From `drp_1d` root directory:
@@ -84,6 +84,41 @@ From `drp_1d` root directory:
 
     cd build/
     make test
+
+
+## Third parties installation guide
+
+As stated earlier pylibamazed depends on several third parties (refer to [this section](#dependencies) for the complete list). It is recommended to install third parties on your system using your own package manager. However, pylibamazed provides a python script to install theses thirdparties.
+
+    buildandinstallthirdparty.py [-h] [--workdir WORKDIR] [--prefix PREFIX] [-j PARALLEL] [--extra_flags EXTRA_FLAGS] [--force] [name1 ...]
+
+Name argument corresponds to the third party name and could take the following values:  [`boost` | `cfitsio` | `gsl` | `fftw` | `openblas`].
+
+For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
+
+    python tools/buildandinstallthirdparty fftw cfitsio
+
+Other command line options:
+
+`--workdir`: specifies the working directory for the third party building (absolute path)
+
+    python tools/buildandinstallthirdparty fftw cfitsio --workdir=/tmp
+
+`--prefix`: specifies the installation directory for third parties (absolute path)
+
+    python tools/buildandinstallthirdparty fftw cfitsio --prefix=/usr/local
+
+`-j`: specifies the number of make jobs to run simultaneously 
+
+    python tools/buildandinstallthirdparty fftw cfitsio -j 4
+
+`--extra_flags`: specifies extra_flag to give to the build stage of third party
+
+    python tools/buildandinstallthirdparty fftw cfitsio --extra_flags=
+
+`--force`: forces the library building and overwrites existing built library 
+
+    python tools/buildandinstallthirdparty fftw cfitsio --force
 
 ## Contacts
 

@@ -36,34 +36,21 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_CONTINUUM_STANDARD_
-#define _REDSHIFT_CONTINUUM_STANDARD_
 
-#include "RedshiftLibrary/continuum/continuum.h"
+#ifndef _REDSHIFT_OPERATOR_FLAGRESULT_
+#define _REDSHIFT_OPERATOR_FLAGRESULT_
 
+#include "RedshiftLibrary/processflow/result.h"
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/flag.h"
+#include "RedshiftLibrary/operator/operator.h"
+
+
+using namespace std;
 namespace NSEpic
 {
 
-  /**
-   * \ingroup Redshift
-   * Null continuum class.
-   */
-class CContinuumStandard : public CContinuum
-{
-
-public:
-
-    CContinuumStandard();
-    ~CContinuumStandard();
-
-    Bool Remove( CSpectrum& s );
-
-private:
-
-
-
-};
-
+#include "RedshiftLibrary/operator/flagResult.i"
 
 }
 

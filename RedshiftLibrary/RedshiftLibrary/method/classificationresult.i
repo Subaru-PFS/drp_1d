@@ -44,16 +44,11 @@ public:
     CClassificationResult();
 
     void SetTypeLabel( std::string lbl );
-    void SetG(Float64 evidence, Float64 prob);
-    void SetS(Float64 evidence, Float64 prob);
-    void SetQ(Float64 evidence, Float64 prob);
+    void SetProba(const std::string &object_type,Float64 prob);
+    void SetEvidence(const std::string &object_type,Float64 evidence);
 
+    std::map<std::string,Float64 > m_evidences;
+    std::map<std::string,Float64 > m_proba;
 
     std::string m_TypeLabel="-1";
-    Float64 m_evidence_galaxy=-1.0;
-    Float64 m_evidence_star=-1.0;
-    Float64 m_evidence_qso=-1.0;
-    Float64 m_prob_galaxy=-1.0;
-    Float64 m_prob_star=-1.0;
-    Float64 m_prob_qso=-1.0;
 };

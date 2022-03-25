@@ -136,9 +136,9 @@ void CParameterStore::Set( const std::string& name, Int64 v )
     m_PropertyTree.put( name, v );
 }
 
-void CParameterStore::Set( const std::string& name, Bool v )
+void CParameterStore::Set( const std::string& name, bool v )
 {
-    boost::optional<Bool> property = m_PropertyTree.get_optional<Bool>( name );
+    boost::optional<bool> property = m_PropertyTree.get_optional<bool>( name );
 
     m_PropertyTree.put( name, v );
 }
@@ -162,33 +162,33 @@ void CParameterStore::FromString(const std::string& json)
     bpt::json_parser::read_json(jsonstream, m_PropertyTree);
 }
 
-Bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
+bool CParameterStore::HasFFTProcessing(const std::string &objectType) const
 {
-    Bool fft_processing = false;
-    if(!Get<bool>("enable"+ objectType +"solve")) return false;
-    if(Has<bool>(objectType + ".templatefittingsolve.fftprocessing"))
-        fft_processing |= Get<bool>(objectType + ".templatefittingsolve.fftprocessing");
-    if(Has<bool>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing"))
-        fft_processing |= Get<bool>(objectType + ".linemodelsolve.linemodel.continuumfit.fftprocessing");
+    bool fft_processing = false;
+
+    if(Has<bool>(objectType + ".TemplateFittingSolve.fftprocessing"))
+        fft_processing |= Get<bool>(objectType + ".TemplateFittingSolve.fftprocessing");
+    if(Has<bool>(objectType + ".LineModelSolve.linemodel.continuumfit.fftprocessing"))
+        fft_processing |= Get<bool>(objectType + ".LineModelSolve.linemodel.continuumfit.fftprocessing");
 
     return fft_processing;
 }
 
-Bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
+bool CParameterStore::HasToOrthogonalizeTemplates(const std::string &objectType) const
 {  
-    Bool orthogonalize = Get<bool>("enable"+ objectType +"solve") && Get<std::string>(objectType + ".method") == "linemodelsolve";
+    bool orthogonalize = Get<std::string>(objectType + ".method") == "LineModelSolve";
     if(orthogonalize){
-        std::string continuumComponent = Get<std::string>(objectType + ".linemodelsolve.linemodel.continuumcomponent");
+        std::string continuumComponent = Get<std::string>(objectType + ".LineModelSolve.linemodel.continuumcomponent");
         orthogonalize &= (continuumComponent == "tplfit" || continuumComponent == "tplfitauto" );
     }
     return orthogonalize;
 }
-Bool CParameterStore::EnableTemplateOrthogonalization(const std::string &objectType) const
+bool CParameterStore::EnableTemplateOrthogonalization(const std::string &objectType) const
 {  
-    Bool enableOrtho = HasToOrthogonalizeTemplates(objectType);
+    bool enableOrtho = HasToOrthogonalizeTemplates(objectType);
     if(enableOrtho)
     {
-        enableOrtho &= !Get<bool>(objectType + ".linemodelsolve.linemodel.continuumfit.ignorelinesupport");
+        enableOrtho &= !Get<bool>(objectType + ".LineModelSolve.linemodel.continuumfit.ignorelinesupport");
     }
     return enableOrtho;
 }

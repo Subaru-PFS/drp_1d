@@ -62,8 +62,7 @@ CPdfMargZLogResult::CPdfMargZLogResult()
 CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
     Redshifts(redshifts),
     countTPL(redshifts.size()), // assumed 1 model per z
-    valProbaLog(redshifts.size(), -DBL_MAX),
-    valEvidenceLog(-1.0)
+    valProbaLog(redshifts.size(), -DBL_MAX)
 {
   this->m_type = "CPdfMargZLogResult";
 }
@@ -71,7 +70,7 @@ CPdfMargZLogResult::CPdfMargZLogResult(const TFloat64List & redshifts):
 Int32 CPdfMargZLogResult::getIndex( Float64 z ) const
 {
     Int32 solutionIdx=-1;
-    for ( UInt32 i2=0; i2<Redshifts.size(); i2++)
+    for ( Int32 i2=0; i2<Redshifts.size(); i2++)
     {
         if( Redshifts[i2]==z )
         {

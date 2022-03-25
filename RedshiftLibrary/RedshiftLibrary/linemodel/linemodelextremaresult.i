@@ -52,13 +52,16 @@ public:
 
     void updateFromLineModelSolution(const CLineModelSolution& cms);
 
-  void updateContinuumFromModel(std::shared_ptr<const CLineModelFitting> lmel);
-  void updateTplRatioFromModel(std::shared_ptr<const CLineModelFitting> lmel);
+  void updateContinuumFromModel(const std::shared_ptr<const CLineModelFitting> &lmel);
+  void updateTplRatioFromModel(const std::shared_ptr<const CLineModelFitting> &lmel);
 
-  void updateFromModel(std::shared_ptr<CLineModelFitting> lmel,std::shared_ptr<CLineModelResult> lmresult,bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
+  void updateFromModel( const std::shared_ptr<const CLineModelFitting> &lmel, 
+                        const std::shared_ptr<const CLineModelResult> &lmresult,
+                        bool estimateLeastSquareFast,int indx,const TFloat64Range &lambdaRange,int i_2pass);
  
-  Float64            MeritContinuum; //extrema merit for continuum
-
+    Float64            MeritContinuum; // best continum  chi2
+    Float64            Merit; // fullmodel best chi2
+    
     Float64            mTransposeM;    // extrema model norm
     Float64            CorrScaleMarg;    // extrema scale marg. correction
     Int32              NDof;   //non zero elements in the lambdarange
@@ -74,7 +77,7 @@ public:
     Float64            SigmaZ;    // sigmaz for each extrema
 
     Float64            StrongELSNR;
-    std::vector<std::string>            StrongELSNRAboveCut;
+    TStringList            StrongELSNRAboveCut;
     Float64            bic;    // bayesian information criterion for each extrema
     std::vector<CContinuumIndexes::TContinuumIndexList> ContinuumIndexes; //continuum indexes for each extrema
     CMask      OutsideLinesMask;   //Mask with 0 under the lines and 1 anywhere else
@@ -84,12 +87,12 @@ public:
     //line width
     Float64      Elv;   //emission line width
     Float64      Alv;   //absorption line width
-    std::vector<Float64>      GroupsELv;   //per fitting group line width , EL
-    std::vector<Float64>      GroupsALv;   //per fitting group line width , AL
+    TFloat64List      GroupsELv;   //per fitting group line width , EL
+    TFloat64List      GroupsALv;   //per fitting group line width , AL
 
     //template continuum (+ base class)
     Float64      FittedTplRedshift;    //Redshift for the best template fitted for continuum
-    std::vector<Float64>      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
+    TFloat64List      FittedTplpCoeffs;    //poly coeffs for the best template fitted for continuum
 
     //template ratio
     std::string      FittedTplratioName;   //Name of the best template fitted for tplcorr/tplratio

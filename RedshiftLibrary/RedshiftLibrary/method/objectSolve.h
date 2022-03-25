@@ -36,45 +36,27 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
-#define _REDSHIFT_LINEMODEL_CALIBRATIONCONFIGHELPER_
+#ifndef _OBJECT_SOLVE_H_
+#define _OBJECT_SOLVE_H_
 
-#include "RedshiftLibrary/common/datatypes.h"
-
-#include <boost/format.hpp>
-
-#include <vector>
-#include <string>
+#include "RedshiftLibrary/method/solve.h"
 
 namespace NSEpic
 {
 
-/**
- * \ingroup Redshift
- */
-class CCalibrationConfigHelper
-{
+  class CObjectSolve : public CSolve
+  {
+  public:
+    using CSolve::CSolve;
+    virtual ~CObjectSolve()=default;
+    CObjectSolve(CObjectSolve const& other) = default;
+    CObjectSolve& operator=(CObjectSolve const& other) = default;
+    CObjectSolve(CObjectSolve&& other) = default;
+    CObjectSolve& operator=(CObjectSolve&& other) = default;
 
-public:
-    CCalibrationConfigHelper();
-    ~CCalibrationConfigHelper();
-
-    void Init(std::string calibrationPath);
-    void Load(const char* filePath);
-
-    std::string Get_starTemplates_relpath();
-    std::string Get_qsoTemplates_relpath();
-
-
-private:
-
-    std::string calibration_config_file_relpath="";
-    std::string m_starTemplates_relpath="";
-    std::string m_qsoTemplates_relpath="";
-
-};
-
-
+  protected:
+    void InitRanges(std::shared_ptr<const CInputContext> inputContext) override;
+  };
 }
 
 #endif

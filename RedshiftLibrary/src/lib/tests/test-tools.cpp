@@ -61,7 +61,7 @@ using namespace CPFTest;
  * Based on spectrum1_z_1.2299.fits
  *
  */
-void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
+void CPFTest::generate_spectrum(CSpectrum &spectrum, Int32 size,
                                 Float64 lambda_min, Float64 lambda_max,
                                 Float64 mean,
                                 TGenerationKind kind)
@@ -69,8 +69,9 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
     CSpectrumSpectralAxis spectralAxis(size, false);
     CSpectrumFluxAxis fluxAxis(size);
 
-    spectrum.SetContinuumEstimationMethod("Median");
+    spectrum.SetContinuumEstimationMethod("IrregularSamplingMedian");
     spectrum.SetMedianWinsize(150);
+    spectrum.SetMedianEvenReflection(false);
 
     boost::random::taus88 rng;
     boost::random::normal_distribution<double> distribution(mean, 1.35);
@@ -80,7 +81,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
     {
     case RANDOM:
         rng.seed(time(0));
-        for (UInt32 i = 0; i < size; i++)
+        for (Int32 i = 0; i < size; i++)
         {
             spectralAxis[i] = lambda_min +
                 double(i) * (lambda_max - lambda_min) / double(size);
@@ -89,7 +90,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
         }
         break;
     case FLAT:
-        for (UInt32 i = 0; i < size; i++)
+        for (Int32 i = 0; i < size; i++)
         {
             spectralAxis[i] = lambda_min +
                 double(i) * (lambda_max - lambda_min) / double(size);
@@ -98,7 +99,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
         }
         break;
     case SUPERSTRONG:
-        for (UInt32 i = 0; i < size; i++)
+        for (Int32 i = 0; i < size; i++)
         {
             spectralAxis[i] = lambda_min +
                 double(i) * (lambda_max - lambda_min) / double(size);
@@ -119,7 +120,7 @@ void CPFTest::generate_spectrum(CSpectrum &spectrum, UInt32 size,
 /**
  * Generate a noise fits file
  */
-bfs::path CPFTest::generate_noise_fits(UInt32 size,
+bfs::path CPFTest::generate_noise_fits(Int32 size,
                                        NSEpic::Float64 lambda_min,
                                        NSEpic::Float64 lambda_max,
                                        NSEpic::Float64 mean,
@@ -271,7 +272,7 @@ bfs::path CPFTest::generate_linecatalog_file(TGenerationKind kind)
 /**
  * Generate a spectrum template
  */
-void CPFTest::generate_template(CTemplate &_template, UInt32 size,
+void CPFTest::generate_template(CTemplate &_template, Int32 size,
                                 Float64 lambda_min, Float64 lambda_max)
 {
     generate_spectrum((CSpectrum &)_template, size, lambda_min, lambda_max);
@@ -281,8 +282,8 @@ void CPFTest::generate_template(CTemplate &_template, UInt32 size,
  * Generate a template catalog category
  */
 static void add_template_category(CTemplateCatalog &catalog,
-                                  UInt32 count,
-                                  UInt32 template_size,
+                                  Int32 count,
+                                  Int32 template_size,
                                   Float64 lambda_min, Float64 lambda_max,
                                   const string &category)
 {
@@ -298,7 +299,7 @@ static void add_template_category(CTemplateCatalog &catalog,
 /**
  * Generate a template full catalog
  */
-void CPFTest::generate_template_catalog(CTemplateCatalog &catalog, UInt32 template_size,
+void CPFTest::generate_template_catalog(CTemplateCatalog &catalog, Int32 template_size,
                                         Float64 lambda_min, Float64 lambda_max)
 {
     add_template_category(catalog, 3, template_size, lambda_min, lambda_max, "galaxy");
@@ -339,10 +340,10 @@ static void fake_meiksin(bfs::path path)
     fileNamesList.push_back("Meiksin_Var_curves_6.5.txt");
     fileNamesList.push_back("Meiksin_Var_curves_7.0.txt");
 
-    for (UInt32 i=0; i<fileNamesList.size(); i++)
+    for (Int32 i=0; i<fileNamesList.size(); i++)
     {
         ofstream out((path / fileNamesList[i]).c_str(), ofstream::out);
-        for (UInt32 lambda=200; lambda<=1300; lambda++)
+        for (Int32 lambda=200; lambda<=1300; lambda++)
         {
             out << lambda << " " <<
                 min(1.0, 0.05 + exp(float(i*lambda)/1200)/exp(1)) << " " <<

@@ -74,7 +74,12 @@ BOOST_AUTO_TEST_CASE(LSF_ConstantWidth)
 {
     Int32 n = 10;
     CSpectrumFluxAxis FluxAxis(n, 1);
-    CSpectrumSpectralAxis SpectralAxis(n);
+    TFloat64List lbdaList(n);
+    for(Int32 i=0; i<n; i++)
+    {
+        lbdaList[i] = i*0.4;
+    }
+    CSpectrumSpectralAxis SpectralAxis(lbdaList);
     std::string lsfType = "GaussianConstantWidth";
     Float64 width = 1.09;
     TScopeStack scopeStack;

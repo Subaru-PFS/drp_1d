@@ -40,6 +40,7 @@
 #include "RedshiftLibrary/ray/airvacuum.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -110,7 +111,7 @@ TFloat64List CAirVacuum::AirToVac(const TFloat64List & waveAir) const
 
     if (iter==maxiter)
     {
-        Log.LogWarning(Formatter() << "CAirVacuum::AirToVac reach max iteration, with precision: " << precision);
+        Flag.warning(Flag.AIR_VACCUM_REACHED_MAX_ITERATIONS, Formatter() << "CAirVacuum::"<<__func__<<" reach max iteration, with precision: " << precision);
     }
 
     return (waveVac);
@@ -178,7 +179,7 @@ void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 2300 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
@@ -191,7 +192,7 @@ void CAirVacCiddor1996::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacPeckReeder1972::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }
@@ -204,7 +205,7 @@ void CAirVacMorton2000::CheckWaveRange(const TFloat64List & wave) const
         throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are below 3000 Angstroem");
     }
 
-    if (*std::max_element(wave.begin(), wave.end()) > 16900.)
+    if (*std::max_element(wave.begin(), wave.end()) > 19000.)
     {
         throw GlobalException(INTERNAL_ERROR,"CAirVacMorton2000::CheckWaveRange: some wavelengths are above 16900 Angstroem");
     }

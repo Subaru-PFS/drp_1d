@@ -70,13 +70,13 @@ public:
 
 private:
 
-    std::string tplratioName="-1";
-    std::string tplcontinuumName="-1";
-    Float64 sigma;
-    Float64 snrHa=-1.0;
-    Float64 lfHa=-1.0;
-    Float64 snrOII=-1.0;
-    Float64 lfOII=-1.0;
+    std::string tplratioName="undefined";
+    std::string tplcontinuumName="undefined";
+    Float64 sigma = NAN;
+    Float64 snrHa = NAN;
+    Float64 lfHa = NAN;
+    Float64 snrOII = NAN;
+    Float64 lfOII = NAN;
 
 };
 

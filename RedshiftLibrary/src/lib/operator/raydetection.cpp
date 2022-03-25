@@ -91,16 +91,16 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
     const CSpectrumFluxAxis fluxAxis = spc.GetFluxAxis();
     const CSpectrumSpectralAxis spectralAxis = spc.GetSpectralAxis();
 
-    UInt32 nPeaks = resPeaks.size();
+    Int32 nPeaks = resPeaks.size();
 
-    auto result = std::shared_ptr<CLineDetectionResult>( new CLineDetectionResult() );
+    auto result = std::make_shared<CLineDetectionResult>();
 
     //retest list
     TInt32RangeList retestPeaks;
     TGaussParamsList retestGaussParams;
 
     // filter the peaks with gaussian fit and create the detected rays catalog
-    for( UInt32 j=0; j<nPeaks; j++ )
+    for( Int32 j=0; j<nPeaks; j++ )
     {
         bool toAdd = true;
         //find gaussian fit
@@ -282,7 +282,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute( const CSpec
             char buffer [64];
             sprintf( buffer,"detected_peak_%d", j );
             std::string peakName = buffer;
-            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, std::make_shared<CLineProfileSYM>(), force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr, gaussAmpErr) );
+            result->RayCatalog.Add( CRay( peakName, gaussPos, m_type, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force , gaussAmp, gaussWidth, ratioAmp, gaussPosErr, gaussWidthErr, gaussAmpErr) );
 	  }
     }
 
@@ -311,9 +311,9 @@ TInt32Range CLineDetection::LimitGaussianFitStartAndStop( Int32 i, const TInt32R
     Int32 fitStop = peaksBorders[i].GetEnd()+1;
 
     Float64 width = fitStop - fitStart;
-    UInt32 center = fitStart + width/2;
-    UInt32 start = std::max( 0, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]-m_maxsize/2.0 ) );
-    UInt32 stop = std::min( (Int32) len, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]+m_maxsize/2.0 ) );
+    Int32 center = fitStart + width/2;
+    Int32 start = std::max( 0, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]-m_maxsize/2.0 ) );
+    Int32 stop = std::min( (Int32) len, spectralAxis.GetIndexAtWaveLength( spectralAxis[center]+m_maxsize/2.0 ) );
     Int32 maxwinsizeIndexes = stop-start;
 
     if( width>maxwinsizeIndexes )
@@ -358,6 +358,14 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
 	  }
       }
 
+    // Range must be included in fluxAxis
+    if (range.GetEnd() >= fluxAxis.GetSamplesCount()){
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CLineDetection::ComputeFluxes: upper bound of range "<<range.GetEnd()<<" is >= to fluxAxis length "<<fluxAxis.GetSamplesCount());
+    }
+    if (range.GetBegin() < 0){
+      throw GlobalException(INTERNAL_ERROR,Formatter()<<"CLineDetection::ComputeFluxes: lower bound of range "<<range.GetEnd()<<" is < 0");
+    }
+
     Float64 maxValue = -DBL_MAX;
     Int32 maxIndex = -1;
     for( Int32 k=range.GetBegin(); k<=range.GetEnd(); k++ )
@@ -383,19 +391,19 @@ Float64 CLineDetection::ComputeFluxes( const CSpectrum& spectrum, Float64 winsiz
     left = max(range.GetBegin(), left);
     right = min(range.GetEnd()+1, right);
 
-    Float64 *fluxMasked = (Float64*)malloc( fluxAxis.GetSamplesCount()*sizeof( Float64 ) );
+    TFloat64List fluxMasked;
+    fluxMasked.reserve(fluxAxis.GetSamplesCount());
     int n=0;
     for( int i=left; i<right; i++ )
       {
         if( mask[i]!=0 )
 	  {
-            fluxMasked[n] = fluxData[i];
+            fluxMasked.push_back(fluxData[i]);
             n++;
 	  }
       }
-    Float64 med = medianProcessor.Find( fluxMasked, n );
-    Float64 xmad = XMadFind( fluxMasked, n, med );
-    free(fluxMasked);
+    Float64 med = medianProcessor.Find( fluxMasked);
+    Float64 xmad = XMadFind( fluxMasked.data(), n, med );
 
     Float64 noise_win= xmad;
     // use noise spectrum
@@ -564,7 +572,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
     }
 
     // create reduced spectra
-    const CSpectrum *reducedSpectrum  = new CSpectrum( spectrum, mask );
+    const CSpectrum reducedSpectrum( spectrum, mask );
     TFloat64List reducedindexesMap;
     for( Int32 k=0; k<spectrum.GetSampleCount(); k++ )
     {
@@ -590,7 +598,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
       {
         TInt32Range reducedrange( (int)reducedindexesMap[selectedretestPeaks[k].GetBegin()], (int)reducedindexesMap[selectedretestPeaks[k].GetEnd()] );
         //Float64 ratioAmp = ComputeFluxes(spectrum, winsize, selectedretestPeaks[k], mask);
-        Float64 ratioAmp = ComputeFluxes( *reducedSpectrum, winsize, reducedrange );
+        Float64 ratioAmp = ComputeFluxes( reducedSpectrum, winsize, reducedrange );
         if( ratioAmp > cut )
 	  {
             Float64 force = CRay::nForce_Weak;
@@ -598,7 +606,7 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
             sprintf( buffer, "detected_retested_peak_%d", k );
             std::string peakName = buffer;
 
-            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, std::make_shared<CLineProfileSYM>(), force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
+            result.RayCatalog.Add( CRay( peakName, selectedgaussparams[k].Pos, m_type, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM()), force , selectedgaussparams[k].Amp, selectedgaussparams[k].Width, ratioAmp) );
             result.RayCatalog.Sort();
         }
     }
@@ -611,31 +619,29 @@ bool CLineDetection::RemoveStrongFromSpectra(const CSpectrum& spectrum, CLineDet
  */
 Float64 CLineDetection::XMadFind( const Float64* x, Int32 n, Float64 median )
 {
-    std::vector<Float64> xdata;
+    TFloat64List xdata;
     Float64 xmadm = 0.0;
 
-    xdata.reserve( n );
+    xdata.resize( n );
 
     for( Int32 i=0; i<n; i++ )
     {
         xdata[i] = fabs( x[i]-median );
     }
 
-    CQuickSort<Float64> sort;
-
-    sort.Sort( xdata.data(), n);
+    std::sort(xdata.begin(), xdata.end());
 
     if ( n & 1 )
     {
         // n is odd
-        UInt32 i1 = n >> 1; // i.e. int(n/2)
+        Int32 i1 = n >> 1; // i.e. int(n/2)
         xmadm = xdata[i1];
     }
     else
     {
         // n is even
-        UInt32 i1 = n/2 -1;
-        UInt32 i2 = n/2;
+        Int32 i1 = n/2 -1;
+        Int32 i2 = n/2;
         xmadm = 0.5*(xdata[i1]+xdata[i2]);
     }
 

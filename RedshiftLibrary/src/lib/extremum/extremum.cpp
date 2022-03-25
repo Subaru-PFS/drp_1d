@@ -37,12 +37,12 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/common/flag.h"
 
 #include <cmath>
 #include <float.h>
@@ -60,11 +60,11 @@ using namespace std;
 /**
  * Member attribution constructor.
  */
-CExtremum::CExtremum( UInt32 maxPeakCount,
+CExtremum::CExtremum( Int32 maxPeakCount,
                       Float64 peakSeparation, 
                       Float64 meritcut,
-                      Bool invertForMinSearch,
-                      Bool allow_extrema_at_border, 
+                      bool invertForMinSearch,
+                      bool allow_extrema_at_border, 
                       const TFloat64Range& xRange) :
     m_MaxPeakCount( maxPeakCount ),
     m_extrema_separation(peakSeparation),
@@ -87,7 +87,7 @@ void CExtremum::SetXRange( const TFloat64Range& r )
 /**
  * Sets m_MaxPeakCount to n.
  */
-void CExtremum::SetMaxPeakCount( UInt32 n )
+void CExtremum::SetMaxPeakCount( Int32 n )
 {
     m_MaxPeakCount = n;
 }
@@ -114,7 +114,7 @@ void CExtremum::SortIndexes(TFloat64List&  maxY) const
 /**
  * Set a list as default extremum as extreumum, i.e., independent from their values
 */
-Bool CExtremum::DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) 
+bool CExtremum::DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint ) 
 {
   if(!xAxis.size())
     return false; 
@@ -127,7 +127,7 @@ Bool CExtremum::DefaultExtremum( const TFloat64List& xAxis, const TFloat64List& 
 /**
  * Wrapper around InternalFind, this function validates and sets the search interval limits.
  */
-Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint) const
+bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPointList& maxPoint) const
 {
     Int32 n = xAxis.size();
     
@@ -146,7 +146,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     // Find index in xAxis that correspond to the boundary specified by m_XRange
     if( !m_XRange.GetIsEmpty() )
     {
-        Bool rangeok;
+        bool rangeok;
         rangeok = m_XRange.getClosedIntervalIndices(xAxis, BeginIndex , EndIndex);
         if (!rangeok){
           Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]", 
@@ -157,20 +157,20 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     
     TFloat64List  maxX, minX;
     TFloat64List  maxY, minY;
-    Bool method = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY );    
+    bool method = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, maxX, maxY );    
 
     if(maxX.size() == 0){ 
       // we should not raise an exception here 
       // (we can accept a missing candidate in second pass window)
       // The boolean return has to be tested by the caller
-      Log.LogWarning("          CExtremum::Find: FindAllPeaks returned empty MaxX");
+      Flag.warning(Flag.FINDER_NO_PEAKS, Formatter()<<"          CExtremum::"<<__func__<<": FindAllPeaks returned empty MaxX");
       return false;
     }
 
     //Look for all local minima
-    Bool activateprominence = false;
+    bool activateprominence = false;
     if(activateprominence){
-      Bool method_min = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, minX, minY, true); // invert signSearch
+      bool method_min = FindAllPeaks( xAxis, yAxis, BeginIndex, EndIndex, minX, minY, true); // invert signSearch
     
       for(Int32 i = 0; i <minX.size(); i++){
         minY[i] = -1*minY[i];
@@ -182,7 +182,7 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
       TFloat64List ret_prominences = Cut_Prominence_Merit(maxX, maxY, minX, minY);    
 
       if(maxX.size() == 0){
-        Log.LogWarning("        CExtremum::Find: Cut_Prominence_Merit returns empty MaxX");
+        Flag.warning(Flag.FINDER_NO_PEAKS, Formatter()<<"        CExtremum::"<<__func__<<": Cut_Prominence_Merit returns empty MaxX");
         return false;
       }
     }
@@ -193,17 +193,17 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     
     Int32 keepMinN = 1;
     if(m_meritCut>0.0 && maxX.size()>keepMinN){ 
-        Bool v = Cut_Threshold(maxX, maxY, keepMinN);
+        bool v = Cut_Threshold(maxX, maxY, keepMinN);
     }
     
     //refine: eliminate very close candidates when possible. 
-    Bool b;
+    bool b;
     if(m_PeakSeparationActive)
     {
       b = FilterOutNeighboringPeaksAndTruncate(maxX, maxY, keepMinN, maxPoint);
       
       //verify that peaks are well separated by at least secondpassradius
-      Bool verified = verifyPeakSeparation(maxPoint);
+      bool verified = verifyPeakSeparation(maxPoint);
 
     }else{
       Truncate(maxX, maxY, maxPoint);
@@ -211,8 +211,8 @@ Bool CExtremum::Find( const TFloat64List& xAxis, const TFloat64List& yAxis, TPoi
     return true;
 }
 
-Bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
-  Bool verified = true;
+bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
+  bool verified = true;
  
   std::sort(maxX.begin(), maxX.end());
   for(Int32 i = 0; i< maxX.size() -1; i++)  {
@@ -230,7 +230,7 @@ Bool CExtremum::verifyPeakSeparation( TFloat64List& maxX) const{
   return verified;
 }
 
-Bool CExtremum::verifyPeakSeparation( TPointList& maxPoint) const{
+bool CExtremum::verifyPeakSeparation( TPointList& maxPoint) const{
   TFloat64List maxX(maxPoint.size());
   for(Int32 i = 0; i<maxPoint.size(); i++)
     maxX[i] = maxPoint[i].X;
@@ -375,7 +375,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit( TFloat64List& maxX, TFloat64List& 
  * Third: Sort based on X values to return candidates following their initial order
  * It returns the new list of extrema
 */
-Bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const
+bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 keepMinN) const
 {
   if(maxX.size() == 0){
         throw GlobalException(INTERNAL_ERROR,"      CExtremum::Cut_threshold: empty MaxX arg");
@@ -405,7 +405,7 @@ Bool CExtremum::Cut_Threshold( TFloat64List& maxX, TFloat64List& maxY, Int32 kee
   return true;
 }
 
-Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, UInt32 keepmin, TPointList& maxPoint)const
+bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat64List& maxY, Int32 keepmin, TPointList& maxPoint)const
 {
   if(maxX.size()<= keepmin){
     for(Int32 i = 0; i<maxX.size(); i++){
@@ -441,10 +441,10 @@ Bool CExtremum::FilterOutNeighboringPeaksAndTruncate(TFloat64List& maxX, TFloat6
   return true;
 }
 
-Bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yAxis,
+bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yAxis,
                              Int32 BeginIndex, Int32 EndIndex, 
                              TFloat64List& maxX, TFloat64List& maxY,
-                             Bool invertSearch) const
+                             bool invertSearch) const
 {
   const Float64 SignSearch = invertSearch ? -1.0*m_SignSearch : m_SignSearch;
   TFloat64List tmpY(yAxis);
@@ -541,8 +541,8 @@ Bool CExtremum::FindAllPeaks(const TFloat64List & xAxis, const TFloat64List & yA
 /**
  * Brief: Reduce number of peaks based on maxCount passed from param.json if present
 */
-Bool CExtremum::Truncate( TFloat64List& maxX, TFloat64List& maxY, TPointList& maxPoint) const {
-  UInt32 n = maxX.size();
+bool CExtremum::Truncate( TFloat64List& maxX, TFloat64List& maxY, TPointList& maxPoint) const {
+  Int32 n = maxX.size();
   n = std::min(m_MaxPeakCount, n);
   for (Int32 j = 0; j < n; j++) { 
     maxPoint.push_back(SPoint(maxX[m_sortedIndexes[j]], m_SignSearch * maxY[m_sortedIndexes[j]]) );

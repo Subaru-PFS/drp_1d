@@ -106,7 +106,7 @@ public:
       GaussianVariableWidth
     };
     CLSF(TLSFType name);
-    CLSF(TLSFType name, CLineProfile_ptr profile);
+    CLSF(TLSFType name, CLineProfile_ptr && profile);
     virtual ~CLSF() = default;
 
     CLSF(const CLSF & other) = default; 
@@ -120,7 +120,7 @@ public:
     Float64                     GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
     Float64                     GetLineProfile (Float64 lambda, Float64 lambda0, Float64 sigma0) const;
     void                        SetSourcesizeDispersion(Float64 sigma) const{};//empty default implementation
-    std::shared_ptr<const CLineProfile>   GetProfile() const;                      
+    const CLineProfile &        GetProfile() const;                      
     const TLSFType  m_name;
     
 protected:

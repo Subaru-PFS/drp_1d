@@ -41,7 +41,7 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
-#include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/operator/linemodel.h"
@@ -60,24 +60,24 @@ class CTemplateCatalog;
 /**
  * \ingroup Redshift
  */
-class CLineModelSolve: public CSolve
+class CLineModelSolve: public CObjectSolve
 {
 public:
 
-    CLineModelSolve(TScopeStack &scope,std::string objectType,std::string calibrationPath="");
+    CLineModelSolve(TScopeStack &scope,std::string objectType);
 
-    Bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
+    bool PopulateParameters( std::shared_ptr<const CParameterStore> parameterStore );
 
     std::shared_ptr<CSolveResult> compute(std::shared_ptr<const CInputContext> inputContext,
                                           std::shared_ptr<COperatorResultStore> resultStore,
                                           TScopeStack &scope) override;
 
-    Bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
+    bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
                const CSpectrum& spc,
                const CSpectrum& rebinnedSpc,
                const CTemplateCatalog& tplCatalog,
-               const TStringList& tplCategoryList,
                const CRayCatalog::TRayVector& restraycatalog,
+               const CRayCatalogsTplShape& tplRatioCatalog,
                const TFloat64Range& lambdaRange,
                const TFloat64List& redshifts,
                const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
@@ -85,19 +85,22 @@ public:
 
 private:
 
-    ChisquareArray BuildChisquareArray(std::shared_ptr<const CLineModelResult> result,
-                                        std::string opt_rigidity,
-                                        std::string opt_combine,
-                                        Float64 opt_stronglinesprior,
-                                        Float64 opt_hapriorstrength,
-                                        Float64 opt_euclidNHaEmittersPriorStrength) const;
+    ChisquareArray BuildChisquareArray( const std::shared_ptr<const CLineModelResult> &result) const;
 
-   
-      void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
-                             std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
+    void  GetZpriorsOptions(bool & zPriorStrongLinePresence,
+                            bool & zPriorHaStrongestLine,
+                            bool & zPriorNLineSNR,
+                            Float64 & opt_nlines_snr_penalization_factor,
+                            bool & zPriorEuclidNHa) const;
+    
+    TFloat64List BuildZpriors(const std::shared_ptr<const CLineModelResult> &result,
+                              Int32 kTplShape=-1) const;
+
+    void storeExtremaResults( std::shared_ptr<COperatorResultStore> dataStore,
+                              std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
     void StoreChisquareTplShapeResults(std::shared_ptr<COperatorResultStore>  dataStore, std::shared_ptr<const CLineModelResult> result) const;
-
+    const CRayCatalog::TRayVector  FilterRestLineCatalog(const CRayCatalog& restraycatalog);
 
     COperatorLineModel m_linemodel;
 
@@ -165,7 +168,7 @@ private:
     Int64 m_opt_extremacountB;
 
     Float64 m_opt_candidatesLogprobaCutThreshold;
-    UInt32 m_opt_firstpass_largegridstepRatio;
+    Int32 m_opt_firstpass_largegridstepRatio;
     std::string m_opt_firstpass_largegridsampling;
     bool m_opt_firstpass_tplratio_ismfit;
     bool m_opt_firstpass_disablemultiplecontinuumfit;
@@ -179,8 +182,6 @@ private:
     std::string m_opt_saveintermediateresults;
     Float64 m_opt_secondpass_halfwindowsize;
 
-    std::string m_calibrationPath;
-    std::string m_outputPdfRelDir;
     Float64 m_redshiftSeparation;
 
 };

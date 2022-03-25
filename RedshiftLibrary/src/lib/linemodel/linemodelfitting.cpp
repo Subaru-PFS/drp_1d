@@ -41,8 +41,6 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/ray/regulament.h"
 #include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/catalogsOffsets.h"
-#include "RedshiftLibrary/ray/linetags.h"
 #include "RedshiftLibrary/ray/ray.h"
 
 #include <gsl/gsl_multifit.h>
@@ -56,7 +54,6 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/extremum/extremum.h"
-#include "RedshiftLibrary/common/quicksort.h"
 #include <math.h>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/format.hpp>
@@ -85,7 +82,6 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
                                         const TFloat64Range& lambdaRange,
                                         const CTemplateCatalog& tplCatalog,
                                         const TStringList& tplCategoryList,
-                                        const std::string calibrationPath,
                                         const CRayCatalog::TRayVector& restRayList,
                                         const std::string& opt_fittingmethod,
                                         const std::string& opt_continuumcomponent,
@@ -100,7 +96,6 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
     m_lambdaRange(lambdaRange),
     m_tplCatalog(tplCatalog),
     m_tplCategoryList(tplCategoryList),
-    m_calibrationPath(calibrationPath),
     m_RestRayList(restRayList),
     m_fittingmethod(opt_fittingmethod),
     m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
@@ -114,15 +109,14 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
     m_rigidity(opt_rigidity),
     m_Regulament(),
     m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()),
-    m_Elements(restRayList),
     m_templateFittingOperator(spectrum, lambdaRange)
 {
     //check if tplcat and orthoTplCat are aligned
-    /*for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+    /*for( Int32 i=0; i<m_tplCategoryList.size(); i++ )
     {
         std::string category = m_tplCategoryList[i];
 
-        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+        for( Int32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
         {
             std::shared_ptr<const CTemplate>  tpl = m_tplCatalog.GetTemplate( category, j );
             std::shared_ptr<const CTemplate>  orthotpl = m_orthoTplCatalog.GetTemplate( category, j );
@@ -143,7 +137,7 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
 
     m_SpectrumModel = CSpectrum(spectrum);
     m_SpcCorrectedUnderLines = CSpectrum(spectrum);
-    const UInt32 spectrumSampleCount = spectrum.GetSampleCount();
+    const Int32 spectrumSampleCount = spectrum.GetSampleCount();
     m_SpcFluxAxis.SetSize( spectrumSampleCount );
     Log.LogDetail("    model: Continuum winsize found is %.2f A", m_inputSpc.GetMedianWinsize());
 
@@ -207,25 +201,13 @@ CLineModelFitting::CLineModelFitting(   const CSpectrum& spectrum,
 }
 
 
-void CLineModelFitting::initLambdaOffsets(std::string offsetsCatalogsRelPath)
+
+
+bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit)
 {
-  CLineCatalogsOffsets ctlgOffsets = CLineCatalogsOffsets();
-  ctlgOffsets.Init(m_calibrationPath, offsetsCatalogsRelPath);
-  // load static offset catalog, idx=0
-  ctlgOffsets.SetLinesOffsets( m_Elements, 0);
-
-  // load auto stack, hack from reference catalog
-  //std::string spcName = m_inputSpc.GetName();
-  //ctlgOffsets.SetLinesOffsetsAutoSelectStack(*this, spcName);
-}
-
-
-Bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath, Int32 opt_tplratio_ismFit)
-{
-
-    bool ret = m_CatalogTplShape.Init(m_calibrationPath, 
-                                      opt_tplratioCatRelPath, 
-                                      opt_tplratio_ismFit, 
+//TODO: use the passed tplRatioCatalog
+//TODO: check if m_CatalogTplShape changes between iterations
+    bool ret = m_CatalogTplShape.Init(opt_tplratio_ismFit, 
                                       m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti,
                                       m_NSigmaSupport);
     if(!ret)
@@ -244,6 +226,7 @@ Bool CLineModelFitting::initTplratioCatalogs(std::string opt_tplratioCatRelPath,
     m_ChisquareTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_ScaleMargCorrTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_StrongELPresentTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+    m_StrongHalphaELPresentTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_NLinesAboveSNRTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_FittedAmpTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
     m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
@@ -306,7 +289,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass)
 
     return true;
 }
-Int32 CLineModelFitting::GetPassNumber(){
+Int32 CLineModelFitting::GetPassNumber() const{
     return m_pass;
 }
 
@@ -340,7 +323,7 @@ const CSpectrum& CLineModelFitting::GetObservedSpectrumWithLinesRemoved(Int32 li
     const CSpectrumFluxAxis & fluxAxis = m_SpectrumModel.GetFluxAxis();
 
     //
-    std::vector<Float64> fluxAndContinuum(spectralAxis.GetSamplesCount(), 0.0);
+    TFloat64List fluxAndContinuum(spectralAxis.GetSamplesCount(), 0.0);
     if(lineTypeFilter==CRay::nType_Emission)
     {
         refreshModel(CRay::nType_Absorption);
@@ -355,10 +338,11 @@ const CSpectrum& CLineModelFitting::GetObservedSpectrumWithLinesRemoved(Int32 li
 
     CSpectrumFluxAxis fluxAxisNothingUnderLines(m_SpcCorrectedUnderLines.GetSampleCount()); 
     TAxisSampleList & Y = fluxAxisNothingUnderLines.GetSamplesVector();
-
-    for( UInt32 t=0;t<spectralAxis.GetSamplesCount();t++)
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
+    const auto & ContinuumFluxAxis =m_ContinuumFluxAxis;
+    for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
-        Y[t] = m_SpcFluxAxis[t]-fluxAxis[t]+m_ContinuumFluxAxis[t];
+        Y[t] = SpcFluxAxis[t]-fluxAxis[t]+ContinuumFluxAxis[t];
     }
 
     bool enableSmoothBlendContinuUnderLines=true;
@@ -366,9 +350,9 @@ const CSpectrum& CLineModelFitting::GetObservedSpectrumWithLinesRemoved(Int32 li
     {
         Float64 alphaMax = 0.9; //alpha blend = 0: only lineSubtractedFlux, alpha=1: only continuum
 
-        std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-        std::vector<UInt32> nonZeroValidEltsIdx;
-        for(UInt32 j=0; j<validEltsIdx.size(); j++)
+        TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+        TInt32List nonZeroValidEltsIdx;
+        for(Int32 j=0; j<validEltsIdx.size(); j++)
         {
             Int32 lineType = m_Elements[validEltsIdx[j]]->m_Rays[0].GetType();
             if(!(lineTypeFilter==-1 || lineTypeFilter==lineType))
@@ -383,10 +367,10 @@ const CSpectrum& CLineModelFitting::GetObservedSpectrumWithLinesRemoved(Int32 li
         }
         if(nonZeroValidEltsIdx.size()>0)
         {
-            std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( nonZeroValidEltsIdx );
+            TInt32List supportIdxes = m_Elements.getSupportIndexes( nonZeroValidEltsIdx );
             if(supportIdxes.size()>0)
             {
-                for( UInt32 i=1; i<supportIdxes.size(); i++ )
+                for( Int32 i=1; i<supportIdxes.size(); i++ )
                 {
                     Float64 weighting = GetWeightingAnyLineCenterProximity(supportIdxes[i], nonZeroValidEltsIdx);
                     Float64 alpha = alphaMax*weighting;
@@ -413,43 +397,38 @@ const CSpectrum& CLineModelFitting::GetObservedSpectrumWithLinesRemoved(Int32 li
  * @param spectrumfluxAxis
  * @param redshift
  * @param continuumfluxAxis
- * @return -1: zero samples found for error estimation, -9: not enough samples found for error estimation, -99: bad continuum winsize
+ * @return -1: zero samples found for error estimation, NAN: not enough samples found for error estimation
  */
 Float64 CLineModelFitting::GetContinuumError(Int32 eIdx, Int32 subeIdx)
 {
-//    if(m_inputSpc->GetMedianWinsize()<=0)
-//    {
-//        return -99;
-//    }
-    UInt32 nMinValueForErrorEstimation=10;
+    Int32 nMinValueForErrorEstimation=10;
 
     const CSpectrum& noLinesSpectrum = GetObservedSpectrumWithLinesRemoved();
     const CSpectrumFluxAxis& noLinesFluxAxis = noLinesSpectrum.GetFluxAxis();
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     const TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
-    Float64 winsizeAngstrom = 150;
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
+    Float64 winsizeAngstrom = 150.;
 
     Float64 mu = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
-    TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
+    TInt32Range indexRange = CLineModelElement::EstimateIndexRange( spectralAxis,
                                                                     mu,
                                                                     lambdaRange,
                                                                     winsizeAngstrom);
 
     //estimate sum square error between continuum and nolines-spectrum
     Float64 sum=0.0;
-    UInt32 nsum = 0;
+    Int32 nsum = 0;
     for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd();t++)
     {
-        Float64 diff = noLinesFluxAxis[t]-m_ContinuumFluxAxis[t];
+        Float64 diff = noLinesFluxAxis[t]-ContinuumFluxAxis[t];
         sum += diff*diff;
         nsum++;
     }
 
-    Float64 error = -1.;
-    if(nsum<nMinValueForErrorEstimation || nsum<1)
+    Float64 error = NAN;
+    if(nsum>=nMinValueForErrorEstimation)
     {
-        return -9.;
-    }else{
         error = sqrt(sum/nsum);
     }
 
@@ -476,7 +455,7 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
                                                       const TInt32List & subeIdx_list,
                                                       Int32 opt_cont_substract_abslinesmodel,
                                                       Float64& fluxdi,
-                                                      Float64& snrdi)
+                                                      Float64& snrdi) const
 {
     Int32 ret=0;
     Float64 nsigma = 6.; //total range: ie. range will be mu-nsigma/2; mu+nsigma/2
@@ -489,7 +468,6 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
 
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     const TFloat64Range lambdaRange = spectralAxis.GetLambdaRange(); //using the full wavelength range for this error estimation
-
     TInt32List indexes;
     for(Int32 kl=0; kl<nlines; kl++)
     {
@@ -498,14 +476,14 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
 
         Float64 mu = NAN;
         Float64 LineWidth = NAN;
-        m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, LineWidth, true);
+        m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, LineWidth);
 
         Float64 winsizeAngstrom = LineWidth*nsigma;
 
-        TInt32Range indexRange = m_Elements[eIdx]->EstimateIndexRange(spectralAxis,
-                                                                      mu,
-                                                                      lambdaRange,
-                                                                      winsizeAngstrom);
+        TInt32Range indexRange = CLineModelElement::EstimateIndexRange( spectralAxis,
+                                                                        mu,
+                                                                        lambdaRange,
+                                                                        winsizeAngstrom);
 
 
         for( Int32 t=indexRange.GetBegin();t<indexRange.GetEnd();t++)
@@ -520,18 +498,18 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
     Int32 n_indexes = indexes.size();
 
     //prepare the continuum
-    CSpectrumFluxAxis continuumFlux(m_ContinuumFluxAxis.GetSamplesCount());
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
+    CSpectrumFluxAxis continuumFlux(ContinuumFluxAxis.GetSamplesCount());
     if(opt_cont_substract_abslinesmodel<=0)
     {
         Int32 t;
         for( Int32 kt=0;kt<n_indexes;kt++)
         {
             t=indexes[kt];
-            continuumFlux[t] = m_ContinuumFluxAxis[t];
+            continuumFlux[t] = ContinuumFluxAxis[t];
         }
     }else{
-        CSpectrumFluxAxis absLinesModelFlux(m_ContinuumFluxAxis.GetSamplesCount());
-        getModel(absLinesModelFlux, CRay::nType_Absorption); //contains the continuum and abs lines model
+        CSpectrumFluxAxis absLinesModelFlux = getModel(CRay::nType_Absorption); //contains the continuum and abs lines model;
         Int32 t;
         for( Int32 kt=0;kt<n_indexes;kt++)
         {
@@ -543,20 +521,22 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
     //estimate the integrated flux between obs. spectrum and continuum: trapezoidal intg
     Float64 sumFlux=0.0;
     Float64 sumErr=0.0;
-    UInt32 nsum = 0;
+    Int32 nsum = 0;
     Int32 t;
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
     for( Int32 kt=0;kt<n_indexes;kt++)
     {
         t=indexes[kt];
         //trapez
-        Float64 fa = m_SpcFluxAxis[t]-continuumFlux[t];
-        Float64 fb = m_SpcFluxAxis[t+1]-continuumFlux[t+1];
+        Float64 fa = SpcFluxAxis[t]-continuumFlux[t];
+        Float64 fb = SpcFluxAxis[t+1]-continuumFlux[t+1];
         Float64 diffFlux = (spectralAxis[t+1]-spectralAxis[t])*(fb+fa)*0.5;
         sumFlux += diffFlux;
 
 
-        Float64 ea = m_ErrorNoContinuum[t]*m_ErrorNoContinuum[t];
-        Float64 eb = m_ErrorNoContinuum[t+1]*m_ErrorNoContinuum[t+1];
+        Float64 ea = ErrorNoContinuum[t]*ErrorNoContinuum[t];
+        Float64 eb = ErrorNoContinuum[t+1]*ErrorNoContinuum[t+1];
         Float64 trapweight = (spectralAxis[t+1]-spectralAxis[t])*0.5;
         Float64 diffError = trapweight*trapweight*(eb+ea);
         sumErr += diffError;
@@ -578,8 +558,8 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
             snrdi = fluxdi/sqrt(sumErr);
         }else
         {
-            fluxdi = 0.;
-            snrdi = -99.;
+            fluxdi = NAN;
+            snrdi = NAN;
          }
 
     }else{
@@ -590,18 +570,18 @@ Int32 CLineModelFitting::GetFluxDirectIntegration(const TInt32List & eIdx_list,
 
 }
 
-Float64 CLineModelFitting::getModelFluxVal(UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxVal(Int32 idx) const
 {
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel.GetFluxAxis();
     if(idx<modelFluxAxis.GetSamplesCount()){
         return modelFluxAxis[idx];
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
 
-Float64 CLineModelFitting::getModelFluxDerivEltVal(UInt32 DerivEltIdx, UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const
 {
 
     const CSpectrumSpectralAxis & spectralAxis = m_SpectrumModel.GetSpectralAxis();
@@ -612,10 +592,10 @@ Float64 CLineModelFitting::getModelFluxDerivEltVal(UInt32 DerivEltIdx, UInt32 id
         return derivateVal;
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
-Float64 CLineModelFitting::getModelFluxDerivContinuumAmpEltVal(UInt32 DerivEltIdx, UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx, Int32 idx) const
 {
 
     const CSpectrumSpectralAxis & spectralAxis = m_SpectrumModel.GetSpectralAxis();
@@ -626,10 +606,10 @@ Float64 CLineModelFitting::getModelFluxDerivContinuumAmpEltVal(UInt32 DerivEltId
         return derivateVal;
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
-Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(UInt32 idx)const{
+Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(Int32 idx)const{
   const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
   if(idx<spectralAxis.GetSamplesCount())
   {
@@ -639,7 +619,7 @@ Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(UInt32 idx)const{
   // if(idx< spectralAxis.GetSamplesCount()){
   //   return m_unscaleContinuumFluxAxisDerivZ[idx] * m_fitContinuum_tplFitAmplitude;
   // }
-  return -1.0;
+  throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
 // void CLineModelFitting::calculateUnscaleContinuumDerivZ(){
@@ -662,7 +642,7 @@ Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(UInt32 idx)const{
 /*
  * Calculate the partial deriv of the flux by z, when the continuum is not a variable of z
  */
-Float64 CLineModelFitting::getModelFluxDerivZEltValNoContinuum(UInt32 DerivEltIdx, UInt32 idx) const{
+Float64 CLineModelFitting::getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx, Int32 idx) const{
   const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
   Int32 iElts=DerivEltIdx;
   if(idx<spectralAxis.GetSamplesCount())
@@ -671,13 +651,13 @@ Float64 CLineModelFitting::getModelFluxDerivZEltValNoContinuum(UInt32 DerivEltId
       return derivateVal;
   }
 
-  return -1.0;
+  throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
 /*
  * Calculate the partial deriv of the flux by z, when the continuum is a variable of z, the partial deriv of z of the continuum at this lambda is given by continuumFluxDerivZ
  */
-Float64 CLineModelFitting::getModelFluxDerivZEltVal(UInt32 DerivEltIdx, UInt32 idx, Float64 continuumFluxDerivZ) const{
+Float64 CLineModelFitting::getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx, Float64 continuumFluxDerivZ) const{
   const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
   Int32 iElts=DerivEltIdx;
   if(idx<spectralAxis.GetSamplesCount())
@@ -686,38 +666,38 @@ Float64 CLineModelFitting::getModelFluxDerivZEltVal(UInt32 DerivEltIdx, UInt32 i
       return derivateVal;
   }
 
-  return -1.0;
+  throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
 /*
 Change on this function, m_SpcFluxAxisModelDerivVel has been remove,
 replace by m_SpcFluxAxisModelDerivVelEmi and m_SpcFluxAxisModelDerivVelAbs
 */
-Float64 CLineModelFitting::getModelFluxDerivVelVal(UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxDerivVelVal(Int32 idx) const
 {
     if(idx<m_SpcFluxAxisModelDerivVelEmi.GetSamplesCount()){
         return m_SpcFluxAxisModelDerivVelEmi[idx]+ m_SpcFluxAxisModelDerivVelAbs[idx];
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
-Float64 CLineModelFitting::getModelFluxDerivVelEmissionVal(UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxDerivVelEmissionVal(Int32 idx) const
 {
     if(idx<m_SpcFluxAxisModelDerivVelEmi.GetSamplesCount()){
         return m_SpcFluxAxisModelDerivVelEmi[idx];
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
-Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(UInt32 idx) const
+Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(Int32 idx) const
 {
     if(idx<m_SpcFluxAxisModelDerivVelAbs.GetSamplesCount()){
         return m_SpcFluxAxisModelDerivVelAbs[idx];
     }
 
-    return -1.0;
+    throw GlobalException(INTERNAL_ERROR,"out-of-bound index");
 }
 
 
@@ -733,16 +713,16 @@ Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(UInt32 idx) const
  **/
 void CLineModelFitting::LoadCatalog(const CRayCatalog::TRayVector& restRayList)
 {
-    CRayCatalog crctlg;
-    std::vector<CRayCatalog::TRayVector> groupList = crctlg.ConvertToGroupList(restRayList);
-    for(UInt32 ig=0; ig<groupList.size(); ig++)
+    
+  std::vector<CRayCatalog::TRayVector> groupList = CRayCatalog::ConvertToGroupList(restRayList);
+    for(Int32 ig=0; ig<groupList.size(); ig++)
     {
         std::vector<CRay> lines;
-        std::vector<Float64> amps;
-        std::vector<UInt32> inds;
-        for(UInt32 i=0; i<groupList[ig].size(); i++)
+        TFloat64List amps;
+        TInt32List inds;
+        for(Int32 i=0; i<groupList[ig].size(); i++)
         {
-            std::vector<UInt32> idx = findLineIdxInCatalog( restRayList, groupList[ig][i].GetName(), groupList[ig][i].GetType());
+            TInt32List idx = findLineIdxInCatalog( restRayList, groupList[ig][i].GetName(), groupList[ig][i].GetType());
             inds.push_back(idx[0]);
             amps.push_back(groupList[ig][i].GetNominalAmplitude());
             lines.push_back(groupList[ig][i]);
@@ -758,9 +738,9 @@ void CLineModelFitting::LoadCatalogOneMultiline(const CRayCatalog::TRayVector& r
 {
 
     std::vector<CRay> lines;
-    std::vector<Float64> amps;
-    std::vector<UInt32> inds;
-    for(UInt32 ir=0; ir<restRayList.size(); ir++)
+    TFloat64List amps;
+    TInt32List inds;
+    for(Int32 ir=0; ir<restRayList.size(); ir++)
     {
         inds.push_back(ir);
         amps.push_back(restRayList[ir].GetNominalAmplitude());
@@ -780,9 +760,9 @@ void CLineModelFitting::LoadCatalogTwoMultilinesAE(const CRayCatalog::TRayVector
     for(Int32 iType=0; iType<2; iType++)
     {
         std::vector<CRay> lines;
-        std::vector<Float64> amps;
-        std::vector<UInt32> inds;
-        for(UInt32 ir=0; ir<restRayList.size(); ir++)
+        TFloat64List amps;
+        TInt32List inds;
+        for(Int32 ir=0; ir<restRayList.size(); ir++)
         {
             if( restRayList[ir].GetType() == types[iType]){
                 inds.push_back(ir);
@@ -807,7 +787,7 @@ void CLineModelFitting::LogCatalogInfos()
 {
     Log.LogDetail( "\n");
     Log.LogDetail( "LineModel Infos: %d elements", m_Elements.size());
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         Int32 nRays = m_Elements[iElts]->GetSize();
         if(nRays<1)
@@ -815,7 +795,7 @@ void CLineModelFitting::LogCatalogInfos()
             Log.LogDetail( "LineModel ctlg: elt %d (%s): no lines", iElts, m_Elements[iElts]->GetElementTypeTag().c_str());
 
         }
-        for(UInt32 j=0; j<nRays; j++){
+        for(Int32 j=0; j<nRays; j++){
             std::string nominalAmpStr = "";
             if(nRays>0){
                 nominalAmpStr = boost::str(boost::format("(nominal amp = %.4e)") % m_Elements[iElts]->GetNominalAmplitude(j));
@@ -827,17 +807,18 @@ void CLineModelFitting::LogCatalogInfos()
 }
 
 
-void CLineModelFitting::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const std::shared_ptr<const CTemplate>& tpl){
+void CLineModelFitting::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaRange, const std::shared_ptr<const CTemplate>& tpl)
+{
   Float64 merit = INFINITY;
 
-  Float64 fitContinuumAmplitude = -1.0;
-  Float64 fitContinuumAmplitudeError = -1.0;
-  Float64 fitContinuumAmplitudeSigma = 0.0;
+  Float64 fitContinuumAmplitude = NAN;
+  Float64 fitContinuumAmplitudeError = NAN;
+  Float64 fitContinuumAmplitudeSigma = NAN;
   Float64 FitEbmvCoeff = -1.0;
   Int32 fitMeiksinIdx = -1;
-  Float64 fitDtM = -1.0;
-  Float64 fitMtM = -1.0;
-  Float64 fitLogprior = 0.0;
+  Float64 fitDtM = NAN;
+  Float64 fitMtM = NAN;
+  Float64 fitLogprior = NAN;
   Float64 overlapThreshold = 1.0;
 
   bool ignoreLinesSupport=m_secondpass_fitContinuum_outsidelinesmask;
@@ -846,7 +827,7 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaR
       maskList.resize(1);
       maskList[0]=getOutsideLinesMask();
   }
-  std::vector<Float64> redshifts(1, m_Redshift);
+  TFloat64List redshifts(1, m_Redshift);
   std::string opt_interp = "precomputedfinegrid"; //"lin";
   Int32 opt_extinction = m_secondpass_fitContinuum_igm;
   Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
@@ -855,7 +836,7 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(const TFloat64Range& lambdaR
   {
     throw GlobalException(INTERNAL_ERROR,"Elementlist, cannot SolveContinuum without m_observeGridContinuumFlux");
   }
-  Bool ret = SolveContinuum( tpl,
+  bool ret = SolveContinuum( tpl,
                              redshifts,
                              overlapThreshold,
                              maskList,
@@ -964,7 +945,7 @@ void CLineModelFitting::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with dtm=%e", m_fitContinuum_tplFitDtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with mtm=%e", m_fitContinuum_tplFitMtM);
                     Log.LogDebug( "    model : LoadFitContinuum, loaded with logprior=%e", m_fitContinuum_tplFitLogprior);
-                    Float64 tplfitsnr = -1;
+                    Float64 tplfitsnr = NAN;
                     if(m_fitContinuum_tplFitMtM>0.0)
                     {
                         tplfitsnr=m_fitContinuum_tplFitDtM/std::sqrt(m_fitContinuum_tplFitMtM);
@@ -980,15 +961,16 @@ void CLineModelFitting::LoadFitContinuum(const TFloat64Range& lambdaRange, Int32
     }
 }
 
-void CLineModelFitting::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const std::vector<Float64> & polyCoeffs){
+void CLineModelFitting::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr, const TFloat64List & polyCoeffs){
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
 
     Float64 alpha = m_fitContinuum_tplFitAlpha; //alpha blend = 1: only m_inputSpc->GetContinuumFluxAxis(), alpha=0: only tplfit
 
     m_fitContinuum_tplFitAmplitude = tplAmp;
     m_fitContinuum_tplFitAmplitudeError = tplAmpErr;
     m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
-    for (UInt32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
+    for (Int32 k=0; k<m_ContinuumFluxAxis.GetSamplesCount(); k++){
         if (alpha == 1.0)
             m_ContinuumFluxAxis[k] = 0.;
         else
@@ -996,7 +978,7 @@ void CLineModelFitting::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tpl
         if  (alpha!=0.0){
             m_ContinuumFluxAxis[k] += alpha*m_inputSpc.GetContinuumFluxAxis()[k];
         }
-        if (alpha != 1)
+        if (alpha != 1.0)
         {
             Float64 lbdaTerm=1.0;
             for(Int32 kCoeff=0; kCoeff<polyCoeffs.size(); kCoeff++)
@@ -1005,7 +987,7 @@ void CLineModelFitting::setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tpl
                 lbdaTerm *= spcSpectralAxis[k];
             }
         }
-        m_spcFluxAxisNoContinuum[k] = m_SpcFluxAxis[k]-m_ContinuumFluxAxis[k];
+        m_spcFluxAxisNoContinuum[k] = SpcFluxAxis[k]-as_const(m_ContinuumFluxAxis)[k];
     }
 }
 
@@ -1068,7 +1050,7 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(const std::shared_ptr<const CTempl
   return 0;
 }
 
-Bool CLineModelFitting::SolveContinuum( const std::shared_ptr<const CTemplate>& tpl,
+bool CLineModelFitting::SolveContinuum( const std::shared_ptr<const CTemplate>& tpl,
                                         const TFloat64List& redshifts,
                                         Float64 overlapThreshold,
                                         std::vector<CMask> maskList,
@@ -1133,10 +1115,11 @@ Bool CLineModelFitting::SolveContinuum( const std::shared_ptr<const CTemplate>& 
 
 }
 
-Int32 CLineModelFitting::LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl){
-    Float64 fitAmplitude = -1.0;
-    Float64 fitAmplitudeError = -1.0;
-    Float64 fitAmplitudeSigma = 0.;
+Int32 CLineModelFitting::LoadFitContaminantTemplate(const TFloat64Range& lambdaRange, const CTemplate& tpl)
+{
+    Float64 fitAmplitude = NAN;
+    Float64 fitAmplitudeError = NAN;
+    Float64 fitAmplitudeSigma = NAN;//nan cause dependent on the the two above
     Float64 overlapThreshold = 1.0;
 
     bool ignoreLinesSupport=false;
@@ -1164,7 +1147,7 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const TFloat64Range& lambdaR
     Int32 n = tpl.GetSampleCount();
     CSpectrumFluxAxis tplFluxAxis = tpl.GetFluxAxis();
     const CSpectrumSpectralAxis& tplSpectralAxis = tpl.GetSpectralAxis();
-    Float64* Ysrc = tplFluxAxis.GetSamples();
+    const Float64* Ysrc = tplFluxAxis.GetSamples();
     const Float64* Xsrc = tplSpectralAxis.GetSamples();
     gsl_spline *spline = gsl_spline_alloc (gsl_interp_cspline, n);
     gsl_spline_init (spline, Xsrc, Ysrc, n);
@@ -1188,7 +1171,7 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const TFloat64Range& lambdaR
 
     //*
     //Fit contaminant template AMPLITUDE
-    m_templateFittingOperator.SetRedshifts(std::vector<Float64>(1, 0.0));  //fitting an already redshifted model
+    m_templateFittingOperator.SetRedshifts(TFloat64List(1, 0.0));  //fitting an already redshifted model
     auto  templateFittingResult = std::dynamic_pointer_cast<CTemplateFittingResult>( m_templateFittingOperator.Compute(
                                                                                                                   m_tplContaminantSpcRebin,
                                                                                                                   overlapThreshold,
@@ -1242,7 +1225,7 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const TFloat64Range& lambdaR
     return 1;
 }
 
-std::shared_ptr<CModelSpectrumResult> CLineModelFitting::GetContaminantSpectrumResult()
+std::shared_ptr<CModelSpectrumResult> CLineModelFitting::GetContaminantSpectrumResult() const
 {
     std::shared_ptr<CModelSpectrumResult>  resultcont = std::make_shared<CModelSpectrumResult>( *m_tplContaminantSpcRebin );
     return resultcont;
@@ -1266,7 +1249,7 @@ Float64 CLineModelFitting::getFitContinuum_tplAmplitudeError() const
 //This SNR estimate maybe needs to use observed spectrum with lines removed ?
 Float64 CLineModelFitting::getFitContinuum_snr() const
 {
-    Float64 snr = -1;
+    Float64 snr = -1.;//shoudnt be NAN here?
     if(m_fitContinuum_tplFitMtM>0.)
     {
         snr = m_fitContinuum_tplFitDtM/std::sqrt(m_fitContinuum_tplFitMtM);
@@ -1298,7 +1281,7 @@ void CLineModelFitting::SetContinuumComponent(std::string component)
 {
     m_ContinuumComponent = component;
 
-    const UInt32 spectrumSampleCount = m_inputSpc.GetSampleCount();
+    const Int32 spectrumSampleCount = m_inputSpc.GetSampleCount();
     
     if( m_ContinuumComponent == "nocontinuum" )
     {
@@ -1333,6 +1316,13 @@ Int32 CLineModelFitting::SetFitContinuum_FitStore(const std::shared_ptr<const CT
     return 1;
 }
 
+const std::shared_ptr<const CTemplatesFitStore> & 
+CLineModelFitting::GetFitContinuum_FitStore() const
+{
+    return m_fitContinuum_tplfitStore;
+}
+
+
 Int32 CLineModelFitting::SetFitContinuum_PriorHelper(const std::shared_ptr<const CPriorHelper> & priorhelper)
 {
     m_fitContinuum_priorhelper = priorhelper;
@@ -1365,7 +1355,7 @@ void CLineModelFitting::SetFitContinuum_FitValues(std::string tplfit_name,
                                                       Float64 tplfit_dtm,
                                                       Float64 tplfit_mtm,
                                                       Float64 tplfit_logprior,
-                                                      const std::vector<Float64> & polyCoeffs)
+                                                      const TFloat64List & polyCoeffs)
 {
     m_fitContinuum_tplName = tplfit_name;
     m_fitContinuum_tplFitAmplitude = tplfit_amp;
@@ -1430,7 +1420,7 @@ Float64 CLineModelFitting::getTplshape_bestMtm() const
 }
 
 
-Int32 CLineModelFitting::getTplshape_count() 
+Int32 CLineModelFitting::getTplshape_count() const
 {
     if(m_rigidity!="tplshape")
     {
@@ -1439,17 +1429,17 @@ Int32 CLineModelFitting::getTplshape_count()
     return m_CatalogTplShape.GetCatalogsCount();
 }
 
-const std::vector<Float64> & CLineModelFitting::getTplshape_priors() 
+const TFloat64List & CLineModelFitting::getTplshape_priors()
 {
     if(m_rigidity!="tplshape")
     {
-        static std::vector<Float64> dumb;
+        static TFloat64List dumb;
         return dumb;
     }
     return m_CatalogTplShape.getCatalogsPriors();
 }
 
-const std::vector<Float64> & CLineModelFitting::GetChisquareTplshape() const
+const TFloat64List & CLineModelFitting::GetChisquareTplshape() const
 {
     return m_ChisquareTplshape;
 }
@@ -1459,9 +1449,9 @@ const std::vector<Float64> & CLineModelFitting::GetChisquareTplshape() const
  * WARNING: as stated in fit(), the prior is valid in this code structure only for tplratio with only 1 element containing the EL component, hence using idx=0 here
  * @return
  */
-std::vector<Float64> CLineModelFitting::GetPriorLinesTplshape() const
+TFloat64List CLineModelFitting::GetPriorLinesTplshape() const
 {
-    std::vector<Float64> plinestplshape;
+    TFloat64List plinestplshape;
     Int32 eltIdx = 0;
     for(Int32 ktpl=0; ktpl<m_LinesLogPriorTplshape.size(); ktpl++)
     {
@@ -1470,7 +1460,7 @@ std::vector<Float64> CLineModelFitting::GetPriorLinesTplshape() const
     return plinestplshape;
 }
 
-const std::vector<Float64> & CLineModelFitting::GetScaleMargTplshape() const
+const TFloat64List & CLineModelFitting::GetScaleMargTplshape() const
 {
     return m_ScaleMargCorrTplshape;
 }
@@ -1480,17 +1470,22 @@ const TBoolList & CLineModelFitting::GetStrongELPresentTplshape() const
     return m_StrongELPresentTplshape;
 }
 
-const std::vector<Int32> & CLineModelFitting::GetNLinesAboveSNRTplshape() const
+const TBoolList & CLineModelFitting::getHaELPresentTplshape() const
+{
+    return m_StrongHalphaELPresentTplshape;
+}
+
+const TInt32List & CLineModelFitting::GetNLinesAboveSNRTplshape() const
 {
     return m_NLinesAboveSNRTplshape;
 }
 
-Bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
+bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lambdaRange, const CSpectrumSpectralAxis &spectralAxis)
 {
     m_Redshift = redshift;
 
     //prepare the elements support
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->resetAsymfitParams();
         m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
@@ -1499,10 +1494,8 @@ Bool CLineModelFitting::initModelAtZ(Float64 redshift, const TFloat64Range& lamb
     return true;
 }
 
-Bool CLineModelFitting::setTplshapeModel(Int32 itplshape, Bool enableSetVelocity)
+bool CLineModelFitting::setTplshapeModel(Int32 itplshape, bool enableSetVelocity)
 {
-    setLyaProfileFromTplShapeCatalog(itplshape, m_forceLyaFitting, m_NSigmaSupport);
-
     SetMultilineNominalAmplitudesFast(itplshape );
 
     if(enableSetVelocity)
@@ -1523,9 +1516,9 @@ Int32 CLineModelFitting::SetTplshape_PriorHelper(const std::shared_ptr<const CPr
 }
 
 
-Bool CLineModelFitting::setTplshapeAmplitude(const std::vector<Float64> & ampsElts, const std::vector<Float64> & errorsElts)
+bool CLineModelFitting::setTplshapeAmplitude(const TFloat64List & ampsElts, const TFloat64List & errorsElts)
 {
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->SetFittedAmplitude(ampsElts[iElts], errorsElts[iElts]);
     }
@@ -1534,7 +1527,7 @@ Bool CLineModelFitting::setTplshapeAmplitude(const std::vector<Float64> & ampsEl
 
 
 
-Bool CLineModelFitting::initDtd(const TFloat64Range& lambdaRange)
+bool CLineModelFitting::initDtd(const TFloat64Range& lambdaRange)
 {
     m_dTransposeDLambdaRange = lambdaRange;
     if( m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto" )
@@ -1626,8 +1619,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     Float64 merit = INFINITY; //initializing 'on the fly' best-merit
     Float64 meritprior = 0.0; //initializing 'on the fly' best-merit-prior
-    std::vector<Float64> meritTplratio(nfitting, INFINITY); //initializing 'on the fly' best-merit per tplratio
-    std::vector<Float64> meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
+    TFloat64List meritTplratio(nfitting, INFINITY); //initializing 'on the fly' best-merit per tplratio
+    TFloat64List meritPriorTplratio(nfitting, 0.0); //initializing 'on the fly' best-merit-prior per tplratio
     for(Int32 icontfitting=0; icontfitting<ncontinuumfitting; icontfitting++)
     {
         if(m_ContinuumComponent != "nocontinuum"){
@@ -1635,54 +1628,40 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         }
         if(m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto") //the support has to be already computed when LoadFitContinuum() is called
         {
-            Int32 autoselect = 0;
-            if(m_ContinuumComponent == "tplfit")
-            {
-                autoselect = 0;
-            }else if(m_ContinuumComponent == "tplfitauto")
-            {
-                autoselect = 1;
-            }
+            Int32 autoselect = (m_ContinuumComponent == "tplfitauto");
             LoadFitContinuum(lambdaRange, icontfitting, autoselect);
         }
         if(m_ContinuumComponent != "nocontinuum")
         {
             CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
+            const auto & SpcFluxAxis = m_SpcFluxAxis;
+            const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
             m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
-            for(UInt32 i=0; i<m_SpectrumModel.GetSampleCount(); i++)
+            for(Int32 i=0; i<m_SpectrumModel.GetSampleCount(); i++)
             {
-                m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i]-ContinuumFluxAxis[i];
             }
         }
 
         if(m_enableAmplitudeOffsets)
         {
-            m_Elements.prepareAmplitudeOffset(m_spcFluxAxisNoContinuum);
+            m_Elements.prepareAmplitudeOffset();
         }
 
         for(Int32 ifitting=0; ifitting<nfitting; ifitting++)
         {
-            if(m_rigidity!="tplshape")
-            {
-                if(!m_forceDisableLyaFitting)
-                {
-                    //prepare the Lya width and asym coefficients if the asymfit profile option is met
-                    setLyaProfile(redshift, spectralAxis);
-                }
-            }else{
-
-                if(m_forcedisableTplratioISMfit)
-                {
-                    if(m_CatalogTplShape.GetIsmCoeff(ifitting)>0 && ifitting>0)
+            if(m_rigidity=="tplshape"){
+                    if(m_forcedisableTplratioISMfit && ifitting>0 && m_CatalogTplShape.GetIsmCoeff(ifitting)>0)
                     {
                         //copy the values for ebmv=ebmv_fixed (=0) here
                         m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting-1];
                         m_ScaleMargCorrTplshape[ifitting] = m_ScaleMargCorrTplshape[ifitting-1];
                         m_StrongELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting-1];
+                        m_StrongHalphaELPresentTplshape[ifitting] = m_StrongHalphaELPresentTplshape[ifitting-1];
                         m_NLinesAboveSNRTplshape[ifitting] = m_NLinesAboveSNRTplshape[ifitting-1];
                         meritTplratio[ifitting] = meritTplratio[ifitting-1];
                         meritPriorTplratio[ifitting] = meritPriorTplratio[ifitting-1];
-                        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                        for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                         {
                             m_FittedAmpTplshape[ifitting][iElts] = m_FittedAmpTplshape[ifitting-1][iElts];
                             m_FittedErrorTplshape[ifitting][iElts] = m_FittedErrorTplshape[ifitting-1][iElts];
@@ -1696,12 +1675,17 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         }
                         continue;
                     }
-                }
                 setTplshapeModel(ifitting, false);
                 //prepare the Lya width and asym coefficients if the asymfit profile option is met
                 //INFO: tpl-shape are often ASYMFIXED in the tplshape catalog files, for the lyaE profile, as of 2016-01-11
                 //INFO: tplshape can override the lyafitting, see m_opt_lya_forcefit
-                setLyaProfile(redshift, spectralAxis);
+                setLyaProfile(m_Redshift, m_CatalogTplShape.GetCatalog(ifitting).GetList(), true);
+            }else{
+                if(!m_forceDisableLyaFitting)//for asymFit, disable fitting
+                {
+                    //prepare the Lya width and asym coefficients if the asymfit profile option is met
+                    setLyaProfile(redshift, m_RestRayList);
+                }
             }
             //generate random amplitudes
             if(m_fittingmethod=="random")
@@ -1715,12 +1699,12 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 Log.LogInfo( "\nLineModel simulation: coeffAmpEmission = %.2f", coeffAmpEmission);
                 Log.LogInfo( "LineModel simulation: coeffAmpAbsorption = %.2f", coeffAmpAbsorption);
                 //fit the model amplitudes individually
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                 {
                     Float64 meanContinuum = getContinuumMeanUnderElement(iElts);
                     Float64 err = 1e-22;
                     Float64 amax = meanContinuum;
-                    if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() == CRay::nType_Absorption)
+                    if(m_Elements[iElts]->m_Rays[0].GetType() == CRay::nType_Absorption)
                     {
                         amax = meanContinuum*0.5*coeffAmpAbsorption;
                     }else{
@@ -1734,7 +1718,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     //get the max nominal amplitude
                     Int32 nRays = m_Elements[iElts]->GetSize();
                     Float64 maxNominalAmp = -1.0;
-                    for(UInt32 j=0; j<nRays; j++){
+                    for(Int32 j=0; j<nRays; j++){
                         if(maxNominalAmp<m_Elements[iElts]->GetNominalAmplitude(j))
                         {
                             maxNominalAmp = m_Elements[iElts]->GetNominalAmplitude(j);
@@ -1749,7 +1733,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             if(m_fittingmethod=="individual")
             {
                 //fit the model amplitudes individually
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                 {
                     m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, redshift);
 
@@ -1785,7 +1769,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 if(controllers.size() == 0){
                     Log.LogError("LMfit : No Controller created");
                 }
-                for( UInt32 i=0; i<controllers.size(); i++ )
+                for( Int32 i=0; i<controllers.size(); i++ )
                 {
                   CLmfitController *controller = controllers[i];
                   //Log.LogInfo("Continuum Template use : %s", controller->getTemplate()->GetName().c_str());
@@ -1793,8 +1777,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     LoadFitContinuumOneTemplate(lambdaRange, controller->getTemplate());
                   }
                   // adding element base on configuration
-                  std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-                  for (UInt32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
+                  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+                  for (Int32 iElt = 0; iElt < validEltsIdx.size(); iElt++)
                   {
                     // if(controller->isLineTypeVelocityFitted(m_RestRayList[m_Elements[validEltsIdx[iElt]]->m_LineCatalogIndexes[0]].GetType()))
                     // {
@@ -1832,16 +1816,16 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     std::shared_ptr<const CTemplate> tpl = bestController->getTemplate();
                     
                     ApplyContinuumOnGrid(tpl, m_Redshift);
-                    std::vector<Float64> polyCoeffs;
+                    TFloat64List polyCoeffs;
                     setFitContinuum_tplAmplitude(bestController->getContinuumAmp(), bestController->getContinuumAmpErr(), polyCoeffs);
                       //setFitContinuum_tplAmplitude(  bestController->getContinuumAmp());
                   }else if (bestController-> isRedshiftFitted()){
                     setRedshift(bestController-> getRedshift(), bestController->isContinuumLoaded());
 
                   }
-                  std::vector<UInt32> bestFilteredEltsIdx = bestController->getFilteredIdx();
+                  TInt32List bestFilteredEltsIdx = bestController->getFilteredIdx();
 
-                  for (UInt32 iElt = 0; iElt < bestFilteredEltsIdx.size(); iElt++)
+                  for (Int32 iElt = 0; iElt < bestFilteredEltsIdx.size(); iElt++)
                   {
                       Float64 amp = bestController->getLineAmp(iElt);
                       Float64 ampErr = bestController->getLineAmpErr(iElt);
@@ -1857,7 +1841,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     //Log.LogInfo("LMfit : VelAbsorption= %.1f, z = %f", bestController->getAbsorptionVelocity(), m_Redshift);
                    }
                    //prepare the elements support
-                   for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                   for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                    {
                        m_Elements[iElts]->prepareSupport(spectralAxis, redshift, lambdaRange);
                    }
@@ -1873,9 +1857,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             //fit the amplitude of all elements together with linear solver: gsl_multifit_wlinear
             if(m_fittingmethod=="svd")
             {
-                std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-                std::vector<Float64> ampsfitted;
-                std::vector<Float64> errorsfitted;
+                TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+                TFloat64List ampsfitted;
+                TFloat64List errorsfitted;
                 fitAmplitudesLinSolveAndLambdaOffset(validEltsIdx,
                                                      spectralAxis,
                                                      m_spcFluxAxisNoContinuum,
@@ -1898,12 +1882,12 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
                 m_fitContinuum_tplFitAmplitude = 1.0;
                 m_fitContinuum_tplFitAmplitudeError = 1.0;
-                std::vector<Float64> polyCoeffs_unused;
+                TFloat64List polyCoeffs_unused;
                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs_unused);
 
-                std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-                std::vector<Float64> ampsfitted;
-                std::vector<Float64> errorsfitted;
+                TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+                TFloat64List ampsfitted;
+                TFloat64List errorsfitted;
                 Float64 chi2_cl = INFINITY;
                 Int32 fitc_polyOrder = -1;
                 if(m_fittingmethod=="svdlcp2")
@@ -1923,17 +1907,19 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
 
                 m_fitContinuum_tplFitAmplitude = ampsfitted[validEltsIdx.size()];
-                std::vector<Float64> polyCoeffs;
+                TFloat64List polyCoeffs;
                 for(Int32 kpoly=validEltsIdx.size()+1; kpoly<ampsfitted.size();kpoly++)
                 {
                     polyCoeffs.push_back(ampsfitted[kpoly]);
                 }
                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError, polyCoeffs);
                 CSpectrumFluxAxis modelFluxAxis =  m_ContinuumFluxAxis; 
+                const auto & SpcFluxAxis = m_SpcFluxAxis;
+                const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
                 m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));             
-                for(UInt32 i=0; i<m_SpectrumModel.GetSampleCount(); i++)
+                for(Int32 i=0; i<m_SpectrumModel.GetSampleCount(); i++)
                 {
-                    m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                    m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i]-ContinuumFluxAxis[i];
                 }
 
                 //2. loop on the continuum templates from catalog
@@ -1941,8 +1927,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 bool stop_loop_tpl = false;
                 Float64 bestChi2 = INFINITY;
                 Float64 bestAmp = 1.0;
-                std::string bestTplName = "-1";
-                for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+                std::string bestTplName = "undefined";
+                for( Int32 i=0; i<m_tplCategoryList.size(); i++ )
                 {
                     if(stop_loop_tpl)
                     {
@@ -1950,7 +1936,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     }
                     std::string category = m_tplCategoryList[i];
 
-                    for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+                    for( Int32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
                     {
                         if(stop_loop_tpl)
                         {
@@ -1967,9 +1953,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         m_fitContinuum_tplFitAmplitude = 1.0;
                         setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
 
-                        std::vector<UInt32> validEltsIdx = GetModelValidElementsIndexes();
-                        std::vector<Float64> ampsfitted;
-                        std::vector<Float64> errorsfitted;
+                        TInt32List validEltsIdx = GetModelValidElementsIndexes();
+                        TFloat64List ampsfitted;
+                        TFloat64List errorsfitted;
                         Float64 chi2_cl = INFINITY;
                         fitAmplitudesLinesAndContinuumLinSolve(validEltsIdx,
                                                                lambdaRange,
@@ -1996,7 +1982,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
                                 //PrepareContinuum(m_Redshift);
 
-                                for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
+                                for(Int32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
                                 {
                                     modelFluxAxis[i] = m_ContinuumFluxAxis[i];
                                     m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
@@ -2016,7 +2002,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 m_fitContinuum_tplFitAmplitude = bestAmp;
                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
                 //PrepareContinuum(m_Redshift);
-                for(UInt32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
+                for(Int32 i=0; i<modelFluxAxis.GetSamplesCount(); i++)
                 {
                     modelFluxAxis[i] = m_ContinuumFluxAxis[i];
                     m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
@@ -2053,28 +2039,30 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     */
                     EstimateSpectrumContinuum(enhanceLines, lambdaRange);
                     CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
+                    const auto & SpcFluxAxis = m_SpcFluxAxis;
+                    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
                     m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
-                    for(UInt32 i=0; i<m_SpectrumModel.GetSampleCount(); i++){
-                        m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i]-m_ContinuumFluxAxis[i];
+                    for(Int32 i=0; i<m_SpectrumModel.GetSampleCount(); i++){
+                        m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i]-ContinuumFluxAxis[i];
                     }
                     //*/
 
                     /*
                 //iterative continuum estimation approx: APPROX. METHOD
-                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-                std::vector<Int32> refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
+                TInt32List validEltsIdx = GetModelValidElementsIndexes();
+                TInt32List refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
                 refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
                 //*/
 
                     /*
                 //iterative continuum estimation approx: FAST METHOD
-                std::vector<Int32> validEltsIdx = GetModelValidElementsIndexes();
-                std::vector<Int32> highSNRvalidEltsIdx;
+                TInt32List validEltsIdx = GetModelValidElementsIndexes();
+                TInt32List highSNRvalidEltsIdx;
                 Float64 snrthres = 5.0;
-                for( UInt32 i=0; i<validEltsIdx.size(); i++ )
+                for( Int32 i=0; i<validEltsIdx.size(); i++ )
                 {
                     Int32 eltIdx = validEltsIdx[i];
-                    Bool isSnrHigh = false;
+                    bool isSnrHigh = false;
                     Int32 nrays = m_Elements[eltIdx]->GetSize();
                     for(Int32 iray=0; iray<nrays; iray++)
                     {
@@ -2091,7 +2079,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         highSNRvalidEltsIdx.push_back(eltIdx);
                     }
                 }
-                std::vector<Int32> refreshIdxs = ReestimateContinuumUnderLines(highSNRvalidEltsIdx);
+                TInt32List refreshIdxs = ReestimateContinuumUnderLines(highSNRvalidEltsIdx);
                 refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis, spcFluxAxisNoContinuum);
                 //*/
 
@@ -2104,7 +2092,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             //set all the amplitudes to 1.0
             if(m_fittingmethod=="ones")
             {
-                for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                 {
                     m_Elements[iElts]->SetFittedAmplitude(1.0, 1.0);
                 }
@@ -2133,15 +2121,19 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 modelSolution = GetModelSolution();
                 continuumModelSolution = GetContinuumModelSolution();
                 //Log.LogInfo( "LineModel Infos: TPLCORR");
-                std::vector<Float64> correctedAmplitudes;
+                TFloat64List correctedAmplitudes;
                 correctedAmplitudes.resize(modelSolution.Amplitudes.size());
                 std::string bestTplName = "";
 
                 m_CatalogTplShape.GetBestFit( modelSolution.Rays, modelSolution.Amplitudes, modelSolution.Errors, correctedAmplitudes, bestTplName);
-                for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
-                {
-                    Int32 eIdx = m_Elements.FindElementIndex(iRestRay);
-                    Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+                for( Int32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+                {   
+                    Int32 subeIdx = undefIdx;
+                    Int32 eIdx = m_Elements.findElementIndex(iRestRay, subeIdx);
+                    if(eIdx == undefIdx  || subeIdx == undefIdx){
+                        Log.LogInfo("indexes are  -1");
+                        continue;
+                    }
                     Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx); //not modifying the fitting error for now
                     Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
                     m_Elements[eIdx]->SetFittedAmplitude(correctedAmplitudes[iRestRay]/nominalAmp, er);
@@ -2156,7 +2148,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
             if(m_rigidity=="tplshape")
             {
-                Float64 _merit;
+                Float64 _merit = INFINITY;
                 //if(enableLogging || m_ContinuumComponent == "tplfit")
                 if(enableLogging)
                 {
@@ -2185,11 +2177,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     {
                         //
                         Float64 ampl=0.0;
-                        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                        for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                         {
                             bool foundAmp=false;
-                            UInt32 nRays = m_Elements[iElts]->GetSize();
-                            for(UInt32 j=0; j<nRays; j++){
+                            Int32 nRays = m_Elements[iElts]->GetSize();
+                            for(Int32 j=0; j<nRays; j++){
                                 if(foundAmp)
                                 {
                                     break;
@@ -2219,13 +2211,16 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     m_ChisquareTplshape[ifitting] = _merit;
                     m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
                     m_StrongELPresentTplshape[ifitting] = GetModelStrongEmissionLinePresent();
-                    //m_StrongELPresentTplshape[ifitting] = GetModelHaStrongest(); //warning: hardcoded selpp replaced by whasp for lm-tplratio
-                    std::vector<std::string> strongELSNRAboveCut;// = getLinesAboveSNR(3.5); //this is costing a lot of processing time, so deactivated for now.
+                    //given that Ha is a strong emission line, 
+                    if(m_opt_haprior>0.)//check first that haprior is activated
+                        m_StrongHalphaELPresentTplshape[ifitting] = m_StrongELPresentTplshape[ifitting]?GetModelHaStrongest():false;//result per tplratio
+                    
+                    TStringList strongELSNRAboveCut;// = getLinesAboveSNR(3.5); //this is costing a lot of processing time, so deactivated for now.
                     m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
                     //Saving the model A, errorA, and dtm, mtm, ... (for all tplratios, needed ?)
                     //NB: this is only needed for the index=savedIdxFitted ultimately
-                    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+                    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
                     {
                         m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
 
@@ -2242,8 +2237,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                         bool allampzero = true;
                         //*/
 
-                        UInt32 nRays = m_Elements[iElts]->GetSize();
-                        for(UInt32 j=0; j<nRays; j++){
+                        Int32 nRays = m_Elements[iElts]->GetSize();
+                        for(Int32 j=0; j<nRays; j++){
                             if(savedAmp)
                             {
                                 break;
@@ -2352,7 +2347,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
             //Set the velocities from templates: todo auto switch when velfit is ON
             //m_CatalogTplShape.GetCatalogVelocities(savedIdxFitted, m_velocityEmission, m_velocityAbsorption);
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
                 Log.LogDetail( "    model - Linemodel: tplratio = %d (%s, with ebmv=%.3f), and A=%e", savedIdxFitted, m_tplshapeBestTplName.c_str(), m_tplshapeBestTplIsmCoeff, m_FittedAmpTplshape[savedIdxFitted][iElts]);
                 m_Elements[iElts]->SetFittedAmplitude(m_FittedAmpTplshape[savedIdxFitted][iElts], m_FittedErrorTplshape[savedIdxFitted][iElts]);
@@ -2361,7 +2356,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             }
 
             //Lya
-            for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+            for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
             {
                 m_Elements[iElts]->SetAsymfitParams({m_LyaWidthCoeffTplshape[savedIdxFitted][iElts], 
                                     m_LyaAsymCoeffTplshape[savedIdxFitted][iElts], 
@@ -2392,14 +2387,14 @@ std::vector<CLmfitController*> CLineModelFitting::createLmfitControllers( const 
         useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
         }
     }else{
-      for( UInt32 i=0; i<m_tplCategoryList.size(); i++ )
+      bool continumLoaded = false;  
+      for( Int32 i=0; i<m_tplCategoryList.size(); i++ )
       {
         std::string category = m_tplCategoryList[i];
 
-        for( UInt32 j=0; j<m_tplCatalog.GetTemplateCount( category ) ; j++ )
+        for( Int32 j=0; j<m_tplCatalog.GetTemplateCount( category ) ; j++ )
         {
             std::shared_ptr<const CTemplate>  tpl = m_tplCatalog.GetTemplate( category, j );
-              bool continumLoaded = false;
               useLmfitControllers.push_back(new CLmfitController(tpl, continumLoaded, m_lmfit_fitContinuum,m_lmfit_fitEmissionVelocity,  m_lmfit_fitAbsorptionVelocity));
             }
         }
@@ -2428,7 +2423,7 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiks
 }
 
 
-void CLineModelFitting::SetFittingMethod(std::string fitMethod)
+void CLineModelFitting::SetFittingMethod(const std::string &fitMethod)
 {
     m_fittingmethod = fitMethod;
 }
@@ -2440,7 +2435,7 @@ void CLineModelFitting::SetLeastSquareFastEstimationEnabled(Int32 enabled)
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit)
 {
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->SetAbsLinesLimit(limit);
     }
@@ -2467,7 +2462,7 @@ void CLineModelFitting::reinitModel()
     
 
     //init spectrum model with continuum
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis);
     }
@@ -2478,12 +2473,12 @@ void CLineModelFitting::reinitModel()
 /**
  * \brief Init the argument elements from the spectrum model with continuum.
  **/
-void CLineModelFitting::reinitModelUnderElements(const std::vector<UInt32> & filterEltsIdx, Int32 lineIdx )
+void CLineModelFitting::reinitModelUnderElements(const TInt32List & filterEltsIdx, Int32 lineIdx )
 {
     Int32 iElts;
     CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
     //init spectrum model with continuum
-    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    for( Int32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->initSpectrumModel(modelFluxAxis, m_ContinuumFluxAxis, lineIdx);
@@ -2491,18 +2486,18 @@ void CLineModelFitting::reinitModelUnderElements(const std::vector<UInt32> & fil
     m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
 }
 
-void CLineModelFitting::getModel(CSpectrumFluxAxis& modelfluxAxis, Int32 lineTypeFilter)
+CSpectrumFluxAxis CLineModelFitting::getModel(Int32 lineTypeFilter) const
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
+    CSpectrumFluxAxis modelfluxAxis(spectralAxis.GetSamplesCount());
 
-
-    UInt32 nElements = m_Elements.size();
-    for( UInt32 iElts=0; iElts<nElements; iElts++ )
+    Int32 nElements = m_Elements.size();
+    for( Int32 iElts=0; iElts<nElements; iElts++ )
     {
         m_Elements[iElts]->initSpectrumModel(modelfluxAxis, m_ContinuumFluxAxis);
     }
 
-    for( UInt32 iElts=0; iElts<nElements; iElts++ )
+    for( Int32 iElts=0; iElts<nElements; iElts++ )
     {
         Int32 lineType = m_Elements[iElts]->m_Rays[0].GetType();
         if(lineTypeFilter==-1 || lineTypeFilter==lineType)
@@ -2511,7 +2506,7 @@ void CLineModelFitting::getModel(CSpectrumFluxAxis& modelfluxAxis, Int32 lineTyp
         }
     }
 
-    return;
+    return modelfluxAxis;
 }
 
 
@@ -2527,7 +2522,7 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter)
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
 
-    Bool enableMinMaxLog = false;
+    bool enableMinMaxLog = false;
     if(enableMinMaxLog)
     {
         //check the model min/max values
@@ -2539,13 +2534,13 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter)
         Float64 fmax = -DBL_MAX;
         for(Int32 j=imin; j<imax; j++)
         {
-            if(modelFluxAxis[j]<fmin)
+            if(as_const(modelFluxAxis)[j]<fmin)
             {
-                fmin = modelFluxAxis[j];
+                fmin = as_const(modelFluxAxis)[j];
             }
             if(modelFluxAxis[j]>fmax)
             {
-                fmax = modelFluxAxis[j];
+                fmax = as_const(modelFluxAxis)[j];
             }
         }
         Log.LogDebug( "CLineModelFitting::refreshModel AFTER REINIT: model min=%e and model max=%e", fmin, fmax );
@@ -2583,8 +2578,8 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter)
     }
 
     //create spectrum model
-    UInt32 nElements = m_Elements.size();
-    for( UInt32 iElts=0; iElts<nElements; iElts++ )
+    Int32 nElements = m_Elements.size();
+    for( Int32 iElts=0; iElts<nElements; iElts++ )
     {
         Int32 lineType = m_Elements[iElts]->m_Rays[0].GetType();
         if(lineTypeFilter==-1 || lineTypeFilter==lineType)
@@ -2621,13 +2616,13 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter)
         Float64 fmax = -DBL_MAX;
         for(Int32 j=imin; j<imax; j++)
         {
-            if(modelFluxAxis[j]<fmin)
+            if(as_const(modelFluxAxis)[j]<fmin)
             {
-                fmin = modelFluxAxis[j];
+                fmin = as_const(modelFluxAxis)[j];
             }
-            if(modelFluxAxis[j]>fmax)
+            if(as_const(modelFluxAxis)[j]>fmax)
             {
-                fmax = modelFluxAxis[j];
+                fmax = as_const(modelFluxAxis)[j];
             }
         }
         Log.LogDebug( "CLineModelFitting::refreshModel AFTER addToSpectrumModel: model min=%e and model max=%e", fmin, fmax );
@@ -2649,7 +2644,7 @@ void CLineModelFitting::refreshModelInitAllGrid()
     CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
 
     //create spectrum model
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift);
     }
@@ -2661,14 +2656,14 @@ void CLineModelFitting::refreshModelInitAllGrid()
  * \brief Adds a new model to each m_Elements entry specified on the argument.
  * Works as refreshModel.
  **/
-void CLineModelFitting::refreshModelUnderElements(const std::vector<UInt32> & filterEltsIdx, Int32 lineIdx )
+void CLineModelFitting::refreshModelUnderElements(const TInt32List & filterEltsIdx, Int32 lineIdx )
 {
     reinitModelUnderElements(filterEltsIdx, lineIdx);
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
     //create spectrum model
     Int32 iElts;
-    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    for( Int32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelFluxAxis, m_ContinuumFluxAxis, m_Redshift, lineIdx);
@@ -2676,38 +2671,38 @@ void CLineModelFitting::refreshModelUnderElements(const std::vector<UInt32> & fi
     m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
 }
 
-void CLineModelFitting::refreshModelDerivVelEmissionUnderElements(const std::vector<UInt32> & filterEltsIdx)
+void CLineModelFitting::refreshModelDerivVelEmissionUnderElements(const TInt32List & filterEltsIdx)
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
-    std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
+    TInt32List supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
 
-    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    for( Int32 i=0; i<supportIdxes.size(); i++ )
     {
         m_SpcFluxAxisModelDerivVelEmi[supportIdxes[i]]=0.0;
     }
 
     //create spectrum model partial derivate vs sigma
     Int32 iElts;
-    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    for( Int32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->addToSpectrumModelDerivVel(spectralAxis, m_SpcFluxAxisModelDerivVelEmi, m_ContinuumFluxAxis,  m_Redshift, true);
     }
 }
 
-void CLineModelFitting::refreshModelDerivVelAbsorptionUnderElements(const std::vector<UInt32> & filterEltsIdx)
+void CLineModelFitting::refreshModelDerivVelAbsorptionUnderElements(const TInt32List & filterEltsIdx)
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
-    std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
+    TInt32List supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
 
-    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    for( Int32 i=0; i<supportIdxes.size(); i++ )
     {
         m_SpcFluxAxisModelDerivVelAbs[supportIdxes[i]]=0.0;
     }
 
     //create spectrum model partial derivate vs sigma
     Int32 iElts;
-    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    for( Int32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->addToSpectrumModelDerivVel(spectralAxis, m_SpcFluxAxisModelDerivVelAbs, m_ContinuumFluxAxis,  m_Redshift, false);
@@ -2715,12 +2710,12 @@ void CLineModelFitting::refreshModelDerivVelAbsorptionUnderElements(const std::v
 }
 
 
-void CLineModelFitting::refreshModelDerivVelUnderElements(const std::vector<UInt32> & filterEltsIdx)
+void CLineModelFitting::refreshModelDerivVelUnderElements(const TInt32List & filterEltsIdx)
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
-    std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
+    TInt32List supportIdxes = m_Elements.getSupportIndexes( filterEltsIdx );
 
-    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    for( Int32 i=0; i<supportIdxes.size(); i++ )
     {
         m_SpcFluxAxisModelDerivVelEmi[supportIdxes[i]]=0.0;
         m_SpcFluxAxisModelDerivVelAbs[supportIdxes[i]]=0.0;
@@ -2728,7 +2723,7 @@ void CLineModelFitting::refreshModelDerivVelUnderElements(const std::vector<UInt
 
     //create spectrum model partial derivate vs sigma
     Int32 iElts;
-    for( UInt32 i=0; i<filterEltsIdx.size(); i++ )
+    for( Int32 i=0; i<filterEltsIdx.size(); i++ )
     {
         iElts = filterEltsIdx[i];
         m_Elements[iElts]->addToSpectrumModelDerivVel(spectralAxis, m_SpcFluxAxisModelDerivVelEmi, m_ContinuumFluxAxis,  m_Redshift, true);
@@ -2745,16 +2740,17 @@ void CLineModelFitting::setModelSpcObservedOnSupportZeroOutside(  const TFloat64
     CSpectrumFluxAxis modelFluxAxis(m_SpectrumModel.GetSampleCount()); //set to zeros
 
     //prepare the elements
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         m_Elements[iElts]->prepareSupport(spectralAxis, m_Redshift, lambdaRange);
     }
 
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( validEltsIdx );
-    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    TInt32List supportIdxes = m_Elements.getSupportIndexes( validEltsIdx );
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
+    for( Int32 i=0; i<supportIdxes.size(); i++ )
     {
-        modelFluxAxis[supportIdxes[i]] = m_SpcFluxAxis[supportIdxes[i]];
+        modelFluxAxis[supportIdxes[i]] = SpcFluxAxis[supportIdxes[i]];
     }
 
     m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
@@ -2764,21 +2760,21 @@ void CLineModelFitting::setModelSpcObservedOnSupportZeroOutside(  const TFloat64
 /**
  * \brief Creates and returns a Mask with 0 in the lines support, 1 under the lines
  **/
-CMask CLineModelFitting::getOutsideLinesMask()
+CMask CLineModelFitting::getOutsideLinesMask() const
 {
     CMask _mask;
     //initialize the model spectrum
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     _mask.SetSize(spectralAxis.GetSamplesCount());
 
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    std::vector<UInt32> supportIdxes = m_Elements.getSupportIndexes( validEltsIdx );
-    for( UInt32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    TInt32List supportIdxes = m_Elements.getSupportIndexes( validEltsIdx );
+    for( Int32 i=0; i<spectralAxis.GetSamplesCount(); i++ )
     {
         _mask[i]=1;
     }
     //setting masks
-    for( UInt32 i=0; i<supportIdxes.size(); i++ )
+    for( Int32 i=0; i<supportIdxes.size(); i++ )
     {
         _mask[supportIdxes[i]] = 0;
     }
@@ -2792,44 +2788,37 @@ CMask CLineModelFitting::getOutsideLinesMask()
  * input: which = 1: uses the spectrum flux continuum subtracted to compute STD
  * input: which = 2: uses the spectrum error to compute STD
  **/
-Float64 CLineModelFitting::getOutsideLinesSTD( Int32 which, TFloat64Range lambdarange)
+Float64 CLineModelFitting::getOutsideLinesSTD( Int32 which, const TFloat64Range &lambdarange) const
 {
     if(which!=1 && which!=2)
     {
         Log.LogError( "    model: getOutsideLinesSTD - Failed to parse input argument, which" );
         return -1;
     }
-    Float64 estimated_std = -1.;
+
     CMask _mask = getOutsideLinesMask();
 
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     Float64 sum2 = 0.0;
     Int32 nsum=0;
-    Float64 imin = spectralAxis.GetIndexAtWaveLength(lambdarange.GetBegin());
-    Float64 imax = spectralAxis.GetIndexAtWaveLength(lambdarange.GetEnd());
-    for( UInt32 i=imin; i<imax; i++ )
+    Int32 imin = spectralAxis.GetIndexAtWaveLength(lambdarange.GetBegin());
+    Int32 imax = spectralAxis.GetIndexAtWaveLength(lambdarange.GetEnd());
+    const auto & spcFluxAxisNoContinuum = m_spcFluxAxisNoContinuum;
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
+    for( Int32 i=imin; i<imax; i++ )
     {
-        if(_mask[i])
-        {
-            if(which==1)
-            {
-                sum2 += m_spcFluxAxisNoContinuum[i]*m_spcFluxAxisNoContinuum[i];
-                nsum++;
-            }else if(which==2)
-            {
-                sum2 += m_ErrorNoContinuum[i]*m_ErrorNoContinuum[i];
-                nsum++;
-            }
-        }
-    }
-    if(nsum>0)
-    {
-        estimated_std = sqrt(sum2/nsum);
-    }else{
-        return -1.;
+        if(!_mask[i]) continue;
+        
+        if(which==1)
+            sum2 += spcFluxAxisNoContinuum[i]*spcFluxAxisNoContinuum[i];
+        else if(which==2)
+            sum2 += ErrorNoContinuum[i]*ErrorNoContinuum[i];
+        nsum++;
     }
 
-    return estimated_std;
+    if(!nsum) 
+        return NAN;
+    return sqrt(sum2/nsum);
 }
 
 /**
@@ -2853,14 +2842,14 @@ Float64 CLineModelFitting::getOutsideLinesSTD( Int32 which, TFloat64Range lambda
 Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectralAxis, const CSpectrumFluxAxis& spcFluxAxisNoContinuum, const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift)
 {
   const bool verbose=true;
-  std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-  std::vector<UInt32> indexesFitted;
-  for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+  TInt32List indexesFitted;
+  for( Int32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
   {
-      UInt32 iElts = validEltsIdx[iValidElts];
+      Int32 iElts = validEltsIdx[iValidElts];
       //skip if already fitted
       bool alreadyfitted=false;
-      for(UInt32 i=0; i<indexesFitted.size(); i++)
+      for(Int32 i=0; i<indexesFitted.size(); i++)
       {
           if(iElts == indexesFitted[i])
           {
@@ -2874,10 +2863,10 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
       }
       //do the fit on the ovelapping elements
       Float64 overlapThres = 0.15; //15% seemed necessary for Ha/SII complex when lines are very wide (either because of PSF or source size)
-      std::vector<UInt32> overlappingInds = m_Elements.getOverlappingElements(iElts, indexesFitted,m_Redshift,  overlapThres);
+      TInt32List overlappingInds = m_Elements.getOverlappingElements(iElts, indexesFitted,m_Redshift,  overlapThres);
 
       //setting the fitting group info
-      for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+      for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
       {
           std::string fitGroupTag = boost::str(boost::format("hy%d") % iValidElts);
           m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo=fitGroupTag;
@@ -2888,7 +2877,7 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
       {
           //Log.LogDebug( "Redshift: %f", m_Redshift);
           Log.LogDebug( "    model: hybrid fit: #%d - N overlapping=%d", iValidElts, overlappingInds.size());
-          for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+          for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
           {
               Log.LogDebug( "    model: hybrid fit:     overlapping #%d - eltIdx=%d", ifit, overlappingInds[ifit]);
           }
@@ -2899,7 +2888,7 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
           {
             Log.LogDebug( "    model: hybrid fit:     Individual fit");
           }
-          m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
+          m_Elements[iElts]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
       }
       else
       {
@@ -2908,19 +2897,18 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
             Log.LogDebug( "    model: hybrid fit:     SVD fit");
           }
           //fit individually: mainly for mtm and dtm estimation
-          for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+          for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
           {
-              m_Elements[overlappingInds[ifit]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
+              m_Elements[overlappingInds[ifit]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
           }
-          std::vector<Float64> ampsfitted;
-          std::vector<Float64> errorsfitted;
-          Int32 retVal = -1;
-          retVal = fitAmplitudesLinSolveAndLambdaOffset(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
+          TFloat64List ampsfitted;
+          TFloat64List errorsfitted;
+          Int32 retVal = fitAmplitudesLinSolveAndLambdaOffset(overlappingInds, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
           // if all the amplitudes fitted don't have the same sign, do it separately
-          std::vector<UInt32> overlappingIndsSameSign;
+          TInt32List overlappingIndsSameSign;
           if(retVal!=1 && ampsfitted.size()>0)
           {
-              for(UInt32 ifit=0; ifit<overlappingInds.size(); ifit++)
+              for(Int32 ifit=0; ifit<overlappingInds.size(); ifit++)
               {
                   if(ampsfitted[ifit]>0)
                   {
@@ -2935,16 +2923,15 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
               //fit the rest of the overlapping elements (same sign) together
               if(!m_enableAmplitudeOffsets && overlappingIndsSameSign.size()==1)
               {
-                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
+                  m_Elements[overlappingIndsSameSign[0]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
               }else if(overlappingIndsSameSign.size()>0){
-                  Int32 retVal2=-1;
-                  retVal2 = fitAmplitudesLinSolveAndLambdaOffset(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
+                  Int32 retVal2 = fitAmplitudesLinSolveAndLambdaOffset(overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit);
 
                   if(retVal2!=1){
-                      for(UInt32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
+                      for(Int32 ifit=0; ifit<overlappingIndsSameSign.size(); ifit++)
                       {
                           if(ampsfitted[ifit]>0){
-                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, -1, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
+                              m_Elements[overlappingIndsSameSign[ifit]]->fitAmplitudeAndLambdaOffset(spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift, undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep, m_LambdaOffsetMin, m_LambdaOffsetMax);
                           }else{
                               m_Elements.SetElementAmplitude(overlappingIndsSameSign[ifit], 0.0, errorsfitted[ifit]);
                           }
@@ -2956,7 +2943,7 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
       }
 
       //update the already fitted list
-      for(UInt32 i=0; i<overlappingInds.size(); i++)
+      for(Int32 i=0; i<overlappingInds.size(); i++)
       {
           indexesFitted.push_back(overlappingInds[i]);
       }
@@ -2985,8 +2972,8 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(const CSpectrumSpectralAxis& spectr
  */
 Int32 CLineModelFitting::estimateMeanSqFluxAndGradient(const Float64* varPack,
                                                            const Float64 normFactor,
-                                                           const std::vector<UInt32> & filteredEltsIdx,
-                                                           const std::vector<UInt32> & xInds,
+                                                           const TInt32List & filteredEltsIdx,
+                                                           const TInt32List & xInds,
                                                            Int32 lineType,
                                                            Float64* fluxdata,
                                                            Float64* msqBuffer,
@@ -2994,7 +2981,7 @@ Int32 CLineModelFitting::estimateMeanSqFluxAndGradient(const Float64* varPack,
                                                            Float64* g)
 {
     // update the linemodel amplitudes
-    for (UInt32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+    for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
     {
         Float64 amp = varPack[iElt]/normFactor;
         m_Elements.SetElementAmplitude(filteredEltsIdx[iElt], amp, 0.0);
@@ -3022,13 +3009,13 @@ Int32 CLineModelFitting::estimateMeanSqFluxAndGradient(const Float64* varPack,
     }
 
     refreshModelDerivVelUnderElements(filteredEltsIdx);
-    for (UInt32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+    for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
     {
         g[iElt]=0.0;
     }
     for (Int32 i = 0; i < nsamples; i++)
     {
-        for (UInt32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
+        for (Int32 iElt = 0; iElt < filteredEltsIdx.size(); iElt++)
         {
             Float64 dm = getModelFluxDerivEltVal(filteredEltsIdx[iElt], xInds[i]);
             Float64 grad = 2*dm*msqBuffer[i];
@@ -3062,27 +3049,27 @@ void print_state (size_t iter, gsl_multifit_fdfsolver * s)
 
 
 Int32 CLineModelFitting::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, CLmfitController* controller)
-//std::vector<Float64>& ampsfitted, std::vector<Float64>& ampsErrfitted, Float64& velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
+//TFloat64List& ampsfitted, TFloat64List& ampsErrfitted, Float64& velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
     //http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-    Bool verbose = true;
+    bool verbose = true;
 
     if(verbose)
     {
         //Log.LogInfo("fitAmplitudesLmfit");
     }
-    std::vector<UInt32> filteredEltsIdx= controller->getFilteredIdx();
-    UInt32 nddl = filteredEltsIdx.size();
+    TInt32List filteredEltsIdx= controller->getFilteredIdx();
+    Int32 nddl = filteredEltsIdx.size();
     if(nddl<1){
         Log.LogError("Linemodel LMfit: No ray amplitude to fit");
         return -1;
     }
 
-    std::vector<UInt32> xInds;
+    TInt32List xInds;
     if(! controller->isContinuumFitted()){
         xInds = m_Elements.getSupportIndexes( filteredEltsIdx );
     }else{
-        xInds = std::vector<UInt32>(fluxAxis.GetSamplesCount());
+        xInds = TInt32List(fluxAxis.GetSamplesCount());
         //boost::push_back(xInds, fluxAxis.GetSamplesCount());
         std::iota(std::begin(xInds), std::end(xInds), 0);
     }
@@ -3237,10 +3224,11 @@ Int32 CLineModelFitting::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, 
 
     // This is the data to be fitted
     Float64 ei;
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
     for (i = 0; i < n; i++)
     {
         idx = xInds[i];
-        ei = m_ErrorNoContinuum[idx]*normFactor;
+        ei = ErrorNoContinuum[idx]*normFactor;
         weights[i] = 1.0 / (ei * ei);
         y[i] = flux[idx]*normFactor;
     }
@@ -3412,19 +3400,19 @@ Int32 CLineModelFitting::fitAmplitudesLmfit( const CSpectrumFluxAxis& fluxAxis, 
 }
 
 
-Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(UInt32 sampleIndex, const std::vector<UInt32> & EltsIdx)
+Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(Int32 sampleIndex, const TInt32List & EltsIdx) const
 {
     Float64 maxWeight=0.0;
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     Float64 currentLbda = spectralAxis[sampleIndex];
 
-    for( UInt32 i=0; i<EltsIdx.size(); i++ )
+    for( Int32 i=0; i<EltsIdx.size(); i++ )
     {
         Int32 iElts = EltsIdx[i];
 
         //getTheoreticalSupport reads from the 2 class variables
         TInt32RangeList s = m_Elements[iElts]->getTheoreticalSupport();
-        for( UInt32 iS=0; iS<s.size(); iS++ )
+        for( Int32 iS=0; iS<s.size(); iS++ )
         {
             Float64 weight = 0;
             TInt32Range range = s[iS];
@@ -3467,10 +3455,10 @@ Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(UInt32 sampleIndex
  *       If the overlap in the spectralAxis is smaller than -1 * overlapThres * winsize, add entry to indexes.
  * Sort indexes, remove duplicates from indexes, and return indexes.
  **/
-std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 ind, Float64 overlapThres )
+TInt32List CLineModelFitting::getOverlappingElementsBySupport( Int32 ind, Float64 overlapThres ) const
 {
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
-    std::vector<UInt32> indexes;
+    TInt32List indexes;
 
     if(m_Elements[ind]->IsOutsideLambdaRange())
       {
@@ -3478,12 +3466,11 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
         return indexes;
       }
     TInt32RangeList refsupport = m_Elements[ind]->getSupport();
-    const CRay& ray = m_RestRayList[m_Elements[ind]->m_LineCatalogIndexes[0]];
+    const CRay& ray = m_Elements[ind]->m_Rays[0];
     Int32 linetype = ray.GetType();
     Float64 mu = ray.GetPosition()*(1+m_Redshift);
-    std::shared_ptr<CLineProfile> profile = ray.GetProfile();
     Float64 c = m_Elements[ind]->GetLineWidth(mu, m_Redshift, ray.GetIsEmission());
-    Float64 winsize = profile->GetNSigmaSupport()*c;
+    Float64 winsize = ray.GetProfile().GetNSigmaSupport()*c;
     Float64 overlapThresholdMin = winsize*overlapThres;
     //overlapThresholdMin = 0.0;
 
@@ -3491,9 +3478,9 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
     Int32 y1=0;
     Int32 x2=0;
     Int32 y2=0;
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[0]].GetType() != linetype){
+        if(m_Elements[iElts]->m_Rays[0].GetType() != linetype){
             continue;
         }
 
@@ -3501,9 +3488,9 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
             continue;
         }
         TInt32RangeList s = m_Elements[iElts]->getSupport();
-        for( UInt32 iS=0; iS<s.size(); iS++ )
+        for( Int32 iS=0; iS<s.size(); iS++ )
         {
-            for( UInt32 iRefS=0; iRefS<refsupport.size(); iRefS++ )
+            for( Int32 iRefS=0; iRefS<refsupport.size(); iRefS++ )
             {
                 x1 = refsupport[iRefS].GetBegin();
                 x2 = refsupport[iRefS].GetEnd();
@@ -3536,13 +3523,13 @@ std::vector<UInt32> CLineModelFitting::getOverlappingElementsBySupport( UInt32 i
 }
 
 
-Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32> EltsIdx,
+Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(TInt32List EltsIdx,
                                                                    const CSpectrumSpectralAxis& spectralAxis,
                                                                    const CSpectrumFluxAxis& fluxAxis,
                                                                    const CSpectrumFluxAxis& continuumfluxAxis,
-                                                                   std::vector<Float64>& ampsfitted,
-                                                                   std::vector<Float64>& errorsfitted,
-                                                                   Bool enableOffsetFitting)
+                                                                   TFloat64List& ampsfitted,
+                                                                   TFloat64List& errorsfitted,
+                                                                   bool enableOffsetFitting)
 {
     Int32 ret=-1;
     Int32 nSteps = int((m_LambdaOffsetMax-m_LambdaOffsetMin)/m_LambdaOffsetStep+0.5);
@@ -3605,7 +3592,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32
             //todo: replace lambdarange using elements limits for speed
             for(Int32 iE=0; iE<EltsIdx.size(); iE++)
             {
-	      Float64 _fit = m_Elements.getModelErrorUnderElement(iE,fluxAxis,m_SpectrumModel.GetFluxAxis());
+	            Float64 _fit = m_Elements.getModelErrorUnderElement(iE,fluxAxis,m_SpectrumModel.GetFluxAxis());
                 sumFit += _fit;
             }
             if(sumFit<bestMerit)
@@ -3647,12 +3634,12 @@ Int32 CLineModelFitting::fitAmplitudesLinSolveAndLambdaOffset(std::vector<UInt32
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
  **/
-Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & EltsIdx,
+Int32 CLineModelFitting::fitAmplitudesLinSolve( const TInt32List & EltsIdx,
                                                     const CSpectrumSpectralAxis& spectralAxis,
                                                     const CSpectrumFluxAxis& fluxAxis,
                                                     const CSpectrumFluxAxis& continuumfluxAxis,
-                                                    std::vector<Float64>& ampsfitted,
-                                                    std::vector<Float64>& errorsfitted)
+                                                    TFloat64List& ampsfitted,
+                                                    TFloat64List& errorsfitted)
 {
   //boost::chrono::thread_clock::time_point start_prep = boost::chrono::thread_clock::now();
 
@@ -3667,7 +3654,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
     if(nddl<1){
         return -1;
     }
-    std::vector<UInt32> xInds = m_Elements.getSupportIndexes( EltsIdx );
+    TInt32List xInds = m_Elements.getSupportIndexes( EltsIdx );
     if(xInds.size()<1)
     {
         return -1;
@@ -3687,6 +3674,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
 
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* flux = fluxAxis.GetSamples();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     //Linear fit
     int i, n;
@@ -3736,7 +3724,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
         idx = xInds[i];
         xi = spectral[idx];
         yi = flux[idx]*normFactor;
-        ei = m_ErrorNoContinuum[idx]*normFactor;
+        ei = ErrorNoContinuum[idx]*normFactor;
 
         for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
         {
@@ -3845,11 +3833,9 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
     if(useAmpOffset)
     {
         Float64 x0 = gsl_vector_get(c,EltsIdx.size())/normFactor;
-        m_Elements.m_ampOffsetsX0[idxAmpOffset] = x0;
         Float64 x1 = gsl_vector_get(c,EltsIdx.size()+1)/normFactor;
-        m_Elements.m_ampOffsetsX1[idxAmpOffset] = x1;
         Float64 x2 = gsl_vector_get(c,EltsIdx.size()+2)/normFactor;
-        m_Elements.m_ampOffsetsX2[idxAmpOffset] = x2;
+        m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
     }
 
     gsl_matrix_free (X);
@@ -3876,13 +3862,13 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve( const std::vector<UInt32> & Elts
  *
  * WARNING: not sure about fitting abs. lines with this method...
  */
-Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vector<UInt32> & EltsIdx,
+Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const TInt32List & EltsIdx,
                                                                      const TFloat64Range& lambdaRange,
                                                                      const CSpectrumSpectralAxis& spectralAxis,
                                                                      const CSpectrumFluxAxis& fluxAxis,
                                                                      const CSpectrumFluxAxis& continuumfluxAxis,
-                                                                     std::vector<Float64>& ampsfitted,
-                                                                     std::vector<Float64>& errorsfitted,
+                                                                     TFloat64List& ampsfitted,
+                                                                     TFloat64List& errorsfitted,
                                                                      Float64& chisquare,
                                                                      Int32 polyOrder)
 {
@@ -3901,7 +3887,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
         nddl += polyOrder+1;
     }
 
-    std::vector<UInt32> xInds;
+    TInt32List xInds;
     for(Int32 i=0; i<spectralAxis.GetSamplesCount(); i++)
     {
         if(spectralAxis[i]>=lambdaRange.GetBegin() && spectralAxis[i]<=lambdaRange.GetEnd())
@@ -3921,6 +3907,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
 
     const Float64* spectral = spectralAxis.GetSamples();
     const Float64* flux = fluxAxis.GetSamples();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     //Linear fit
     int i, n;
@@ -3970,7 +3957,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
         idx = xInds[i];
         xi = spectral[idx];
         yi = flux[idx]*normFactor;
-        ei = m_ErrorNoContinuum[idx]*normFactor;
+        ei = ErrorNoContinuum[idx]*normFactor;
         ci = continuumfluxAxis[idx];
 
         for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++)
@@ -4107,129 +4094,72 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve( const std::vect
 }
 
 /**
- * SetLyaProfile should be part of CLineModelFitting, and rather takes a CLineModelFitting as argument.
- * This is mainly because no ch
-*/
-Bool CLineModelFitting::setLyaProfileFromTplShapeCatalog(Int32 iCatalog, 
-                                        bool forceLyaFitting,
-                                        const Float64 nsigmasupport)
-{
-    if(iCatalog<0)
-        return false;
-    
-    linetags ltags;
-    std::string lyaTag = ltags.lya_em;
-
-    //loop the amplitudes in the iLine_st catalog in order to find Lya 
-    CRayCatalog::TRayVector currentCatalogLineList = m_CatalogTplShape.GetCatalog(iCatalog).GetList();
-    Int32 nLines = currentCatalogLineList.size();
-
-    for(Int32 kL=0; kL<nLines; kL++)
-    {
-        if(currentCatalogLineList[kL].GetName()!=lyaTag.c_str())
-            continue;
-
-        std::shared_ptr<CLineProfile> targetProfile(currentCatalogLineList[kL].GetProfile()->Clone());
-        
-        if(forceLyaFitting)
-            targetProfile = std::make_shared<CLineProfileASYMFIT>(nsigmasupport, currentCatalogLineList[kL].GetAsymParams(), "mean");   
-
-        //find line Lya in the elementList
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
-        {
-            //get the max nominal amplitude
-            Int32 nRays = m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++)
-            {
-                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == lyaTag.c_str())
-                {
-                    m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].SetProfile(targetProfile);
-                    break;
-                }
-            }
-        }
-
-    }
-    return true;
-}
-
-/**
 * @brief CLineModelFitting::setLyaProfile
 * If a Lya line is present with ASYMFIT profile, fit the width and asymmetry parameters
 * If a Lya line is present with ASYMFIXED profile, set the width and asymmetry parameters according to profile parameters given in the string
-* @param redshift, spectralAxis
+* @param redshift, catalog (could be tplshape or linecatalog)
 * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya not configured to be fitted in the catalog
 */
-Int32 CLineModelFitting::setLyaProfile(Float64 redshift, const CSpectrumSpectralAxis &spectralAxis)
+Int32 CLineModelFitting::setLyaProfile(Float64 redshift, 
+                                       const CRayCatalog::TRayVector& catalog,
+                                       bool tplratio )
+
 {
-    Int32 verbose=0;
-    if(verbose)
-    {
-        Log.LogInfo("Setting Lya Profile");
-    }
 
     //1. retrieve the Lya index
-    linetags ltags;
     std::string lyaTag = ltags.lya_em;
-    Int32 idxLineLyaE = -1;
-    Int32 idxLyaE = m_Elements.FindElementIndex(lyaTag, -1, idxLineLyaE);
+
+    Int32 idxLineLyaE = undefIdx;
+    Int32 idxLyaE = m_Elements.findElementIndex(lyaTag, -1, idxLineLyaE);
     if( idxLyaE<0 || idxLineLyaE<0 )
     {
         return 2; //Lya alpha not found
     }
-    std::vector<UInt32> filterEltsIdxLya;
-    filterEltsIdxLya.push_back(idxLyaE);
 
-    //2. check if the profile has to be fitted
-    bool asimfitProfileFound = false;
-    bool asimfixedProfileFound = false;
-
-    Int32 nrays = m_Elements[idxLyaE]->GetSize();
-    for(Int32 iray=0; iray<nrays; iray++)
-    {
-        Int32 lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[iray];
-        std::shared_ptr<CLineProfile> profile = m_RestRayList[lineIndex].GetProfile();
-        bool lineOutsideLambdaRange = m_Elements[idxLyaE]->IsOutsideLambdaRange();
-
-        if( profile->isAsymFit() && !lineOutsideLambdaRange)
-        {
-            asimfitProfileFound = true;
-            break;
-        }else if(profile->isAsymFixed())
-        {
-            //use the manual fixed profile parameters from catalog profile string
-            asimfixedProfileFound = true;
-            m_Elements[idxLyaE]->SetAsymfitParams(m_RestRayList[lineIndex].GetAsymParams());
-            break;
-        }
-    }
-    if( !asimfitProfileFound && !asimfixedProfileFound)
-    {
-        return 3; //no profile found with parameters to be fitted
+    Int32 lineIndex = undefIdx;
+    //get index of lya inside tplshape catalog
+    if(tplratio) {
+        lineIndex = std::find_if(catalog.begin(), catalog.end(), 
+                    [lyaTag](const CRay& ray){ return ray.GetName()==lyaTag;}) - catalog.begin();
+        if(lineIndex ==undefIdx || lineIndex > catalog.size()-1)
+            return 2;//Lya alpha not found in tplshape catalog
+    }else{
+        lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[idxLineLyaE];
     }
 
-    //FIT the profile parameters
-    if(asimfitProfileFound)
-    {
-        if(verbose)
-        {
-            Log.LogInfo("Fitting Lya Profile: width, asym, delta");
-        }
+    if(lineIndex<0 || lineIndex > catalog.size()-1) throw GlobalException(INTERNAL_ERROR,"out-of-bound");
+
+    //finding or setting the correct profile
+    CLineProfile_ptr profile;
+    if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+        profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"));
+    else
+        profile =  catalog[lineIndex].GetProfile().Clone();
+    
+    bool doasymfit = profile->isAsymFit() && !m_Elements[idxLyaE]->IsOutsideLambdaRange();
+
+    m_Elements[idxLyaE]->m_Rays[idxLineLyaE].SetProfile(std::move(profile));
+
+    if(!doasymfit) return 3;
+    else{
+        TInt32List filterEltsIdxLya;
+        filterEltsIdxLya.push_back(idxLyaE);
         //3. find the best width and asym coeff. parameters
-        TAsymParams bestfitParams = FitAsymParameters(spectralAxis, redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
+        TAsymParams bestfitParams = FitAsymParameters(redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
         //4. set the associated Lya members in the element definition
         m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
     }
 
     return 1;
 }
-TAsymParams CLineModelFitting::FitAsymParameters(const CSpectrumSpectralAxis& spectralAxis, 
-                                                    const Float64& redshift, 
-                                                    const UInt32& idxLyaE,
-                                                    const TUInt32List& filterEltsIdxLya, 
-                                                    const UInt32& idxLineLyaE)
+
+TAsymParams CLineModelFitting::FitAsymParameters(const Float64& redshift, 
+                                                    const Int32& idxLyaE,
+                                                    const TInt32List& filterEltsIdxLya, 
+                                                    const Int32& idxLineLyaE)
 {
 
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
     //3. find the best width and asym coeff. parameters
     Float64 widthCoeffStep = m_opt_lya_fit_width_step;
     Float64 widthCoeffMin = m_opt_lya_fit_width_min;
@@ -4299,10 +4229,10 @@ TAsymParams CLineModelFitting::FitAsymParameters(const CSpectrumSpectralAxis& sp
 * @param EltsIdx
 * @return
 */
-std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::vector<UInt32> & EltsIdx)
+TInt32List CLineModelFitting::ReestimateContinuumUnderLines(const TInt32List & EltsIdx)
 {
     if(EltsIdx.size()<1){
-        std::vector<UInt32> empty;
+        TInt32List empty;
         return empty;
     }
 
@@ -4312,27 +4242,27 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::
     //modify m_ContinuumFluxAxis
     CSpectrumFluxAxis& fluxAxisModified = m_ContinuumFluxAxis;
     Float64* Ycont = fluxAxisModified.GetSamples();
-    CSpectrumSpectralAxis spectralAxis = m_SpectrumModel.GetSpectralAxis();
+    const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
 
-    std::vector<UInt32> xInds = m_Elements.getSupportIndexes( EltsIdx );
+    TInt32List xInds = m_Elements.getSupportIndexes( EltsIdx );
     Int32 minInd = xInds[0];
     Int32 maxInd = xInds[xInds.size()-1];
     //
-    UInt32 iminMerge = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-2*smoof);
+    Int32 iminMerge = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-2*smoof);
     if(iminMerge==0){
         iminMerge = 1;
     }
-    UInt32 imaxMerge = spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd]+2*smoof);
+    Int32 imaxMerge = spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd]+2*smoof);
     //
     //
-    UInt32 iminMerge2 = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-smoof);
+    Int32 iminMerge2 = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-smoof);
     if(iminMerge2==0){
         iminMerge2 = 1;
     }
-    UInt32 imaxMerge2 = spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd]+smoof);
+    Int32 imaxMerge2 = spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd]+smoof);
     //
-    UInt32 imin = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-3*smoof);
+    Int32 imin = spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd]-3*smoof);
     if(imin==0){
         imin = 1;
     }
@@ -4342,26 +4272,27 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::
 
     //prepare the line model with no continuum;
     CSpectrumFluxAxis modelFluxAxisTmp = m_SpectrumModel.GetFluxAxis();
-    for(UInt32 i=0; i<spcSize; i++){
+    for(Int32 i=0; i<spcSize; i++){
         modelFluxAxisTmp[i+imin]=0.0;
     }
-    for(UInt32 idx=0; idx<EltsIdx.size(); idx++){
-        UInt32 eltIdx = EltsIdx[idx];
+    for(Int32 idx=0; idx<EltsIdx.size(); idx++){
+        Int32 eltIdx = EltsIdx[idx];
         m_Elements[eltIdx]->addToSpectrumModel(spectralAxis, modelFluxAxisTmp, m_ContinuumFluxAxis, m_Redshift);
 
     }
 
     //gather the modified indexes
-    std::vector<UInt32> modifiedIdxs;
+    TInt32List modifiedIdxs;
 
     //create the spcBuffer with spectrum minus the lines
     CSpectrum spcBuffer;
     CSpectrumSpectralAxis _SpectralAxis = CSpectrumSpectralAxis(spcSize, false);
     CSpectrumFluxAxis _FluxAxis = CSpectrumFluxAxis(spcSize);
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
 
     for(Int32 i=0; i<spcSize; i++){
         (_SpectralAxis)[i] = spectralAxis[i+imin];
-        (_FluxAxis)[i] = m_SpcFluxAxis[i+imin] - modelFluxAxisTmp[i+imin];
+        (_FluxAxis)[i] = SpcFluxAxis[i+imin] - as_const(modelFluxAxisTmp)[i+imin];
         //                if( error!= NULL ){
         //                    (*_FluxAxis).GetError()[i] = tmpError[i];
         //                }
@@ -4399,8 +4330,8 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::
     Float64 modified = 0.0;
     Float64 coeff=0.0;
     //merge raw continuum free with the newly calculated cont. under the line, (todo: with cross-fade on the borders)
-    for(UInt32 i=iminMerge; i<imaxMerge; i++){
-        modified = spcBuffer.GetFluxAxis()[i-imin] - fluxAxisWithoutContinuumCalc[i-imin];
+    for(Int32 i=iminMerge; i<imaxMerge; i++){
+        modified = spcBuffer.GetFluxAxis()[i-imin] - as_const(fluxAxisWithoutContinuumCalc)[i-imin];
         coeff = 1.0;
 
         if(i<=iminMerge2){
@@ -4409,7 +4340,7 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::
             coeff = 1.0-(Float64(i-imaxMerge2)/Float64(imaxMerge-imaxMerge2));
         }
 
-        Ycont[i] = coeff*modified + (1-coeff)*Ycont[i];
+        Ycont[i] = coeff*modified + (1-coeff)*as_const(Ycont)[i];
         modifiedIdxs.push_back(i);
     }
 
@@ -4421,19 +4352,19 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumUnderLines(const std::
 /**
  * \brief Modifies the fluxAxis where SNR is good enough, and returns the list of modified indexes of fluxAxis.
  **/
-std::vector<UInt32> CLineModelFitting::ReestimateContinuumApprox(const std::vector<UInt32> & EltsIdx)
+TInt32List CLineModelFitting::ReestimateContinuumApprox(const TInt32List & EltsIdx)
 {
     //smoothing factor in continuum median filter
     Float64 smoof = 150;
 
     //
-    std::vector<UInt32> modifiedIdxs;
+    TInt32List modifiedIdxs;
 
 
     //modify m_ContinuumFluxAxis
     CSpectrumFluxAxis& fluxAxisModified = m_ContinuumFluxAxis;
     Float64* Ycont = fluxAxisModified.GetSamples();
-    CSpectrumSpectralAxis spectralAxis = m_SpectrumModel.GetSpectralAxis();
+    const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
     for(Int32 idx=0; idx<EltsIdx.size(); idx++){
         Int32 eltIdx = EltsIdx[idx];
@@ -4463,7 +4394,7 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumApprox(const std::vect
             A*= m_Elements[eltIdx]->GetSignFactor(iray);
 
             Float64 mu = NAN;Float64 sigma = NAN;
-            m_Elements[eltIdx]->getWidth(iray, m_Redshift, mu, sigma, false);
+            m_Elements[eltIdx]->getObservedPositionAndLineWidth(iray, m_Redshift, mu, sigma, false);
             Float64 integratedA = A*sigma*sqrt(2*M_PI);
             Float64 coeffA = integratedA/(Float64)sSize;
 
@@ -4495,24 +4426,25 @@ std::vector<UInt32> CLineModelFitting::ReestimateContinuumApprox(const std::vect
 /**
  * \brief Copies the continuum flux to the model flux, and the no continuum flux receives the value of spectrum flux minus the continuum flux.
  **/
-void CLineModelFitting::refreshModelAfterContReestimation(const std::vector<UInt32> & xInds, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum)
+void CLineModelFitting::refreshModelAfterContReestimation(const TInt32List & xInds, CSpectrumFluxAxis& modelFluxAxis, CSpectrumFluxAxis& spcFluxAxisNoContinuum) const
 {
     Int32 n = xInds.size();
-
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
+    const auto & SpcFluxAxis = m_SpcFluxAxis;
     Int32 idx = 0;
     for (Int32 i = 0; i < n; i++)
     {
         idx = xInds[i];
 
-        modelFluxAxis[idx] = m_ContinuumFluxAxis[idx];
-        spcFluxAxisNoContinuum[idx] = m_SpcFluxAxis[idx]-m_ContinuumFluxAxis[idx];
+        modelFluxAxis[idx] = ContinuumFluxAxis[idx];
+        spcFluxAxisNoContinuum[idx] = SpcFluxAxis[idx]-ContinuumFluxAxis[idx];
     }
 }
 
 /**
  * \brief Accumulates the squared differences between model and spectrum in the argument lambdaRange and returns the sum.
  **/
-Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
+Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange) const
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
@@ -4522,6 +4454,7 @@ Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
     Float64 fit = 0.0;
     const Float64* Ymodel = modelFluxAxis.GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
     Float64 diff = 0.0;
 
     Int32 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
@@ -4530,12 +4463,12 @@ Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
     {
         //numDevs++;
         diff = (Yspc[j] - Ymodel[j]);
-        fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
-        //        if ( 1E6 * diff < m_ErrorNoContinuum[j] )
+        fit += (diff*diff) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
+        //        if ( 1E6 * diff < ErrorNoContinuum[j] )
         //        {
         //            Log.LogDebug( "Warning: noise is at least 6 orders greater than the residue!" );
         //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit diff = %f", diff );
-        //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit m_ErrorNoContinuum[%d] = %f", j, m_ErrorNoContinuum[j] );
+        //            Log.LogDebug( "CLineModelFitting::getLeastSquareMerit ErrorNoContinuum[%d] = %f", j, ErrorNoContinuum[j] );
         //        }
     }
 
@@ -4563,12 +4496,12 @@ Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
                 break;
             }
 
-            if(std::isnan(m_ErrorNoContinuum[j]))
+            if(std::isnan(ErrorNoContinuum[j]))
             {
                 Log.LogError( "CLineModelFitting::getLeastSquareMerit: NaN value found for the sqrt(variance) at lambda=%f", spcSpectralAxis[j] );
                 break;
             }
-            if(m_ErrorNoContinuum[j]==0.0)
+            if(ErrorNoContinuum[j]==0.0)
             {
                 Log.LogError( "CLineModelFitting::getLeastSquareMerit: 0 value found for the sqrt(variance) at lambda=%f", spcSpectralAxis[j] );
                 break;
@@ -4579,24 +4512,25 @@ Float64 CLineModelFitting::getLeastSquareMerit(const TFloat64Range& lambdaRange)
     return fit;
 }
 
-Float64 CLineModelFitting::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange)
+Float64 CLineModelFitting::getLeastSquareContinuumMerit(const TFloat64Range& lambdaRange) const
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 fit = 0.0;
-    const Float64* YCont = m_ContinuumFluxAxis.GetSamples();
+    const Float64* YCont = as_const(m_ContinuumFluxAxis).GetSamples();
     const Float64* Yspc = spcFluxAxis.GetSamples();
     Float64 diff = 0.0;
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         diff = (Yspc[j] - YCont[j]);
-        fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        fit += (diff*diff) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
     }
 
     if( m_ContinuumComponent=="tplfit" || m_ContinuumComponent == "tplfitauto" )
@@ -4611,13 +4545,13 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit(const TFloat64Range& lam
 /**
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
-Float64 CLineModelFitting::getLeastSquareMeritFast(Int32 idxLine)
+Float64 CLineModelFitting::getLeastSquareMeritFast(Int32 idxLine) const
 {
     Float64 fit = getLeastSquareContinuumMeritFast();
 
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(idxLine!=-1 && idxLine!=iElts)
+        if(idxLine!=undefIdx && idxLine!=iElts)
         {
             continue;
         }
@@ -4633,7 +4567,7 @@ Float64 CLineModelFitting::getLeastSquareMeritFast(Int32 idxLine)
     return fit;
 }
 
-Float64 CLineModelFitting::getLeastSquareContinuumMeritFast()
+Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const
 {
     Float64 fit;
 
@@ -4656,7 +4590,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast()
  *
  * WARNING: (todo-check) for lm-rules or lm-free, if hybrid method was used to fit, mtm and dtm are not estimated for now...
  **/
-Float64 CLineModelFitting::getScaleMargCorrection(Int32 idxLine)
+Float64 CLineModelFitting::getScaleMargCorrection(Int32 idxLine) const
 {
     Float64 corr=0.0;
 
@@ -4665,9 +4599,9 @@ Float64 CLineModelFitting::getScaleMargCorrection(Int32 idxLine)
 
 
 
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
-        if(idxLine!=-1 && idxLine!=iElts)
+        if(idxLine!=undefIdx && idxLine!=iElts)
         {
             continue;
         }
@@ -4688,7 +4622,7 @@ Float64 CLineModelFitting::getScaleMargCorrection(Int32 idxLine)
 }
 
 
-Float64 CLineModelFitting::getContinuumScaleMargCorrection()
+Float64 CLineModelFitting::getContinuumScaleMargCorrection() const
 {
     Float64 corr=0.0;
 
@@ -4705,7 +4639,7 @@ Float64 CLineModelFitting::getContinuumScaleMargCorrection()
  * \brief Returns the number of spectral samples between lambdaRange.
  **/
 //TODO rename this ! not a simple getter
-Int32 CLineModelFitting::getSpcNSamples(const TFloat64Range& lambdaRange){
+Int32 CLineModelFitting::getSpcNSamples(const TFloat64Range& lambdaRange) const {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
 
     Int32 numDevs = 0;
@@ -4713,7 +4647,7 @@ Int32 CLineModelFitting::getSpcNSamples(const TFloat64Range& lambdaRange){
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
 
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
     }
@@ -4725,10 +4659,11 @@ Int32 CLineModelFitting::getSpcNSamples(const TFloat64Range& lambdaRange){
  * \brief Accumulates the squared differences between model and spectrum and returns the sum.
  **/
 
-Float64 CLineModelFitting::getLeastSquareMeritUnderElements()
+Float64 CLineModelFitting::getLeastSquareMeritUnderElements() const
 {
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel.GetFluxAxis();
+    const CSpectrumNoiseAxis & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 fit = 0;
@@ -4737,26 +4672,26 @@ Float64 CLineModelFitting::getLeastSquareMeritUnderElements()
     Float64 diff = 0.0;
 
     TInt32RangeList support;
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         if(m_Elements[iElts]->IsOutsideLambdaRange()){
             continue;
         }
         TInt32RangeList s = m_Elements[iElts]->getSupport();
-        for( UInt32 iS=0; iS<s.size(); iS++ )
+        for( Int32 iS=0; iS<s.size(); iS++ )
         {
             support.push_back(s[iS]);
         }
     }
 
 
-    for( UInt32 iS=0; iS<support.size(); iS++ )
+    for( Int32 iS=0; iS<support.size(); iS++ )
     {
-        for( UInt32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
+        for( Int32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
         {
             numDevs++;
             diff = (Yspc[j] - Ymodel[j]);
-            fit += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+            fit += (diff*diff) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
         }
     }
     return fit;
@@ -4769,7 +4704,7 @@ Float64 CLineModelFitting::getLeastSquareMeritUnderElements()
  * @param snrcut
  * @return
  */
-std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
+TStringList CLineModelFitting::getLinesAboveSNR(Float64 snrcut) const
 {
     TInt32List eIdx_oii;
     TInt32List subeIdx_oii;
@@ -4777,107 +4712,91 @@ std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
     TInt32List subeIdx_ciii;
 
 
-    Float64 snr_ha = -1;
-    Float64 snr_oii = -1;
-    Float64 snr_oiiia = -1;
-    //snr_oiiib = -1;
-    Float64 snr_hb = -1;
-    Float64 snr_ciii = -1;
-    Float64 snr_lya = -1;
+    Float64 snr_ha = NAN;
+    Float64 snr_oii = NAN;
+    Float64 snr_oiiia = NAN;
+    //snr_oiiib = NAN;
+    Float64 snr_hb = NAN;
+    Float64 snr_ciii = NAN;
+    Float64 snr_lya = NAN;
 
-    for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+    for( Int32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
     {
-        Int32 eIdx = m_Elements.FindElementIndex(iRestRay);
-        Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
-        if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+        Int32 subeIdx = undefIdx;
+        Int32 eIdx = m_Elements.findElementIndex(iRestRay, subeIdx);
+        if(eIdx<0 || subeIdx<0 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+            continue;
+        
+        TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
+        Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
+                                    m_SpectrumModel.GetSpectralAxis(), 
+                                    m_Redshift,
+                                    m_ContinuumFluxAxis,
+                                    polynom_coeffs);
+        Float64 mu = NAN;
+        Float64 sigma = NAN;
+        m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);
+
+        Float64 flux = NAN;
+        Float64 fluxError = NAN;
+        Float64 fluxDI = NAN;
+        Float64 snrDI = NAN;
+        TInt32List eIdx_line(1, eIdx);
+        TInt32List subeIdx_line(1, subeIdx);
+        Int32 opt_cont_substract_abslinesmodel=0;
+        bool isEmission = false;
+        if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
         {
-        }else{
-
-            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
-
-            Float64 mu = NAN;
-            Float64 sigma = NAN;
-            m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);
-
-            Float64 flux = -1;
-            Float64 fluxError = -1;
-            Float64 fluxDI = -1;
-            Float64 snrDI = -1;
-            TInt32List eIdx_line(1, eIdx);
-            TInt32List subeIdx_line(1, subeIdx);
-            Int32 opt_cont_substract_abslinesmodel=0;
-            if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                opt_cont_substract_abslinesmodel=1;
-            }
-            Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
-
-            linetags ltags;
-            // Ha
-            if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                {
-                    snr_ha = snrDI;
-                }
-            }
-            // oiii1
-            if(m_RestRayList[iRestRay].GetName()==ltags.oIIIa_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                {
-                    snr_oiiia = snrDI;
-                }
-            }
-            // hb
-            if(m_RestRayList[iRestRay].GetName()==ltags.hbeta_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                {
-                    snr_hb = snrDI;
-                }
-            }
-            // oii
-            if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
-                    && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                //here we only cover the fluxDI case.
-                eIdx_oii.push_back(eIdx);
-                subeIdx_oii.push_back(subeIdx);
-                {
-                    fluxDI = -1;
-                    Float64 snrDI = -1;
-                    Int32 opt_cont_substract_abslinesmodel=0;
-                    Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
-
-                    snr_oii = snrDI;
-                }
-            }
-            if((m_RestRayList[iRestRay].GetName()==ltags.cIII1907_em || m_RestRayList[iRestRay].GetName()==ltags.cIII1909_em)
-                    && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                //here we only cover the fluxDI case.
-                eIdx_ciii.push_back(eIdx);
-                subeIdx_ciii.push_back(subeIdx);
-                {
-                    fluxDI = -1;
-                    Float64 snrDI = -1;
-                    Int32 opt_cont_substract_abslinesmodel=0;
-                    Int32 retdi = GetFluxDirectIntegration(eIdx_ciii, subeIdx_ciii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
-
-                    snr_ciii = snrDI;
-                }
-            }
-            // lya
-            if(m_RestRayList[iRestRay].GetName()==ltags.lya_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-            {
-                {
-                    snr_lya = snrDI;
-                }
-            }
+            opt_cont_substract_abslinesmodel=1;
+            isEmission = true;
         }
+        Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
+
+        if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && isEmission)
+            snr_ha = snrDI;
+        
+        if(m_RestRayList[iRestRay].GetName()==ltags.oIIIa_em && isEmission)
+            snr_oiiia = snrDI;
+        
+        if(m_RestRayList[iRestRay].GetName()==ltags.hbeta_em && isEmission)
+            snr_hb = snrDI;
+        
+        if(m_RestRayList[iRestRay].GetName()==ltags.lya_em && isEmission)
+            snr_lya = snrDI;
+
+        if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
+                && isEmission)
+        {
+            //here we only cover the fluxDI case.
+            eIdx_oii.push_back(eIdx);
+            subeIdx_oii.push_back(subeIdx);
+            fluxDI = NAN;
+            snrDI = NAN;
+            opt_cont_substract_abslinesmodel=0;
+            Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+            snr_oii = snrDI;
+        }
+        if((m_RestRayList[iRestRay].GetName()==ltags.cIII1907_em || m_RestRayList[iRestRay].GetName()==ltags.cIII1909_em)
+                && isEmission)
+        {
+            //here we only cover the fluxDI case.
+            eIdx_ciii.push_back(eIdx);
+            subeIdx_ciii.push_back(subeIdx);
+            fluxDI = NAN;
+            snrDI = NAN;
+            opt_cont_substract_abslinesmodel=0;
+            Int32 retdi = GetFluxDirectIntegration(eIdx_ciii, subeIdx_ciii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+            snr_ciii = snrDI;
+        }
+
+    
     }
 
     //sum snr ht cut
     Int32 nhtcut = 0;
-    std::vector<std::string> str_above_cut;
+    TStringList str_above_cut;
     if(snr_ha>snrcut)
     {
         nhtcut++;
@@ -4917,27 +4836,27 @@ std::vector<std::string> CLineModelFitting::getLinesAboveSNR(Float64 snrcut)
  * 1. retrieve the lines amplitudes list for the Strong, and the Weak lines
  * 2. TODO: estimate the coefficient to be used as prior to penalise solutions with less Strong lines
  **/
-Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff()
+Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff() const
 {
     TFloat64List AmpsStrong;
     TFloat64List AmpsWeak;
     Float64 sumAmps = 0.0;
 
     //Retrieve all the lines amplitudes in two lists (1 Strong, 1 weak)
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    for( Int32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
     {
         Int32 iElts = validEltsIdx[iValidElts];
-        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
-        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        Int32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(Int32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() ){
                 continue;
             }
 
             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
             sumAmps += amp;
-            if( m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            if( m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
             {
                 AmpsStrong.push_back(amp);
             }
@@ -4949,7 +4868,7 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff()
     }
 
     Float64 sumAmpsStrong = 0.0;
-    for(UInt32 k=0; k<AmpsStrong.size(); k++)
+    for(Int32 k=0; k<AmpsStrong.size(); k++)
     {
         sumAmpsStrong += AmpsStrong[k];
     }
@@ -4962,22 +4881,22 @@ Float64 CLineModelFitting::getStrongerMultipleELAmpCoeff()
  * 1. retrieve the lines support
  * 2. process each
  **/
-Float64 CLineModelFitting::getCumulSNRStrongEL()
+Float64 CLineModelFitting::getCumulSNRStrongEL() const
 {
 
   //Retrieve all the liens supports in a list of range
     TInt32RangeList supportList;
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    for( Int32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
     {
         Int32 iElts = validEltsIdx[iValidElts];
-        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
-        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        Int32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(Int32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() ){
                 continue;
             }
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() ){
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() ){
                 continue;
             }
 
@@ -4988,8 +4907,8 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
 
     //merge overlapping ranges
     TInt32RangeList nonOverlappingSupportList;
-    std::vector<Int32> processedSupport;
-    for(UInt32 k=0; k<supportList.size(); k++)
+    TInt32List processedSupport;
+    for(Int32 k=0; k<supportList.size(); k++)
     {
         //skip if already fitted
         bool alreadyProcessed=false;
@@ -5010,7 +4929,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
         processedSupport.push_back(k);
         TInt32Range support = TInt32Range( supportList[k].GetBegin(), supportList[k].GetEnd());
 
-        for(UInt32 l=0; l<supportList.size(); l++)
+        for(Int32 l=0; l<supportList.size(); l++)
         {
             //skip if already fitted
             bool alreadyProcessed=false;
@@ -5046,7 +4965,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
     TFloat64List snrList;
     Float64 sumSNR = 0.0;
     //process SNR on the non overlapping ranges
-    for(UInt32 k=0; k<nonOverlappingSupportList.size(); k++)
+    for(Int32 k=0; k<nonOverlappingSupportList.size(); k++)
     {
         snrList.push_back(getCumulSNROnRange(nonOverlappingSupportList[k]));
         sumSNR += snrList[k];
@@ -5054,14 +4973,14 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
     std::sort( snrList.rbegin(), snrList.rend() );
 
     //compute the snr metric
-    std::vector<Int32> snrIsrelevantList;
-    for(UInt32 k=0; k<snrList.size(); k++)
+    TInt32List snrIsrelevantList;
+    for(Int32 k=0; k<snrList.size(); k++)
     {
         snrIsrelevantList.push_back(0);
     }
     Float64 thresRatio = 0.8;
     Float64 curRatio = 0.0;
-    for(UInt32 k=0; k<snrList.size(); k++)
+    for(Int32 k=0; k<snrList.size(); k++)
     {
         // relevant if snr>8.0
         if(snrList[k]>8.0)
@@ -5078,7 +4997,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
     }
 
     Float64 sumIsRelevant = 0.0;
-    for(UInt32 k=0; k<snrIsrelevantList.size(); k++)
+    for(Int32 k=0; k<snrIsrelevantList.size(); k++)
     {
         sumIsRelevant += snrIsrelevantList[k];
     }
@@ -5091,22 +5010,22 @@ Float64 CLineModelFitting::getCumulSNRStrongEL()
  * @brief CLineModelFitting::GetModelStrongLinePresent
  * @return 1 if there is 1 strong emission line present
  */
-bool CLineModelFitting::GetModelStrongEmissionLinePresent()
+bool CLineModelFitting::GetModelStrongEmissionLinePresent() const
 {
+    if(!m_RestRayList.size())
+        throw GlobalException(INTERNAL_ERROR, "m_RestframeList is empty");
+
     bool isStrongPresent = false;
 
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    for( Int32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
     {
         Int32 iElts = validEltsIdx[iValidElts];
-        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
-        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        Int32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(Int32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
-            {
-                continue;
-            }
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsStrong() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission() || 
+                !m_Elements[iElts]->m_Rays[lineIdx].GetIsStrong() )
             {
                 continue;
             }
@@ -5115,10 +5034,11 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
             if( amp>0.0)
             {
                 isStrongPresent = true;
-                Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found Strong EL: %s", m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str());
+                Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found Strong EL: %s", m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str());
                 break;
             }
         }
+        if(isStrongPresent) break;
     }
 
     return isStrongPresent;
@@ -5128,22 +5048,20 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent()
  * @brief
  * @return 1 if ha em is the strongest line present
  */
-bool CLineModelFitting::GetModelHaStrongest()
+bool CLineModelFitting::GetModelHaStrongest() const
 {
-    bool isHaStrongest = false;
     linetags ltags;
-    Float64 ampMax = -1;
-    std::string lineMax = "";
-    Float64 ampHa = -1;
+    Float64 ampMax = -DBL_MAX;
+    std::string ampMaxLineTag = "";
 
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    for( UInt32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    for( Int32 iValidElts=0; iValidElts<validEltsIdx.size(); iValidElts++ )
     {
         Int32 iElts = validEltsIdx[iValidElts];
-        UInt32 nlines =  m_Elements[iElts]->GetRays().size();
-        for(UInt32 lineIdx=0; lineIdx<nlines; lineIdx++)
+        Int32 nlines =  m_Elements[iElts]->GetRays().size();
+        for(Int32 lineIdx=0; lineIdx<nlines; lineIdx++)
         {
-            if( !m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetIsEmission() )
+            if( !m_Elements[iElts]->m_Rays[lineIdx].GetIsEmission())
             {
                 continue;
             }
@@ -5151,31 +5069,24 @@ bool CLineModelFitting::GetModelHaStrongest()
             Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
             if(amp>0. && amp>ampMax)
             {
-                lineMax = m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str();
+                ampMaxLineTag = m_Elements[iElts]->m_Rays[lineIdx].GetName().c_str();
                 ampMax = amp;
-            }
-            if( strcmp(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[lineIdx]].GetName().c_str(),ltags.halpha_em)==0)
-            {
-                ampHa = amp;
             }
         }
     }
 
-    Log.LogDebug("    model: GetModelHaStrongest - ampMax=%e (for line=%s)", ampMax, lineMax.c_str());
-    Log.LogDebug("    model: GetModelHaStrongest - ampHa=%e (for lha tag=%s)", ampHa, ltags.halpha_em);
-    if( ampHa>0.0 && ampHa==ampMax)
+    bool isHaStrongest = (!std::isnan(ampMax) && ampMax>0. && ampMaxLineTag == ltags.halpha_em); 
+    if(isHaStrongest)
     {
-        isHaStrongest = true;
-        Log.LogDebug("    model: GetModelHaStrongest - found to be true");
-    }
-
+        Log.LogDebug("    model: GetModelHaStrongest - found to be true with ampMax=%e (for line=Halpha)", ampMax);
+    }   
     return isHaStrongest;
 }
 
 /**
  * \brief Returns the cumulative SNR on the idxRange
  **/
-Float64 CLineModelFitting::getCumulSNROnRange( TInt32Range idxRange  )
+Float64 CLineModelFitting::getCumulSNROnRange( TInt32Range idxRange  ) const
 {
     Int32 n = idxRange.GetEnd() - idxRange.GetBegin() +1;
     if(n<2){
@@ -5184,6 +5095,8 @@ Float64 CLineModelFitting::getCumulSNROnRange( TInt32Range idxRange  )
 
     const CSpectrumFluxAxis& modelFluxAxis = m_SpectrumModel.GetFluxAxis();
     const Float64* Ymodel = modelFluxAxis.GetSamples();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
 
     Int32 idx = 0;
     Float64 sumF = 0.0;
@@ -5191,9 +5104,9 @@ Float64 CLineModelFitting::getCumulSNROnRange( TInt32Range idxRange  )
     for(Int32 i = 0; i < n; i++)
     {
         idx = i + idxRange.GetBegin();
-        Float64 flux = Ymodel[idx]-m_ContinuumFluxAxis[idx]; //using only the no-continuum component to estimate SNR
+        Float64 flux = Ymodel[idx]-ContinuumFluxAxis[idx]; //using only the no-continuum component to estimate SNR
         sumF += flux;
-        sumM +=  m_ErrorNoContinuum[idx]*m_ErrorNoContinuum[idx];
+        sumM +=  ErrorNoContinuum[idx]*ErrorNoContinuum[idx];
     }
     Float64 Err = std::sqrt(sumM);
     Float64 rangeSNR = sumF/Err;
@@ -5202,35 +5115,36 @@ Float64 CLineModelFitting::getCumulSNROnRange( TInt32Range idxRange  )
 }
 
 
-Float64 CLineModelFitting::getContinuumMeanUnderElement(UInt32 eltId)
+Float64 CLineModelFitting::getContinuumMeanUnderElement(Int32 eltId) const
 {
     Int32 n = 0;
     Float64 m=0.0;
     //Float64 sumErr=0.0;
 
     TInt32RangeList support;
-    UInt32 iElts=eltId;
+    Int32 iElts=eltId;
     {
         if(m_Elements[iElts]->IsOutsideLambdaRange()){
             return 0.0;
         }
         TInt32RangeList s = m_Elements[iElts]->getSupport();
-        for( UInt32 iS=0; iS<s.size(); iS++ )
+        for( Int32 iS=0; iS<s.size(); iS++ )
         {
             support.push_back(s[iS]);
         }
     }
 
-
-    for( UInt32 iS=0; iS<support.size(); iS++ )
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
+    //const auto & ErrorNoContinuum = m_ErrorNoContinuum;
+    for( Int32 iS=0; iS<support.size(); iS++ )
     {
-        for( UInt32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
+        for( Int32 j=support[iS].GetBegin(); j<support[iS].GetEnd(); j++ )
         {
             n++;
-            //w = 1.0 / m_ErrorNoContinuum[j];
+            //w = 1.0 / ErrorNoContinuum[j];
             //sumErr += w;
-            //m += m_ContinuumFluxAxis[j] * w;
-            m += m_ContinuumFluxAxis[j];
+            //m += ContinuumFluxAxis[j] * w;
+            m += ContinuumFluxAxis[j];
         }
     }
 
@@ -5241,10 +5155,10 @@ Float64 CLineModelFitting::getContinuumMeanUnderElement(UInt32 eltId)
 /**
  * \brief Search the line catalog for lines whose name match the argument strTag.
  **/
-std::vector<UInt32> CLineModelFitting::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, std::string strTag, Int32 type)
+TInt32List CLineModelFitting::findLineIdxInCatalog(const CRayCatalog::TRayVector& restRayList, const std::string &strTag, Int32 type) const
 {
-    std::vector<UInt32> indexes;
-    for( UInt32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
+    TInt32List indexes;
+    for( Int32 iRestRay=0; iRestRay<restRayList.size(); iRestRay++ )
     {
         if(restRayList[iRestRay].GetType() != type){
             continue;
@@ -5266,10 +5180,10 @@ void CLineModelFitting::addDoubleLine(const CRay &r1, const CRay &r2, Int32 inde
     std::vector<CRay> lines;
     lines.push_back(r1);
     lines.push_back(r2);
-    std::vector<Float64> amps;
+    TFloat64List amps;
     amps.push_back(a1);
     amps.push_back(a2);
-    std::vector<UInt32> a;
+    TInt32List a;
     a.push_back(index1);
     a.push_back(index2);
     m_Elements.push_back(std::shared_ptr<CLineModelElement> (new CLineModelElement(lines, m_LineWidthType, m_velocityEmission, m_velocityAbsorption, amps, nominalWidth, a)));
@@ -5294,7 +5208,7 @@ void CLineModelFitting::applyRules( bool enableLogs )
 
 }
 
-TStringList CLineModelFitting::GetModelRulesLog()
+const TStringList & CLineModelFitting::GetModelRulesLog() const
 {
   return m_Regulament.GetLogs();
 }
@@ -5303,32 +5217,39 @@ TStringList CLineModelFitting::GetModelRulesLog()
 Reset all the model value to the previous solution found.
 return 0 if every was ok; else -1
 */
-Int32 CLineModelFitting::LoadModelSolution(const CLineModelSolution&  modelSolution){
-  if(m_RestRayList.size() != modelSolution.Rays.size() ){
-    Log.LogError("Unable to load the model solution because m_restRayList has not the same size as the number of ray in  modelSolution");
-    return -1;
-  }
-  for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+void CLineModelFitting::LoadModelSolution(const CLineModelSolution&  modelSolution)
+{
+  if(m_RestRayList.size() != modelSolution.Rays.size() )
+    throw GlobalException(INTERNAL_ERROR, "CLineModelFitting::LoadModelSolution: m_restRayList and modelSolution.m_Rays have different size");
+  
+  for( Int32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
   {
     Int32 eIdx = modelSolution.ElementId[iRestRay];
-    Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+    if(eIdx == undefIdx) continue;
 
-    if(m_RestRayList[iRestRay] !=modelSolution.Rays[iRestRay]){
-      Log.LogError("ray in m_restRest doesn't correspond to the modelSolution ray for index %d", iRestRay);
+    if(m_enableAmplitudeOffsets){
+        m_Elements.prepareAmplitudeOffset();//prepare to load polynom coeffs. shd we check if this already done first
+
+        TPolynomCoeffs contPolynomCoeffs = {modelSolution.continuum_pCeoff0[iRestRay],
+                                            modelSolution.continuum_pCeoff1[iRestRay],
+                                            modelSolution.continuum_pCeoff2[iRestRay]};
+        applyPolynomCoeffs(eIdx, contPolynomCoeffs);
     }
-    if(eIdx != -1 and subeIdx==-1){
-      m_Elements[eIdx]->SetFittedAmplitude(subeIdx,modelSolution.Amplitudes[iRestRay], -1.0);
-    }else{
-      m_Elements[eIdx]->SetFittedAmplitude(subeIdx,modelSolution.Amplitudes[iRestRay], modelSolution.Errors[iRestRay]);
-    }
-    //Log.LogInfo("LoadModelSolution eidx %d subeIdx %d, iRestRay %d, Amp %f", eIdx, subeIdx, iRestRay,modelSolution.Amplitudes[iRestRay]);
+
+    Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestRay);
+
+    if(m_RestRayList[iRestRay] !=modelSolution.Rays[iRestRay])
+       throw GlobalException(INTERNAL_ERROR, "CLineModelFitting::LoadModelSolution: m_restRayList and modelSolution.m_Rays dont correspond");
+
+    m_Elements[eIdx]->SetFittedAmplitude(subeIdx,modelSolution.Amplitudes[iRestRay], modelSolution.Errors[iRestRay]);
+
   }
 
-  if(modelSolution.LyaWidthCoeff != -1.0 or modelSolution.LyaAlpha !=-1.0 or modelSolution.LyaDelta !=-1.0){
-    linetags ltags;
+  if(!std::isnan(modelSolution.LyaWidthCoeff) or !std::isnan(modelSolution.LyaAlpha) or !std::isnan(modelSolution.LyaDelta)){
+     
     std::string lyaTag = ltags.lya_em;
-    Int32 idxLyaE = m_Elements.FindElementIndex(lyaTag);
-    if( idxLyaE>-1 )
+    Int32 idxLyaE = m_Elements.findElementIndex(lyaTag);
+    if( idxLyaE!=undefIdx )
     {
         m_Elements[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff, modelSolution.LyaAlpha , modelSolution.LyaDelta});
     }
@@ -5336,30 +5257,30 @@ Int32 CLineModelFitting::LoadModelSolution(const CLineModelSolution&  modelSolut
   SetVelocityEmission(modelSolution.EmissionVelocity);
   SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
   setRedshift(modelSolution.Redshift, false);
-  return 0;
+  return;
 }
 
 // return error: 1=can't find element index, 2=Abs_width not high enough compared to Em_width
 Int32 CLineModelFitting::improveBalmerFit()
 {
-    linetags ltags;
+     
     //Emission Balmer lines
-    std::vector<std::string> linetagsE;
+    TStringList linetagsE;
     linetagsE.push_back( ltags.halpha_em );
     linetagsE.push_back( ltags.hbeta_em );
     linetagsE.push_back( ltags.hgamma_em );
     linetagsE.push_back( ltags.hdelta_em );
     //Absorption Balmer lines
-    std::vector<std::string> linetagsA;
+    TStringList linetagsA;
     linetagsA.push_back( ltags.halpha_abs );
     linetagsA.push_back( ltags.hbeta_abs );
     linetagsA.push_back( ltags.hgamma_abs );
     linetagsA.push_back( ltags.hdelta_abs );
     //Additional lines to be fitted with the Balmer lines, WARNING: only EMISSION for now !!
-    std::vector<std::string> linetagsNII;
+    TStringList linetagsNII;
     linetagsNII.push_back( ltags.niia_em );
     linetagsNII.push_back( ltags.niib_em );
-    std::vector<std::string> linetagsVoid;
+    TStringList linetagsVoid;
     std::vector<TStringList> linetagsMore;
     linetagsMore.push_back( linetagsNII );
     linetagsMore.push_back( linetagsVoid );
@@ -5376,8 +5297,8 @@ Int32 CLineModelFitting::improveBalmerFit()
         std::string tagE = linetagsE[itag];
         std::string tagA = linetagsA[itag];
 
-        Int32 ilineE = m_Elements.FindElementIndex( tagE, CRay::nType_Emission );
-        Int32 ilineA = m_Elements.FindElementIndex( tagA, CRay::nType_Absorption );
+        Int32 ilineE = m_Elements.findElementIndex( tagE, CRay::nType_Emission );
+        Int32 ilineA = m_Elements.findElementIndex( tagA, CRay::nType_Absorption );
         // Were the lines indexes found ?
         if(ilineE<0 || ilineA<0)
         {
@@ -5392,11 +5313,11 @@ Int32 CLineModelFitting::improveBalmerFit()
         Int32 subeIdxA = 0;
 
         //find the linesMore unique elements indexes
-        std::vector<UInt32> ilinesMore;
-        for( UInt32 imore=0; imore<linetagsMore[itag].size(); imore++)
+        TInt32List ilinesMore;
+        for( Int32 imore=0; imore<linetagsMore[itag].size(); imore++)
         {
             std::string tagMore = linetagsMore[itag][imore];
-            Int32 ilineMore = m_Elements.FindElementIndex( tagMore, CRay::nType_Emission );
+            Int32 ilineMore = m_Elements.findElementIndex( tagMore, CRay::nType_Emission );
             if(ilineMore<0)
             {
                 continue;
@@ -5414,8 +5335,8 @@ Int32 CLineModelFitting::improveBalmerFit()
         Float64 AbsVSEmWidthCoeffThreshold = 2.0;
         Float64 muE = NAN;Float64 muA = NAN;
         Float64 sigmaE = NAN; Float64 sigmaA = NAN;
-        m_Elements[ilineE]->getWidth(subeIdxE, m_Redshift, muE, sigmaE, false);// do not apply Lya asym offset
-        m_Elements[ilineA]->getWidth(subeIdxA, m_Redshift, muA, sigmaA, false);// do not apply Lya asym offset
+        m_Elements[ilineE]->getObservedPositionAndLineWidth(subeIdxE, m_Redshift, muE, sigmaE, false);// do not apply Lya asym offset
+        m_Elements[ilineA]->getObservedPositionAndLineWidth(subeIdxA, m_Redshift, muA, sigmaA, false);// do not apply Lya asym offset
         if(sigmaA<AbsVSEmWidthCoeffThreshold*sigmaE)
         {
             continue;
@@ -5437,22 +5358,22 @@ Int32 CLineModelFitting::improveBalmerFit()
             ampErrorsMore.push_back(ampErr);
         }
 
-        std::vector<UInt32> eltsIdx;
+        TInt32List eltsIdx;
         eltsIdx.push_back(ilineA);
         eltsIdx.push_back(ilineE);
         for( Int32 imore=0; imore<ilinesMore.size(); imore++)
         {
             eltsIdx.push_back(ilinesMore[imore]);
         }
-        std::vector<Float64> ampsfitted;
-        std::vector<Float64> errorsfitted;
+        TFloat64List ampsfitted;
+        TFloat64List errorsfitted;
         fitAmplitudesLinSolve(eltsIdx, m_SpectrumModel.GetSpectralAxis(), m_spcFluxAxisNoContinuum, m_ContinuumFluxAxis, ampsfitted, errorsfitted);
 
         //decide if the fit is better than previous amps
-        std::vector<UInt32> elts;
+        TInt32List elts;
         elts.push_back(ilineA);
         elts.push_back(ilineE);
-        for( UInt32 imore=0; imore<ilinesMore.size(); imore++)
+        for( Int32 imore=0; imore<ilinesMore.size(); imore++)
         {
             elts.push_back(ilinesMore[imore]);
         }
@@ -5478,170 +5399,162 @@ Int32 CLineModelFitting::improveBalmerFit()
 
 
 /**
- * \brief Returns a SLineModelSolution object populated with the current solutions.
+ * \brief Returns a CLineModelSolution object populated with the current solutions.
  **/
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
 {
+    Int32 s = m_RestRayList.size();
     CLineModelSolution modelSolution;
     modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
-    std::transform (m_RestRayList.begin(), m_RestRayList.end(), std::back_inserter(modelSolution.Rays), 
-                                                         [](CRay &c){return c.clone();});
-
-    modelSolution.ElementId.resize(m_RestRayList.size());
+    modelSolution.Rays = m_RestRayList;//copying the catalog?
+    modelSolution.ElementId.resize(s);
     modelSolution.snrHa = NAN;
     modelSolution.lfHa = NAN;
     modelSolution.snrOII = NAN;
     modelSolution.lfOII = NAN;
+    modelSolution.LyaWidthCoeff = NAN;
+    modelSolution.LyaAlpha = NAN;
+    modelSolution.LyaDelta = NAN;
+    modelSolution.Amplitudes = TFloat64List(s, NAN);
+    modelSolution.Errors =  TFloat64List(s, NAN);
+    modelSolution.FittingError = TFloat64List(s, NAN);
+    modelSolution.LambdaObs = TFloat64List(s, NAN);
+    modelSolution.Offset = TFloat64List(s, NAN);
+    modelSolution.Velocity = TFloat64List(s, NAN);
+    modelSolution.CenterContinuumFlux = TFloat64List(s, NAN);
+    modelSolution.ContinuumError = TFloat64List(s, NAN);
+    modelSolution.Sigmas = TFloat64List(s, NAN);
+    modelSolution.Fluxs = TFloat64List(s, NAN);
+    modelSolution.FluxErrors = TFloat64List(s, NAN);
+    modelSolution.FluxDirectIntegration = TFloat64List(s, NAN);
+    modelSolution.FluxDirectIntegrationError = TFloat64List(s, NAN);
+    modelSolution.OutsideLambdaRange = TBoolList(s, true);
+    modelSolution.fittingGroupInfo = TStringList(s, "undefined");
+    modelSolution.continuum_pCeoff0 = TFloat64List(s, NAN);
+    modelSolution.continuum_pCeoff1 = TFloat64List(s, NAN);
+    modelSolution.continuum_pCeoff2 = TFloat64List(s, NAN);
 
     TInt32List eIdx_oii;
     TInt32List subeIdx_oii;
 
-    for( UInt32 iRestRay=0; iRestRay<m_RestRayList.size(); iRestRay++ )
+    for( Int32 iRestRay=0; iRestRay<s; iRestRay++ )
     {
-        Int32 eIdx = m_Elements.FindElementIndex(iRestRay);
-        Int32 subeIdx = m_Elements[eIdx]->FindElementIndex(iRestRay);
+        Int32 subeIdx = undefIdx;
+        Int32 eIdx = m_Elements.findElementIndex(iRestRay, subeIdx);
         modelSolution.ElementId[iRestRay] = eIdx;
 
-        if(eIdx==-1 || subeIdx==-1 || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+        if(eIdx==undefIdx || subeIdx==undefIdx || m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
         {
-            modelSolution.Amplitudes.push_back(m_Elements[eIdx]->GetFittedAmplitude(subeIdx));
-            modelSolution.Errors.push_back(-1.0);
-            modelSolution.FittingError.push_back(-1.0);
-            modelSolution.LambdaObs.push_back(-1.0);
-            modelSolution.Offset.push_back(-1.0);
-            modelSolution.Velocity.push_back(-1.0);
-            modelSolution.CenterContinuumFlux.push_back(-1.0);
-            modelSolution.ContinuumError.push_back(-1.0);
-            modelSolution.Sigmas.push_back(-1.0);
-            modelSolution.Fluxs.push_back(-1.0);
-            modelSolution.FluxErrors.push_back(-1.0);
-            modelSolution.FluxDirectIntegration.push_back(-1.0);
-            modelSolution.OutsideLambdaRange.push_back(true);
-            modelSolution.fittingGroupInfo.push_back("-1");
-        }else{
-            Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
-            modelSolution.Amplitudes.push_back(amp);
-            Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
-            modelSolution.Errors.push_back(ampError);
-
-            modelSolution.LambdaObs.push_back(m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift));
-            modelSolution.Velocity.push_back(m_Elements[eIdx]->GetVelocity());
-            modelSolution.Offset.push_back(m_Elements[eIdx]->m_Rays[subeIdx].GetOffset());
-
-            if(opt_level!=0)// brief, to save processing time, do not estimate fluxes and high level line properties
-            {
-	            modelSolution.FittingError.push_back(m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis()));
-                Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift, m_ContinuumFluxAxis);
-                modelSolution.CenterContinuumFlux.push_back(cont);
-                modelSolution.ContinuumError.push_back(GetContinuumError(eIdx, subeIdx));
-                Float64 mu = NAN;Float64 sigma = NAN;
-                m_Elements[eIdx]->getWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
-
-                Float64 flux = NAN;
-                Float64 fluxError = NAN;
-                Float64 fluxDI = NAN;
-                Float64 snrDI = NAN;
-                TInt32List eIdx_line(1, eIdx);
-                TInt32List subeIdx_line(1, subeIdx);
-                Int32 opt_cont_substract_abslinesmodel=0;
-                if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-                {
-                    opt_cont_substract_abslinesmodel=1;
-                }
-                Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
-                if(amp>=0.0)
-                {
-                    if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-                    {
-                        flux = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, ampError);
-                    }else{
-                        Float64 _amp = cont*amp;
-                        Float64 _ampError = cont*ampError;
-                        flux = -m_RestRayList[iRestRay].GetProfile()->GetLineFlux( _amp, sigma);
-                        fluxError = m_RestRayList[iRestRay].GetProfile()->GetLineFlux( sigma, _ampError);
-                    }
-                }
-                modelSolution.Sigmas.push_back(sigma);
-                modelSolution.Fluxs.push_back(flux);
-                modelSolution.FluxErrors.push_back(fluxError);
-                modelSolution.FluxDirectIntegration.push_back(fluxDI);
-
-                //rough estimation of SNR_Ha, using the given model and fitting method
-                //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
-                linetags ltags;
-                if(m_RestRayList[iRestRay].GetName()==ltags.halpha_em && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-                {
-                    if(false)
-                    {
-                        if(fluxError>0.0)
-                        {
-                            modelSolution.snrHa = flux/fluxError;
-                        }
-                        if(flux>0.0)
-                        {
-
-                            modelSolution.lfHa = log10(flux);
-                        }
-                    }else{
-                        modelSolution.snrHa = snrDI;
-                        if(fluxDI>0.0)
-                        {
-                            modelSolution.lfHa = log10(fluxDI);
-                        }
-                        else if (fluxDI == 0.)
-                        {
-                            modelSolution.lfHa = -99.;
-                        }
-                    }
-                }
-                if((m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em)
-                        && m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
-                {
-                    //here we only cover the fluxDI case.
-                    eIdx_oii.push_back(eIdx);
-                    subeIdx_oii.push_back(subeIdx);
-                    if(true)
-                    {
-                        fluxDI = NAN ;
-                        Float64 snrDI = NAN;
-                        Int32 opt_cont_substract_abslinesmodel=0;
-                        Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
-
-                        modelSolution.snrOII = snrDI;
-                        if(fluxDI>0.0)
-                        {
-                            modelSolution.lfOII = log10(fluxDI);
-                        }
-                        else if (fluxDI == 0.)
-                        {
-                            modelSolution.lfOII = -99.;
-                        }
-                    }
-                }
-            }
-            else{
-                modelSolution.FittingError.push_back(-1.0);
-                modelSolution.CenterContinuumFlux.push_back(-1.0);
-                modelSolution.ContinuumError.push_back(-1.0);
-                modelSolution.Sigmas.push_back(-1.0);
-                modelSolution.Fluxs.push_back(-1.0);
-                modelSolution.FluxErrors.push_back(-1.0);
-                modelSolution.FluxDirectIntegration.push_back(-1.0);
-            }
-
-            modelSolution.fittingGroupInfo.push_back(m_Elements[eIdx]->m_fittingGroupInfo);
-            modelSolution.OutsideLambdaRange.push_back(m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx));
+            continue; //data already set to its default values
         }
+        Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
+        modelSolution.Amplitudes[iRestRay] = amp;
+        Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
+        modelSolution.Errors[iRestRay] = ampError;
+
+        modelSolution.LambdaObs[iRestRay] = m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
+        modelSolution.Velocity[iRestRay] = m_Elements[eIdx]->GetVelocity();
+        modelSolution.Offset[iRestRay] = m_Elements[eIdx]->m_Rays[subeIdx].GetOffset();
+
+        if(opt_level)// brief, to save processing time, do not estimate fluxes and high level line properties
+        {
+            modelSolution.FittingError[iRestRay] = m_Elements.getModelErrorUnderElement(eIdx,m_SpcFluxAxis,m_SpectrumModel.GetFluxAxis());
+            TPolynomCoeffs polynom_coeffs =  getPolynomCoeffs(eIdx);
+            //save polynom info to output them in hdf5, mainly to recontruct linemeas model
+            modelSolution.continuum_pCeoff0[iRestRay] = polynom_coeffs.x0;
+            modelSolution.continuum_pCeoff1[iRestRay] = polynom_coeffs.x1;
+            modelSolution.continuum_pCeoff2[iRestRay] = polynom_coeffs.x2;
+
+            Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(subeIdx, 
+                                            m_SpectrumModel.GetSpectralAxis(), 
+                                            m_Redshift, 
+                                            m_ContinuumFluxAxis,
+                                            polynom_coeffs);
+            modelSolution.CenterContinuumFlux[iRestRay] = cont;
+            modelSolution.ContinuumError[iRestRay] = GetContinuumError(eIdx, subeIdx);
+            Float64 mu = NAN;Float64 sigma = NAN;
+            m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu, sigma, false);// do not apply Lya asym offset
+
+            Float64 flux = NAN;
+            Float64 fluxError = NAN;
+            Float64 fluxDI = NAN;
+            Float64 snrDI = NAN;
+            TInt32List eIdx_line(1, eIdx);
+            TInt32List subeIdx_line(1, subeIdx);
+            Int32 opt_cont_substract_abslinesmodel=0;
+            bool isEmission = false;
+            if(m_RestRayList[iRestRay].GetType()==CRay::nType_Emission)
+            {
+                opt_cont_substract_abslinesmodel=1;
+                isEmission = true;
+            }
+            Int32 retdi = GetFluxDirectIntegration(eIdx_line, subeIdx_line, opt_cont_substract_abslinesmodel, fluxDI, snrDI);
+            if(!std::isnan(amp) && amp>=0.0)
+            {
+                if(isEmission)
+                {
+                    flux = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( amp, sigma);
+                    fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, ampError);
+                }else{
+                    Float64 _amp = cont*amp;
+                    Float64 _ampError = cont*ampError;
+                    flux = -m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( _amp, sigma);
+                    fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux( sigma, _ampError);
+                }
+            }
+            modelSolution.Sigmas[iRestRay] = sigma;
+            modelSolution.Fluxs[iRestRay] = flux;
+            modelSolution.FluxErrors[iRestRay] = fluxError;
+            modelSolution.FluxDirectIntegration[iRestRay] = fluxDI;
+
+            //rough estimation of SNR_Ha, using the given model and fitting method
+            //(warning: Ha flux and error could have been obtained by global fitting of the model, which leads to different results than fitted individually...)
+            bool directIntegration = true;
+            if(isEmission && m_RestRayList[iRestRay].GetName()==ltags.halpha_em)
+            {
+                if(directIntegration){
+                    modelSolution.snrHa = snrDI;
+                    if(fluxDI>0.0)
+                        modelSolution.lfHa = log10(fluxDI);
+                    else if (fluxDI == 0.)
+                        modelSolution.lfHa = -INFINITY;
+                }else{
+                    if(fluxError>0.0)
+                        modelSolution.snrHa = flux/fluxError;
+                    if(flux>0.0)
+                        modelSolution.lfHa = log10(flux);
+                }
+            }
+            if(isEmission && 
+               (m_RestRayList[iRestRay].GetName()==ltags.oII3726_em || m_RestRayList[iRestRay].GetName()==ltags.oII3729_em))
+            {
+                //here we only cover the fluxDI case.
+                eIdx_oii.push_back(eIdx);
+                subeIdx_oii.push_back(subeIdx);
+                if(directIntegration)
+                {
+                    fluxDI = NAN ;
+                    snrDI = NAN;
+                    Int32 opt_cont_substract_abslinesmodel=0;
+                    Int32 retdi = GetFluxDirectIntegration(eIdx_oii, subeIdx_oii, opt_cont_substract_abslinesmodel,fluxDI, snrDI);
+
+                    modelSolution.snrOII = snrDI;
+                    if(fluxDI>0.0)
+                        modelSolution.lfOII = log10(fluxDI);
+                    else if (fluxDI == 0.)
+                        modelSolution.lfOII = -INFINITY;
+                }
+            }
+        }
+
+        modelSolution.fittingGroupInfo[iRestRay] = m_Elements[eIdx]->m_fittingGroupInfo;
+        modelSolution.OutsideLambdaRange[iRestRay] = m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx);
     }
-    //retrieve Lya params if fitted
-    modelSolution.LyaWidthCoeff = -1.0;
-    modelSolution.LyaAlpha = -1.0;
-    modelSolution.LyaDelta = -1.0;
-    linetags ltags;
+
+    //retrieve Lya params if fitted    
     std::string lyaTag = ltags.lya_em;
-    Int32 idxLyaE = m_Elements.FindElementIndex(lyaTag);
-    if( idxLyaE>-1 )
+    Int32 idxLyaE = m_Elements.findElementIndex(lyaTag);
+    if( idxLyaE!=undefIdx )
     {
         TAsymParams params = m_Elements[idxLyaE]->GetAsymfitParams(0);
         modelSolution.LyaWidthCoeff = params.sigma;
@@ -5652,14 +5565,51 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level)
     modelSolution.AbsorptionVelocity = m_velocityAbsorption;
     modelSolution.Redshift = m_Redshift;
 
-    std::vector<std::string> strongELSNRAboveCut = std::vector<std::string>();// getLinesAboveSNR(3.5);
+    TStringList strongELSNRAboveCut = TStringList();// getLinesAboveSNR(3.5);
     modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
     return modelSolution;
 }
 
+/**
+ * @brief Look for polynom coeffs corresponding to one specific Line
+ * Here,we assume that we already fitted one line at a time, which is not really the case
+ * TODO: take into consideration lines fitted together for the element in question
+ * 
+ * @param eIdx 
+ * @return TPolynomCoeffs 
+ */
+TPolynomCoeffs CLineModelFitting::getPolynomCoeffs(Int32 eIdx) const
+{
+    TInt32List xInds = m_Elements.getSupportIndexes( {Int32(eIdx)} );
+    TPolynomCoeffs polynom_coeffs = {0.,0.,0.}; 
+    if(xInds.size()&& m_Elements.m_ampOffsetsCoeffs.size())
+    {
+        Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+        polynom_coeffs = m_Elements.m_ampOffsetsCoeffs[idxAmpOffset];
+    }
+    return polynom_coeffs;
+}
 
-CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution()
+/**
+ * @brief Add polynom coeffs into the class variables, for all correctly in m_ampOffsetCoeffs
+ * 
+ * @param eIdx 
+ * @param polynom_coeffs 
+ * @return 
+ */
+void CLineModelFitting::applyPolynomCoeffs(Int32 eIdx, const TPolynomCoeffs& polynom_coeffs)
+{
+    TInt32List xInds = m_Elements.getSupportIndexes( {Int32(eIdx)} );
+    if(xInds.size()&& m_Elements.m_ampOffsetsCoeffs.size())
+    {
+        Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
+        m_Elements.m_ampOffsetsCoeffs[idxAmpOffset] = polynom_coeffs;
+    }
+    return;
+}
+
+CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution() const
 {
     CContinuumModelSolution continuumModelSolution;
 
@@ -5682,7 +5632,7 @@ CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution()
 /**
  * \brief Returns the size of m_Elements.
  **/
-Int32 CLineModelFitting::GetNElements()
+Int32 CLineModelFitting::GetNElements() const
 {
     Int32 nddl = m_Elements.size();
     return nddl;
@@ -5776,16 +5726,17 @@ void CLineModelFitting::SetVelocityAbsorptionOneElement(Float64 vel, Int32 idxEl
     }
 }
 
-Float64 CLineModelFitting::GetVelocityEmission()
+Float64 CLineModelFitting::GetVelocityEmission() const
 {
     return m_velocityEmission;
 }
-Float64 CLineModelFitting::GetVelocityAbsorption()
+
+Float64 CLineModelFitting::GetVelocityAbsorption() const
 {
     return m_velocityAbsorption;
 }
 
-Float64 CLineModelFitting::GetRedshift()
+Float64 CLineModelFitting::GetRedshift() const
 {
     return m_Redshift;
 }
@@ -5823,9 +5774,10 @@ Int32 CLineModelFitting::ApplyVelocityBound(Float64 inf, Float64 sup)
  **/
 void CLineModelFitting::EstimateSpectrumContinuum( Float64 opt_enhance_lines, const TFloat64Range& lambdaRange )
 {
-    std::vector<UInt32> validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-    //std::vector<UInt32> xInds = getSupportIndexes( validEltsIdx );
+    TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
+    //TInt32List xInds = getSupportIndexes( validEltsIdx );
     const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
+    const auto & ContinuumFluxAxis = m_ContinuumFluxAxis;
 
     //create new spectrum, which is corrected under the lines
 
@@ -5855,8 +5807,8 @@ void CLineModelFitting::EstimateSpectrumContinuum( Float64 opt_enhance_lines, co
     //model for subtraction
     CSpectrumFluxAxis spcmodel4linefittingFluxAxis = m_SpectrumModel.GetFluxAxis();
     //CSpectrum spcmodel4linefitting = GetModelSpectrum();
-    for(UInt32 i=0; i<spcmodel4linefittingFluxAxis.GetSamplesCount(); i++){
-        spcmodel4linefittingFluxAxis[i] -= m_ContinuumFluxAxis[i];
+    for(Int32 i=0; i<spcmodel4linefittingFluxAxis.GetSamplesCount(); i++){
+        spcmodel4linefittingFluxAxis[i] -= ContinuumFluxAxis[i];
     }
     //optionnaly enhance the abs model component
     if(opt_enhance_lines>0.0){
@@ -5880,7 +5832,7 @@ void CLineModelFitting::EstimateSpectrumContinuum( Float64 opt_enhance_lines, co
     CSpectrumFluxAxis fluxAxisNothingUnderLines = m_SpcFluxAxis; 
     for( Int32 t=0;t<spectralAxis.GetSamplesCount();t++)
     {
-        fluxAxisNothingUnderLines[t] -= spcmodel4linefittingFluxAxis[t];
+        fluxAxisNothingUnderLines[t] -= as_const(spcmodel4linefittingFluxAxis)[t];
     }
 
     // evaluate contiuum
@@ -5925,11 +5877,12 @@ Float64 CLineModelFitting::getLikelihood_cstLog(const TFloat64Range& lambdaRange
 /**
  * \brief this function estimates the dtd value withing the wavelength range
  **/
-Float64 CLineModelFitting::EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent)
+Float64 CLineModelFitting::EstimateDTransposeD(const TFloat64Range& lambdaRange, const std::string & spcComponent) const
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpcFluxAxis;
     const CSpectrumFluxAxis& spcFluxAxisNoContinuum = m_spcFluxAxisNoContinuum;
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 dtd = 0.0;
@@ -5939,7 +5892,7 @@ Float64 CLineModelFitting::EstimateDTransposeD(const TFloat64Range& lambdaRange,
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         if(spcComponent=="nocontinuum")
@@ -5949,7 +5902,7 @@ Float64 CLineModelFitting::EstimateDTransposeD(const TFloat64Range& lambdaRange,
         {
             flux = Yspc[j];
         }
-        dtd += (flux*flux) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        dtd += (flux*flux) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
     }
     Log.LogDebug( "CLineModelFitting::EstimateDTransposeD val = %f", dtd );
 
@@ -5959,10 +5912,11 @@ Float64 CLineModelFitting::EstimateDTransposeD(const TFloat64Range& lambdaRange,
 /**
  * \brief this function estimates the mtm value withing the wavelength range
  **/
-Float64 CLineModelFitting::EstimateMTransposeM(const TFloat64Range& lambdaRange)
+Float64 CLineModelFitting::EstimateMTransposeM(const TFloat64Range& lambdaRange) const
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpectrumModel.GetFluxAxis();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 mtm = 0.0;
@@ -5971,13 +5925,13 @@ Float64 CLineModelFitting::EstimateMTransposeM(const TFloat64Range& lambdaRange)
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         {
             diff = Yspc[j];
         }
-        mtm += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        mtm += (diff*diff) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
     }
     //Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
@@ -5988,12 +5942,13 @@ Float64 CLineModelFitting::EstimateMTransposeM(const TFloat64Range& lambdaRange)
 /**
  * \brief this function estimates the mtm value withing the wavelength range
  **/
-Int32 CLineModelFitting::getMTransposeMCumulative(const TFloat64Range& lambdaRange, std::vector<Float64> & lbda, std::vector<Float64> & mtmCumul)
+Int32 CLineModelFitting::getMTransposeMCumulative(const TFloat64Range& lambdaRange, TFloat64List & lbda, TFloat64List & mtmCumul) const
 {
     mtmCumul.clear();
     lbda.clear();
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
     const CSpectrumFluxAxis& spcFluxAxis = m_SpectrumModel.GetFluxAxis();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 mtm = 0.0;
@@ -6002,13 +5957,13 @@ Int32 CLineModelFitting::getMTransposeMCumulative(const TFloat64Range& lambdaRan
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
         {
             diff = Yspc[j];
         }
-        mtm += (diff*diff) / (m_ErrorNoContinuum[j]*m_ErrorNoContinuum[j]);
+        mtm += (diff*diff) / (ErrorNoContinuum[j]*ErrorNoContinuum[j]);
         lbda.push_back(spcSpectralAxis[j]);
         mtmCumul.push_back(mtm);
     }
@@ -6022,9 +5977,10 @@ Int32 CLineModelFitting::getMTransposeMCumulative(const TFloat64Range& lambdaRan
 /**
  * \brief this function estimates the likelihood_cstLog term withing the wavelength range
  **/
-Float64 CLineModelFitting::EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange)
+Float64 CLineModelFitting::EstimateLikelihoodCstLog(const TFloat64Range& lambdaRange) const
 {
     const CSpectrumSpectralAxis& spcSpectralAxis = m_SpectrumModel.GetSpectralAxis();
+    const auto & ErrorNoContinuum = m_ErrorNoContinuum;
 
     Int32 numDevs = 0;
     Float64 cstLog = 0.0;
@@ -6032,10 +5988,10 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog(const TFloat64Range& lambdaR
 
     Float64 imin = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetBegin());
     Float64 imax = spcSpectralAxis.GetIndexAtWaveLength(lambdaRange.GetEnd());
-    for( UInt32 j=imin; j<imax; j++ )
+    for( Int32 j=imin; j<imax; j++ )
     {
         numDevs++;
-        sumLogNoise += log( m_ErrorNoContinuum[j] );
+        sumLogNoise += log( ErrorNoContinuum[j] );
     }
     //Log.LogDebug( "CLineModelFitting::EstimateMTransposeM val = %f", mtm );
 
@@ -6051,16 +6007,16 @@ Float64 CLineModelFitting::EstimateLikelihoodCstLog(const TFloat64Range& lambdaR
  * @param iCatalog
  * @return
  */
-Bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
+bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
 {
     if(iCatalog<0){
         return false;
     }
     Float64 nominalAmp = 0.0;
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         Int32 nRays = m_Elements[iElts]->GetSize();
-        for(UInt32 j=0; j<nRays; j++){
+        for(Int32 j=0; j<nRays; j++){
             nominalAmp = m_CatalogTplShape.getNominalAmplitudeCorrespondance()[iElts][iCatalog][j];
             m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
         }
@@ -6075,14 +6031,14 @@ Bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog)
  * @param iCatalog
  * @return
  */
-Bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
+bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
 {
     //first set all amplitudes to 0.0
-    for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+    for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
     {
         //get the max nominal amplitude
         Int32 nRays = m_Elements[iElts]->GetSize();
-        for(UInt32 j=0; j<nRays; j++){
+        for(Int32 j=0; j<nRays; j++){
             m_Elements[iElts]->SetNominalAmplitude(j, 0.0);
         }
     }
@@ -6096,13 +6052,13 @@ Bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog)
         Float64 dustCoeff = m_tplCatalog.GetTemplate( m_tplCategoryList[0],0)->m_ismCorrectionCalzetti->GetDustCoeff( m_CatalogTplShape.GetIsmIndex(iCatalog), restLambda);
         nominalAmp*=dustCoeff;
         //find line in the elementList
-        for( UInt32 iElts=0; iElts<m_Elements.size(); iElts++ )
+        for( Int32 iElts=0; iElts<m_Elements.size(); iElts++ )
         {
             //get the max nominal amplitude
             Int32 nRays = m_Elements[iElts]->GetSize();
-            for(UInt32 j=0; j<nRays; j++){
+            for(Int32 j=0; j<nRays; j++){
 
-                if(m_RestRayList[m_Elements[iElts]->m_LineCatalogIndexes[j]].GetName() == currentCatalogLineList[kL].GetName())
+                if(m_Elements[iElts]->m_Rays[j].GetName() == currentCatalogLineList[kL].GetName())
                 {
                     m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
                 }

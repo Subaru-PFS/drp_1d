@@ -74,11 +74,11 @@ public:
         nForce_Strong = 2,
     };
 
-    CRay();
+    CRay() = default;
     CRay( const std::string& name,
-          Float64 pos, UInt32 type,
-          std::shared_ptr<CLineProfile> profile,
-          UInt32 force,
+          Float64 pos, Int32 type,
+          CLineProfile_ptr &&profile,
+          Int32 force,
           Float64 amp=-1.0,
           Float64 width=-1.0,
           Float64 cut=-1.0,
@@ -89,20 +89,33 @@ public:
           Float64 nominalAmp=1.0,
           const std::string& velGroupName="-1",
 	      Int32 id=-1);
+    CRay( const std::string& name,
+          Float64 pos, Int32 type,
+          CLineProfile_ptr &&profile,
+          Int32 force,
+	  Float64 velocityOffset ,
+	  bool enableVelocityOffsetFitting,
+          const std::string& groupName,
+          Float64 nominalAmp,
+          const std::string& velGroupName,
+	  Int32 id,
+	  const std::string& str_id);
 
-    CRay clone() const;
+    CRay(const CRay & other); 
+    CRay(CRay && other) = default; 
+    CRay& operator=(const CRay& other);  
+    CRay& operator=(CRay&& other) = default; 
 
     bool operator < (const CRay& str) const;
     bool operator != (const CRay& str) const;
 
     Int32               GetID() const;
-    Bool                GetIsStrong() const;
-    Bool                GetIsEmission() const;
+    bool                GetIsStrong() const;
+    bool                GetIsEmission() const;
     Int32               GetForce() const;
     Int32               GetType() const;
-    std::shared_ptr<CLineProfile>        GetProfile() const;
-    bool                SetProfile(const std::shared_ptr<CLineProfile>& profile);
-
+    const CLineProfile &  GetProfile() const;
+    void                SetProfile(CLineProfile_ptr &&profile);
     Float64             GetPosition() const;
     Float64             GetOffset() const;
     bool                SetOffset(Float64 val);
@@ -116,9 +129,11 @@ public:
     Float64             GetPosFitError() const;
     Float64             GetSigmaFitError() const;
     Float64             GetAmpFitError() const;
-    const TAsymParams   GetAsymParams();
+    TAsymParams         GetAsymParams() const;
     void                SetAsymParams(TAsymParams asymParams);
+  void setAsymProfileAndParams(const std::string& profileName,TAsymParams asymParams, Float64 nSigmaSupport);
     void                resetAsymFitParams();
+  void setNominalAmplitude(const Float64&ampl) { m_NominalAmplitude = ampl;}
 
     const std::string&  GetName() const;
     const std::string&  GetGroupName() const;
@@ -126,13 +141,15 @@ public:
 
     const std::string&  GetVelGroupName() const;
 
+    const std::string&  GetStrID() const;
+  
     void                Save( std::ostream& stream ) const;
     void                SaveDescription( std::ostream& stream ) const;
 
 private:
     Int32           m_id = -1;
     Int32           m_Type = 0;
-    std::shared_ptr<CLineProfile>    m_Profile=nullptr;
+    CLineProfile_ptr    m_Profile=nullptr;
     Int32           m_Force = 0;
     Float64         m_Pos = 0.;
     Float64         m_Offset = 0.;
@@ -152,11 +169,12 @@ private:
     Float64         m_NominalAmplitude = 0.;
 
     //for offset fitting
-    bool            m_OffsetFit = false;
+  bool            m_OffsetFit = false; 
 
     //for velocity fitting
     std::string     m_VelGroupName = "";
 
+  std::string m_strID;
 };
 
 }

@@ -44,7 +44,7 @@ using namespace NSEpic;
 using namespace std;
 
 CLSFGaussianNISPVSSPSF201707::CLSFGaussianNISPVSSPSF201707(Float64 sourcesize):
-    CLSF(GaussianNISPVSSPSF201707, std::make_shared<CLineProfileSYM>()),
+    CLSF(GaussianNISPVSSPSF201707, std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())),
     m_SourceSizeDispersion(sourcesize)
 {
     

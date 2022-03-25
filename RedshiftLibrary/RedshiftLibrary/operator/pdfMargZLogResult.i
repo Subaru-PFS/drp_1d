@@ -48,6 +48,7 @@ class CPdfMargZLogResult : public COperatorResult
 
     TFloat64List          Redshifts;
     TFloat64List          valProbaLog;
-    Float64               valEvidenceLog;
-    UInt32 				  countTPL;
+    Float64               valEvidenceLog = NAN;
+    Float64               valMargEvidenceLog = NAN;
+    Int32 				  countTPL;
 };

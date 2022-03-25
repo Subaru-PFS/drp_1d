@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(Interpolate)
   Float64 xInt[] = {1.5,2.5,3.5,4.5};
   Float64 xIntNoInt[] = {1,2.5,3,4};
 
-  CSpectrumAxis axisXorg( xOrg, 4);
-  CSpectrumAxis axisYorg( yOrg, 4);
-  CSpectrumAxis axisXint( xInt, 4);
+  const CSpectrumAxis axisXorg( xOrg, 4);
+  const CSpectrumAxis axisYorg( yOrg, 4);
+  const CSpectrumAxis axisXint( xInt, 4);
   CSpectrumAxis axisXintNoInt( xIntNoInt, 4);
   CSpectrumAxis axisYint(4);
   Int32 offset;
@@ -69,12 +69,14 @@ BOOST_AUTO_TEST_CASE(Interpolate)
   offset = 0;
   nOrg = 4;
   tools.Interpolate(axisXorg, axisYorg, offset, nOrg, axisXint, axisYint, mask);
-  BOOST_TEST_MESSAGE("out: " << axisYint[0] << " " << axisYint[1] << " " << axisYint[2] << " " << axisYint[3]);
+
+  const CSpectrumAxis& const_axisYint = axisYint;
+  BOOST_TEST_MESSAGE("out: " << const_axisYint[0] << " " << const_axisYint[1] << " " << const_axisYint[2] << " " << const_axisYint[3]);
   BOOST_TEST_MESSAGE("mask: " << (mask[0] ? "1" : "0")  << " " << (mask[1] ? "1" : "0") << " " << (mask[2] ? "1" : "0") << " " << (mask[3] ? "1" : "0"));
-  BOOST_CHECK_CLOSE(axisYint[0], 15., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[1], 25., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[2], 35., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[3], 0., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint[0], 15., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint[1], 25., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint[2], 35., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint[3], 0., 1e-18);
   BOOST_CHECK(mask[0] == 1 && mask[1] == 1 && mask[2] == 1 && mask[3] == 0);
 
   // second test
@@ -85,12 +87,13 @@ BOOST_AUTO_TEST_CASE(Interpolate)
   offset = 1;
   nOrg = 2;
   tools.Interpolate(axisXorg, axisYorg, offset, nOrg, axisXint, axisYint, mask);
-  BOOST_TEST_MESSAGE("out: " << axisYint[0] << " " << axisYint[1] << " " << axisYint[2] << " " << axisYint[3]);
+  const CSpectrumAxis& const_axisYint2 = axisYint;
+  BOOST_TEST_MESSAGE("out: " << const_axisYint2[0] << " " << const_axisYint2[1] << " " << const_axisYint2[2] << " " << const_axisYint2[3]);
   BOOST_TEST_MESSAGE("mask: " << (mask[0] ? "1" : "0")  << " " << (mask[1] ? "1" : "0") << " " << (mask[2] ? "1" : "0") << " " << (mask[3] ? "1" : "0"));
-  BOOST_CHECK_CLOSE(axisYint[0], 0., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[1], 25., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[2], 0., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[3], 0., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint2[0], 0., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint2[1], 25., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint2[2], 0., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint2[3], 0., 1e-18);
   BOOST_CHECK(mask[0] == 0 && mask[1] == 1 && mask[2] == 0 && mask[3] == 0);
 
   // third test
@@ -101,12 +104,13 @@ BOOST_AUTO_TEST_CASE(Interpolate)
   offset = 0;
   nOrg = 4;
   tools.Interpolate(axisXorg, axisYorg, offset, nOrg, axisXintNoInt, axisYint, mask);
-  BOOST_TEST_MESSAGE("out: " << axisYint[0] << " " << axisYint[1] << " " << axisYint[2] << " " << axisYint[3]);
+  const CSpectrumAxis& const_axisYint3 = axisYint;
+  BOOST_TEST_MESSAGE("out: " << const_axisYint3[0] << " " << const_axisYint3[1] << " " << const_axisYint3[2] << " " << const_axisYint3[3]);
   BOOST_TEST_MESSAGE("mask: " << (mask[0] ? "1" : "0")  << " " << (mask[1] ? "1" : "0") << " " << (mask[2] ? "1" : "0") << " " << (mask[3] ? "1" : "0"));
-  BOOST_CHECK_CLOSE(axisYint[0], 10., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[1], 25., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[2], 30., 1e-18);
-  BOOST_CHECK_CLOSE(axisYint[3], 40., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint3[0], 10., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint3[1], 25., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint3[2], 30., 1e-18);
+  BOOST_CHECK_CLOSE(const_axisYint3[3], 40., 1e-18);
   BOOST_CHECK(mask[0] == 1 && mask[1] == 1 && mask[2] == 1 && mask[3] == 1);
 
 }

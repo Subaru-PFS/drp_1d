@@ -56,7 +56,7 @@ public:
     bool Init(std::string calibrationPath);
     Float64 GetHeatmapVal( Int32 _index, Float64 _color, Float64 _break);
 
-    typedef std::vector<std::vector<Float64>> TContinuumIndexData;
+    typedef std::vector<TFloat64List> TContinuumIndexData;
 
 private:
 
@@ -68,10 +68,10 @@ private:
 
     Float64 m_tbl_break_step = 0;
     Float64 m_tbl_break_min = 0;
-    UInt32 m_tbl_break_n = 0;
+    Int32 m_tbl_break_n = 0;
 
     std::vector<TContinuumIndexData> m_ciprior_table;
-    std::vector<Float64> m_ciprior_max;
+    TFloat64List m_ciprior_max;
 };
 
 }

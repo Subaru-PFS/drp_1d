@@ -47,7 +47,7 @@ using namespace NSEpic;
 /**
  * Prints log message in stdout.
  */
-void CLogConsoleHandler::LogEntry( UInt32 lvl, const char* header, const char* msg )
+void CLogConsoleHandler::LogEntry( Int32 lvl, const char* header, const char* msg )
 {
     if( header )
         printf("%s", header );
