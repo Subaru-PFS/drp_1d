@@ -58,13 +58,10 @@ public:
   CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr,
                                   Float64 ebmv_start, Float64 ebmv_step,
                                   Float64 ebmv_n);
-  CSpectrumFluxCorrectionCalzetti() = default;
 
-  bool LoadFile(const char *filePath);
-
-  Float64 GetLambdaMin() const;
-  Float64 GetLambdaMax() const;
-  Int32 GetNPrecomputedEbmvCoeffs() const;
+  Float64 getLambdaMin() const { return m_LambdaMin; };
+  Float64 getLambdaMax() const { return m_LambdaMax; };
+  Int32 GetNPrecomputedEbmvCoeffs() const { return m_nEbmvCoeff; };
 
   Float64 GetEbmvValue(Int32 k) const;
 

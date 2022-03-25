@@ -82,7 +82,7 @@ class CalibrationLibrary:
         self.photometric_bands = CPhotBandCatalog()
         self.calzetti = None
         self.meiksin = None
-        self.reliability_models = None
+        self.reliability_models = {}
 
     def _load_templates(self, object_type, path):
         """

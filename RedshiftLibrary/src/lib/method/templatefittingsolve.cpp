@@ -79,7 +79,6 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
   const bool opt_extinction = (m_objectType == "star")? false:inputContext->GetParameterStore()->GetScoped<bool>("extinction");
   bool opt_dustFit = inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
 
-  //std::string calibration_dir = inputContext->GetParameterStore()->Get<std::string>("calibrationDir");
   bool fft_processing = inputContext->GetParameterStore()->GetScoped<bool>("fftprocessing");
 
   bool use_photometry = false;

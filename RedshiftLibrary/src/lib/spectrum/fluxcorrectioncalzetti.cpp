@@ -46,8 +46,8 @@ CSpectrumFluxCorrectionCalzetti::CSpectrumFluxCorrectionCalzetti(
     Float64 ebmv_n)
     : m_dataCalzetti(std::move(_calzettiCorr.fluxcorr)), m_nEbmvCoeff(ebmv_n),
       m_EbmvCoeffStep(ebmv_step), m_EbmvCoeffStart(ebmv_start) {
-  m_LambdaMin = m_dataCalzetti.front();
-  m_LambdaMax = m_dataCalzetti.back();
+  m_LambdaMin = _calzettiCorr.lbda.front();
+  m_LambdaMax = _calzettiCorr.lbda.back();
 
   m_dataDustCoeff.resize(m_nEbmvCoeff * m_dataCalzetti.size());
   for (Int32 kDust = 0; kDust < m_nEbmvCoeff; kDust++) {
@@ -78,16 +78,4 @@ CSpectrumFluxCorrectionCalzetti::GetDustCoeff(Int32 kDust,
     coeffDust = m_dataDustCoeff[kDust * m_dataCalzetti.size() + kCalzetti];
   }
   return coeffDust;
-}
-
-Int32 CSpectrumFluxCorrectionCalzetti::GetNPrecomputedEbmvCoeffs() const {
-  return m_nEbmvCoeff;
-}
-
-Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMin() const {
-  return m_LambdaMin;
-}
-
-Float64 CSpectrumFluxCorrectionCalzetti::GetLambdaMax() const {
-  return m_LambdaMax;
 }
