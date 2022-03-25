@@ -87,4 +87,5 @@ void CProcessFlowContext::Init()
 void CProcessFlowContext::reset()
 {
   m_ResultStore->reset();
+  m_inputContext->resetSpectrumSpecific();
 }

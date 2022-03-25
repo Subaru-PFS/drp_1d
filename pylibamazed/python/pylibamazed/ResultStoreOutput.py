@@ -133,10 +133,9 @@ class ResultStoreOutput(AbstractOutput):
                                                           rs_key,
                                                           ds):
                 continue
-            #                self.object_results[ds]=dict()
-            # self.object_results[ds]["dataframe"]=pd.DataFrame()
-            # TODO change here when we will deal with 2D ranking or model ranking
-            nb_candidates = len(self.object_results[object_type]["model_parameters"])
+
+            nb_candidates = self.results_store.getNbRedshiftCandidates(object_type,
+                                                                       self.get_solve_method(object_type))
             candidates = []
             candidates_df = []  # useless if dataset attributes dimension is not multi
             dimension = None
@@ -224,7 +223,7 @@ class ResultStoreOutput(AbstractOutput):
                 rs = self.results_specifications
                 rs = rs[rs["level"] == "candidate"]
                 candidate_datasets = list(rs["hdf5_dataset"].unique())
-                nb_candidates = self.results_store.getNbRedshiftCandidates(object_type,self.get_solve_method(object_type))
+                nb_candidates = len(self.object_results[object_type]["model_parameters"])
                 for rank in range(nb_candidates):
                     candidate = candidates.create_group(self.get_candidate_group_name(rank))
                     for ds in candidate_datasets:
