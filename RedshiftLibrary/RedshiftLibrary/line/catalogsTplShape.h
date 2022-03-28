@@ -64,7 +64,7 @@ class CLineCatalogsTplShape
 public:
 
     bool Init(Int32 enableISMCalzetti,
-              std::shared_ptr<CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti,
+              const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> &ismCorrectionCalzetti,
               Float64 nsigmasupport);
 
 
@@ -97,7 +97,7 @@ private:
     std::vector<std::vector<TFloat64List>> m_LineCatalogLinesCorrespondingNominalAmp;
   TFloat64List m_catalogsPriors; // TODO temporary hack before reviewing getCatalogsPrior uses
 
-    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
+    std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
     Int32 m_opt_dust_calzetti;
     Float64 m_nsigmasupport;
 };

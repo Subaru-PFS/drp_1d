@@ -73,9 +73,9 @@ private:
                                Float64 redshift, const std::string &opt_interp);
 
   void InitIsmIgmConfig(Float64 redshift,
-                        const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+                        const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
                             &ismCorrectionCalzetti,
-                        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+                        const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
                             &igmCorrectionMeiksin,
                         Int32 EbmvListSize) override;
 

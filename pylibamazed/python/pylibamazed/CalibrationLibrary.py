@@ -48,9 +48,12 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   TAsymParams,
-                                  CFlagWarning)
+                                  CFlagWarning,MeiksinCorrection,
+                                  CSpectrumFluxCorrectionMeiksin,
+                                  VecTFloat64List, VecMeiksinCorrection,
+                                  CSpectrumFluxCorrectionCalzetti, CalzettiCorrection)
 import numpy as np
-from astropy.io import fits
+from astropy.io import fits, ascii
 import glob
 
 zflag = CFlagWarning.GetInstance()
@@ -77,7 +80,8 @@ class CalibrationLibrary:
         self.lambda_offsets = dict()
         self.lsf = dict()
         self.photometric_bands = CPhotBandCatalog()
-        self.calzetti = pd.DataFrame()
+        self.calzetti = None
+        self.meiksin = None
         self.reliability_models = {}
 
     def _load_templates(self, object_type, path):
@@ -249,13 +253,31 @@ class CalibrationLibrary:
                                                                   np.array(df["lambda"])))
 
     def load_calzetti(self):
-        calzetti_df = pd.read_csv(os.path.join(self.calibration_dir,"ism", "SB_calzetti.tsv" ),sep='\t')
-        # self.calzetti =
+        df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
+        _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
+        self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti, self.parameters["ebmv"]["start"], self.parameters["ebmv"]["step"], self.parameters["ebmv"]["count"])
+
+    # Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
+    # i.e., from the least extinction curve to the highest extinction curve 
+    def load_Meiksin(self):
+        zbins = [2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0]
+        columns =['restlambda', 'flux0', 'flux1', 'flux2','flux3', 'flux4', 'flux5', 'flux6']
+        #we'd better create a map between meiksin curves and their zbin
+        meiksinCorrectionCurves = VecMeiksinCorrection()
+        for z in zbins: 
+            filename = f"Meiksin_Var_curves_{z}.txt"
+            meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin", filename), names=columns)
+            fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
+            meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
+        self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
+
 
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
 
         """
+        self.load_Meiksin()
+        self.load_calzetti()
         for object_type in self.parameters["objects"]:
             self.load_templates_catalog(object_type)
             method = self.parameters[object_type]["method"]

@@ -527,11 +527,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(const CSpectru
         {
             throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-tplcombination: input template k="<<ktpl<<" are not in log scale");
         }
-        if( opt_dustFitting && tplList[ktpl]->m_ismCorrectionCalzetti->calzettiInitFailed)
+        if( opt_dustFitting && tplList[ktpl]->CalzettiInitFailed())
         {
             throw GlobalException(INTERNAL_ERROR,"Operator-tplcombination: no calzetti calib. file loaded... aborting");
         }
-        if( opt_extinction && tplList[ktpl]->m_igmCorrectionMeiksin->meiksinInitFailed)
+        if( opt_extinction && tplList[ktpl]->MeiksinInitFailed())
         {
             throw GlobalException(INTERNAL_ERROR,"  Operator-tplcombination: no meiksin calib. file loaded... aborting");
         }

@@ -221,29 +221,15 @@ void  CTemplateCatalog::InitContinuumRemoval(const std::shared_ptr<const CParame
 }
 
 //adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CParameterStore> &parameterStore,
-                                  const std::shared_ptr<const CLSF>& lsf)
+void CTemplateCatalog::InitIsmIgm(const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> igmCorrectionMeiksin,
+                                  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> ismCorrectionCalzetti)
 {
-    Float64 ebmv_start = parameterStore->Get<Float64>( "ebmv.start");
-    Float64 ebmv_step  = parameterStore->Get<Float64>( "ebmv.step");
-    Int32  ebmv_n     = parameterStore->Get<Int32>( "ebmv.count");
-    std::string calibrationPath = parameterStore->Get<std::string>( "calibrationDir");
-
-    //ISM
-    auto ismCorrectionCalzetti = std::make_shared<CSpectrumFluxCorrectionCalzetti>();
-    ismCorrectionCalzetti->Init(calibrationPath, ebmv_start, ebmv_step, ebmv_n);
-    //IGM
-    TFloat64Range lambdaRange = parameterStore->Get<TFloat64Range>("lambdarange");
-    auto igmCorrectionMeiksin = std::make_shared<CSpectrumFluxCorrectionMeiksin>();
-    igmCorrectionMeiksin->Init(calibrationPath, lsf, lambdaRange);
-
     for(auto it : GetList(0,0))
     {             
         const TTemplateRefList  & TplList = it.second;
         for (auto tpl : TplList)
             tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-        if(it.first != "star")//no igm for stars
-            for (auto tpl : TplList)
-                tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+        for (auto tpl : TplList)
+            tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
     }
 }

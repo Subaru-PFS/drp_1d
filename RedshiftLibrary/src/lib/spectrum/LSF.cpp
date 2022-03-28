@@ -68,3 +68,39 @@ const CLineProfile & CLSF::GetProfile() const
 {
     return *m_profile;
 }
+
+TFloat64List CLSF::getRestFrameProfileVector(Float64 lambda0_rest,
+                                             Float64 z) const {
+
+  if (!IsValid()) {
+    throw GlobalException(INTERNAL_ERROR, "LSF is not valid");
+  }
+  Float64 lambda0_obs = lambda0_rest * (1 + z);
+  Float64 sigma_obs = GetWidth(lambda0_obs);
+  Float64 sigmaSupport = GetProfile().GetNSigmaSupport();
+
+  Float64 lbdastep_rest = 1.; // value in angstrom based on calibration-igm
+                              // files
+  Int32 Nhalf = std::round(sigmaSupport * sigma_obs / (1 + z) / lbdastep_rest);
+  Int32 len = 2 * Nhalf + 1;
+
+  // change to observedframe
+  TFloat64List lambdas_obs(len);
+  for (Int32 i = 0; i < len; i++) {
+    lambdas_obs[i] = (lambda0_rest + (i - Nhalf) * lbdastep_rest) * (1 + z);
+  }
+  Float64 norm = 0, v;
+  TFloat64List kernel(len);
+  for (Int32 i = 0; i < len; i++) {
+    // getLineProfile expects lbda in observedframe
+    v = GetLineProfile(lambdas_obs[i], lambda0_obs, sigma_obs);
+    kernel[i] = v;
+    norm += v;
+  }
+  // normalizing  values
+  Float64 inv_norm = 1 / norm;
+  for (Int32 i = 0; i < len; i++) {
+    kernel[i] *= inv_norm;
+  }
+  return kernel;
+}

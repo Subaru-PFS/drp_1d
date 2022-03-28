@@ -97,22 +97,22 @@ public:
     Int32 GetIgmEndIndex(Int32 kstart, Int32 kend) const;
 
     void InitIsmIgmConfig( Float64 redshift,
-                           const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
-                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
+                           const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
+                           const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
     void InitIsmIgmConfig(const TFloat64Range& lbdaRange, Float64 redshift,
-                           const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
-                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
+                           const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
+                           const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
     void InitIsmIgmConfig(Int32 kstart, Int32 kend, Float64 redshift,
-                           const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
-                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
+                           const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>& ismCorrectionCalzetti = nullptr,
+                           const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>& igmCorrectionMeiksin=nullptr);
     void DisableIsmIgm();
 
     bool CheckIsmIgmEnabled() const {return !m_NoIsmIgmFluxAxis.isEmpty();};
     bool CalzettiInitFailed() const;
     bool MeiksinInitFailed() const;
 
-    std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
-    std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
+    std::shared_ptr<const CSpectrumFluxCorrectionCalzetti> m_ismCorrectionCalzetti;
+    std::shared_ptr<const CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
     void   GetIsmIgmIdxList( Int32 opt_extinction,
                       Int32 opt_dustFitting,
                       TInt32List& MeiksinList, //return 

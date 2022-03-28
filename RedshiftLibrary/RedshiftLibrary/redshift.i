@@ -86,6 +86,8 @@
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
+%shared_ptr(CSpectrumFluxCorrectionMeiksin)
+%shared_ptr(CSpectrumFluxCorrectionCalzetti) 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
@@ -134,6 +136,8 @@
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
 static PyObject* pParameterException;
@@ -303,6 +307,7 @@ typedef std::vector<std::string> TStringList;
 %template(TFloat64List) std::vector<Float64>;
 %template(TInt32List) std::vector<Int32>;
 %template(TStringList) std::vector<std::string>;
+%template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
@@ -348,8 +353,8 @@ public:
 
 typedef struct {
   TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
-        Float64 sigma, alpha, delta;
-    } TAsymParams;
+  Float64 sigma, alpha, delta;
+} TAsymParams;
 
 
 class CLineRatioCatalog : public CLineCatalog
@@ -428,14 +433,17 @@ public:
   static CProcessFlowContext& GetInstance();
 
   void Init();
-  void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog); 
-  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
-  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
-  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
-
+  void setLineCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalog> &catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
+  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
+  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
+  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
   void reset();
-  std::shared_ptr<COperatorResultStore> GetResultStore();
+
+
+  const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
   TScopeStack  m_ScopeStack;
@@ -903,4 +911,28 @@ class CLineMatchingSolve: public CObjectSolve
 public:
 
     CLineMatchingSolve(TScopeStack &scope,std::string objectType);
+};
+
+typedef struct {
+  MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr);
+  TFloat64List lbda; // wavelength
+  std::vector<TFloat64List > fluxcorr; // 7 flux correction lists
+}MeiksinCorrection;
+
+%template(VecMeiksinCorrection) std::vector< MeiksinCorrection >;
+class CSpectrumFluxCorrectionMeiksin
+{
+  public:
+    CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCurves);
+};
+
+typedef struct {
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr);
+  TFloat64List lbda;
+  TFloat64List fluxcorr; 
+}CalzettiCorrection;
+class CSpectrumFluxCorrectionCalzetti
+{
+  public:
+    CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
 };
