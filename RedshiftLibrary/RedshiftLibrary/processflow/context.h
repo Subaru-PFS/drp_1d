@@ -95,7 +95,7 @@ public:
 private:
     friend class CSingleton<CProcessFlowContext >;
   CProcessFlowContext();
-    ~CProcessFlowContext();
+  ~CProcessFlowContext() = default;
 
     std::shared_ptr<COperatorResultStore> m_ResultStore;
     std::shared_ptr<CParameterStore>      m_parameterStore;

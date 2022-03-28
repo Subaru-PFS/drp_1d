@@ -67,11 +67,6 @@ CProcessFlowContext::CProcessFlowContext()
     m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
-CProcessFlowContext::~CProcessFlowContext()
-{
-
-}
-
 std::shared_ptr<const CParameterStore> CProcessFlowContext::LoadParameterStore(const std::string& paramsJSONString)
 {
   m_parameterStore->FromString(paramsJSONString);
