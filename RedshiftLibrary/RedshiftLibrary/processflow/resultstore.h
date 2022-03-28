@@ -191,7 +191,7 @@ public:
   
   std::string GetScope( const COperatorResult&  result) const;
   
-  
+  void reset() {m_GlobalResults.clear(); m_PerTemplateResults.clear();}
 protected:
 
     void StoreResult( TResultsMap& map, const std::string& path, const std::string& name, std::shared_ptr<const COperatorResult> result );

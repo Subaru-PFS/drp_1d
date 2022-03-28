@@ -212,3 +212,16 @@ void CInputContext::Init()
 
     OrthogonalizeTemplates();
 }
+
+
+void CInputContext::resetSpectrumSpecific()
+{
+  m_Spectrum.reset();
+  m_rebinnedSpectrum.reset();
+  // not always spectrum specific
+  m_TemplateCatalog.reset();
+  // those one should not be here, they stay until api modification (only load spectrum specific data in Context::run)
+  m_lineCatalogs.clear();
+  m_lineRatioCatalogCatalogs.clear();
+  m_photBandCatalog.reset();
+}

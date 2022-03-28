@@ -73,7 +73,7 @@ class Context:
         self.parameters["calibrationDir"]=config["calibration_dir"]
 
     def init_context(self):
-        self.process_flow_context = CProcessFlowContext()
+        self.process_flow_context = CProcessFlowContext.GetInstance()
         for object_type in self.parameters["objects"]:
             if object_type in self.calibration_library.line_catalogs:
                 self.process_flow_context.setLineCatalog(object_type,
@@ -91,7 +91,6 @@ class Context:
     def run(self, spectrum_reader):
         self.init_context()
         spectrum_reader.init()
-        self.process_flow_context.setSpectrum(spectrum_reader.get_spectrum())
         if self.config.get("linemeascatalog"):
             for object_type in self.config["linemeascatalog"].keys():
                 lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
@@ -152,7 +151,7 @@ class Context:
             rso.object_results[object_type]['reliability'] = dict()
             rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
 
-        del self.process_flow_context
+        self.process_flow_context.reset()
         return rso
 
     def run_method(self, object_type, method):
@@ -162,7 +161,7 @@ class Context:
         solver_method = globals()["C" + method]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
-        solver.Compute(self.process_flow_context)
+        solver.Compute()
 
 
 def _check_config(config):

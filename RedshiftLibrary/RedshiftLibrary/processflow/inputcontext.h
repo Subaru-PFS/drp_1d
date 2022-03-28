@@ -96,6 +96,8 @@ class CInputContext
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
 
   void Init();
+
+  void resetSpectrumSpecific();
 private:
 
 

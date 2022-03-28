@@ -67,11 +67,6 @@ CProcessFlowContext::CProcessFlowContext()
     m_inputContext = std::make_shared<CInputContext>(m_parameterStore);
 }
 
-CProcessFlowContext::~CProcessFlowContext()
-{
-
-}
-
 std::shared_ptr<const CParameterStore> CProcessFlowContext::LoadParameterStore(const std::string& paramsJSONString)
 {
   m_parameterStore->FromString(paramsJSONString);
@@ -84,3 +79,8 @@ void CProcessFlowContext::Init()
   m_inputContext->Init();
 }
 
+void CProcessFlowContext::reset()
+{
+  m_ResultStore->reset();
+  m_inputContext->resetSpectrumSpecific();
+}

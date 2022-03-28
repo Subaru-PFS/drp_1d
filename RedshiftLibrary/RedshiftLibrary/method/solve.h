@@ -82,7 +82,7 @@ namespace NSEpic
     CSolve(CSolve&& other) = default;
     CSolve& operator=(CSolve&& other) = default;
 
-    void Compute(CProcessFlowContext& context);
+    void Compute();
     
   };
 

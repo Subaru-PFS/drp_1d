@@ -424,7 +424,9 @@ public:
 
 class CProcessFlowContext {
 public:
-  CProcessFlowContext();
+
+  static CProcessFlowContext& GetInstance();
+
   void Init();
   void setLineCatalog(const std::string& objectType,std::shared_ptr<CLineCatalog> catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CLineCatalogsTplShape> catalog); 
@@ -432,11 +434,16 @@ public:
   void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
 
+  void reset();
   std::shared_ptr<COperatorResultStore> GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
   TScopeStack  m_ScopeStack;
 
+ private:
+    CProcessFlowContext();
+    ~CProcessFlowContext();
+    
 };
 
 
@@ -838,13 +845,13 @@ class CSolveDescription
 class CSolve{
  public:
   CSolve()=delete;
-    void Compute(CProcessFlowContext& context);
+    void Compute();
 };
 
 class CObjectSolve{
  public:
   CSolve()=delete;
-    void Compute(CProcessFlowContext& context);
+    void Compute();
 };
 
   class CClassificationSolve:public CSolve

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/method/solve.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/common/flag.h"
@@ -44,6 +45,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 
 using namespace NSEpic;
+
 
 CSolve::CSolve(std::string name,TScopeStack &scope,std::string objectType):
   m_categoryList({objectType}),
@@ -78,11 +80,11 @@ void CSolve::InitRanges(std::shared_ptr<const CInputContext> inputContext)
 }
 
 
-void CSolve::Compute(CProcessFlowContext& context)
+void CSolve::Compute()
 {
-  std::shared_ptr<const CInputContext> inputContext=context.GetInputContext();
-  std::shared_ptr<COperatorResultStore> resultStore=context.GetResultStore();
-  TScopeStack &scope=context.m_ScopeStack;
+  std::shared_ptr<const CInputContext> inputContext=Context.GetInputContext();
+  std::shared_ptr<COperatorResultStore> resultStore=Context.GetResultStore();
+  TScopeStack &scope=Context.m_ScopeStack;
     InitRanges(inputContext);
   std::shared_ptr<CSolveResult> result=std::shared_ptr<CSolveResult>(nullptr);  
   {
