@@ -49,6 +49,12 @@
 #include <ostream>
 #include <vector>
 
+namespace ResultStore { // boost_test_suite
+// all boost_auto_test_case that use private method
+class CreateResultStorage_test;
+class StoreResult_test;
+} // namespace ResultStore
+
 namespace NSEpic {
 
 class CTemplate;
@@ -194,6 +200,9 @@ public:
   }
 
 protected:
+  friend class ResultStore::CreateResultStorage_test;
+  friend class ResultStore::StoreResult_test;
+
   void StoreResult(TResultsMap &map, const std::string &path,
                    const std::string &name,
                    std::shared_ptr<const COperatorResult> result);
