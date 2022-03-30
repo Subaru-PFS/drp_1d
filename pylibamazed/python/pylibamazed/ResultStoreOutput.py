@@ -207,11 +207,8 @@ class ResultStoreOutput(AbstractOutput):
                         if self.has_attribute(object_type,ds,ds_row["hdf5_name"]):
                             object_results_node.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][ds_row["hdf5_name"]]
                     
-
-
     def write_hdf5(self,hdf5_root,spectrum_id):
         obs = hdf5_root.create_group(spectrum_id)
-
         self.write_hdf5_root(obs)
 
         for object_type in self.object_types:
@@ -234,6 +231,8 @@ class ResultStoreOutput(AbstractOutput):
                                 candidate.create_group(ds)
 
                 for ds in candidate_datasets:
+                    if not ds in self.object_results[object_type]:
+                        continue
                     ds_attributes = rs[rs["hdf5_dataset"]==ds]
 
                     # TODO change here when we will deal with 2D ranking or model ranking
@@ -241,10 +240,12 @@ class ResultStoreOutput(AbstractOutput):
                     for rank in range(nb_candidates):
                         candidate = candidates.get(self.get_candidate_group_name(rank))
                         for index,ds_row in ds_attributes.iterrows():
-                            if self.has_attribute_in_result_store(ds_row, object_type, rank):
-                                dimension=ds_row["dimension"]
-                                if dimension == "mono":
-                                    candidate.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][rank][ds_row["hdf5_name"]]
+                            dimension = ds_row["dimension"]
+                            if self.has_attribute(object_type,
+                                                  ds_row.hdf5_dataset,
+                                                  ds_row.hdf5_name,
+                                                  rank) and dimension == "mono":
+                                candidate.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][rank][ds_row["hdf5_name"]]
                         if dimension == "multi":
                             ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
                             ds_size = self.get_dataset_size(object_type,ds,rank)
