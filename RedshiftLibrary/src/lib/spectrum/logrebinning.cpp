@@ -107,13 +107,14 @@ void CSpectrumLogRebinning::SetupRebinning( CSpectrum &spectrum,
 *  step1: construct the spectralAxis
 *  step2: do the rebin
 */
-std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<const CSpectrum> spectrum, 
+std::shared_ptr<CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::shared_ptr<const CSpectrum> spectrum, 
                                                                            std::string errorRebinMethod) const
 { 
     TFloat64Range lambdaRange_spc;
     Int32 loglambda_count_spc;
-    if(!spectrum->GetSpectralAxis().IsLogSampled() )
-    {
+    if (spectrum->GetSpectralAxis().IsLogSampled()){
+        return make_shared<CSpectrum>(*spectrum); // copy the spectrum
+    }else{
         // compute rebinned spectrum lambda range lambdaRange_spc (ie clamp on reference grid)
         // to be passed to computeTargetLogSpectralAxis in LogLambdaRebinSpectrum
         spectrum->GetSpectralAxis().ClampLambdaRange(m_lambdaRange_ref, lambdaRange_spc);
@@ -135,11 +136,9 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
         loglambda_count_spc = round(count_) + 1; 
 
         if(loglambda_count_spc<2){
-	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"Operator-TemplateFittingLog: logGridCount = "<< loglambda_count_spc<< "<2");
+	  throw GlobalException(INTERNAL_ERROR,Formatter()<<"CSpectrumLogRebinning::LoglambdaRebinSpectrum: logGridCount = "<< loglambda_count_spc<< "<2");
         }
-    }/*else{
-        // no need to compute lambdaRange_spc (used only for resampling input spectra)
-    }*/
+    }
 
     //prepare return rebinned vector  
     auto spectrumRebinedLog = make_shared<CSpectrum>(spectrum->GetName());
@@ -157,10 +156,9 @@ std::shared_ptr< CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum( std::
     if(!ret){
         throw GlobalException(INTERNAL_ERROR,"Cant rebin spectrum");
     }
-    //spectrumRebinedLog->GetSpectralAxis().SetLogScale(); //we need to do a convertScale before setting scale
+
     spectrumRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);//double make sure that sampling is well done
 
-    //the rebinned spectrum and we change logscale
     Log.LogDetail("  Log-regular lambda resampling FINISHED");
 
     return spectrumRebinedLog;  
