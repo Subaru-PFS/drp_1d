@@ -371,7 +371,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                 scope.c_str());
 
   TOperatorResultMap meritResults =
-      store->GetPerTemplateResult(scopeStr.c_str());
+      store->GetScopedPerTemplateResult(scopeStr.c_str());
 
   chisquarearray.cstLog = -1;
 
@@ -463,7 +463,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
   Log.LogDetail("    templatefittingsolve: using results in scope: %s",
                 scope.c_str());
 
-  TOperatorResultMap results = store->GetPerTemplateResult(scopeStr.c_str());
+  TOperatorResultMap results =
+      store->GetScopedPerTemplateResult(scopeStr.c_str());
 
   // bool foundRedshiftAtLeastOnce = false;
 

@@ -53,6 +53,8 @@ namespace ResultStore { // boost_test_suite
 // all boost_auto_test_case that use private method
 class CreateResultStorage_test;
 class StoreResult_test;
+class StoreTemplateMethods_test;
+class GetMethods_test;
 } // namespace ResultStore
 
 namespace NSEpic {
@@ -89,22 +91,12 @@ public:
                               std::shared_ptr<const COperatorResult> result);
   void StoreGlobalResult(const std::string &path, const std::string &name,
                          std::shared_ptr<const COperatorResult> result);
-
   std::weak_ptr<const COperatorResult>
-  GetPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
-                       const std::string &name) const;
-  TOperatorResultMap GetPerTemplateResult(const std::string &name) const;
-  std::weak_ptr<const COperatorResult>
-  GetGlobalResult(const std::string &name) const;
+  GetScopedPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
+                             const std::string &name) const;
+  TOperatorResultMap GetScopedPerTemplateResult(const std::string &name) const;
   std::weak_ptr<const COperatorResult>
   GetScopedGlobalResult(const std::string &name) const;
-
-  std::weak_ptr<const COperatorResult>
-  GetGlobalResult(const std::string &objectType, const std::string &method,
-                  const std::string &name) const;
-  std::weak_ptr<const COperatorResult>
-  GetGlobalResult(const std::string &objectType, const std::string &method,
-                  const std::string &name, const int &rank) const;
 
   const std::string &GetGlobalResultType(const std::string &objectType,
                                          const std::string &method,
@@ -198,6 +190,22 @@ public:
     m_GlobalResults.clear();
     m_PerTemplateResults.clear();
   }
+private:
+  friend class ResultStore::StoreTemplateMethods_test;
+  friend class ResultStore::GetMethods_test;
+
+  std::weak_ptr<const COperatorResult>
+  GetPerTemplateResult(const std::shared_ptr<const CTemplate> &t,
+                       const std::string &name) const;
+  TOperatorResultMap GetPerTemplateResult(const std::string &name) const;
+  std::weak_ptr<const COperatorResult>
+  GetGlobalResult(const std::string &name) const;
+  std::weak_ptr<const COperatorResult>
+  GetGlobalResult(const std::string &objectType, const std::string &method,
+                  const std::string &name) const;
+  std::weak_ptr<const COperatorResult>
+  GetGlobalResult(const std::string &objectType, const std::string &method,
+                  const std::string &name, const int &rank) const;
 
 protected:
   friend class ResultStore::CreateResultStorage_test;

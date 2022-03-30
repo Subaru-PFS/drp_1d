@@ -106,15 +106,11 @@ void COperatorResultStore::StoreGlobalResult(
 
 std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
     const std::shared_ptr<const CTemplate> &t, const std::string &name) const {
-  std::string scopedName = GetCurrentScopeName();
-  if (!scopedName.empty())
-    scopedName.append(".");
-  scopedName.append(name);
   TPerTemplateResultsMap::const_iterator it1 =
       m_PerTemplateResults.find(t->GetName());
   if (it1 != m_PerTemplateResults.end()) {
     const TResultsMap &m = (*it1).second;
-    TResultsMap::const_iterator it2 = m.find(scopedName);
+    TResultsMap::const_iterator it2 = m.find(name);
     if (it2 != m.end()) {
       return (*it2).second;
     }
@@ -128,26 +124,33 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
   return std::weak_ptr<const COperatorResult>();
 }
 
+std::weak_ptr<const COperatorResult>
+COperatorResultStore::GetScopedPerTemplateResult(
+    const std::shared_ptr<const CTemplate> &t, const std::string &name) const {
+  return GetPerTemplateResult(t, GetScopedName(name));
+}
+
 TOperatorResultMap
 COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
   TOperatorResultMap map;
   TPerTemplateResultsMap::const_iterator it;
-  std::string scopedName = GetCurrentScopeName();
-  if (!scopedName.empty())
-    scopedName.append(".");
-  scopedName.append(name);
   for (it = m_PerTemplateResults.begin(); it != m_PerTemplateResults.end();
        ++it) {
     std::string tplName = (*it).first;
 
     const TResultsMap &m = (*it).second;
-    TResultsMap::const_iterator it2 = m.find(scopedName);
+    TResultsMap::const_iterator it2 = m.find(name);
     if (it2 != m.end()) {
       map[tplName] = (*it2).second;
     }
   }
 
   return map;
+}
+
+TOperatorResultMap COperatorResultStore::GetScopedPerTemplateResult(
+    const std::string &name) const {
+  return GetPerTemplateResult(GetScopedName(name));
 }
 
 /**

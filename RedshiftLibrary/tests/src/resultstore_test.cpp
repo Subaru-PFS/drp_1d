@@ -269,12 +269,13 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   store.StoreScopedPerTemplateResult(tpl, "warningFlag", result_in);
 
   std::weak_ptr<const COperatorResult> result_out =
-      store.GetPerTemplateResult(tpl, "warningFlag");
+      store.GetScopedPerTemplateResult(tpl, "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
-  BOOST_CHECK_THROW(store.GetPerTemplateResult(tpl, "warningFlag_"),
+  BOOST_CHECK_THROW(store.GetScopedPerTemplateResult(tpl, "warningFlag_"),
                     GlobalException);
 
-  TOperatorResultMap result_out_2 = store.GetPerTemplateResult("warningFlag");
+  TOperatorResultMap result_out_2 =
+      store.GetScopedPerTemplateResult("warningFlag");
   TOperatorResultMap::const_iterator it;
   for (it = result_out_2.begin(); it != result_out_2.end(); ++it) {
     std::string tplName = (*it).first;
@@ -282,7 +283,7 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   }
 
   // empty map
-  result_out_2 = store.GetPerTemplateResult("warningFlag__");
+  result_out_2 = store.GetScopedPerTemplateResult("warningFlag__");
   BOOST_CHECK(result_out_2.size() == 0);
 
   // test store and get outside context
@@ -293,14 +294,17 @@ BOOST_AUTO_TEST_CASE(StoreTemplateMethods_test) {
   result_out = store_2.GetPerTemplateResult(tpl, "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
 
+  result_out = store_2.GetScopedPerTemplateResult(tpl, "warningFlag");
+  BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
+
   // StorePerTemplateResult
   store.StorePerTemplateResult(tpl, store.GetCurrentScopeName(),
                                "warningFlag_2", result_in);
 
-  result_out = store.GetPerTemplateResult(tpl, "warningFlag_2");
+  result_out = store.GetScopedPerTemplateResult(tpl, "warningFlag_2");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
 
-  result_out_2 = store.GetPerTemplateResult("warningFlag_2");
+  result_out_2 = store.GetScopedPerTemplateResult("warningFlag_2");
   for (it = result_out_2.begin(); it != result_out_2.end(); ++it) {
     std::string tplName = (*it).first;
     BOOST_CHECK(result_out_2[tplName]->getType() == "CFlagLogResult");
@@ -320,8 +324,9 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
   std::weak_ptr<const COperatorResult> result_out =
       store.GetScopedGlobalResult("warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
-  BOOST_CHECK_THROW(result_out = store.GetGlobalResult("warningFlag__"),
-                    GlobalException);
+  BOOST_CHECK_THROW(
+      result_out = store.GetGlobalResult(store.GetScopedName("warningFlag__")),
+      GlobalException);
 
   result_out = store.GetGlobalResult("object", "method", "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");

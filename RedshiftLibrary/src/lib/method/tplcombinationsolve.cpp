@@ -301,7 +301,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
   Log.LogDetail("    tplcombinationsolve: using results in scope: %s",
                 scope.c_str());
 
-  auto results = store->GetGlobalResult(scope.c_str());
+  auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
     throw GlobalException(INTERNAL_ERROR,
                           "tplcombinationsolve: CombinePDF - Unable to "
@@ -395,7 +395,7 @@ CTplcombinationSolve::SaveExtremaResult(
                 scope.c_str());
   // in contrast to linemodel and TF, there is no perTemplateResults for
   // tplCombination
-  auto results = store->GetGlobalResult(scope.c_str());
+  auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
     throw GlobalException(INTERNAL_ERROR,
                           "tplcombinationsolve: SaveExtremaResult - Unable to "
