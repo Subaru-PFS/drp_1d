@@ -330,10 +330,6 @@ BOOST_AUTO_TEST_CASE(GetMethods_test) {
 
   result_out = store.GetGlobalResult("object", "method", "warningFlag");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
-
-  store.StoreScopedGlobalResult("warningFlag_2", result_in);
-  result_out = store.GetGlobalResult("object", "method", "warningFlag_", 2);
-  BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
 }
 
 //---------------------------------------------------------------
@@ -364,19 +360,6 @@ BOOST_AUTO_TEST_CASE(GetSolveResult_test) {
   std::weak_ptr<const COperatorResult> result_out =
       store.GetSolveResult("object", "method");
   BOOST_CHECK(result_out.lock()->getType() == "CFlagLogResult");
-}
-
-//---------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(GetScope_test) {
-  TScopeStack scopeStack = getScopeStack();
-
-  std::shared_ptr<const CFlagLogResult> result_in = getFlagResult();
-
-  COperatorResultStore store(scopeStack);
-  store.StoreScopedGlobalResult("warningFlag", result_in);
-
-  std::string scope = store.GetScope(*result_in.get());
-  BOOST_CHECK(scope == "object.method.");
 }
 
 //---------------------------------------------------------------
@@ -644,23 +627,5 @@ BOOST_AUTO_TEST_CASE(getNbRedshiftCandidates_test) {
   result_out = store.getNbRedshiftCandidates("object", "method");
   BOOST_CHECK(result_out == 1);
 }
-
-//---------------------------------------------------------------
-// CreateResultStorage not used
-BOOST_AUTO_TEST_CASE(CreateResultStorage_test) {
-  TScopeStack scopeStack = getScopeStack();
-
-  std::fstream stream;
-  const boost::filesystem::path path("/test/test.txt");
-  const boost::filesystem::path baseDir(".");
-
-  COperatorResultStore store(scopeStack);
-  Int32 result_out = store.CreateResultStorage(stream, path, baseDir);
-
-  BOOST_CHECK(result_out == 0 || result_out == 1);
-}
-
-//---------------------------------------------------------------
-// getProcessedObjectTypes ???
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -163,8 +163,6 @@ public:
   GetSpectraFluxResult(const std::string &objectType, const std::string &method,
                        const std::string &name, const int &rank) const;
 
-  TStringList getProcessedObjectTypes() const;
-
   int getNbRedshiftCandidates(const std::string &objectType,
                               const std::string &method) const;
 
@@ -184,8 +182,6 @@ public:
                                std::shared_ptr<const COperatorResult> result);
   void StoreFlagResult(const std::string &name, Int32 result);
 
-  std::string GetScope(const COperatorResult &result) const;
-
   void reset() {
     m_GlobalResults.clear();
     m_PerTemplateResults.clear();
@@ -203,9 +199,6 @@ private:
   std::weak_ptr<const COperatorResult>
   GetGlobalResult(const std::string &objectType, const std::string &method,
                   const std::string &name) const;
-  std::weak_ptr<const COperatorResult>
-  GetGlobalResult(const std::string &objectType, const std::string &method,
-                  const std::string &name, const int &rank) const;
 
 protected:
   friend class ResultStore::CreateResultStorage_test;
@@ -214,10 +207,6 @@ protected:
   void StoreResult(TResultsMap &map, const std::string &path,
                    const std::string &name,
                    std::shared_ptr<const COperatorResult> result);
-
-  Int32 CreateResultStorage(std::fstream &stream,
-                            const boost::filesystem::path &path,
-                            const boost::filesystem::path &baseDir) const;
 
   TPerTemplateResultsMap m_PerTemplateResults;
   TResultsMap m_GlobalResults;
