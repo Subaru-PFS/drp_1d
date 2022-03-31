@@ -321,13 +321,13 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
   Float64 cstlog =
       COperatorTemplateFitting::EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
-  Float64 sumLogNoise;
+  Float64 sumLogNoise = 0.0;
   const auto &photData = m_spectrum.GetPhotData();
   for (const auto &b : *m_photBandCat) {
     const std::string &bandName = b.first;
     sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
   }
-  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) + sumLogNoise;
+  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
 
   return cstlog;
 }

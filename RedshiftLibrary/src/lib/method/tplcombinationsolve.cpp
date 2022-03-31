@@ -82,7 +82,7 @@ std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<cons
 
     std::string scopeStr = "tplcombination";
 
-    EType _type;
+    EType _type = nType_raw;
     if(opt_spcComponent=="raw"){
       _type = nType_raw;
     }else if(opt_spcComponent=="nocontinuum"){
@@ -93,6 +93,8 @@ std::shared_ptr<CSolveResult> CTplcombinationSolve::compute(std::shared_ptr<cons
       scopeStr = "tplcombination_continuum";
     }else if(opt_spcComponent=="all"){
       _type = nType_all;
+    }else{
+        throw GlobalException(INTERNAL_ERROR, "CTplcombinationSolve::compute: unknown spectrum component");
     }
 
     //for now interp must be 'lin'. pfg not availbale for now...
@@ -256,6 +258,8 @@ bool CTplcombinationSolve::Solve(std::shared_ptr<COperatorResultStore> resultSto
             // use spectrum without continuum
             scopeStr = "tplcombination_nocontinuum";
             enable_dustFitting = 0;
+        }else{
+            throw GlobalException(INTERNAL_ERROR, "CTplcombinationSolve::Solve: unknown spectrum component");
         }
 
         // Compute merit function

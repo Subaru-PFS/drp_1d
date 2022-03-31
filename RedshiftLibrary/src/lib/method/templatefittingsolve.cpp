@@ -114,7 +114,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
     std::string scopeStr = "templatefitting";
     
 
-    EType _type;
+    EType _type = nType_raw;
     if(opt_spcComponent=="raw"){
        _type = nType_raw;
     }else if(opt_spcComponent=="nocontinuum"){
@@ -125,6 +125,8 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(std::shared_ptr<con
         scopeStr = "templatefitting_continuum";
     }else if(opt_spcComponent=="all"){
         _type = nType_all;
+    }else{
+        throw GlobalException(INTERNAL_ERROR, "CTemplateFittingSolve::compute: unknown spectrum component");
     }
 
     m_opt_maxCandidate = inputContext->GetParameterStore()->GetScoped<int>( "extremacount");
@@ -264,6 +266,9 @@ bool CTemplateFittingSolve::Solve(std::shared_ptr<COperatorResultStore> resultSt
             scopeStr = "templatefitting_nocontinuum";
             //
             option_dustFitting = -1;
+        }else{
+            // unknown type
+            throw GlobalException(INTERNAL_ERROR,"CTemplateFittingSolve::Solve: unknown spectrum component");
         }
 
         // Compute merit function
