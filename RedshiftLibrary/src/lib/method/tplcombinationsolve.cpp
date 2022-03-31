@@ -295,11 +295,9 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
 
   Log.LogDetail("tplcombinationsolve: build chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
-
-  Log.LogDetail("    tplcombinationsolve: using results in scope: %s",
-                scope.c_str());
+  Log.LogDetail(Formatter()
+                << "    tplcombinationsolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
@@ -388,11 +386,9 @@ CTplcombinationSolve::SaveExtremaResult(
 
   Log.LogDetail(
       "CTplCombinationSolve::SaveExtremaResult: building chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
-
-  Log.LogDetail("    tplCombinationSolve: using results in scope: %s",
-                scope.c_str());
+  Log.LogDetail(Formatter()
+                << "    tplCombinationSolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
   // in contrast to linemodel and TF, there is no perTemplateResults for
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());

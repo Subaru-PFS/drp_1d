@@ -364,11 +364,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
 
   Log.LogDetail("templatefittingsolve: building chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
-
-  Log.LogDetail("    templatefittingsolve: using results in scope: %s",
-                scope.c_str());
+  Log.LogDetail(Formatter()
+                << "    templatefittingsolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
 
   TOperatorResultMap meritResults =
       store->GetScopedPerTemplateResult(scopeStr.c_str());
@@ -457,11 +455,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
 
   Log.LogDetail(
       "CTemplateFittingSolve::SaveExtremaResult: building chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
-
-  Log.LogDetail("    templatefittingsolve: using results in scope: %s",
-                scope.c_str());
+  Log.LogDetail(Formatter()
+                << "    templatefittingsolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
 
   TOperatorResultMap results =
       store->GetScopedPerTemplateResult(scopeStr.c_str());
