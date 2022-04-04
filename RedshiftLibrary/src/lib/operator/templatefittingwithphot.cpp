@@ -76,14 +76,13 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "COperatorTemplateFittingPhot: photometric band transmision not availables");
+    throw GlobalException(INTERNAL_ERROR,
+                          "COperatorTemplateFittingPhot: photometric band "
+                          "transmision not availables");
   if (m_photBandCat->empty())
     throw GlobalException(
         INTERNAL_ERROR,
         "COperatorTemplateFittingPhot: photometric bands transmission empty");
-
 
   if (m_spectrum.GetPhotData() == nullptr)
     throw GlobalException(INTERNAL_ERROR,
@@ -168,8 +167,8 @@ void COperatorTemplateFittingPhot::InitIsmIgmConfig(
         &igmCorrectionMeiksin,
     Int32 EbmvListSize) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin, EbmvListSize);
+  COperatorTemplateFitting::InitIsmIgmConfig(
+      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)

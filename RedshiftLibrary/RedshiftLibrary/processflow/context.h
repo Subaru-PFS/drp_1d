@@ -53,8 +53,7 @@
 #include <string>
 
 #define Context (CProcessFlowContext::GetInstance())
-namespace NSEpic
-{
+namespace NSEpic {
 
 class CSpectrum;
 class CTemplateCatalog;
@@ -67,12 +66,9 @@ class CInputContext;
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
  */
-  class CProcessFlowContext: public CSingleton<CProcessFlowContext>
-{
+class CProcessFlowContext : public CSingleton<CProcessFlowContext> {
 
 public:
-
-
   void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum) {
     m_inputContext->setSpectrum(spectrum);
   }
@@ -88,9 +84,9 @@ public:
                       const std::shared_ptr<CLineCatalog> &catalog) {
     m_inputContext->setLineCatalog(objectType, catalog);
   }
-  void
-  setLineRatioCatalogCatalog(const std::string &objectType,
-                             const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
+  void setLineRatioCatalogCatalog(
+      const std::string &objectType,
+      const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
     m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
   }
   void
@@ -108,7 +104,7 @@ public:
   void reset();
   std::shared_ptr<const CParameterStore>
   LoadParameterStore(const std::string &paramsJSONString);
-  
+
   std::shared_ptr<const CSpectrum> GetRebinnedSpectrum() const {
     return m_inputContext->GetRebinnedSpectrum();
   }
@@ -135,7 +131,7 @@ public:
   TScopeStack m_ScopeStack;
 
 private:
-  friend class CSingleton<CProcessFlowContext >;
+  friend class CSingleton<CProcessFlowContext>;
   CProcessFlowContext();
   ~CProcessFlowContext() = default;
   std::shared_ptr<COperatorResultStore> m_ResultStore;

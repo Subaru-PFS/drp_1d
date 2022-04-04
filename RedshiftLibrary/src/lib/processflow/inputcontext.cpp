@@ -197,8 +197,7 @@ void CInputContext::Init() {
 
   // convolve IGM by LSF
   if (!m_igmcorrectionMeiksin->isConvolved() ||
-      m_ParameterStore->Get<std::string>("LSF.LSFType") ==
-          "FROMSPECTRUMDATA")
+      m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA")
     m_igmcorrectionMeiksin->convolveByLSF(m_Spectrum->GetLSF(), m_lambdaRange);
 
   // Calzetti ISM & Meiksin IGM initialization, for only original templates,
@@ -222,14 +221,13 @@ void CInputContext::Init() {
   OrthogonalizeTemplates();
 }
 
-
-void CInputContext::resetSpectrumSpecific()
-{
+void CInputContext::resetSpectrumSpecific() {
   m_Spectrum.reset();
   m_rebinnedSpectrum.reset();
   // not always spectrum specific
   m_TemplateCatalog.reset();
-  // those one should not be here, they stay until api modification (only load spectrum specific data in Context::run)
+  // those one should not be here, they stay until api modification (only load
+  // spectrum specific data in Context::run)
   m_lineCatalogs.clear();
   m_lineRatioCatalogCatalogs.clear();
   m_photBandCatalog.reset();

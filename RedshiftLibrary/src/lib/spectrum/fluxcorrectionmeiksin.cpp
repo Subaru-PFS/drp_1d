@@ -44,10 +44,9 @@ using namespace NSEpic;
 
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     std::vector<MeiksinCorrection> meiksinCorrectionCurves)
-    : m_rawCorrections(std::move(meiksinCorrectionCurves)), 
+    : m_rawCorrections(std::move(meiksinCorrectionCurves)),
       m_LambdaMin(m_rawCorrections[0].lbda.front()),
       m_LambdaMax(m_rawCorrections[0].lbda.back()) {}
-
 
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex
