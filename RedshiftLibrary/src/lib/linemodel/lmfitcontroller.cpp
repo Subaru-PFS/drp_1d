@@ -3,25 +3,25 @@
 // This file is part of: AMAZED
 //
 // Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
-// 
+//
 // https://www.lam.fr/
-// 
+//
 // This software is a computer program whose purpose is to estimate the
 // spectrocopic redshift of astronomical sources (galaxy/quasar/star)
 // from there 1D spectrum.
-// 
+//
 // This software is governed by the CeCILL-C license under French law and
-// abiding by the rules of distribution of free software.  You can  use, 
+// abiding by the rules of distribution of free software.  You can  use,
 // modify and/ or redistribute the software under the terms of the CeCILL-C
 // license as circulated by CEA, CNRS and INRIA at the following URL
-// "http://www.cecill.info". 
-// 
+// "http://www.cecill.info".
+//
 // As a counterpart to the access to the source code and  rights to copy,
 // modify and redistribute granted by the license, users are provided only
 // with a limited warranty  and the software's author,  the holder of the
 // economic rights,  and the successive licensors  have only  limited
-// liability. 
-// 
+// liability.
+//
 // In this respect, the user's attention is drawn to the risks associated
 // with loading,  using,  modifying and/or developing or reproducing the
 // software by the user in light of its specific status of free software,
@@ -29,104 +29,86 @@
 // therefore means  that it is reserved for developers  and  experienced
 // professionals having in-depth computer knowledge. Users are therefore
 // encouraged to load and test the software's suitability as regards their
-// requirements in conditions enabling the security of their systems and/or 
-// data to be ensured and,  more generally, to use and operate it in the 
-// same conditions as regards security. 
-// 
+// requirements in conditions enabling the security of their systems and/or
+// data to be ensured and,  more generally, to use and operate it in the
+// same conditions as regards security.
+//
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/lmfitcontroller.h"
-#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/line/line.h"
+#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
 using namespace NSEpic;
 /*
 This class is use to drive  levenberg marquardt fitting.
-Each instance correpond to one tentatie of fiiting. It has parameters of fitting, like which parameters need to be fit.
-It's also store the results of the fitting, in order to temporize the moment when the model is set. This allow to do several run of lmfit and
-keep the best one.
+Each instance correpond to one tentatie of fiiting. It has parameters of
+fitting, like which parameters need to be fit. It's also store the results of
+the fitting, in order to temporize the moment when the model is set. This allow
+to do several run of lmfit and keep the best one.
 */
-CLmfitController::CLmfitController(
-          const std::shared_ptr<const CTemplate>& tpl,
-          bool continumLoaded,
-          bool continuumfit,
-          bool emissionVelFit,
-          bool absorptionVelFit):
-    m_tpl(tpl),
-    m_noContinuum(false),
-    m_continumLoaded(continumLoaded),
-    m_continuumfit(continuumfit),
-    m_emissionVelFit(emissionVelFit),
-    m_absorptionVelFit(absorptionVelFit)
-{}
+CLmfitController::CLmfitController(const std::shared_ptr<const CTemplate> &tpl,
+                                   bool continumLoaded, bool continuumfit,
+                                   bool emissionVelFit, bool absorptionVelFit)
+    : m_tpl(tpl), m_noContinuum(false), m_continumLoaded(continumLoaded),
+      m_continuumfit(continuumfit), m_emissionVelFit(emissionVelFit),
+      m_absorptionVelFit(absorptionVelFit) {}
 
-CLmfitController::CLmfitController(
-          bool emissionVelFit,
-          bool absorptionVelFit):
-    m_tpl(nullptr),
-    m_noContinuum(true),
-    m_continumLoaded(true),
-    m_continuumfit(false),
-    m_emissionVelFit(emissionVelFit),
-    m_absorptionVelFit(absorptionVelFit)
-{}
+CLmfitController::CLmfitController(bool emissionVelFit, bool absorptionVelFit)
+    : m_tpl(nullptr), m_noContinuum(true), m_continumLoaded(true),
+      m_continuumfit(false), m_emissionVelFit(emissionVelFit),
+      m_absorptionVelFit(absorptionVelFit) {}
 
-bool CLmfitController::isEmissionVelocityFitted(){
-  return m_emissionVelFit;
-}
+bool CLmfitController::isEmissionVelocityFitted() { return m_emissionVelFit; }
 
-bool CLmfitController::isAbsorptionVelocityFitted(){
+bool CLmfitController::isAbsorptionVelocityFitted() {
   return m_absorptionVelFit;
 }
 
 // return if the continuum is fitted by lmfit
-bool CLmfitController::isContinuumFitted(){
-  return m_continuumfit;
-}
+bool CLmfitController::isContinuumFitted() { return m_continuumfit; }
 
 // is the continuum is loadded in linemodel ie interpolated on the grid.
-bool  CLmfitController::isContinuumLoaded(){
-  return m_continumLoaded;
-}
+bool CLmfitController::isContinuumLoaded() { return m_continumLoaded; }
 
 // return if the line model don't not inclde a continuum
-bool CLmfitController::isNoContinuum(){
-    return m_noContinuum;
-}
+bool CLmfitController::isNoContinuum() { return m_noContinuum; }
 
 // return if the redshift is fitted by lmfit
-bool CLmfitController::isRedshiftFitted(){
-  return true;;
+bool CLmfitController::isRedshiftFitted() {
+  return true;
+  ;
 }
 
 // return if the linetype (given in argument) is fitted by lmfit.
-bool CLmfitController::isLineTypeVelocityFitted(Int32 lineType){
-  if(lineType ==CLine::nType_Emission){
+bool CLmfitController::isLineTypeVelocityFitted(Int32 lineType) {
+  if (lineType == CLine::nType_Emission) {
     return isEmissionVelocityFitted();
-  }else{
+  } else {
     return isAbsorptionVelocityFitted();
   }
 }
 
-// resize the vectr of line amp and line error amp to the size of filtred element vector
-void CLmfitController::resizeAmpsLine(){
+// resize the vectr of line amp and line error amp to the size of filtred
+// element vector
+void CLmfitController::resizeAmpsLine() {
   m_ampsLinefitted.resize(m_filteredEltsIdx.size());
   m_ampErrLineFitted.resize(m_filteredEltsIdx.size());
 }
 
 // store the value of amplitude of a line and it's error.
-void CLmfitController::setAmpLine(Int32 idx, Float64 amp, Float64 ampErr){
-  if(idx < m_ampsLinefitted.size()){
+void CLmfitController::setAmpLine(Int32 idx, Float64 amp, Float64 ampErr) {
+  if (idx < m_ampsLinefitted.size()) {
     m_ampsLinefitted[idx] = amp;
     m_ampErrLineFitted[idx] = ampErr;
   }
 }
 
 // return the stored amplitude of a element
-Float64  CLmfitController::getLineAmp(Int32 idx){
-  if(idx < m_ampsLinefitted.size()){
+Float64 CLmfitController::getLineAmp(Int32 idx) {
+  if (idx < m_ampsLinefitted.size()) {
     return m_ampsLinefitted[idx];
   }
   Log.LogError("idx greater than m_ampsLinefitted size");
@@ -134,8 +116,8 @@ Float64  CLmfitController::getLineAmp(Int32 idx){
 }
 
 // return the stored error amplitude of a element
-Float64  CLmfitController::getLineAmpErr(Int32 idx){
-  if(idx < m_ampErrLineFitted.size()){
+Float64 CLmfitController::getLineAmpErr(Int32 idx) {
+  if (idx < m_ampErrLineFitted.size()) {
     return m_ampErrLineFitted[idx];
   }
   Log.LogError("idx greater than m_ampErrLineFitted size");
@@ -143,85 +125,85 @@ Float64  CLmfitController::getLineAmpErr(Int32 idx){
 }
 
 // add a element if the list of fiftted element
-void CLmfitController::addElement(Int32 elemId){
+void CLmfitController::addElement(Int32 elemId) {
   m_filteredEltsIdx.push_back(elemId);
 }
 
 // return the vecotr of index of fitted element
-TInt32List CLmfitController::getFilteredIdx(){
-  return m_filteredEltsIdx;
-}
+TInt32List CLmfitController::getFilteredIdx() { return m_filteredEltsIdx; }
 
 // calculate the indice in the lmfit vector of varaible,
-//it's take into account all the possibility of fit.(continuum or not, velocity or not ...)
-void CLmfitController::calculatedIndices(){
+// it's take into account all the possibility of fit.(continuum or not, velocity
+// or not ...)
+void CLmfitController::calculatedIndices() {
   m_numberParameters = m_filteredEltsIdx.size();
 
-  if(isEmissionVelocityFitted()){
+  if (isEmissionVelocityFitted()) {
     m_indEmissionVel = m_numberParameters;
-    m_numberParameters +=1;
+    m_numberParameters += 1;
   }
-  if(isAbsorptionVelocityFitted()){
+  if (isAbsorptionVelocityFitted()) {
     m_indAbsorptionVel = m_numberParameters;
-    m_numberParameters +=1;
+    m_numberParameters += 1;
   }
-  if(isContinuumFitted()){
+  if (isContinuumFitted()) {
     m_indContinuumAmp = m_numberParameters;
-    m_numberParameters +=1;
+    m_numberParameters += 1;
   }
 
-  if(isRedshiftFitted()){
+  if (isRedshiftFitted()) {
     m_indRedshift = m_numberParameters;
-    m_numberParameters +=1;
+    m_numberParameters += 1;
   }
-
 }
 
 //======================================================================================
-//Transform the variable from the model value to the value use in lmfit.
-// if modif here modif the inverse function : modeltolm<-> lmtomodel and the df function in lmfitfunction (the jacobian is the derivided by lmvalue of the variable)
-Float64 CLmfitController::lineAmp_LmToModel(Float64 lmLineAmp){
-  return lmLineAmp*lmLineAmp/m_normAmpLine;
-  //return lmLineAmp;
+// Transform the variable from the model value to the value use in lmfit.
+// if modif here modif the inverse function : modeltolm<-> lmtomodel and the df
+// function in lmfitfunction (the jacobian is the derivided by lmvalue of the
+// variable)
+Float64 CLmfitController::lineAmp_LmToModel(Float64 lmLineAmp) {
+  return lmLineAmp * lmLineAmp / m_normAmpLine;
+  // return lmLineAmp;
 }
 
-Float64 CLmfitController::lineAmp_ModelToLm(Float64 modelLineAmp){
-  return sqrt(modelLineAmp*m_normAmpLine);
-  //return modelLineAmp;
+Float64 CLmfitController::lineAmp_ModelToLm(Float64 modelLineAmp) {
+  return sqrt(modelLineAmp * m_normAmpLine);
+  // return modelLineAmp;
 }
 
-Float64 CLmfitController::emiVel_LmToModel(Float64 lmEmiVel){
-  return lmEmiVel*lmEmiVel/m_normEmiFactor;
+Float64 CLmfitController::emiVel_LmToModel(Float64 lmEmiVel) {
+  return lmEmiVel * lmEmiVel / m_normEmiFactor;
   // return lmEmiVel/m_normEmiFactor;
 }
 
-Float64 CLmfitController::emiVel_ModelToLm(Float64 modelEmiVel){
-  return sqrt(modelEmiVel* m_normEmiFactor);
+Float64 CLmfitController::emiVel_ModelToLm(Float64 modelEmiVel) {
+  return sqrt(modelEmiVel * m_normEmiFactor);
   // return modelEmiVel*m_normEmiFactor;
 }
 
-Float64 CLmfitController::absVel_LmToModel(Float64 lmAbsVel){
-  return lmAbsVel*lmAbsVel/m_normAbsFactor;
+Float64 CLmfitController::absVel_LmToModel(Float64 lmAbsVel) {
+  return lmAbsVel * lmAbsVel / m_normAbsFactor;
   // return lmAbsVel/m_normAbsFactor;
 }
 
-Float64 CLmfitController::absVel_ModelToLm(Float64 modelAbsVel){
-  return sqrt(modelAbsVel* m_normAbsFactor);
+Float64 CLmfitController::absVel_ModelToLm(Float64 modelAbsVel) {
+  return sqrt(modelAbsVel * m_normAbsFactor);
   // return modelAbsVel*m_normAbsFactor;
 }
 
-Float64 CLmfitController::continuumAmp_LmToModel(Float64 lmContinuumAmp){
-  return lmContinuumAmp*lmContinuumAmp;
+Float64 CLmfitController::continuumAmp_LmToModel(Float64 lmContinuumAmp) {
+  return lmContinuumAmp * lmContinuumAmp;
   // return lmContinuumAmp;
 }
 
-Float64 CLmfitController::continuumAmp_ModelToLm(Float64 lmContinuumAmp){
+Float64 CLmfitController::continuumAmp_ModelToLm(Float64 lmContinuumAmp) {
   return sqrt(lmContinuumAmp);
   // return lmContinuumAmp;
 }
 
-/*Float64 CLmfitController::continuumAmpErr_LmToModel(Float64 lmContinuumAmpErr){
-  return lmContinuumAmpErr*lmContinuumAmpErr;
+/*Float64 CLmfitController::continuumAmpErr_LmToModel(Float64
+lmContinuumAmpErr){ return lmContinuumAmpErr*lmContinuumAmpErr;
   // return lmContinuumAmpErr;
 }
 
@@ -232,156 +214,123 @@ Float64 CLmfitController::continuumAmpErr_ModelToLm(Float64 lmContinuumAmpErr){
 
 //
 /*
-Parse all the amplitude of element and look if some are neg. Those are remove from the fitting
-return true if at least one line is removed
+Parse all the amplitude of element and look if some are neg. Those are remove
+from the fitting return true if at least one line is removed
 */
-bool CLmfitController::removeNegAmpLine(){
+bool CLmfitController::removeNegAmpLine() {
   m_NegAmpRemoved = false;
-  for(Int32 ie=m_filteredEltsIdx.size()-1; ie>=0; ie--)
-  {
-      if(m_ampsLinefitted[ie]<0.0)
-      {
-          //Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
-          m_filteredEltsIdx.erase(m_filteredEltsIdx.begin() + ie);
+  for (Int32 ie = m_filteredEltsIdx.size() - 1; ie >= 0; ie--) {
+    if (m_ampsLinefitted[ie] < 0.0) {
+      // Log.LogInfo( "LineModel Infos: erasing i= %d", ie);
+      m_filteredEltsIdx.erase(m_filteredEltsIdx.begin() + ie);
 
-          m_NegAmpRemoved = true;
-      }
+      m_NegAmpRemoved = true;
+    }
   }
-  if(m_NegAmpRemoved){
+  if (m_NegAmpRemoved) {
     calculatedIndices();
   }
   return m_NegAmpRemoved;
 }
 
 // store the value of coef for element amplitude
-void CLmfitController::setNormAmpLine(Float64 normAmpLineFactor){
-    m_normAmpLine = normAmpLineFactor;
+void CLmfitController::setNormAmpLine(Float64 normAmpLineFactor) {
+  m_normAmpLine = normAmpLineFactor;
 }
 
-//return the value of coefficent factore for element amplitude
-Float64 CLmfitController::getNormAmpLine(){
-    return m_normAmpLine;
-}
+// return the value of coefficent factore for element amplitude
+Float64 CLmfitController::getNormAmpLine() { return m_normAmpLine; }
 
 // store the coefficient that normalise the flux and the model.
-void CLmfitController::setNormFactor(Float64 normFactor){
-   m_normFactorSetted = true;
-   m_normFactor = normFactor;
+void CLmfitController::setNormFactor(Float64 normFactor) {
+  m_normFactorSetted = true;
+  m_normFactor = normFactor;
 }
 
-//return the coeffcient of normalisation for the flux an model
-Float64 CLmfitController::getNormFactor(){
-  return m_normFactor;
+// return the coeffcient of normalisation for the flux an model
+Float64 CLmfitController::getNormFactor() { return m_normFactor; }
+
+// store the coefficient of normalisation of the emission velocity factor
+void CLmfitController::setNormEmiFactor(Float64 normEmiFactor) {
+
+  m_normEmiFactor = normEmiFactor;
 }
 
-//store the coefficient of normalisation of the emission velocity factor
-void CLmfitController::setNormEmiFactor(Float64 normEmiFactor){
+// return the coefficient of normalisation of the emission velocity factor
+Float64 CLmfitController::getNormEmiFactor() { return m_normEmiFactor; }
 
-   m_normEmiFactor = normEmiFactor;
+// store the coefficient of normalisation of the absorption velocity factor
+void CLmfitController::setNormAbsFactor(Float64 normAbsFactor) {
+
+  m_normAbsFactor = normAbsFactor;
 }
 
-//return the coefficient of normalisation of the emission velocity factor
-Float64 CLmfitController::getNormEmiFactor(){
-  return m_normEmiFactor;
-}
-
-//store the coefficient of normalisation of the absorption velocity factor
-void CLmfitController::setNormAbsFactor(Float64 normAbsFactor){
-
-   m_normAbsFactor = normAbsFactor;
-}
-
-//return the coefficient of normalisation of the absorption velocity factor
-Float64 CLmfitController::getNormAbsFactor(){
-  return m_normAbsFactor;
-}
+// return the coefficient of normalisation of the absorption velocity factor
+Float64 CLmfitController::getNormAbsFactor() { return m_normAbsFactor; }
 
 // return is the norma factor need to be recalculated.
-bool CLmfitController::needCalculateNormFactor(){
-  if(!m_normFactorSetted){
+bool CLmfitController::needCalculateNormFactor() {
+  if (!m_normFactorSetted) {
     return true;
   }
-  if(!isContinuumFitted() && m_NegAmpRemoved){
+  if (!isContinuumFitted() && m_NegAmpRemoved) {
     return true;
   }
   return false;
 }
 
-Int32 CLmfitController::getNumberParameters(){
-  return m_numberParameters;
-}
+Int32 CLmfitController::getNumberParameters() { return m_numberParameters; }
 
 // return the index of emission velocity in the vector of lmfit variable
-Int32 CLmfitController::getIndEmissionVel(){
-  return m_indEmissionVel;
-}
+Int32 CLmfitController::getIndEmissionVel() { return m_indEmissionVel; }
 
 // return the index of absorption velocity in the vector of lmfit variable
-Int32 CLmfitController::getIndAbsorptionVel(){
-  return m_indAbsorptionVel;
-}
+Int32 CLmfitController::getIndAbsorptionVel() { return m_indAbsorptionVel; }
 
 // return the index of continuum Amplitude in the vector of lmfit variable
-Int32 CLmfitController::getIndContinuumAmp(){
-  return m_indContinuumAmp;
-}
+Int32 CLmfitController::getIndContinuumAmp() { return m_indContinuumAmp; }
 
 // return the index of redshift in the vector of lmfit variable
-Int32 CLmfitController::getIndRedshift(){
-  return m_indRedshift;
-}
+Int32 CLmfitController::getIndRedshift() { return m_indRedshift; }
 
 //=========================================
 // is this section with store and return the calculate value by lmfit.
 // the value that is stored, is the value in linemodel.
-void CLmfitController::setContinummAmp(Float64 continuumAmp, Float64 continuumAmpErr){
+void CLmfitController::setContinummAmp(Float64 continuumAmp,
+                                       Float64 continuumAmpErr) {
   m_continuumAmp = continuumAmp;
   m_continuumAmpErr = continuumAmpErr;
 }
 
-void  CLmfitController::setVelocityAbsorption(Float64 val, Float64 valErr){
+void CLmfitController::setVelocityAbsorption(Float64 val, Float64 valErr) {
   m_velAbs = val;
   m_velErrAbs = valErr;
 }
 
-void  CLmfitController::setVelocityEmission(Float64 val,Float64  valErr){
+void CLmfitController::setVelocityEmission(Float64 val, Float64 valErr) {
   m_velEm = val;
-  m_velErrEm= valErr;
+  m_velErrEm = valErr;
 }
 
-void CLmfitController::setRedshift(Float64 redshift, Float64 redshiftErr){
+void CLmfitController::setRedshift(Float64 redshift, Float64 redshiftErr) {
   m_redshift = redshift;
   m_redshiftErr = redshiftErr;
 }
 
-Float64  CLmfitController::getEmissionVelocity(){
-  return m_velEm;
-}
+Float64 CLmfitController::getEmissionVelocity() { return m_velEm; }
 
-Float64  CLmfitController::getAbsorptionVelocity(){
-  return m_velAbs;
-}
+Float64 CLmfitController::getAbsorptionVelocity() { return m_velAbs; }
 
-Float64 CLmfitController::getContinuumAmp(){
-  return m_continuumAmp;
-}
+Float64 CLmfitController::getContinuumAmp() { return m_continuumAmp; }
 
-Float64 CLmfitController::getContinuumAmpErr(){
-  return m_continuumAmpErr;
-}
+Float64 CLmfitController::getContinuumAmpErr() { return m_continuumAmpErr; }
 
-Float64 CLmfitController::getRedshift(){
-  return m_redshift;
-}
+Float64 CLmfitController::getRedshift() { return m_redshift; }
 
-void CLmfitController::setMerit(Float64 merit){
-  m_merit = merit;
-}
+void CLmfitController::setMerit(Float64 merit) { m_merit = merit; }
 
-Float64 CLmfitController::getMerit(){
-  return m_merit;
-}
+Float64 CLmfitController::getMerit() { return m_merit; }
 
-const std::shared_ptr<const CTemplate> CLmfitController::getTemplate(){
+const std::shared_ptr<const CTemplate> CLmfitController::getTemplate() {
   return m_tpl;
 }

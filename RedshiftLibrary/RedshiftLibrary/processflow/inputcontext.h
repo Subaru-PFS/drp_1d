@@ -143,6 +143,7 @@ public:
   void Init();
 
   void resetSpectrumSpecific();
+
 private:
   std::shared_ptr<CSpectrum> m_Spectrum;
   std::shared_ptr<CSpectrum> m_rebinnedSpectrum;

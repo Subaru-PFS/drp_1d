@@ -43,14 +43,14 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 
-namespace fluxcorrectionmeiksin_test{ // boost test suite
-  //all boost_auto_test_case that use private method
-  class correction_multiply_test;
-  class correction_multiply_test_CteResolution;
-  class correction_multiply_test_CteResolution25_4;
-  class correction_multiply_test_CteResolution25_4_incontext;
-  class correction_test;
-}
+namespace fluxcorrectionmeiksin_test { // boost test suite
+// all boost_auto_test_case that use private method
+class correction_multiply_test;
+class correction_multiply_test_CteResolution;
+class correction_multiply_test_CteResolution25_4;
+class correction_multiply_test_CteResolution25_4_incontext;
+class correction_test;
+} // namespace fluxcorrectionmeiksin_test
 namespace NSEpic {
 typedef struct MeiksinCorrection {
   MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr)
@@ -83,11 +83,14 @@ public:
   Float64 getLambdaMin() const { return m_LambdaMin; };
   Float64 getLambdaMax() const { return m_LambdaMax; };
 
-private:  
+private:
   friend class fluxcorrectionmeiksin_test::correction_multiply_test;
-  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution;
-  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution25_4;
-  friend class fluxcorrectionmeiksin_test::correction_multiply_test_CteResolution25_4_incontext;
+  friend class fluxcorrectionmeiksin_test::
+      correction_multiply_test_CteResolution;
+  friend class fluxcorrectionmeiksin_test::
+      correction_multiply_test_CteResolution25_4;
+  friend class fluxcorrectionmeiksin_test::
+      correction_multiply_test_CteResolution25_4_incontext;
   friend class fluxcorrectionmeiksin_test::correction_test;
 
   TFloat64List applyAdaptativeKernel(const TFloat64List &arr,

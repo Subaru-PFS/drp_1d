@@ -3,25 +3,25 @@
 // This file is part of: AMAZED
 //
 // Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
-// 
+//
 // https://www.lam.fr/
-// 
+//
 // This software is a computer program whose purpose is to estimate the
 // spectrocopic redshift of astronomical sources (galaxy/quasar/star)
 // from there 1D spectrum.
-// 
+//
 // This software is governed by the CeCILL-C license under French law and
-// abiding by the rules of distribution of free software.  You can  use, 
+// abiding by the rules of distribution of free software.  You can  use,
 // modify and/ or redistribute the software under the terms of the CeCILL-C
 // license as circulated by CEA, CNRS and INRIA at the following URL
-// "http://www.cecill.info". 
-// 
+// "http://www.cecill.info".
+//
 // As a counterpart to the access to the source code and  rights to copy,
 // modify and redistribute granted by the license, users are provided only
 // with a limited warranty  and the software's author,  the holder of the
 // economic rights,  and the successive licensors  have only  limited
-// liability. 
-// 
+// liability.
+//
 // In this respect, the user's attention is drawn to the risks associated
 // with loading,  using,  modifying and/or developing or reproducing the
 // software by the user in light of its specific status of free software,
@@ -29,31 +29,31 @@
 // therefore means  that it is reserved for developers  and  experienced
 // professionals having in-depth computer knowledge. Users are therefore
 // encouraged to load and test the software's suitability as regards their
-// requirements in conditions enabling the security of their systems and/or 
-// data to be ensured and,  more generally, to use and operate it in the 
-// same conditions as regards security. 
-// 
+// requirements in conditions enabling the security of their systems and/or
+// data to be ensured and,  more generally, to use and operate it in the
+// same conditions as regards security.
+//
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/linemodelfitting.h"
-#include "RedshiftLibrary/noise/flat.h"
-#include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/log/consolehandler.h"
+#include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/noise/flat.h"
 #include "RedshiftLibrary/tests/test-tools.h"
 
-#include <time.h>
-#include <iostream>
-#include <stdlib.h>
-#include <boost/test/unit_test.hpp>
-#include "test-config.h"
-#include "RedshiftLibrary/spectrum/LSFFactory.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
-#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
+#include "RedshiftLibrary/spectrum/LSFFactory.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
+#include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
+#include "test-config.h"
+#include <boost/test/unit_test.hpp>
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;
@@ -62,8 +62,7 @@ using namespace CPFTest;
 
 BOOST_AUTO_TEST_SUITE(test_elementlist)
 
-BOOST_AUTO_TEST_CASE(Constructor)
-{
+BOOST_AUTO_TEST_CASE(Constructor) {
   bfs::path noisePath;
   bfs::path linecatalogPath;
 
@@ -82,7 +81,7 @@ BOOST_AUTO_TEST_CASE(Constructor)
   CTemplateCatalog tplCatalog;
   TStringList tplCategories;
   CLineCatalog lineCatalog;
-  TFloat64Range range(12500,18500);
+  TFloat64Range range(12500, 18500);
   CLineModelSolution solution;
   CContinuumModelSolution c_solution;
   int iterations = 1;
@@ -92,19 +91,24 @@ BOOST_AUTO_TEST_CASE(Constructor)
   noise.SetNoiseFilePath(noisePath.c_str(), reader);
   noise.AddNoise(spectrum);
   */
-  
-  std::string lsfType="GaussianConstantWidth";
+
+  std::string lsfType = "GaussianConstantWidth";
   Float64 width = 13.;
   TScopeStack scopeStack;
-  std::shared_ptr<CParameterStore> store = std::make_shared<CParameterStore>(scopeStack);
-  store->Set( "LSF.width", width );
-  std::shared_ptr<TLSFArguments> args = std::make_shared<TLSFGaussianConstantWidthArgs>(store);
+  std::shared_ptr<CParameterStore> store =
+      std::make_shared<CParameterStore>(scopeStack);
+  store->Set("LSF.width", width);
+  std::shared_ptr<TLSFArguments> args =
+      std::make_shared<TLSFGaussianConstantWidthArgs>(store);
   std::shared_ptr<CLSF> lsf = LSFFactory.Create(lsfType, args);
   spectrum.SetLSF(lsf);
 
   generate_template_catalog(tplCatalog, 100, 3500., 12500.);
   TAsymParams asymP;
-  /* //TODO restore this test , for the moment if linecatalog is not empty, test will fail with follogin message: fatal error: in "test_elementlist/Constructor": NSEpic::GlobalException: Could not find template with name fromspectrum
+  /* //TODO restore this test , for the moment if linecatalog is not empty, test
+    will fail with follogin message: fatal error: in
+    "test_elementlist/Constructor": NSEpic::GlobalException: Could not find
+    template with name fromspectrum
 
     lineCatalog.AddLineFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,0,"Halpha_,6562.8_E");
     lineCatalog.AddLineFromParams("Hbeta",4861.3,"E","S","SYM",asymP,"",1.,"E1",INFINITY,false,1,"Hbeta_4861.3_E");
@@ -113,7 +117,8 @@ BOOST_AUTO_TEST_CASE(Constructor)
   */
   // BUILT FROM REGEX replace :
   //"(\d+\.\d+)\\t([a-z0-9_\[\]\(\)\-\.\/]+)\\t([AE])\\t([WS])\\t([A-Z]+)\\t([A-Z_\-1]+)\\t(-?\d\.?\d*)\\t*-1\\n"
-  //lineCatalog.AddLineFromParams("$2",$1,"$3","$4","$5",asymP,"$6",$7,"$3 1",INFINITY,false,);
+  // lineCatalog.AddLineFromParams("$2",$1,"$3","$4","$5",asymP,"$6",$7,"$3
+  // 1",INFINITY,false,);
   /*
   lineCatalog.AddLineFromParams("P5A",12821.59,"A","W","SYM",asymP,"-1",1,"A1",0,false,0);
   lineCatalog.AddLineFromParams("P6A",10941.09,"A","W","SYM",asymP,"-1",1,"A1",0,false,1);
@@ -175,44 +180,29 @@ BOOST_AUTO_TEST_CASE(Constructor)
  lineCatalog.AddLineFromParams("Halpha",6562.8,"E","S","SYM",asymP,"",1.,"E1",0,false,3);
  lineCatalog.AddLineFromParams("Hdelta",4101.7,"E","W","SYM",asymP,"",1.,"E1",0,false,4);
   */
- CLineCatalog::TLineVector lineList = lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
+  CLineCatalog::TLineVector lineList =
+      lineCatalog.GetFilteredList(lineTypeFilter, forceFilter);
 
   // no continuum
- CLineModelFitting model_nocontinuum( spectrum,
-				      range,
-				      tplCatalog, tplCategories,
-				       lineList,
-				      "lmfit", "nocontinuum",-INFINITY,
-				      opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
-				      opt_velocityAbsorption, opt_rules, opt_rigidity);
+  CLineModelFitting model_nocontinuum(
+      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
+      "nocontinuum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
+      opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
- CLineModelFitting model_fromspectrum( spectrum,
-				       range,
-				       tplCatalog,
-				       tplCategories,
-				       lineList,
-				       "lmfit",
-				       "fromspectrum",
-				       -INFINITY,
-				       opt_lineWidthType,
-				       opt_nsigmasupport,
-				       opt_velocityEmission,
-				       opt_velocityAbsorption,
-				       opt_rules,
-				       opt_rigidity);
+  CLineModelFitting model_fromspectrum(
+      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
+      "fromspectrum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
+      opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   model_fromspectrum.fit(0.5, solution, c_solution, iterations, false);
 
   // tplfit
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
-  CLineModelFitting model_tplfit(    spectrum,
-                                     range,
-                                     tplCatalog, tplCategories,
-   				                           lineList,
-   				                           "lmfit", "tplfit", -5.0,
-                                     opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
-   				                           opt_velocityAbsorption, opt_rules, opt_rigidity);
+  CLineModelFitting model_tplfit(
+      spectrum, range, tplCatalog, tplCategories, lineList, "lmfit", "tplfit",
+      -5.0, opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
+      opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*
   model_tplfit.fit(0.5, range, solution, iterations, false);
@@ -223,16 +213,18 @@ BOOST_AUTO_TEST_CASE(Constructor)
 
   // setPassMode
   model_tplfit.setPassMode(1);
-  //BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == true );
+  // BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == true );
   model_tplfit.setPassMode(2);
-  //BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == false );
+  // BOOST_CHECK( model_tplfit.m_forceDisableLyaFitting == false );
 
   // GetModelSpectrum
   CSpectrum modelspectrum = model_tplfit.GetModelSpectrum();
 
   // GetObservedSpectrumWithLinesRemoved
-  CSpectrum emission = model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Emission);
-  CSpectrum absorption = model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Absorption);
+  CSpectrum emission =
+      model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Emission);
+  CSpectrum absorption =
+      model_tplfit.GetObservedSpectrumWithLinesRemoved(CLine::nType_Absorption);
 
   bfs::remove(noisePath);
   bfs::remove(linecatalogPath);
