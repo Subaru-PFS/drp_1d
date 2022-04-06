@@ -124,6 +124,12 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
   return std::weak_ptr<const COperatorResult>();
 }
 
+std::weak_ptr<const COperatorResult>
+COperatorResultStore::GetScopedPerTemplateResult(
+    const std::shared_ptr<const CTemplate> &t, const std::string &name) const {
+  return GetPerTemplateResult(t, GetScopedName(name));
+}
+
 TOperatorResultMap
 COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
   TOperatorResultMap map;
@@ -140,6 +146,11 @@ COperatorResultStore::GetPerTemplateResult(const std::string &name) const {
   }
 
   return map;
+}
+
+TOperatorResultMap COperatorResultStore::GetScopedPerTemplateResult(
+    const std::string &name) const {
+  return GetPerTemplateResult(GetScopedName(name));
 }
 
 /**
@@ -335,14 +346,6 @@ COperatorResultStore::GetModelSpectrumResult(const std::string &objectType,
       GetGlobalResult(objectType, method, name).lock());
 }
 
-std::weak_ptr<const COperatorResult> COperatorResultStore::GetGlobalResult(
-    const std::string &objectType, const std::string &method,
-    const std::string &name, const int &rank) const {
-  std::ostringstream oss;
-  oss << objectType << "." << method << "." << name << rank;
-  return GetGlobalResult(oss.str());
-}
-
 const std::string &
 COperatorResultStore::GetGlobalResultType(const std::string &objectType,
                                           const std::string &method,
@@ -399,60 +402,6 @@ int COperatorResultStore::getNbRedshiftCandidates(
     return 0;
 }
 
-/**
- * @brief COperatorResultStore::CreateResultStorage
- *
- * @return 0 if already exists, 1 if just created, -1 if error
- */
-Int32 COperatorResultStore::CreateResultStorage(
-    std::fstream &stream, const bfs::path &path,
-    const bfs::path &baseDir) const {
-  Int32 ret = -1;
-
-  bfs::path outputFilePath = bfs::path(baseDir);
-  outputFilePath /= path.string();
-
-  if (bfs::exists(outputFilePath.parent_path()) == false) {
-    bfs::create_directories(outputFilePath.parent_path());
-  }
-
-  if (bfs::exists(outputFilePath) == false) {
-    ret = 1;
-  } else {
-    ret = 0;
-  }
-
-  stream.open(outputFilePath.string().c_str(),
-              std::fstream::out | std::fstream::app);
-  if (stream.rdstate() & std::ios_base::failbit) {
-    return -1;
-  }
-
-  return ret;
-}
-
-std::string
-COperatorResultStore::GetScope(const COperatorResult &result) const {
-  std::string n = "";
-
-  TResultsMap::const_iterator it;
-  for (it = m_GlobalResults.begin(); it != m_GlobalResults.end(); it++) {
-    auto r = (*it).second;
-    if (&result == r.get()) {
-      std::string s = (*it).first;
-
-      std::size_t found = s.rfind(".");
-      if (found != std::string::npos) {
-        n = s.substr(0, found);
-        n = n.append(".");
-      }
-      break;
-    }
-  }
-
-  return n;
-}
-
 void COperatorResultStore::StoreScopedPerTemplateResult(
     const std::shared_ptr<const CTemplate> &t, const std::string &name,
     std::shared_ptr<const COperatorResult> result) {
@@ -474,12 +423,6 @@ void COperatorResultStore::StoreFlagResult(const std::string &name,
   TWarningMsgList msgList = Flag.getListMessages();
   StoreGlobalResult(name,
                     std::make_shared<const CFlagLogResult>(result, msgList));
-}
-
-TStringList COperatorResultStore::getProcessedObjectTypes() const {
-  TStringList res;
-
-  return res;
 }
 
 std::weak_ptr<const COperatorResult>

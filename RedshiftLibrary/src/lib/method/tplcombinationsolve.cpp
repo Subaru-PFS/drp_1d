@@ -295,13 +295,11 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
   ChisquareArray chisquarearray;
 
   Log.LogDetail("tplcombinationsolve: build chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
+  Log.LogDetail(Formatter()
+                << "    tplcombinationsolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
 
-  Log.LogDetail("    tplcombinationsolve: using results in scope: %s",
-                scope.c_str());
-
-  auto results = store->GetGlobalResult(scope.c_str());
+  auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
     throw GlobalException(INTERNAL_ERROR,
                           "tplcombinationsolve: CombinePDF - Unable to "
@@ -388,14 +386,12 @@ CTplcombinationSolve::SaveExtremaResult(
 
   Log.LogDetail(
       "CTplCombinationSolve::SaveExtremaResult: building chisquare array");
-  std::string scope = store->GetCurrentScopeName() + ".";
-  scope.append(scopeStr.c_str());
-
-  Log.LogDetail("    tplCombinationSolve: using results in scope: %s",
-                scope.c_str());
+  Log.LogDetail(Formatter()
+                << "    tplCombinationSolve: using results in scope: "
+                << store->GetScopedName(scopeStr));
   // in contrast to linemodel and TF, there is no perTemplateResults for
   // tplCombination
-  auto results = store->GetGlobalResult(scope.c_str());
+  auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
     throw GlobalException(INTERNAL_ERROR,
                           "tplcombinationsolve: SaveExtremaResult - Unable to "
