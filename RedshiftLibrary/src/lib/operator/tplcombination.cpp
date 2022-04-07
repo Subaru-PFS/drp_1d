@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/tplcombination.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/indexing.h"
@@ -50,6 +51,7 @@
 #include "RedshiftLibrary/spectrum/tools.h"
 
 #include <algorithm> // std::sort
+#include <assert.h>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/filesystem.hpp>
@@ -63,11 +65,6 @@
 #include <math.h>
 #include <numeric>
 #include <sstream>
-//#include <boost/progress.hpp>
-#include <assert.h>
-
-#define NOT_OVERLAP_VALUE NAN
-#include <stdio.h>
 
 namespace bfs = boost::filesystem;
 using namespace NSEpic;

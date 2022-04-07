@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LINE_PROFILE_LOR_
 #define _REDSHIFT_LINE_PROFILE_LOR_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/log/log.h"
 #include <math.h>
@@ -49,7 +50,7 @@ namespace NSEpic {
  */
 class CLineProfileLOR : public CLineProfile {
 public:
-  CLineProfileLOR(const Float64 nsigmasupport = 8.0);
+  CLineProfileLOR(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
   Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma)
       const override; // override is optional, but a good practice with c++11
   Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;

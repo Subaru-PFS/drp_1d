@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LINE_PROFILE_SYM_
 #define _REDSHIFT_LINE_PROFILE_SYM_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <math.h>
 #include <string>
@@ -48,7 +49,7 @@ namespace NSEpic {
  */
 class CLineProfileSYM : public CLineProfile {
 public:
-  CLineProfileSYM(const Float64 nsigmasupport = 8.0);
+  CLineProfileSYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
   Float64 GetLineProfile(Float64 x, Float64 x0,
                          const Float64 sigma) const override;
   Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;

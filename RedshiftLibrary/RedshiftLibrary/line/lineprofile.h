@@ -40,6 +40,7 @@
 #define _REDSHIFT_LINE_PROFILE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include <cmath>
 #include <string>
 namespace NSEpic {
@@ -70,8 +71,9 @@ enum TProfile {
 class CLineProfile {
 
 public:
-  CLineProfile(const Float64 nsigmasupport = 8.0);
-  CLineProfile(const Float64 nsigmasupport = 8.0, const TProfile = NONE);
+  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
+               const TProfile = NONE);
   virtual Float64 GetLineProfile(Float64 x, Float64 x0,
                                  Float64 sigma) const = 0;
   virtual Float64 GetLineFlux(Float64 A, Float64 sigma) const = 0;

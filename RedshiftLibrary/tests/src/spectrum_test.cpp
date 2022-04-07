@@ -42,16 +42,6 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <ctime>
-#include <iostream>
-#include <limits>
-#include <vector>
-
-#include <gsl/gsl_fit.h>
-
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include <boost/test/unit_test.hpp>

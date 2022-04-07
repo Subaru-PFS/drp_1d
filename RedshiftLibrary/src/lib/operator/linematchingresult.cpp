@@ -39,9 +39,6 @@
 #include "RedshiftLibrary/operator/linematchingresult.h"
 #include "RedshiftLibrary/line/rules.h"
 #include "RedshiftLibrary/log/log.h"
-#include <algorithm> // std::sort
-#include <math.h>
-#include <stdio.h>
 
 using namespace NSEpic;
 

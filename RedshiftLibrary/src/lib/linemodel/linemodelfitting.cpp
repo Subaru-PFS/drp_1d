@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/lmfitfunctions.h"
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
@@ -50,24 +51,21 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
+
+#include <float.h>
+#include <gsl/gsl_blas.h>
+
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-//#include <gsl/gsl_rng.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_vector.h>
 
-#include <numeric>
+#include <boost/numeric/conversion/bounds.hpp>
+#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_spline.h>
+#include <gsl/gsl_vector.h>
 using namespace NSEpic;
 using namespace std;
 

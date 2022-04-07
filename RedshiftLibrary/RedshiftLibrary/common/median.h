@@ -40,11 +40,9 @@
 #define _REDSHIFT_COMMON_MEDIAN_
 
 #include "RedshiftLibrary/common/datatypes.h"
-
+#include "RedshiftLibrary/common/defaults.h"
 #include <algorithm>
 #include <vector>
-
-#define MEDIAN_FAST_OR_BEERS_THRESHOLD (1000)
 
 using namespace std;
 

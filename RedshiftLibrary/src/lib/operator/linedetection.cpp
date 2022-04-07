@@ -44,12 +44,7 @@
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include "boost/format.hpp"
-
 #include <float.h>
-#include <math.h>
-#include <stdio.h>
 
 using namespace NSEpic;
 

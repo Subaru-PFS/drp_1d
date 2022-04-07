@@ -51,7 +51,7 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include <map>
-#include <stdio.h>
+
 namespace NSEpic {
 class CLSF;
 // the idea  is to define one single factory instance accross app instances

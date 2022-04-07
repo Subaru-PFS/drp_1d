@@ -44,9 +44,6 @@
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
-#include <float.h>
-#include <math.h>
-#include <stdio.h>
 
 using namespace NSEpic;
 
