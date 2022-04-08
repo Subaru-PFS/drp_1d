@@ -67,7 +67,8 @@ class CSpectrumFluxCorrectionMeiksin {
 
 public:
   CSpectrumFluxCorrectionMeiksin(
-      std::vector<MeiksinCorrection> meiksinCorrectionCurves);
+      std::vector<MeiksinCorrection> meiksinCorrectionCurves,
+      TFloat64List zbins);
 
   void convolveByLSF(const std::shared_ptr<const CLSF> &lsf,
                      const TFloat64Range &lambdaRange);
@@ -79,7 +80,7 @@ public:
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
     return m_corrections[zIdx].fluxcorr[meiksinIdx][lbdaIdx];
   };
-  TFloat64List getSegmentsStartRedshiftList() const;
+  const TFloat64List &getRedshiftBins() const { return m_zbins; };
   Float64 getLambdaMin() const { return m_LambdaMin; };
   Float64 getLambdaMax() const { return m_LambdaMax; };
 
@@ -98,19 +99,13 @@ private:
                                      const std::shared_ptr<const CLSF> &lsf,
                                      const TFloat64List &lambdas);
 
+  TFloat64List m_zbins;
   std::vector<MeiksinCorrection> m_rawCorrections;
   std::vector<MeiksinCorrection> m_corrections;
   Float64 m_LambdaMin;
   Float64 m_LambdaMax;
   TFloat64Range m_convolRange;
   bool m_convolved = false;
-};
-
-inline TFloat64List
-CSpectrumFluxCorrectionMeiksin::getSegmentsStartRedshiftList() const {
-  static const TFloat64List zstartlist = {0.0, 2.0, 2.5, 3.0, 3.5, 4.0,
-                                          4.5, 5.0, 5.5, 6.0, 6.5};
-  return zstartlist;
 };
 
 } // namespace NSEpic

@@ -870,7 +870,7 @@ typedef struct {
 class CSpectrumFluxCorrectionMeiksin
 {
   public:
-    CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCurves);
+    CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins);
 };
 
 typedef struct {

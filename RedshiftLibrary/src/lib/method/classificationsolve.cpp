@@ -76,10 +76,6 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     }
   }
   Log.LogInfo("Setting object type: %s", typeLabel.c_str());
-  // compute  proba
-  Float64 Pgal = 0.;
-  Float64 Pstar = 0.;
-  Float64 Pqso = 0.;
   Float64 sum = 0.;
 
   for (const std::string &category : inputContext->m_categories) {

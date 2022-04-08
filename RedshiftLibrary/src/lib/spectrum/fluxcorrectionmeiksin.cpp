@@ -43,10 +43,10 @@
 using namespace NSEpic;
 
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
-    std::vector<MeiksinCorrection> meiksinCorrectionCurves)
+    std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins)
     : m_rawCorrections(std::move(meiksinCorrectionCurves)),
-      m_LambdaMin(m_rawCorrections[0].lbda.front()),
-      m_LambdaMax(m_rawCorrections[0].lbda.back()) {}
+      m_LambdaMin(m_rawCorrections[0].lbda.front()), m_LambdaMax(1215.),
+      m_zbins(std::move(zbins)) {}
 
 /**
  * @brief CSpectrumFluxCorrectionMeiksin::getRedshiftIndex
@@ -59,17 +59,11 @@ CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
  */
 Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
   Int32 index = -1;
+  TFloat64Index::getClosestLowerIndex(m_zbins, z, index);
 
-  Float64 zStart = 2.0;
-  Float64 zStep = 0.5;
-  Float64 zStop = 7.0;
-  if (z < zStart) {
-    index = 0;
-  } else if (z >= zStart && z < zStop) {
-    index = (Int32)((z - zStart) / zStep + 1.0);
-  } else if (z >= zStop) {
-    index = (Int32)((zStop - zStart) / zStep);
-  }
+  // keep last curves above last bin
+  if (index == m_zbins.size() - 1)
+    --index;
   return index;
 }
 
@@ -135,17 +129,10 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
 
   m_corrections.resize(m_rawCorrections.size());
 
-  TFloat64List meiksin_Bins = getSegmentsStartRedshiftList();
-  Float64 zstep = meiksin_Bins[2] - meiksin_Bins[1];
-
   // iterate over the redshift list
   Float64 z_center;
   for (Int32 i = 0; i < m_rawCorrections.size(); i++) {
-    if (i == 0)
-      z_center = meiksin_Bins[i + 1] - zstep / 2.;
-    else
-      z_center = meiksin_Bins[i] + zstep / 2.;
-
+    z_center = (m_zbins[i + 1] + m_zbins[i]) / 2.;
     m_corrections[i].lbda = m_rawCorrections[i].lbda;
 
     for (Int32 j = 0; j < m_rawCorrections[i].fluxcorr.size();

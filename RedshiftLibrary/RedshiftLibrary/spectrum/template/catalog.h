@@ -82,10 +82,12 @@ public:
   Int32 GetNonNullTemplateCount(const std::string &category) const;
   void InitContinuumRemoval(
       const std::shared_ptr<const CParameterStore> &parameterStore);
-  void InitIsmIgm(const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
-                      igmCorrectionMeiksin,
-                  const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                      ismCorrectionCalzetti);
+  void SetIsmIgmCorrection(
+      const std::shared_ptr<const CParameterStore> &parameterStore,
+      const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+          igmCorrectionMeiksin,
+      const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+          ismCorrectionCalzetti);
   mutable bool m_logsampling = 0; // non-log by default
   mutable bool m_orthogonal = 0;  // non-log by default
   Float64 m_ortho_LSFWidth = NAN;

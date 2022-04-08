@@ -82,7 +82,7 @@ public:
     return true;
   }
 
-  // the closet at left or right, at epsilon
+  // the closest at left or right, at epsilon
   static Int32 getCloserIndex(const std::vector<T> &ordered_values,
                               const T &value) {
     typename std::vector<T>::const_iterator it =
