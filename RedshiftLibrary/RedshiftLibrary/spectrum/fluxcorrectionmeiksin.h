@@ -40,6 +40,7 @@
 #define _REDSHIFT_SPECTRUM_FLUXCORRECTIONMEIKSIN_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/range.h"
 namespace fluxcorrectionmeiksin_test { // boost test suite
@@ -102,7 +103,10 @@ private:
                                      const Float64 z_center,
                                      const std::shared_ptr<const CLSF> &lsf,
                                      const TFloat64List &lambdas);
-
+  TFloat64List interpolateConvolvedCurve(const TFloat64List &Xsrc,
+                                         const TFloat64List &Xtgt,
+                                         const TFloat64List &Ysrc,
+                                         const Float64 &z_center);
   TFloat64List m_zbins;
   std::vector<MeiksinCorrection> m_rawCorrections;
   std::vector<MeiksinCorrection> m_corrections;
@@ -110,6 +114,7 @@ private:
   Float64 m_LambdaMax;
   TFloat64Range m_convolRange;
   bool m_convolved = false;
+  Float64 m_interpRatio = IGM_INTERPOLATION_RATIO;
 };
 
 } // namespace NSEpic
