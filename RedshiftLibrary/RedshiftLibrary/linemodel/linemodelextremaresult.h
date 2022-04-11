@@ -104,7 +104,8 @@ public:
   }
 
   std::shared_ptr<const COperatorResult>
-  getCandidate(const int &rank, const std::string &dataset) const;
+  getCandidate(const int &rank, const std::string &dataset,
+               bool firstpassResults = false) const;
 
   const std::string &getCandidateDatasetType(const std::string &dataset) const;
 
@@ -112,6 +113,9 @@ public:
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const std::string id) const;
+
+  std::shared_ptr<const COperatorResult>
+  getCandidateParent(const int &rank, const std::string &dataset) const;
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

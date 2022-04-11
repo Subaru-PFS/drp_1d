@@ -199,13 +199,16 @@ void TLineModelResult::updateFromModel(
   }
 }
 
-std::shared_ptr<const COperatorResult>
-LineModelExtremaResult::getCandidate(const int &rank,
-                                     const std::string &dataset) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
+std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
+    const int &rank, const std::string &dataset, bool firstpassResult) const {
+
+  if (firstpassResult)
+    return getCandidateParent(rank, dataset);
+
+  if (dataset == "model_parameters") {
     return std::make_shared<const TLineModelResult>(
         this->m_ranked_candidates[rank].second);
-  else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
+  } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
     std::shared_ptr<const COperatorResult> cop =
         this->m_savedModelFittingResults[rank];
     return cop;
@@ -220,7 +223,7 @@ LineModelExtremaResult::getCandidate(const int &rank,
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
     const std::string &dataset) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
+  if (dataset == "model_parameters")
     return this->m_ranked_candidates[0].second.getType();
   else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return this->m_savedModelFittingResults[0]->getType();
@@ -247,4 +250,15 @@ LineModelExtremaResult::getCandidate(const std::string id) const {
   }
   throw GlobalException(INTERNAL_ERROR,
                         "LineModelExtremaResult::getCandidate using id failed");
+}
+
+std::shared_ptr<const COperatorResult>
+LineModelExtremaResult::getCandidateParent(const int &rank,
+                                           const std::string &dataset) const {
+  if (dataset == "model_parameters")
+    return std::dynamic_pointer_cast<const TLineModelResult>(
+        this->m_ranked_candidates[rank].second.ParentObject);
+  else
+    throw GlobalException(UNKNOWN_ATTRIBUTE,
+                          "Unknown dataset for parentObject");
 }

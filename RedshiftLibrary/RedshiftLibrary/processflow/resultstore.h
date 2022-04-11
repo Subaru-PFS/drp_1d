@@ -133,7 +133,8 @@ public:
 
   std::shared_ptr<const TLineModelResult>
   GetLineModelResult(const std::string &objectType, const std::string &method,
-                     const std::string &name, const int &rank) const;
+                     const std::string &name, const int &rank,
+                     bool firstpassCorrespondingResult = false) const;
   std::shared_ptr<const TLineModelResult>
   getLineModelResult(const std::string &objectType, const std::string &method,
                      const std::string &name, const std::string &id) const;

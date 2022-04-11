@@ -154,13 +154,19 @@ class ResultStoreOutput(AbstractOutput):
             candidates = []
             candidates_df = []  # useless if dataset attributes dimension is not multi
             dimension = None
+           
             for rank in range(nb_candidates):
                 candidates.append(dict())
                 candidates_df.append(pd.DataFrame())
+                parentResult = False
                 for index, ds_row in ds_attributes.iterrows():
                     #            for attr in list(ds_attributes["hdf5_name"]):
-                    if self.has_attribute_in_result_store(ds_row,object_type, rank):
-                        attr = self._get_attribute_from_result_store(ds_row, object_type, rank)
+                    if "<SPCand>" in ds_row["hdf5_name"]: #writing firstpass results
+                        #read ParendObject from resultStore 
+                        parentResult = True
+                        ds_row["hdf5_name"] = ds_row["hdf5_name"].replace("<SPCand>","")
+                    if self.has_attribute_in_result_store(ds_row,object_type, rank, parentResult):
+                        attr = self._get_attribute_from_result_store(ds_row, object_type, rank, linemeas=None, parentResult=parentResult)
                         candidates[rank][ds_row["hdf5_name"]] = attr
                         dimension = ds_row["dimension"]
                         if dimension == "multi":
@@ -233,7 +239,7 @@ class ResultStoreOutput(AbstractOutput):
             if self.has_dataset(object_type, ds):
                 ds_size = self.get_dataset_size(object_type, ds)
                 if ds_size > 1:
-                    if ds == "firstpass_pdf":#compress firstpass pdf
+                    if "firstpass_pdf" in ds:#compress firstpass pdf
                         object_results_node.create_dataset(ds,
                                                         (ds_size,),
                                                         ds_datatype,
@@ -302,6 +308,8 @@ class ResultStoreOutput(AbstractOutput):
                     for rank in range(nb_candidates):
                         candidate = candidates.get(self.get_candidate_group_name(rank))
                         for index,ds_row in ds_attributes.iterrows():
+                            if "<SPCand>" in ds_row["hdf5_name"]:
+                                ds_row['hdf5_name']=ds_row['hdf5_name'].replace("<SPCand>", "")
                             dimension = ds_row["dimension"]
                             if self.has_attribute(object_type,
                                                   ds_row.hdf5_dataset,
@@ -316,8 +324,8 @@ class ResultStoreOutput(AbstractOutput):
                                                      ds_datatype,
                                                      self.object_dataframes[object_type][ds][rank].to_records())
 
-    def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None):
-        operator_result = self.get_operator_result(data_spec,object_type,rank, linemeas)
+    def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None, parentResult=None):
+        operator_result = self.get_operator_result(data_spec,object_type,rank,linemeas,parentResult)
         if data_spec.dimension == "mono":
             if "[object_type]" in data_spec.OperatorResult_name:
                 operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
@@ -340,20 +348,20 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["hdf5_name"] == attribute_name]
         return self._get_attribute_from_result_store(rs.iloc[0], object_type, rank)
 
-    def has_attribute_in_result_store(self,data_spec,object_type,rank=0):
+    def has_attribute_in_result_store(self,data_spec,object_type,rank=0,firstpass_result=False):
         if rank is not None:
             if self.results_store.HasCandidateDataset(object_type,
                                                       self.get_solve_method(object_type),
                                                       data_spec.ResultStore_key,
                                                       data_spec.hdf5_dataset):
-                operator_result = self.get_operator_result(data_spec, object_type, rank)
+                operator_result = self.get_operator_result(data_spec, object_type, rank, linemeas=None, firstpass_results=firstpass_result)
             else:
                 return False
         else:
             operator_result = self.get_operator_result(data_spec, object_type, rank=None)
         return hasattr(operator_result, data_spec.OperatorResult_name)
 
-    def get_operator_result(self, data_spec, object_type, rank = None, linemeas=None):
+    def get_operator_result(self, data_spec, object_type, rank = None, linemeas=None, firstpass_results=None):
         if object_type is not None:
             if data_spec.hdf5_dataset in self.operator_results[object_type]:
                 if rank is not None:
@@ -361,7 +369,7 @@ class ResultStoreOutput(AbstractOutput):
                         self.operator_results[object_type][data_spec.hdf5_dataset][rank] = self.load_operator_result(
                             data_spec,
                             object_type,
-                            rank)
+                            rank, None, firstpass_results)
                     return self.operator_results[object_type][data_spec.hdf5_dataset][rank]
                 elif rank is None:
                     return self.operator_results[object_type][data_spec.hdf5_dataset]
@@ -386,7 +394,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                                           rank)
                 return self.operator_results[data_spec.hdf5_dataset]
 
-    def load_operator_result(self, data_spec, object_type, rank=None, linemeas = None):
+    def load_operator_result(self, data_spec, object_type, rank=None, linemeas = None, firstpass_results=False):
         if data_spec.level == "root":
             if data_spec.ResultStore_key == "context_warningFlag":
                 return self.results_store.GetFlagResult(data_spec.hdf5_dataset,
@@ -455,7 +463,7 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetLineModelResult(object_type,
                                                              method,
                                                              data_spec.ResultStore_key,
-                                                             rank)
+                                                             rank, firstpass_results)
             elif or_type == "TExtremaResult":
                 return self.results_store.GetExtremaResult(object_type,
                                                            method,
