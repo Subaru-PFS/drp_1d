@@ -1271,17 +1271,13 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       make_shared<LineModelExtremaResult>(zCandidates);
 
-  // Int32 start =
-  // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
-  // Int32 end =
-  // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
-  // Int32 nsamples = end - start + 1;
   Int32 savedModels = 0;
 
   Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d",
                 extremumCount);
   for (Int32 i = 0; i < extremumCount; i++) {
     std::string Id = zCandidates[i].first;
+    std::string parentId = zCandidates[i].second.ParentId; // retrieve parentID
     Float64 z = zCandidates[i].second.Redshift;
 
     // find the index in the zaxis results
@@ -1290,8 +1286,7 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
 
     Int32 i_2pass = -1;
     for (Int32 j = 0; j != m_secondpass_parameters_extremaResult.size(); ++j)
-      if (m_secondpass_parameters_extremaResult.ID(j) ==
-          zCandidates[i].second.ParentId)
+      if (m_secondpass_parameters_extremaResult.ID(j) == parentId)
         i_2pass = j;
     if (i_2pass == -1) {
       throw GlobalException(
@@ -1496,7 +1491,6 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
         .second.updateFromContinuumModelSolution(csolution, false);
     ExtremaResult->m_ranked_candidates[i].second.updateTplRatioFromModel(
         m_model);
-
     // save the tplcorr/tplratio results
   }
 

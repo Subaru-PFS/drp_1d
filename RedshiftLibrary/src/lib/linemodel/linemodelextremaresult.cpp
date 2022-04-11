@@ -238,3 +238,13 @@ bool LineModelExtremaResult::HasCandidateDataset(
           dataset == "fp_model_parameters" || dataset == "continuum" ||
           dataset == "fitted_lines" || dataset == "fp_fitted_lines");
 }
+
+std::shared_ptr<const COperatorResult>
+LineModelExtremaResult::getCandidate(const std::string id) const {
+  for (const auto &cand : this->m_ranked_candidates) {
+    if (cand.first == id)
+      return std::make_shared<const TLineModelResult>(cand.second);
+  }
+  throw GlobalException(INTERNAL_ERROR,
+                        "LineModelExtremaResult::getCandidate using id failed");
+}

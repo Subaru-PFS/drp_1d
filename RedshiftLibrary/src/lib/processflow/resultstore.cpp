@@ -289,6 +289,18 @@ std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
   return tlm;
 }
 
+std::shared_ptr<const TLineModelResult>
+COperatorResultStore::getLineModelResult(const std::string &objectType,
+                                         const std::string &method,
+                                         const std::string &name,
+                                         const std::string &id) const {
+  std::shared_ptr<const COperatorResult> cop =
+      GetGlobalResult(objectType, method, name).lock()->getCandidate(id);
+  std::shared_ptr<const TLineModelResult> tlm =
+      std::dynamic_pointer_cast<const TLineModelResult>(cop);
+  return tlm;
+}
+
 std::shared_ptr<const CLineModelSolution>
 COperatorResultStore::GetLineModelSolution(const std::string &objectType,
                                            const std::string &method,

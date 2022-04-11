@@ -40,14 +40,9 @@
 #define _REDSHIFT_LINEMODEL_LINEMODELEXTREMARESULT_
 
 #include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
 #include "RedshiftLibrary/operator/extremaresult.h"
-
-//#include "RedshiftLibrary/operator/modelspectrumresult.h>
-//#include "RedshiftLibrary/linemodel/modelfittingresult.h>
-//#include "RedshiftLibrary/linemodel/modelrulesresult.h>
-//#include "RedshiftLibrary/operator/spectraFluxResult.h>
-#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 
 namespace NSEpic {
@@ -72,7 +67,9 @@ public:
       m_savedModelRulesResults;
   std::vector<std::shared_ptr<const CSpectraFluxResult>>
       m_savedModelContinuumSpectrumResults;
-
+  /*//this is a first solutuion
+  std::vector<std::shared_ptr<const LineModelExtremaResult>>
+      m_firstPassLineModelExtremaResults;*/
   // Yes there is a repetition of CExtremaResult<TExtremaResult> variables,
   // because we inherit from CExtremaResult<TLineModelResult>, TODO find a more
   // satisfactory solution
@@ -112,6 +109,9 @@ public:
   const std::string &getCandidateDatasetType(const std::string &dataset) const;
 
   bool HasCandidateDataset(const std::string &dataset) const;
+
+  std::shared_ptr<const COperatorResult>
+  getCandidate(const std::string id) const;
 };
 
 typedef CExtremaResult<TLineModelResult> LineModelExtremaResult;

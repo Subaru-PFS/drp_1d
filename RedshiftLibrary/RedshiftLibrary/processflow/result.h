@@ -76,6 +76,12 @@ public:
         UNKNOWN_ATTRIBUTE,
         "This operator result does not support this operation");
   }
+  virtual std::shared_ptr<const COperatorResult>
+  getCandidate(const std::string id) const {
+    throw GlobalException(
+        UNKNOWN_ATTRIBUTE,
+        "This operator result does not support this operation");
+  }
 
 protected:
   std::string m_type = "COperatorResult";

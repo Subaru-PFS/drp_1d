@@ -449,11 +449,24 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange);
   // Get linemodel results at extrema (recompute spectrum model etc.)
-  std::shared_ptr<const LineModelExtremaResult> ExtremaResult =
-      m_linemodel.SaveExtremaResults(spc, clampedlambdaRange,
-                                     candidateResult->m_ranked_candidates,
-                                     m_opt_continuumreest);
-
+  std::shared_ptr<LineModelExtremaResult> ExtremaResult =
+      m_linemodel.SaveExtremaResults(
+          spc, clampedlambdaRange, candidateResult->m_ranked_candidates,
+          m_opt_continuumreest); // maybe its better to pass
+                                 // resultStore->GetGlobalResult so that we
+                                 // constuct extremaResult all at once in
+                                 // linemodel operator
+  // add pointers to firstpass results
+  bool addFirstPassResults = true;
+  if (addFirstPassResults) {
+    // retrieve result from resultstore
+    std::string firstpassExtremaResultsStr = ("linemodel_firstpass_extrema");
+    for (auto &cand : ExtremaResult->m_ranked_candidates) {
+      cand.second.ParentObject = resultStore->getLineModelResult(
+          m_objectType, m_name, firstpassExtremaResultsStr,
+          cand.second.ParentId);
+    }
+  }
   // store extrema results
   storeExtremaResults(resultStore, ExtremaResult);
 
@@ -1171,13 +1184,6 @@ bool CLineModelSolve::Solve(
     if (enableFirstpass_B) {
       std::string firstpassbExtremaResultsStr = scopeStr.c_str();
       firstpassbExtremaResultsStr.append("_firstpassb_extrema");
-      // Log.LogError("Linemodel, saving firstpassb extrema results: %s",
-      // firstpassExtremaResultsStr.c_str());
-      // TODO restore this after converting it from
-      // COperatorLineModelExtremaResult to LineModelExtremaResult
-      //   resultStore->StoreScopedGlobalResult(
-      //   firstpassbExtremaResultsStr.c_str(),
-      //   linemodel_fpb.m_firstpass_extremaResult );
     }
   }
 
