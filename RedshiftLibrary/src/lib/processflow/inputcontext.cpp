@@ -89,11 +89,6 @@ void CInputContext::RebinInputs() {
     if (fft_processing[cat])
       m_use_LogLambaSpectrum = true;
   }
-  if (fft_processing.find("star") != fft_processing.end() &&
-      fft_processing["star"]) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "FFT processing is not yet supported for stars");
-  }
 
   if (!m_use_LogLambaSpectrum)
     return;
