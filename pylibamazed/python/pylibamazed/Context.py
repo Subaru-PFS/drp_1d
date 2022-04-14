@@ -71,6 +71,7 @@ class Context:
             _check_LinemeasValidity(config, parameters)
         self.parameters = parameters
         self.parameters["calibrationDir"]=config["calibration_dir"]
+        self.extended_results = config["extended_results"]
 
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
@@ -126,7 +127,8 @@ class Context:
                 if not self.config["linemeascatalog"]:
                     output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
                                                self.parameters,
-                                               auto_load=False)
+                                               auto_load=False,
+                                               extended_results = self.extended_results)
 
                     self.parameters[object_type]["redshiftref"] = output.get_attribute_from_result_store("Redshift",
                                                                                                          object_type,
@@ -143,13 +145,13 @@ class Context:
                 self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
 
             if self.parameters[object_type].get("enable_reliability") and object_type in self.calibration_library.reliability_models:
-                rel = Reliability(object_type, self.parameters,self.calibration_library)
+                rel = Reliability(object_type, self.parameters,self.calibration_library, extended_results = self.extended_results)
                 reliabilities[object_type] = rel.Compute(self.process_flow_context)
 
         if enable_classification:
             self.run_method("classification", "ClassificationSolve")
 
-        rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters)
+        rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters, extended_results = self.extended_results)
         for object_type in reliabilities.keys():
             rso.object_results[object_type]['reliability'] = dict()
             rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]

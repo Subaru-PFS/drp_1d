@@ -43,24 +43,21 @@ import pandas as pd
 import resource
 from collections import defaultdict
 from pylibamazed.redshift import PC_Get_Float64Array, PC_Get_Int32Array, CLog
-#from pylibamazed.redshift import PC_Get_Float32Array #TODO ask Ali how to define this latter in the lib
 zlog = CLog.GetInstance()
-
-
-class ResultStoreOutput(AbstractOutput):
-
-    def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True):
+class ResultStoreOutput(AbstractOutput): 
+    def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True, extended_results=True):
         AbstractOutput.__init__(self)
         self.results_store = result_store
         self.parameters = parameters
         self.operator_results = dict()
+        self.extended_results = extended_results 
         self.results_specifications = pd.read_csv(results_specifications,
                                      sep='\t',
                                      dtype={'format': object}
                                      )
         
         self.object_types = self.parameters["objects"]
-            
+           
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
@@ -69,18 +66,15 @@ class ResultStoreOutput(AbstractOutput):
             self.load_all()
 
     def load_root(self):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "root"]
-        root_datasets = list(rs["hdf5_dataset"].unique())
+        level= "root"
+        rs, root_datasets = self.filter_datasets(level)
         for ds in root_datasets:
+            ds_attributes = self.filter_dataset_attributes(ds)
+            self.root_results[ds]=dict()
             if ds == "context_warningFlag" :
-                ds_attributes = rs[rs["hdf5_dataset"] == ds]
-                self.root_results[ds]=dict()
                 for index, ds_row in ds_attributes.iterrows():
                     self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
             elif self.results_store.HasDataset(ds,ds,"solveResult"):
-                ds_attributes = rs[rs["hdf5_dataset"] == ds]
-                self.root_results[ds]=dict()
                 for index, ds_row in ds_attributes.iterrows():
                     if "<" in ds_row["hdf5_name"]:
                         for object_type in self.parameters["objects"]:
@@ -91,9 +85,8 @@ class ResultStoreOutput(AbstractOutput):
                         self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
 
     def load_object_level(self, object_type):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "object"]
-        object_datasets = list(rs["hdf5_dataset"].unique())
+        level = "object"
+        rs, object_datasets = self.filter_datasets(level)
         for ds in object_datasets:
             methods = self.get_solve_methods(object_type)
             if self.get_solve_method(object_type):
@@ -104,7 +97,7 @@ class ResultStoreOutput(AbstractOutput):
                 if self.results_store.HasDataset(object_type,
                                                  method,
                                                  ds):
-                    ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                    ds_attributes = self.filter_dataset_attributes(ds)
                     dimension = ds_attributes["dimension"].iat[0]
                     if dimension == "multi":
                         self.object_results[object_type][ds] = dict()
@@ -122,11 +115,10 @@ class ResultStoreOutput(AbstractOutput):
     def load_candidate_level(self, object_type):
         if not self.parameters[object_type]["method"]:
             return
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "candidate"]
-        candidate_datasets = list(rs["hdf5_dataset"].unique())
+        level = "candidate"
+        rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"] == ds]
+            ds_attributes = self.filter_dataset_attributes(ds)
             rs_key = ds_attributes["ResultStore_key"].unique()[0]
             if not self.results_store.HasCandidateDataset(object_type,
                                                           self.get_solve_method(object_type),
@@ -158,15 +150,43 @@ class ResultStoreOutput(AbstractOutput):
                 {res[key].append(sub[key]) for sub in candidates for key in sub}
                 self.object_dataframes[object_type][ds] = pd.DataFrame(res)
                 self.object_dataframes[object_type][ds]["Rank"] = range(nb_candidates)
+    
+    def filter_datasets(self, level):
+        rs = self.results_specifications
+        #filter by level
+        rs = rs[rs["level"] == level]
+        all_datasets = list(rs["hdf5_dataset"].unique())
+        
+        #filter by extended_results
+        if self.extended_results:
+            return rs, all_datasets
+
+        #a dataset is considered as debug if all its elements have debug = True
+        filtered_datasets = []
+        for ds in all_datasets:
+            ds_attributes = rs[rs["hdf5_dataset"]==ds]
+            debug = all(ds_row["debug"] == True for index, ds_row in ds_attributes.iterrows())
+            if not debug:
+                filtered_datasets.append(ds) 
+        
+        return rs, filtered_datasets
+
+    def filter_dataset_attributes(self, ds_name):  
+        rs = self.results_specifications 
+        ds_attributes = rs[rs["hdf5_dataset"]==ds_name]   
+        #filter ds_attributes by debug column
+        if self.extended_results:
+            return ds_attributes
+        filtered_df = ds_attributes[ds_attributes["debug"]==self.extended_results]     
+        return filtered_df
 
     def write_hdf5_root(self, hdf5_spectrum_node):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "root"]
-        root_datasets = list(rs["hdf5_dataset"].unique())
+        level = "root"
+        rs, root_datasets = self.filter_datasets(level)
                                    
         for ds in root_datasets:
             if ds in self.root_results:
-                ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                ds_attributes = self.filter_dataset_attributes(ds)
                 dsg = hdf5_spectrum_node.create_group(ds)
                 for index, ds_row in ds_attributes.iterrows():
                     if "<" in ds_row["hdf5_name"]:
@@ -179,11 +199,10 @@ class ResultStoreOutput(AbstractOutput):
                             dsg.attrs[ds_row["hdf5_name"]] = self.root_results[ds][ds_row["hdf5_name"]]
 
     def write_hdf5_object_level(self, object_type, object_results_node):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "object"]
-        object_datasets = list(rs["hdf5_dataset"].unique())
+        level = "object"
+        rs, object_datasets = self.filter_datasets(level)
         for ds in object_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"] == ds]
+            ds_attributes = self.filter_dataset_attributes(ds)
             ds_datatype = np.dtype([(row["hdf5_name"], row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
             # TODO we should add dynamic column(s) to results_specification to specify if the attribute has been loaded
             if self.has_dataset(object_type, ds):
@@ -217,9 +236,8 @@ class ResultStoreOutput(AbstractOutput):
             if self.get_solve_method(object_type):
 
                 candidates = object_results.create_group("candidates")
-                rs = self.results_specifications
-                rs = rs[rs["level"] == "candidate"]
-                candidate_datasets = list(rs["hdf5_dataset"].unique())
+                level = "candidate"
+                rs, candidate_datasets = self.filter_datasets(level)
                 nb_candidates = len(self.object_results[object_type]["model_parameters"])
                 for rank in range(nb_candidates):
                     candidate = candidates.create_group(self.get_candidate_group_name(rank))
