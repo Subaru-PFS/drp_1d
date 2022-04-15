@@ -76,4 +76,4 @@ FirstpassFittedTemplateMtM	fp_model_parameters	f8	linemodel_firstpass_extrema	mo
 FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]
 FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]
 ContextWarningFlags	context_warningFlag	i	context_warningFlag	mono	False	root	flagValue	int
-WarningFlags	warningFlag	i	warningFlag	mono	False	object	flagValue	int
+<MethodType>WarningFlags	warningFlag	i	warningFlag	mono	False	method	flagValue[method_type]	int
