@@ -57,8 +57,8 @@ import pandas as pd
 import json
 import os
 
-import pylibamazed.redshift as amz
-
+from pylibamazed.Exception import InputError
+import pylibamazed.redshift as amzErrorCodes #temporary
 zflag = CFlagWarning.GetInstance()
 class Context:
 
@@ -169,7 +169,7 @@ class Context:
     def run_method(self, object_type, method):
 
         if "C" + method not in globals():
-            raise Exception("Unkown method " + method)
+            raise InputError(amzErrorCodes.INVALID_PARAMETER,"Unkown method {}".format(str(method)))
         solver_method = globals()["C" + method]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
@@ -178,18 +178,20 @@ class Context:
 
 def _check_config(config):
     if "calibration_dir" not in config:
-        raise Exception("Config must contain 'calibration_dir' key")
+        raise InputError(amzErrorCodes.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
     if not os.path.exists(config["calibration_dir"]):
-        raise Exception("Calibration directory {} does not exist".format(config["calibration_dir"]))
+        raise InputError(amzErrorCodes.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
     if "linemeascatalog" in config:
         if "linemeas_catalog_columns" not in config:
-            raise Exception("With a linemeas catalog Config must contain a linemeas_catalog_columns key")
+            raise InputError(amzErrorCodes.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
         for object_type in config["linemeascatalog"].keys():
             if object_type not in config["linemeas_catalog_columns"]:
-                raise Exception("Config['linemeas_catalog_columns'] misses category {}".format(object_type))
+                raise InputError(amzErrorCodes.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
+
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
-                    raise Exception("Config['linemeas_catalog_columns'][{}] misses attribute".format(object_type, attr))
+                    raise InputError(amzErrorCodes.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
+
 
 def _check_LinemeasValidity(config, parameters):
     if not config["linemeascatalog"]:
@@ -198,4 +200,4 @@ def _check_LinemeasValidity(config, parameters):
         method = parameters[object_type]["method"]
         if method == "LineModelSolve":
             if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
-                raise Exception("Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")
+                raise InputError(amzErrorCodes.INCOHERENT_CONFIG_OPTION,"Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")

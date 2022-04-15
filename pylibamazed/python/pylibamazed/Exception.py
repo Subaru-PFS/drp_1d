@@ -36,28 +36,38 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
+from pylibamazed.redshift import CLog
+zlog = CLog.GetInstance()
 
-from pylibamazed.ResultStoreOutput import ResultStoreOutput
-import numpy as np
-from pylibamazed.Exception import OutputReaderError
-import pylibamazed.redshift as amzErrorCodes #temporary
+#after a small research on the internet, it seems that it s a common practice in python
+#to create subclasses of Exception rather than using errorCodes
+class GlobalError(Exception):
+    def __init__(self, errCode, message):
+        self.errCode = errCode
+        zlog.logError(errCode, message)
+        super(GlobalError).__init__(message)#to call the base class constructor with the 
 
-class Reliability:
-    def __init__(self, object_type,parameters, calibration):
-        self.object_type = object_type
-        self.parameters = parameters
-        self.calibration_library = calibration
-        self.extended_results = extended_results
-        
-    def Compute(self, context):
-        output = ResultStoreOutput(context.GetResultStore(),
-                                   self.parameters,
-                                   auto_load=False,
-                                   extended_results=False)
-        pdf = output.get_attribute_from_result_store("PDFProbaLog", self.object_type, 0)
-        model = self.calibration_library.reliability_models[self.object_type]
-        if pdf.shape[0] != model.input_shape[1]:
-            raise OutputReaderError(amzErrorCodes.OutputReaderError,"PDF and model shapes are not compatible")
-                # The model needs a PDF, not LogPDF
-        return  model.predict(np.exp(pdf[None, :, None]))[0, 1]
+class SpectrumReaderError(Exception):
+    '''Raise when something is wrong while reading spectrum data'''
+    def __init__(self, errCode, message):
+        self.errCode = errCode#str
+        self.message = message
+        super(SpectrumReaderException, self).__init__(message)
+
+
+class InputError(Exception):
+    '''Raise when something is wrong while reading and validating config and parameter files'''
+    def __init__(self, errCode, message):
+        self.errCode = errCode
+        self.message = message
+        super(InputException, self).__init__(message)
+
+
+class OutputReaderError(Exception):
+    '''Raise when something is wrong while reading library output data'''
+    def __init__(self, errCode, message):
+        self.errCode = errCode
+        self.message = message
+        super(OutputReaderException, self).__init__(message)
+
 
