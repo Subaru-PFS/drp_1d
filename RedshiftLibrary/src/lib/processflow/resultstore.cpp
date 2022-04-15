@@ -115,7 +115,7 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
   }
 
   throw GlobalException(
-      INTERNAL_ERROR,
+      ErrorCode::INTERNAL_ERROR,
       Formatter()
           << "COperatorResultStore::GetPerTemplateResult, per template result "
           << name << " not found");
@@ -167,7 +167,7 @@ COperatorResultStore::GetGlobalResult(const std::string &name) const {
   if (it != m_GlobalResults.end()) {
     return (*it).second;
   } else
-    throw GlobalException(UNKNOWN_ATTRIBUTE,
+    throw GlobalException(ErrorCode::UNKNOWN_ATTRIBUTE,
                           Formatter() << "Unknown global result:" << name);
 }
 

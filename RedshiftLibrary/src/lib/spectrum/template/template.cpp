@@ -195,7 +195,7 @@ bool CTemplate::Save(const char *filePath) const {
  */
 bool CTemplate::ApplyDustCoeff(Int32 kDust) {
   if (!CheckIsmIgmEnabled() || CalzettiInitFailed()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplate::ApplyDustCoeff: try to apply dust "
                           "extinction without ism initialization");
   }
@@ -227,7 +227,7 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust) {
  */
 bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx) {
   if (!CheckIsmIgmEnabled() || MeiksinInitFailed()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplate::ApplyMeiksinCoeff: try to apply igm "
                           "extinction without igm initialization");
   }
@@ -295,7 +295,7 @@ void CTemplate::InitIsmIgmConfig(
       m_SpectralAxis.GetSamplesVector(), kstart, kend);
   if (!ret) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
   }
   InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti,
@@ -315,16 +315,16 @@ void CTemplate::InitIsmIgmConfig(
     m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
   if (MeiksinInitFailed() && CalzettiInitFailed()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplate::InitIsmIgmConfig: Cannot init ismigm");
   }
 
   if (kstart < 0 || kstart >= m_SpectralAxis.GetSamplesCount()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplate::InitIsmIgmConfig: kstart outside range");
   }
   if (kend < 0 || kend >= m_SpectralAxis.GetSamplesCount()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplate::InitIsmIgmConfig: kend outside range");
   }
 
@@ -361,7 +361,7 @@ void CTemplate::InitIsmIgmConfig(
 Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
   if (MeiksinInitFailed()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIgmEndIndex: igm initialization not done");
   }
 
@@ -393,12 +393,12 @@ void CTemplate::GetIsmIgmIdxList(Int32 opt_extinction, Int32 opt_dustFitting,
                                  Int32 FitMeiksinIdx) const {
   if (MeiksinInitFailed() && opt_extinction) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
   }
   if (CalzettiInitFailed() && opt_dustFitting != -1) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
   }
 

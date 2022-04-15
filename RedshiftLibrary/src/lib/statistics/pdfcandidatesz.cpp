@@ -144,7 +144,7 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
       continue;
     } else {
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "CPdfCandidatesZ::SetIntegrationWindows: Failed to "
                          "identify a range including the candidate "
                       << c[Id]->Redshift);
@@ -252,7 +252,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
   for (Int32 k = 1; k < redshifts.size(); k++) {
     if (redshifts[k] < redshifts[k - 1]) {
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "CPdfCandidatesZ::getCandidateSumTrapez - redshifts "
                          "are not sorted for (at least) index="
                       << k);
@@ -267,7 +267,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CPdfCandidatesZ::getCandidateSumTrapez could not "
                           "find enclosing interval");
   }
@@ -400,7 +400,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   for (Int32 k = 1; k < redshifts.size(); k++) {
     if (redshifts[k] < redshifts[k - 1]) {
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "CPdfCandidatesZ::getCandidateSumGaussFit - redshifts "
                          "are not sorted for (at least) index="
                       << k);
@@ -416,7 +416,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CPdfCandidatesZ::getCandidateSumGaussFit could not "
                           "find enclosing interval");
   }
@@ -525,7 +525,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   s = gsl_multifit_fdfsolver_alloc(T, n, p);
   if (s == 0) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "    CPdfCandidatesZ::getCandidateSumGaussFit - "
                           "Unable to allocate the multifit solver");
     return false;

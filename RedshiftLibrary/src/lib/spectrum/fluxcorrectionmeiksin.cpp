@@ -80,7 +80,7 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(
     const TFloat64List &arr, const Float64 z_center,
     const std::shared_ptr<const CLSF> &lsf, const TFloat64List &lambdas) {
   if (!arr.size()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "Cannot convolve: either kernel or array is empty. ");
   }
 
@@ -105,7 +105,8 @@ TFloat64List CSpectrumFluxCorrectionMeiksin::applyAdaptativeKernel(
     Nhalf = int(kernel.size() / 2);
     if (!kernel.size()) {
       throw GlobalException(
-          INTERNAL_ERROR, "Cannot convolve: either kernel or array is empty. ");
+          ErrorCode::INTERNAL_ERROR,
+          "Cannot convolve: either kernel or array is empty. ");
     }
 
     tmp = 0.0;                              // sum over the intersection area

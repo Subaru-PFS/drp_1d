@@ -52,7 +52,7 @@ using namespace NSEpic;
 
 static void NewHandler(const char *reason, const char *file, int line,
                        int gsl_errno) {
-  throw GlobalException(EXTERNAL_LIB_ERROR,
+  throw GlobalException(ErrorCode::EXTERNAL_LIB_ERROR,
                         Formatter() << "GSL Error : "
                                     << " gsl: " << file << ":" << line
                                     << ": ERROR:" << reason << " (Errtype: "

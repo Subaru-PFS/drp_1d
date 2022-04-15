@@ -51,12 +51,12 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CFlagWarning,MeiksinCorrection,
                                   CSpectrumFluxCorrectionMeiksin,
                                   VecTFloat64List, VecMeiksinCorrection,
-                                  CSpectrumFluxCorrectionCalzetti, CalzettiCorrection)
+                                  CSpectrumFluxCorrectionCalzetti, CalzettiCorrection,
+                                  ErrorCode)
 import numpy as np
 from astropy.io import fits, ascii
 import glob
 from pylibamazed.Exception import InputError
-import pylibamazed.redshift as amzErrorCodes #temporary
 zflag = CFlagWarning.GetInstance()
 
 class CalibrationLibrary:
@@ -105,14 +105,14 @@ class CalibrationLibrary:
         # Template directory contains category directories
         categories = os.listdir(full_path)
         if not categories:
-            raise InputError(amzErrorCodes.INVALID_DIRECTORY,"No template category directory found in {}".format(full_path))
+            raise InputError(ErrorCode.INVALID_DIRECTORY,"No template category directory found in {}".format(full_path))
         for category in categories:
             category_path = os.path.join(full_path, category)
             # Category directory contains template files
             template_file_list = os.listdir(category_path)
 
             if not template_file_list:
-                raise InputError(amzErrorCodes.INVALID_FILEPATH,"No template file found in {}".format(category_path))
+                raise InputError(ErrorCode.INVALID_FILEPATH,"No template file found in {}".format(category_path))
             for template_filename in template_file_list:
                 file_path = os.path.join(category_path, template_filename)
                 # Template file is a two columns text file
@@ -120,7 +120,7 @@ class CalibrationLibrary:
                     data = np.loadtxt(file_path, unpack=True)
                 except Exception as e:
                     #logger.error("Unable to read template file {}".format(file_path))#todo: check if we keep the logger
-                    raise InputError(amzErrorCodes.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
+                    raise InputError(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
                 wavelength = data[0]
                 flux = data[1]
 
@@ -133,7 +133,7 @@ class CalibrationLibrary:
     def load_templates_catalog(self, object_type):
         if "template_dir" not in self.parameters[object_type]:
             # TODO create a dedicated class for setup exceptions
-            raise InputError(amzErrorCodes.MISSING_PARAMETER,"Incomplete parameter file, template_dir entry mandatory")
+            raise InputError(ErrorCode.MISSING_PARAMETER,"Incomplete parameter file, template_dir entry mandatory")
         self.templates_catalogs[object_type] = CTemplateCatalog()
         self._load_templates(object_type, self.parameters[object_type]["template_dir"])
         # Temporary hack before handling process flow in api
@@ -145,10 +145,10 @@ class CalibrationLibrary:
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "linecatalog" not in linemodel_params:
-            raise InputError(amzErrorCodes.MISSING_PARAMETER,"Incomplete parameter file, {}.linemodel.linecatalog entry mandatory".format(method))
+            raise InputError(ErrorCode.MISSING_PARAMETER,"Incomplete parameter file, {}.linemodel.linecatalog entry mandatory".format(method))
         line_catalog_file = os.path.join(self.calibration_dir,linemodel_params["linecatalog"])
         if not os.path.exists(line_catalog_file):
-            raise InputError(amzErrorCodes.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
+            raise InputError(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
@@ -157,7 +157,7 @@ class CalibrationLibrary:
         try:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
-            raise InputError(amzErrorCodes.BAD_FILEFORMAT,"bad line catalog {0} cause :{1}".format(line_catalog_file, e))
+            raise InputError(ErrorCode.BAD_FILEFORMAT,"bad line catalog {0} cause :{1}".format(line_catalog_file, e))
 
         self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
@@ -185,7 +185,7 @@ class CalibrationLibrary:
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "tplratio_catalog" not in linemodel_params:
-            raise InputError(amzErrorCodes.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
+            raise InputError(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
 
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                linemodel_params["tplratio_catalog"],
@@ -242,10 +242,10 @@ class CalibrationLibrary:
                              self.parameters["photometryTransmissionDir"],
                              "*")
         if not "photometryBand" in self.parameters:
-            raise InputError(amzErrorCodes.MISSING_PARAMETER,"photometryBand parameter required")
+            raise InputError(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
         bands = self.parameters["photometryBand"]
         if len(bands) == 0:
-            raise InputError(amzErrorCodes.INVALID_PARAMETER,"photometryBand parameter is empty")
+            raise InputError(ErrorCode.INVALID_PARAMETER,"photometryBand parameter is empty")
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]

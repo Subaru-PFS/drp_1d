@@ -58,7 +58,7 @@ public:
         std::find(list.begin(), list.end(), z);
     if (itr == list.end())
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "CIndexing::getIndex: Could not find index for " << z);
 
     return (itr - list.begin());

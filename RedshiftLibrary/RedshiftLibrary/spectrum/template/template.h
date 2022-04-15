@@ -191,7 +191,7 @@ inline void CTemplate::SetType(const CSpectrum::EType type) const {
     if (!CheckIsmIgmEnabled())
       CSpectrum::SetType(type);
     else {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "CTemplate::SetType: cannot change component type "
                             "when ism/igm enabled on a const CTemplate");
     }
@@ -209,7 +209,7 @@ inline void CTemplate::DisableIsmIgm() {
 inline Int32 CTemplate::GetIsmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIsmCoeff:  ismigm initialization not done");
   }
   return m_kDust;
@@ -218,7 +218,7 @@ inline Int32 CTemplate::GetIsmCoeff() const {
 inline Int32 CTemplate::GetIgmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIgmCoeff:  ismigm initialization not done");
   }
   return m_meiksinIdx;
@@ -227,7 +227,7 @@ inline Int32 CTemplate::GetIgmCoeff() const {
 inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
   if (!CheckIsmIgmEnabled()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
   }
   begin = m_IsmIgm_kstart;
@@ -237,7 +237,7 @@ inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
 inline Int32 CTemplate::GetIgmEndIndex() const {
   if (!CheckIsmIgmEnabled() || MeiksinInitFailed()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplate::GetIgmEndIndex: igm initialization not done");
   }
   return m_Igm_kend;

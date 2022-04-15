@@ -51,7 +51,7 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
     : m_transmission(std::move(trans)), m_lambda(std::move(lambda)) {
   // check all sizes are the same
   if (m_transmission.size() != m_lambda.size()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CPhotometryBand::CPhotometryBand: transmission and "
                           "wavelength have not the same size");
   }
@@ -80,7 +80,7 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
 Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
 
   if (inFlux.size() != m_transmission.size())
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CPhotometryBand::IntegrateFlux: flux and "
                           "transmission sizes are different");
 

@@ -106,7 +106,7 @@ void CInputContext::RebinInputs() {
                                                       kstart, kend);
     if (!ret)
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "LambdaRange borders are outside the spectralAxis range");
     // save into the rebinnedSpectrum
     m_rebinnedSpectrum->SetSpectralAndFluxAxes(

@@ -142,11 +142,11 @@ void CLineCatalog::Add(const CLine &r) {
     //  with a name + position + type that already exists in the list
     if ((*it).GetPosition() == r.GetPosition() &&
         (*it).GetType() == r.GetType())
-      throw GlobalException(
-          INTERNAL_ERROR, Formatter()
-                              << "line with name " << r.GetName()
-                              << " already exists, position=" << r.GetPosition()
-                              << " type=" << r.GetType());
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                            Formatter()
+                                << "line with name " << r.GetName()
+                                << " already exists, position="
+                                << r.GetPosition() << " type=" << r.GetType());
   }
 
   m_List.push_back(r);
@@ -165,7 +165,7 @@ void CLineCatalog::AddLineFromParams(
   else if (type == "A")
     etype = 1;
   else
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter() << "Bad line type, should be in {A,E} : "
                                       << type);
 
@@ -175,7 +175,7 @@ void CLineCatalog::AddLineFromParams(
   else if (force == "S")
     eforce = 2;
   else
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter() << "Bad line force, should be in {S,W} : "
                                       << force);
   TAsymParams _asymParams = {1., 4.5, 0.};
@@ -199,7 +199,7 @@ void CLineCatalog::AddLineFromParams(
     profile = std::unique_ptr<CLineProfileASYMFIT>(
         new CLineProfileASYMFIT(m_nSigmaSupport, _asymFitParams, "mean"));
   } else {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter() << "CLineCatalog::Load: Profile name "
                                       << profileName << " is no recognized.");
   }
@@ -218,9 +218,9 @@ void CLineCatalog::setLineAmplitude(const std::string &str_id,
     if (it->GetStrID() == str_id)
       return it->setNominalAmplitude(nominalAmplitude);
   }
-  throw GlobalException(INTERNAL_ERROR, Formatter()
-                                            << " Line with id " << str_id
-                                            << " does not exist in catalog");
+  throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                        Formatter() << " Line with id " << str_id
+                                    << " does not exist in catalog");
 }
 
 void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
@@ -231,7 +231,7 @@ void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
       return it->setAsymProfileAndParams(profile, params, m_nSigmaSupport);
   }
   throw GlobalException(
-      INTERNAL_ERROR,
+      ErrorCode::INTERNAL_ERROR,
       "Cannot set asym parameters on this catalog, lyA does not exist");
 }
 

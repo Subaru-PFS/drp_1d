@@ -96,7 +96,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CTemplateFittingSolve::compute: fftprocessing not "
                           "implemented with photometry enabled");
 
@@ -139,7 +139,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     _type = nType_all;
   } else {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CTemplateFittingSolve::compute: unknown spectrum component");
   }
 
@@ -165,7 +165,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
 
   Log.LogInfo("Iterating over %d tplCategories", m_categoryList.size());
   if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
-    throw GlobalException(BAD_TEMPLATECATALOG,
+    throw GlobalException(ErrorCode::BAD_TEMPLATECATALOG,
                           Formatter() << "Template catalog for category "
                                       << m_categoryList[0] << " is empty");
   }
@@ -289,7 +289,7 @@ bool CTemplateFittingSolve::Solve(
     } else {
       // unknown type
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "CTemplateFittingSolve::Solve: unknown spectrum component");
     }
 
@@ -386,7 +386,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       Log.LogInfo("templatefittingsolve: using cstLog = %f",
                   chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter()
                                 << "templatefittingsolve: Found different "
                                    "cstLog values in results... val-1="
@@ -408,7 +408,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
       }
       if (foundBadStatus) {
         throw GlobalException(
-            INTERNAL_ERROR,
+            ErrorCode::INTERNAL_ERROR,
             Formatter()
                 << "templatefittingsolve: Found bad status result... for tpl="
                 << (*it).first.c_str());
@@ -491,18 +491,18 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       }
     }
     if (foundBadStatus) {
-      throw GlobalException(
-          INTERNAL_ERROR, Formatter()
-                              << "CTemplateFittingSolve::buildExtremaResults: "
-                                 "Found bad status result... for tpl="
-                              << r.first.c_str());
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                            Formatter()
+                                << "CTemplateFittingSolve::SaveExtremaResult: "
+                                   "Found bad status result... for tpl="
+                                << r.first.c_str());
     }
     if (foundBadRedshift) {
-      throw GlobalException(
-          INTERNAL_ERROR, Formatter()
-                              << "CTemplateFittingSolve::buildExtremaResults: "
-                                 "redshift vector is not the same for tpl="
-                              << r.first.c_str());
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                            Formatter()
+                                << "CTemplateFittingSolve::SaveExtremaResult: "
+                                   "redshift vector is not the same for tpl="
+                                << r.first.c_str());
     }
   }
 
@@ -569,9 +569,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
             opt_interp, overlapThreshold);
 
     if (spcmodelPtr == nullptr)
-      throw GlobalException(
-          INTERNAL_ERROR, "CTemplateFittingSolve::buildExtremaResults: Couldnt "
-                          "compute spectrum model");
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                            "CTemplateFittingSolve::SaveExtremaResult: Couldnt "
+                            "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }

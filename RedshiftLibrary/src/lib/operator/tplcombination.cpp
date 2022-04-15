@@ -112,7 +112,7 @@ void COperatorTplcombination::BasicFit(
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "Operator-Tplcombination: spcMaskAdditional does not "
                        "have the same size as the spectrum flux vector... ("
                     << spcMaskAdditional.GetMasksCount() << " vs "
@@ -129,7 +129,7 @@ void COperatorTplcombination::BasicFit(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTplcombination::BasicFit: impossible to "
                           "get valid kstart or kend");
   }
@@ -522,7 +522,7 @@ void COperatorTplcombination::RebinTemplate(
 
     // Check for overlap rate
     if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
-      throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,
+      throw GlobalException(ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
                             Formatter() << "overlaprate of " << overlapRate);
     }
   }
@@ -551,24 +551,24 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "  Operator-tplcombination: input spectrum is not in log scale");
   }
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter()
                                 << "Operator-tplcombination: input template k="
                                 << ktpl << " are not in log scale");
     }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "Operator-tplcombination: no calzetti calib. file "
                             "loaded... aborting");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "  Operator-tplcombination: no meiksin calib. file "
                             "loaded... aborting");
     }
@@ -625,7 +625,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter()
                               << "Operator-Tplcombination: masks-list size="
                               << additional_spcMasks.size()
@@ -684,7 +684,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, MeiksinList, EbmvList);
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter()
                                 << "Operator-Tplcombination: found invalid "
                                    "tplcombination products for z="
@@ -808,7 +808,7 @@ COperatorTplcombination::ComputeSpectrumModel(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTplcombination::ComputeSpectrumModel: "
                           "impossible to get valid kstart or kend");
   }

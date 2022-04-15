@@ -765,46 +765,44 @@ public:
     TStringList GetNameList() const;
     TStringList GetNameListSortedByLambda() const;
 };
- //struct ErrorCode {
-  typedef enum ErrorCode{
-    //enum{
-      INTERNAL_ERROR=0,
-      EXTERNAL_LIB_ERROR,
-      INVALID_SPECTRA_FLUX,
-      INVALID_NOISE,
-      SMALL_WAVELENGTH_RANGE ,
-      NEGATIVE_CONTINUUMFIT	,
-      BAD_CONTINUUMFIT	,
-      NULL_AMPLITUDES	,
-      PEAK_NOT_FOUND_PDF	,
-      MAX_AT_BORDER_PDF	,
-      UNKNOWN_PARAMETER  ,
-      BAD_PARAMETER_VALUE,
-      UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG,
-      BAD_LOGSAMPLEDSPECTRUM,
-      BAD_COUNTMATCH,
-      BAD_TEMPLATECATALOG,
-      INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE,
-      DZ_NOT_COMPUTABLE,
-      //below are api errorCodes
-      SPECTRUM_NOT_LOADED,
-      MULTILSF_NOT_HANDELED,
-      UNALLOWED_DUPLICATES,
-      UNSORTED_ARRAY,
-      INVALID_DIRECTORY,
-      INVALID_FILEPATH,
-      MISSING_PARAMETER,
-      INVALID_PARAMETER,
-      MISSING_CONFIG_OPTION,
-      BAD_FILEFORMAT,
-      INCOHERENT_CONFIG_OPTIONS,
-      ATTRIBUTE_NOT_SUPPORTED,
-      INCOMPATIBLE_PDF_MODELSHAPES,
-      UNKNOWN_RESULT_TYPE
-    }ErrorCode;
-//}; 
+typedef enum{
+    INTERNAL_ERROR=0,
+    EXTERNAL_LIB_ERROR,
+    INVALID_SPECTRA_FLUX,
+    INVALID_NOISE,
+    SMALL_WAVELENGTH_RANGE ,
+    NEGATIVE_CONTINUUMFIT	,
+    BAD_CONTINUUMFIT	,
+    NULL_AMPLITUDES	,
+    PEAK_NOT_FOUND_PDF	,
+    MAX_AT_BORDER_PDF	,
+    UNKNOWN_PARAMETER  ,
+    BAD_PARAMETER_VALUE,
+    UNKNOWN_ATTRIBUTE ,
+    BAD_LINECATALOG,
+    BAD_LOGSAMPLEDSPECTRUM,
+    BAD_COUNTMATCH,
+    BAD_TEMPLATECATALOG,
+    INVALID_SPECTRUM,
+    OVERLAPRATE_NOTACCEPTABLE,
+    DZ_NOT_COMPUTABLE,
+    //below are api errorCodes
+    SPECTRUM_NOT_LOADED,
+    MULTILSF_NOT_HANDELED,
+    UNALLOWED_DUPLICATES,
+    UNSORTED_ARRAY,
+    INVALID_DIRECTORY,
+    INVALID_FILEPATH,
+    MISSING_PARAMETER,
+    INVALID_PARAMETER,
+    MISSING_CONFIG_OPTION,
+    BAD_FILEFORMAT,
+    INCOHERENT_CONFIG_OPTIONS,
+    ATTRIBUTE_NOT_SUPPORTED,
+    INCOMPATIBLE_PDF_MODELSHAPES,
+    UNKNOWN_RESULT_TYPE
+  }ErrorCode;
+
 class AmzException : public std::exception
 {
 
@@ -939,3 +937,18 @@ class CSpectrumFluxCorrectionCalzetti
   public:
     CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
 };
+
+//code that runs after the cpp mapping takes place, it transfroms the cpp enum into python enum
+%pythoncode %{
+from enum import Enum
+def redo(prefix):
+    tmpD = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
+    for k,v in tmpD.items():
+        del globals()[k]
+    tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
+    # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
+    globals()[prefix] = Enum(prefix,tmpD)
+redo('ErrorCode')
+del redo  # cleaning up the namespace
+del Enum
+%}

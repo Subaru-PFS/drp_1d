@@ -56,8 +56,9 @@ CLSFGaussianVariableWidth::CLSFGaussianVariableWidth(
 Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda) const {
   Int32 idx = -1;
   if (!checkAvailability(lambda)) {
-    throw GlobalException(INTERNAL_ERROR, "CLSFGaussianVariableWidth::GetWidth:"
-                                          " lambda outside spectralAxis range");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          "CLSFGaussianVariableWidth::GetWidth:"
+                          " lambda outside spectralAxis range");
   }
 
   TFloat64Index::getClosestLowerIndex(m_spcAxis.GetSamplesVector(), lambda,
@@ -75,11 +76,11 @@ Float64 CLSFGaussianVariableWidth::GetWidth(Float64 lambda) const {
 bool CLSFGaussianVariableWidth::IsValid() const {
   if (!m_width.size()) {
     throw GlobalException(
-        BAD_COUNTMATCH,
+        ErrorCode::BAD_COUNTMATCH,
         "CLSFGaussianVariableWidth::Width array cannot be null ");
   }
   if (m_spcAxis.GetSamplesCount() != m_width.size()) {
-    throw GlobalException(BAD_COUNTMATCH,
+    throw GlobalException(ErrorCode::BAD_COUNTMATCH,
                           "CLSFGaussianVariableWidth::isValid Spectral axis "
                           "size and width axis size do not match ");
   }

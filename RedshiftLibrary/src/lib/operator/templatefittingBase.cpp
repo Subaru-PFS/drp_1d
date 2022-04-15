@@ -99,7 +99,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf.CalzettiInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "no calzetti initialization for template");
     }
     Int32 idxEbmv = -1;
@@ -112,7 +112,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf.MeiksinInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "no meiksin initialization for template");
     }
     m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
@@ -153,7 +153,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   if (m_spcSpectralAxis_restframe.IsInLinearScale() !=
       tplSpectralAxis.IsInLinearScale()) {
     // status = nStatus_DataError;
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTemplateFittingBase::RebinTemplate: data "
                           "and tpl not in the same scale (lin/log)");
   }
@@ -170,7 +170,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
                       m_templateRebined_bf, m_mskRebined_bf, opt_interp);
   if (!b)
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "COperatorTemplateFittingBase::RebinTemplate: error in rebinning tpl");
 
   // overlapRate
@@ -180,7 +180,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   // Check for overlap rate
   if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
     // status = nStatus_NoOverlap;
-    throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,
+    throw GlobalException(ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
                           Formatter()
                               << "COperatorTemplateFittingBase::RebinTemplate: "
                                  "tpl overlap too small, overlaprate of "

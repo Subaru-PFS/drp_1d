@@ -107,7 +107,7 @@ typedef struct {
 } TPolynomCoeffs;
 
 static const Int32 undefIdx = -1;
-typedef enum ErrorCode {
+typedef enum {
   INTERNAL_ERROR = 0,
   EXTERNAL_LIB_ERROR,
   INVALID_SPECTRA_FLUX,

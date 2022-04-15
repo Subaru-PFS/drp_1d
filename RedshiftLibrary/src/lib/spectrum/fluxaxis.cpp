@@ -72,7 +72,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
                                      const Float64 *error, const Int32 m)
     : CSpectrumAxis(samples, n), m_StdError(error, m) {
   if (m != n) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "FluxAxis and NoiseAxis do not have equal size.");
   }
 }

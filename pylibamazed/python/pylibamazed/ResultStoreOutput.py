@@ -42,11 +42,10 @@ import numpy as np
 import pandas as pd
 import resource
 from collections import defaultdict
-from pylibamazed.redshift import PC_Get_Float64Array, PC_Get_Int32Array, CLog
-
+from pylibamazed.redshift import (PC_Get_Float64Array, PC_Get_Int32Array, CLog, ErrorCode)
+#from pylibamazed.redshift import PC_Get_Float32Array #TODO ask Ali how to define this latter in the lib
 zlog = CLog.GetInstance()
 from pylibamazed.Exception import OutputReaderError
-import pylibamazed.redshift as amzErrorCodes #temporary
 
 class ResultStoreOutput(AbstractOutput): 
     def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True, extended_results=True):
@@ -61,7 +60,7 @@ class ResultStoreOutput(AbstractOutput):
                                      )
         
         self.object_types = self.parameters["objects"]
-           
+
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
             self.object_dataframes[object_type] = dict()
@@ -416,7 +415,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                     data_spec.hdf5_dataset,
                                                                     data_spec.ResultStore_key)
                 else:
-                    raise OutputReaderError(amzErrorCodes.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                    raise OutputReaderError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
         elif data_spec.level == "method":
             if linemeas :
                 method = self.parameters[object_type]["linemeas_method"]
@@ -455,7 +454,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                  method,
                                                                  data_spec.ResultStore_key)
             else:
-                raise OutputReaderError(amzErrorCodes.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                raise OutputReaderError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
         elif data_spec.level == "candidate":
             method = self.get_solve_method(object_type)
             or_type = self.results_store.GetCandidateResultType(object_type,
@@ -498,5 +497,5 @@ class ResultStoreOutput(AbstractOutput):
                                                                data_spec.ResultStore_key,
                                                                rank)
             else:
-                raise OutputReaderError(amzErrorCodes.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                raise OutputReaderError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
 

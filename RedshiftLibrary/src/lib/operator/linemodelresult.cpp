@@ -62,9 +62,10 @@ void CLineModelResult::Init(TFloat64List redshifts,
                             Int32 nTemplates, Int32 nTplshapes,
                             TFloat64List tplshapesPriors) {
   if (tplshapesPriors.size() != nTplshapes) {
-    throw GlobalException(
-        INTERNAL_ERROR, Formatter() << "LinemodelResult: tplshapeprior size "
-                                       "and tplshapes size do not correspond");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          Formatter()
+                              << "LinemodelResult: tplshapeprior size "
+                                 "and tplshapes size do not correspond");
   }
 
   Int32 nResults = redshifts.size();
@@ -110,7 +111,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   const auto index_z_in_store =
       tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
   if (index_z_in_store == -1)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CLineModelResult::SetChisquareTplContinuumResult: "
                           "redshift not in fitstore");
 
@@ -141,7 +142,7 @@ void CLineModelResult::SetChisquareTplshapeResult(
 
   if (index_z >= Redshifts.size())
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CLineModelResult::SetChisquareTplshapeResult: invalid z index");
 
   if (chisquareTplshape.size() != ChiSquareTplshapes.size() ||
@@ -149,7 +150,7 @@ void CLineModelResult::SetChisquareTplshapeResult(
       chisquareTplshape.size() != strongEmissionLinePresentTplshape.size() ||
       chisquareTplshape.size() != nLinesAboveSNRTplshape.size() ||
       chisquareTplshape.size() != priorLinesTplshape.size())
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CLineModelResult::SetChisquareTplshapeResult: "
                           "vector sizes do not match");
 

@@ -171,7 +171,8 @@ inline const std::shared_ptr<CLineCatalog> &
 CInputContext::GetLineCatalog(const std::string &objectType,
                               const std::string &method) {
   //  if (std::findm_categories.find(objectType))
-  // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetLineCatalog:
+  // throw
+  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetLineCatalog:
   // invalid object type");
   return m_lineCatalogs[objectType][method];
 }
@@ -185,7 +186,7 @@ inline const std::shared_ptr<CLineCatalogsTplShape> &
 CInputContext::GetTemplateRatioCatalog(const std::string &objectType) {
   //  if (std::findm_categories.find(objectType))
   // throw
-  // GlobalException(INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog:
+  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetTemplateRatioCatalog:
   // invalid object type");
   return m_lineRatioCatalogCatalogs[objectType];
 }

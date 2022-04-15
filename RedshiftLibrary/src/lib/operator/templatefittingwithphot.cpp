@@ -58,7 +58,7 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   bool b = m_lambdaRange.getClosedIntervalIndices(
       m_spectrum.GetSpectralAxis().GetSamplesVector(), kstart, kend);
   if (!b) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTemplateFittingPhot::RebinTemplate: no "
                           "intersecton between spectral exis and lambda range");
   }
@@ -77,16 +77,16 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTemplateFittingPhot: photometric band "
                           "transmision not availables");
   if (m_photBandCat->empty())
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "COperatorTemplateFittingPhot: photometric bands transmission empty");
 
   if (m_spectrum.GetPhotData() == nullptr)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorTemplateFittingPhot: photometric data not "
                           "available in spectrum");
 
@@ -94,7 +94,7 @@ void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter() << "COperatorTemplateFittingPhot: "
                                            "photometry point for band name: "
                                         << bandName
@@ -141,7 +141,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
                         templateRebined_phot, mskRebined, opt_interp);
 
     if (!b)
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "COperatorTemplateFittingPhot::"
                             "RebinTemplatePhotBand: error in rebinning tpl");
 
@@ -152,7 +152,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
     if (overlapRate < 1.0) {
       // status = nStatus_NoOverlap;
       throw GlobalException(
-          OVERLAPRATE_NOTACCEPTABLE,
+          ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
           Formatter() << "COperatorTemplateFittingPhot::RebinTemplatePhotBand: "
                          "tpl overlap too small, overlaprate of "
                       << overlapRate);
@@ -292,7 +292,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           Formatter() << "COperatorTemplateFittingPhot::ComputeLeastSquare: "
                          "found invalid inverse variance : err2="
                       << oneOverErr2 << ", for band=" << bandName);

@@ -76,7 +76,7 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
 
     if (m_asym_delta) // temporary check
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "Problem in configuring ASYM lineprofile: asym_delta should be null");
   } else if (m_centeringMethod == "mean") // ASYMFIT, ASYMFIXED
   { // correction in order to have the line shifted on the mean: from
@@ -102,7 +102,8 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
 Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0,
                                          Float64 sigma) const {
   if (!isValid()) {
-    throw GlobalException(INTERNAL_ERROR, "LineProfile is not valid");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          "LineProfile is not valid");
   }
   Float64 xsurc;
   GetXSurc(x - x0, sigma, xsurc);
@@ -124,7 +125,8 @@ Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0,
                                                Float64 redshift,
                                                Float64 sigma) const {
   if (!isValid()) {
-    throw GlobalException(INTERNAL_ERROR, "LineProfile is not valid");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          "LineProfile is not valid");
   }
   Float64 xsurc;
   Float64 alpha2 = m_asym_alpha * m_asym_alpha;
@@ -143,7 +145,8 @@ Float64 CLineProfileASYM::GetLineProfileDerivZ(Float64 x, Float64 x0,
 Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                                    Float64 sigma) const {
   if (!isValid()) {
-    throw GlobalException(INTERNAL_ERROR, "LineProfile is not valid");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          "LineProfile is not valid");
   }
   Float64 alpha2 = m_asym_alpha * m_asym_alpha;
 
@@ -158,7 +161,7 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
   if (m_centeringMethod == "none") {
     // temporary: double check muz == 0
     if (muz)
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "Problem: mu is not null for ASYM profile!");
   }
   valSymD = m_asym_sigma_coeff * (xsurc2 / sigma - muz * xsurc / sigma) *

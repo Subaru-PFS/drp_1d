@@ -121,8 +121,9 @@ bool CLineModelSolve::PopulateParameters(
     }
     if (m_opt_tplfit_fftprocessing && m_opt_tplfit_use_photometry)
       throw GlobalException(
-          INTERNAL_ERROR, "CLineModelSolve::PopulateParameters: fftprocessing "
-                          "not implemented with photometry enabled");
+          ErrorCode::INTERNAL_ERROR,
+          "CLineModelSolve::PopulateParameters: fftprocessing "
+          "not implemented with photometry enabled");
     m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
     m_opt_tplfit_dustfit =
         parameterStore->GetScoped<bool>("linemodel.continuumfit.ismfit");
@@ -233,7 +234,7 @@ bool CLineModelSolve::PopulateParameters(
   // Auto-correct fitting method
   std::string forcefittingmethod = "individual";
   if (m_opt_rigidity == "tplshape" && m_opt_fittingmethod == "hybrid") {
-    throw ParameterException(BAD_PARAMETER_VALUE,
+    throw ParameterException(ErrorCode::BAD_PARAMETER_VALUE,
                              "rigidity = tplshape and fitting_method=hybrid "
                              "imply fittingmethod=individual");
     /*
@@ -246,7 +247,7 @@ bool CLineModelSolve::PopulateParameters(
   if (m_opt_rigidity == "tplshape" &&
       m_opt_firstpass_fittingmethod == "hybrid") {
     throw ParameterException(
-        BAD_PARAMETER_VALUE,
+        ErrorCode::BAD_PARAMETER_VALUE,
         "rigidity = tplshape and firstpass_fitting_method=hybrid imply "
         "fittingmethod=individual");
 
@@ -932,7 +933,8 @@ bool CLineModelSolve::Solve(
                        m_opt_continuumcomponent, m_opt_nsigmasupport,
                        m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
   if (retInit != 0) {
-    throw GlobalException(INTERNAL_ERROR, "Linemodel, init failed. Aborting");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                          "Linemodel, init failed. Aborting");
   }
   m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
   //
@@ -1003,7 +1005,7 @@ bool CLineModelSolve::Solve(
       m_opt_rules, m_opt_velocityfit, m_opt_firstpass_largegridstepRatio,
       m_opt_firstpass_largegridsampling, m_opt_rigidity, m_opt_haPrior);
   if (retFirstPass != 0) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "Linemodel, first pass failed. Aborting");
     return false;
   }
@@ -1158,8 +1160,8 @@ bool CLineModelSolve::Solve(
       std::dynamic_pointer_cast<const CLineModelResult>(
           m_linemodel.getResult());
 
-  if (!result)
-    throw GlobalException(INTERNAL_ERROR,
+  if (!result) 
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter() << __func__
                                       << ": Failed to get linemodel result");
 

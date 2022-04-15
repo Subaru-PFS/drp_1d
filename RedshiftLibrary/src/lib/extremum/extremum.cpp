@@ -110,7 +110,7 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
   Int32 n = xAxis.size();
 
   if (n == 0) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "CExtremum::Find, input X vector is empty");
   }
 
@@ -131,7 +131,8 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
       Log.LogError("CExtremum::Find, bad range [%f, %f] for Xaxis: [%f,%f]",
                    m_XRange.GetBegin(), m_XRange.GetEnd(), xAxis.front(),
                    xAxis.back());
-      throw GlobalException(INTERNAL_ERROR, "CExtremum::Find, bad range");
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
+                            "CExtremum::Find, bad range");
     }
   }
 
@@ -212,7 +213,7 @@ bool CExtremum::verifyPeakSeparation(TFloat64List &maxX) const {
     overlap = windowh.GetBegin() - windowl.GetEnd();
     if (overlap < 0) {
       verified = false;
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter()
                                 << "CExtremum::verifyPeakSeparation: Peaks "
                                 << maxX[i] << " and " << maxX[i + 1]
@@ -265,7 +266,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit(TFloat64List &maxX,
                prominence_thresh, ref_prominence);
 
   if (maxX.size() == 0) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "    CExtremum::Cut_Prominence_Merit:empty MaxX");
   }
 
@@ -316,7 +317,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit(TFloat64List &maxX,
       j--;
     }
     if (rangex_low == -1 || rangex_high == -1) {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             Formatter()
                                 << "Problem in range determination " << i);
     }
@@ -391,7 +392,7 @@ TFloat64List CExtremum::Cut_Prominence_Merit(TFloat64List &maxX,
 bool CExtremum::Cut_Threshold(TFloat64List &maxX, TFloat64List &maxY,
                               Int32 keepMinN) const {
   if (maxX.size() == 0) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "      CExtremum::Cut_threshold: empty MaxX arg");
   }
   if (maxX.size() <= keepMinN) {
@@ -489,7 +490,7 @@ bool CExtremum::FindAllPeaks(const TFloat64List &xAxis,
   // check at least 3 points left (to get an extrema)
   if ((EndIndex - BeginIndex) < 2) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "CExtremum::FindAllPeaks, less than 3 contiguous non nan values");
   }
 

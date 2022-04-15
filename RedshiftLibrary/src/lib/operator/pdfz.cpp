@@ -127,13 +127,13 @@ void COperatorPdfz::CombinePDF(const ChisquareArray &chisquarearray) {
       BestProba(chisquarearray);
 
     } else {
-      throw GlobalException(INTERNAL_ERROR,
+      throw GlobalException(ErrorCode::INTERNAL_ERROR,
                             "COperatorPdfz::CombinePDF: Unable to parse pdf "
                             "combination method option");
     }
   } else {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "COperatorPdfz::CombinePDF: Unable to find any "
                        "chisquares prepared for combination. chisquares.size()="
                     << chisquarearray.chisquares.size());
@@ -188,7 +188,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
         Log.LogInfo(" Flag - Eliminating a second-pass candidate");
         continue;
       } else {
-        throw GlobalException(INTERNAL_ERROR,
+        throw GlobalException(ErrorCode::INTERNAL_ERROR,
                               "COperatorPdfz: searchMaxPDFcandidates failed");
       }
     }
@@ -210,7 +210,7 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   }
 
   if (candidates.empty()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz: searchMaxPDFcandidates failed");
   }
 
@@ -244,7 +244,7 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
 
   Float64 logfactor = -DBL_MAX;
   if (redshifts.size() < 2) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz::logSumExpTrick Can't compute on a "
                           "range of less than 2 points");
   }
@@ -325,13 +325,13 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
     logEvidence = 1.0;
     return;
   } else if (redshifts.size() < 1) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz::ComputePdf, redshifts is empty");
   }
 
   // check that the zPrior is size-compatible
   if (logZPrior.size() != redshifts.size()) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz::ComputePdf, redshifts and logZPrior "
                           "have different sizes");
   }
@@ -453,14 +453,14 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
   const TFloat64List &modelPriors = chisquarearray.modelpriors;
 
   if (meritResults.size() != zPriors.size())
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter()
                               << "COperatorPdfz::ComputeAllPdfs: merit.size ("
                               << meritResults.size() << ") != prior.size ("
                               << zPriors.size() << ")");
 
   if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1)
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           Formatter()
                               << "COperatorPdfz::ComputeAllPdfs: merit.size("
                               << meritResults.size() << "), prior.size("
@@ -471,7 +471,7 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
   for (const TFloat64List &_merit : meritResults)
     for (const Float64 &m : _merit)
       if (m != m) // test NAN value
-        throw GlobalException(INTERNAL_ERROR,
+        throw GlobalException(ErrorCode::INTERNAL_ERROR,
                               "COperatorPdfz::ComputeAllPdfs - merit result "
                               "has at least one nan value");
 
@@ -485,7 +485,7 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
   } else {
     if (modelPriors.size() != meritResults.size())
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "COperatorPdfz::ComputeAllPdfs: modelPriors has wrong size");
 
     logPriorModel.resize(meritResults.size());
@@ -504,7 +504,7 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
     Log.LogInfo("COperatorPdfz::ComputeAllPdfs: sumPriors=%f", sumPriors);
     if (sumPriors > 1.1 || sumPriors < 0.9)
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "Pdfz::ComputeAllPdfs: sumPriors should be close to 1... !!!");
   }
 
@@ -563,7 +563,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
     // check if the redshift bins are the same
     if (m_postmargZResult->Redshifts != redshifts)
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "COperatorPdfz::Marginalize z-bins comparison failed");
 
     for (Int32 k = 0; k < zsize; k++) {
@@ -587,7 +587,7 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
           "Pdfz: Pdfz computation failed. For z=%f, meritResults.size()=%d",
           m_postmargZResult->Redshifts[k], nmodel);
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "COperatorPdfz::Marginalize computation failed. Not all templates "
           "have 100 percent coverage for all redshifts!");
     }
@@ -612,14 +612,14 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
 
   if (meritResults.size() != zPriors.size()) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "COperatorPdfz: Pdfz-bestproba problem, merit.size ("
                     << meritResults.size() << ") != prior.size ("
                     << zPriors.size() << ")");
   }
   if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         Formatter() << "COperatorPdfz: Pdfz-bestproba problem, merit.size("
                     << meritResults.size() << "), prior.size(" << zPriors.size()
                     << ") or redshifts.size(" << redshifts.size()
@@ -643,7 +643,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
     // check if the redshift bins are the same
     for (Int32 k = 0; k < redshifts.size(); k++) {
       if (m_postmargZResult->Redshifts[k] != redshifts[k]) {
-        throw GlobalException(INTERNAL_ERROR,
+        throw GlobalException(ErrorCode::INTERNAL_ERROR,
                               Formatter()
                                   << "Pdfz: Pdfz-bestproba, computation "
                                      "(z-bins comparison) failed for result km="
@@ -686,7 +686,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Float64 zstep = (maxdz + mindz) / 2.0;
   if (abs(maxdz - mindz) / zstep > reldzThreshold) {
     throw GlobalException(
-        INTERNAL_ERROR,
+        ErrorCode::INTERNAL_ERROR,
         "COperatorPdfz::BestProba: zstep is not constant, cannot normalize");
   }
 
@@ -790,13 +790,14 @@ void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
  */
 void COperatorPdfz::isPdfValid() const {
   if (!m_postmargZResult) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz::isPdfValid: PDF ptr is null");
   }
 
   if (m_postmargZResult->Redshifts.size() < 2) {
     throw GlobalException(
-        INTERNAL_ERROR, "COperatorPdfz::isPdfValid: PDF has size less than 2");
+        ErrorCode::INTERNAL_ERROR,
+        "COperatorPdfz::isPdfValid: PDF has size less than 2");
   }
 
   // is it completely flat ?
@@ -811,7 +812,7 @@ void COperatorPdfz::isPdfValid() const {
     }
   }
   if (minVal == maxVal) {
-    throw GlobalException(INTERNAL_ERROR,
+    throw GlobalException(ErrorCode::INTERNAL_ERROR,
                           "COperatorPdfz::isPdfValid: PDF is flat !");
   }
 
@@ -820,7 +821,7 @@ void COperatorPdfz::isPdfValid() const {
     if (m_postmargZResult->valProbaLog[k] !=
         m_postmargZResult->valProbaLog[k]) {
       throw GlobalException(
-          INTERNAL_ERROR,
+          ErrorCode::INTERNAL_ERROR,
           "COperatorPdfz::isPdfValid: PDF has nan or invalid values !");
     }
   }
@@ -828,6 +829,7 @@ void COperatorPdfz::isPdfValid() const {
   // is sum equal to 1
   if (!checkPdfSum()) {
     throw GlobalException(
-        INTERNAL_ERROR, "COperatorPdfz::isPdfValid: Pdfz normalization failed");
+        ErrorCode::INTERNAL_ERROR,
+        "COperatorPdfz::isPdfValid: Pdfz normalization failed");
   };
 }

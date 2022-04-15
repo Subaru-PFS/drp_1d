@@ -64,7 +64,7 @@ TFloat64List CLSF::getRestFrameProfileVector(Float64 lambda0_rest,
                                              Float64 z) const {
 
   if (!IsValid()) {
-    throw GlobalException(INTERNAL_ERROR, "LSF is not valid");
+    throw GlobalException(ErrorCode::INTERNAL_ERROR, "LSF is not valid");
   }
   Float64 lambda0_obs = lambda0_rest * (1 + z);
   Float64 sigma_obs = GetWidth(lambda0_obs);
