@@ -43,6 +43,10 @@
 #include "RedshiftLibrary/method/solve.h"
 #include "RedshiftLibrary/method/solveresult.h"
 
+namespace classificationSolve_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class compute_test;
+} // namespace classificationSolve_test
 namespace NSEpic {
 
 class CClassificationSolve : public CSolve {
@@ -51,6 +55,8 @@ public:
   CClassificationSolve(TScopeStack &scope, std::string objectType);
 
 private:
+  friend class classificationSolve_test::compute_test;
+
   std::shared_ptr<CSolveResult>
   compute(std::shared_ptr<const CInputContext> inputContext,
           std::shared_ptr<COperatorResultStore> resultStore,

@@ -67,7 +67,7 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   }
   std::shared_ptr<CClassificationResult> classifResult =
       std::make_shared<CClassificationResult>();
-  Float64 MaxLogEvidence = -INFINITY;
+  Float64 MaxLogEvidence = -DBL_MAX;
   for (const std::string &category : inputContext->m_categories) {
     logEvidences[category] = results[category].lock()->getEvidence();
     if (logEvidences[category] > MaxLogEvidence) {
