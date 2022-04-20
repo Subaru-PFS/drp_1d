@@ -93,10 +93,6 @@ class ResultStoreOutput(AbstractOutput):
         object_datasets = list(rs["hdf5_dataset"].unique())
         for ds in object_datasets:
             methods = self.get_solve_methods(object_type)
-            if self.get_solve_method(object_type):
-                method = self.get_solve_method(object_type)
-            else:
-                method = self.parameters[object_type]["linemeas_method"]
             self.object_results[object_type][ds] = dict()
             for method in methods:
                 if self.results_store.HasDataset(object_type,
@@ -271,10 +267,6 @@ class ResultStoreOutput(AbstractOutput):
                     ds_attributes = rs[rs["hdf5_dataset"] == ds] 
                     object_results.create_group(ds)
                     methods = self.get_solve_methods(object_type)
-                    if self.get_solve_method(object_type):
-                        method = self.get_solve_method(object_type)
-                    else:
-                        method = self.parameters[object_type]["linemeas_method"]
                     for method in methods:                                               
                         for index,ds_row in ds_attributes.iterrows():
                             if "<" in ds_row["hdf5_name"]:
