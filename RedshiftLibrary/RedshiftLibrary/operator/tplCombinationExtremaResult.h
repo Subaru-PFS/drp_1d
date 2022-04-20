@@ -71,11 +71,13 @@ public:
   void Resize(Int32 size) { m_savedModelSpectrumResults.resize(size); }
 
   std::shared_ptr<const COperatorResult>
-  getCandidate(const int &rank, const std::string &dataset) const;
+  getCandidate(const int &rank, const std::string &dataset,
+               bool firstpassResults = false) const override;
 
-  const std::string &getCandidateDatasetType(const std::string &dataset) const;
+  const std::string &
+  getCandidateDatasetType(const std::string &dataset) const override;
 
-  bool HasCandidateDataset(const std::string &dataset) const;
+  bool HasCandidateDataset(const std::string &dataset) const override;
 };
 
 typedef CExtremaResult<TTplCombinationResult> TplCombinationExtremaResult;

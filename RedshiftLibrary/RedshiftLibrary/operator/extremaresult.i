@@ -40,11 +40,11 @@
 class TExtremaResult : public TCandidateZ {
 
 public:
-  TExtremaResult(){};
-  TExtremaResult(const TExtremaResult &) = default;
-  TExtremaResult(TExtremaResult &&) = default;
-  TExtremaResult &operator=(const TExtremaResult &) = default;
-  TExtremaResult &operator=(TExtremaResult &&) = default;
+  TExtremaResult() = default;
+  TExtremaResult(const TExtremaResult &res) = default;
+  TExtremaResult(TExtremaResult &&res) = default;
+  TExtremaResult &operator=(const TExtremaResult &res) = default;
+  TExtremaResult &operator=(TExtremaResult &&res) = default;
   virtual ~TExtremaResult() = default;
   TExtremaResult(const TCandidateZ &candz) : TCandidateZ(candz) {
     this->m_type = "TExtremaResult";

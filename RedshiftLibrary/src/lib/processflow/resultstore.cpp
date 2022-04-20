@@ -246,14 +246,14 @@ COperatorResultStore::GetFlagResult(const std::string &objectType,
 std::shared_ptr<const TLineModelResult>
 COperatorResultStore::GetLineModelResult(
     const std::string &objectType, const std::string &method,
-    const std::string &name, const int &sp_rank,
+    const std::string &name, const int &rank,
     bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(sp_rank, "model_parameters",
+          ->getCandidate(rank, "model_parameters",
                          firstpassCorrespondingResult);
 
   std::shared_ptr<const TLineModelResult> tlm =

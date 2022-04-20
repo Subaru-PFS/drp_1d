@@ -141,7 +141,7 @@ class ResultStoreOutput(AbstractOutput):
         level = "candidate"
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
-            ds_attributes = self.filter_dataset_attributes(ds)
+            ds_attributes = self.filter_dataset_attributes(ds).copy()
             rs_key = ds_attributes["ResultStore_key"].unique()[0]
             if not self.results_store.HasCandidateDataset(object_type,
                                                           self.get_solve_method(object_type),
@@ -166,7 +166,7 @@ class ResultStoreOutput(AbstractOutput):
                         parentResult = True
                         ds_row["hdf5_name"] = ds_row["hdf5_name"].replace("<SPCand>","")
                     if self.has_attribute_in_result_store(ds_row,object_type, rank, parentResult):
-                        attr = self._get_attribute_from_result_store(ds_row, object_type, rank, linemeas=None, parentResult=parentResult)
+                        attr = self._get_attribute_from_result_store(ds_row, object_type, rank, parentResult=parentResult)
                         candidates[rank][ds_row["hdf5_name"]] = attr
                         dimension = ds_row["dimension"]
                         if dimension == "multi":
@@ -293,7 +293,7 @@ class ResultStoreOutput(AbstractOutput):
                     candidate = candidates.create_group(self.get_candidate_group_name(rank))
                     for ds in candidate_datasets:
                         if self.has_dataset(object_type,ds):
-                            ds_attributes = rs[rs["hdf5_dataset"]==ds]
+                            ds_attributes = rs[rs["hdf5_dataset"]==ds].copy()
                             ds_dim = ds_attributes["dimension"].unique()[0]
                             if ds_dim == "mono":
                                 candidate.create_group(ds)
@@ -354,14 +354,14 @@ class ResultStoreOutput(AbstractOutput):
                                                       self.get_solve_method(object_type),
                                                       data_spec.ResultStore_key,
                                                       data_spec.hdf5_dataset):
-                operator_result = self.get_operator_result(data_spec, object_type, rank, linemeas=None, firstpass_results=firstpass_result)
+                operator_result = self.get_operator_result(data_spec, object_type, rank, firstpass_results=firstpass_result)
             else:
                 return False
         else:
             operator_result = self.get_operator_result(data_spec, object_type, rank=None)
         return hasattr(operator_result, data_spec.OperatorResult_name)
 
-    def get_operator_result(self, data_spec, object_type, rank = None, linemeas=None, firstpass_results=None):
+    def get_operator_result(self, data_spec, object_type, rank = None, firstpass_results=None):
         if object_type is not None:
             if data_spec.hdf5_dataset in self.operator_results[object_type]:
                 if rank is not None:

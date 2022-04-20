@@ -42,7 +42,8 @@
 using namespace NSEpic;
 
 std::shared_ptr<const COperatorResult>
-ExtremaResult::getCandidate(const int &rank, const std::string &dataset) const {
+ExtremaResult::getCandidate(const int &rank, const std::string &dataset,
+                            bool firstpassResults) const {
   if (dataset == "model_parameters" || dataset == "fp_model_parameters")
     return std::make_shared<const TExtremaResult>(
         this->m_ranked_candidates[rank].second);

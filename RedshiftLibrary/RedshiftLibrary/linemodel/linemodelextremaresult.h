@@ -67,12 +67,6 @@ public:
       m_savedModelRulesResults;
   std::vector<std::shared_ptr<const CSpectraFluxResult>>
       m_savedModelContinuumSpectrumResults;
-  /*//this is a first solutuion
-  std::vector<std::shared_ptr<const LineModelExtremaResult>>
-      m_firstPassLineModelExtremaResults;*/
-  // Yes there is a repetition of CExtremaResult<TExtremaResult> variables,
-  // because we inherit from CExtremaResult<TLineModelResult>, TODO find a more
-  // satisfactory solution
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
 
@@ -105,14 +99,15 @@ public:
 
   std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
-               bool firstpassResults = false) const;
+               bool firstpassResults = false) const override;
 
-  const std::string &getCandidateDatasetType(const std::string &dataset) const;
+  const std::string &
+  getCandidateDatasetType(const std::string &dataset) const override;
 
-  bool HasCandidateDataset(const std::string &dataset) const;
+  bool HasCandidateDataset(const std::string &dataset) const override;
 
   std::shared_ptr<const COperatorResult>
-  getCandidate(const std::string id) const;
+  getCandidate(const std::string id) const override;
 
   std::shared_ptr<const COperatorResult>
   getCandidateParent(const int &rank, const std::string &dataset) const;

@@ -44,7 +44,8 @@ using namespace NSEpic;
 
 std::shared_ptr<const COperatorResult>
 TplCombinationExtremaResult::getCandidate(const int &rank,
-                                          const std::string &dataset) const {
+                                          const std::string &dataset,
+                                          bool firstpassResults) const {
   if (dataset == "model_parameters" ||
       dataset == "modeltplCombination_parameters")
     return std::make_shared<const TTplCombinationResult>(
