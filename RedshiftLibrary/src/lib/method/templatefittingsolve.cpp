@@ -79,11 +79,8 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   std::string opt_interp =
       inputContext->GetParameterStore()->GetScoped<std::string>(
           "interpolation");
-  // disable extinction for stars
   const bool opt_extinction =
-      (m_objectType == "star")
-          ? false
-          : inputContext->GetParameterStore()->GetScoped<bool>("extinction");
+      inputContext->GetParameterStore()->GetScoped<bool>("extinction");
   bool opt_dustFit =
       inputContext->GetParameterStore()->GetScoped<bool>("dustfit");
 
