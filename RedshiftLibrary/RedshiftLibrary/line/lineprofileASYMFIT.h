@@ -52,10 +52,10 @@ public:
   CLineProfileASYMFIT(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
                       TAsymParams params = ASYMF_DEFAULT_PARAMS,
                       const std::string centeringMethod = "mean");
-  bool isAsymFit() const override;
-  bool isAsymFixed() const override;
-  void SetAsymParams(TAsymParams params) override;
-  void resetAsymFitParams() override;
+  bool isAsymFit() const override { return true; };
+  bool isAsymFixed() const override { return false; };
+  void SetAsymParams(const TAsymParams &params) override;
+  void resetParams() override;
 
 private:
   CLineProfile *CloneImplementation() const override {

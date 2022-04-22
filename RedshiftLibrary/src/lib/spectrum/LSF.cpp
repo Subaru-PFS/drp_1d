@@ -49,13 +49,13 @@ using namespace std;
 CLSF::CLSF(TLSFType name, CLineProfile_ptr &&profile)
     : m_name(name), m_profile(std::move(profile)) {}
 
-Float64 CLSF::GetLineProfile(Float64 lambda, Float64 lambda0) const {
-  return m_profile->GetLineProfile(lambda, lambda0, GetWidth(lambda0));
+Float64 CLSF::GetLineProfileVal(Float64 lambda, Float64 lambda0) const {
+  return m_profile->GetLineProfileVal(lambda, lambda0, GetWidth(lambda0));
 }
 
-Float64 CLSF::GetLineProfile(Float64 lambda, Float64 lambda0,
-                             Float64 sigma0) const {
-  return m_profile->GetLineProfile(lambda, lambda0, sigma0);
+Float64 CLSF::GetLineProfileVal(Float64 lambda, Float64 lambda0,
+                                Float64 sigma0) const {
+  return m_profile->GetLineProfileVal(lambda, lambda0, sigma0);
 }
 
 const CLineProfile &CLSF::GetProfile() const { return *m_profile; }
@@ -84,7 +84,7 @@ TFloat64List CLSF::getRestFrameProfileVector(Float64 lambda0_rest,
   TFloat64List kernel(len);
   for (Int32 i = 0; i < len; i++) {
     // getLineProfile expects lbda in observedframe
-    v = GetLineProfile(lambdas_obs[i], lambda0_obs, sigma_obs);
+    v = GetLineProfileVal(lambdas_obs[i], lambda0_obs, sigma_obs);
     kernel[i] = v;
     norm += v;
   }

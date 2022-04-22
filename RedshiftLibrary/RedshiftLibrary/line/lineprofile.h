@@ -47,6 +47,10 @@
 #include <string>
 namespace NSEpic {
 class CSpectrumFluxCorrectionMeiksin;
+/**
+ * \ingroup Redshift
+ * Abstract class for different line profiles
+ */
 
 /**
  * struct that holds ASYMFIXED profile parameters
@@ -57,7 +61,7 @@ typedef struct TAsymParams {
       : sigma(sigma), alpha(alpha), delta(delta){};
 
   TAsymParams() = default;
-  Float64 sigma, alpha, delta;
+  Float64 sigma = NAN, alpha = NAN, delta = NAN;
 } TAsymParams;
 
 // lineprofileAsym
@@ -67,61 +71,58 @@ static const Float64 ASYM_DEFAULT_CONSTSIGMA = 1.;
 static const TAsymParams ASYMF_DEFAULT_PARAMS{2.0, 2.0, 0.};
 static const Float64 ASYMF_DEFAULT_CONSTSIGMA = 2.5;
 
-enum TProfile {
-  NONE,
-  SYM,
-  LOR,
-  ASYM,
-  ASYMFIT,
-  SYMIGM
-  // ASYMFIXED,//doesnt exist anymore since merged with ASYM
-};
-/**
- * \ingroup Redshift
- * Abstract class for different line profiles
- */
+typedef struct TSymIgmParams {
+  TSymIgmParams() = default;
+  TSymIgmParams(Int32 igmidx, Float64 redshift)
+      : m_igmidx(igmidx), m_redshift(redshift){};
+
+  Int32 m_igmidx = -1;
+  Float64 m_redshift = NAN;
+} TSymIgmParams;
+
+enum TProfile { NONE, SYM, LOR, ASYM, ASYMFIT, SYMIGM };
 
 class CLineProfile {
 
 public:
-  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
   CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-               const TProfile = NONE);
-  virtual Float64 GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
-                                 Float64 redshift = NAN,
-                                 Int32 igmIdx = -1) const = 0;
+               const TProfile name = NONE)
+      : m_nsigmasupport(nsigmasupport), m_name(name){};
 
-  virtual Float64 GetLineFlux(Float64 A, const Float64 sigma,
-                              Float64 redshift = NAN, Float64 mu = NAN,
-                              Int32 igmIdx = -1) const = 0;
+  virtual ~CLineProfile() = default;
 
-  virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                       Float64 redshift, Float64 sigma,
-                                       Int32 igmIdx = -1) const = 0;
-
-  virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, Float64 sigma,
-                                           Float64 redshift = NAN,
-                                           Int32 igmIdx = -1) const = 0;
-  virtual Float64 GetNSigmaSupport() const;
-
-  const TProfile &GetName() const;
-  virtual const TAsymParams GetAsymParams() const { return {NAN, NAN, NAN}; };
-  virtual Float64 GetAsymDelta() const;
-  virtual bool isAsymFit() const;
-  virtual bool isAsymFixed() const;
-  virtual void SetAsymParams(TAsymParams params){};
-  virtual void resetAsymFitParams();
-
-  virtual Int32 getIGMIdxCount() const;
   CLineProfile(const CLineProfile &other) = default;
   CLineProfile(CLineProfile &&other) = default;
   CLineProfile &operator=(const CLineProfile &other) = default;
   CLineProfile &operator=(CLineProfile &&other) = default;
 
-  virtual ~CLineProfile(){}; // to make sure derived objects are correctly
-                             // deleted from a pointer to the base class
-  // std::shared_ptr<CLineProfile> Clone () const {return
-  // std::shared_ptr<CLineProfile>(CloneImplementation());}
+  virtual Float64 GetLineProfileVal(Float64 x, Float64 x0,
+                                    Float64 sigma) const = 0;
+
+  virtual Float64 GetLineFlux(Float64 x0, Float64 sigma,
+                              Float64 A = 1.0) const = 0;
+
+  virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 lambda0,
+                                       Float64 redshift,
+                                       Float64 sigma) const = 0;
+
+  virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
+                                           Float64 sigma) const = 0;
+
+  virtual Float64 GetNSigmaSupport() const { return m_nsigmasupport; };
+
+  const TProfile &GetName() const { return m_name; };
+  virtual TAsymParams GetAsymParams() const { return TAsymParams(); };
+  virtual Float64 GetDelta() const { return 0.; };
+  virtual TSymIgmParams GetSymIgmParams() const { return TSymIgmParams(); };
+  virtual bool isAsymFit() const { return false; };
+  virtual bool isAsymFixed() const { return false; };
+  virtual void SetAsymParams(const TAsymParams &params){};
+  virtual void SetSymIgmParams(const TSymIgmParams &params){};
+  virtual void resetParams(){};
+
+  virtual Int32 getIGMIdxCount() const;
+
   std::unique_ptr<CLineProfile> Clone() const {
     return std::unique_ptr<CLineProfile>(CloneImplementation());
   }
@@ -133,32 +134,9 @@ protected:
   Float64 m_nsigmasupport;
   const TProfile m_name; // hack to avoid using dynamic casting
 };
+
 typedef std::unique_ptr<CLineProfile> CLineProfile_ptr;
 typedef std::vector<CLineProfile_ptr> TProfileList;
-
-inline const TProfile &CLineProfile::GetName() const { return m_name; }
-
-// no need to define a constructor here
-inline CLineProfile::CLineProfile(const Float64 nsigmasupport)
-    : m_nsigmasupport(nsigmasupport), m_name(NONE) {}
-
-inline CLineProfile::CLineProfile(const Float64 nsigmasupport,
-                                  const TProfile name)
-    : m_nsigmasupport(nsigmasupport), m_name(name) {}
-
-inline Float64 CLineProfile::GetNSigmaSupport() const {
-  return m_nsigmasupport;
-}
-inline Float64 CLineProfile::GetAsymDelta() const {
-  return 0.; // default. Mainly used for asylfit/fixed
-}
-inline bool CLineProfile::isAsymFit() const {
-  return 0; // default to no
-}
-inline bool CLineProfile::isAsymFixed() const {
-  return 0; // default to no
-}
-inline void CLineProfile::resetAsymFitParams() { return; }
 
 inline Int32 CLineProfile::getIGMIdxCount() const {
   THROWG(INTERNAL_ERROR, "getIGMIdxCount is not defined "

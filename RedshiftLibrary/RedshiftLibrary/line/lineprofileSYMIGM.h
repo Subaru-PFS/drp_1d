@@ -56,26 +56,29 @@ public:
                          &igmcorrectionMeiksin,
                      const Float64 nsigmasupport = N_SIGMA_SUPPORT);
 
-  Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma,
-                         Float64 redshift = NAN,
-                         Int32 igmIdx = -1) const override;
-  Float64 GetLineFlux(Float64 A, const Float64 sigma, Float64 redshift = NAN,
-                      Float64 mu = NAN, Int32 igmIdx = -1) const override;
+  Float64 GetLineProfileVal(Float64 x, Float64 x0,
+                            Float64 sigma) const override;
+  Float64 GetLineFlux(Float64 x0, Float64 sigma,
+                      Float64 A = 1.0) const override;
   Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                               const Float64 sigma,
-                               Int32 igmIdx = -1) const override;
-  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0, const Float64 sigma,
-                                   Float64 redshift,
-                                   Int32 igmIdx) const override;
+                               Float64 sigma) const override;
+  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
+                                   Float64 sigma) const override;
+  TSymIgmParams GetSymIgmParams() const override;
+  void SetSymIgmParams(const TSymIgmParams &params) override;
+  void resetParams() override;
   Int32 getIGMIdxCount() const override;
 
 private:
   CLineProfile *CloneImplementation() const override {
     return new CLineProfileSYMIGM(*this);
   }
+  void CheckMeiksinInit() const;
+  Int32 getIGMCorrection(Float64 x) const;
+
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmCorrectionMeiksin;
-  void MeiksinInitFailed() const;
-  Int32 getIGMCorrection(Float64 x, Float64 redshift, Int32 igmIdx) const;
+  Float64 m_redshift = NAN;
+  Int32 m_igmidx = -1;
 };
 } // namespace NSEpic
 #endif

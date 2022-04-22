@@ -107,7 +107,6 @@ private:
   std::string m_opt_linetypefilter;
   std::string m_opt_lineforcefilter;
   std::string m_opt_fittingmethod;
-  bool m_opt_igmfit;
   std::string m_opt_secondpasslcfittingmethod;
   std::string m_opt_continuumcomponent;
   bool m_opt_skipsecondpass = false;

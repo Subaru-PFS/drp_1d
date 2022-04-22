@@ -238,9 +238,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     bool enableLogging = true;
     CLineModelSolution modelSolution;
     CContinuumModelSolution continuumModelSolution;
-    Int32 orthoIGMIndex = 0;
-    model.setIgmIndex(orthoIGMIndex); // better keep it separated rather than
-                                      // passing igmIdx as argument to ::fit
+
     model.fit(redshift, modelSolution, continuumModelSolution,
               contreest_iterations, enableLogging);
 

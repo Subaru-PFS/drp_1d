@@ -127,7 +127,7 @@ Int32 COperatorLineModel::ComputeFirstPass(
       m_RestLineList, opt_fittingmethod, m_opt_continuumcomponent,
       m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
       m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity, m_opt_igmfit);
+      opt_rules, opt_rigidity);
   m_model->setHaPriorOption(opt_haprior);
 
   /*
@@ -2332,7 +2332,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   //  params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType =
       params->GetScoped<std::string>("linewidthtype");
-  m_opt_igmfit = params->GetScoped<bool>("igmfit");
   Float64 opt_velocityEmission = params->GetScoped<Float64>(
       "velocityemission"); // set by client, not in parameters.json
   Float64 opt_velocityAbsorption = params->GetScoped<Float64>(
@@ -2367,7 +2366,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       opt_fittingmethod, opt_continuumcomponent,
       m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
       m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity, amplitudeOffsetsDegree, m_opt_igmfit);
+      opt_rules, opt_rigidity, amplitudeOffsetsDegree);
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
 

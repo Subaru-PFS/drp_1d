@@ -187,7 +187,6 @@ public:
   Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
   std::string m_opt_tplfit_continuumprior_dirpath = "";
-  bool m_opt_igmfit = false;
   Int32 m_opt_tplratio_ismFit = 1;
   Int32 m_opt_firstpass_tplratio_ismFit = 0;
   Int32 m_opt_firstpass_multiplecontinuumfit_disable = 1;

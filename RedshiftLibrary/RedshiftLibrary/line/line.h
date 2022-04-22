@@ -112,11 +112,13 @@ public:
   Float64 GetSigmaFitError() const;
   Float64 GetAmpFitError() const;
   TAsymParams GetAsymParams() const;
-  void SetAsymParams(TAsymParams asymParams);
+  TSymIgmParams GetSymIgmParams() const;
+  void SetAsymParams(const TAsymParams &asymParams);
+  void SetSymIgmParams(const TSymIgmParams &params);
   void setProfileAndParams(const std::string &profileName,
-                           TAsymParams asymParams, Float64 nSigmaSupport,
-                           std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
-                               igmcorrectionMeiksin = nullptr);
+                           const TAsymParams &asymParams, Float64 nSigmaSupport,
+                           const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+                               &igmcorrectionMeiksin = nullptr);
   void resetAsymFitParams();
   void setNominalAmplitude(const Float64 &ampl) { m_NominalAmplitude = ampl; }
 

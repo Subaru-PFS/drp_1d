@@ -44,12 +44,12 @@ using namespace std;
 CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport)
     : CLineProfile(nsigmasupport, SYM) {}
 
-CLineProfileSYM::CLineProfileSYM(const TProfile pltype,
-                                 const Float64 nsigmasupport)
+CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport,
+                                 const TProfile pltype)
     : CLineProfile(nsigmasupport, pltype) {}
 
-Float64 CLineProfileSYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
-                                        Float64 redshift, Int32 igmIdx) const {
+Float64 CLineProfileSYM::GetLineProfileVal(Float64 x, Float64 x0,
+                                           Float64 sigma) const {
   Float64 xc = x - x0;
   Float64 val = 0.0;
   Float64 xsurc;
@@ -59,14 +59,14 @@ Float64 CLineProfileSYM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
   return val;
 }
 
-Float64 CLineProfileSYM::GetLineFlux(Float64 A, Float64 sigma, Float64 redshift,
-                                     Float64 mu, Int32 igmIdx) const {
+Float64 CLineProfileSYM::GetLineFlux(Float64 x0, Float64 sigma,
+                                     Float64 A) const {
   return A * sigma * sqrt(2 * M_PI);
 }
 
 Float64 CLineProfileSYM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
-                                              Float64 redshift, Float64 sigma,
-                                              Int32 igmIdx) const {
+                                              Float64 redshift,
+                                              Float64 sigma) const {
   Float64 xc = x - lambda0 * (1 + redshift);
   Float64 val = 0.0;
   Float64 xsurc;
@@ -77,9 +77,7 @@ Float64 CLineProfileSYM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
 }
 
 Float64 CLineProfileSYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                                  Float64 sigma,
-                                                  Float64 redshift,
-                                                  Int32 igmIdx) const {
+                                                  Float64 sigma) const {
   Float64 val = 0.0;
   Float64 xc = x - x0;
   Float64 xsurc, xsurc2;

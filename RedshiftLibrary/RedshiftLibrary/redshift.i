@@ -336,7 +336,7 @@ public:
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
   void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
-  void setProfileAndParams(const std::string& profile, TAsymParams params);
+  void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
   void convertLineProfiles2SYMIGM(
       const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
 };

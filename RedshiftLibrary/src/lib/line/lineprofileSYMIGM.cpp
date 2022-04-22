@@ -49,24 +49,23 @@ using namespace std;
 CLineProfileSYMIGM::CLineProfileSYMIGM(
     const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin,
     const Float64 nsigmasupport)
-    : CLineProfileSYM(SYMIGM, nsigmasupport),
+    : CLineProfileSYM(nsigmasupport, SYMIGM),
       m_igmCorrectionMeiksin(igmcorrectionMeiksin) {}
 
-void CLineProfileSYMIGM::MeiksinInitFailed() const {
+void CLineProfileSYMIGM::CheckMeiksinInit() const {
   if (!m_igmCorrectionMeiksin) {
     THROWG(INTERNAL_ERROR, "m_igmCorrectionMeiksin is nullptr");
   }
 }
 
-Float64 CLineProfileSYMIGM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
-                                           Float64 redshift,
-                                           Int32 igmIdx) const {
-  MeiksinInitFailed();
+Float64 CLineProfileSYMIGM::GetLineProfileVal(Float64 x, Float64 x0,
+                                              Float64 sigma) const {
+  CheckMeiksinInit();
 
-  Float64 igm_fluxcorr_lbda = getIGMCorrection(x, redshift, igmIdx);
+  Float64 igm_fluxcorr_lbda = getIGMCorrection(x);
 
   Float64 val =
-      CLineProfileSYM::GetLineProfile(x, x0, sigma) * igm_fluxcorr_lbda;
+      CLineProfileSYM::GetLineProfileVal(x, x0, sigma) * igm_fluxcorr_lbda;
   return val;
 }
 
@@ -81,17 +80,17 @@ Float64 CLineProfileSYMIGM::GetLineProfile(Float64 x, Float64 x0, Float64 sigma,
  * @param igmIdx
  * @return Float64
  */
-Float64 CLineProfileSYMIGM::GetLineFlux(Float64 A, Float64 sigma,
-                                        Float64 redshift, Float64 mu,
-                                        Int32 igmIdx) const {
-  MeiksinInitFailed();
-  TFloat64Range range(mu - sigma / 2, mu + sigma / 2);
+Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
+                                        Float64 A) const {
+  CheckMeiksinInit();
+  const Float64 winsize = sigma * N_SIGMA_SUPPORT;
+  TFloat64Range range(x0 - winsize / 2, x0 + winsize / 2);
   Float64 step = 1.0 / IGM_OVERSAMPLING;
   TFloat64List list = range.SpreadOver(step);
 
   Float64 flux = 0.;
   for (Float64 x : list) {
-    Float64 igm_fluxcorr_lbda = getIGMCorrection(x, redshift, igmIdx);
+    Float64 igm_fluxcorr_lbda = getIGMCorrection(x);
     flux += igm_fluxcorr_lbda;
   }
   return A * flux;
@@ -100,33 +99,38 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 A, Float64 sigma,
 // we should derivate the IgmCorrection  at z_binwith respect to Z
 Float64 CLineProfileSYMIGM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
                                                  Float64 redshift,
-                                                 Float64 sigma,
-                                                 Int32 igmIdx) const {
+                                                 Float64 sigma) const {
   THROWG(INTERNAL_ERROR,
          "GetLineProfileDerivZ is not yet defined for SYMIGM lineprofile");
 }
 
 Float64 CLineProfileSYMIGM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                                     Float64 sigma,
-                                                     Float64 redshift,
-                                                     Int32 igmIdx) const {
+                                                     Float64 sigma) const {
+  THROWG(INTERNAL_ERROR,
+         "CLineProfileSYMIGM::GetLineProfileDerivSigma not yet implemented");
+}
 
-  MeiksinInitFailed();
+TSymIgmParams CLineProfileSYMIGM::GetSymIgmParams() const {
+  return TSymIgmParams(m_igmidx, m_redshift);
+}
 
-  Float64 igm_fluxcorr_lbda = getIGMCorrection(x, redshift, igmIdx);
+void CLineProfileSYMIGM::SetSymIgmParams(const TSymIgmParams &params) {
+  m_redshift = params.m_redshift;
+  m_igmidx = params.m_igmidx;
+}
 
-  Float64 val = CLineProfileSYMIGM::GetLineProfileDerivSigma(x, x0, sigma,
-                                                             redshift, igmIdx) *
-                igm_fluxcorr_lbda;
-  return val;
+void CLineProfileSYMIGM::resetParams() {
+  m_redshift = NAN;
+  m_igmidx = -1;
 }
 
 Int32 CLineProfileSYMIGM::getIGMIdxCount() const {
   return m_igmCorrectionMeiksin->getIdxCount();
 }
 
-Int32 CLineProfileSYMIGM::getIGMCorrection(Float64 x, Float64 redshift,
-                                           Int32 igmIdx) const {
-  return m_igmCorrectionMeiksin->getCorrection(redshift, igmIdx,
-                                               x / (1 + redshift));
+Int32 CLineProfileSYMIGM::getIGMCorrection(Float64 x) const {
+  if (m_igmidx < 0)
+    return 1.0;
+  return m_igmCorrectionMeiksin->getCorrection(m_redshift, m_igmidx,
+                                               x / (1 + m_redshift));
 }

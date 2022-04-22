@@ -36,6 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
@@ -44,10 +46,6 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
@@ -129,10 +127,10 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   Float64 x = 8000.;
   Float64 x0 = 7999.;
 
-  Float64 res_1 = LSF->GetLineProfile(x, x0);
+  Float64 res_1 = LSF->GetLineProfileVal(x, x0);
 
   Float64 sigma = LSF->GetWidth(x0);
-  Float64 res_2 = LSF->GetLineProfile(x, x0, sigma);
+  Float64 res_2 = LSF->GetLineProfileVal(x, x0, sigma);
 
   Float64 res_ref = exp(-0.5 * ((x - x0) / sigma) * ((x - x0) / sigma));
 
@@ -157,7 +155,7 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   BOOST_CHECK(LSF_3->IsValid() == false);
   BOOST_CHECK(LSF_3->GetWidth(lambda) == 0.0);
 
-  Float64 res_4 = LSF_3->GetLineProfile(0., 0.);
+  Float64 res_4 = LSF_3->GetLineProfileVal(0., 0.);
   BOOST_CHECK(std::isnan(res_4));
 
   BOOST_CHECK_THROW(LSF_3->getRestFrameProfileVector(7200, 2.2),

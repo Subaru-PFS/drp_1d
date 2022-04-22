@@ -50,20 +50,17 @@ namespace NSEpic {
 class CLineProfileSYM : public CLineProfile {
 public:
   CLineProfileSYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
-  CLineProfileSYM(const TProfile pltype, const Float64 nsigmasupport);
-  virtual Float64 GetLineProfile(Float64 x, Float64 x0, const Float64 sigma,
-                                 Float64 redshift = NAN,
-                                 Int32 igmIdx = -1) const override;
-  virtual Float64 GetLineFlux(Float64 A, const Float64 sigma,
-                              Float64 redshift = NAN, Float64 mu = NAN,
-                              Int32 igmIdx = -1) const override;
+  virtual Float64 GetLineProfileVal(Float64 x, Float64 x0,
+                                    Float64 sigma) const override;
+  virtual Float64 GetLineFlux(Float64 x0, Float64 sigma,
+                              Float64 A = 1.0) const override;
   virtual Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                                       const Float64 sigma,
-                                       Int32 igmIdx = -1) const override;
+                                       Float64 sigma) const override;
   virtual Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                           const Float64 sigma,
-                                           Float64 redshift,
-                                           Int32 igmIdx) const override;
+                                           Float64 sigma) const override;
+
+protected:
+  CLineProfileSYM(const Float64 nsigmasupport, const TProfile pltype);
 
 private:
   CLineProfile *CloneImplementation() const override {

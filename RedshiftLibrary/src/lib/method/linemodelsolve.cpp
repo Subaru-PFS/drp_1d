@@ -88,13 +88,6 @@ bool CLineModelSolve::PopulateParameters(
   m_opt_fittingmethod =
       parameterStore->GetScoped<std::string>("linemodel.fittingmethod");
 
-  m_opt_igmfit = parameterStore->GetScoped<bool>(
-      "linemodel.igmfit"); // TODO: merge it with
-                           // @linemodel.continuumfit.igmfit@ note that this
-                           // latter is conditionned to using "tplfit*" for
-                           // continuum?! Do we really want to igm independing
-                           // from continuum component?
-
   m_opt_secondpasslcfittingmethod = parameterStore->GetScoped<std::string>(
       "linemodel.secondpasslcfittingmethod");
   m_opt_skipsecondpass =
@@ -943,10 +936,9 @@ bool CLineModelSolve::Solve(
       m_linemodel.Init(spc, redshifts, restLineList, m_categoryList,
                        m_opt_continuumcomponent, m_opt_nsigmasupport,
                        m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
-  if (retInit != 0) {
+  if (retInit != 0)
     THROWG(INTERNAL_ERROR, "Linemodel, init failed. Aborting");
-  }
-  m_linemodel.m_opt_igmfit = m_opt_igmfit;
+
   m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
   //
   if (m_opt_continuumcomponent == "tplfit" ||

@@ -228,8 +228,8 @@ void CLineCatalog::setLineAmplitude(const std::string &str_id,
  * @param profile
  * @param params
  */
-void CLineCatalog::setProfileAndParams(const std::string &profile,
-                                       TAsymParams params) {
+void CLineCatalog::setAsymProfileAndParams(const std::string &profile,
+                                           TAsymParams params) {
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
     if (it->GetProfile().isAsymFit() || it->GetProfile().isAsymFixed())
@@ -243,8 +243,8 @@ void CLineCatalog::convertLineProfiles2SYMIGM(
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
     if (it->GetName() == ltags.lya_em || it->GetPosition() < RESTLAMBDA_LYA)
-      it->setProfileAndParams("SYMIGM", TAsymParams{NAN, NAN, NAN},
-                              m_nSigmaSupport, igmcorrection);
+      it->setProfileAndParams("SYMIGM", TAsymParams(), m_nSigmaSupport,
+                              igmcorrection);
   }
 }
 

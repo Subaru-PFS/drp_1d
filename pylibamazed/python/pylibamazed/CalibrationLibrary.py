@@ -241,7 +241,7 @@ class CalibrationLibrary:
                 lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
                 lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
                 #here also we should change the profile type
-                lr_catalog.setProfileAndParams(line_ratio_catalog_parameter["asym_params"]["profile"],
+                lr_catalog.setAsymProfileAndParams(line_ratio_catalog_parameter["asym_params"]["profile"],
                                                    TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
                                                                line_ratio_catalog_parameter["asym_params"]["alpha"],
                                                                line_ratio_catalog_parameter["asym_params"]["delta"], 

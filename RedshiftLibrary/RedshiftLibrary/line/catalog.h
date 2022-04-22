@@ -85,7 +85,7 @@ public:
 
   void Sort();
 
-  void setProfileAndParams(const std::string &profile, TAsymParams params);
+  void setAsymProfileAndParams(const std::string &profile, TAsymParams params);
 
   void setLineAmplitude(const std::string &str_id,
                         const Float64 &nominalAmplitude);

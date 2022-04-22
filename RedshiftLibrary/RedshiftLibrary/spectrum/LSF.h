@@ -117,8 +117,9 @@ public:
     return true;
   }; // default to true
   virtual bool IsValid() const = 0;
-  Float64 GetLineProfile(Float64 lambda, Float64 lambda0 = 0.) const;
-  Float64 GetLineProfile(Float64 lambda, Float64 lambda0, Float64 sigma0) const;
+  Float64 GetLineProfileVal(Float64 lambda, Float64 lambda0 = 0.) const;
+  Float64 GetLineProfileVal(Float64 lambda, Float64 lambda0,
+                            Float64 sigma0) const;
   TFloat64List getRestFrameProfileVector(Float64 lambda0_rest, Float64 z) const;
 
   const CLineProfile &GetProfile() const;
