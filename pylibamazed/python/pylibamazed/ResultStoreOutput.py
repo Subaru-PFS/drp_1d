@@ -186,9 +186,11 @@ class ResultStoreOutput(AbstractOutput):
     def write_hdf5_root(self, hdf5_spectrum_node):
         level = "root"
         rs, root_datasets = self.filter_datasets(level)
-                                   
+                
         for ds in root_datasets:
             if ds in self.root_results:
+                if not self.root_results[ds]:
+                    continue
                 ds_attributes = self.filter_dataset_attributes(ds)
                 dsg = hdf5_spectrum_node.create_group(ds)
                 for index, ds_row in ds_attributes.iterrows():
