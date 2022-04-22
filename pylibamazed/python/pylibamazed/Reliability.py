@@ -46,11 +46,13 @@ class Reliability:
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
+        self.extended_results = extended_results
         
     def Compute(self, context):
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
-                                   auto_load=False)
+                                   auto_load=False,
+                                   extended_results=False)
         pdf = output.get_attribute_from_result_store("PDFProbaLog", self.object_type, 0)
         model = self.calibration_library.reliability_models[self.object_type]
         if pdf.shape[0] != model.input_shape[1]:
