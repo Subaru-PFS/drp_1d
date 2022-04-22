@@ -42,7 +42,7 @@ import numpy as np
 
 
 class Reliability:
-    def __init__(self, object_type,parameters, calibration, extended_results):
+    def __init__(self, object_type,parameters, calibration):
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
@@ -52,7 +52,7 @@ class Reliability:
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
                                    auto_load=False,
-                                   extended_results=self.extended_results)
+                                   extended_results=False)
         pdf = output.get_attribute_from_result_store("PDFProbaLog", self.object_type, 0)
         model = self.calibration_library.reliability_models[self.object_type]
         if pdf.shape[0] != model.input_shape[1]:

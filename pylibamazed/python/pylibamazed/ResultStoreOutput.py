@@ -43,7 +43,10 @@ import pandas as pd
 import resource
 from collections import defaultdict
 from pylibamazed.redshift import PC_Get_Float64Array, PC_Get_Int32Array, CLog
+
 zlog = CLog.GetInstance()
+
+
 class ResultStoreOutput(AbstractOutput): 
     def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True, extended_results=True):
         AbstractOutput.__init__(self)
