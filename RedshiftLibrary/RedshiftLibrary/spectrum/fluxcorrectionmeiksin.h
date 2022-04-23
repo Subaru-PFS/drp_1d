@@ -78,6 +78,7 @@ public:
     return 7;
   }; // harcoded value from the number of cols in the ascii files
   Int32 getRedshiftIndex(Float64 z) const;
+  Int32 getWaveIndex(Float64 w) const;
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
     return m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaIdx);
   };
@@ -99,10 +100,10 @@ private:
       correction_multiply_test_CteResolution25_4_incontext;
   friend class fluxcorrectionmeiksin_test::correction_test;
 
-  TFloat64List applyAdaptativeKernel(const TFloat64List &arr,
-                                     const Float64 z_center,
-                                     const std::shared_ptr<const CLSF> &lsf,
-                                     const TFloat64List &lambdas);
+  TFloat64List applyLSFKernel(const TFloat64List &arr,
+                              const TFloat64List &lambdas,
+                              const TFloat64Range &zbin,
+                              const std::shared_ptr<const CLSF> &lsf);
   TFloat64List interpolateConvolvedCurve(const TFloat64List &Xsrc,
                                          const TFloat64List &Xtgt,
                                          const TFloat64List &Ysrc,
@@ -114,7 +115,7 @@ private:
   Float64 m_LambdaMax;
   TFloat64Range m_convolRange;
   bool m_convolved = false;
-  Float64 m_interpRatio = IGM_INTERPOLATION_RATIO;
+  Float64 m_finegridstep = 1.0 / IGM_OVERSAMPLING;
 };
 
 } // namespace NSEpic

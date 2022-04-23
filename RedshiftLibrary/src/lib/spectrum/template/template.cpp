@@ -246,8 +246,7 @@ bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx) {
     if (m_meiksinIdx > -1) {
       Int32 kLbdaMeiksin = 0;
       if (m_SpectralAxis[k] >= m_igmCorrectionMeiksin->getLambdaMin()) {
-        kLbdaMeiksin =
-            Int32(SpectralAxis[k] - m_igmCorrectionMeiksin->getLambdaMin());
+        kLbdaMeiksin = m_igmCorrectionMeiksin->getWaveIndex(SpectralAxis[k]);
       } else // if lambda lower than min meiksin value, use lower meiksin value
       {
         kLbdaMeiksin = 0;

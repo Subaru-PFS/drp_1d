@@ -86,7 +86,7 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 A, Float64 sigma,
                                         Int32 igmIdx) const {
   MeiksinInitFailed();
   TFloat64Range range(mu - sigma / 2, mu + sigma / 2);
-  Float64 step = IGM_INTERPOLATION_RATIO;
+  Float64 step = 1.0 / IGM_OVERSAMPLING;
   TFloat64List list = range.SpreadOver(step);
 
   Float64 flux = 0.;

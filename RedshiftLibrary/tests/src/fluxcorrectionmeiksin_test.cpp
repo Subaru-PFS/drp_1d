@@ -389,7 +389,7 @@ fakeFluxCorrectionMeiksin(TFloat64List igmLambdas, TFloat64List fluxcorr) {
 BOOST_AUTO_TEST_CASE(correction_multiply_test) {
   // create a gaussian kernel
   Float64 sigma = 1.;
-  Float64 z_center = 2 - (2 - 1.5) / 2;
+  TFloat64Range zbin = {1.5, 2.0};
 
   std::string lsfType = "GaussianConstantWidth";
   Float64 width = 1.09;
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test) {
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr.size());
 
   TFloat64List conv =
-      fluxMeiksinObj.applyAdaptativeKernel(fluxcorr, z_center, lsf, igmLambdas);
+      fluxMeiksinObj.applyLSFKernel(fluxcorr, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test) {
 BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution) {
   // create a gaussian kernel
   Float64 sigma = 1.;
-  Float64 z_center = 2 - (2 - 1.5) / 2;
+  TFloat64Range zbin = {1.5, 2.0};
 
   std::string lsfType = "GaussianConstantResolution";
   Float64 resolution = 2350;
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution) {
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr.size());
 
   TFloat64List conv =
-      fluxMeiksinObj.applyAdaptativeKernel(fluxcorr, z_center, lsf, igmLambdas);
+      fluxMeiksinObj.applyLSFKernel(fluxcorr, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM_cteResolution.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution) {
 BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4) {
   // create a gaussian kernel
   Float64 sigma = 1.;
-  Float64 z_center = 2.5 - (0.5) / 2;
+  TFloat64Range zbin = {2.0, 2.5};
 
   std::string lsfType = "GaussianConstantResolution";
   Float64 resolution = 4300;
@@ -487,8 +487,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4) {
 
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr_25_4.size());
 
-  TFloat64List conv = fluxMeiksinObj.applyAdaptativeKernel(
-      fluxcorr_25_4, z_center, lsf, igmLambdas);
+  TFloat64List conv =
+      fluxMeiksinObj.applyLSFKernel(fluxcorr_25_4, igmLambdas, zbin, lsf);
 
   FILE *fspc = fopen("convolvedIGM_cteResolution_Z25_Curv4.csv", "w+");
   fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4) {
 BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext) {
   // create a gaussian kernel
   Float64 sigma = 1.;
-  Float64 z_center = 2.5 - (0.5) / 2;
+  TFloat64Range zbin = {2.0, 2.5};
 
   std::string lsfType = "GaussianConstantResolution";
   Float64 resolution = 4300;
@@ -536,8 +536,8 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext) {
   fluxMeiksinObj.m_corrections[0].lbda = igmLambdas;
   fluxMeiksinObj.m_corrections[0].fluxcorr.push_back(fluxcorr_25_4);
 
-  TFloat64List conv = fluxMeiksinObj.applyAdaptativeKernel(
-      fluxcorr_25_4, z_center, lsf, igmLambdas);
+  TFloat64List conv =
+      fluxMeiksinObj.applyLSFKernel(fluxcorr_25_4, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM_cteResolution_Z25_Curv4_context.csv", "w+"
     ); fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n"); for (Int32 i = 0;
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext) {
 BOOST_AUTO_TEST_CASE(correction_test) {
   // create a gaussian kernel
   Float64 sigma = 1.;
-  Float64 z_center = 2.5 - (0.5) / 2;
+  TFloat64Range zbin = {2.0, 2.5};
 
   std::string lsfType = "GaussianConstantResolution";
   Float64 resolution = 4300;
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(correction_test) {
   fluxMeiksinObj.m_corrections[0].fluxcorr.push_back(fluxsim);
 
   TFloat64List conv =
-      fluxMeiksinObj.applyAdaptativeKernel(fluxsim, z_center, lsf, igmLambdas);
+      fluxMeiksinObj.applyLSFKernel(fluxsim, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedRandom.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");

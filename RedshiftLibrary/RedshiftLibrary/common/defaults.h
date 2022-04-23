@@ -21,7 +21,6 @@ static const Float64 SPEED_OF_LIGHT_IN_VACCUM =
 static constexpr Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
     230.0 / 325.0 / 2.35;
 static const Float64 RESTLAMBDA_LYA = 1216.;
-static const Float64 IGM_INTERPOLATION_RATIO = 0.1;
-
+static const Int32 IGM_OVERSAMPLING = 10;
 } // namespace NSEpic
 #endif
