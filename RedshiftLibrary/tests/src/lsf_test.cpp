@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianNISPVSSPSF201707_test) {
   std::string lsfType = "GaussianNISPVSSPSF201707";
 
   // TEST OK
-  Float64 sourcesize = 100.0;
+  Float64 sourcesize = 0.3;
   Float64 lambda = 7000.;
   store->Set("LSF.sourcesize", sourcesize);
   std::shared_ptr<TLSFArguments> args =
@@ -262,21 +262,23 @@ BOOST_AUTO_TEST_CASE(LSF_GaussianVariableWidth_test) {
   TFloat64List spcAxis(n);
   TFloat64List widthList(n);
   for (Int32 i = 0; i < n; i++) {
-    spcAxis[i] = 100 + i;
-    widthList[i] = 1000 + 100 * i;
+    spcAxis[i] = 12000 + 1000 * i;
+    widthList[i] = spcAxis[i] * 3.939e-4 + 2.191;
   }
 
-  Float64 lambda = 7000.;
+  Float64 lambda = 14500.;
   std::shared_ptr<TLSFArguments> args =
       std::make_shared<TLSFGaussianVarWidthArgs>(spcAxis, widthList);
   std::shared_ptr<CLSF> LSF = LSFFactory.Create(lsfType, args);
 
   BOOST_CHECK(LSF->IsValid() == true);
-  BOOST_CHECK(LSF->checkAvailability(100.5) == true);
+  BOOST_CHECK(LSF->checkAvailability(13000) == true);
   for (Int32 i = 0; i < spcAxis.size(); i++) {
     BOOST_CHECK(LSF->GetWidth(spcAxis[i]) == widthList[i]);
   }
-  BOOST_CHECK(LSF->GetWidth(100.5) == 1050.);
+
+  Float64 width_ref = lambda * 3.939e-4 + 2.191;
+  BOOST_CHECK_CLOSE(LSF->GetWidth(lambda), width_ref, precision);
 
   // TEST KO
   TFloat64List widthList_2(n + 1, 0.5);
