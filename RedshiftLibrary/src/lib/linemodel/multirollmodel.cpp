@@ -109,16 +109,6 @@ CMultiRollModel::CMultiRollModel(
         opt_fittingmethod, opt_continuumcomponent, opt_continuum_neg_threshold,
         widthType, lines_nsigmasupport, velocityEmission, velocityAbsorption,
         opt_rules, opt_rigidity));
-    // hardcoded source size definition for each roll
-    if (km == 0) {
-      m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
-    } else if (km == 1) {
-      m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
-    } else if (km == 2) {
-      m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
-    } else if (km == 3) {
-      m_models[km]->m_Elements.SetSourcesizeDispersion(0.35);
-    }
   }
 }
 
