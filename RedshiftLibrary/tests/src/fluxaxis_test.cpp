@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 

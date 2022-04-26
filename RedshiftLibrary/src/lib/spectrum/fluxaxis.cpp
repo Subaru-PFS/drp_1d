@@ -42,7 +42,6 @@
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
-#include "RedshiftLibrary/debug/assert.h"
 
 #include "RedshiftLibrary/log/log.h"
 #include <math.h>
@@ -152,7 +151,10 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
 bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
                                                        Float64 &mean,
                                                        Float64 &sdev) const {
-  DebugAssert(mask.GetMasksCount() == GetSamplesCount());
+  if (mask.GetMasksCount() != GetSamplesCount()) {
+    throw new GlobalException(INTERNAL_ERROR,
+                              "mask.GetMasksCount() != GetSamplesCount()");
+  }
 
   Int32 j;
   Float64 sum = 0.0, sum2 = 0.0;
@@ -160,7 +162,10 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
 
   ndOfSampleUsed = 0;
   for (j = 0; j < GetSamplesCount(); j++) {
-    DebugAssert(mask[j] == 1 || mask[j] == 0);
+#ifdef DEBUG_BUILD
+    if (!(mask[j] == 1 || mask[j] == 0))
+      throw new GlobalException(INTERNAL_ERROR, "bad mask");
+#endif
 
     sum += mask[j] * m_Samples[j];
     sum2 += mask[j] * m_Samples[j] * m_Samples[j];
@@ -182,7 +187,9 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
 bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError(const CMask &mask,
                                                     Float64 &mean,
                                                     Float64 &sdev) const {
-  DebugAssert(mask.GetMasksCount() == GetSamplesCount());
+  if (mask.GetMasksCount() != GetSamplesCount())
+    throw new GlobalException(INTERNAL_ERROR,
+                              "mask.GetMasksCount() != GetSamplesCount()");
 
   const CSpectrumNoiseAxis &error = GetError();
 
@@ -191,7 +198,10 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError(const CMask &mask,
   Float64 sum = 0.0, sum2 = 0.0, weigthSum = 0.0, weigthSum2 = 0.0, weight;
 
   for (j = 0; j < GetSamplesCount(); j++) {
-    DebugAssert(mask[j] == 1 || mask[j] == 0);
+#ifdef DEBUG_BUILD
+    if (!(mask[j] == 1 || mask[j] == 0))
+      throw new GlobalException(INTERNAL_ERROR, "bad mask");
+#endif
 
     weight = 1.0 / (error[j] * error[j]);
 

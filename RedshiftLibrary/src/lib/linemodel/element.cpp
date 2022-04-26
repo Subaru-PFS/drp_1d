@@ -39,7 +39,6 @@
 
 #include "RedshiftLibrary/linemodel/element.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 

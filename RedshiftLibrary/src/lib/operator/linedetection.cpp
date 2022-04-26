@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/linedetection.h"
 #include "RedshiftLibrary/common/median.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/linedetectionresult.h"
@@ -481,7 +480,6 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
   if (!m_bypassDebug)
     Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
                  retestPeaks.size(), winsize, strongLines.size());
-  DebugAssert(retestPeaks.size() == retestPeaks.size());
 
   TGaussParamsList selectedgaussparams;
   TInt32RangeList selectedretestPeaks;

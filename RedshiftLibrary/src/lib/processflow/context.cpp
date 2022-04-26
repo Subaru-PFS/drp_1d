@@ -42,7 +42,6 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 
 #include <boost/filesystem.hpp>

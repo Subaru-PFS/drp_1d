@@ -41,7 +41,6 @@
 
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 #include <algorithm>
 #include <cmath>

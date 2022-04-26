@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/common/mutex.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;
