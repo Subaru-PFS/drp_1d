@@ -40,7 +40,6 @@
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/log.h"
-#include "RedshiftLibrary/noise/flat.h"
 #include "RedshiftLibrary/tests/test-tools.h"
 
 #include "RedshiftLibrary/spectrum/LSF.h"
