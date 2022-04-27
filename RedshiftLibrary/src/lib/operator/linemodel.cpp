@@ -42,7 +42,6 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
-#include "RedshiftLibrary/linemodel/templatesorthostore.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"

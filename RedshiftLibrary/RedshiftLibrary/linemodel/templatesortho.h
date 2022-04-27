@@ -53,7 +53,6 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 
-#include "RedshiftLibrary/linemodel/templatesorthostore.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include <boost/shared_ptr.hpp>
@@ -70,7 +69,6 @@ public:
                      std::shared_ptr<const CLSF> lsf);
 
   CTemplateCatalog getOrthogonalTplCatalog();
-  CTemplatesOrthoStore getOrthogonalTplStore();
 
 private:
   bool m_enableOrtho;
