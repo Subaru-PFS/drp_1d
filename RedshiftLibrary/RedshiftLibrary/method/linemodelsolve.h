@@ -43,7 +43,6 @@
 #include "RedshiftLibrary/method/linemodelsolveresult.h"
 #include "RedshiftLibrary/method/objectSolve.h"
 #include "RedshiftLibrary/operator/linemodel.h"
-#include "RedshiftLibrary/operator/pdfLogresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/processflow/inputcontext.h"

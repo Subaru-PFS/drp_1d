@@ -45,7 +45,6 @@
 #include "RedshiftLibrary/processflow/parameterstore.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 
-#include "RedshiftLibrary/operator/pdfLogresult.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -413,8 +412,6 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   std::shared_ptr<const CLineModelResult> result =
       std::dynamic_pointer_cast<const CLineModelResult>(results.lock());
 
-  // std::shared_ptr<CPdfLogResult> zpriorResult =
-  // std::make_shared<CPdfLogResult>();
   //  suggestion : CSolve::GetCurrentScopeName(TScopeStack)
   //  prepare the linemodel chisquares and prior results for pdf computation
   ChisquareArray chisquares = BuildChisquareArray(result);
