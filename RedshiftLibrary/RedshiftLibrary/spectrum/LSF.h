@@ -96,13 +96,13 @@ class CLSF {
 
 public:
   enum TLSFType {
+    NONE,
     GaussianConstantWidth,
     GaussianConstantResolution,
     GaussianNISPSIM2016,
     GaussianNISPVSSPSF201707,
     GaussianVariableWidth
   };
-  CLSF(TLSFType name);
   CLSF(TLSFType name, CLineProfile_ptr &&profile);
   virtual ~CLSF() = default;
 
@@ -121,9 +121,11 @@ public:
   TFloat64List getRestFrameProfileVector(Float64 lambda0_rest, Float64 z) const;
 
   const CLineProfile &GetProfile() const;
-  const TLSFType m_name;
+  const TLSFType m_name = TLSFType::NONE;
 
 protected:
+  CLSF() = default;
+
   CLineProfile_ptr m_profile;
 };
 

@@ -673,10 +673,11 @@ class CLSF
       GaussianVariableWidth
     };
  public:
-  CLSF(TLSFType name);
   virtual ~CLSF();
   virtual Float64 GetWidth(Float64 lambda) const=0;
   virtual bool IsValid() const=0;
+protected:
+  CLSF();
 };
 
 class CLSFGaussianConstantWidth : public CLSF
