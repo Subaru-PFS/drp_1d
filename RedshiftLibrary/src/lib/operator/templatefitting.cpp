@@ -48,7 +48,6 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include "RedshiftLibrary/spectrum/tools.h"
 
 #include <boost/numeric/conversion/bounds.hpp>
 
