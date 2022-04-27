@@ -88,9 +88,8 @@ class ResultStoreOutput(AbstractOutput):
                         self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
 
     def load_method_level(self, object_type):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "method"]
-        object_datasets = list(rs["hdf5_dataset"].unique())
+        level = "method"
+        rs, object_datasets = self.filter_datasets(level)
         for ds in object_datasets:
             methods = self.get_solve_methods(object_type)
             self.object_results[object_type][ds] = dict()
@@ -98,12 +97,13 @@ class ResultStoreOutput(AbstractOutput):
                 if self.results_store.HasDataset(object_type,
                                                  method,
                                                  ds):
-                    ds_attributes = rs[rs["hdf5_dataset"] == ds]
+                    ds_attributes = self.filter_dataset_attributes(ds)                    
                     for index, ds_row in ds_attributes.iterrows():
                         attr_name = ds_row["hdf5_name"]
-                        if "<" in ds_row["hdf5_name"]:
+                        if "<MethodType>" in ds_row["hdf5_name"]:
                             attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
-                        attr = self._get_attribute_from_result_store(ds_row,object_type, None, method=="LineMeasSolve")
+                        methodIsLineMeasSolve = (method=="LineMeasSolve")
+                        attr = self._get_attribute_from_result_store(ds_row,object_type, None, methodIsLineMeasSolve)
                         self.object_results[object_type][ds][attr_name] = attr
 
     def load_object_level(self, object_type):
@@ -131,7 +131,8 @@ class ResultStoreOutput(AbstractOutput):
                     else:
                         self.object_results[object_type][ds] = dict()
                         for index, ds_row in ds_attributes.iterrows():
-                            attr = self._get_attribute_from_result_store(ds_row,object_type, None,method=="LineMeasSolve")
+                            methodIsLineMeasSolve = (method=="LineMeasSolve")
+                            attr = self._get_attribute_from_result_store(ds_row,object_type, None, methodIsLineMeasSolve)
                             self.object_results[object_type][ds][ds_row["hdf5_name"]] = attr
                     
     def load_candidate_level(self, object_type):
@@ -269,7 +270,7 @@ class ResultStoreOutput(AbstractOutput):
                     methods = self.get_solve_methods(object_type)
                     for method in methods:                                               
                         for index,ds_row in ds_attributes.iterrows():
-                            if "<" in ds_row["hdf5_name"]:
+                            if "<MethodType>" in ds_row["hdf5_name"]:
                                 attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
                             else :
                                 attr_name = ds_row["hdf5_name"]
