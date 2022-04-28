@@ -36,38 +36,21 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from pylibamazed.redshift import CLog
+from pylibamazed.redshift import CLog, AmzException, ErrorCode
+
 zlog = CLog.GetInstance()
 
-#after a small research on the internet, it seems that it s a common practice in python
-#to create subclasses of Exception rather than using errorCodes
-class GlobalError(Exception):
+
+class AmazedError(AmzException):
     def __init__(self, errCode, message):
-        self.errCode = errCode
-        zlog.logError(errCode, message)
-        super(GlobalError).__init__(message)#to call the base class constructor with the 
+        zlog.LogError(errCode.name + " : " + message)
+        self.errCode = errCode # we keep the python enum for further use
+        AmzException.__init__(self, errCode.value, message)
 
-class SpectrumReaderError(Exception):
-    '''Raise when something is wrong while reading spectrum data'''
-    def __init__(self, errCode, message):
-        self.errCode = errCode#str
-        self.message = message
-        super(SpectrumReaderException, self).__init__(message)
+    def __str__(self):
+        return self.errCode.name + " : " + self.what()
 
 
-class InputError(Exception):
-    '''Raise when something is wrong while reading and validating config and parameter files'''
-    def __init__(self, errCode, message):
-        self.errCode = errCode
-        self.message = message
-        super(InputException, self).__init__(message)
-
-
-class OutputReaderError(Exception):
-    '''Raise when something is wrong while reading library output data'''
-    def __init__(self, errCode, message):
-        self.errCode = errCode
-        self.message = message
-        super(OutputReaderException, self).__init__(message)
-
-
+def AmazedErrorFromGlobalException(global_exception):
+        errCode = ErrorCode(global_exception.getErrorCode())
+        return AmazedError(errCode, global_exception.what())

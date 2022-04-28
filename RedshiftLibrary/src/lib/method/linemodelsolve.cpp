@@ -234,9 +234,9 @@ bool CLineModelSolve::PopulateParameters(
   // Auto-correct fitting method
   std::string forcefittingmethod = "individual";
   if (m_opt_rigidity == "tplshape" && m_opt_fittingmethod == "hybrid") {
-    throw ParameterException(ErrorCode::BAD_PARAMETER_VALUE,
-                             "rigidity = tplshape and fitting_method=hybrid "
-                             "imply fittingmethod=individual");
+    throw GlobalException(ErrorCode::BAD_PARAMETER_VALUE,
+                          "rigidity = tplshape and fitting_method=hybrid "
+                          "imply fittingmethod=individual");
     /*
     m_opt_fittingmethod = forcefittingmethod;
       parameterStore->SetScopedParam("linemodel.fittingmethod",
@@ -246,7 +246,7 @@ bool CLineModelSolve::PopulateParameters(
   }
   if (m_opt_rigidity == "tplshape" &&
       m_opt_firstpass_fittingmethod == "hybrid") {
-    throw ParameterException(
+    throw GlobalException(
         ErrorCode::BAD_PARAMETER_VALUE,
         "rigidity = tplshape and firstpass_fitting_method=hybrid imply "
         "fittingmethod=individual");

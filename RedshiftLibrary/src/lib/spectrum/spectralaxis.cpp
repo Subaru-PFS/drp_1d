@@ -86,6 +86,7 @@ CSpectrumSpectralAxis::CSpectrumSpectralAxis(TFloat64List &&samples,
 CSpectrumSpectralAxis::CSpectrumSpectralAxis(const Float64 *samples, Int32 n,
                                              std::string AirVacuum)
     : CSpectrumAxis(samples, n) {
+
   if (AirVacuum != "") {
     m_Samples = CAirVacuumConverter::Get(AirVacuum)->AirToVac(m_Samples);
     Log.LogInfo(

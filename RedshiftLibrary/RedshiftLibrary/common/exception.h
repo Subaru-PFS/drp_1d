@@ -47,12 +47,9 @@
 namespace NSEpic {
 
 class AmzException : public std::exception {
-protected:
-  std::string _msg;
-  std::string stacktrace;
-  ErrorCode code;
 
 public:
+  //#include "RedshiftLibrary/common/errorcodes.i"
   AmzException(ErrorCode ec, std::string message);
 
   AmzException(const AmzException &e);
@@ -66,6 +63,11 @@ public:
   void setErrorCode(ErrorCode ec) { code = ec; }
 
   const char *getStackTrace() const;
+
+protected:
+  std::string _msg;
+  std::string stacktrace;
+  ErrorCode code;
 };
 
 // A solve exception stops the whole pipeline
@@ -75,46 +77,9 @@ public:
   GlobalException(ErrorCode ec, std::string message)
       : AmzException(ec, message) {}
   GlobalException(const GlobalException &e) : AmzException(e) {}
-
-  virtual ~GlobalException();
 };
 
-// A solve exception stops a solve method (which is considered as failed), but
-// not the whole pipeline This exception should be caught only from pylibamazed
-// or a client
-class SolveException : public AmzException {
-public:
-  SolveException(ErrorCode ec, std::string message)
-      : AmzException(ec, message) {}
-  SolveException(const SolveException &e) : AmzException(e) {}
-
-  virtual ~SolveException();
-};
-
-// This exception is for now reserved for the unknown parameter exception
-// It should be handled at initialization only, not the case as parameters are
-// retrieved in the process flow This exception class should also be used for
-// bad parameters values (e.g. a negative value when a positive value is
-// required)
-class ParameterException : public AmzException {
-public:
-  ParameterException(ErrorCode ec, std::string message)
-      : AmzException(ec, message) {}
-  ParameterException(const ParameterException &e) : AmzException(e) {}
-
-  virtual ~ParameterException();
-  const std::string &getMessage() { return _msg; }
-};
-
-// only this exception class should be caught from the library
-class InternalException : public AmzException {
-public:
-  InternalException(ErrorCode ec, std::string message)
-      : AmzException(ec, message) {}
-  InternalException(const InternalException &e) : AmzException(e) {}
-
-  virtual ~InternalException();
-};
+//  typedef AmzException::ErrorCode ErrorCode;
 
 } // namespace NSEpic
 

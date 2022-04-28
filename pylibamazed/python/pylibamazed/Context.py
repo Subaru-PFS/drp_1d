@@ -52,12 +52,12 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineMeasSolve,
                                   CLineMatchingSolve,
                                   CFlagWarning,
-                                  GlobalException)
+                                  GlobalException, ErrorCode)
 import pandas as pd
 import json
 import os
 
-from pylibamazed.Exception import InputError
+from pylibamazed.Exception import AmazedError, AmazedErrorFromGlobalException
 import pylibamazed.redshift as amzErrorCodes #temporary
 zflag = CFlagWarning.GetInstance()
 class Context:
@@ -98,78 +98,85 @@ class Context:
         self.process_flow_context.setfluxCorrectionMeiksin(self.calibration_library.meiksin)
         self.process_flow_context.setfluxCorrectionCalzetti(self.calibration_library.calzetti)
 
-
     def run(self, spectrum_reader):
-        self.init_context()
-        spectrum_reader.init()
-        if self.config.get("linemeascatalog"):
-            for object_type in self.config["linemeascatalog"].keys():
-                lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
-                lm = lm[lm.ProcessingID == spectrum_reader.source_id]
-                columns = self.config["linemeas_catalog_columns"][object_type]
-                redshift_ref = lm[columns["Redshift"]].iloc[0]
-                velocity_abs = lm[columns["VelocityAbsorption"]].iloc[0]
-                velocity_em = lm[columns["VelocityEmission"]].iloc[0]
-    #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
-                self.parameters[object_type]["redshiftref"] = redshift_ref
-                self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
-                self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
-        self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
-        self.process_flow_context.Init()
+        try:
+            self.init_context()
+            spectrum_reader.init()
+            if self.config.get("linemeascatalog"):
+                for object_type in self.config["linemeascatalog"].keys():
+                    lm = pd.read_csv(self.config["linemeascatalog"][object_type], sep='\t', dtype={'ProcessingID': object})
+                    lm = lm[lm.ProcessingID == spectrum_reader.source_id]
+                    columns = self.config["linemeas_catalog_columns"][object_type]
+                    redshift_ref = lm[columns["Redshift"]].iloc[0]
+                    velocity_abs = lm[columns["VelocityAbsorption"]].iloc[0]
+                    velocity_em = lm[columns["VelocityEmission"]].iloc[0]
+        #            zlog.LogInfo("Linemeas on " + spectrum_reader.source_id + " with redshift " + str(redshift_ref))
+                    self.parameters[object_type]["redshiftref"] = redshift_ref
+                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = velocity_abs
+                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = velocity_em
+            self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
+            self.process_flow_context.Init()
 
-        #store flag in root object
-        resultStore = self.process_flow_context.GetResultStore()
-        resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
-        zflag.resetFlag()
+            #store flag in root object
+            resultStore = self.process_flow_context.GetResultStore()
+            resultStore.StoreFlagResult( "context_warningFlag", zflag.getBitMask())
+            zflag.resetFlag()
 
-        enable_classification = False
-        reliabilities = dict()
-        for object_type in self.parameters["objects"]:
-            method = self.parameters[object_type]["method"]
-            if method:
-                self.run_method(object_type, method)
-                enable_classification = True
+            enable_classification = False
+            reliabilities = dict()
+            for object_type in self.parameters["objects"]:
+                method = self.parameters[object_type]["method"]
+                if method:
+                    self.run_method(object_type, method)
+                    enable_classification = True
 
-            if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
-                if not self.config["linemeascatalog"]:
-                    output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
-                                               self.parameters,
-                                               auto_load=False,
-                                               extended_results = self.extended_results)
+                if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
+                    if not self.config["linemeascatalog"]:
+                        output = ResultStoreOutput(self.process_flow_context.GetResultStore(),
+                                                   self.parameters,
+                                                   auto_load=False,
+                                                   extended_results = self.extended_results)
 
-                    self.parameters[object_type]["redshiftref"] = output.get_attribute_from_result_store("Redshift",
-                                                                                                         object_type,
-                                                                                                         0)
-                    vel_a = output.get_attribute_from_result_store("VelocityAbsorption",
-                                                                   object_type,
-                                                                   0)
-                    vel_e = output.get_attribute_from_result_store("VelocityEmission",
-                                                                   object_type,
-                                                                   0)
-                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = vel_a
-                    self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
-                    self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
-                self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
+                        self.parameters[object_type]["redshiftref"] = output.get_attribute_from_result_store("Redshift",
+                                                                                                             object_type,
+                                                                                                             0)
+                        vel_a = output.get_attribute_from_result_store("VelocityAbsorption",
+                                                                       object_type,
+                                                                       0)
+                        vel_e = output.get_attribute_from_result_store("VelocityEmission",
+                                                                       object_type,
+                                                                       0)
+                        self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityabsorption"] = vel_a
+                        self.parameters[object_type]["LineMeasSolve"]["linemodel"]["velocityemission"] = vel_e
+                        self.process_flow_context.LoadParameterStore(json.dumps(self.parameters))
+                    self.run_method(object_type, self.parameters[object_type]["linemeas_method"])
 
-            if self.parameters[object_type].get("enable_reliability") and object_type in self.calibration_library.reliability_models:
-                rel = Reliability(object_type, self.parameters,self.calibration_library)
-                reliabilities[object_type] = rel.Compute(self.process_flow_context)
+                if self.parameters[object_type].get("enable_reliability") and object_type in self.calibration_library.reliability_models:
+                    rel = Reliability(object_type, self.parameters,self.calibration_library)
+                    reliabilities[object_type] = rel.Compute(self.process_flow_context)
 
-        if enable_classification:
-            self.run_method("classification", "ClassificationSolve")
+            if enable_classification:
+                self.run_method("classification", "ClassificationSolve")
 
-        rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters, extended_results = self.extended_results)
-        for object_type in reliabilities.keys():
-            rso.object_results[object_type]['reliability'] = dict()
-            rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
+            rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters, extended_results = self.extended_results)
+            for object_type in reliabilities.keys():
+                rso.object_results[object_type]['reliability'] = dict()
+                rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
 
-        self.process_flow_context.reset()
+            self.process_flow_context.reset()
+
+        except GlobalException as e:
+            raise AmazedErrorFromGlobalException(e)
+        except AmazedError as e:
+            raise e
+        except Exception as e:
+            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
         return rso
 
     def run_method(self, object_type, method):
 
         if "C" + method not in globals():
-            raise InputError(amzErrorCodes.INVALID_PARAMETER,"Unkown method {}".format(str(method)))
+            raise AmazedError(amzErrorCodes.INVALID_PARAMETER,"Unkown method {}".format(str(method)))
         solver_method = globals()["C" + method]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
@@ -178,19 +185,19 @@ class Context:
 
 def _check_config(config):
     if "calibration_dir" not in config:
-        raise InputError(amzErrorCodes.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
+        raise AmazedError(amzErrorCodes.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
     if not os.path.exists(config["calibration_dir"]):
-        raise InputError(amzErrorCodes.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
+        raise AmazedError(amzErrorCodes.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
     if "linemeascatalog" in config:
         if "linemeas_catalog_columns" not in config:
-            raise InputError(amzErrorCodes.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
+            raise AmazedError(amzErrorCodes.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
         for object_type in config["linemeascatalog"].keys():
             if object_type not in config["linemeas_catalog_columns"]:
-                raise InputError(amzErrorCodes.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
+                raise AmazedError(amzErrorCodes.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
 
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
-                    raise InputError(amzErrorCodes.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
+                    raise AmazedError(amzErrorCodes.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
 
 
 def _check_LinemeasValidity(config, parameters):
@@ -200,4 +207,4 @@ def _check_LinemeasValidity(config, parameters):
         method = parameters[object_type]["method"]
         if method == "LineModelSolve":
             if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
-                raise InputError(amzErrorCodes.INCOHERENT_CONFIG_OPTION,"Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")
+                raise AmazedError(amzErrorCodes.INCOHERENT_CONFIG_OPTION, "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")

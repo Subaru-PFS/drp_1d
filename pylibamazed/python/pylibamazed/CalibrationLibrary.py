@@ -52,12 +52,18 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxCorrectionMeiksin,
                                   VecTFloat64List, VecMeiksinCorrection,
                                   CSpectrumFluxCorrectionCalzetti, CalzettiCorrection,
-                                  ErrorCode)
+                                  GlobalException, ErrorCode)
 import numpy as np
 from astropy.io import fits, ascii
 import glob
-from pylibamazed.Exception import InputError
+from pylibamazed.Exception import AmazedError,AmazedErrorFromGlobalException
 zflag = CFlagWarning.GetInstance()
+
+
+def _get_linecatalog_id(row):
+    wl = round(row.WaveLength,2)
+    return row.Name + "_" + str(wl) + "_" + row.Type
+
 
 class CalibrationLibrary:
     """
@@ -105,14 +111,14 @@ class CalibrationLibrary:
         # Template directory contains category directories
         categories = os.listdir(full_path)
         if not categories:
-            raise InputError(ErrorCode.INVALID_DIRECTORY,"No template category directory found in {}".format(full_path))
+            raise AmazedError(ErrorCode.INVALID_DIRECTORY, "No template category directory found in {}".format(full_path))
         for category in categories:
             category_path = os.path.join(full_path, category)
             # Category directory contains template files
             template_file_list = os.listdir(category_path)
 
             if not template_file_list:
-                raise InputError(ErrorCode.INVALID_FILEPATH,"No template file found in {}".format(category_path))
+                raise AmazedError(ErrorCode.INVALID_FILEPATH,"No template file found in {}".format(category_path))
             for template_filename in template_file_list:
                 file_path = os.path.join(category_path, template_filename)
                 # Template file is a two columns text file
@@ -120,7 +126,7 @@ class CalibrationLibrary:
                     data = np.loadtxt(file_path, unpack=True)
                 except Exception as e:
                     #logger.error("Unable to read template file {}".format(file_path))#todo: check if we keep the logger
-                    raise InputError(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
+                    raise AmazedError(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
                 wavelength = data[0]
                 flux = data[1]
 
@@ -133,7 +139,7 @@ class CalibrationLibrary:
     def load_templates_catalog(self, object_type):
         if "template_dir" not in self.parameters[object_type]:
             # TODO create a dedicated class for setup exceptions
-            raise InputError(ErrorCode.MISSING_PARAMETER,"Incomplete parameter file, template_dir entry mandatory")
+            raise AmazedError(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, template_dir entry mandatory")
         self.templates_catalogs[object_type] = CTemplateCatalog()
         self._load_templates(object_type, self.parameters[object_type]["template_dir"])
         # Temporary hack before handling process flow in api
@@ -145,19 +151,23 @@ class CalibrationLibrary:
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "linecatalog" not in linemodel_params:
-            raise InputError(ErrorCode.MISSING_PARAMETER,"Incomplete parameter file, {}.linemodel.linecatalog entry mandatory".format(method))
+            raise AmazedError(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, {}.linemodel.linecatalog entry"
+                                                          " mandatory".format(method))
         line_catalog_file = os.path.join(self.calibration_dir,linemodel_params["linecatalog"])
         if not os.path.exists(line_catalog_file):
-            raise InputError(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
+            raise AmazedError(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
         nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
         self.line_catalogs[object_type][method] = CLineCatalog(nsigmasupport)
         try:
-            line_catalog = pd.read_csv( line_catalog_file, sep='\t')
+            line_catalog = pd.read_csv( line_catalog_file, sep='\t',dtype={"WaveLength":float,
+                                                                           "EnableFitWaveLengthOffset":bool})
+        except pd.errors.ParserError:
+            raise AmazedError(ErrorCode.BAD_FILEFORMAT, "bad line catalog {0} cause :{1}".format(line_catalog_file, e))
         except Exception as e:
-            raise InputError(ErrorCode.BAD_FILEFORMAT,"bad line catalog {0} cause :{1}".format(line_catalog_file, e))
+            raise AmazedError(ErrorCode.BAD_FILEFORMAT,"bad line catalog {0} cause :{1}".format(line_catalog_file, e))
 
         self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
@@ -185,7 +195,7 @@ class CalibrationLibrary:
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "tplratio_catalog" not in linemodel_params:
-            raise InputError(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
+            raise AmazedError(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
 
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                linemodel_params["tplratio_catalog"],
@@ -211,7 +221,7 @@ class CalibrationLibrary:
                 lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type][method])
                 for index,row in lr_catalog_df.iterrows():
                     if row.Name in list(self.line_catalogs_df[object_type].Name):
-                        lr_catalog.setLineAmplitude(self._get_linecatalog_id(row),row.NominalAmplitude)
+                        lr_catalog.setLineAmplitude(_get_linecatalog_id(row), row.NominalAmplitude)
                 lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
                 lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
                 lr_catalog.setAsymProfileAndParams(line_ratio_catalog_parameter["asym_params"]["profile"],
@@ -233,6 +243,7 @@ class CalibrationLibrary:
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
             file = os.path.join(self.calibration_dir,
                                 self.parameters["LSF"]["GaussianVariablewidthFileName"])
+            # TODO check hdul here
             with fits.open(file) as hdul:
                 self.lsf["wave"] = hdul[1].data.field(0)
                 self.lsf["width"] = hdul[1].data.field(1)
@@ -242,10 +253,10 @@ class CalibrationLibrary:
                              self.parameters["photometryTransmissionDir"],
                              "*")
         if not "photometryBand" in self.parameters:
-            raise InputError(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
+            raise AmazedError(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
         bands = self.parameters["photometryBand"]
         if len(bands) == 0:
-            raise InputError(ErrorCode.INVALID_PARAMETER,"photometryBand parameter is empty")
+            raise AmazedError(ErrorCode.INVALID_PARAMETER, "photometryBand parameter is empty")
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
@@ -256,9 +267,12 @@ class CalibrationLibrary:
     def load_calzetti(self):
         df = ascii.read(os.path.join(self.calibration_dir, "ism", "SB_calzetti.dl1.txt"))
         _calzetti = CalzettiCorrection(df['lambda'], df['flux'])
-        self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti, self.parameters["ebmv"]["start"], self.parameters["ebmv"]["step"], self.parameters["ebmv"]["count"])
+        self.calzetti = CSpectrumFluxCorrectionCalzetti(_calzetti,
+                                                        self.parameters["ebmv"]["start"],
+                                                        self.parameters["ebmv"]["step"],
+                                                        self.parameters["ebmv"]["count"])
 
-    # Important: igm curves should be loaded in the increasing ordre of their extinction per bin of z,
+    # Important: igm curves should be loaded in the increasing order of their extinction per bin of z,
     # i.e., from the least extinction curve to the highest extinction curve 
     def load_Meiksin(self):
         zbins = [2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0]
@@ -271,7 +285,6 @@ class CalibrationLibrary:
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
         self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
-
 
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
@@ -288,10 +301,7 @@ class CalibrationLibrary:
                 self.load_linecatalog(object_type,method)
                 if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
                     self.load_line_ratio_catalog_list(object_type, method)
-            #load linecatalog for linemeassolve
-            linemeas_method = self.parameters[object_type]["linemeas_method"]
-            if linemeas_method == "LineMeasSolve":
-                self.load_linecatalog(object_type,linemeas_method)            
+
             # Load the reliability model
             if self.parameters[object_type].get("enable_reliability"):
                 try:
@@ -309,16 +319,19 @@ class CalibrationLibrary:
         if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
             self.load_lsf()
 
-        if "photometryTransmissionDir" in self.parameters:
-            self.load_photometric_bands()
+            if "photometryTransmissionDir" in self.parameters:
+                self.load_photometric_bands()
+        except AmazedError as e:
+            raise e
+        except GlobalException as e:
+            raise AmazedErrorFromGlobalException(e)
+        except FileNotFoundError as e:
+            raise AmazedError(ErrorCode.INVALID_FILEPATH, str(e))
+        except Exception as e:
+            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
 
     def init(self):
         """Initialize templates (init continuum removal, init ism/igm and lsf if lsf is not spectrum dependent
 
         """
         raise NotImplementedError("TODO after reviewing CProcessFlowContext::Init")
-
-
-    def _get_linecatalog_id(self, row):
-        wl = round(row.WaveLength,2)
-        return row.Name + "_" + str(wl) + "_" + row.Type

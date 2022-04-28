@@ -57,7 +57,7 @@ from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
-from pylibamazed.Exception import SpectrumReaderError
+from pylibamazed.Exception import AmazedError
 class AbstractSpectrumReader:
     """
     Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
@@ -159,7 +159,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return self._spectra[0]
         else:
-            raise  SpectrumReaderError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+            raise  AmazedError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
     def get_wave(self):
         """
 
@@ -170,7 +170,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetSpectralAxis().GetSamplesVector())
         else:
-            raise  SpectrumReaderError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+            raise  AmazedError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_flux(self):
         """
@@ -182,7 +182,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList( self._spectra[0].GetFluxAxis().GetSamplesVector())
         else:
-            raise  SpectrumReaderError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+            raise  AmazedError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_error(self):
         """
@@ -194,7 +194,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetErrorAxis().GetSamplesVector())
         else:
-            raise  SpectrumReaderError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
+            raise  AmazedError(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_lsf(self):
         """
@@ -212,9 +212,9 @@ class AbstractSpectrumReader:
 
     def init(self):
         if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
-            raise  SpectrumReaderError(ErrorCode.INVALID_SPECTRUM,"Numbers of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves), str(len(self.errors)), str(len(self.fluxes)))))
+            raise  AmazedError(ErrorCode.INVALID_SPECTRUM,"Numbers of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves), str(len(self.errors)), str(len(self.fluxes)))))
         if len(self.lsf_data) > 1:
-            raise  SpectrumReaderError(ErrorCode.MULTILSF_NOT_HANDELED,"Multiple LSF not handled")
+            raise  AmazedError(ErrorCode.MULTILSF_NOT_HANDELED,"Multiple LSF not handled")
         airvacuum_method = self.parameters.get("airvacuum_method", "")
         if airvacuum_method == "default":
             airvacuum_method = "Morton2000"
@@ -244,9 +244,9 @@ class AbstractSpectrumReader:
             epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
             wse["wave"] = wse["wave"] + epsilon
             if len(wse["wave"].unique()) != wse.index.size:
-                raise  SpectrumReaderError(ErrorCode.UNALLOWED_DUPLICATES,"Duplicates in wavelengths")
+                raise  AmazedError(ErrorCode.UNALLOWED_DUPLICATES,"Duplicates in wavelengths")
             if not (np.diff(wse["wave"]) > 0).all():
-                raise  SpectrumReaderError(ErrorCode.UNSORTED_ARRAY,"Wavelenghts are not sorted")
+                raise  AmazedError(ErrorCode.UNSORTED_ARRAY,"Wavelenghts are not sorted")
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))
