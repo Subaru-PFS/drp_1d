@@ -44,33 +44,11 @@
 #include <vector>
 
 namespace NSEpic {
-typedef struct conversionParams {
-  const Float64 a;
-  const Float64 b1;
-  const Float64 b2;
-  const Float64 c1;
-  const Float64 c2;
-  const std::string name;
-  conversionParams(const Float64 _a, const Float64 _b1, const Float64 _b2,
-                   const Float64 _c1, const Float64 _c2,
-                   const std::string &_name = "Undefined")
-      : a(_a), b1(_b1), b2(_b2), c1(_c1), c2(_c2), name(_name) {}
-} conversionParams;
-static const conversionParams Morton2000Params{
-    8.34254e-5, 2.406147e-2, 1.5998e-4, 130.0, 38.9, "Morton2000"};
-static const conversionParams VacCiddor1996Params{
-    0.0, 5.792105E-2, 1.67917E-3, 238.0185, 57.362, "VacCiddor1996"};
-static const conversionParams PeckReeder1972Params{
-    0.0, 5.791817E-2, 1.67909E-3, 238.0185, 57.362, "PeckReeder1972"};
-static const conversionParams Edlen1966Params{
-    8.34213E-5, 2.406030E-2, 1.5997E-4, 130.0, 38.9, "Edlen1966"};
-static const conversionParams Edlen1953Params{
-    6.4328E-5, 2.94981E-2, 2.5540E-4, 146.0, 41.0, "Edlen1953"};
 class CAirVacuum {
 public:
-  CAirVacuum(const conversionParams &params)
-      : m_a(params.a), m_b1(params.b1), m_b2(params.b2), m_c1(params.c1),
-        m_c2(params.c2), m_name(params.name){};
+  CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2,
+             const std::string &name = "Undefined")
+      : m_a(a), m_b1(b1), m_b2(b2), m_c1(c1), m_c2(c2), m_name(name){};
 
   // rule of 5 defaults
   CAirVacuum(const CAirVacuum &other) = default;
@@ -101,25 +79,33 @@ public:
 
 class CAirVacEdlen1953 : public CAirVacuum {
 public:
-  CAirVacEdlen1953() : CAirVacuum(Edlen1953Params){};
+  CAirVacEdlen1953()
+      : CAirVacuum(6.4328E-5, 2.94981E-2, 2.5540E-4, 146.0, 41.0,
+                   "Edlen1953"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
 class CAirVacEdlen1966 : public CAirVacuum {
 public:
-  CAirVacEdlen1966() : CAirVacuum(Edlen1966Params){};
+  CAirVacEdlen1966()
+      : CAirVacuum(8.34213E-5, 2.406030E-2, 1.5997E-4, 130.0, 38.9,
+                   "Edlen1966"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
 class CAirVacPeckReeder1972 : public CAirVacuum {
 public:
-  CAirVacPeckReeder1972() : CAirVacuum(PeckReeder1972Params){};
+  CAirVacPeckReeder1972()
+      : CAirVacuum(0.0, 5.791817E-2, 1.67909E-3, 238.0185, 57.362,
+                   "PeckReeder1972"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
 class CAirVacCiddor1996 : public CAirVacuum {
 public:
-  CAirVacCiddor1996() : CAirVacuum(VacCiddor1996Params){};
+  CAirVacCiddor1996()
+      : CAirVacuum(0.0, 5.792105E-2, 1.67917E-3, 238.0185, 57.362,
+                   "VacCiddor1996"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
 };
 
@@ -129,7 +115,9 @@ public:
  */
 class CAirVacMorton2000 : public CAirVacuum {
 public:
-  CAirVacMorton2000() : CAirVacuum(Morton2000Params){};
+  CAirVacMorton2000()
+      : CAirVacuum(8.34254e-5, 2.406147e-2, 1.5998e-4, 130.0, 38.9,
+                   "Morton2000"){};
   void CheckWaveRange(const TFloat64List &wave) const override;
   TFloat64List AirToVac(const TFloat64List &waveAir) const override;
 };

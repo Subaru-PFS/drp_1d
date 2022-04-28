@@ -108,7 +108,6 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
 #include "RedshiftLibrary/line/catalogsTplShape.h"
-#include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"

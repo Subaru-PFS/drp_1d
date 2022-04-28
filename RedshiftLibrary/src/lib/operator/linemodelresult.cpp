@@ -359,7 +359,6 @@ TInt32List CLineModelResult::getNLinesAboveSnrcut(
  */
 TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
-  linetags ltags;
   TBoolList isHaStrongest(linemodelsols.size(), false);
   std::string ampMaxLineTag = "";
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
@@ -380,7 +379,7 @@ TBoolList CLineModelResult::getStrongestLineIsHa(
     }
 
     isHaStrongest[solutionIdx] = (!std::isnan(ampMax) && ampMax > 0. &&
-                                  ampMaxLineTag == ltags.halpha_em);
+                                  ampMaxLineTag == linetags::halpha_em);
     if (isHaStrongest[solutionIdx]) {
       Log.LogDebug("CLineModelResult::GetModelHaStrongest:  z=%f found to be "
                    "true with ampMax=%e (for line=Halpha)",
