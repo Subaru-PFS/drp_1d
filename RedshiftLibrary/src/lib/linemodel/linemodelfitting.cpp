@@ -525,9 +525,9 @@ TInt32List CLineModelFitting::getlambdaIndexesUnderLines(
 
     TInt32Range indexRange = CLineModelElement::EstimateIndexRange(
         spectralAxis, mu, lambdaRange, winsizeAngstrom);
-    Int32 s = indexes.size();
-    indexes.resize(s + indexRange.GetEnd() - indexRange.GetBegin() + 1);
-    std::iota(indexes.begin() + s, indexes.end(), indexRange.GetBegin());
+
+    auto newindices = indexRange.SpreadOver(1);
+    indexes.insert(indexes.end(), newindices.begin(), newindices.end());
   }
   // remove duplicate indexes
   std::sort(indexes.begin(), indexes.end());
