@@ -366,12 +366,6 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const {
   return a;
 }
 
-void CLineModelElementList::SetSourcesizeDispersion(Float64 sizeArcsec) {
-  for (Int32 j = 0; j < m_Elements.size(); j++) {
-    m_Elements[j]->SetSourcesizeDispersion(sizeArcsec);
-  }
-}
-
 /**
  * \brief Returns the first index of m_Elements where calling the element's
  *findElementIndex method with LineCatalogIndex argument does not return -1.

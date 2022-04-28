@@ -65,8 +65,6 @@ public:
   Int32 GetModelValidElementsNDdl() const;
   Int32 GetModelNonZeroElementsNDdl() const;
 
-  void SetSourcesizeDispersion(Float64 sizeArcsec);
-
   std::vector<TInt32List> GetModelVelfitGroups(Int32 lineType) const;
 
   Int32 findElementIndex(const std::string &LineTagStr,

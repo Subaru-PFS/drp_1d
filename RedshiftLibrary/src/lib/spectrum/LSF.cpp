@@ -46,7 +46,6 @@
 using namespace NSEpic;
 using namespace std;
 
-CLSF::CLSF(TLSFType name) : m_name(name) {}
 CLSF::CLSF(TLSFType name, CLineProfile_ptr &&profile)
     : m_name(name), m_profile(std::move(profile)) {}
 

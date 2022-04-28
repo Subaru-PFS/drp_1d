@@ -200,14 +200,6 @@ Float64 CLineModelElement::GetLineProfileDerivVel(const CLineProfile &profile,
   return 0.0;
 }
 
-// TODO: check if below can be removed
-// this is called from CLineModelFitting: thus the call should be redirected to
-// the new lsf class
-void CLineModelElement::SetSourcesizeDispersion(Float64 sigma) {
-  // m_SourceSizeDispersion = sigma;
-  m_LSF->SetSourcesizeDispersion(sigma);
-}
-
 void CLineModelElement::SetLSF(const std::shared_ptr<const CLSF> &lsf) {
   m_LSF = lsf;
 }

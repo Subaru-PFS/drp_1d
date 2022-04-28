@@ -53,7 +53,6 @@ public:
 
   Float64 GetWidth(Float64 lambda) const override;
   bool IsValid() const override;
-  void SetSourcesizeDispersion(Float64 sigma);
 
   static std::shared_ptr<CLSF>
   make_LSF(const std::shared_ptr<const TLSFArguments> &args);

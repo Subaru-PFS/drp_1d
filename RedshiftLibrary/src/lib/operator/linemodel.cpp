@@ -148,10 +148,6 @@ Int32 COperatorLineModel::ComputeFirstPass(
       m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
       opt_rules, opt_rigidity);
   m_model->setHaPriorOption(opt_haprior);
-  Float64 setssSizeInit = 0.1;
-  m_model->m_Elements.SetSourcesizeDispersion(setssSizeInit);
-  Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
-              setssSizeInit);
 
   /*
   CMultiRollModel model( spectrum,
@@ -2414,11 +2410,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
       m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
       opt_rules, opt_rigidity);
-
-  Float64 setssSizeInit = 0.1;
-  m_model->m_Elements.SetSourcesizeDispersion(setssSizeInit);
-  Log.LogInfo("  Operator-Linemodel: sourcesize init to: ss=%.2f",
-              setssSizeInit);
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
                            /*

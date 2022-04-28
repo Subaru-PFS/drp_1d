@@ -152,8 +152,6 @@ public:
   Float64 GetVelocity() const;
   void setVelocity(Float64 vel);
 
-  void SetSourcesizeDispersion(Float64 sigma);
-
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
 
   void SetAsymfitParams(TAsymParams params,
