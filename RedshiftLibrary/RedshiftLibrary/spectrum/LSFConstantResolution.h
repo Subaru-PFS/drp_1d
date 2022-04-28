@@ -40,6 +40,7 @@
 #define _REDSHIFT_SPECTRUM_LSFBYEXTRINSIC_FIXEDRESOLUTION_COMPONENTS_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 namespace NSEpic {
@@ -58,10 +59,9 @@ public:
   static Float64 computeResolution(Float64 lambda, Float64 width);
 
 private:
-  static constexpr Float64 m_instrumentResolutionEmpiricalFactor =
-      230.0 / 325.0 / 2.35;
-  // CLineProfile_ptr m_profile{std::make_shared<CLineProfileSYM>()}; // default
-  // to sym
+  /*const Float64 m_instrumentResolutionEmpiricalFactor =
+      INSTRUMENT_RESOLUTION_EMPERICALFACTOR;*/
+
   const Float64 m_Resolution;
 };
 inline std::shared_ptr<CLSF> CLSFGaussianConstantResolution::make_LSF(

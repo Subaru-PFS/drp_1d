@@ -47,14 +47,6 @@ namespace NSEpic {
 /**
  * struct that holds ASYMFIXED profile parameters
  */
-typedef struct TAsymParams {
-
-  TAsymParams(Float64 sigma, Float64 alpha, Float64 delta)
-      : sigma(sigma), alpha(alpha), delta(delta){};
-
-  TAsymParams() = default;
-  Float64 sigma, alpha, delta;
-} TAsymParams;
 
 enum TProfile {
   NONE,

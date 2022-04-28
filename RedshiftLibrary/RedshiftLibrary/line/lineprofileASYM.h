@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LINE_PROFILE_ASYM_
 #define _REDSHIFT_LINE_PROFILE_ASYM_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include <math.h>
 #include <string>
@@ -48,8 +49,8 @@ namespace NSEpic {
  */
 class CLineProfileASYM : public CLineProfile {
 public:
-  CLineProfileASYM(const Float64 nsigmasupport = 8.0,
-                   const TAsymParams params = {1., 4.5, 0.},
+  CLineProfileASYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                   const TAsymParams params = ASYM_DEFAULT_PARAMS,
                    const std::string centeringMethod = "none");
 
   Float64 GetLineProfile(Float64 x, Float64 x0,
@@ -80,14 +81,14 @@ private:
 
 protected:
   bool isValid() const;
-  Float64 m_asym_sigma_coeff = 1.0; // vs 2. for asymFit/Fixed
-  Float64 m_asym_alpha = 4.5;
-  Float64 m_asym_delta = 0.;
+  Float64 m_asym_sigma_coeff = ASYM_DEFAULT_PARAMS.sigma;
+  Float64 m_asym_alpha = ASYM_DEFAULT_PARAMS.alpha;
+  Float64 m_asym_delta = ASYM_DEFAULT_PARAMS.delta;
   std::string m_centeringMethod = "none";
-  Float64 m_constSigma = 1; // vs 2.5 for AsymFit and AsymFixed
+  Float64 m_constSigma = ASYM_DEFAULT_CONSTSIGMA;
   CLineProfileASYM(
-      const TProfile pltype, const Float64 nsigmasupport = 8.0,
-      const TAsymParams params = {2., 2.5, 0.},
+      const TProfile pltype, const Float64 nsigmasupport = N_SIGMA_SUPPORT,
+      const TAsymParams params = ASYMF_DEFAULT_PARAMS,
       const std::string centeringMethod = "mean"); // mainly called by asymfit
 };
 } // namespace NSEpic

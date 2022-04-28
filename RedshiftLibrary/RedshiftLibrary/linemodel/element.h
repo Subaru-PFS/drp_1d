@@ -40,9 +40,10 @@
 #define _REDSHIFT_LINEMODEL_ELEMENT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/line/lineprofile.h"
-#include <gsl/gsl_const_mksa.h>
+
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
@@ -215,11 +216,7 @@ protected:
   Float64 m_dtmFree =
       0.0; // dtmFree is the non-positive-constrained version of sumCross
   Float64 m_fitAmplitude = 0.0;
-
-  // Constant
-  const Float64 m_speedOfLightInVacuum =
-      GSL_CONST_MKSA_SPEED_OF_LIGHT / 1000.0; // km.s^-1
-
+  const Float64 m_speedOfLightInVacuum = SPEED_OF_LIGHT_IN_VACCUM;
   std::shared_ptr<const CLSF> m_LSF;
 
   std::vector<TInt32List> m_LineIsActiveOnSupport;
