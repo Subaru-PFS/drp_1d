@@ -5158,16 +5158,27 @@ void CLineModelFitting::LoadModelSolution(
         INTERNAL_ERROR, "CLineModelFitting::LoadModelSolution: m_restLineList "
                         "and modelSolution.m_Lines have different size");
 
+  setRedshift(modelSolution.Redshift, false);
+  SetVelocityEmission(modelSolution.EmissionVelocity);
+  SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
+
+  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
     Int32 eIdx = modelSolution.ElementId[iRestLine];
     if (eIdx == undefIdx)
       continue;
 
-    if (m_enableAmplitudeOffsets) {
-      m_Elements
-          .prepareAmplitudeOffset(); // prepare to load polynom coeffs. shd we
-                                     // check if this already done first
+    m_Elements[eIdx]->prepareSupport(spectralAxis, m_Redshift, m_lambdaRange);
+  }
 
+  if (m_enableAmplitudeOffsets)
+    m_Elements.prepareAmplitudeOffset();
+
+  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
+    Int32 eIdx = modelSolution.ElementId[iRestLine];
+    if (eIdx == undefIdx)
+      continue;
+    if (m_enableAmplitudeOffsets) {
       TPolynomCoeffs contPolynomCoeffs = {
           modelSolution.continuum_pCeoff0[iRestLine],
           modelSolution.continuum_pCeoff1[iRestLine],
@@ -5200,9 +5211,6 @@ void CLineModelFitting::LoadModelSolution(
                                              modelSolution.LyaDelta});
     }
   }
-  SetVelocityEmission(modelSolution.EmissionVelocity);
-  SetVelocityAbsorption(modelSolution.AbsorptionVelocity);
-  setRedshift(modelSolution.Redshift, false);
   return;
 }
 

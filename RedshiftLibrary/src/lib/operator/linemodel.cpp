@@ -2463,7 +2463,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
  * @return std::shared_ptr<const CModelSpectrumResult>
  */
 const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
-    Float64 z, const CLineModelSolution &bestModelSolution) {
+    const CLineModelSolution &bestModelSolution) {
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_model->LoadModelSolution(bestModelSolution);

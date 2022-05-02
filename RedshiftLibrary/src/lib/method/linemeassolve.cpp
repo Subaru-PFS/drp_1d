@@ -96,7 +96,7 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   bestModelSolution.fillLineIds();
   std::shared_ptr<const CModelSpectrumResult> modelspc =
       std::make_shared<const CModelSpectrumResult>(
-          m_linemodel.getFittedModelWithoutcontinuum(bestz, bestModelSolution));
+          m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution));
   std::shared_ptr<const CLineModelSolution> res =
       std::make_shared<CLineModelSolution>(std::move(bestModelSolution));
   resultStore->StoreScopedGlobalResult("linemeas", res);
