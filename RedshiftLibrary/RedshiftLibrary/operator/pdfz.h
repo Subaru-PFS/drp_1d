@@ -76,7 +76,9 @@ public:
           0, // <=0 will be set to maxCandidate (default to one window)
       const std::vector<TFloat64List> &candidatesRedshifts =
           std::vector<TFloat64List>(1),
-      const TStringList &candidatesIds = TStringList(1));
+      const TStringList &candidatesIds = TStringList(1),
+      const TCandidateZbyRank &parentObjects =
+          std::vector<std::pair<std::string, std::shared_ptr<TCandidateZ>>>(0));
 
   std::shared_ptr<CPdfCandidateszResult<TCandidateZ>>
   Compute(const ChisquareArray &chisquares, bool integ = true);
@@ -131,6 +133,8 @@ private:
   const bool m_allow_extrema_at_border;
   const Float64 m_meritcut;
   const std::string m_Id_prefix; // =  "EXT"; // for "extrema"
+
+  const TCandidateZbyRank m_parentObjects;
 };
 
 } // namespace NSEpic

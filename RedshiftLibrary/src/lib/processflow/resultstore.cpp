@@ -258,6 +258,10 @@ COperatorResultStore::GetLineModelResult(
 
   std::shared_ptr<const TLineModelResult> tlm =
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
+  if (tlm == nullptr && cop != nullptr) // dynamic casting is not working for
+                                        // tlinemodelresult' parentObject
+    throw GlobalException(INTERNAL_ERROR,
+                          "tlm is nullptr from GetLineModelResult");
   return tlm;
 }
 
@@ -288,18 +292,6 @@ std::shared_ptr<const TExtremaResult> COperatorResultStore::GetExtremaResult(
           ->getCandidate(rank, "model_parameters");
   std::shared_ptr<const TExtremaResult> tlm =
       std::dynamic_pointer_cast<const TExtremaResult>(cop);
-  return tlm;
-}
-// todo:check if still relevant
-std::shared_ptr<const TLineModelResult>
-COperatorResultStore::getLineModelResult(const std::string &objectType,
-                                         const std::string &method,
-                                         const std::string &name,
-                                         const std::string &id) const {
-  std::shared_ptr<const COperatorResult> cop =
-      GetGlobalResult(objectType, method, name).lock()->getCandidate(id);
-  std::shared_ptr<const TLineModelResult> tlm =
-      std::dynamic_pointer_cast<const TLineModelResult>(cop);
   return tlm;
 }
 

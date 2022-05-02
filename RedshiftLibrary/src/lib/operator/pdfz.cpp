@@ -38,9 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/zprior.h"
-
 using namespace NSEpic;
 using namespace std;
 #include <algorithm>
@@ -52,13 +52,14 @@ COperatorPdfz::COperatorPdfz(
     Int32 maxCandidate, const std::string &Id_prefix,
     bool allow_extrema_at_border, Int32 maxPeakCount_per_window,
     const std::vector<TFloat64List> &candidatesRedshifts,
-    const TStringList &candidatesIds)
+    const TStringList &candidatesIds, const TCandidateZbyRank &parentObjects)
     : m_opt_combine(opt_combine), m_peakSeparation(peakSeparation),
       m_meritcut(meritcut), m_allow_extrema_at_border(allow_extrema_at_border),
       m_maxPeakCount_per_window(maxPeakCount_per_window <= 0
                                     ? maxCandidate
                                     : maxPeakCount_per_window),
-      m_maxCandidate(maxCandidate), m_Id_prefix(Id_prefix) {
+      m_maxCandidate(maxCandidate), m_Id_prefix(Id_prefix),
+      m_parentObjects(parentObjects) {
   TStringList::const_iterator begin1 = candidatesIds.begin();
   TStringList::const_iterator end1 = candidatesIds.end();
   std::vector<TFloat64List>::const_iterator begin2 =
@@ -168,7 +169,7 @@ bool COperatorPdfz::checkPdfSum() const {
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   TCandidateZbyID candidates;
-
+  Int32 j = 0;
   for (const auto &cand : m_candidatesZRanges) {
     TPointList extremumList;
     const TFloat64Range &redshiftsRange = cand.second;
@@ -204,11 +205,20 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
          extremumList) // ranked by ValProba (from CExtremum::Find)
     {
       std::string newid = Id_prefix + std::to_string(i++);
-      candidates[newid].Redshift = extremum.X;
-      candidates[newid].ValProba = extremum.Y;
+      candidates[newid] = std::make_shared<TCandidateZ>();
+      candidates[newid]->Redshift = extremum.X;
+      candidates[newid]->ValProba = extremum.Y;
       if (id != "") // this extrema has a parent id
-        candidates[newid].ParentId = id;
+        candidates[newid]->ParentId = id;
+      if (m_parentObjects.size()) {
+        candidates[newid]->ParentObject = m_parentObjects[j].second;
+        /*
+        std::shared_ptr<LineModelExtremaResult> ExtremaResult =
+          make_shared<LineModelExtremaResult>(m_parentObjects[j]);
+          */
+      }
     }
+    j++;
   }
 
   if (candidates.empty()) {

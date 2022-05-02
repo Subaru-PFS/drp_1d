@@ -111,6 +111,7 @@ public:
       const CSpectrum &spectrum, const CSpectrum &logSampledSpectrum,
       const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
       const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults,
       const Float64 photo_weight, const std::string &opt_fittingmethod,
       const std::string &opt_lineWidthType, const Float64 opt_velocityEmission,
       const Float64 opt_velocityAbsorption,

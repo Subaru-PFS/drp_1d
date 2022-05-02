@@ -47,7 +47,8 @@
 
 using namespace NSEpic;
 CTplCombinationSolveResult::CTplCombinationSolveResult(
-    const std::string &scope, const TCandidateZ &BestExtremumResult,
+    const std::string &scope,
+    const std::shared_ptr<TCandidateZ> &BestExtremumResult,
     const std::string &opt_pdfcombination, Float64 evidence)
     : CPdfSolveResult(BestExtremumResult, opt_pdfcombination, evidence),
       m_scope(scope) {}

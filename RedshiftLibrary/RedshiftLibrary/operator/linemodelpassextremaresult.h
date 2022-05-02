@@ -141,15 +141,17 @@ public:
 
   std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
   Float64 Redshift(Int32 i) const {
-    return m_ranked_candidates[i].second.Redshift;
+    return m_ranked_candidates[i].second->Redshift;
   }
   Float64 ValProba(Int32 i) const {
-    return m_ranked_candidates[i].second.ValProba;
+    return m_ranked_candidates[i].second->ValProba;
   }
   Float64 ValSumProba(Int32 i) const {
-    return m_ranked_candidates[i].second.ValSumProba;
+    return m_ranked_candidates[i].second->ValSumProba;
   }
-  Float64 DeltaZ(Int32 i) const { return m_ranked_candidates[i].second.Deltaz; }
+  Float64 DeltaZ(Int32 i) const {
+    return m_ranked_candidates[i].second->Deltaz;
+  }
   Int32 size() const { return m_ranked_candidates.size(); }
 };
 

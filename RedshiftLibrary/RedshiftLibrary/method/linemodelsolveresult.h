@@ -55,7 +55,7 @@ namespace NSEpic {
 class CLineModelSolveResult : public CPdfSolveResult {
 
 public:
-  CLineModelSolveResult(const TCandidateZ &BestExtremumResult,
+  CLineModelSolveResult(const std::shared_ptr<TCandidateZ> &BestExtremumResult,
                         const std::string &opt_pdfcombination,
                         Float64 evidence);
 

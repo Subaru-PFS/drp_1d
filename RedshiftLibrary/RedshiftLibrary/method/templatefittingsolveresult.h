@@ -58,7 +58,7 @@ class CTemplateFittingSolveResult : public CPdfSolveResult {
 
 public:
   CTemplateFittingSolveResult(const std::string &scope,
-                              const TCandidateZ &ExtremaResult,
+                              const std::shared_ptr<TCandidateZ> &ExtremaResult,
                               const std::string &opt_pdfcombination,
                               Float64 evidence);
 

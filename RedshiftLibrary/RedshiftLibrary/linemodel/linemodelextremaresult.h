@@ -70,18 +70,29 @@ public:
   std::vector<std::shared_ptr<const CModelSpectrumResult>>
       m_savedModelSpectrumResults;
 
-  CExtremaResult<TLineModelResult>() = default;
-
   CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates) {
     this->m_type = "LineModelExtremaResult";
-
-    for (std::pair<std::string, const TCandidateZ &> cand : zCandidates)
+    Int32 i = 0;
+    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
+         zCandidates) {
       this->m_ranked_candidates.push_back(
-          std::make_pair<std::string, TLineModelResult>(
-              std::string(cand.first), TLineModelResult(cand.second)));
-
+          std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
+              std::string(cand.first),
+              std::make_shared<TLineModelResult>(*cand.second)));
+      i++;
+    }
     this->Resize(zCandidates.size());
-  }
+  };
+
+  // mainly for saving parentObject
+  CExtremaResult<TLineModelResult>(
+      const std::pair<std::string, std::shared_ptr<TCandidateZ>> cand) {
+    this->m_type = "LineModelExtremaResult";
+    this->m_ranked_candidates.push_back(
+        std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
+            std::string(cand.first),
+            std::make_shared<TLineModelResult>(*cand.second)));
+  };
 
   void Resize(Int32 size) {
     // CExtremaResult::Resize(size);
@@ -94,7 +105,8 @@ public:
 
   void setCandidateFromContinuumSolution(int rank,
                                          CContinuumModelSolution cms) {
-    m_ranked_candidates[rank].second = TLineModelResult(cms);
+    m_ranked_candidates[rank].second =
+        std::make_shared<TLineModelResult>(TLineModelResult(cms));
   }
 
   std::shared_ptr<const COperatorResult>
@@ -105,9 +117,6 @@ public:
   getCandidateDatasetType(const std::string &dataset) const override;
 
   bool HasCandidateDataset(const std::string &dataset) const override;
-
-  std::shared_ptr<const COperatorResult>
-  getCandidate(const std::string id) const override;
 
   std::shared_ptr<const COperatorResult>
   getCandidateParent(const int &rank, const std::string &dataset) const;

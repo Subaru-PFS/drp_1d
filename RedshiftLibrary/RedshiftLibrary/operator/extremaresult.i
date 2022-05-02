@@ -49,7 +49,6 @@ public:
   TExtremaResult(const TCandidateZ &candz) : TCandidateZ(candz) {
     this->m_type = "TExtremaResult";
   }
-
   // Name of the best template fitted for continuum
   std::string FittedTplName = "";
   // Amplitude for the best template fitted for continuum

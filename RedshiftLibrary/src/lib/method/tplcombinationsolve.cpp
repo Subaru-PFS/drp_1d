@@ -430,29 +430,29 @@ CTplcombinationSolve::SaveExtremaResult(
       make_shared<TplCombinationExtremaResult>(ranked_zCandidates);
   Int32 extremumCount = ranked_zCandidates.size();
   for (Int32 i = 0; i < extremumCount; i++) {
-    Float64 z = ranked_zCandidates[i].second.Redshift;
+    Float64 z = ranked_zCandidates[i].second->Redshift;
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
     const Int32 idx = std::distance(redshifts.begin(), itZ);
 
     // Fill extrema Result
-    extremaResult->m_ranked_candidates[i].second.FittedTplMerit =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMerit =
         TplFitResult->ChiSquare[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeList =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeList =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeErrorList =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeErrorList =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeSigmaList =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeSigmaList =
         TplFitResult->FitAmplitudeSigma[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplCovMatrix =
+    extremaResult->m_ranked_candidates[i].second->FittedTplCovMatrix =
         TplFitResult->FitCOV[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior = NAN;
-    extremaResult->m_ranked_candidates[i].second.FittedTplSNR =
+    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior = NAN;
+    extremaResult->m_ranked_candidates[i].second->FittedTplSNR =
         TplFitResult->SNR[idx];
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;

@@ -436,7 +436,8 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       false,              // do not allow extrema at border
       1,                  // one peak/window only
       m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts,
-      m_linemodel.m_secondpass_parameters_extremaResult.GetIDs());
+      m_linemodel.m_secondpass_parameters_extremaResult.GetIDs(),
+      m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
@@ -456,17 +457,6 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                                  // resultStore->GetGlobalResult so that we
                                  // constuct extremaResult all at once in
                                  // linemodel operator
-  // add pointers to firstpass results
-  bool addFirstPassResults = true;
-  if (addFirstPassResults) {
-    // retrieve result from resultstore
-    std::string firstpassExtremaResultsStr = ("linemodel_firstpass_extrema");
-    for (auto &cand : ExtremaResult->m_ranked_candidates) {
-      cand.second.ParentObject = resultStore->getLineModelResult(
-          m_objectType, m_name, firstpassExtremaResultsStr,
-          cand.second.ParentId);
-    }
-  }
   // store extrema results
   storeExtremaResults(resultStore, ExtremaResult);
 
@@ -1141,13 +1131,14 @@ bool CLineModelSolve::Solve(
   //**************************************************
   if (!m_opt_skipsecondpass) {
     Int32 retSecondPass = m_linemodel.ComputeSecondPass(
-        spc, rebinnedSpc, tplCatalog, lambdaRange, photBandCat, photo_weight,
-        m_opt_fittingmethod, m_opt_lineWidthType, m_opt_velocity_emission,
-        m_opt_velocity_absorption, m_opt_continuumreest, m_opt_rules,
-        m_opt_velocityfit, m_opt_rigidity, m_opt_em_velocity_fit_min,
-        m_opt_em_velocity_fit_max, m_opt_em_velocity_fit_step,
-        m_opt_abs_velocity_fit_min, m_opt_abs_velocity_fit_max,
-        m_opt_abs_velocity_fit_step, m_opt_secondpass_continuumfit);
+        spc, rebinnedSpc, tplCatalog, lambdaRange, photBandCat, fpExtremaResult,
+        photo_weight, m_opt_fittingmethod, m_opt_lineWidthType,
+        m_opt_velocity_emission, m_opt_velocity_absorption,
+        m_opt_continuumreest, m_opt_rules, m_opt_velocityfit, m_opt_rigidity,
+        m_opt_em_velocity_fit_min, m_opt_em_velocity_fit_max,
+        m_opt_em_velocity_fit_step, m_opt_abs_velocity_fit_min,
+        m_opt_abs_velocity_fit_max, m_opt_abs_velocity_fit_step,
+        m_opt_secondpass_continuumfit);
     if (retSecondPass != 0) {
       Log.LogError("Linemodel, second pass failed. Aborting");
       return false;

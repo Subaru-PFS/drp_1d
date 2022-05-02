@@ -39,10 +39,10 @@
 
 class TLineModelResult : public TExtremaResult {
 public:
-  TLineModelResult(const TCandidateZ &candz) : TExtremaResult(candz) {
+  TLineModelResult(const TCandidateZ &candz)
+      : TExtremaResult(candz) {
     this->m_type = "TLineModelResult";
   }
-
   TLineModelResult(const CContinuumModelSolution &cms);
 
   void updateFromContinuumModelSolution(const CContinuumModelSolution &cms,

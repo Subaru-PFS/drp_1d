@@ -511,7 +511,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
 
   for (Int32 i = 0; i < extremumCount; i++) {
     // std::string Id = ranked_zCandidates[i].first;
-    Float64 z = ranked_zCandidates[i].second.Redshift;
+    Float64 z = ranked_zCandidates[i].second->Redshift;
 
     // find the corresponding Z
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
@@ -533,30 +533,30 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second.FittedTplMerit = ChiSquare;
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMerit = ChiSquare;
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplName = tplName;
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->FittedTplName = tplName;
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitude =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitude =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeError =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeError =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplDtm =
+    extremaResult->m_ranked_candidates[i].second->FittedTplDtm =
         TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplMtm =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMtm =
         TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior =
+    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior =
         TplFitResult->LogPrior[idx];
 
     Float64 FitSNR = NAN;
     if (TplFitResult->FitMtM[idx] != 0.)
       FitSNR = abs(TplFitResult->FitDtM[idx]) /
                sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
-    extremaResult->m_ranked_candidates[i].second.FittedTplSNR = FitSNR;
+    extremaResult->m_ranked_candidates[i].second->FittedTplSNR = FitSNR;
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;

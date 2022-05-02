@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(compute_test) {
   inputContext.get()->m_categories = {"galaxy", "star"};
 
   // create candidateZ
-  TCandidateZ candidateZ;
+  std::shared_ptr<TCandidateZ> candidateZ = std::make_shared<TCandidateZ>();
 
   // create Pdf solve result for galaxy
   std::shared_ptr<CPdfSolveResult> result_in =

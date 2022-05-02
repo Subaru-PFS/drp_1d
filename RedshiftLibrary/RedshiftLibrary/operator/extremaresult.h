@@ -63,10 +63,12 @@ public:
 
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
     this->m_type = "ExtremaResult";
-    for (std::pair<std::string, const TCandidateZ &> cand : zCandidates) {
+    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
+         zCandidates) {
       this->m_ranked_candidates.push_back(
-          std::make_pair<std::string, TExtremaResult>(
-              std::string(cand.first), TExtremaResult(cand.second)));
+          std::make_pair<std::string, std::shared_ptr<TExtremaResult>>(
+              std::string(cand.first),
+              std::make_shared<TExtremaResult>(*cand.second)));
     }
     this->m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
   }

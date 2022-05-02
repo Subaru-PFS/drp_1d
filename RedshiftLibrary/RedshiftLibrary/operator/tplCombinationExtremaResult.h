@@ -60,10 +60,12 @@ public:
   CExtremaResult<TTplCombinationResult>(const TCandidateZbyRank &zCandidates) {
     this->m_type = "TplCombinationExtremaResult";
 
-    for (std::pair<std::string, const TCandidateZ &> cand : zCandidates) {
+    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
+         zCandidates) {
       this->m_ranked_candidates.push_back(
-          std::make_pair<std::string, TTplCombinationResult>(
-              std::string(cand.first), TTplCombinationResult(cand.second)));
+          std::make_pair<std::string, std::shared_ptr<TTplCombinationResult>>(
+              std::string(cand.first),
+              std::make_shared<TTplCombinationResult>(*cand.second)));
     }
     this->Resize(zCandidates.size());
   }

@@ -53,9 +53,7 @@ public:
   Float64 ValSumProbaZmax = NAN;
 
   std::string ParentId = "";
-  std::shared_ptr<const TCandidateZ> ParentObject =
-      nullptr; // this useful mainly for linemodel when a firstpass takes place
-               // TODO: check that we can get back all data from a child class
+  std::shared_ptr<const TCandidateZ> ParentObject = nullptr;
   // opt 1: direct integration
   //
   // opt 2: gaussian fit

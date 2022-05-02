@@ -48,8 +48,7 @@ TplCombinationExtremaResult::getCandidate(const int &rank,
                                           bool firstpassResults) const {
   if (dataset == "model_parameters" ||
       dataset == "modeltplCombination_parameters")
-    return std::make_shared<const TTplCombinationResult>(
-        this->m_ranked_candidates[rank].second);
+    return this->m_ranked_candidates[rank].second;
   else if (dataset == "model")
     return this->m_savedModelSpectrumResults[rank];
   else
@@ -60,7 +59,7 @@ const std::string &TplCombinationExtremaResult::getCandidateDatasetType(
     const std::string &dataset) const {
   if (dataset == "model_parameters" ||
       dataset == "modeltplCombination_parameters")
-    return this->m_ranked_candidates[0].second.getType();
+    return this->m_ranked_candidates[0].second->getType();
   else if (dataset == "model")
     return this->m_savedModelSpectrumResults[0]->getType();
   else

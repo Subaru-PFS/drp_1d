@@ -55,7 +55,7 @@ public:
 class CPdfSolveResult : public CSolveResult {
 
 public:
-  CPdfSolveResult(const TCandidateZ &ExtremaResult,
+  CPdfSolveResult(const std::shared_ptr<TCandidateZ> &ExtremaResult,
                   const std::string &opt_pdfcombination, Float64 evidence);
   CPdfSolveResult(Float64 merit, Float64 redshift,
                   const std::string &opt_pdfcombination, Float64 evidence);
