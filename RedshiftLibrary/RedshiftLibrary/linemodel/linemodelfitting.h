@@ -83,12 +83,12 @@ public:
                     const CLineCatalog::TLineVector &restLineList,
                     const std::string &opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
-                    const Float64 opt_continuum_neg_threshold,
-                    const std::string &lineWidthType,
-                    const Float64 nsigmasupport, const Float64 velocityEmission,
-                    const Float64 velocityAbsorption,
+                    Float64 opt_continuum_neg_threshold,
+                    const std::string &lineWidthType, Float64 nsigmasupport,
+                    Float64 velocityEmission, Float64 velocityAbsorption,
                     const std::string &opt_rules,
-                    const std::string &opt_rigidity);
+                    const std::string &opt_rigidity,
+                    Int32 amplitudeOffsetsDegree = 2);
 
   void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
   void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
@@ -300,6 +300,7 @@ public:
 
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
+  Int32 m_AmplitudeOffsetsDegree = 2;
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;

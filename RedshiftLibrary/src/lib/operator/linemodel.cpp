@@ -121,14 +121,6 @@ Int32 COperatorLineModel::ComputeFirstPass(
   } else {
     largeGridRedshifts = m_sortedRedshifts;
   }
-  // save larggrid data
-  /*FILE* f = fopen( "largegrid.txt", "w+" );
-  for( Float64 v :largeGridRedshifts)
-  {
-      fprintf( f, "%f\n", v);
-  }
-  fclose( f );
-  */
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -2370,7 +2362,15 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   bool velocityfit = params->GetScoped<bool>("velocityfit");
   if (velocityfit)
     throw GlobalException(INTERNAL_ERROR,
-                          "Linemeas does not handle velocityfit for now");
+                          "COperatorLineModel::computeForLineMeas: velocityfit "
+                          "not implemented yet");
+
+  Int32 amplitudeOffsetsDegree = params->GetScoped<Int32>("polynomialdegree");
+  if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
+    throw GlobalException(
+        INTERNAL_ERROR,
+        "COperatorLineModel::computeForLineMeas: the polynomial degree "
+        "parameter should be between 0 and 2");
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   // bool opt_tplfit_ignoreLinesSupport =
@@ -2391,31 +2391,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       opt_fittingmethod, opt_continuumcomponent,
       m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
       m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity);
+      opt_rules, opt_rigidity, amplitudeOffsetsDegree);
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
-                           /*
-                           if (opt_rigidity == "tplshape")
-                             {
-                             std::string opt_tplratio_reldirpath = params->GetScoped<std::string>(
-                           "tplratio_catalog");                          m_opt_tplratio_ismFit =
-                           params->GetScoped<std::string>(                          "tplratio_ismfit");
-                               // init catalog tplratios
-                               Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
-                               bool tplratioInitRet =
-                                 m_model->initTplratioCatalogs(opt_tplratio_reldirpath,
-                           m_opt_tplratio_ismFit);                          if (!tplratioInitRet)
-                                 {
-                                   throw GlobalException(INTERNAL_ERROR,"  Operator-Linemodel: Failed to
-                           init tpl-ratios. aborting...");
-                                 }
-                         
-                               m_model->m_opt_firstpass_forcedisableTplratioISMfit =
-                           !m_opt_firstpass_tplratio_ismFit;
-                         
-                               InitTplratioPriors();
-                             }
-                           */
+
   // init catalog offsets
 
   // commom between firstpass and secondpass processes

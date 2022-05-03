@@ -288,7 +288,7 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
       continue;
     }
 
-    Float64 noise = LineModelSolutions[solutionIdx].Errors[j];
+    Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
     if (noise > 0) {
       Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
       Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /

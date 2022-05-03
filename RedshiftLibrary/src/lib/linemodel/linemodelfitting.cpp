@@ -81,10 +81,10 @@ CLineModelFitting::CLineModelFitting(
     const CLineCatalog::TLineVector &restLineList,
     const std::string &opt_fittingmethod,
     const std::string &opt_continuumcomponent,
-    const Float64 opt_continuum_neg_threshold, const std::string &widthType,
-    const Float64 nsigmasupport, const Float64 velocityEmission,
-    const Float64 velocityAbsorption, const std::string &opt_rules,
-    const std::string &opt_rigidity)
+    Float64 opt_continuum_neg_threshold, const std::string &widthType,
+    Float64 nsigmasupport, Float64 velocityEmission, Float64 velocityAbsorption,
+    const std::string &opt_rules, const std::string &opt_rigidity,
+    Int32 amplitudeOffsetsDegree)
     : m_inputSpc(spectrum), m_lambdaRange(lambdaRange),
       m_tplCatalog(tplCatalog), m_tplCategoryList(tplCategoryList),
       m_RestLineList(restLineList), m_fittingmethod(opt_fittingmethod),
@@ -96,32 +96,14 @@ CLineModelFitting::CLineModelFitting(
       m_velocityAbsorptionInit(m_velocityAbsorption), m_rulesoption(opt_rules),
       m_rigidity(opt_rigidity), m_Regulament(),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()),
-      m_templateFittingOperator(spectrum, lambdaRange) {
-  // check if tplcat and orthoTplCat are aligned
-  /*for( Int32 i=0; i<m_tplCategoryList.size(); i++ )
-  {
-      std::string category = m_tplCategoryList[i];
-
-      for( Int32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
-      {
-          std::shared_ptr<const CTemplate>  tpl = m_tplCatalog.GetTemplate(
-  category, j ); std::shared_ptr<const CTemplate>  orthotpl =
-  m_orthoTplCatalog.GetTemplate( category, j );
-
-          if(tpl->GetName()!=orthotpl->GetName())
-          {
-              throw GlobalException(INTERNAL_ERROR,"Failed Init Element Model.
-  Tplcat and orthotplcat are not aligned for category=%s, i=%d",
-  category.c_str(), j);
-          }
-      }
-  }*/
+      m_templateFittingOperator(spectrum, lambdaRange),
+      m_enableAmplitudeOffsets(false),
+      m_AmplitudeOffsetsDegree(amplitudeOffsetsDegree) {
 
   // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
   m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
   m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
-  m_enableAmplitudeOffsets = false; // this is highly experimental for now.
   m_enableLambdaOffsetsFit =
       true; // enable lambdaOffsetFit. Once enabled, the offset fixed value or
             // the fitting on/off switch is done through the offset calibration
@@ -2110,9 +2092,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
         std::string bestTplName = "";
 
-        m_CatalogTplShape.GetBestFit(
-            modelSolution.Lines, modelSolution.Amplitudes, modelSolution.Errors,
-            correctedAmplitudes, bestTplName);
+        m_CatalogTplShape.GetBestFit(modelSolution.Lines,
+                                     modelSolution.Amplitudes,
+                                     modelSolution.AmplitudesUncertainties,
+                                     correctedAmplitudes, bestTplName);
         for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size();
              iRestLine++) {
           Int32 subeIdx = undefIdx;
@@ -3639,7 +3622,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
   }
 
   if (useAmpOffset) {
-    nddl += 3;
+    nddl += m_AmplitudeOffsetsDegree + 1;
     // find the amplitudeOffset Support that corresponds to these elts
     idxAmpOffset = m_Elements.getIndexAmpOffset(xInds[0]);
   }
@@ -3697,6 +3680,9 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     yi = flux[idx] * normFactor;
     ei = ErrorNoContinuum[idx] * normFactor;
 
+    gsl_vector_set(y, i, yi);
+    gsl_vector_set(w, i, 1.0 / (ei * ei));
+
     for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
       fval = m_Elements[EltsIdx[iddl]]->getModelAtLambda(
           xi, m_Redshift, continuumfluxAxis[idx]);
@@ -3709,35 +3695,20 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
 
     if (useAmpOffset) {
       gsl_matrix_set(X, i, EltsIdx.size(), 1.0);
+      if (m_AmplitudeOffsetsDegree == 0)
+        continue;
       gsl_matrix_set(X, i, EltsIdx.size() + 1, xi);
+      if (m_AmplitudeOffsetsDegree == 1)
+        continue;
       gsl_matrix_set(X, i, EltsIdx.size() + 2, xi * xi);
     }
-
-    gsl_vector_set(y, i, yi);
-    gsl_vector_set(w, i, 1.0 / (ei * ei));
   }
-
-  //
-  // boost::chrono::thread_clock::time_point stop_prep =
-  // boost::chrono::thread_clock::now();
-  // Float64 duration_prep =
-  // boost::chrono::duration_cast<boost::chrono::microseconds>(stop_prep -
-  // start_prep).count();
-  // boost::chrono::thread_clock::time_point start_fit =
-  // boost::chrono::thread_clock::now();
 
   {
     gsl_multifit_linear_workspace *work = gsl_multifit_linear_alloc(n, nddl);
     gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
     gsl_multifit_linear_free(work);
   }
-
-  //
-  // boost::chrono::thread_clock::time_point stop_fit =
-  // boost::chrono::thread_clock::now(); Float64 duration_fit =
-  // boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit -
-  // start_fit).count(); Log.LogInfo("LineModel linear fit: prep = %.3f - fit =
-  // %.3f", duration_prep, duration_fit);
 
   if (verbose) {
 #define C(i) (gsl_vector_get(c, (i)))
@@ -3799,10 +3770,15 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
       errorsfitted[iddl] = (sigma);
     }
   }
+
   if (useAmpOffset) {
     Float64 x0 = gsl_vector_get(c, EltsIdx.size()) / normFactor;
-    Float64 x1 = gsl_vector_get(c, EltsIdx.size() + 1) / normFactor;
-    Float64 x2 = gsl_vector_get(c, EltsIdx.size() + 2) / normFactor;
+    Float64 x1 = 0.0;
+    Float64 x2 = 0.0;
+    if (m_AmplitudeOffsetsDegree > 0)
+      x1 = gsl_vector_get(c, EltsIdx.size() + 1) / normFactor;
+    if (m_AmplitudeOffsetsDegree > 1)
+      x2 = gsl_vector_get(c, EltsIdx.size() + 2) / normFactor;
     m_Elements.setAmplitudeOffsetsCoeffsAt(idxAmpOffset, {x0, x1, x2});
   }
 
@@ -5180,9 +5156,9 @@ void CLineModelFitting::LoadModelSolution(
       continue;
     if (m_enableAmplitudeOffsets) {
       TPolynomCoeffs contPolynomCoeffs = {
-          modelSolution.continuum_pCeoff0[iRestLine],
-          modelSolution.continuum_pCeoff1[iRestLine],
-          modelSolution.continuum_pCeoff2[iRestLine]};
+          modelSolution.continuum_pCoeff0[iRestLine],
+          modelSolution.continuum_pCoeff1[iRestLine],
+          modelSolution.continuum_pCoeff2[iRestLine]};
       applyPolynomCoeffs(eIdx, contPolynomCoeffs);
     }
 
@@ -5194,9 +5170,9 @@ void CLineModelFitting::LoadModelSolution(
           "CLineModelFitting::LoadModelSolution: m_restLineList and "
           "modelSolution.m_Lines dont correspond");
 
-    m_Elements[eIdx]->SetFittedAmplitude(subeIdx,
-                                         modelSolution.Amplitudes[iRestLine],
-                                         modelSolution.Errors[iRestLine]);
+    m_Elements[eIdx]->SetFittedAmplitude(
+        subeIdx, modelSolution.Amplitudes[iRestLine],
+        modelSolution.AmplitudesUncertainties[iRestLine]);
   }
 
   if (!std::isnan(modelSolution.LyaWidthCoeff) or
@@ -5377,7 +5353,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.LyaAlpha = NAN;
   modelSolution.LyaDelta = NAN;
   modelSolution.Amplitudes = TFloat64List(s, NAN);
-  modelSolution.Errors = TFloat64List(s, NAN);
+  modelSolution.AmplitudesUncertainties = TFloat64List(s, NAN);
   modelSolution.FittingError = TFloat64List(s, NAN);
   modelSolution.LambdaObs = TFloat64List(s, NAN);
   modelSolution.Offset = TFloat64List(s, NAN);
@@ -5391,9 +5367,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.FluxDirectIntegrationError = TFloat64List(s, NAN);
   modelSolution.OutsideLambdaRange = TBoolList(s, true);
   modelSolution.fittingGroupInfo = TStringList(s, "undefined");
-  modelSolution.continuum_pCeoff0 = TFloat64List(s, NAN);
-  modelSolution.continuum_pCeoff1 = TFloat64List(s, NAN);
-  modelSolution.continuum_pCeoff2 = TFloat64List(s, NAN);
+  modelSolution.continuum_pCoeff0 = TFloat64List(s, NAN);
+  modelSolution.continuum_pCoeff1 = TFloat64List(s, NAN);
+  modelSolution.continuum_pCoeff2 = TFloat64List(s, NAN);
 
   TInt32List eIdx_oii;
   TInt32List subeIdx_oii;
@@ -5410,7 +5386,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     Float64 amp = m_Elements[eIdx]->GetFittedAmplitude(subeIdx);
     modelSolution.Amplitudes[iRestLine] = amp;
     Float64 ampError = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(subeIdx);
-    modelSolution.Errors[iRestLine] = ampError;
+    modelSolution.AmplitudesUncertainties[iRestLine] = ampError;
 
     modelSolution.LambdaObs[iRestLine] =
         m_Elements[eIdx]->GetObservedPosition(subeIdx, m_Redshift);
@@ -5427,9 +5403,9 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
       // save polynom info to output them in hdf5, mainly to recontruct linemeas
       // model
-      modelSolution.continuum_pCeoff0[iRestLine] = polynom_coeffs.x0;
-      modelSolution.continuum_pCeoff1[iRestLine] = polynom_coeffs.x1;
-      modelSolution.continuum_pCeoff2[iRestLine] = polynom_coeffs.x2;
+      modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.x0;
+      modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.x1;
+      modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.x2;
 
       Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(
           subeIdx, m_SpectrumModel.GetSpectralAxis(), m_Redshift,

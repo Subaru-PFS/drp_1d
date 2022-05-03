@@ -44,7 +44,7 @@ public:
   TFloat64List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;
   std::vector<CLine> Lines;
-  TFloat64List Errors;       // noise sigma
+  TFloat64List AmplitudesUncertainties;       // noise sigma
   TFloat64List FittingError; // ModelLeastSquare error under each line
   TFloat64List
       CenterContinuumFlux; // Continuum flux value at the center of each line
@@ -79,9 +79,9 @@ public:
   Float64 EmissionVelocity;
   Float64 Redshift;
 
-  TFloat64List continuum_pCeoff0;
-  TFloat64List continuum_pCeoff1;
-  TFloat64List continuum_pCeoff2;
+  TFloat64List continuum_pCoeff0;
+  TFloat64List continuum_pCoeff1;
+  TFloat64List continuum_pCoeff2;
 
   Int32 nDDL;
   void fillLineIds();
