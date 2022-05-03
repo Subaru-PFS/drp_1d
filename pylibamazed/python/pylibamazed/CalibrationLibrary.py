@@ -152,7 +152,8 @@ class CalibrationLibrary:
             raise Exception(line_catalog_file + " cannot be found")
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        self.line_catalogs[object_type] = CLineCatalog()
+        nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
+        self.line_catalogs[object_type] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
