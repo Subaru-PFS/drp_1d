@@ -87,8 +87,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
     forceFilter = CLine::nForce_Strong;
 
   CLineCatalog::TLineVector restLineList =
-      inputContext.GetLineCatalog(category)->GetFilteredList(typeFilter,
-                                                             forceFilter);
+      inputContext.GetLineCatalog(category, "LineModelSolve")
+          ->GetFilteredList(typeFilter, forceFilter);
   // prepare continuum templates catalog
   std::string opt_fittingmethod = "hybrid";
 

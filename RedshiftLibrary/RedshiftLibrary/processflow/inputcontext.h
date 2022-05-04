@@ -69,7 +69,8 @@ public:
   std::shared_ptr<const CLineCatalogsTplShape>
   GetTemplateRatioCatalog(const std::string &objectType) const;
   std::shared_ptr<const CLineCatalog>
-  GetLineCatalog(const std::string &objectType) const;
+  GetLineCatalog(const std::string &objectType,
+                 const std::string &method) const;
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog() const {
     return m_photBandCatalog;
   }
@@ -89,7 +90,7 @@ public:
   const std::shared_ptr<CLineCatalogsTplShape> &
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
-  GetLineCatalog(const std::string &objectType);
+  GetLineCatalog(const std::string &objectType, const std::string &method);
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
@@ -114,7 +115,7 @@ public:
   TStringList
       m_categories; //{"galaxy", "qso", "star"}; rename this to object_type
 
-  void setLineCatalog(const std::string &objectType,
+  void setLineCatalog(const std::string &objectType, const std::string &method,
                       const std::shared_ptr<CLineCatalog> &catalog);
   void setLineRatioCatalogCatalog(
       const std::string &objectType,
@@ -148,7 +149,8 @@ private:
   std::shared_ptr<CSpectrum> m_Spectrum;
   std::shared_ptr<CSpectrum> m_rebinnedSpectrum;
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
-  std::map<std::string, std::shared_ptr<CLineCatalog>> m_lineCatalogs;
+  std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
+      m_lineCatalogs;
   std::map<std::string, std::shared_ptr<CLineCatalogsTplShape>>
       m_lineRatioCatalogCatalogs;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmcorrectionMeiksin;
@@ -160,16 +162,18 @@ private:
 };
 
 inline std::shared_ptr<const CLineCatalog>
-CInputContext::GetLineCatalog(const std::string &objectType) const {
-  return const_cast<CInputContext *>(this)->GetLineCatalog(objectType);
+CInputContext::GetLineCatalog(const std::string &objectType,
+                              const std::string &method) const {
+  return const_cast<CInputContext *>(this)->GetLineCatalog(objectType, method);
 }
 
 inline const std::shared_ptr<CLineCatalog> &
-CInputContext::GetLineCatalog(const std::string &objectType) {
+CInputContext::GetLineCatalog(const std::string &objectType,
+                              const std::string &method) {
   //  if (std::findm_categories.find(objectType))
   // throw GlobalException(INTERNAL_ERROR,"CInputContext::GetLineCatalog:
   // invalid object type");
-  return m_lineCatalogs[objectType];
+  return m_lineCatalogs[objectType][method];
 }
 
 inline std::shared_ptr<const CLineCatalogsTplShape>

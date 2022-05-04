@@ -164,9 +164,9 @@ void CInputContext::OrthogonalizeTemplates() {
 }
 
 void CInputContext::setLineCatalog(
-    const std::string &objectType,
+    const std::string &objectType, const std::string &method,
     const std::shared_ptr<CLineCatalog> &catalog) {
-  m_lineCatalogs[objectType] = catalog;
+  m_lineCatalogs[objectType][method] = catalog;
 }
 
 void CInputContext::setLineRatioCatalogCatalog(

@@ -76,15 +76,19 @@ class Context:
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
         for object_type in self.parameters["objects"]:
+            methods = []
+            if self.parameters[object_type]["linemeas_method"]:
+                methods.append(self.parameters[object_type]["linemeas_method"]) 
+            if self.parameters[object_type]["method"] and self.parameters[object_type]["method"] == "LineModelSolve":
+                methods.append(self.parameters[object_type]["method"]) 
             if object_type in self.calibration_library.line_catalogs:
-                self.process_flow_context.setLineCatalog(object_type,
-                                                         self.calibration_library.line_catalogs[object_type])
+                for method in methods:
+                    self.process_flow_context.setLineCatalog(object_type, method,
+                                                            self.calibration_library.line_catalogs[object_type][method])
             if object_type in self.calibration_library.line_ratio_catalog_lists:
                 self.process_flow_context.setLineRatioCatalogCatalog(object_type,
                                                                      self.calibration_library.line_ratio_catalog_lists[
                                                                          object_type])
-            if "linemeas_method" in self.parameters[object_type] and self.parameters[object_type]["linemeas_method"]:
-                self.process_flow_context.setLineCatalog(object_type, self.calibration_library.line_catalogs[object_type])
 
         self.process_flow_context.setTemplateCatalog(self.calibration_library.templates_catalogs["all"])
         self.process_flow_context.setPhotBandCatalog(self.calibration_library.photometric_bands)

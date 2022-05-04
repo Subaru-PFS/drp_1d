@@ -432,7 +432,7 @@ public:
   static CProcessFlowContext& GetInstance();
 
   void Init();
-  void setLineCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalog> &catalog); 
+  void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
   void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}

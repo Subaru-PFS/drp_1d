@@ -95,7 +95,7 @@ CLineMatchingSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   return Compute(*(resultStore.get()), inputContext->GetParameterStore(),
                  *(inputContext->GetSpectrum().get()), m_lambdaRange,
                  m_redshifts,
-                 *(inputContext->GetLineCatalog(m_objectType).get()));
+                 *(inputContext->GetLineCatalog(m_objectType, m_name).get()));
 }
 
 /**

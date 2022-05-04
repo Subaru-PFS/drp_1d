@@ -374,7 +374,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
   const CLineCatalog &restlinecatalog =
-      *(inputContext->GetLineCatalog(m_objectType));
+      *(inputContext->GetLineCatalog(m_objectType, m_name));
   const auto &photBandCat = inputContext->GetPhotBandCatalog();
   const CLineCatalogsTplShape &tplRatioCatalog =
       *(inputContext->GetTemplateRatioCatalog(m_objectType));
