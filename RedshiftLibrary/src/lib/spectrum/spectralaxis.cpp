@@ -41,7 +41,6 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/line/airvacuum.h"
 #include <cmath>
 using namespace NSEpic;
@@ -163,7 +162,10 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
   m_isLogScale = origin.m_isLogScale;
   const Float64 *originSamples = origin.GetSamples();
 
-  DebugAssert(direction == nShiftForward || direction == nShiftBackward);
+  if (!(direction == nShiftForward || direction == nShiftBackward)) {
+    throw new GlobalException(INTERNAL_ERROR,
+                              "Shift wavelength, bad direction");
+  }
 
   if (wavelengthOffset == 0.0) {
     for (Int32 i = 0; i < nSamples; i++) {

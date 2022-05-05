@@ -38,7 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/common/exception.h"
 //#include <boost/stacktrace.hpp>
+#include <execinfo.h>
 #include <sstream>
+
 using namespace NSEpic;
 
 AmzException::AmzException(ErrorCode ec, std::string message)
@@ -46,7 +48,16 @@ AmzException::AmzException(ErrorCode ec, std::string message)
   // std::ostringstream os;
   // os << boost::stacktrace::stacktrace();
   // stacktrace =  os.str();
+  void *array[16];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+  char **backtrace = backtrace_symbols(array, size);
   stacktrace = "";
+  for (int i = 0; i < 10; i++) {
+    stacktrace = stacktrace + std::string(backtrace[i]) + "\n";
+  }
 }
 
 AmzException::AmzException(const AmzException &e)

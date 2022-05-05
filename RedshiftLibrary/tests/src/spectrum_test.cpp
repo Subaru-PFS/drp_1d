@@ -41,7 +41,6 @@
 
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/mask.h"
-#include "RedshiftLibrary/debug/assert.h"
 
 #include <algorithm>
 #include <cmath>

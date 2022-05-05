@@ -45,7 +45,6 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 
 #include <cfloat>
 #include <cmath>

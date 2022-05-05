@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/method/linematchingsolve.h"
 #include "RedshiftLibrary/common/flag.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/linematchingsolveresult.h"

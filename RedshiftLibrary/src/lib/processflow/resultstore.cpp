@@ -38,7 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/processflow/resultstore.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
@@ -80,8 +79,7 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(name);
   if (it != map.end()) {
-    DebugError("Result already exist");
-    return;
+    throw new GlobalException(INTERNAL_ERROR, "Result already exist");
   }
 
   map[scopedName] = result;

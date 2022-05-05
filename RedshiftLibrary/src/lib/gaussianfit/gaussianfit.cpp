@@ -37,7 +37,6 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/gaussianfit/gaussianfit.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 

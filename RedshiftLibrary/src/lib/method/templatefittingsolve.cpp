@@ -41,7 +41,6 @@
 
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/pdfz.h"
 #include "RedshiftLibrary/operator/templatefitting.h"

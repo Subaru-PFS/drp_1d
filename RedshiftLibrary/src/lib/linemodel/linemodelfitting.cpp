@@ -47,7 +47,6 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/template/template.h"

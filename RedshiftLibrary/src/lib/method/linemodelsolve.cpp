@@ -40,7 +40,6 @@
 
 #include "RedshiftLibrary/log/log.h"
 
-#include "RedshiftLibrary/debug/assert.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
