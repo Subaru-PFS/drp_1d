@@ -47,6 +47,21 @@ namespace NSEpic {
 /**
  * struct that holds ASYMFIXED profile parameters
  */
+typedef struct TAsymParams {
+
+  TAsymParams(Float64 sigma, Float64 alpha, Float64 delta)
+      : sigma(sigma), alpha(alpha), delta(delta){};
+
+  TAsymParams() = default;
+  Float64 sigma, alpha, delta;
+} TAsymParams;
+
+// lineprofileAsym
+static const TAsymParams ASYM_DEFAULT_PARAMS{1.0, 4.5, 0.};
+static const Float64 ASYM_DEFAULT_CONSTSIGMA = 1.;
+// lineprofileAsym Fit anf Fixed
+static const TAsymParams ASYMF_DEFAULT_PARAMS{2.0, 2.0, 0.};
+static const Float64 ASYMF_DEFAULT_CONSTSIGMA = 2.5;
 
 enum TProfile {
   NONE,

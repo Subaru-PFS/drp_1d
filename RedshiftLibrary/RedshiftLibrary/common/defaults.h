@@ -23,11 +23,5 @@ static constexpr Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
 static const Float64 RESTLAMBDA_LYA = 1216.;
 static const Float64 IGM_INTERPOLATION_RATIO = 0.1;
 
-// lineprofileAsym
-static const TAsymParams ASYM_DEFAULT_PARAMS{1.0, 4.5, 0.};
-static const Float64 ASYM_DEFAULT_CONSTSIGMA = 1.;
-// lineprofileAsym Fit anf Fixed
-static const TAsymParams ASYMF_DEFAULT_PARAMS{2.0, 2.0, 0.};
-static const Float64 ASYMF_DEFAULT_CONSTSIGMA = 2.5;
 } // namespace NSEpic
 #endif
