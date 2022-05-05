@@ -99,8 +99,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (EbmvCoeff > 0.) {
     if (m_templateRebined_bf.CalzettiInitFailed()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "no calzetti initialization for template");
+      THROWG(INTERNAL_ERROR, "no calzetti initialization for template");
     }
     Int32 idxEbmv = -1;
     idxEbmv =
@@ -112,8 +111,7 @@ COperatorTemplateFittingBase::ComputeSpectrumModel(
 
   if (meiksinIdx > -1) {
     if (m_templateRebined_bf.MeiksinInitFailed()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "no meiksin initialization for template");
+      THROWG(INTERNAL_ERROR, "no meiksin initialization for template");
     }
     m_templateRebined_bf.ApplyMeiksinCoeff(meiksinIdx);
   }
@@ -153,9 +151,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   if (m_spcSpectralAxis_restframe.IsInLinearScale() !=
       tplSpectralAxis.IsInLinearScale()) {
     // status = nStatus_DataError;
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFittingBase::RebinTemplate: data "
-                          "and tpl not in the same scale (lin/log)");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingBase::RebinTemplate: data "
+                           "and tpl not in the same scale (lin/log)");
   }
 
   // Compute clamped lambda range over template in restframe
@@ -169,8 +166,8 @@ void COperatorTemplateFittingBase::RebinTemplate(
   bool b = tpl->Rebin(intersectedLambdaRange, m_spcSpectralAxis_restframe,
                       m_templateRebined_bf, m_mskRebined_bf, opt_interp);
   if (!b)
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         "COperatorTemplateFittingBase::RebinTemplate: error in rebinning tpl");
 
   // overlapRate
@@ -180,11 +177,10 @@ void COperatorTemplateFittingBase::RebinTemplate(
   // Check for overlap rate
   if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
     // status = nStatus_NoOverlap;
-    throw GlobalException(ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
-                          Formatter()
-                              << "COperatorTemplateFittingBase::RebinTemplate: "
-                                 "tpl overlap too small, overlaprate of "
-                              << overlapRate);
+    THROWG(OVERLAPRATE_NOTACCEPTABLE,
+           Formatter() << "COperatorTemplateFittingBase::RebinTemplate: "
+                          "tpl overlap too small, overlaprate of "
+                       << overlapRate);
   }
 
   // the spectral axis should be in the same scale

@@ -100,16 +100,14 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CTplcombinationSolve::compute: unknown spectrum component");
+    THROWG(INTERNAL_ERROR,
+           "CTplcombinationSolve::compute: unknown spectrum component");
   }
 
   // for now interp must be 'lin'. pfg not availbale for now...
   if (opt_interp != "lin") {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "Tplcombinationsolve: interp. parameter must be 'lin'");
+    THROWG(INTERNAL_ERROR,
+           "Tplcombinationsolve: interp. parameter must be 'lin'");
   }
 
   Log.LogInfo("Method parameters:");
@@ -188,17 +186,16 @@ bool CTplcombinationSolve::Solve(
 
   // prepare the list of components/templates
   if (m_categoryList.size() > 1) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Multiple categories are passed for "
-                          "tplcombinationsolve. Only one is required");
+    THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
+                           "tplcombinationsolve. Only one is required");
   }
 
   const TTemplateConstRefList &tplList =
       tplCatalog.GetTemplateList(m_categoryList);
   if (tplList.empty()) {
-    throw GlobalException(ErrorCode::BAD_TEMPLATECATALOG,
-                          Formatter() << "Template catalog for category "
-                                      << m_categoryList[0] << " is empty");
+    THROWG(BAD_TEMPLATECATALOG, Formatter()
+                                    << "Template catalog for category "
+                                    << m_categoryList[0] << " is empty");
   }
 
   // check all templates have same spectralAxis
@@ -208,14 +205,13 @@ bool CTplcombinationSolve::Solve(
     const CSpectrumSpectralAxis &currentSpcAxis =
         tplList[ktpl]->GetSpectralAxis();
     if (axisSize != tplList[ktpl]->GetSampleCount()) {
-      throw GlobalException(
-          ErrorCode::INTERNAL_ERROR,
-          "  Method-tplcombination: templates dont have same size");
+      THROWG(INTERNAL_ERROR,
+             "  Method-tplcombination: templates dont have same size");
     }
     for (Int32 i = 0; i < axisSize; i++) {
       if (std::abs(refSpcAxis[i] - currentSpcAxis[i]) > 1E-8) {
-        throw GlobalException(
-            ErrorCode::INTERNAL_ERROR,
+        THROWG(
+            INTERNAL_ERROR,
             "  Method-tplcombination: templates dont have same spectralAxis");
       }
     }
@@ -257,9 +253,8 @@ bool CTplcombinationSolve::Solve(
       scopeStr = "tplcombination_nocontinuum";
       enable_dustFitting = 0;
     } else {
-      throw GlobalException(
-          ErrorCode::INTERNAL_ERROR,
-          "CTplcombinationSolve::Solve: unknown spectrum component");
+      THROWG(INTERNAL_ERROR,
+             "CTplcombinationSolve::Solve: unknown spectrum component");
     }
 
     // Compute merit function
@@ -301,9 +296,8 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "tplcombinationsolve: CombinePDF - Unable to "
-                          "retrieve tplcombination results");
+    THROWG(INTERNAL_ERROR, "tplcombinationsolve: CombinePDF - Unable to "
+                           "retrieve tplcombination results");
   }
   std::shared_ptr<const CTplCombinationResult> result =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -325,12 +319,11 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
       Log.LogInfo("tplcombinationsolve: using cstLog = %f",
                   chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != result->CstLog) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            Formatter()
-                                << "tplcombinationsolve: Found different "
-                                   "cstLog values in results... val-1="
-                                << chisquarearray.cstLog
-                                << " != val-2=" << result->CstLog);
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "tplcombinationsolve: Found different "
+                                    "cstLog values in results... val-1="
+                                 << chisquarearray.cstLog
+                                 << " != val-2=" << result->CstLog);
     }
     if (chisquarearray.redshifts.size() == 0) {
       chisquarearray.redshifts = result->Redshifts;
@@ -346,9 +339,8 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
         }
       }
       if (foundBadStatus) {
-        throw GlobalException(
-            ErrorCode::INTERNAL_ERROR,
-            "tplcombinationsolve: Found bad status result...");
+        THROWG(INTERNAL_ERROR,
+               "tplcombinationsolve: Found bad status result...");
       }
     }
 
@@ -395,9 +387,8 @@ CTplcombinationSolve::buildExtremaResults(
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "tplcombinationsolve: SaveExtremaResult - Unable to "
-                          "retrieve tplcombination results");
+    THROWG(INTERNAL_ERROR, "tplcombinationsolve: SaveExtremaResult - Unable to "
+                           "retrieve tplcombination results");
   }
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -406,26 +397,21 @@ CTplcombinationSolve::buildExtremaResults(
   bool foundRedshiftAtLeastOnce = false;
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTplCombinationSolve::SaveExtremaResult, "
-                          "templatefitting results has wrong size");
+    THROWG(INTERNAL_ERROR, "CTplCombinationSolve::SaveExtremaResult, "
+                           "templatefitting results has wrong size");
   }
 
   bool foundBadStatus = false;
 
   if (foundBadStatus) {
-    throw GlobalException(
-==== BASE ====
-        INTERNAL_ERROR,
-        "CTplCombinationSolve::SaveExtremaResult: Found bad status result");
-==== BASE ====
+    THROWG(INTERNAL_ERROR,
+           "Found bad status result");
   }
 
   // prepare the list of components/templates
   if (m_categoryList.size() > 1) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Multiple categories are passed for "
-                          "tplcombinationsolve. Only one is required");
+    THROWG(INTERNAL_ERROR, "Multiple categories are passed for "
+                           "tplcombinationsolve. Only one is required");
   }
 
   const TTemplateConstRefList &tplList =
@@ -469,8 +455,7 @@ CTplcombinationSolve::buildExtremaResults(
             opt_interp, lambdaRange, overlapThreshold);
     tplCatalog.m_logsampling = currentSampling;
     if (spcmodelPtr == nullptr)
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "Couldnt compute spectrum model");
+      THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }
 

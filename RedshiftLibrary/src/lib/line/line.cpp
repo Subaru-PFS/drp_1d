@@ -127,9 +127,8 @@ bool CLine::operator!=(const CLine &str) const {
 
 void CLine::SetAsymParams(TAsymParams asymParams) {
   if (!m_Profile)
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLine::SetAsymParams: lineprofile is not initialized");
+    THROWG(INTERNAL_ERROR,
+           "CLine::SetAsymParams: lineprofile is not initialized");
   m_Profile->SetAsymParams(asymParams);
 }
 
@@ -148,24 +147,21 @@ void CLine::setAsymProfileAndParams(const std::string &profileName,
   } else if (profileName == "ASYMFIT") {
     m_Profile.reset(new CLineProfileASYMFIT(nSigmaSupport, asymParams, "mean"));
   } else {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter() << "CLineCatalog::Load: Profile name "
-                                      << profileName << " is no recognized.");
+    THROWG(INTERNAL_ERROR, Formatter() << "CLineCatalog::Load: Profile name "
+                                       << profileName << " is no recognized.");
   }
 }
 
 void CLine::resetAsymFitParams() {
   if (!m_Profile)
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLine::resetAsymParams: lineprofile is not initialized");
+    THROWG(INTERNAL_ERROR,
+           "CLine::resetAsymParams: lineprofile is not initialized");
   m_Profile->resetAsymFitParams();
 }
 TAsymParams CLine::GetAsymParams() const {
   if (!m_Profile)
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLine::GetAsymParams: lineprofile is not initialized");
+    THROWG(INTERNAL_ERROR,
+           "CLine::GetAsymParams: lineprofile is not initialized");
   return m_Profile->GetAsymParams();
 }
 
@@ -177,8 +173,7 @@ Int32 CLine::GetType() const { return m_Type; }
 
 const CLineProfile &CLine::GetProfile() const {
   if (!m_Profile)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Current line does not have a profile");
+    THROWG(INTERNAL_ERROR, "Current line does not have a profile");
   return *m_Profile;
 }
 

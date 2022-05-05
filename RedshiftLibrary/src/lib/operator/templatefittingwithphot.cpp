@@ -58,9 +58,9 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   bool b = m_lambdaRange.getClosedIntervalIndices(
       m_spectrum.GetSpectralAxis().GetSamplesVector(), kstart, kend);
   if (!b) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFittingPhot::RebinTemplate: no "
-                          "intersecton between spectral exis and lambda range");
+    THROWG(INTERNAL_ERROR,
+           "COperatorTemplateFittingPhot::RebinTemplate: no "
+           "intersecton between spectral exis and lambda range");
   }
 
   // initialize restframe photometric axis and rebined photmetric template
@@ -77,28 +77,25 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFittingPhot: photometric band "
-                          "transmision not availables");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingPhot: photometric band "
+                           "transmision not availables");
   if (m_photBandCat->empty())
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         "COperatorTemplateFittingPhot: photometric bands transmission empty");
 
   if (m_spectrum.GetPhotData() == nullptr)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFittingPhot: photometric data not "
-                          "available in spectrum");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingPhot: photometric data not "
+                           "available in spectrum");
 
   const auto &dataNames = m_spectrum.GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            Formatter() << "COperatorTemplateFittingPhot: "
-                                           "photometry point for band name: "
-                                        << bandName
-                                        << " is not available in the spectrum");
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "COperatorTemplateFittingPhot: "
+                            "photometry point for band name: "
+                         << bandName << " is not available in the spectrum");
 }
 
 void COperatorTemplateFittingPhot::RebinTemplate(
@@ -141,9 +138,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
                         templateRebined_phot, mskRebined, opt_interp);
 
     if (!b)
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "COperatorTemplateFittingPhot::"
-                            "RebinTemplatePhotBand: error in rebinning tpl");
+      THROWG(INTERNAL_ERROR, "COperatorTemplateFittingPhot::"
+                             "RebinTemplatePhotBand: error in rebinning tpl");
 
     const Float64 overlapRate =
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
@@ -151,8 +147,8 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 
     if (overlapRate < 1.0) {
       // status = nStatus_NoOverlap;
-      throw GlobalException(
-          ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
+      THROWG(
+          OVERLAPRATE_NOTACCEPTABLE,
           Formatter() << "COperatorTemplateFittingPhot::RebinTemplatePhotBand: "
                          "tpl overlap too small, overlaprate of "
                       << overlapRate);
@@ -291,11 +287,10 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
         photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
-      throw GlobalException(
-          ErrorCode::INTERNAL_ERROR,
-          Formatter() << "COperatorTemplateFittingPhot::ComputeLeastSquare: "
-                         "found invalid inverse variance : err2="
-                      << oneOverErr2 << ", for band=" << bandName);
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "COperatorTemplateFittingPhot::ComputeLeastSquare: "
+                            "found invalid inverse variance : err2="
+                         << oneOverErr2 << ", for band=" << bandName);
 
     sumCross_phot += d * integ_flux * oneOverErr2;
     sumT_phot += integ_flux * integ_flux * oneOverErr2;

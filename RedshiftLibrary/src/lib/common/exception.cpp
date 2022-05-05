@@ -37,32 +37,32 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/common/exception.h"
-//#include <boost/stacktrace.hpp>
 #include <execinfo.h>
 #include <sstream>
 
 using namespace NSEpic;
 
-AmzException::AmzException(ErrorCode ec, std::string message)
-    : _msg(message), code(ec) {
-  // std::ostringstream os;
-  // os << boost::stacktrace::stacktrace();
-  // stacktrace =  os.str();
-  void *array[16];
-  size_t size;
-
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-  char **backtrace = backtrace_symbols(array, size);
-  stacktrace = "";
-  for (int i = 0; i < 10; i++) {
-    stacktrace = stacktrace + std::string(backtrace[i]) + "\n";
-  }
-}
-
 AmzException::AmzException(const AmzException &e)
-    : _msg(e._msg), code(e.code), stacktrace(e.stacktrace) {}
+    : _msg(e._msg), code(e.code), stacktrace(e.stacktrace),
+      filename(e.filename), method(e.method), line(e.line) {}
+
+AmzException::AmzException(ErrorCode ec, std::string message,
+                           const char *filename_, const char *method_,
+                           int line_)
+    : code(ec), _msg(message), filename(filename_), method(method_),
+      line(line_) {}
 
 const char *AmzException::getStackTrace() const { return stacktrace.c_str(); }
 
 AmzException::~AmzException() {}
+
+std::string AmzException::getFileName() { return filename; }
+
+std::string AmzException::getMethod() { return method; }
+
+int AmzException::getLine() { return line; }
+
+GlobalException::GlobalException(ErrorCode ec, std::string message,
+                                 const char *filename_, const char *method_,
+                                 int line_)
+    : AmzException(ec, message, filename_, method_, line_) {}

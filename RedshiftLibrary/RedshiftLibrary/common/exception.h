@@ -39,19 +39,21 @@
 #ifndef _REDSHIFT_EXCEPTION_
 #define _REDSHIFT_EXCEPTION_
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include <exception>
 #include <iostream>
 #include <string>
-//#include <boost/stacktrace.hpp>
-#include "RedshiftLibrary/common/datatypes.h"
+#define THROWG(code, msg)                                                      \
+  throw GlobalException(ErrorCode::code, msg, __FILE__, __func__, __LINE__)
 namespace NSEpic {
 
 class AmzException : public std::exception {
 
 public:
   //#include "RedshiftLibrary/common/errorcodes.i"
-  AmzException(ErrorCode ec, std::string message);
-
+  //  AmzException(ErrorCode ec, std::string message);
+  AmzException(ErrorCode ec, std::string message, const char *filename_,
+               const char *method_, int line_);
   AmzException(const AmzException &e);
 
   virtual ~AmzException();
@@ -63,11 +65,17 @@ public:
   void setErrorCode(ErrorCode ec) { code = ec; }
 
   const char *getStackTrace() const;
+  std::string getFileName();
+  std::string getMethod();
+  int getLine();
 
 protected:
   std::string _msg;
   std::string stacktrace;
   ErrorCode code;
+  std::string filename = "";
+  std::string method = "";
+  int line = -1;
 };
 
 // A solve exception stops the whole pipeline
@@ -75,8 +83,10 @@ protected:
 class GlobalException : public AmzException {
 public:
   GlobalException(ErrorCode ec, std::string message)
-      : AmzException(ec, message) {}
+      : AmzException(ec, message, "", "", -1) {}
   GlobalException(const GlobalException &e) : AmzException(e) {}
+  GlobalException(ErrorCode ec, std::string message, const char *filename_,
+                  const char *method_, int line_);
 };
 
 //  typedef AmzException::ErrorCode ErrorCode;

@@ -51,9 +51,8 @@ CPhotometricData::CPhotometricData(const TStringList &name,
   if (name.size() != flux.size() || name.size() != fluxerr.size()) {
     Log.LogError("CPhotometryData::CPhotometryData name, flux or fluxerr have "
                  "not the same size");
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CPhotometryData::CPhotometryData name, flux or "
-                          "fluxerr have not the same size");
+    THROWG(INTERNAL_ERROR, "CPhotometryData::CPhotometryData name, flux or "
+                           "fluxerr have not the same size");
   }
 
   for (Int32 i = 0; i < name.size(); i++) {

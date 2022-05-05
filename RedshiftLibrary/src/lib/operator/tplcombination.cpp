@@ -111,12 +111,11 @@ void COperatorTplcombination::BasicFit(
   const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        Formatter() << "Operator-Tplcombination: spcMaskAdditional does not "
-                       "have the same size as the spectrum flux vector... ("
-                    << spcMaskAdditional.GetMasksCount() << " vs "
-                    << spcFluxAxis.GetSamplesCount() << "), aborting");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Operator-Tplcombination: spcMaskAdditional does not "
+                          "have the same size as the spectrum flux vector... ("
+                       << spcMaskAdditional.GetMasksCount() << " vs "
+                       << spcFluxAxis.GetSamplesCount() << "), aborting");
   }
 
   TFloat64Range currentRange;
@@ -129,9 +128,8 @@ void COperatorTplcombination::BasicFit(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTplcombination::BasicFit: impossible to "
-                          "get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "COperatorTplcombination::BasicFit: impossible to "
+                           "get valid kstart or kend");
   }
   Int32 kStart_model =
       kStart; // mainly used at high redshifts, when desextincting spectrum is
@@ -522,8 +520,8 @@ void COperatorTplcombination::RebinTemplate(
 
     // Check for overlap rate
     if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
-      throw GlobalException(ErrorCode::OVERLAPRATE_NOTACCEPTABLE,
-                            Formatter() << "overlaprate of " << overlapRate);
+      THROWG(OVERLAPRATE_NOTACCEPTABLE,
+             Formatter() << "overlaprate of " << overlapRate);
     }
   }
   currentRange = intersectedAllLambdaRange;
@@ -550,27 +548,24 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
       componentCount);
 
   if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "  Operator-tplcombination: input spectrum is not in log scale");
+    THROWG(INTERNAL_ERROR,
+           "  Operator-tplcombination: input spectrum is not in log scale");
   }
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            Formatter()
-                                << "Operator-tplcombination: input template k="
-                                << ktpl << " are not in log scale");
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "Operator-tplcombination: input template k=" << ktpl
+                         << " are not in log scale");
     }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "Operator-tplcombination: no calzetti calib. file "
-                            "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "Operator-tplcombination: no calzetti calib. file "
+                             "loaded... aborting");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "  Operator-tplcombination: no meiksin calib. file "
-                            "loaded... aborting");
+      THROWG(INTERNAL_ERROR,
+             "  Operator-tplcombination: no meiksin calib. file "
+             "loaded... aborting");
     }
   }
 
@@ -625,12 +620,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "Operator-Tplcombination: masks-list size="
-                              << additional_spcMasks.size()
-                              << "didn't match the input redshift-list size="
-                              << sortedRedshifts.size());
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Operator-Tplcombination: masks-list size="
+                               << additional_spcMasks.size()
+                               << "didn't match the input redshift-list size="
+                               << sortedRedshifts.size());
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -684,11 +678,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, MeiksinList, EbmvList);
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            Formatter()
-                                << "Operator-Tplcombination: found invalid "
-                                   "tplcombination products for z="
-                                << redshift);
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "Operator-Tplcombination: found invalid "
+                                    "tplcombination products for z="
+                                 << redshift);
     }
 
     result->ChiSquare[i] = fittingResults.chisquare;
@@ -808,9 +801,8 @@ COperatorTplcombination::ComputeSpectrumModel(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTplcombination::ComputeSpectrumModel: "
-                          "impossible to get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "COperatorTplcombination::ComputeSpectrumModel: "
+                           "impossible to get valid kstart or kend");
   }
 
   // create identityTemplate on which we apply meiksin and ism, once for all

@@ -198,7 +198,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
     return this->m_savedModelContinuumSpectrumResults[rank];
 
   else
-    throw GlobalException(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
@@ -212,7 +212,7 @@ const std::string &LineModelExtremaResult::getCandidateDatasetType(
   else if (dataset == "continuum")
     return this->m_savedModelContinuumSpectrumResults[0]->getType();
   else
-    throw GlobalException(ErrorCode::UNKNOWN_ATTRIBUTE, "Unknown dataset");
+    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset");
 }
 
 bool LineModelExtremaResult::HasCandidateDataset(

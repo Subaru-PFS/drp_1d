@@ -44,13 +44,25 @@ zlog = CLog.GetInstance()
 class AmazedError(AmzException):
     def __init__(self, errCode, message):
         zlog.LogError(errCode.name + " : " + message)
+
         self.errCode = errCode # we keep the python enum for further use
-        AmzException.__init__(self, errCode.value, message)
+        AmzException.__init__(self, errCode.value, message,"","",-1)
+        self.line = -1
+        self.method = ""
+        self.filename = ""
 
     def __str__(self):
-        return self.errCode.name + " : " + self.what()
-
+        ret = self.errCode.name + " : " + self.what() + "\n"
+        ret = ret + self.filename + ":" + str(self.line) + ":" + self.method
+        return ret
 
 def AmazedErrorFromGlobalException(global_exception):
         errCode = ErrorCode(global_exception.getErrorCode())
-        return AmazedError(errCode, global_exception.what())
+        ae = AmazedError(errCode, global_exception.what())
+        ae.stacktrace = global_exception.getStackTrace()
+        ae.line = global_exception.getLine()
+        ae.filename = global_exception.getFileName()
+        ae.method = global_exception.getMethod()
+        zlog.LogError(ae.filename + " : " + str(ae.line) + "(" + ae.method + ")")
+ 
+        return ae

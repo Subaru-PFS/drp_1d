@@ -87,8 +87,8 @@ CClassificationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     sum += Proba;
   }
   if (sum <= 0) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Classification failed, all probabilities undefined");
+    THROWG(INTERNAL_ERROR,
+           "Classification failed, all probabilities undefined");
   }
   for (const std::string &category : inputContext->m_categories) {
     Float64 proba = exp(logEvidences[category] - MaxLogEvidence);

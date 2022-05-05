@@ -127,29 +127,29 @@ bfs::path CPFTest::generate_noise_fits(Int32 size, NSEpic::Float64 lambda_min,
 
   if (fits_create_file(&fptr, tempfile.c_str(), &status)) {
     cerr << "Can't fits_create_file : " << status;
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "Can't fits_create_file");
+    THROWG(INTERNAL_ERROR, "Can't fits_create_file");
   }
 
   if (fits_create_tbl(fptr, BINARY_TBL, noise.GetSampleCount(), 2,
                       (char **)ttype, (char **)tform, NULL, NULL, &status)) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "Can't fits_create_tbl");
+    THROWG(INTERNAL_ERROR, "Can't fits_create_tbl");
   }
 
   if (fits_write_col(
           fptr, TDOUBLE, 1, 1, 1, noise.GetSampleCount(),
           const_cast<Float64 *>(noise.GetSpectralAxis().GetSamples()),
           &status)) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "Can't fits_write_col");
+    THROWG(INTERNAL_ERROR, "Can't fits_write_col");
   }
 
   if (fits_write_col(fptr, TDOUBLE, 2, 1, 1, noise.GetSampleCount(),
                      const_cast<Float64 *>(noise.GetFluxAxis().GetSamples()),
                      &status)) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "Can't fits_write_col");
+    THROWG(INTERNAL_ERROR, "Can't fits_write_col");
   }
 
   if (fits_close_file(fptr, &status)) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "Can't fits_close_file");
+    THROWG(INTERNAL_ERROR, "Can't fits_close_file");
   }
 
   return tempfile;

@@ -51,7 +51,7 @@ from pylibamazed.redshift import (CProcessFlowContext,
                                   CReliabilitySolve,
                                   CLineMeasSolve,
                                   CLineMatchingSolve,
-                                  CFlagWarning,
+                                  CFlagWarning,CLog,
                                   GlobalException, ErrorCode)
 import pandas as pd
 import json
@@ -60,6 +60,8 @@ import os
 from pylibamazed.Exception import AmazedError, AmazedErrorFromGlobalException
 import pylibamazed.redshift as amzErrorCodes #temporary
 zflag = CFlagWarning.GetInstance()
+zlog = CLog.GetInstance()
+
 class Context:
 
     def __init__(self, config, parameters):

@@ -79,7 +79,7 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(name);
   if (it != map.end()) {
-    throw new GlobalException(INTERNAL_ERROR, "Result already exist");
+    THROWG(INTERNAL_ERROR, "Result already exist");
   }
 
   map[scopedName] = result;
@@ -114,8 +114,8 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
     }
   }
 
-  throw GlobalException(
-      ErrorCode::INTERNAL_ERROR,
+  THROWG(
+      INTERNAL_ERROR,
       Formatter()
           << "COperatorResultStore::GetPerTemplateResult, per template result "
           << name << " not found");
@@ -167,8 +167,7 @@ COperatorResultStore::GetGlobalResult(const std::string &name) const {
   if (it != m_GlobalResults.end()) {
     return (*it).second;
   } else
-    throw GlobalException(ErrorCode::UNKNOWN_ATTRIBUTE,
-                          Formatter() << "Unknown global result:" << name);
+    THROWG(UNKNOWN_ATTRIBUTE, Formatter() << "Unknown global result:" << name);
 }
 
 std::weak_ptr<const COperatorResult>

@@ -195,9 +195,8 @@ bool CTemplate::Save(const char *filePath) const {
  */
 bool CTemplate::ApplyDustCoeff(Int32 kDust) {
   if (!CheckIsmIgmEnabled() || CalzettiInitFailed()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTemplate::ApplyDustCoeff: try to apply dust "
-                          "extinction without ism initialization");
+    THROWG(INTERNAL_ERROR, "CTemplate::ApplyDustCoeff: try to apply dust "
+                           "extinction without ism initialization");
   }
 
   if (m_kDust == kDust)
@@ -227,9 +226,8 @@ bool CTemplate::ApplyDustCoeff(Int32 kDust) {
  */
 bool CTemplate::ApplyMeiksinCoeff(Int32 meiksinIdx) {
   if (!CheckIsmIgmEnabled() || MeiksinInitFailed()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTemplate::ApplyMeiksinCoeff: try to apply igm "
-                          "extinction without igm initialization");
+    THROWG(INTERNAL_ERROR, "CTemplate::ApplyMeiksinCoeff: try to apply igm "
+                           "extinction without igm initialization");
   }
 
   if (m_meiksinIdx == meiksinIdx)
@@ -294,9 +292,8 @@ void CTemplate::InitIsmIgmConfig(
   bool ret = lbdaRange.getClosedIntervalIndices(
       m_SpectralAxis.GetSamplesVector(), kstart, kend);
   if (!ret) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
+    THROWG(INTERNAL_ERROR,
+           "CTemplate::InitIsmIgmConfig: lambda range outside spectral axis");
   }
   InitIsmIgmConfig(kstart, kend, redshift, ismCorrectionCalzetti,
                    igmCorrectionMeiksin);
@@ -315,17 +312,14 @@ void CTemplate::InitIsmIgmConfig(
     m_igmCorrectionMeiksin = igmCorrectionMeiksin;
 
   if (MeiksinInitFailed() && CalzettiInitFailed()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTemplate::InitIsmIgmConfig: Cannot init ismigm");
+    THROWG(INTERNAL_ERROR, "CTemplate::InitIsmIgmConfig: Cannot init ismigm");
   }
 
   if (kstart < 0 || kstart >= m_SpectralAxis.GetSamplesCount()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTemplate::InitIsmIgmConfig: kstart outside range");
+    THROWG(INTERNAL_ERROR, "CTemplate::InitIsmIgmConfig: kstart outside range");
   }
   if (kend < 0 || kend >= m_SpectralAxis.GetSamplesCount()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CTemplate::InitIsmIgmConfig: kend outside range");
+    THROWG(INTERNAL_ERROR, "CTemplate::InitIsmIgmConfig: kend outside range");
   }
 
   m_kDust = -1;
@@ -360,9 +354,8 @@ void CTemplate::InitIsmIgmConfig(
 
 Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
   if (MeiksinInitFailed()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CTemplate::GetIgmEndIndex: igm initialization not done");
+    THROWG(INTERNAL_ERROR,
+           "CTemplate::GetIgmEndIndex: igm initialization not done");
   }
 
   Int32 Igm_kend = -1;
@@ -392,14 +385,12 @@ void CTemplate::GetIsmIgmIdxList(Int32 opt_extinction, Int32 opt_dustFitting,
                                  bool keepigmism, Float64 FitEbmvCoeff,
                                  Int32 FitMeiksinIdx) const {
   if (MeiksinInitFailed() && opt_extinction) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
+    THROWG(INTERNAL_ERROR,
+           "CTemplate::GetIsmIgmIdxList: missing Meiksin initialization");
   }
   if (CalzettiInitFailed() && opt_dustFitting != -1) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
+    THROWG(INTERNAL_ERROR,
+           "CTemplate::GetIsmIgmIdxList: missing Calzetti initialization");
   }
 
   Int32 MeiksinListSize = 1;

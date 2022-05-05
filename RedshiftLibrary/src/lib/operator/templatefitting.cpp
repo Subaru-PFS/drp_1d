@@ -119,14 +119,12 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart,
       m_kEnd);
   if (!kStartEnd_ok)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFitting::BasicFit: impossible to "
-                          "get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFitting::BasicFit: impossible to "
+                           "get valid kstart or kend");
   if (m_kStart == -1 || m_kEnd == -1)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "COperatorTemplateFitting::BasicFit:: kStart="
-                              << m_kStart << ", kEnd=" << m_kEnd);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "COperatorTemplateFitting::BasicFit:: kStart="
+                               << m_kStart << ", kEnd=" << m_kEnd);
 
   if (apply_ism || opt_extinction) {
     InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
@@ -307,12 +305,11 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
       sumS += Yspc[j] * Yspc[j] * err2;
 
       if (std::isinf(err2) || std::isnan(err2)) {
-        throw GlobalException(
-            ErrorCode::INTERNAL_ERROR,
-            Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
-                           "found invalid inverse variance : err2="
-                        << err2 << ", for index=" << j
-                        << " at restframe wl=" << Xtpl[j]);
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
+                              "found invalid inverse variance : err2="
+                           << err2 << ", for index=" << j
+                           << " at restframe wl=" << Xtpl[j]);
       }
 
       if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS) {
@@ -328,19 +325,17 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
         Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
                      "invalid dtd : error=%e, for index=%d at restframe wl=%f",
                      error[j], j, Xtpl[j]);
-        throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                              Formatter()
-                                  << "COperatorTemplateFitting::"
-                                     "ComputeCrossProducts: found invalid dtd");
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "COperatorTemplateFitting::"
+                              "ComputeCrossProducts: found invalid dtd");
       }
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
-        throw GlobalException(
-            ErrorCode::INTERNAL_ERROR,
-            Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
-                           "found invalid mtm : mtm="
-                        << sumT << " for index=" << j
-                        << " at restframe wl=" << Xtpl[j]);
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
+                              "found invalid mtm : mtm="
+                           << sumT << " for index=" << j
+                           << " at restframe wl=" << Xtpl[j]);
       }
     }
   }
@@ -358,9 +353,8 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
   }
 
   if (numDevs == 0) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "COperatorTemplateFitting::ComputeCrossProducts: "
-                          "empty leastsquare sum");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFitting::ComputeCrossProducts: "
+                           "empty leastsquare sum");
   }
 
   return fitResult;
@@ -453,15 +447,14 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
       tpl->CalzettiInitFailed()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "  Operator-TemplateFitting: no calzetti calib. file in template");
+    THROWG(INTERNAL_ERROR,
+           "  Operator-TemplateFitting: no calzetti calib. file in template");
   }
   if (opt_dustFitting > -1 &&
       opt_dustFitting >
           tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() - 1) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         Formatter()
             << "Operator-TemplateFitting: calzetti index overflow (dustfitting="
             << opt_dustFitting << ",while NPrecomputedEbmvCoeffs="
@@ -470,9 +463,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
   }
 
   if (opt_extinction && tpl->MeiksinInitFailed()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "  Operator-TemplateFitting: no meiksin calib. file in template");
+    THROWG(INTERNAL_ERROR,
+           "  Operator-TemplateFitting: no meiksin calib. file in template");
   }
 
   if (m_spectrum.GetSpectralAxis().IsInLinearScale() == false ||
@@ -518,20 +510,18 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "Operator-TemplateFitting: masks-list size ("
-                              << additional_spcMasks.size()
-                              << ") didn't match the input redshift-list ("
-                              << sortedRedshifts.size() << ") !)");
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Operator-TemplateFitting: masks-list size ("
+                               << additional_spcMasks.size()
+                               << ") didn't match the input redshift-list ("
+                               << sortedRedshifts.size() << ") !)");
 
   if (logpriorze.size() > 0 && logpriorze.size() != sortedRedshifts.size())
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "Operator-TemplateFitting: prior list size("
-                              << logpriorze.size()
-                              << ") didn't match the input redshift-list size :"
-                              << sortedRedshifts.size());
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Operator-TemplateFitting: prior list size("
+                       << logpriorze.size()
+                       << ") didn't match the input redshift-list size :"
+                       << sortedRedshifts.size());
 
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
     const CPriorHelper::TPriorEList &logp =

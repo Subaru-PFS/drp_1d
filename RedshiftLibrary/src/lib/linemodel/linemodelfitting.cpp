@@ -172,7 +172,7 @@ CLineModelFitting::CLineModelFitting(
   {
       if(isnan(m_ContinuumFluxAxis[j]))
       {
-          throw GlobalException(ErrorCode::INTERNAL_ERROR, "CLineModelFitting():
+          THROWG(INTERNAL_ERROR, "CLineModelFitting():
   NaN value found for the ContinuumFluxAxis at lambda=%f", spectralAxis[j] );
   break;
       }
@@ -552,7 +552,7 @@ Float64 CLineModelFitting::getModelFluxVal(Int32 idx) const {
     return modelFluxAxis[idx];
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 Float64 CLineModelFitting::getModelFluxDerivEltVal(Int32 DerivEltIdx,
@@ -566,7 +566,7 @@ Float64 CLineModelFitting::getModelFluxDerivEltVal(Int32 DerivEltIdx,
     return derivateVal;
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 Float64
@@ -581,7 +581,7 @@ CLineModelFitting::getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx,
     return derivateVal;
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(Int32 idx) const {
@@ -595,7 +595,7 @@ Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(Int32 idx) const {
   //   return m_unscaleContinuumFluxAxisDerivZ[idx] *
   //   m_fitContinuum_tplFitAmplitude;
   // }
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 // void CLineModelFitting::calculateUnscaleContinuumDerivZ(){
@@ -632,7 +632,7 @@ CLineModelFitting::getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx,
     return derivateVal;
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 /*
@@ -652,7 +652,7 @@ CLineModelFitting::getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx,
     return derivateVal;
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 /*
@@ -665,7 +665,7 @@ Float64 CLineModelFitting::getModelFluxDerivVelVal(Int32 idx) const {
            m_SpcFluxAxisModelDerivVelAbs[idx];
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 Float64 CLineModelFitting::getModelFluxDerivVelEmissionVal(Int32 idx) const {
@@ -673,7 +673,7 @@ Float64 CLineModelFitting::getModelFluxDerivVelEmissionVal(Int32 idx) const {
     return m_SpcFluxAxisModelDerivVelEmi[idx];
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(Int32 idx) const {
@@ -681,7 +681,7 @@ Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(Int32 idx) const {
     return m_SpcFluxAxisModelDerivVelAbs[idx];
   }
 
-  throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound index");
+  THROWG(INTERNAL_ERROR, "out-of-bound index");
 }
 
 /**
@@ -818,9 +818,8 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(
   Int32 opt_dustFit = m_secondpass_fitContinuum_dustfit;
 
   if (m_observeGridContinuumFlux.empty()) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Elementlist, cannot SolveContinuum "
-                          "without m_observeGridContinuumFlux");
+    THROWG(INTERNAL_ERROR, "Elementlist, cannot SolveContinuum "
+                           "without m_observeGridContinuumFlux");
   }
   bool ret =
       SolveContinuum(tpl, redshifts, overlapThreshold, maskList, opt_interp,
@@ -858,8 +857,8 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(
 void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
   Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
   if (m_observeGridContinuumFlux.empty()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         "Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux");
   }
 
@@ -868,7 +867,7 @@ void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
     CTemplatesFitStore::TemplateFitValues fitValues =
         m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
     if (fitValues.tplName.empty()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR, "Empty template name");
+      THROWG(INTERNAL_ERROR, "Empty template name");
     }
 
     m_fitContinuum_tplName = fitValues.tplName;
@@ -894,8 +893,7 @@ void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
   } else if (m_fitContinuum_option == 2) {
     // values unmodified nothing to do
   } else {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Elementlist, cannot parse fitContinuum_option");
+    THROWG(INTERNAL_ERROR, "Elementlist, cannot parse fitContinuum_option");
   }
 
   if (!m_fitContinuum_tplName.empty()) {
@@ -947,17 +945,16 @@ void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
       Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
                    tplfitsnr);
     } else {
-      throw GlobalException(
-          ErrorCode::INTERNAL_ERROR,
+      THROWG(
+          INTERNAL_ERROR,
           Formatter()
               << "Failed to load-fit continuum. Failed to find best template="
               << m_fitContinuum_tplName.c_str());
     }
   } else {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "Failed to load-fit continuum for cfitopt="
-                              << m_fitContinuum_option);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Failed to load-fit continuum for cfitopt="
+                               << m_fitContinuum_option);
   }
 }
 
@@ -1025,8 +1022,7 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(
   Int32 idxDust = -1;
   if (m_fitContinuum_tplFitEbmvCoeff > 0.) {
     if (tpl->CalzettiInitFailed()) {
-      throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                            "  no calzetti calib. file in template");
+      THROWG(INTERNAL_ERROR, "  no calzetti calib. file in template");
     }
     idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(
         m_fitContinuum_tplFitEbmvCoeff);
@@ -1042,8 +1038,7 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(
           m_fitContinuum_tplFitMeiksinIdx, amplitude, inter_opt,
           overlapThreshold);
   if (spcmodel == nullptr)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Couldnt compute spectrum model");
+    THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
 
   // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
   m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
@@ -1062,9 +1057,8 @@ bool CLineModelFitting::SolveContinuum(
   bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(
       tpl->GetName(), redshifts, zePriorData);
   if (retGetPrior == false) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "    model: Failed to get prior for chi2 solvecontinuum.");
+    THROWG(INTERNAL_ERROR,
+           "    model: Failed to get prior for chi2 solvecontinuum.");
   }
   bool keepigmism = false;
   if (FitEbmvCoeff + fitMeiksinIdx != -2) {
@@ -1532,9 +1526,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     if (!m_tplshape_priorhelper->mInitFailed) {
       // prior initilization for tplshape EL only
       if (m_Elements.size() > 1) {
-        throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                              "    model: Unable to use tplshape line priors "
-                              "with nElts>1 for now");
+        THROWG(INTERNAL_ERROR, "    model: Unable to use tplshape line priors "
+                               "with nElts>1 for now");
         // NB: this could be done if the EL element idx in searched (see later
         // in the ifitting loop, UV Abs lines would be not affected by priors
         // then)
@@ -1547,9 +1540,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         bool retGetPrior = m_tplshape_priorhelper->GetTZEPriorData(
             tplrationame, ebvfilter, redshift, logPriorData);
         if (retGetPrior == false) {
-          throw GlobalException(
-              ErrorCode::INTERNAL_ERROR,
-              "    model: Failed to get prior for chi2 solvecontinuum.");
+          THROWG(INTERNAL_ERROR,
+                 "    model: Failed to get prior for chi2 solvecontinuum.");
         } else {
           logPriorDataTplShape.push_back(logPriorData);
         }
@@ -2453,7 +2445,7 @@ void CLineModelFitting::reinitModel() {
   {
       if(isnan(m_ContinuumFluxAxis[j]))
       {
-          throw GlobalException(ErrorCode::INTERNAL_ERROR,
+          THROWG(INTERNAL_ERROR,
   "CLineModelFitting::reinitModel: NaN value found for the ContinuumFluxAxis at
   lambda=%f", spectralAxis[j] ); break;
       }
@@ -2548,7 +2540,7 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
   {
       if(isnan(modelFluxAxis[j]))
       {
-          throw GlobalException(ErrorCode::INTERNAL_ERROR,
+          THROWG(INTERNAL_ERROR,
   "CLineModelFitting::refreshModel: NaN value found for the reinited model
   spectrum at lambda=%f", spectralAxis[j] ); break;
       }
@@ -2590,7 +2582,7 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
     {
         if(isnan(modelFluxAxis[j]))
         {
-            throw GlobalException(ErrorCode::INTERNAL_ERROR,
+            THROWG(INTERNAL_ERROR,
     "CLineModelFitting::refreshModel: NaN value found for the model spectrum at
     lambda=%f", spectralAxis[j] ); break;
         }
@@ -4056,7 +4048,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
   }
 
   if (lineIndex < 0 || lineIndex > catalog.size() - 1)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, "out-of-bound");
+    THROWG(INTERNAL_ERROR, "out-of-bound");
 
   // finding or setting the correct profile
   CLineProfile_ptr profile;
@@ -4470,9 +4462,8 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
         break;
       }
     }
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLineModelFitting::getLeastSquareMerit: NaN value found");
+    THROWG(INTERNAL_ERROR,
+           "CLineModelFitting::getLeastSquareMerit: NaN value found");
   }
   return fit;
 }
@@ -4932,8 +4923,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
  */
 bool CLineModelFitting::GetModelStrongEmissionLinePresent() const {
   if (!m_RestLineList.size())
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "m_RestframeList is empty");
+    THROWG(INTERNAL_ERROR, "m_RestframeList is empty");
 
   bool isStrongPresent = false;
 
@@ -5134,10 +5124,9 @@ return 0 if every was ok; else -1
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
   if (m_RestLineList.size() != modelSolution.Lines.size())
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLineModelFitting::LoadModelSolution: m_restLineList "
-        "and modelSolution.m_Lines have different size");
+    THROWG(INTERNAL_ERROR,
+           "CLineModelFitting::LoadModelSolution: m_restLineList "
+           "and modelSolution.m_Lines have different size");
 
   setRedshift(modelSolution.Redshift, false);
   SetVelocityEmission(modelSolution.EmissionVelocity);
@@ -5170,10 +5159,9 @@ void CLineModelFitting::LoadModelSolution(
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
 
     if (m_RestLineList[iRestLine] != modelSolution.Lines[iRestLine])
-      throw GlobalException(
-          ErrorCode::INTERNAL_ERROR,
-          "CLineModelFitting::LoadModelSolution: m_restLineList and "
-          "modelSolution.m_Lines dont correspond");
+      THROWG(INTERNAL_ERROR,
+             "CLineModelFitting::LoadModelSolution: m_restLineList and "
+             "modelSolution.m_Lines dont correspond");
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
@@ -5596,14 +5584,14 @@ void CLineModelFitting::SetLSF() {
   const std::shared_ptr<const CLSF> &lsf = m_inputSpc.GetLSF();
 
   if (lsf == nullptr) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         Formatter()
             << "CLineModelFitting::" << __func__
             << ": Cannot enable LSF, LSF spectrum member is not initialized");
   } else if (!lsf->IsValid()) {
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
+    THROWG(
+        INTERNAL_ERROR,
         Formatter() << "CLineModelFitting::" << __func__
                     << " Cannot enable LSF, LSF spectrum member is not valid");
   }
@@ -5649,9 +5637,8 @@ void CLineModelFitting::setVelocity(Float64 vel, Int32 idxElt, Int32 lineType) {
   if (idxElt < m_Elements.size()) {
     m_Elements[idxElt]->setVelocity(vel);
   } else
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter() << "Wrong index for line model element "
-                                      << idxElt);
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Wrong index for line model element " << idxElt);
 }
 
 void CLineModelFitting::SetVelocityEmissionOneElement(Float64 vel,

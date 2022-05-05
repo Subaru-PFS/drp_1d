@@ -85,8 +85,7 @@ CLineModelElement::CLineModelElement(
   } else if (widthType == "velocitydriven") {
     m_LineWidthType = VELOCITYDRIVEN;
   } else {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter() << "Unknown LineWidthType" << widthType);
+    THROWG(INTERNAL_ERROR, Formatter() << "Unknown LineWidthType" << widthType);
   }
 
   Int32 nLines = m_Lines.size();
@@ -144,8 +143,7 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z,
   const Float64 pfsSimuCompensationFactor = 1.0;
 
   if (!m_LSF)
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "LSF object is not initailized.");
+    THROWG(INTERNAL_ERROR, "LSF object is not initailized.");
   Float64 instrumentSigma = m_LSF->GetWidth(redshiftedlambda);
 
   Float64 velocitySigma = pfsSimuCompensationFactor * v / c *
@@ -161,9 +159,8 @@ Float64 CLineModelElement::GetLineWidth(Float64 redshiftedlambda, Float64 z,
     break;
   default:
     // TODO this should not happen here, but at parameter setting stage
-    throw GlobalException(ErrorCode::INTERNAL_ERROR, Formatter()
-                                                         << "Invalid LSF type "
-                                                         << m_LineWidthType);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Invalid LSF type " << m_LineWidthType);
   }
 
   Float64 sigma =
@@ -194,9 +191,8 @@ Float64 CLineModelElement::GetLineProfileDerivVel(const CLineProfile &profile,
   case VELOCITYDRIVEN:
     return v_to_sigma * profile.GetLineProfileDerivSigma(x, x0, sigma);
   default:
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          Formatter()
-                              << "Invalid LineWidthType : " << m_LineWidthType);
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Invalid LineWidthType : " << m_LineWidthType);
   }
   return 0.0;
 }
@@ -231,8 +227,7 @@ Float64 CLineModelElement::GetVelocity() const {
 
 void CLineModelElement::setVelocity(Float64 vel) {
   if (!m_Lines.size())
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Empty line model element, could not set velocity");
+    THROWG(INTERNAL_ERROR, "Empty line model element, could not set velocity");
 
   if (m_Lines[0].GetIsEmission()) {
     m_VelocityEmission = vel;
@@ -243,9 +238,8 @@ void CLineModelElement::setVelocity(Float64 vel) {
 
 const CLineProfile &CLineModelElement::getLineProfile(Int32 lineIdx) const {
   if (lineIdx > m_Lines.size() - 1)
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLineModelElement::getLineProfile out-of-bound index");
+    THROWG(INTERNAL_ERROR,
+           "CLineModelElement::getLineProfile out-of-bound index");
   return m_Lines[lineIdx].GetProfile();
 }
 
@@ -295,8 +289,7 @@ Float64 CLineModelElement::GetFitAmplitude() const { return m_fitAmplitude; }
  **/
 const std::string &CLineModelElement::GetLineName(Int32 subeIdx) const {
   if (subeIdx >= m_Lines.size())
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "CLineModelElement::GetLineName: invalid index");
+    THROWG(INTERNAL_ERROR, "CLineModelElement::GetLineName: invalid index");
 
   return m_Lines[subeIdx].GetName();
 }
@@ -647,8 +640,7 @@ void CLineModelElement::getObservedPositionAndLineWidth(
     bool doAsymfitdelta) const {
   mu = GetObservedPosition(subeIdx, redshift, doAsymfitdelta);
   if (!m_LSF->checkAvailability(mu)) {
-    throw GlobalException(ErrorCode::INTERNAL_ERROR,
-                          "Line position does not belong to LSF range");
+    THROWG(INTERNAL_ERROR, "Line position does not belong to LSF range");
   } else
     sigma = GetLineWidth(mu, redshift, m_Lines[subeIdx].GetIsEmission());
   return;
@@ -762,9 +754,8 @@ bool CLineModelElement::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp) {
 void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
                                            Float64 SNR) {
   if (subeIdx == undefIdx || subeIdx >= m_FittedAmplitudes.size())
-    throw GlobalException(
-        ErrorCode::INTERNAL_ERROR,
-        "CLineModelElement::SetFittedAmplitude: out-of-bound index");
+    THROWG(INTERNAL_ERROR,
+           "CLineModelElement::SetFittedAmplitude: out-of-bound index");
 
   if (m_OutsideLambdaRangeList[subeIdx]) {
     m_FittedAmplitudes[subeIdx] = NAN;
@@ -1063,13 +1054,12 @@ void CLineModelElement::addToSpectrumModel(
       Float64 Yi = getModelAtLambda(lambda, redshift, continuumfluxAxis[i], k);
       flux[i] += Yi;
       if (isnan(flux[i])) {
-        throw GlobalException(
-            ErrorCode::INTERNAL_ERROR,
-            Formatter() << "addToSpectrumModel has a NaN flux Line" << k
-                        << ": ContinuumFlux " << continuumfluxAxis[i]
-                        << ", ModelAtLambda Yi = " << Yi << " for range ["
-                        << m_StartNoOverlap[k] << ", " << m_EndNoOverlap[k]
-                        << "]");
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "addToSpectrumModel has a NaN flux Line" << k
+                           << ": ContinuumFlux " << continuumfluxAxis[i]
+                           << ", ModelAtLambda Yi = " << Yi << " for range ["
+                           << m_StartNoOverlap[k] << ", " << m_EndNoOverlap[k]
+                           << "]");
       }
     }
   }
@@ -1097,7 +1087,7 @@ void CLineModelElement::addToSpectrumModelDerivVel(
     Float64 A = m_FittedAmplitudes[k];
     if (isnan(A))
       continue;
-    // throw GlobalException(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");//to be uncommented
 
     for (Int32 i = m_StartNoOverlap[k]; i <= m_EndNoOverlap[k]; i++) {
@@ -1148,7 +1138,7 @@ Float64 CLineModelElement::getModelAtLambda(Float64 lambda, Float64 redshift,
     Float64 A = m_FittedAmplitudes[k2];
     if (isnan(A))
       continue;
-    // throw GlobalException(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
     if (A < 0.)
       continue;
@@ -1209,7 +1199,7 @@ Float64 CLineModelElement::GetModelDerivContinuumAmpAtLambda(
     Float64 A = m_FittedAmplitudes[k2];
     if (isnan(A))
       continue;
-    // throw GlobalException(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
     Yi += m_SignFactors[k2] * continuumFluxUnscale * A *
@@ -1238,7 +1228,7 @@ Float64 CLineModelElement::GetModelDerivZAtLambdaNoContinuum(
     Float64 A = m_FittedAmplitudes[k2];
     if (isnan(A))
       continue;
-    // throw GlobalException(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
     Float64 dzOffset = m_Lines[k2].GetOffset() / m_speedOfLightInVacuum;
@@ -1278,7 +1268,7 @@ CLineModelElement::GetModelDerivZAtLambda(Float64 lambda, Float64 redshift,
     Float64 A = m_FittedAmplitudes[k2];
     if (isnan(A))
       continue;
-    // throw GlobalException(ErrorCode::INTERNAL_ERROR,"FittedAmplitude cannot
+    // THROWG(INTERNAL_ERROR,"FittedAmplitude cannot
     // be NAN");
 
     Float64 dzOffset = m_Lines[k2].GetOffset() / m_speedOfLightInVacuum;
