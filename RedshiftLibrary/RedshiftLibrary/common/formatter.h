@@ -44,7 +44,8 @@
 class Formatter {
 public:
   Formatter() {}
-  ~Formatter() {}
+  Formatter(const Formatter &) = delete;
+  Formatter &operator=(Formatter &) = delete;
 
   template <typename Type> Formatter &operator<<(const Type &value) {
     stream_ << value;
@@ -59,8 +60,5 @@ public:
 
 private:
   std::stringstream stream_;
-
-  Formatter(const Formatter &);
-  Formatter &operator=(Formatter &);
 };
 #endif
