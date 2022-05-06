@@ -429,7 +429,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   int status, info;
   size_t i;
   size_t n = kmax - kmin +
-             2; // n samples on the support, /* number of data points to fit */
+             1; // n samples on the support, /* number of data points to fit */
   size_t p = 2; // DOF = 1.amplitude + 2.width
 
   if (verbose) {
@@ -583,6 +583,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   gsl_multifit_fdfsolver_free(s);
   gsl_matrix_free(covar);
   gsl_matrix_free(J);
+  free(x_init);
 
   return true;
 }
