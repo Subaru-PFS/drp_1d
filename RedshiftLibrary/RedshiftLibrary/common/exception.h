@@ -53,10 +53,15 @@ public:
   //#include "RedshiftLibrary/common/errorcodes.i"
   //  AmzException(ErrorCode ec, std::string message);
   AmzException(ErrorCode ec, std::string message, const char *filename_,
-               const char *method_, int line_);
-  AmzException(const AmzException &e);
+               const char *method_, int line_)
+      : code(ec), _msg(message), filename(filename_), method(method_),
+        line(line_) {}
+  AmzException(const AmzException &e) = default;
+  virtual ~AmzException() = default;
+  AmzException(AmzException &&other) = default;
+  AmzException &operator=(AmzException const &other) = default;
+  AmzException &operator=(AmzException &&other) = default;
 
-  virtual ~AmzException();
   virtual const char *what() const noexcept override { return _msg.c_str(); }
 
   const std::string &getMessage() { return _msg; }
@@ -64,14 +69,12 @@ public:
   ErrorCode getErrorCode() { return code; }
   void setErrorCode(ErrorCode ec) { code = ec; }
 
-  const char *getStackTrace() const;
-  std::string getFileName();
-  std::string getMethod();
-  int getLine();
+  std::string getFileName() { return filename; }
+  std::string getMethod() { return method; }
+  int getLine() { return line; }
 
 protected:
   std::string _msg;
-  std::string stacktrace;
   ErrorCode code;
   std::string filename = "";
   std::string method = "";
@@ -82,11 +85,9 @@ protected:
 // This exception should be caught only from pylibamazed or a client
 class GlobalException : public AmzException {
 public:
-  GlobalException(ErrorCode ec, std::string message)
-      : AmzException(ec, message, "", "", -1) {}
-  GlobalException(const GlobalException &e) : AmzException(e) {}
   GlobalException(ErrorCode ec, std::string message, const char *filename_,
-                  const char *method_, int line_);
+                  const char *method_, int line_)
+      : AmzException(ec, message, filename_, method_, line_) {}
 };
 
 //  typedef AmzException::ErrorCode ErrorCode;

@@ -238,8 +238,7 @@ void CLineModelElement::setVelocity(Float64 vel) {
 
 const CLineProfile &CLineModelElement::getLineProfile(Int32 lineIdx) const {
   if (lineIdx > m_Lines.size() - 1)
-    THROWG(INTERNAL_ERROR,
-           "CLineModelElement::getLineProfile out-of-bound index");
+    THROWG(INTERNAL_ERROR, "out-of-bound index");
   return m_Lines[lineIdx].GetProfile();
 }
 
@@ -289,7 +288,7 @@ Float64 CLineModelElement::GetFitAmplitude() const { return m_fitAmplitude; }
  **/
 const std::string &CLineModelElement::GetLineName(Int32 subeIdx) const {
   if (subeIdx >= m_Lines.size())
-    THROWG(INTERNAL_ERROR, "CLineModelElement::GetLineName: invalid index");
+    THROWG(INTERNAL_ERROR, "invalid index");
 
   return m_Lines[subeIdx].GetName();
 }
@@ -754,8 +753,7 @@ bool CLineModelElement::SetNominalAmplitude(Int32 subeIdx, Float64 nominalamp) {
 void CLineModelElement::SetFittedAmplitude(Int32 subeIdx, Float64 A,
                                            Float64 SNR) {
   if (subeIdx == undefIdx || subeIdx >= m_FittedAmplitudes.size())
-    THROWG(INTERNAL_ERROR,
-           "CLineModelElement::SetFittedAmplitude: out-of-bound index");
+    THROWG(INTERNAL_ERROR, "out-of-bound index");
 
   if (m_OutsideLambdaRangeList[subeIdx]) {
     m_FittedAmplitudes[subeIdx] = NAN;

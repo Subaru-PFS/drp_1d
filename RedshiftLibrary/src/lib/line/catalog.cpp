@@ -196,8 +196,8 @@ void CLineCatalog::AddLineFromParams(
     profile = std::unique_ptr<CLineProfileASYMFIT>(
         new CLineProfileASYMFIT(m_nSigmaSupport, _asymFitParams, "mean"));
   } else {
-    THROWG(INTERNAL_ERROR, Formatter() << "CLineCatalog::Load: Profile name "
-                                       << profileName << " is no recognized.");
+    THROWG(INTERNAL_ERROR, Formatter() << "Profile name " << profileName
+                                       << " is no recognized.");
   }
 
   Add(CLine(name, position, etype, std::move(profile), eforce, velocityOffset,

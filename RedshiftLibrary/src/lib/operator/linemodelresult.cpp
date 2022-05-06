@@ -111,8 +111,7 @@ void CLineModelResult::SetChisquareTplContinuumResult(
   const auto index_z_in_store =
       tplFitStore->GetRedshiftIndex(Redshifts[index_z]);
   if (index_z_in_store == -1)
-    THROWG(INTERNAL_ERROR, "CLineModelResult::SetChisquareTplContinuumResult: "
-                           "redshift not in fitstore");
+    THROWG(INTERNAL_ERROR, "Redshift not in fitstore");
 
   for (Int32 k = 0; k < tplFitStore->GetContinuumCount();
        k++) { // TODO: handle the use of more than one continuum in linemodel
@@ -140,16 +139,14 @@ void CLineModelResult::SetChisquareTplshapeResult(
     return;
 
   if (index_z >= Redshifts.size())
-    THROWG(INTERNAL_ERROR,
-           "CLineModelResult::SetChisquareTplshapeResult: invalid z index");
+    THROWG(INTERNAL_ERROR, "Invalid z index");
 
   if (chisquareTplshape.size() != ChiSquareTplshapes.size() ||
       chisquareTplshape.size() != scaleMargCorrTplshape.size() ||
       chisquareTplshape.size() != strongEmissionLinePresentTplshape.size() ||
       chisquareTplshape.size() != nLinesAboveSNRTplshape.size() ||
       chisquareTplshape.size() != priorLinesTplshape.size())
-    THROWG(INTERNAL_ERROR, "CLineModelResult::SetChisquareTplshapeResult: "
-                           "vector sizes do not match");
+    THROWG(INTERNAL_ERROR, "vector sizes do not match");
 
   for (Int32 k = 0; k < chisquareTplshape.size(); k++) {
     ChiSquareTplshapes[k][index_z] = chisquareTplshape[k];

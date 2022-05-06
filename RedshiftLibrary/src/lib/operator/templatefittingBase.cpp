@@ -151,7 +151,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   if (m_spcSpectralAxis_restframe.IsInLinearScale() !=
       tplSpectralAxis.IsInLinearScale()) {
     // status = nStatus_DataError;
-    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingBase::RebinTemplate: data "
+    THROWG(INTERNAL_ERROR, "data "
                            "and tpl not in the same scale (lin/log)");
   }
 
@@ -178,8 +178,7 @@ void COperatorTemplateFittingBase::RebinTemplate(
   if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
     // status = nStatus_NoOverlap;
     THROWG(OVERLAPRATE_NOTACCEPTABLE,
-           Formatter() << "COperatorTemplateFittingBase::RebinTemplate: "
-                          "tpl overlap too small, overlaprate of "
+           Formatter() << "tpl overlap too small, overlaprate of "
                        << overlapRate);
   }
 

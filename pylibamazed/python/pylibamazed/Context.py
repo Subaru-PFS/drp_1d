@@ -169,8 +169,6 @@ class Context:
 
         except GlobalException as e:
             raise AmazedErrorFromGlobalException(e)
-        except AmazedError as e:
-            raise e
         except Exception as e:
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
         return rso

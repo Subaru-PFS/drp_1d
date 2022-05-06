@@ -119,12 +119,11 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       m_templateRebined_bf.GetSpectralAxis().GetSamplesVector(), m_kStart,
       m_kEnd);
   if (!kStartEnd_ok)
-    THROWG(INTERNAL_ERROR, "COperatorTemplateFitting::BasicFit: impossible to "
+    THROWG(INTERNAL_ERROR, "Impossible to "
                            "get valid kstart or kend");
   if (m_kStart == -1 || m_kEnd == -1)
     THROWG(INTERNAL_ERROR, Formatter()
-                               << "COperatorTemplateFitting::BasicFit:: kStart="
-                               << m_kStart << ", kEnd=" << m_kEnd);
+                               << "kStart=" << m_kStart << ", kEnd=" << m_kEnd);
 
   if (apply_ism || opt_extinction) {
     InitIsmIgmConfig(redshift, tpl->m_ismCorrectionCalzetti,
@@ -306,9 +305,8 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
 
       if (std::isinf(err2) || std::isnan(err2)) {
         THROWG(INTERNAL_ERROR,
-               Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
-                              "found invalid inverse variance : err2="
-                           << err2 << ", for index=" << j
+               Formatter() << "found invalid inverse variance : err2=" << err2
+                           << ", for index=" << j
                            << " at restframe wl=" << Xtpl[j]);
       }
 
@@ -326,16 +324,13 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
                      "invalid dtd : error=%e, for index=%d at restframe wl=%f",
                      error[j], j, Xtpl[j]);
         THROWG(INTERNAL_ERROR,
-               Formatter() << "COperatorTemplateFitting::"
-                              "ComputeCrossProducts: found invalid dtd");
+               Formatter() << "ComputeCrossProducts: found invalid dtd");
       }
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
-        THROWG(INTERNAL_ERROR,
-               Formatter() << "COperatorTemplateFitting::ComputeCrossProducts: "
-                              "found invalid mtm : mtm="
-                           << sumT << " for index=" << j
-                           << " at restframe wl=" << Xtpl[j]);
+        THROWG(INTERNAL_ERROR, Formatter() << "found invalid mtm : mtm=" << sumT
+                                           << " for index=" << j
+                                           << " at restframe wl=" << Xtpl[j]);
       }
     }
   }
@@ -353,8 +348,7 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
   }
 
   if (numDevs == 0) {
-    THROWG(INTERNAL_ERROR, "COperatorTemplateFitting::ComputeCrossProducts: "
-                           "empty leastsquare sum");
+    THROWG(INTERNAL_ERROR, "empty leastsquare sum");
   }
 
   return fitResult;

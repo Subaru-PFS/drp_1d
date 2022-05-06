@@ -767,7 +767,6 @@ class AmzException : public std::exception
 
   virtual ~AmzException();
  
-  const char* getStackTrace() const;
   ErrorCode getErrorCode();
   virtual const char* what() ;
   std::string getFileName();
@@ -780,8 +779,6 @@ class AmzException : public std::exception
 class GlobalException: public AmzException
 {
  public:
-  GlobalException(ErrorCode ec,std::string message);
-  GlobalException(const GlobalException& e);
   GlobalException(ErrorCode ec, std::string message, const char * filename_,
 		  const char * method_, int line_);
   virtual ~GlobalException();

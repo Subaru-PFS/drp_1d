@@ -86,7 +86,11 @@ class CalibrationLibrary:
         self.line_ratio_catalog_lists = dict()
         self.lambda_offsets = dict()
         self.lsf = dict()
-        self.photometric_bands = CPhotBandCatalog()
+        try:
+            self.photometric_bands = CPhotBandCatalog()
+        except GlobalException as e:
+            raise AmazedErrorFromGlobalException(e)
+    
         self.calzetti = None
         self.meiksin = None
         self.reliability_models = {}
@@ -321,8 +325,6 @@ class CalibrationLibrary:
 
             if "photometryTransmissionDir" in self.parameters:
                 self.load_photometric_bands()
-        except AmazedError as e:
-            raise e
         except GlobalException as e:
             raise AmazedErrorFromGlobalException(e)
         except FileNotFoundError as e:

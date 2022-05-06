@@ -96,7 +96,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
           "photometry.weight");
   }
   if (fft_processing && use_photometry)
-    THROWG(INTERNAL_ERROR, "CTemplateFittingSolve::compute: fftprocessing not "
+    THROWG(INTERNAL_ERROR, "fftprocessing not "
                            "implemented with photometry enabled");
 
   if (fft_processing) {
@@ -137,8 +137,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    THROWG(INTERNAL_ERROR,
-           "CTemplateFittingSolve::compute: unknown spectrum component");
+    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
   }
 
   m_opt_maxCandidate =
@@ -286,8 +285,7 @@ bool CTemplateFittingSolve::Solve(
       option_dustFitting = -1;
     } else {
       // unknown type
-      THROWG(INTERNAL_ERROR,
-             "CTemplateFittingSolve::Solve: unknown spectrum component");
+      THROWG(INTERNAL_ERROR, "Unknown spectrum component");
     }
 
     // Compute merit function
@@ -403,11 +401,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
         }
       }
       if (foundBadStatus) {
-        THROWG(
-            INTERNAL_ERROR,
-            Formatter()
-                << "templatefittingsolve: Found bad status result... for tpl="
-                << (*it).first.c_str());
+        THROWG(INTERNAL_ERROR, Formatter()
+                                   << "Found bad status result... for tpl="
+                                   << (*it).first.c_str());
       }
     }
 
@@ -486,14 +482,12 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     }
     if (foundBadStatus) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "CTemplateFittingSolve::SaveExtremaResult: "
-                                    "Found bad status result... for tpl="
+                                 << "Found bad status result... for tpl="
                                  << r.first.c_str());
     }
     if (foundBadRedshift) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "CTemplateFittingSolve::SaveExtremaResult: "
-                                    "redshift vector is not the same for tpl="
+                                 << "redshift vector is not the same for tpl="
                                  << r.first.c_str());
     }
   }
@@ -561,9 +555,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
             opt_interp, overlapThreshold);
 
     if (spcmodelPtr == nullptr)
-      THROWG(INTERNAL_ERROR,
-             "CTemplateFittingSolve::SaveExtremaResult: Couldnt "
-             "compute spectrum model");
+      THROWG(INTERNAL_ERROR, "Couldnt "
+                             "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }

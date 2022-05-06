@@ -79,7 +79,8 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
       if (e.getErrorCode() != ErrorCode::DZ_NOT_COMPUTABLE) {
         std::string msg;
         msg = e.getMessage();
-        throw GlobalException(e.getErrorCode(), msg);
+        throw GlobalException(e.getErrorCode(), msg, __FILE__, __func__,
+                              __LINE__);
       } else {
         if (deltaz_i < maxIter) {
           // Log.LogWarning("  Deltaz: Deltaz computation failed for half range

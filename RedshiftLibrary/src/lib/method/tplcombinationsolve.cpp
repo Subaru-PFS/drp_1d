@@ -100,14 +100,12 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   } else if (opt_spcComponent == "all") {
     _type = nType_all;
   } else {
-    THROWG(INTERNAL_ERROR,
-           "CTplcombinationSolve::compute: unknown spectrum component");
+    THROWG(INTERNAL_ERROR, "Unknown spectrum component");
   }
 
   // for now interp must be 'lin'. pfg not availbale for now...
   if (opt_interp != "lin") {
-    THROWG(INTERNAL_ERROR,
-           "Tplcombinationsolve: interp. parameter must be 'lin'");
+    THROWG(INTERNAL_ERROR, "interp. parameter must be 'lin'");
   }
 
   Log.LogInfo("Method parameters:");
@@ -253,8 +251,7 @@ bool CTplcombinationSolve::Solve(
       scopeStr = "tplcombination_nocontinuum";
       enable_dustFitting = 0;
     } else {
-      THROWG(INTERNAL_ERROR,
-             "CTplcombinationSolve::Solve: unknown spectrum component");
+      THROWG(INTERNAL_ERROR, "Unknown spectrum component");
     }
 
     // Compute merit function

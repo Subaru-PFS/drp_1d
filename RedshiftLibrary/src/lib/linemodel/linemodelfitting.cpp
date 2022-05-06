@@ -172,9 +172,8 @@ CLineModelFitting::CLineModelFitting(
   {
       if(isnan(m_ContinuumFluxAxis[j]))
       {
-          THROWG(INTERNAL_ERROR, "CLineModelFitting():
-  NaN value found for the ContinuumFluxAxis at lambda=%f", spectralAxis[j] );
-  break;
+          THROWG(INTERNAL_ERROR, "NaN value found for the ContinuumFluxAxis at
+  lambda=%f", spectralAxis[j] );
       }
   }
   */
@@ -857,9 +856,8 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(
 void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
   Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
   if (m_observeGridContinuumFlux.empty()) {
-    THROWG(
-        INTERNAL_ERROR,
-        "Elementlist, cannot loadfitcontinuum without precomputedGridTplFlux");
+    THROWG(INTERNAL_ERROR,
+           "Cannot loadfitcontinuum without precomputedGridTplFlux");
   }
 
   if (m_fitContinuum_option ==
@@ -893,7 +891,7 @@ void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
   } else if (m_fitContinuum_option == 2) {
     // values unmodified nothing to do
   } else {
-    THROWG(INTERNAL_ERROR, "Elementlist, cannot parse fitContinuum_option");
+    THROWG(INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
 
   if (!m_fitContinuum_tplName.empty()) {
@@ -1526,7 +1524,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     if (!m_tplshape_priorhelper->mInitFailed) {
       // prior initilization for tplshape EL only
       if (m_Elements.size() > 1) {
-        THROWG(INTERNAL_ERROR, "    model: Unable to use tplshape line priors "
+        THROWG(INTERNAL_ERROR, "model: Unable to use tplshape line priors "
                                "with nElts>1 for now");
         // NB: this could be done if the EL element idx in searched (see later
         // in the ifitting loop, UV Abs lines would be not affected by priors
@@ -1541,7 +1539,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             tplrationame, ebvfilter, redshift, logPriorData);
         if (retGetPrior == false) {
           THROWG(INTERNAL_ERROR,
-                 "    model: Failed to get prior for chi2 solvecontinuum.");
+                 "model: Failed to get prior for chi2 solvecontinuum.");
         } else {
           logPriorDataTplShape.push_back(logPriorData);
         }
@@ -2446,7 +2444,7 @@ void CLineModelFitting::reinitModel() {
       if(isnan(m_ContinuumFluxAxis[j]))
       {
           THROWG(INTERNAL_ERROR,
-  "CLineModelFitting::reinitModel: NaN value found for the ContinuumFluxAxis at
+  "NaN value found for the ContinuumFluxAxis at
   lambda=%f", spectralAxis[j] ); break;
       }
   }*/
@@ -4462,8 +4460,7 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
         break;
       }
     }
-    THROWG(INTERNAL_ERROR,
-           "CLineModelFitting::getLeastSquareMerit: NaN value found");
+    THROWG(INTERNAL_ERROR, "NaN value found");
   }
   return fit;
 }
@@ -5124,9 +5121,8 @@ return 0 if every was ok; else -1
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
   if (m_RestLineList.size() != modelSolution.Lines.size())
-    THROWG(INTERNAL_ERROR,
-           "CLineModelFitting::LoadModelSolution: m_restLineList "
-           "and modelSolution.m_Lines have different size");
+    THROWG(INTERNAL_ERROR, "m_restLineList "
+                           "and modelSolution.m_Lines have different size");
 
   setRedshift(modelSolution.Redshift, false);
   SetVelocityEmission(modelSolution.EmissionVelocity);
@@ -5159,9 +5155,8 @@ void CLineModelFitting::LoadModelSolution(
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
 
     if (m_RestLineList[iRestLine] != modelSolution.Lines[iRestLine])
-      THROWG(INTERNAL_ERROR,
-             "CLineModelFitting::LoadModelSolution: m_restLineList and "
-             "modelSolution.m_Lines dont correspond");
+      THROWG(INTERNAL_ERROR, "m_restLineList and "
+                             "modelSolution.m_Lines dont correspond");
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
@@ -5584,16 +5579,11 @@ void CLineModelFitting::SetLSF() {
   const std::shared_ptr<const CLSF> &lsf = m_inputSpc.GetLSF();
 
   if (lsf == nullptr) {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter()
-            << "CLineModelFitting::" << __func__
-            << ": Cannot enable LSF, LSF spectrum member is not initialized");
+    THROWG(INTERNAL_ERROR,
+           "Cannot enable LSF, LSF spectrum member is not initialized");
   } else if (!lsf->IsValid()) {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter() << "CLineModelFitting::" << __func__
-                    << " Cannot enable LSF, LSF spectrum member is not valid");
+    THROWG(INTERNAL_ERROR,
+           " Cannot enable LSF, LSF spectrum member is not valid");
   }
 
   for (Int32 j = 0; j < m_Elements.size(); j++) {

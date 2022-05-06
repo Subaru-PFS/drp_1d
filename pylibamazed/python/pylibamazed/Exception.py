@@ -44,7 +44,6 @@ zlog = CLog.GetInstance()
 class AmazedError(AmzException):
     def __init__(self, errCode, message):
         zlog.LogError(errCode.name + " : " + message)
-
         self.errCode = errCode # we keep the python enum for further use
         AmzException.__init__(self, errCode.value, message,"","",-1)
         self.line = -1

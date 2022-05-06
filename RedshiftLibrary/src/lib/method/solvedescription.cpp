@@ -46,7 +46,6 @@ using namespace NSEpic;
 const std::string CSolveDescription::GetDescription(const std::string &method) {
   std::string desc;
 
-  return "toto";
   if (method == "linemodelsolve") {
     desc = "Method linemodel:\n";
 

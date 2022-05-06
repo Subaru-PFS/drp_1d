@@ -673,8 +673,7 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
         (m_opt_tplfit_dustFit || m_opt_tplfit_extinction)) { // refitfirstpass
       if (candidateIdx < 0 ||
           candidateIdx > m_firstpass_extremaResult->size() - 1) {
-        THROWG(INTERNAL_ERROR, "COperatorLinemodel::PrecomputeContinuumFit: "
-                               "Candidate index is out of range");
+        THROWG(INTERNAL_ERROR, "Candidate index is out of range");
       }
       // using one template per Z with fixed values for ism/igm (if Z changes,
       // template change;)
@@ -713,10 +712,8 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       bool retGetPrior = m_phelperContinuum->GetTplPriorData(
           tpl->GetName(), redshiftsTplFit, zePriorData);
       if (retGetPrior == false) {
-        THROWG(
-            INTERNAL_ERROR,
-            "COperatorLineModel::PrecomputeContinuumFit: Failed to get prior "
-            "for chi2 continuum precomp fit. aborting...");
+        THROWG(INTERNAL_ERROR, "Failed to get prior "
+                               "for chi2 continuum precomp fit. aborting...");
       }
 
       m_templateFittingOperator->SetRedshifts(redshiftsTplFit);
@@ -728,11 +725,10 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
                   zePriorData, keepismigm, EbmvCoeff, meiksinIdx));
 
       if (!templatefittingResult) {
-        THROWG(
-            INTERNAL_ERROR,
-            Formatter() << "COperatorLineModel::PrecomputeContinuumFit: failed "
-                           "to compute chisquare value for tpl=%"
-                        << tpl->GetName());
+        THROWG(INTERNAL_ERROR, Formatter()
+                                   << "failed "
+                                      "to compute chisquare value for tpl=%"
+                                   << tpl->GetName());
       } else {
         chisquareResultsAllTpl.push_back(templatefittingResult);
         chisquareResultsTplName.push_back(tpl->GetName());
@@ -766,9 +762,8 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       // logprior = %e", chisquareResult->LogPrior[i]);
 
       if (!retAdd) {
-        THROWG(INTERNAL_ERROR,
-               "COperatorLineModel::PrecomputeContinuumFit: Failed to add "
-               "continuum fit to store. aborting...");
+        THROWG(INTERNAL_ERROR, "Failed to add "
+                               "continuum fit to store. aborting...");
       }
 
       Float64 tplfitsnr = -1.;
@@ -820,18 +815,16 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
     if (m_opt_continuumcomponent != "tplfitauto") {
-      THROWG(
-          INTERNAL_ERROR,
-          Formatter() << "COperatorLineModel::PrecomputeContinuumFit: Negative "
-                         "continuum amplitude found at z="
-                      << max_fitamplitudeSigma_z << ": best continuum tpl "
-                      << fitValues.tplName
-                      << ", amplitude/error = " << fitValues.fitAmplitudeSigma
-                      << " & error = " << fitValues.fitAmplitudeError);
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "Negative "
+                            "continuum amplitude found at z="
+                         << max_fitamplitudeSigma_z << ": best continuum tpl "
+                         << fitValues.tplName << ", amplitude/error = "
+                         << fitValues.fitAmplitudeSigma
+                         << " & error = " << fitValues.fitAmplitudeError);
     } else {
       Flag.warning(Flag.FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
                    Formatter()
-                       << "  COperatorLineModel::" << __func__
                        << ": Switching to spectrum continuum since Negative "
                           "continuum amplitude found at z="
                        << max_fitamplitudeSigma_z << ": best continuum tpl "
@@ -861,9 +854,8 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   bool ret = secondpass_window.getClosedIntervalIndices(m_result->Redshifts,
                                                         i_min, i_max);
   if (!ret) {
-    THROWG(INTERNAL_ERROR,
-           "COperatorLineModel::SpanRedshiftWindow: second pass "
-           "window outside z range");
+    THROWG(INTERNAL_ERROR, "Second pass "
+                           "window outside z range");
   }
   for (Int32 i = i_min; i <= i_max; ++i) {
     extendedList.push_back(m_result->Redshifts[i]);
@@ -1255,10 +1247,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
   Int32 extremumCount = zCandidates.size();
   if (extremumCount > m_maxModelSaveCount) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "COperatorLineModel::SaveResults: ExtremumCount "
-                       << extremumCount << " is greater the maxModelSaveCount "
-                       << m_maxModelSaveCount);
+    THROWG(INTERNAL_ERROR, Formatter() << "ExtremumCount " << extremumCount
+                                       << " is greater the maxModelSaveCount "
+                                       << m_maxModelSaveCount);
   }
 
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -1282,11 +1273,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       if (m_secondpass_parameters_extremaResult.ID(j) == parentId)
         i_2pass = j;
     if (i_2pass == -1) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << __func__
-                         << ": impossible to find the first pass extrema "
-                            "id corresponding to 2nd pass extrema "
-                         << Id.c_str());
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "Impossible to find the first pass extrema "
+                                    "id corresponding to 2nd pass extrema "
+                                 << Id.c_str());
     }
 
     Log.LogInfo("");
