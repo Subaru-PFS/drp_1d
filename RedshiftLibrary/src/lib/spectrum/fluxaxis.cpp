@@ -162,7 +162,7 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
   for (j = 0; j < GetSamplesCount(); j++) {
 #ifdef DEBUG_BUILD
     if (!(mask[j] == 1 || mask[j] == 0))
-      throw new GlobalException(INTERNAL_ERROR, "bad mask");
+      THROWG(INTERNAL_ERROR, "bad mask");
 #endif
 
     sum += mask[j] * m_Samples[j];
@@ -197,7 +197,7 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError(const CMask &mask,
   for (j = 0; j < GetSamplesCount(); j++) {
 #ifdef DEBUG_BUILD
     if (!(mask[j] == 1 || mask[j] == 0))
-      throw new GlobalException(INTERNAL_ERROR, "bad mask");
+      THROWG(INTERNAL_ERROR, "bad mask");
 #endif
 
     weight = 1.0 / (error[j] * error[j]);

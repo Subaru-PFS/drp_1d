@@ -61,7 +61,7 @@ COperatorPdfz::COperatorPdfz(
       m_maxCandidate(maxCandidate), m_Id_prefix(Id_prefix),
       m_parentCandidates(parentCandidates.cbegin(), parentCandidates.cend()) {
   if (candidatesRedshifts.size() != parentCandidates.size())
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         "candidatesRedshifts and parentCandidates does not have the same size");
   for (Int32 i = 0; i < candidatesRedshifts.size(); ++i)

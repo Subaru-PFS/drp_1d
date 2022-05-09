@@ -429,16 +429,12 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
 
   Int32 nlines = eIdx_list.size();
   if (nlines != subeIdx_list.size())
-    throw GlobalException(INTERNAL_ERROR,
-                          "CLineModelFitting::getFluxDirectIntegration: indexe "
-                          "sizes do not match");
+    THROWG(INTERNAL_ERROR, " index sizes do not match");
   TInt32List indexes =
       getlambdaIndexesUnderLines(eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI);
 
   if (!indexes.size())
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "CLineModelFitting::getFluxDirectIntegration: empty indexes");
+    THROWG(INTERNAL_ERROR, "empty indexes");
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;

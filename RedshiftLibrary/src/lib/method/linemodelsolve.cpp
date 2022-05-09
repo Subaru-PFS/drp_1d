@@ -1159,11 +1159,8 @@ bool CLineModelSolve::Solve(
       std::dynamic_pointer_cast<const CLineModelResult>(
           m_linemodel.getResult());
 
-  if (!result) {
+  if (!result)
     THROWG(INTERNAL_ERROR, "Failed to get linemodel result");
-  } else {
-    // save linemodel chisquare results
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
 
   // save linemodel chisquare results
   resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);

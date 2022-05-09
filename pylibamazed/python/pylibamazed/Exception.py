@@ -55,22 +55,28 @@ class AmazedError(AmzException):
                                   frame.lineno)
         else:
             AmzException.__init__(self, errCode.value, message,filename,method,line)
-        self.line = line
-        self.method = method
-        self.filename = filename
-        zlog.LogError(errCode.name + " : " + message +  "["+self.filename + ":" + str(self.line) + "(" + self.method + ")]")b
+        zlog.LogError(self.__str__())
 
     def __str__(self):
-        ret = self.errCode.name + " : " + self.what() + "\n"
-        ret = ret + self.filename + ":" + str(self.line) + ":" + self.method
+        ret = self.errCode.name + ": " + self.getMessage() + " ["
+        ret = ret + self.getFileName() + ":" + str(self.getLine()) + ":" + self.getMethod() + "]"
         return ret
 
 def AmazedErrorFromGlobalException(global_exception):
         errCode = ErrorCode(global_exception.getErrorCode())
         ae = AmazedError(errCode,
-                         global_exception.what(),
+                         global_exception.getMessage(),
                          line=global_exception.getLine(),
                          filename=global_exception.getFileName(),
                          method=global_exception.getMethod())
  
         return ae
+
+
+class APIException(Exception):
+    def __init__(self, errCode, message):
+        self.errCode = errCode
+        self.message = message
+
+    def __str__(self):
+        return message

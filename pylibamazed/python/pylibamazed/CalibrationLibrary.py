@@ -56,7 +56,7 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
 import numpy as np
 from astropy.io import fits, ascii
 import glob
-from pylibamazed.Exception import AmazedError,AmazedErrorFromGlobalException
+from pylibamazed.Exception import AmazedError,AmazedErrorFromGlobalException,APIException
 zflag = CFlagWarning.GetInstance()
 
 
@@ -115,14 +115,14 @@ class CalibrationLibrary:
         # Template directory contains category directories
         categories = os.listdir(full_path)
         if not categories:
-            raise AmazedError(ErrorCode.INVALID_DIRECTORY, "No template category directory found in {}".format(full_path))
+            raise APIException(ErrorCode.INVALID_DIRECTORY, "No template category directory found in {}".format(full_path))
         for category in categories:
             category_path = os.path.join(full_path, category)
             # Category directory contains template files
             template_file_list = os.listdir(category_path)
 
             if not template_file_list:
-                raise AmazedError(ErrorCode.INVALID_FILEPATH,"No template file found in {}".format(category_path))
+                raise APIException(ErrorCode.INVALID_FILEPATH,"No template file found in {}".format(category_path))
             for template_filename in template_file_list:
                 file_path = os.path.join(category_path, template_filename)
                 # Template file is a two columns text file
@@ -130,7 +130,7 @@ class CalibrationLibrary:
                     data = np.loadtxt(file_path, unpack=True)
                 except Exception as e:
                     #logger.error("Unable to read template file {}".format(file_path))#todo: check if we keep the logger
-                    raise AmazedError(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
+                    raise APIException(ErrorCode.INVALID_FILEPATH,"Unable to read template file {}".format(file_path))
                 wavelength = data[0]
                 flux = data[1]
 
@@ -143,7 +143,7 @@ class CalibrationLibrary:
     def load_templates_catalog(self, object_type):
         if "template_dir" not in self.parameters[object_type]:
             # TODO create a dedicated class for setup exceptions
-            raise AmazedError(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, template_dir entry mandatory")
+            raise APIException(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, template_dir entry mandatory")
         self.templates_catalogs[object_type] = CTemplateCatalog()
         self._load_templates(object_type, self.parameters[object_type]["template_dir"])
         # Temporary hack before handling process flow in api
@@ -155,11 +155,11 @@ class CalibrationLibrary:
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "linecatalog" not in linemodel_params:
-            raise AmazedError(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, {}.linemodel.linecatalog entry"
+            raise APIException(ErrorCode.MISSING_PARAMETER, "Incomplete parameter file, {}.linemodel.linecatalog entry"
                                                           " mandatory".format(method))
         line_catalog_file = os.path.join(self.calibration_dir,linemodel_params["linecatalog"])
         if not os.path.exists(line_catalog_file):
-            raise AmazedError(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
+            raise APIException(ErrorCode.INVALID_FILEPATH,"{} cannot be found".format(line_catalog_file))
 
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
@@ -193,18 +193,20 @@ class CalibrationLibrary:
                                                              row.WaveLengthOffset,
                                                              row.EnableFitWaveLengthOffset,
                                                              index,
-                                                             self._get_linecatalog_id(row))
+                                                             _get_linecatalog_id(row))
 
     def load_line_ratio_catalog_list(self, object_type, method):
         logger = logging.getLogger("calibration_api")
         linemodel_params = self.parameters[object_type][method]["linemodel"]
         if "tplratio_catalog" not in linemodel_params:
-            raise AmazedError(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
+            raise APIException(ErrorCode.MISSING_PARAMETER,"Missing mandatory entry: {}.linemodel.tplratio_catalog ".format(method))
 
         line_ratio_catalog_list = os.path.join(self.calibration_dir,
                                                linemodel_params["tplratio_catalog"],
                                                "*.tsv")
         line_ratio_catalog_list = glob.glob(line_ratio_catalog_list)
+        if not line_ratio_catalog_list:
+            raise APIException(ErrorCode.INVALID_FILEPATH, "Template ratio catalog empty")
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
@@ -257,10 +259,10 @@ class CalibrationLibrary:
                              self.parameters["photometryTransmissionDir"],
                              "*")
         if not "photometryBand" in self.parameters:
-            raise AmazedError(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
+            raise APIException(ErrorCode.MISSING_PARAMETER,"photometryBand parameter required")
         bands = self.parameters["photometryBand"]
         if len(bands) == 0:
-            raise AmazedError(ErrorCode.INVALID_PARAMETER, "photometryBand parameter is empty")
+            raise APIException(ErrorCode.INVALID_PARAMETER, "photometryBand parameter is empty")
         for f in glob.glob(paths):
             df = pd.read_csv(f, comment='#')
             band = df.columns[1]
@@ -294,34 +296,39 @@ class CalibrationLibrary:
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content
 
         """
-        self.load_Meiksin()
-        self.load_calzetti()
-        for object_type in self.parameters["objects"]:
-            self.load_templates_catalog(object_type)
-            #load linecatalog for linemodelsolve
-            self.line_catalogs[object_type] = dict()
-            method = self.parameters[object_type]["method"]            
-            if method == "LineModelSolve":                
-                self.load_linecatalog(object_type,method)
-                if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
-                    self.load_line_ratio_catalog_list(object_type, method)
+        try:
+            self.load_Meiksin()
+            self.load_calzetti()
+            for object_type in self.parameters["objects"]:
+                self.load_templates_catalog(object_type)
+                #load linecatalog for linemodelsolve
+                self.line_catalogs[object_type] = dict()
+                method = self.parameters[object_type]["method"]            
+                if method == "LineModelSolve":                
+                    self.load_linecatalog(object_type,method)
+                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
+                        self.load_line_ratio_catalog_list(object_type, method)
+		            #load linecatalog for linemeassolve
+                linemeas_method = self.parameters[object_type]["linemeas_method"]
+                if linemeas_method == "LineMeasSolve":
+                    self.load_linecatalog(object_type,linemeas_method)            
+	
+                # Load the reliability model
+                if self.parameters[object_type].get("enable_reliability"):
+                    try:
+                        # to avoid annoying messages about gpu/cuda availability
+                        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+                        from tensorflow.keras import models
+                    except ImportError:
+                        zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
+                    else:
+                        model_path = os.path.join(self.calibration_dir,
+                                                  self.parameters[object_type]["reliability_model"])
+                        model = models.load_model(model_path)
+                        self.reliability_models[object_type] = model
 
-            # Load the reliability model
-            if self.parameters[object_type].get("enable_reliability"):
-                try:
-                    # to avoid annoying messages about gpu/cuda availability
-                    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-                    from tensorflow.keras import models
-                except ImportError:
-                    zflag.warning(zflag.RELIABILITY_NEEDS_TENSORFLOW,"Tensorflow is required to compute the reliability")
-                else:
-                    model_path = os.path.join(self.calibration_dir,
-                                              self.parameters[object_type]["reliability_model"])
-                    model = models.load_model(model_path)
-                    self.reliability_models[object_type] = model
-
-        if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
-            self.load_lsf()
+            if self.parameters["LSF"]["LSFType"] != "FROMSPECTRUMDATA":
+                self.load_lsf()
 
             if "photometryTransmissionDir" in self.parameters:
                 self.load_photometric_bands()
@@ -329,6 +336,8 @@ class CalibrationLibrary:
             raise AmazedErrorFromGlobalException(e)
         except FileNotFoundError as e:
             raise AmazedError(ErrorCode.INVALID_FILEPATH, str(e))
+        except APIException as e:
+            raise AmazedError(e.errCode, e.message)
         except Exception as e:
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
 

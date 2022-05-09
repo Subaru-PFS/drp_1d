@@ -230,6 +230,5 @@ LineModelExtremaResult::getCandidateParent(const int &rank,
   }
 
   else
-    throw GlobalException(UNKNOWN_ATTRIBUTE,
-                          "Unknown dataset for parentObject");
+    THROWG(UNKNOWN_ATTRIBUTE, "Unknown dataset for parentObject");
 }

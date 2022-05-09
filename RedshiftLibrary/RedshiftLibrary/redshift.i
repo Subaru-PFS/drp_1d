@@ -769,6 +769,8 @@ class AmzException : public std::exception
  
   ErrorCode getErrorCode();
   virtual const char* what() ;
+  const std::string &getMessage();
+
   std::string getFileName();
   std::string getMethod();
   int getLine();

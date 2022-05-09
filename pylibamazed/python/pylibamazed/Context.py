@@ -36,7 +36,6 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-from distutils.log import error
 import os.path
 
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
@@ -57,27 +56,37 @@ import pandas as pd
 import json
 import os
 
-from pylibamazed.Exception import AmazedError, AmazedErrorFromGlobalException
-import pylibamazed.redshift as amzErrorCodes #temporary
+from pylibamazed.Exception import (AmazedError,
+                                   AmazedErrorFromGlobalException,
+                                   APIException)
 zflag = CFlagWarning.GetInstance()
 zlog = CLog.GetInstance()
+
 
 class Context:
 
     def __init__(self, config, parameters):
-        _check_config(config)
-        self.calibration_library = CalibrationLibrary(parameters, config["calibration_dir"])
-        self.calibration_library.load_all()
-        self.process_flow_context = None
-        self.config = config
-        if "linemeascatalog" not in self.config:
-            self.config["linemeascatalog"] = {}
-        else:
-            _check_LinemeasValidity(config, parameters)
-        self.parameters = parameters
-        self.parameters["calibrationDir"]=config["calibration_dir"]
-        self.extended_results = config["extended_results"]
-
+        try:
+            _check_config(config)
+            self.calibration_library = CalibrationLibrary(parameters,
+                                                          config["calibration_dir"])
+            self.calibration_library.load_all()
+            self.process_flow_context = None
+            self.config = config
+            if "linemeascatalog" not in self.config:
+                self.config["linemeascatalog"] = {}
+            else:
+                _check_LinemeasValidity(config, parameters)
+            self.parameters = parameters
+            self.parameters["calibrationDir"]=config["calibration_dir"]
+            self.extended_results = config["extended_results"]
+        except GlobalException as e:
+            raise AmazedErrorFromGlobalException(e)
+        except APIException as e:
+            raise AmazedError(e.errCode,e.message)
+        except Exception as e:
+            raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
+            
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
         for object_type in self.parameters["objects"]:
@@ -169,6 +178,8 @@ class Context:
 
         except GlobalException as e:
             raise AmazedErrorFromGlobalException(e)
+        except APIException as e:
+            raise AmazedError(e.errCode,e.message)
         except Exception as e:
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
         return rso
@@ -176,7 +187,7 @@ class Context:
     def run_method(self, object_type, method):
 
         if "C" + method not in globals():
-            raise AmazedError(amzErrorCodes.INVALID_PARAMETER,"Unkown method {}".format(str(method)))
+            raise APIException(ErrorCode.INVALID_PARAMETER,"Unknown method {}".format(method))
         solver_method = globals()["C" + method]
         solver = solver_method(self.process_flow_context.m_ScopeStack,
                                object_type)
@@ -185,19 +196,19 @@ class Context:
 
 def _check_config(config):
     if "calibration_dir" not in config:
-        raise AmazedError(amzErrorCodes.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
+        raise APIException(ErrorCode.MISSING_CONFIG_OPTION,"Config must contain 'calibration_dir' key")
     if not os.path.exists(config["calibration_dir"]):
-        raise AmazedError(amzErrorCodes.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
+        raise APIException(ErrorCode.INVALID_DIRECTORY,"Calibration directory {} does not exist".format(config["calibration_dir"]))
     if "linemeascatalog" in config:
         if "linemeas_catalog_columns" not in config:
-            raise AmazedError(amzErrorCodes.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
+            raise APIException(ErrorCode.MISSING_CONFIG_OPTION,"Missing linemeas_catalog_columns key in linemeascatalog config-option")
         for object_type in config["linemeascatalog"].keys():
             if object_type not in config["linemeas_catalog_columns"]:
-                raise AmazedError(amzErrorCodes.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
+                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTIONS,"Missing category {} in linemeas_catalog_columns ".format(object_type))
 
             for attr in ["Redshift", "VelocityAbsorption", "VelocityEmission"]:
                 if attr not in config["linemeas_catalog_columns"][object_type]:
-                    raise AmazedError(amzErrorCodes.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
+                    raise APIException(ErrorCode.ATTRIBUTE_NOT_SUPPORTED,"Not supported Attribute {0} in Config['linemeas_catalog_columns'][{1}]".format(object_type, attr))
 
 
 def _check_LinemeasValidity(config, parameters):
@@ -207,4 +218,4 @@ def _check_LinemeasValidity(config, parameters):
         method = parameters[object_type]["method"]
         if method == "LineModelSolve":
             if "linemeas_method" in parameters[object_type] and parameters[object_type]["linemeas_method"]:
-                raise AmazedError(amzErrorCodes.INCOHERENT_CONFIG_OPTION, "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")
+                raise APIException(ErrorCode.INCOHERENT_CONFIG_OPTION, "Cannot run LineMeasSolve from catalog when sequencial processing is selected simultaneously.")

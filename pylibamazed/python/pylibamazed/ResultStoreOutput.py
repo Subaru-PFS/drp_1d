@@ -45,7 +45,7 @@ from collections import defaultdict
 from pylibamazed.redshift import (PC_Get_Float64Array, PC_Get_Int32Array, CLog, ErrorCode)
 #from pylibamazed.redshift import PC_Get_Float32Array #TODO ask Ali how to define this latter in the lib
 zlog = CLog.GetInstance()
-from pylibamazed.Exception import AmazedError
+from pylibamazed.Exception import AmazedError,APIException
 
 class ResultStoreOutput(AbstractOutput): 
     def __init__(self, result_store, parameters, results_specifications=rspecifications, auto_load=True, extended_results=True):
@@ -259,72 +259,76 @@ class ResultStoreOutput(AbstractOutput):
                             object_results_node.get(ds).attrs[ds_row["hdf5_name"]] = self.object_results[object_type][ds][ds_row["hdf5_name"]]
                     
     def write_hdf5(self,hdf5_root,spectrum_id):
-        obs = hdf5_root.create_group(spectrum_id)
-        self.write_hdf5_root(obs)
+        try:
+            obs = hdf5_root.create_group(spectrum_id)
+            self.write_hdf5_root(obs)
 
-        for object_type in self.object_types:
-            object_results = obs.create_group(object_type) #h5
-            self.write_hdf5_object_level(object_type, object_results)
-            
-            # warning flag
-            rs = self.results_specifications
-            rs = rs[rs["level"] == "method"]
-            methods_datasets = list(rs["hdf5_dataset"].unique())
-            for ds in methods_datasets:
-                if self.has_dataset(object_type,ds):
-                    ds_attributes = rs[rs["hdf5_dataset"] == ds] 
-                    object_results.create_group(ds)
-                    methods = self.get_solve_methods(object_type)
-                    for method in methods:                                               
-                        for index,ds_row in ds_attributes.iterrows():
-                            if "<MethodType>" in ds_row["hdf5_name"]:
-                                attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
-                            else :
-                                attr_name = ds_row["hdf5_name"]
-                            if self.has_attribute(object_type,ds,attr_name):
-                                object_results.get(ds).attrs[attr_name] = self.object_results[object_type][ds][attr_name]
+            for object_type in self.object_types:
+                object_results = obs.create_group(object_type) #h5
+                self.write_hdf5_object_level(object_type, object_results)
 
-            if self.get_solve_method(object_type):
+                # warning flag
+                rs = self.results_specifications
+                rs = rs[rs["level"] == "method"]
+                methods_datasets = list(rs["hdf5_dataset"].unique())
+                for ds in methods_datasets:
+                    if self.has_dataset(object_type,ds):
+                        ds_attributes = rs[rs["hdf5_dataset"] == ds] 
+                        object_results.create_group(ds)
+                        methods = self.get_solve_methods(object_type)
+                        for method in methods:                                               
+                            for index,ds_row in ds_attributes.iterrows():
+                                if "<MethodType>" in ds_row["hdf5_name"]:
+                                    attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
+                                else :
+                                    attr_name = ds_row["hdf5_name"]
+                                if self.has_attribute(object_type,ds,attr_name):
+                                    object_results.get(ds).attrs[attr_name] = self.object_results[object_type][ds][attr_name]
 
-                candidates = object_results.create_group("candidates")
-                level = "candidate"
-                rs, candidate_datasets = self.filter_datasets(level)
-                nb_candidates = len(self.object_results[object_type]["model_parameters"])
-                for rank in range(nb_candidates):
-                    candidate = candidates.create_group(self.get_candidate_group_name(rank))
-                    for ds in candidate_datasets:
-                        if self.has_dataset(object_type,ds):
-                            ds_attributes = rs[rs["hdf5_dataset"]==ds].copy()
-                            ds_dim = ds_attributes["dimension"].unique()[0]
-                            if ds_dim == "mono":
-                                candidate.create_group(ds)
+                if self.get_solve_method(object_type):
 
-                for ds in candidate_datasets:
-                    if not ds in self.object_results[object_type]:
-                        continue
-                    ds_attributes = rs[rs["hdf5_dataset"]==ds]
-
-                    # TODO change here when we will deal with 2D ranking or model ranking
-                    dimension=None
+                    candidates = object_results.create_group("candidates")
+                    level = "candidate"
+                    rs, candidate_datasets = self.filter_datasets(level)
+                    nb_candidates = len(self.object_results[object_type]["model_parameters"])
                     for rank in range(nb_candidates):
-                        candidate = candidates.get(self.get_candidate_group_name(rank))
-                        for index,ds_row in ds_attributes.iterrows():
-                            attr_name = ds_row['hdf5_name']
-                            if "<SPCand>" in ds_row["hdf5_name"]:
-                                attr_name = attr_name.replace("<SPCand>", "")
-                            dimension = ds_row["dimension"]
-                            if self.has_attribute(object_type,
-                                                  ds_row.hdf5_dataset,
-                                                  attr_name,
-                                                  rank) and dimension == "mono":
-                                candidate.get(ds).attrs[attr_name] = self.object_results[object_type][ds][rank][attr_name]
-                        if dimension == "multi":
-                            ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
-                            ds_size = self.get_dataset_size(object_type,ds,rank)
-                            candidate.create_dataset(ds,
-                                                     (ds_size,),
-                                                     ds_datatype,
-                                                     self.object_dataframes[object_type][ds][rank].to_records())
+                        candidate = candidates.create_group(self.get_candidate_group_name(rank))
+                        for ds in candidate_datasets:
+                            if self.has_dataset(object_type,ds):
+                                ds_attributes = rs[rs["hdf5_dataset"]==ds].copy()
+                                ds_dim = ds_attributes["dimension"].unique()[0]
+                                if ds_dim == "mono":
+                                    candidate.create_group(ds)
+
+                    for ds in candidate_datasets:
+                        if not ds in self.object_results[object_type]:
+                            continue
+                        ds_attributes = rs[rs["hdf5_dataset"]==ds]
+
+                        # TODO change here when we will deal with 2D ranking or model ranking
+                        dimension=None
+                        for rank in range(nb_candidates):
+                            candidate = candidates.get(self.get_candidate_group_name(rank))
+                            for index,ds_row in ds_attributes.iterrows():
+                                attr_name = ds_row['hdf5_name']
+                                if "<SPCand>" in ds_row["hdf5_name"]:
+                                    attr_name = attr_name.replace("<SPCand>", "")
+                                dimension = ds_row["dimension"]
+                                if self.has_attribute(object_type,
+                                                      ds_row.hdf5_dataset,
+                                                      attr_name,
+                                                      rank) and dimension == "mono":
+                                    candidate.get(ds).attrs[attr_name] = self.object_results[object_type][ds][rank][attr_name]
+                            if dimension == "multi":
+                                ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
+                                ds_size = self.get_dataset_size(object_type,ds,rank)
+                                candidate.create_dataset(ds,
+                                                         (ds_size,),
+                                                         ds_datatype,
+                                                         self.object_dataframes[object_type][ds][rank].to_records())
+        except Exception as e:
+            raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR,"Failed writing h5:".format(e))
+        
 
     def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None, firstpass_result=None):
         operator_result = self.get_operator_result(data_spec,object_type,rank,firstpass_result,linemeas)
@@ -415,7 +419,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                     data_spec.hdf5_dataset,
                                                                     data_spec.ResultStore_key)
                 else:
-                    raise AmazedError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                    raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
         elif data_spec.level == "method":
             if linemeas :
                 method = self.parameters[object_type]["linemeas_method"]
@@ -454,7 +458,7 @@ class ResultStoreOutput(AbstractOutput):
                                                                  method,
                                                                  data_spec.ResultStore_key)
             else:
-                raise AmazedError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
         elif data_spec.level == "candidate":
             method = self.get_solve_method(object_type)
             or_type = self.results_store.GetCandidateResultType(object_type,
@@ -497,5 +501,5 @@ class ResultStoreOutput(AbstractOutput):
                                                                data_spec.ResultStore_key,
                                                                rank)
             else:
-                raise AmazedError(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+                raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(or_type))
 
