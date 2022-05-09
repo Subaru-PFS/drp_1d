@@ -37,18 +37,28 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 from pylibamazed.redshift import CLog, AmzException, ErrorCode
+import sys,traceback
 
 zlog = CLog.GetInstance()
 
-
 class AmazedError(AmzException):
-    def __init__(self, errCode, message):
-        zlog.LogError(errCode.name + " : " + message)
+    def __init__(self, errCode, message, line=-1, method="", filename=""):
         self.errCode = errCode # we keep the python enum for further use
-        AmzException.__init__(self, errCode.value, message,"","",-1)
-        self.line = -1
-        self.method = ""
-        self.filename = ""
+        if line == -1:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            frame = traceback.extract_tb(exc_traceback)[-1]
+            AmzException.__init__(self,
+                                  errCode.value,
+                                  message,
+                                  frame.filename.split("/")[-1],
+                                  frame.name,
+                                  frame.lineno)
+        else:
+            AmzException.__init__(self, errCode.value, message,filename,method,line)
+        self.line = line
+        self.method = method
+        self.filename = filename
+        zlog.LogError(errCode.name + " : " + message +  "["+self.filename + ":" + str(self.line) + "(" + self.method + ")]")b
 
     def __str__(self):
         ret = self.errCode.name + " : " + self.what() + "\n"
@@ -57,11 +67,10 @@ class AmazedError(AmzException):
 
 def AmazedErrorFromGlobalException(global_exception):
         errCode = ErrorCode(global_exception.getErrorCode())
-        ae = AmazedError(errCode, global_exception.what())
-        ae.stacktrace = global_exception.getStackTrace()
-        ae.line = global_exception.getLine()
-        ae.filename = global_exception.getFileName()
-        ae.method = global_exception.getMethod()
-        zlog.LogError(ae.filename + " : " + str(ae.line) + "(" + ae.method + ")")
+        ae = AmazedError(errCode,
+                         global_exception.what(),
+                         line=global_exception.getLine(),
+                         filename=global_exception.getFileName(),
+                         method=global_exception.getMethod())
  
         return ae
