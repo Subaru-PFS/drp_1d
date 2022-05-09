@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefitting.h"
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/mask.h"
@@ -64,8 +65,6 @@
 #include <sstream>
 
 #include <assert.h>
-
-#define NOT_OVERLAP_VALUE NAN
 
 using namespace NSEpic;
 using namespace std;

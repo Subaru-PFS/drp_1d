@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/linemodel/lmfitfunctions.h"
 
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
@@ -50,24 +51,21 @@
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
+
+#include <float.h>
+#include <gsl/gsl_blas.h>
+
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_spline.h>
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-//#include <gsl/gsl_rng.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit_nlin.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_vector.h>
 
-#include <numeric>
+#include <boost/numeric/conversion/bounds.hpp>
+#include <gsl/gsl_multifit_nlin.h>
+#include <gsl/gsl_spline.h>
+#include <gsl/gsl_vector.h>
 using namespace NSEpic;
 using namespace std;
 
@@ -4038,7 +4036,7 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
 {
 
   // 1. retrieve the Lya index
-  std::string lyaTag = ltags.lya_em;
+  std::string lyaTag = linetags::lya_em;
 
   Int32 idxLineLyaE = undefIdx;
   Int32 idxLyaE = m_Elements.findElementIndex(lyaTag, -1, idxLineLyaE);
@@ -4706,20 +4704,21 @@ TStringList CLineModelFitting::getLinesAboveSNR(Float64 snrcut) const {
                                            opt_cont_substract_abslinesmodel,
                                            fluxDI, snrDI);
 
-    if (m_RestLineList[iRestLine].GetName() == ltags.halpha_em && isEmission)
+    if (m_RestLineList[iRestLine].GetName() == linetags::halpha_em &&
+        isEmission)
       snr_ha = snrDI;
 
-    if (m_RestLineList[iRestLine].GetName() == ltags.oIIIa_em && isEmission)
+    if (m_RestLineList[iRestLine].GetName() == linetags::oIIIa_em && isEmission)
       snr_oiiia = snrDI;
 
-    if (m_RestLineList[iRestLine].GetName() == ltags.hbeta_em && isEmission)
+    if (m_RestLineList[iRestLine].GetName() == linetags::hbeta_em && isEmission)
       snr_hb = snrDI;
 
-    if (m_RestLineList[iRestLine].GetName() == ltags.lya_em && isEmission)
+    if (m_RestLineList[iRestLine].GetName() == linetags::lya_em && isEmission)
       snr_lya = snrDI;
 
-    if ((m_RestLineList[iRestLine].GetName() == ltags.oII3726_em ||
-         m_RestLineList[iRestLine].GetName() == ltags.oII3729_em) &&
+    if ((m_RestLineList[iRestLine].GetName() == linetags::oII3726_em ||
+         m_RestLineList[iRestLine].GetName() == linetags::oII3729_em) &&
         isEmission) {
       // here we only cover the fluxDI case.
       eIdx_oii.push_back(eIdx);
@@ -4733,8 +4732,8 @@ TStringList CLineModelFitting::getLinesAboveSNR(Float64 snrcut) const {
 
       snr_oii = snrDI;
     }
-    if ((m_RestLineList[iRestLine].GetName() == ltags.cIII1907_em ||
-         m_RestLineList[iRestLine].GetName() == ltags.cIII1909_em) &&
+    if ((m_RestLineList[iRestLine].GetName() == linetags::cIII1907_em ||
+         m_RestLineList[iRestLine].GetName() == linetags::cIII1909_em) &&
         isEmission) {
       // here we only cover the fluxDI case.
       eIdx_ciii.push_back(eIdx);
@@ -4977,7 +4976,7 @@ bool CLineModelFitting::GetModelStrongEmissionLinePresent() const {
  * @return 1 if ha em is the strongest line present
  */
 bool CLineModelFitting::GetModelHaStrongest() const {
-  linetags ltags;
+
   Float64 ampMax = -DBL_MAX;
   std::string ampMaxLineTag = "";
 
@@ -4998,8 +4997,8 @@ bool CLineModelFitting::GetModelHaStrongest() const {
     }
   }
 
-  bool isHaStrongest =
-      (!std::isnan(ampMax) && ampMax > 0. && ampMaxLineTag == ltags.halpha_em);
+  bool isHaStrongest = (!std::isnan(ampMax) && ampMax > 0. &&
+                        ampMaxLineTag == linetags::halpha_em);
   if (isHaStrongest) {
     Log.LogDebug("    model: GetModelHaStrongest - found to be true with "
                  "ampMax=%e (for line=Halpha)",
@@ -5181,7 +5180,7 @@ void CLineModelFitting::LoadModelSolution(
       !std::isnan(modelSolution.LyaAlpha) or
       !std::isnan(modelSolution.LyaDelta)) {
 
-    std::string lyaTag = ltags.lya_em;
+    std::string lyaTag = linetags::lya_em;
     Int32 idxLyaE = m_Elements.findElementIndex(lyaTag);
     if (idxLyaE != undefIdx) {
       m_Elements[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
@@ -5201,21 +5200,21 @@ Int32 CLineModelFitting::improveBalmerFit() {
 
   // Emission Balmer lines
   TStringList linetagsE;
-  linetagsE.push_back(ltags.halpha_em);
-  linetagsE.push_back(ltags.hbeta_em);
-  linetagsE.push_back(ltags.hgamma_em);
-  linetagsE.push_back(ltags.hdelta_em);
+  linetagsE.push_back(linetags::halpha_em);
+  linetagsE.push_back(linetags::hbeta_em);
+  linetagsE.push_back(linetags::hgamma_em);
+  linetagsE.push_back(linetags::hdelta_em);
   // Absorption Balmer lines
   TStringList linetagsA;
-  linetagsA.push_back(ltags.halpha_abs);
-  linetagsA.push_back(ltags.hbeta_abs);
-  linetagsA.push_back(ltags.hgamma_abs);
-  linetagsA.push_back(ltags.hdelta_abs);
+  linetagsA.push_back(linetags::halpha_abs);
+  linetagsA.push_back(linetags::hbeta_abs);
+  linetagsA.push_back(linetags::hgamma_abs);
+  linetagsA.push_back(linetags::hdelta_abs);
   // Additional lines to be fitted with the Balmer lines, WARNING: only EMISSION
   // for now !!
   TStringList linetagsNII;
-  linetagsNII.push_back(ltags.niia_em);
-  linetagsNII.push_back(ltags.niib_em);
+  linetagsNII.push_back(linetags::niia_em);
+  linetagsNII.push_back(linetags::niib_em);
   TStringList linetagsVoid;
   std::vector<TStringList> linetagsMore;
   linetagsMore.push_back(linetagsNII);
@@ -5465,7 +5464,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       // individually...)
       bool directIntegration = true;
       if (isEmission &&
-          m_RestLineList[iRestLine].GetName() == ltags.halpha_em) {
+          m_RestLineList[iRestLine].GetName() == linetags::halpha_em) {
         if (directIntegration) {
           modelSolution.snrHa = snrDI;
           if (fluxDI > 0.0)
@@ -5480,8 +5479,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
         }
       }
       if (isEmission &&
-          (m_RestLineList[iRestLine].GetName() == ltags.oII3726_em ||
-           m_RestLineList[iRestLine].GetName() == ltags.oII3729_em)) {
+          (m_RestLineList[iRestLine].GetName() == linetags::oII3726_em ||
+           m_RestLineList[iRestLine].GetName() == linetags::oII3729_em)) {
         // here we only cover the fluxDI case.
         eIdx_oii.push_back(eIdx);
         subeIdx_oii.push_back(subeIdx);
@@ -5509,7 +5508,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   }
 
   // retrieve Lya params if fitted
-  std::string lyaTag = ltags.lya_em;
+  std::string lyaTag = linetags::lya_em;
   Int32 idxLyaE = m_Elements.findElementIndex(lyaTag);
   if (idxLyaE != undefIdx) {
     TAsymParams params = m_Elements[idxLyaE]->GetAsymfitParams(0);

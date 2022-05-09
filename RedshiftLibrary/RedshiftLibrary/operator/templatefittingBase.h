@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/operator/operator.h"
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/processflow/result.h"

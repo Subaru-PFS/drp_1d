@@ -37,21 +37,14 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/spectrum.h"
-#include "RedshiftLibrary/noise/flat.h"
-
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/log/log.h"
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
+#include "RedshiftLibrary/noise/flat.h"
+#include <gsl/gsl_fit.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
-
-#include "RedshiftLibrary/common/exception.h"
-#include <boost/filesystem.hpp>
-#include <gsl/gsl_fit.h>
-namespace bfs = boost::filesystem;
 
 using namespace NSEpic;
 using namespace std;

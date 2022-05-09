@@ -43,7 +43,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "RedshiftLibrary/common/exception.h"
-#include <cstdio>
 using namespace NSEpic;
 using namespace std;
 

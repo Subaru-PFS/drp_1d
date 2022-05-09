@@ -106,7 +106,6 @@ typedef struct {
   Float64 x2;
 } TPolynomCoeffs;
 
-static const Int32 undefIdx = -1;
 } // namespace NSEpic
 
 #endif

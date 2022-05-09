@@ -37,12 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/log/log.h"
-
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/log/handler.h"
-
-#include <cstdio>
-
-#define LOG_WORKING_BUFFER_SIZE 4096
 
 using namespace NSEpic;
 

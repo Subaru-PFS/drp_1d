@@ -44,9 +44,6 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/method/solveresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
-#include <float.h>
-#include <memory>
-#include <stdio.h>
 
 using namespace NSEpic;
 

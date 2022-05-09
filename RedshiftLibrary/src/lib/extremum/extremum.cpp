@@ -38,20 +38,14 @@
 // ============================================================================
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/log/log.h"
-
-#include <cmath>
 #include <float.h>
-#include <iostream>
 #include <numeric>
-#include <stdio.h>
-
-#define PEAKS_MIN_THRESHOLD (3)
-#define PEAKS_SMOOTH_LIMIT (20)
 
 using namespace NSEpic;
 using namespace std;

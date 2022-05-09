@@ -44,10 +44,6 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include <math.h>
-
-#include <stdio.h>
-
 using namespace NSEpic;
 
 CPeakDetection::CPeakDetection(Float64 windowSize, Float64 cut,

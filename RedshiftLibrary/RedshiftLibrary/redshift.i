@@ -94,6 +94,7 @@
 %{
 #define SWIG_FILE_WITH_INIT
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/pyconv.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
@@ -107,7 +108,6 @@
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
 #include "RedshiftLibrary/line/catalogsTplShape.h"
-#include "RedshiftLibrary/line/airvacuum.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -355,7 +355,6 @@ typedef struct {
   TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
   Float64 sigma, alpha, delta;
 } TAsymParams;
-
 
 class CLineRatioCatalog : public CLineCatalog
 {
@@ -608,20 +607,6 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
   CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum="" );
 };
 %clear (const Float64* samples, Int32 n);
-class CAirVacuum
-{
-public:
-    CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2);
-    virtual TFloat64List AirToVac(const TFloat64List & waveAir) const;
-    virtual TFloat64List VacToAir(const TFloat64List & waveVac) const;
-};
-class CAirVacuumConverter
-{
-public:
-    static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
-};
-
-//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
 %rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(Int32 n);

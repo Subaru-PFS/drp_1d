@@ -38,8 +38,6 @@
 // ============================================================================
 #include "RedshiftLibrary/log/consolehandler.h"
 
-#include <stdio.h>
-
 using namespace NSEpic;
 
 /**

@@ -37,38 +37,21 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/templatefittinglog.h"
-
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/operator/templatefittingresult.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/spectrum/tools.h"
 
-#include "RedshiftLibrary/log/log.h"
-
-#include <boost/numeric/conversion/bounds.hpp>
-
-#include <algorithm> // std::sort
 #include <float.h>
-#include <gsl/gsl_errno.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
-#include <math.h>
 
-#include <assert.h>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <numeric>
-#include <sstream>
-
-#define NOT_OVERLAP_VALUE NAN
-#include <stdio.h>
-
-namespace bfs = boost::filesystem;
 using namespace NSEpic;
 using namespace std;
 
@@ -889,7 +872,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   // wavelength appear
   Int32 enableIGM = m_enableIGM;
   Int32 overrideNIGMTobesaved = -1;
-  if (tplRebinedLambdaGlobal[kstart] > 1216. && nIGM > 1) {
+  if (tplRebinedLambdaGlobal[kstart] > RESTLAMBDA_LYA && nIGM > 1) {
     overrideNIGMTobesaved = nIGM;
     nIGM = 1;
     enableIGM = 0;

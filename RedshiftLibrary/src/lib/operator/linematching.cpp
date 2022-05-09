@@ -37,11 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/linematching.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <algorithm> // std::sort
-#include <math.h>
-#include <stdio.h>
 
 using namespace NSEpic;
 

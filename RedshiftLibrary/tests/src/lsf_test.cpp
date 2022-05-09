@@ -46,15 +46,6 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
 
-#include <cfloat>
-#include <cmath>
-#include <cstdio>
-#include <ctime>
-#include <iostream>
-#include <limits>
-#include <numeric>
-#include <vector>
-
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
 #include <boost/test/unit_test.hpp>

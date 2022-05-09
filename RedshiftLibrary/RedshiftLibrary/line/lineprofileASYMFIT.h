@@ -39,6 +39,7 @@
 #ifndef _REDSHIFT_LINE_PROFILE_ASYMFIT_
 #define _REDSHIFT_LINE_PROFILE_ASYMFIT_
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include <math.h>
 #include <string>
@@ -49,8 +50,8 @@ namespace NSEpic {
  */
 class CLineProfileASYMFIT : public CLineProfileASYM {
 public:
-  CLineProfileASYMFIT(const Float64 nsigmasupport = 8.0,
-                      TAsymParams params = {2., 2., 0.},
+  CLineProfileASYMFIT(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                      TAsymParams params = ASYMF_DEFAULT_PARAMS,
                       const std::string centeringMethod = "mean");
   bool isAsymFit() const override;
   bool isAsymFixed() const override;

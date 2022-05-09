@@ -52,7 +52,7 @@ CLSFGaussianConstantResolution::CLSFGaussianConstantResolution(
 
 Float64 CLSFGaussianConstantResolution::GetWidth(Float64 lambda) const {
   Float64 defaultSigma =
-      lambda / m_Resolution * m_instrumentResolutionEmpiricalFactor;
+      lambda / m_Resolution * INSTRUMENT_RESOLUTION_EMPERICALFACTOR;
   return defaultSigma;
 }
 
@@ -62,5 +62,5 @@ bool CLSFGaussianConstantResolution::IsValid() const {
 
 Float64 CLSFGaussianConstantResolution::computeResolution(Float64 lambda,
                                                           Float64 width) {
-  return lambda / width * m_instrumentResolutionEmpiricalFactor;
+  return lambda / width * INSTRUMENT_RESOLUTION_EMPERICALFACTOR;
 }

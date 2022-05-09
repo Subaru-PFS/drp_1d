@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/operator/linemodel.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
@@ -59,26 +60,16 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
 
-#include "boost/format.hpp"
 #include <boost/chrono/thread_clock.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
+#include <boost/format.hpp>
 
 #include "RedshiftLibrary/processflow/inputcontext.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
 
-#include <algorithm>
 #include <algorithm> //std::sort
 #include <assert.h>
-#include <float.h>
+#include <boost/numeric/conversion/bounds.hpp>
 #include <gsl/gsl_interp.h>
-#include <gsl/gsl_spline.h>
-#include <iostream>
-#include <math.h>
-#include <numeric> //std::iota
-#include <string>
-#include <vector>
-#define NOT_OVERLAP_VALUE NAN
-#include <stdio.h>
 
 using namespace NSEpic;
 using namespace std;

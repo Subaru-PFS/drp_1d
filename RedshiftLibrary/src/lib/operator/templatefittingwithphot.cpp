@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/operator/templatefittingwithphot.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -257,7 +258,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   const auto &End = m_sortedBandNames.cend();
   const auto IgmEnd =
       std::lower_bound(m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
-                       1216.0, [this](const std::string &s, Float64 v) {
+                       RESTLAMBDA_LYA, [this](const std::string &s, Float64 v) {
                          return m_photBandCat->at(s).GetMinLambda() < v;
                        });
 

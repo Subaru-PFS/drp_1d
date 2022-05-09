@@ -40,6 +40,7 @@
 #define _REDSHIFT_LINE_PROFILE_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include <cmath>
 #include <string>
 namespace NSEpic {
@@ -54,6 +55,13 @@ typedef struct TAsymParams {
   TAsymParams() = default;
   Float64 sigma, alpha, delta;
 } TAsymParams;
+
+// lineprofileAsym
+static const TAsymParams ASYM_DEFAULT_PARAMS{1.0, 4.5, 0.};
+static const Float64 ASYM_DEFAULT_CONSTSIGMA = 1.;
+// lineprofileAsym Fit anf Fixed
+static const TAsymParams ASYMF_DEFAULT_PARAMS{2.0, 2.0, 0.};
+static const Float64 ASYMF_DEFAULT_CONSTSIGMA = 2.5;
 
 enum TProfile {
   NONE,
@@ -70,8 +78,9 @@ enum TProfile {
 class CLineProfile {
 
 public:
-  CLineProfile(const Float64 nsigmasupport = 8.0);
-  CLineProfile(const Float64 nsigmasupport = 8.0, const TProfile = NONE);
+  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
+               const TProfile = NONE);
   virtual Float64 GetLineProfile(Float64 x, Float64 x0,
                                  Float64 sigma) const = 0;
   virtual Float64 GetLineFlux(Float64 A, Float64 sigma) const = 0;
