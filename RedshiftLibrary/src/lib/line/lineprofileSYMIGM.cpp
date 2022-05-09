@@ -83,20 +83,29 @@ Float64 CLineProfileSYMIGM::GetLineProfileVal(Float64 x, Float64 x0,
 Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
                                         Float64 A) const {
   CheckMeiksinInit();
-  const Float64 winsize = sigma * N_SIGMA_SUPPORT;
-  TFloat64Range range(x0 - winsize / 2, x0 + winsize / 2);
+
+  const Float64 x0_rest = x0 / (1 + m_redshift);
+  const Float64 winsize_rest = sigma / (1 + m_redshift) * N_SIGMA_SUPPORT;
+  TFloat64Range range_rest(x0_rest - winsize_rest / 2,
+                           x0_rest + winsize_rest / 2);
+
+  // check igm, if not applicable return Gaussian flux
+  if (m_igmidx < 0 || range_rest.GetBegin() > RESTLAMBDA_LYA)
+    return A * sigma * sqrt(2 * M_PI);
+
+  // lambda rest grid of convolved igm: will avoid NGP interp later on
   Float64 step = 1.0 / IGM_OVERSAMPLING;
-  TFloat64List list = range.SpreadOver(step);
+  TFloat64List xlist_rest = range_rest.SpreadOver(step);
 
   Float64 flux = 0.;
-  for (Float64 x : list) {
-    Float64 igm_fluxcorr_lbda = getIGMCorrection(x);
-    flux += igm_fluxcorr_lbda;
-  }
+  for (Float64 x_rest : xlist_rest)
+    flux += GetLineProfileVal(x_rest * (1 + m_redshift), x0, sigma);
+  flux *= (xlist_rest.back() - xlist_rest.front()) * (1 + m_redshift);
+
   return A * flux;
 }
 
-// we should derivate the IgmCorrection  at z_binwith respect to Z
+// we should derive the IgmCorrection  at z_binwith respect to Z
 Float64 CLineProfileSYMIGM::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
                                                  Float64 redshift,
                                                  Float64 sigma) const {
