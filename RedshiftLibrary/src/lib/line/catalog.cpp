@@ -242,6 +242,8 @@ void CLineCatalog::convertLineProfiles2SYMIGM(
   linetags ltags;
   TLineVector::iterator it;
   for (it = m_List.begin(); it != m_List.end(); ++it) {
+    if (!it->GetIsEmission())
+      continue;
     if (it->GetName() == ltags.lya_em || it->GetPosition() < RESTLAMBDA_LYA)
       it->setProfileAndParams("SYMIGM", TAsymParams(), m_nSigmaSupport,
                               igmcorrection);
