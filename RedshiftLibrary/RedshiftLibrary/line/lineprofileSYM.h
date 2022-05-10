@@ -49,7 +49,7 @@ namespace NSEpic {
  */
 class CLineProfileSYM : public CLineProfile {
 public:
-  CLineProfileSYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+  CLineProfileSYM(Float64 nsigmasupport = N_SIGMA_SUPPORT);
   virtual Float64 GetLineProfileVal(Float64 x, Float64 x0,
                                     Float64 sigma) const override;
   virtual Float64 GetLineFlux(Float64 x0, Float64 sigma,

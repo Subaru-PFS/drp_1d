@@ -42,7 +42,7 @@
 using namespace NSEpic;
 using namespace std;
 
-CLineProfileLOR::CLineProfileLOR(const Float64 nsigmasupport)
+CLineProfileLOR::CLineProfileLOR(Float64 nsigmasupport)
     : CLineProfile(nsigmasupport, LOR) {}
 
 Float64 CLineProfileLOR::GetLineProfileVal(Float64 x, Float64 x0,

@@ -85,8 +85,7 @@ enum TProfile { NONE, SYM, LOR, ASYM, ASYMFIT, SYMIGM };
 class CLineProfile {
 
 public:
-  CLineProfile(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-               const TProfile name = NONE)
+  CLineProfile(Float64 nsigmasupport = N_SIGMA_SUPPORT, TProfile name = NONE)
       : m_nsigmasupport(nsigmasupport), m_name(name){};
 
   virtual ~CLineProfile() = default;

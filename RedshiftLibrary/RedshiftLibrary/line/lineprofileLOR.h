@@ -50,7 +50,7 @@ namespace NSEpic {
  */
 class CLineProfileLOR : public CLineProfile {
 public:
-  CLineProfileLOR(const Float64 nsigmasupport = N_SIGMA_SUPPORT);
+  CLineProfileLOR(Float64 nsigmasupport = N_SIGMA_SUPPORT);
   Float64 GetLineProfileVal(Float64 x, Float64 x0,
                             Float64 sigma) const override;
   Float64 GetLineFlux(Float64 x0, Float64 sigma,

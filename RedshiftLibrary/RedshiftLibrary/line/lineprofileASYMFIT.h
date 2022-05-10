@@ -49,13 +49,16 @@ namespace NSEpic {
  */
 class CLineProfileASYMFIT : public CLineProfileASYM {
 public:
-  CLineProfileASYMFIT(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-                      TAsymParams params = ASYMF_DEFAULT_PARAMS,
-                      const std::string centeringMethod = "mean");
+  CLineProfileASYMFIT(Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                      const TAsymParams &params = ASYMF_DEFAULT_PARAMS,
+                      const std::string &centeringMethod = "mean");
+  CLineProfileASYMFIT(
+      const CLineProfileASYM &other); // asymfit->asymfixed converter
   bool isAsymFit() const override { return true; };
   bool isAsymFixed() const override { return false; };
   void SetAsymParams(const TAsymParams &params) override;
   void resetParams() override;
+  std::unique_ptr<CLineProfile> cloneToASYM() const;
 
 private:
   CLineProfile *CloneImplementation() const override {

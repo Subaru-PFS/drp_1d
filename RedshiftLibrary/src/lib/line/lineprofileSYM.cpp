@@ -41,7 +41,7 @@
 using namespace NSEpic;
 using namespace std;
 
-CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport)
+CLineProfileSYM::CLineProfileSYM(Float64 nsigmasupport)
     : CLineProfile(nsigmasupport, SYM) {}
 
 CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport,

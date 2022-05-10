@@ -47,16 +47,21 @@ namespace NSEpic {
 /**
  * \ingroup Redshift
  */
+
+class CLineProfileASYMFIT;
 class CLineProfileASYM : public CLineProfile {
 public:
-  CLineProfileASYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-                   const TAsymParams params = ASYM_DEFAULT_PARAMS,
-                   const std::string centeringMethod = "none");
+  CLineProfileASYM(Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                   const TAsymParams &params = ASYM_DEFAULT_PARAMS,
+                   const std::string &centeringMethod = "none");
   virtual ~CLineProfileASYM() = default;
   CLineProfileASYM(const CLineProfileASYM &other) = default;
   CLineProfileASYM(CLineProfileASYM &&other) = default;
   CLineProfileASYM &operator=(const CLineProfileASYM &other) = default;
   CLineProfileASYM &operator=(CLineProfileASYM &&other) = default;
+
+  CLineProfileASYM(
+      const CLineProfileASYMFIT &other); // ASYMFIT -> ASYM converter
 
   Float64 GetLineProfileVal(Float64 x, Float64 x0,
                             Float64 sigma) const override;
@@ -71,6 +76,12 @@ public:
   Float64 GetDelta() const override { return m_asym_delta; };
   virtual bool isAsymFixed() const override { return true; };
 
+  virtual const std::string &GetCenteringMethod() const {
+    return m_centeringMethod;
+  };
+
+  std::unique_ptr<CLineProfile> cloneToASYMFIT() const;
+
 private:
   virtual CLineProfile *CloneImplementation() const override {
     return new CLineProfileASYM(*this);
@@ -79,9 +90,9 @@ private:
 
 protected:
   CLineProfileASYM(
-      const TProfile pltype, const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-      const TAsymParams params = ASYMF_DEFAULT_PARAMS,
-      const std::string centeringMethod = "mean"); // mainly called by asymfit
+      TProfile pltype, Float64 nsigmasupport = N_SIGMA_SUPPORT,
+      const TAsymParams &params = ASYMF_DEFAULT_PARAMS,
+      const std::string &centeringMethod = "mean"); // used by asymfit ctor
 
   bool isValid() const;
   Float64 m_asym_sigma_coeff = ASYM_DEFAULT_PARAMS.sigma;

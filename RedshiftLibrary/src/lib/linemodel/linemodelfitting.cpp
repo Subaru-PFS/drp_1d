@@ -1630,12 +1630,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         setLyaProfile(m_Redshift,
                       m_CatalogTplShape.GetCatalog(ifitting).GetList(), true);
       } else {
-        if (!m_forceDisableLyaFitting) // for asymFit, disable fitting
-        {
-          // prepare the Lya width and asym coefficients if the asymfit profile
-          // option is met
-          setLyaProfile(redshift, m_RestLineList);
-        }
+        // prepare the Lya width and asym coefficients if the asymfit profile
+        // option is met
+        setLyaProfile(m_Redshift, m_RestLineList);
       }
       // generate random amplitudes
       if (m_fittingmethod == "random") {
@@ -4070,9 +4067,16 @@ Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
 
   // finding or setting the correct profile
   CLineProfile_ptr profile;
-  if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
-    profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(
-        m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"));
+  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile().isAsymFit())
+    // convert asymfit to asymfixed profile
+    profile = dynamic_cast<const CLineProfileASYMFIT *>(
+                  &catalog[lineIndex].GetProfile())
+                  ->cloneToASYM();
+  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+    // convert asymfixed to asymfit
+    profile =
+        dynamic_cast<const CLineProfileASYM *>(&catalog[lineIndex].GetProfile())
+            ->cloneToASYMFIT();
   else
     profile = catalog[lineIndex].GetProfile().Clone();
 
