@@ -450,6 +450,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   Float64 *x_init = (Float64 *)calloc(p, sizeof(Float64));
   if (x_init == 0) {
+    gsl_matrix_free(covar);
+    gsl_matrix_free(J);
     Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to "
                  "allocate x_init");
     return false;
@@ -522,6 +524,9 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   s = gsl_multifit_fdfsolver_alloc(T, n, p);
   if (s == 0) {
+    gsl_matrix_free(covar);
+    gsl_matrix_free(J);
+    free(x_init);
     THROWG(INTERNAL_ERROR, "    CPdfCandidatesZ::getCandidateSumGaussFit - "
                            "Unable to allocate the multifit solver");
     return false;
