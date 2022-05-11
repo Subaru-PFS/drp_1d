@@ -161,16 +161,17 @@ class ResultStoreOutput(AbstractOutput):
                 firstpass_result = False
                 for index, ds_row in ds_attributes.iterrows():
                     #            for attr in list(ds_attributes["hdf5_name"]):
-                    if "<SPCand>" in ds_row["hdf5_name"]: #writing firstpass results
+                    attr_name = ds_row["hdf5_name"]
+                    if "<SPCand>" in attr_name: #writing firstpass results
                         #read ParendObject from resultStore 
                         firstpass_result = True
-                        ds_row["hdf5_name"] = ds_row["hdf5_name"].replace("<SPCand>","")
+                        attr_name = attr_name.replace("<SPCand>","")
                     if self.has_attribute_in_result_store(ds_row,object_type, rank, firstpass_result):
                         attr = self._get_attribute_from_result_store(ds_row, object_type, rank, firstpass_result=firstpass_result)
-                        candidates[rank][ds_row["hdf5_name"]] = attr
+                        candidates[rank][attr_name] = attr
                         dimension = ds_row["dimension"]
                         if dimension == "multi":
-                            candidates_df[rank][ds_row["hdf5_name"]] = candidates[rank][ds_row["hdf5_name"]]
+                            candidates_df[rank][attr_name] = candidates[rank][attr_name]
             self.object_results[object_type][ds] = candidates
             if dimension == "multi":
                 self.object_dataframes[object_type][ds] = candidates_df
@@ -308,15 +309,15 @@ class ResultStoreOutput(AbstractOutput):
                     for rank in range(nb_candidates):
                         candidate = candidates.get(self.get_candidate_group_name(rank))
                         for index,ds_row in ds_attributes.iterrows():
-                            attr=ds_row['hdf5_name']
+                            attr_name = ds_row['hdf5_name']
                             if "<SPCand>" in ds_row["hdf5_name"]:
-                                attr=ds_row['hdf5_name'].replace("<SPCand>", "")
+                                attr_name = attr_name.replace("<SPCand>", "")
                             dimension = ds_row["dimension"]
                             if self.has_attribute(object_type,
                                                   ds_row.hdf5_dataset,
-                                                  attr,
+                                                  attr_name,
                                                   rank) and dimension == "mono":
-                                candidate.get(ds).attrs[attr] = self.object_results[object_type][ds][rank][attr]
+                                candidate.get(ds).attrs[attr_name] = self.object_results[object_type][ds][rank][attr_name]
                         if dimension == "multi":
                             ds_datatype = np.dtype([(row["hdf5_name"],row["hdf5_type"]) for index, row in ds_attributes.iterrows()])
                             ds_size = self.get_dataset_size(object_type,ds,rank)
