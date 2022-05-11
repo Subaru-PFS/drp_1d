@@ -50,7 +50,7 @@ using namespace NSEpic;
 /**
  * \brief Empty constructor.
  **/
-CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<TCandidateZ>& BestExtremumResult,
+CLineModelSolveResult::CLineModelSolveResult(const std::shared_ptr<const TCandidateZ>& BestExtremumResult,
                                              const std::string& opt_pdfcombination,
                                              Float64 evidence):
     CPdfSolveResult( BestExtremumResult, opt_pdfcombination, evidence)

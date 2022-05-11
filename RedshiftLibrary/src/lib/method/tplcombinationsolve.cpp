@@ -145,9 +145,9 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   TFloat64Range clampedLbdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedLbdaRange);
   std::shared_ptr<const TplCombinationExtremaResult> extremaResult =
-      SaveExtremaResult(resultStore, scopeStr,
-                        candidateResult->m_ranked_candidates, spc, tplCatalog,
-                        clampedLbdaRange, overlapThreshold, opt_interp);
+      buildExtremaResults(resultStore, scopeStr,
+                          candidateResult->m_ranked_candidates, spc, tplCatalog,
+                          clampedLbdaRange, overlapThreshold, opt_interp);
   // store extrema results
   StoreExtremaResults(resultStore, extremaResult);
 
@@ -376,7 +376,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
   return chisquarearray;
 }
 std::shared_ptr<const TplCombinationExtremaResult>
-CTplcombinationSolve::SaveExtremaResult(
+CTplcombinationSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
@@ -384,7 +384,7 @@ CTplcombinationSolve::SaveExtremaResult(
     std::string opt_interp) {
 
   Log.LogDetail(
-      "CTplCombinationSolve::SaveExtremaResult: building chisquare array");
+      "CTplCombinationSolve::buildExtremaResults: building chisquare array");
   Log.LogDetail(Formatter()
                 << "    tplCombinationSolve: using results in scope: "
                 << store->GetScopedName(scopeStr));
@@ -392,9 +392,9 @@ CTplcombinationSolve::SaveExtremaResult(
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "tplcombinationsolve: SaveExtremaResult - Unable to "
-                          "retrieve tplcombination results");
+    throw GlobalException(
+        INTERNAL_ERROR, "tplcombinationsolve: buildExtremaResults - Unable to "
+                        "retrieve tplcombination results");
   }
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -404,7 +404,7 @@ CTplcombinationSolve::SaveExtremaResult(
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
     throw GlobalException(INTERNAL_ERROR,
-                          "CTplCombinationSolve::SaveExtremaResult, "
+                          "CTplCombinationSolve::buildExtremaResults, "
                           "templatefitting results has wrong size");
   }
 
@@ -413,7 +413,7 @@ CTplcombinationSolve::SaveExtremaResult(
   if (foundBadStatus) {
     throw GlobalException(
         INTERNAL_ERROR,
-        "CTplCombinationSolve::SaveExtremaResult: Found bad status result");
+        "CTplCombinationSolve::buildExtremaResults: Found bad status result");
   }
 
   // prepare the list of components/templates

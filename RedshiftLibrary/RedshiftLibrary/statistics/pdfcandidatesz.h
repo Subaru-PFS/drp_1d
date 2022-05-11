@@ -83,8 +83,7 @@ private:
   bool getCandidateSumTrapez(const TRedshiftList &redshifts,
                              const TFloat64List &valprobalog,
                              const TFloat64Range &zrange,
-                             std::shared_ptr<TCandidateZ> &candidate)
-      const; // default: zwidth_left = zwidth_right
+                             std::shared_ptr<TCandidateZ> &candidate) const;
 
   bool
   getCandidateRobustGaussFit(const TRedshiftList &redshifts,

@@ -71,27 +71,14 @@ public:
       m_savedModelSpectrumResults;
 
   CExtremaResult<TLineModelResult>(const TCandidateZbyRank &zCandidates) {
-    this->m_type = "LineModelExtremaResult";
-    Int32 i = 0;
-    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
-         zCandidates) {
-      this->m_ranked_candidates.push_back(
+    m_type = "LineModelExtremaResult";
+    for (const auto &cand : zCandidates) {
+      m_ranked_candidates.push_back(
           std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
               std::string(cand.first),
               std::make_shared<TLineModelResult>(*cand.second)));
-      i++;
     }
-    this->Resize(zCandidates.size());
-  };
-
-  // mainly for saving parentObject
-  CExtremaResult<TLineModelResult>(
-      const std::pair<std::string, std::shared_ptr<TCandidateZ>> cand) {
-    this->m_type = "LineModelExtremaResult";
-    this->m_ranked_candidates.push_back(
-        std::make_pair<std::string, std::shared_ptr<TLineModelResult>>(
-            std::string(cand.first),
-            std::make_shared<TLineModelResult>(*cand.second)));
+    Resize(zCandidates.size());
   };
 
   void Resize(Int32 size) {
@@ -105,8 +92,7 @@ public:
 
   void setCandidateFromContinuumSolution(int rank,
                                          CContinuumModelSolution cms) {
-    m_ranked_candidates[rank].second =
-        std::make_shared<TLineModelResult>(TLineModelResult(cms));
+    m_ranked_candidates[rank].second = std::make_shared<TLineModelResult>(cms);
   }
 
   std::shared_ptr<const COperatorResult>

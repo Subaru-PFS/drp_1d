@@ -40,6 +40,7 @@
 #define _REDSHIFT_OPERATOR_EXTREMARESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -62,15 +63,14 @@ public:
       m_savedModelSpectrumResults;
 
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
-    this->m_type = "ExtremaResult";
-    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
-         zCandidates) {
-      this->m_ranked_candidates.push_back(
+    m_type = "ExtremaResult";
+    for (const auto &cand : zCandidates) {
+      m_ranked_candidates.push_back(
           std::make_pair<std::string, std::shared_ptr<TExtremaResult>>(
               std::string(cand.first),
               std::make_shared<TExtremaResult>(*cand.second)));
     }
-    this->m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
+    m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
   }
 
   std::shared_ptr<const COperatorResult>

@@ -44,23 +44,6 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
-// TODO this should be a TExtremaResult constructor, using member initialization
-// list
-TLineModelResult::TLineModelResult(const CContinuumModelSolution &cms) {
-  FittedTplName = cms.tplName;
-  FittedTplAmplitude = cms.tplAmplitude;
-  FittedTplAmplitudeError = cms.tplAmplitudeError;
-  FittedTplMerit = cms.tplMerit;
-  FittedTplMeritPhot = cms.tplMeritPhot;
-  FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-  FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-  FittedTplRedshift = cms.tplRedshift;
-  FittedTplDtm = cms.tplDtm;
-  FittedTplMtm = cms.tplMtm;
-  FittedTplLogPrior = cms.tplLogPrior;
-  FittedTplpCoeffs = cms.pCoeffs;
-}
-
 void TLineModelResult::updateFromContinuumModelSolution(
     const CContinuumModelSolution &cms, bool all) {
   if (all) {
@@ -208,9 +191,7 @@ std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
   if (dataset == "model_parameters") {
     return this->m_ranked_candidates[rank].second;
   } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
-    std::shared_ptr<const COperatorResult> cop =
-        this->m_savedModelFittingResults[rank];
-    return cop;
+    return m_savedModelFittingResults[rank];
   } else if (dataset == "model")
     return this->m_savedModelSpectrumResults[rank];
   else if (dataset == "continuum")

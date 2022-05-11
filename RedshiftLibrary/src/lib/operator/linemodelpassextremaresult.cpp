@@ -132,11 +132,3 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
   }
   return uniqueIndices;
 }
-
-TStringList CLineModelPassExtremaResult::GetIDs() const {
-  TStringList ids;
-  ids.reserve(m_ranked_candidates.size());
-  for (auto c : m_ranked_candidates)
-    ids.push_back(c.first);
-  return ids;
-}

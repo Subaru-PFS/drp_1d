@@ -57,10 +57,10 @@ namespace NSEpic {
 class CTplCombinationSolveResult : public CPdfSolveResult {
 
 public:
-  CTplCombinationSolveResult(const std::string &scope,
-                             const std::shared_ptr<TCandidateZ> &ExtremaResult,
-                             const std::string &opt_pdfcombination,
-                             Float64 evidence);
+  CTplCombinationSolveResult(
+      const std::string &scope,
+      const std::shared_ptr<const TCandidateZ> &ExtremaResult,
+      const std::string &opt_pdfcombination, Float64 evidence);
 
   ~CTplCombinationSolveResult();
 

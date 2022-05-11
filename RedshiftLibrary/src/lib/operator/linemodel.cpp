@@ -948,9 +948,8 @@ Int32 COperatorLineModel::SetFirstPassCandidates(
   return 0;
 }
 
-// TODO:double check all data are well filled
 std::shared_ptr<const LineModelExtremaResult>
-COperatorLineModel::saveFirstPassExtremaResults(
+COperatorLineModel::buildFirstPassExtremaResults(
     const TCandidateZbyRank &zCandidates) {
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       make_shared<LineModelExtremaResult>(zCandidates);
@@ -1200,16 +1199,11 @@ Int32 COperatorLineModel::ComputeSecondPass(
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
-  // downcast LineModelExtremaResult to TCandidateZ before saving in secondpass
-  TCandidateZbyRank cast_cand;
-  for (std::pair<std::string, const std::shared_ptr<TLineModelResult> &> cand :
-       firstpassResults->m_ranked_candidates) {
-    cast_cand.push_back(
-        std::make_pair<std::string, std::shared_ptr<TCandidateZ>>(
-            std::string(cand.first), cand.second));
-  }
+  // upcast LineModelExtremaResult to TCandidateZ
+  m_secondpass_parameters_extremaResult.m_ranked_candidates.assign(
+      firstpassResults->m_ranked_candidates.cbegin(),
+      firstpassResults->m_ranked_candidates.cend());
 
-  m_secondpass_parameters_extremaResult.m_ranked_candidates = cast_cand;
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
@@ -1264,10 +1258,10 @@ Int32 COperatorLineModel::ComputeSecondPass(
 }
 
 std::shared_ptr<LineModelExtremaResult>
-COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
-                                       const TFloat64Range &lambdaRange,
-                                       const TCandidateZbyRank &zCandidates,
-                                       const std::string &opt_continuumreest) {
+COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
+                                        const TFloat64Range &lambdaRange,
+                                        const TCandidateZbyRank &zCandidates,
+                                        const std::string &opt_continuumreest) {
   Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
   Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
 
@@ -1556,13 +1550,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
   // enable/disable fit by groups. Once enabled, the velocity fitting groups
   // are defined in the line catalog from v4.0 on.
   m_enableWidthFitByGroups = true;
-
-  bool enable_secondpass_parameters_estimation = true;
-  if (!enable_secondpass_parameters_estimation) //?
-  {
-    m_secondpass_parameters_extremaResult = *m_firstpass_extremaResult;
-    return 0;
-  }
 
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Log.LogInfo("");

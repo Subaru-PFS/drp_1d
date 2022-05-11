@@ -52,26 +52,21 @@ COperatorPdfz::COperatorPdfz(
     Int32 maxCandidate, const std::string &Id_prefix,
     bool allow_extrema_at_border, Int32 maxPeakCount_per_window,
     const std::vector<TFloat64List> &candidatesRedshifts,
-    const TStringList &candidatesIds, const TCandidateZbyRank &parentObjects)
+    const TCandidateZbyRank &parentCandidates)
     : m_opt_combine(opt_combine), m_peakSeparation(peakSeparation),
       m_meritcut(meritcut), m_allow_extrema_at_border(allow_extrema_at_border),
       m_maxPeakCount_per_window(maxPeakCount_per_window <= 0
                                     ? maxCandidate
                                     : maxPeakCount_per_window),
       m_maxCandidate(maxCandidate), m_Id_prefix(Id_prefix),
-      m_parentObjects(parentObjects) {
-  TStringList::const_iterator begin1 = candidatesIds.begin();
-  TStringList::const_iterator end1 = candidatesIds.end();
-  std::vector<TFloat64List>::const_iterator begin2 =
-      candidatesRedshifts.begin();
-  std::vector<TFloat64List>::const_iterator end2 = candidatesRedshifts.end();
-  TStringList::const_iterator i1;
-  std::vector<TFloat64List>::const_iterator i2;
-  for (i1 = begin1, i2 = begin2; (i1 != end1) && (i2 != end2); ++i1, ++i2) {
-    m_candidatesZRanges[*i1] = TFloat64Range(*i2);
-    // with nocandidatesRedshifts given will be with Id="" and empty range
-    // value.
-  }
+      m_parentCandidates(parentCandidates.cbegin(), parentCandidates.cend()) {
+  if (candidatesRedshifts.size() != parentCandidates.size())
+    throw GlobalException(
+        INTERNAL_ERROR,
+        "candidatesRedshifts and parentCandidates does not have the same size");
+  for (Int32 i = 0; i < candidatesRedshifts.size(); ++i)
+    m_candidatesZRanges[parentCandidates[i].first] =
+        TFloat64Range(candidatesRedshifts[i]);
 }
 
 /*
@@ -169,7 +164,6 @@ bool COperatorPdfz::checkPdfSum() const {
 
 TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
   TCandidateZbyID candidates;
-  Int32 j = 0;
   for (const auto &cand : m_candidatesZRanges) {
     TPointList extremumList;
     const TFloat64Range &redshiftsRange = cand.second;
@@ -201,24 +195,18 @@ TCandidateZbyID COperatorPdfz::searchMaxPDFcandidates() const {
     Int32 i = 0;
     const std::string Id_prefix =
         (id == "" ? m_Id_prefix : id + "_" + m_Id_prefix);
-    for (const auto &extremum :
-         extremumList) // ranked by ValProba (from CExtremum::Find)
-    {
+
+    // loop ranked by ValProba (from CExtremum::Find)
+    for (const auto &extremum : extremumList) {
       std::string newid = Id_prefix + std::to_string(i++);
       candidates[newid] = std::make_shared<TCandidateZ>();
       candidates[newid]->Redshift = extremum.X;
       candidates[newid]->ValProba = extremum.Y;
-      if (id != "") // this extrema has a parent id
+      if (id != "") { // this extrema has a parent id
         candidates[newid]->ParentId = id;
-      if (m_parentObjects.size()) {
-        candidates[newid]->ParentObject = m_parentObjects[j].second;
-        /*
-        std::shared_ptr<LineModelExtremaResult> ExtremaResult =
-          make_shared<LineModelExtremaResult>(m_parentObjects[j]);
-          */
+        candidates[newid]->ParentObject = m_parentCandidates.at(id);
       }
     }
-    j++;
   }
 
   if (candidates.empty()) {

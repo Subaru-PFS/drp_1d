@@ -213,7 +213,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     if (fft_processing) {
       tplCatalog.m_logsampling = false;
     }
-    std::shared_ptr<const ExtremaResult> extremaResult = SaveExtremaResult(
+    std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
         resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
         overlapThreshold, opt_interp);
 
@@ -443,14 +443,14 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   return chisquarearray;
 }
 
-std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
+std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CTemplateCatalog &tplCatalog, Float64 overlapThreshold,
     std::string opt_interp) {
 
   Log.LogDetail(
-      "CTemplateFittingSolve::SaveExtremaResult: building chisquare array");
+      "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
   Log.LogDetail(Formatter()
                 << "    templatefittingsolve: using results in scope: "
                 << store->GetScopedName(scopeStr));
@@ -471,11 +471,11 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
     auto TplFitResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
     if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult, "
-                                   "templatefitting results (for tpl="
-                                << r.first.c_str() << ") has wrong size");
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults, "
+                                 "templatefitting results (for tpl="
+                              << r.first.c_str() << ") has wrong size");
     }
 
     bool foundBadStatus = false;
@@ -491,18 +491,18 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
       }
     }
     if (foundBadStatus) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult: "
-                                   "Found bad status result... for tpl="
-                                << r.first.c_str());
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults: "
+                                 "Found bad status result... for tpl="
+                              << r.first.c_str());
     }
     if (foundBadRedshift) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult: "
-                                   "redshift vector is not the same for tpl="
-                                << r.first.c_str());
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults: "
+                                 "redshift vector is not the same for tpl="
+                              << r.first.c_str());
     }
   }
 
@@ -569,9 +569,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
             opt_interp, overlapThreshold);
 
     if (spcmodelPtr == nullptr)
-      throw GlobalException(INTERNAL_ERROR,
-                            "CTemplateFittingSolve::SaveExtremaResult: Couldnt "
-                            "compute spectrum model");
+      throw GlobalException(
+          INTERNAL_ERROR, "CTemplateFittingSolve::buildExtremaResults: Couldnt "
+                          "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }

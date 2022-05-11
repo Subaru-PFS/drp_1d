@@ -436,7 +436,6 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       false,              // do not allow extrema at border
       1,                  // one peak/window only
       m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts,
-      m_linemodel.m_secondpass_parameters_extremaResult.GetIDs(),
       m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
@@ -451,7 +450,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange);
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
-      m_linemodel.SaveExtremaResults(
+      m_linemodel.buildExtremaResults(
           spc, clampedlambdaRange, candidateResult->m_ranked_candidates,
           m_opt_continuumreest); // maybe its better to pass
                                  // resultStore->GetGlobalResult so that we
@@ -1123,8 +1122,14 @@ bool CLineModelSolve::Solve(
   }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
-      m_linemodel.saveFirstPassExtremaResults(
+      m_linemodel.buildFirstPassExtremaResults(
           m_linemodel.m_firstpass_extremaResult->m_ranked_candidates);
+
+  // save linemodel firstpass extrema results
+  std::string firstpassExtremaResultsStr = scopeStr;
+  firstpassExtremaResultsStr.append("_firstpass_extrema");
+  resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
+                                       fpExtremaResult);
 
   //**************************************************
   // SECOND PASS
@@ -1153,30 +1158,16 @@ bool CLineModelSolve::Solve(
       std::dynamic_pointer_cast<const CLineModelResult>(
           m_linemodel.getResult());
 
-  if (!result) {
+  if (!result)
     throw GlobalException(INTERNAL_ERROR,
                           Formatter() << __func__
                                       << ": Failed to get linemodel result");
-  } else {
-    // save linemodel chisquare results
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
 
-    // don't save linemodel extrema results, since will change with pdf
-    // computation
+  // save linemodel chisquare results
+  resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
 
-    // save linemodel firstpass extrema results
-    std::string firstpassExtremaResultsStr = scopeStr;
-    firstpassExtremaResultsStr.append("_firstpass_extrema");
-
-    resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
-                                         fpExtremaResult);
-
-    // save linemodel firstpass extrema B results
-    if (enableFirstpass_B) {
-      std::string firstpassbExtremaResultsStr = scopeStr.c_str();
-      firstpassbExtremaResultsStr.append("_firstpassb_extrema");
-    }
-  }
+  // don't save linemodel extrema results, since will change with pdf
+  // computation
 
   return true;
 }

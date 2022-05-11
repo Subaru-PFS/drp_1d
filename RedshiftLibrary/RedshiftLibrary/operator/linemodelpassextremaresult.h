@@ -56,7 +56,6 @@ public:
   void Resize(Int32 size);
   TInt32List getUniqueCandidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
-  TStringList GetIDs() const;
   TFloat64List GetRedshifts() const;
 
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit

@@ -49,6 +49,14 @@ public:
   TExtremaResult(const TCandidateZ &candz) : TCandidateZ(candz) {
     this->m_type = "TExtremaResult";
   }
+  TExtremaResult(const CContinuumModelSolution &cms)
+      : FittedTplName(cms.tplName), FittedTplAmplitude(cms.tplAmplitude),
+        FittedTplAmplitudeError(cms.tplAmplitudeError),
+        FittedTplMerit(cms.tplMerit), FittedTplMeritPhot(cms.tplMeritPhot),
+        FittedTplEbmvCoeff(cms.tplEbmvCoeff),
+        FittedTplMeiksinIdx(cms.tplMeiksinIdx), FittedTplDtm(cms.tplDtm),
+        FittedTplMtm(cms.tplMtm), FittedTplLogPrior(cms.tplLogPrior) {}
+
   // Name of the best template fitted for continuum
   std::string FittedTplName = "";
   // Amplitude for the best template fitted for continuum

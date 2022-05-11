@@ -146,12 +146,12 @@ public:
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
   std::shared_ptr<const LineModelExtremaResult>
-  saveFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
+  buildFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
   std::shared_ptr<LineModelExtremaResult>
-  SaveExtremaResults(const CSpectrum &spectrum,
-                     const TFloat64Range &lambdaRange,
-                     const TCandidateZbyRank &zCandidates,
-                     const std::string &opt_continuumreest = "no");
+  buildExtremaResults(const CSpectrum &spectrum,
+                      const TFloat64Range &lambdaRange,
+                      const TCandidateZbyRank &zCandidates,
+                      const std::string &opt_continuumreest = "no");
 
   void InitTplratioPriors();
 
