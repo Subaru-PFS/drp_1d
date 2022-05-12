@@ -40,24 +40,31 @@
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
 import json
+from pylibamazed.redshift import (CLog, ErrorCode)
+import os
+
+zlog = CLog.GetInstance()
 
 class SubType:
     def __init__(self, object_type,parameters, calibration):
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
-        self.extended_results = extended_results
         
     def Compute(self, context):
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
                                    auto_load=False,
                                    extended_results=False)
-        tpl_ratio = output.get_attribute_from_result_store("LineRatioName", self.object_type, 0)
-        linemodel_params = self.parameters[object_type][method]["linemodel"]
-        with open(os.path.join(self.calibration_dir,
-                                   linemodel_params["tplratio_catalog"],
-                                   tpl_ratio + ".json")) as f:
-            tpl_ratio_conf = json.load(f)
-            return tpl_ratio_conf["sub_type"]
+        ret = []
+
+        for rank in range(context.GetResultStore().getNbRedshiftCandidates(self.object_type,"LineModelSolve")):
+            tpl_ratio = output.get_attribute_from_source(self.object_type,
+                                                         "LineModelSolve",
+                                                         "model_parameters",
+                                                         "LinesRatioName",
+                                                         rank)
+            ret.append(self.calibration_library.get_sub_type(self.object_type,
+                                                             tpl_ratio))
+        return ret
 
