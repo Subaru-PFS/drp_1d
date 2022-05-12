@@ -182,11 +182,14 @@ BOOST_AUTO_TEST_CASE(calcul) {
   TFloat64List Array5 = {1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
   CSpectrumSpectralAxis targetSpectralAxis5(Array5, true);
   CSpectrumSpectralAxis sourceSpectralAxis5(Array5b, true);
-  CSpectrumFluxAxis sourceFluxAxis5(Array1, n + n);
+  Float64 Array1b[20] = {1, 2, 3, 4, 5,  6,  7,  8,  9,  10,
+                         2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+  CSpectrumFluxAxis sourceFluxAxis5(Array1b, n + n);
 
   CSpectrum object_CSpectrum8(sourceSpectralAxis5, sourceFluxAxis5);
   CMask rebinedMask6;
   CSpectrum rebinnedSpectrum8;
+
   bool resultRebincas4 =
       object_CSpectrum8.Rebin(object_Range4, targetSpectralAxis5,
                               rebinnedSpectrum8, (rebinedMask6), opt_interp);

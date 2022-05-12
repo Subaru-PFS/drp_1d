@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Save) {
   boost::filesystem::remove(filename);
 
   // bad filename
-  BOOST_CHECK(tmpl.Save(NULL) == false);
+  BOOST_CHECK(tmpl.Save("") == false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
