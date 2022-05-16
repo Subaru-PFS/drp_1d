@@ -762,7 +762,7 @@ class AmzException : public std::exception
 
  public: 
 
-  AmzException(ErrorCode ec, std::string message, const char * filename_,
+  AmzException(ErrorCode ec, const std::string &message, const char * filename_,
 		  const char * method_, int line_);
 
   virtual ~AmzException();
@@ -771,8 +771,8 @@ class AmzException : public std::exception
   virtual const char* what() ;
   const std::string &getMessage();
 
-  std::string getFileName();
-  std::string getMethod();
+  const std::string &getFileName();
+  const std::string &getMethod();
   int getLine();
 
 };
@@ -781,10 +781,7 @@ class AmzException : public std::exception
 class GlobalException: public AmzException
 {
  public:
-  GlobalException(ErrorCode ec, std::string message, const char * filename_,
-		  const char * method_, int line_);
-  virtual ~GlobalException();
-
+  using AmzException::AmzException;
 };
 
 
