@@ -56,7 +56,6 @@ public:
   void Resize(Int32 size);
   TInt32List getUniqueCandidates(
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
-  TStringList GetIDs() const;
   TFloat64List GetRedshifts() const;
 
   Int32 m_optMethod; // 0: direct integration, 1:gaussian fit
@@ -141,15 +140,17 @@ public:
 
   std::string ID(Int32 i) const { return m_ranked_candidates[i].first; }
   Float64 Redshift(Int32 i) const {
-    return m_ranked_candidates[i].second.Redshift;
+    return m_ranked_candidates[i].second->Redshift;
   }
   Float64 ValProba(Int32 i) const {
-    return m_ranked_candidates[i].second.ValProba;
+    return m_ranked_candidates[i].second->ValProba;
   }
   Float64 ValSumProba(Int32 i) const {
-    return m_ranked_candidates[i].second.ValSumProba;
+    return m_ranked_candidates[i].second->ValSumProba;
   }
-  Float64 DeltaZ(Int32 i) const { return m_ranked_candidates[i].second.Deltaz; }
+  Float64 DeltaZ(Int32 i) const {
+    return m_ranked_candidates[i].second->Deltaz;
+  }
   Int32 size() const { return m_ranked_candidates.size(); }
 };
 

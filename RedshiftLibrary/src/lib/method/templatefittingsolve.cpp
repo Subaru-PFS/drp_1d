@@ -213,7 +213,7 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
     if (fft_processing) {
       tplCatalog.m_logsampling = false;
     }
-    std::shared_ptr<const ExtremaResult> extremaResult = SaveExtremaResult(
+    std::shared_ptr<const ExtremaResult> extremaResult = buildExtremaResults(
         resultStore, scopeStr, candidateResult->m_ranked_candidates, tplCatalog,
         overlapThreshold, opt_interp);
 
@@ -443,14 +443,14 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   return chisquarearray;
 }
 
-std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
+std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     std::shared_ptr<const COperatorResultStore> store,
     const std::string &scopeStr, const TCandidateZbyRank &ranked_zCandidates,
     const CTemplateCatalog &tplCatalog, Float64 overlapThreshold,
     std::string opt_interp) {
 
   Log.LogDetail(
-      "CTemplateFittingSolve::SaveExtremaResult: building chisquare array");
+      "CTemplateFittingSolve::buildExtremaResults: building chisquare array");
   Log.LogDetail(Formatter()
                 << "    templatefittingsolve: using results in scope: "
                 << store->GetScopedName(scopeStr));
@@ -471,11 +471,11 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
     auto TplFitResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
     if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult, "
-                                   "templatefitting results (for tpl="
-                                << r.first.c_str() << ") has wrong size");
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults, "
+                                 "templatefitting results (for tpl="
+                              << r.first.c_str() << ") has wrong size");
     }
 
     bool foundBadStatus = false;
@@ -491,18 +491,18 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
       }
     }
     if (foundBadStatus) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult: "
-                                   "Found bad status result... for tpl="
-                                << r.first.c_str());
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults: "
+                                 "Found bad status result... for tpl="
+                              << r.first.c_str());
     }
     if (foundBadRedshift) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "CTemplateFittingSolve::SaveExtremaResult: "
-                                   "redshift vector is not the same for tpl="
-                                << r.first.c_str());
+      throw GlobalException(
+          INTERNAL_ERROR, Formatter()
+                              << "CTemplateFittingSolve::buildExtremaResults: "
+                                 "redshift vector is not the same for tpl="
+                              << r.first.c_str());
     }
   }
 
@@ -511,7 +511,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
 
   for (Int32 i = 0; i < extremumCount; i++) {
     // std::string Id = ranked_zCandidates[i].first;
-    Float64 z = ranked_zCandidates[i].second.Redshift;
+    Float64 z = ranked_zCandidates[i].second->Redshift;
 
     // find the corresponding Z
     auto itZ = std::find(redshifts.begin(), redshifts.end(), z);
@@ -533,30 +533,30 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
     // Fill extrema Result
     auto TplFitResult = std::dynamic_pointer_cast<const CTemplateFittingResult>(
         results[tplName]);
-    extremaResult->m_ranked_candidates[i].second.FittedTplMerit = ChiSquare;
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeritPhot =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMerit = ChiSquare;
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeritPhot =
         TplFitResult->ChiSquarePhot[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplName = tplName;
-    extremaResult->m_ranked_candidates[i].second.FittedTplMeiksinIdx =
+    extremaResult->m_ranked_candidates[i].second->FittedTplName = tplName;
+    extremaResult->m_ranked_candidates[i].second->FittedTplMeiksinIdx =
         TplFitResult->FitMeiksinIdx[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplEbmvCoeff =
+    extremaResult->m_ranked_candidates[i].second->FittedTplEbmvCoeff =
         TplFitResult->FitEbmvCoeff[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitude =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitude =
         TplFitResult->FitAmplitude[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplAmplitudeError =
+    extremaResult->m_ranked_candidates[i].second->FittedTplAmplitudeError =
         TplFitResult->FitAmplitudeError[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplDtm =
+    extremaResult->m_ranked_candidates[i].second->FittedTplDtm =
         TplFitResult->FitDtM[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplMtm =
+    extremaResult->m_ranked_candidates[i].second->FittedTplMtm =
         TplFitResult->FitMtM[idx];
-    extremaResult->m_ranked_candidates[i].second.FittedTplLogPrior =
+    extremaResult->m_ranked_candidates[i].second->FittedTplLogPrior =
         TplFitResult->LogPrior[idx];
 
     Float64 FitSNR = NAN;
     if (TplFitResult->FitMtM[idx] != 0.)
       FitSNR = abs(TplFitResult->FitDtM[idx]) /
                sqrt(TplFitResult->FitMtM[idx]); // = |amplitude|/amplitudeError
-    extremaResult->m_ranked_candidates[i].second.FittedTplSNR = FitSNR;
+    extremaResult->m_ranked_candidates[i].second->FittedTplSNR = FitSNR;
     // make sure tpl is non-rebinned
     bool currentSampling = tplCatalog.m_logsampling;
     tplCatalog.m_logsampling = false;
@@ -569,9 +569,9 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::SaveExtremaResult(
             opt_interp, overlapThreshold);
 
     if (spcmodelPtr == nullptr)
-      throw GlobalException(INTERNAL_ERROR,
-                            "CTemplateFittingSolve::SaveExtremaResult: Couldnt "
-                            "compute spectrum model");
+      throw GlobalException(
+          INTERNAL_ERROR, "CTemplateFittingSolve::buildExtremaResults: Couldnt "
+                          "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);
   }

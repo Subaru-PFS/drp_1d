@@ -77,7 +77,7 @@ public:
     return m_ranked_candidates[rank].second;
   }
 
-  std::vector<std::pair<std::string, T>> m_ranked_candidates;
+  std::vector<std::pair<std::string, std::shared_ptr<T>>> m_ranked_candidates;
 };
 
 typedef CPdfCandidateszResult<TCandidateZ> PdfCandidatesZResult;

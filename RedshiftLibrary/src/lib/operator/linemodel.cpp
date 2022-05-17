@@ -894,12 +894,12 @@ Int32 COperatorLineModel::SetFirstPassCandidates(
   // extend z around the extrema
   for (Int32 j = 0; j < zCandidates.size(); j++) {
     std::string Id = zCandidates[j].first;
-    const TCandidateZ &cand = zCandidates[j].second;
+    const std::shared_ptr<const TCandidateZ> &cand = zCandidates[j].second;
 
     Log.LogInfo("  Operator-Linemodel: Raw extr #%d, z_e.X=%f, m_e.Y=%e", j,
-                cand.Redshift, cand.ValProba);
+                cand->Redshift, cand->ValProba);
 
-    const Float64 &x = cand.Redshift;
+    const Float64 &x = cand->Redshift;
     const TFloat64List extendedList = SpanRedshiftWindow(x);
     m_firstpass_extremaResult->ExtendedRedshifts[j] = extendedList;
   }
@@ -908,7 +908,7 @@ Int32 COperatorLineModel::SetFirstPassCandidates(
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     // find the index in the zaxis results
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts,
-                                             zCandidates[i].second.Redshift);
+                                             zCandidates[i].second->Redshift);
 
     // save basic fitting info from first pass
     m_firstpass_extremaResult->Elv[i] =
@@ -948,9 +948,8 @@ Int32 COperatorLineModel::SetFirstPassCandidates(
   return 0;
 }
 
-// TODO:double check all data are well filled
 std::shared_ptr<const LineModelExtremaResult>
-COperatorLineModel::saveFirstPassExtremaResults(
+COperatorLineModel::buildFirstPassExtremaResults(
     const TCandidateZbyRank &zCandidates) {
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       make_shared<LineModelExtremaResult>(zCandidates);
@@ -958,15 +957,15 @@ COperatorLineModel::saveFirstPassExtremaResults(
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     // find the index in the zaxis results
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts,
-                                             zCandidates[i].second.Redshift);
+                                             zCandidates[i].second->Redshift);
 
     CContinuumModelSolution csolution = m_result->ContinuumModelSolutions[idx];
     ExtremaResult->m_ranked_candidates[i]
-        .second.updateFromContinuumModelSolution(csolution, true);
+        .second->updateFromContinuumModelSolution(csolution, true);
     // ExtremaResult->setCandidateFromContinuumSolution(i, csolution);
 
     // for saving velocities: use CLineModelSolution
-    ExtremaResult->m_ranked_candidates[i].second.updateFromLineModelSolution(
+    ExtremaResult->m_ranked_candidates[i].second->updateFromLineModelSolution(
         m_result->LineModelSolutions[idx]);
 
     m_result->LineModelSolutions[idx].fillLineIds();
@@ -1088,6 +1087,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
     const CSpectrum &spectrum, const CSpectrum &logSampledSpectrum,
     const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
     const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+    const std::shared_ptr<const LineModelExtremaResult> &firstpassResults,
     const Float64 photo_weight, const std::string &opt_fittingmethod,
     const std::string &opt_lineWidthType, const Float64 opt_velocityEmission,
     const Float64 opt_velocityAbsorption, const std::string &opt_continuumreest,
@@ -1198,6 +1198,12 @@ Int32 COperatorLineModel::ComputeSecondPass(
   }
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
+
+  // upcast LineModelExtremaResult to TCandidateZ
+  m_secondpass_parameters_extremaResult.m_ranked_candidates.assign(
+      firstpassResults->m_ranked_candidates.cbegin(),
+      firstpassResults->m_ranked_candidates.cend());
+
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
@@ -1252,10 +1258,10 @@ Int32 COperatorLineModel::ComputeSecondPass(
 }
 
 std::shared_ptr<LineModelExtremaResult>
-COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
-                                       const TFloat64Range &lambdaRange,
-                                       const TCandidateZbyRank &zCandidates,
-                                       const std::string &opt_continuumreest) {
+COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
+                                        const TFloat64Range &lambdaRange,
+                                        const TCandidateZbyRank &zCandidates,
+                                        const std::string &opt_continuumreest) {
   Int32 savedFitContinuumOption = m_model->GetFitContinuum_Option();
   Log.LogInfo("  Operator-Linemodel: Now storing extrema results");
 
@@ -1271,18 +1277,14 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       make_shared<LineModelExtremaResult>(zCandidates);
 
-  // Int32 start =
-  // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetBegin());
-  // Int32 end =
-  // spectrum.GetSpectralAxis().GetIndexAtWaveLength(lambdaRange.GetEnd());
-  // Int32 nsamples = end - start + 1;
   Int32 savedModels = 0;
 
   Log.LogDetail("  Operator-Linemodel: N extrema results will be saved : %d",
                 extremumCount);
   for (Int32 i = 0; i < extremumCount; i++) {
     std::string Id = zCandidates[i].first;
-    Float64 z = zCandidates[i].second.Redshift;
+    std::string parentId = zCandidates[i].second->ParentId; // retrieve parentID
+    Float64 z = zCandidates[i].second->Redshift;
 
     // find the index in the zaxis results
     Int32 idx = CIndexing<Float64>::getIndex(m_result->Redshifts, z);
@@ -1290,8 +1292,7 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
 
     Int32 i_2pass = -1;
     for (Int32 j = 0; j != m_secondpass_parameters_extremaResult.size(); ++j)
-      if (m_secondpass_parameters_extremaResult.ID(j) ==
-          zCandidates[i].second.ParentId)
+      if (m_secondpass_parameters_extremaResult.ID(j) == parentId)
         i_2pass = j;
     if (i_2pass == -1) {
       throw GlobalException(
@@ -1484,19 +1485,18 @@ COperatorLineModel::SaveExtremaResults(const CSpectrum &spectrum,
     }
 
     // code here has been moved to TLineModelResult::updateFromModel
-    ExtremaResult->m_ranked_candidates[i].second.updateFromModel(
+    ExtremaResult->m_ranked_candidates[i].second->updateFromModel(
         m_model, m_result, m_estimateLeastSquareFast, idx, i_2pass);
 
     // save the continuum tpl fitting results
-    ExtremaResult->m_ranked_candidates[i].second.updateContinuumFromModel(
+    ExtremaResult->m_ranked_candidates[i].second->updateContinuumFromModel(
         m_model);
 
     CContinuumModelSolution csolution = m_model->GetContinuumModelSolution();
     ExtremaResult->m_ranked_candidates[i]
-        .second.updateFromContinuumModelSolution(csolution, false);
-    ExtremaResult->m_ranked_candidates[i].second.updateTplRatioFromModel(
+        .second->updateFromContinuumModelSolution(csolution, false);
+    ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
         m_model);
-
     // save the tplcorr/tplratio results
   }
 
@@ -1551,15 +1551,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
   // are defined in the line catalog from v4.0 on.
   m_enableWidthFitByGroups = true;
 
-  bool enable_secondpass_parameters_estimation = true;
-  if (!enable_secondpass_parameters_estimation) //?
-  {
-    m_secondpass_parameters_extremaResult = *m_firstpass_extremaResult;
-    return 0;
-  }
-
-  m_secondpass_parameters_extremaResult.m_ranked_candidates =
-      m_firstpass_extremaResult->m_ranked_candidates;
   for (Int32 i = 0; i < m_firstpass_extremaResult->size(); i++) {
     Log.LogInfo("");
     Log.LogInfo("  Operator-Linemodel: Second pass - estimate parameters for "

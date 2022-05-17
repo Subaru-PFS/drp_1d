@@ -57,7 +57,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
   for (Int32 i = 0; i < redshifts.size(); ++i) {
     const std::string Id = "EXT" + to_string(i);
-    m_candidates[Id].Redshift = redshifts[i];
+    m_candidates[Id]->Redshift = redshifts[i];
   }
 }
 
@@ -66,7 +66,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
  * default values 2) Check if integration windows overlap, mostly for close
  * candidates 1) if no, keep deltaz value 2) if overlapping, update the
  * half-width of the left and right sides of the integration windows Note:
- * Output range includes the multiplication by (1+z). Returns a list of
+ * Output range includes the multiplication by (1+z)-> Returns a list of
  * identified very close candidates, at 2*1E-4
  */
 TStringList
@@ -79,18 +79,18 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
 
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
-    TCandidateZ &cand = c.second;
+    std::shared_ptr<TCandidateZ> &cand = c.second;
 
     // check cases where deltaz couldnt be computed or wasnt set--> use default
     // value,
-    if (cand.Deltaz == -1 || nodz)
-      cand.Deltaz = m_dzDefault * (1 + cand.Redshift);
+    if (cand->Deltaz == -1 || nodz)
+      cand->Deltaz = m_dzDefault * (1 + cand->Redshift);
 
-    const Float64 halfWidth = 3 * cand.Deltaz;
+    const Float64 halfWidth = 3 * cand->Deltaz;
 
     // initialize range boundaries for each candidate]
-    TFloat64Range range = {cand.Redshift - halfWidth,
-                           cand.Redshift + halfWidth};
+    TFloat64Range range = {cand->Redshift - halfWidth,
+                           cand->Redshift + halfWidth};
     ranges.emplace(Id, std::move(range));
     ranges[Id].IntersectWith(PdfZRange);
   };
@@ -102,7 +102,7 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
   }
   TCandidateZbyID &c = m_candidates;
   std::sort(Ids.rbegin(), Ids.rend(), [&c](std::string Id1, std::string Id2) {
-    return c[Id1].Redshift < c[Id2].Redshift;
+    return c[Id1]->Redshift < c[Id2]->Redshift;
   });
 
   // trim overlapping ranges
@@ -110,8 +110,8 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
   for (auto Id_it = Ids.begin(); Id_it != Ids.end() - 1; ++Id_it) {
     std::string &Id_h = *Id_it;
     std::string &Id_l = *(Id_it + 1);
-    Float64 &z_h = c[Id_h].Redshift;
-    Float64 &z_l = c[Id_l].Redshift;
+    Float64 &z_h = c[Id_h]->Redshift;
+    Float64 &z_l = c[Id_l]->Redshift;
     Float64 overlap = ranges[Id_h].GetBegin() - ranges[Id_l].GetEnd();
     if (overlap < 0) {
       // in the case of duplicates, trim completely the range of the second cand
@@ -139,15 +139,15 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
     // only test the others
     if (find(b.begin(), b.end(), Id) != b.end())
       continue;
-    if (c[Id].Redshift >= ranges[Id].GetBegin() &&
-        c[Id].Redshift <= ranges[Id].GetEnd()) {
+    if (c[Id]->Redshift >= ranges[Id].GetBegin() &&
+        c[Id]->Redshift <= ranges[Id].GetEnd()) {
       continue;
     } else {
       throw GlobalException(
           INTERNAL_ERROR,
           Formatter() << "CPdfCandidatesZ::SetIntegrationWindows: Failed to "
                          "identify a range including the candidate "
-                      << c[Id].Redshift);
+                      << c[Id]->Redshift);
     }
   }
   return b;
@@ -170,8 +170,8 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
   // compute deltaz
   CDeltaz deltaz_op;
   for (auto &c : m_candidates) {
-    c.second.Deltaz =
-        deltaz_op.GetDeltaz(PdfRedshifts, PdfProbaLog, c.second.Redshift);
+    c.second->Deltaz =
+        deltaz_op.GetDeltaz(PdfRedshifts, PdfProbaLog, c.second->Redshift);
   }
 
   TCandidateZRangebyID zranges;
@@ -179,27 +179,27 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
       SetIntegrationWindows(TFloat64Range(PdfRedshifts), zranges);
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
-    TCandidateZ &cand = c.second;
+    std::shared_ptr<TCandidateZ> &cand = c.second;
     if (m_optMethod == 0) {
       // check if current candidate belongs to the identified duplicates list
       // if yes, force its pdf value to 0 and avoid callling
       // getCandidateSumTrapez
       if (find(duplicates.begin(), duplicates.end(), Id) != duplicates.end())
-        cand.ValSumProba = 0;
+        cand->ValSumProba = 0;
       else
         getCandidateSumTrapez(PdfRedshifts, PdfProbaLog, zranges[Id], cand);
     } else {
       // TODO: this requires further check ?...
       if (find(duplicates.begin(), duplicates.end(), Id) != duplicates.end()) {
-        cand.ValSumProba = 0;
+        cand->ValSumProba = 0;
         continue;
       }
       bool GaussFitok = getCandidateRobustGaussFit(PdfRedshifts, PdfProbaLog,
                                                    zranges[Id], cand);
       if (GaussFitok) {
-        cand.ValSumProba = cand.GaussAmp * cand.GaussSigma * sqrt(2 * M_PI);
+        cand->ValSumProba = cand->GaussAmp * cand->GaussSigma * sqrt(2 * M_PI);
       } else {
-        cand.ValSumProba = -1.;
+        cand->ValSumProba = -1.;
       }
     }
   }
@@ -223,7 +223,7 @@ void CPdfCandidatesZ::SortByValSumProbaInt(
   const TCandidateZbyID &c = m_candidates;
   std::stable_sort(Ids.rbegin(), Ids.rend(),
                    [&c](std::string Id1, std::string Id2) {
-                     return c.at(Id1).ValSumProba < c.at(Id2).ValSumProba;
+                     return c.at(Id1)->ValSumProba < c.at(Id2)->ValSumProba;
                    });
 
   ranked_candidates.clear();
@@ -239,10 +239,10 @@ void CPdfCandidatesZ::SortByValSumProbaInt(
  * @param zrange corresponds to the concerned range
  * @return -1.0 if error, else sum around the candidate
  */
-bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList &redshifts,
-                                            const TFloat64List &valprobalog,
-                                            const TFloat64Range &zrange,
-                                            TCandidateZ &candidate) const {
+bool CPdfCandidatesZ::getCandidateSumTrapez(
+    const TRedshiftList &redshifts, const TFloat64List &valprobalog,
+    const TFloat64Range &zrange,
+    std::shared_ptr<TCandidateZ> &candidate) const {
   // TODO use a std function and throw exception
   // TODO check that this is really necessary and not just a debug
   // functionnality
@@ -263,7 +263,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList &redshifts,
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate.Redshift,
+  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
@@ -274,13 +274,13 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList &redshifts,
 
   TFloat64List ZinRange =
       TFloat64List(redshifts.begin() + kmin, redshifts.begin() + kmax + 1);
-  candidate.ValSumProbaZmin = ZinRange.front();
-  candidate.ValSumProbaZmax = ZinRange.back();
+  candidate->ValSumProbaZmin = ZinRange.front();
+  candidate->ValSumProbaZmax = ZinRange.back();
   TFloat64List valprobainRange =
       TFloat64List(valprobalog.begin() + kmin, valprobalog.begin() + kmax + 1);
 
   Float64 logSum = COperatorPdfz::logSumExpTrick(valprobainRange, ZinRange);
-  candidate.ValSumProba = exp(logSum);
+  candidate->ValSumProba = exp(logSum);
 
   return true;
 }
@@ -289,38 +289,39 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(const TRedshiftList &redshifts,
 // range
 bool CPdfCandidatesZ::getCandidateRobustGaussFit(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
-    const TFloat64Range &zrange, TCandidateZ &candidate) const {
+    const TFloat64Range &zrange,
+    std::shared_ptr<TCandidateZ> &candidate) const {
   Int32 fitSuccessful = false;
   Int32 nTry = 5;
   Int32 iTry = 0;
 
   TFloat64Range current_zrange = zrange;
-  Float64 zwidth_max = std::max(candidate.Redshift - zrange.GetBegin(),
-                                zrange.GetEnd() - candidate.Redshift);
+  Float64 zwidth_max = std::max(candidate->Redshift - zrange.GetBegin(),
+                                zrange.GetEnd() - candidate->Redshift);
   while (!fitSuccessful && iTry < nTry) {
     Int32 retFit =
         getCandidateGaussFit(redshifts, valprobalog, current_zrange, candidate);
-    if (!retFit && candidate.GaussSigma < zwidth_max * 2.0 &&
-        std::abs(candidate.GaussSigma / candidate.GaussSigmaErr) > 1e-2) {
+    if (!retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
+        std::abs(candidate->GaussSigma / candidate->GaussSigmaErr) > 1e-2) {
       fitSuccessful = true;
     } else {
       Log.LogDebug(
           "    CPdfCandidatesZ::getCandidateRobustSumGaussFit - iTry=%d", iTry);
       Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -    "
                    "for zcandidate=%.5f",
-                   candidate.Redshift);
+                   candidate->Redshift);
       Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
                    "found gaussAmp=%e",
-                   candidate.GaussAmp);
+                   candidate->GaussAmp);
       Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
                    "found gaussSigma=%e",
-                   candidate.GaussSigma);
+                   candidate->GaussSigma);
       Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
                    "now going to retry w. different parameters");
     }
     zwidth_max /= 2.0;
     current_zrange.IntersectWith(TFloat64Range(
-        candidate.Redshift - zwidth_max, candidate.Redshift + zwidth_max));
+        candidate->Redshift - zwidth_max, candidate->Redshift + zwidth_max));
     iTry++;
   }
 
@@ -387,10 +388,10 @@ int pdfz_lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J) {
 }
 //** gaussian fit end**//
 
-bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList &redshifts,
-                                           const TFloat64List &valprobalog,
-                                           const TFloat64Range &zrange,
-                                           TCandidateZ &candidate) const {
+bool CPdfCandidatesZ::getCandidateGaussFit(
+    const TRedshiftList &redshifts, const TFloat64List &valprobalog,
+    const TFloat64Range &zrange,
+    std::shared_ptr<TCandidateZ> &candidate) const {
   Int32 verbose = 0;
   Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - Starting pdf "
                "peaks gaussian fitting");
@@ -411,7 +412,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList &redshifts,
   // redshifts[kmin]:redshifts[kmax] ]
   Int32 kmin = -1;
   Int32 kmax = -1;
-  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate.Redshift,
+  bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
@@ -447,7 +448,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList &redshifts,
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
   double y[n], weights[n], z[n];
-  const Float64 &zc = candidate.Redshift;
+  const Float64 &zc = candidate->Redshift;
   gsl_multifit_function_fdf f;
 
   Float64 *x_init = (Float64 *)calloc(p, sizeof(Float64));
@@ -476,8 +477,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList &redshifts,
   } else {
     x_init[0] = 1.0;
   }
-  x_init[1] = std::max(candidate.Redshift - zrange.GetBegin(),
-                       zrange.GetEnd() - candidate.Redshift) /
+  x_init[1] = std::max(candidate->Redshift - zrange.GetBegin(),
+                       zrange.GetEnd() - candidate->Redshift) /
               2.0;
   if (verbose) {
     Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e",
@@ -578,10 +579,10 @@ bool CPdfCandidatesZ::getCandidateGaussFit(const TRedshiftList &redshifts,
     Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
   }
 
-  candidate.GaussAmp = gsl_vector_get(s->x, 0) * normFactor;
-  candidate.GaussAmpErr = c * ERR(0) * normFactor;
-  candidate.GaussSigma = abs(gsl_vector_get(s->x, 1));
-  candidate.GaussSigmaErr = c * ERR(1);
+  candidate->GaussAmp = gsl_vector_get(s->x, 0) * normFactor;
+  candidate->GaussAmpErr = c * ERR(0) * normFactor;
+  candidate->GaussSigma = abs(gsl_vector_get(s->x, 1));
+  candidate->GaussSigmaErr = c * ERR(1);
 
   gsl_multifit_fdfsolver_free(s);
   gsl_matrix_free(covar);

@@ -40,6 +40,7 @@
 #define _REDSHIFT_OPERATOR_EXTREMARESULT_
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/continuummodelsolution.h"
 #include "RedshiftLibrary/processflow/result.h"
 #include "RedshiftLibrary/statistics/pdfcandidatesz.h"
 #include "RedshiftLibrary/statistics/pdfcandidateszresult.h"
@@ -62,21 +63,24 @@ public:
       m_savedModelSpectrumResults;
 
   CExtremaResult<TExtremaResult>(const TCandidateZbyRank &zCandidates) {
-    this->m_type = "ExtremaResult";
-    for (std::pair<std::string, const TCandidateZ &> cand : zCandidates) {
-      this->m_ranked_candidates.push_back(
-          std::make_pair<std::string, TExtremaResult>(
-              std::string(cand.first), TExtremaResult(cand.second)));
+    m_type = "ExtremaResult";
+    for (const auto &cand : zCandidates) {
+      m_ranked_candidates.push_back(
+          std::make_pair<std::string, std::shared_ptr<TExtremaResult>>(
+              std::string(cand.first),
+              std::make_shared<TExtremaResult>(*cand.second)));
     }
-    this->m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
+    m_savedModelSpectrumResults.resize(this->m_ranked_candidates.size());
   }
 
   std::shared_ptr<const COperatorResult>
-  getCandidate(const int &rank, const std::string &dataset) const;
+  getCandidate(const int &rank, const std::string &dataset,
+               bool firstpassResults = false) const override;
 
-  const std::string &getCandidateDatasetType(const std::string &dataset) const;
+  const std::string &
+  getCandidateDatasetType(const std::string &dataset) const override;
 
-  bool HasCandidateDataset(const std::string &dataset) const;
+  bool HasCandidateDataset(const std::string &dataset) const override;
 };
 
 typedef CExtremaResult<TExtremaResult> ExtremaResult;

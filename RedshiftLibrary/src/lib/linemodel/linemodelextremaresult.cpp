@@ -44,23 +44,6 @@
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
-// TODO this should be a TExtremaResult constructor, using member initialization
-// list
-TLineModelResult::TLineModelResult(const CContinuumModelSolution &cms) {
-  FittedTplName = cms.tplName;
-  FittedTplAmplitude = cms.tplAmplitude;
-  FittedTplAmplitudeError = cms.tplAmplitudeError;
-  FittedTplMerit = cms.tplMerit;
-  FittedTplMeritPhot = cms.tplMeritPhot;
-  FittedTplEbmvCoeff = cms.tplEbmvCoeff;
-  FittedTplMeiksinIdx = cms.tplMeiksinIdx;
-  FittedTplRedshift = cms.tplRedshift;
-  FittedTplDtm = cms.tplDtm;
-  FittedTplMtm = cms.tplMtm;
-  FittedTplLogPrior = cms.tplLogPrior;
-  FittedTplpCoeffs = cms.pCoeffs;
-}
-
 void TLineModelResult::updateFromContinuumModelSolution(
     const CContinuumModelSolution &cms, bool all) {
   if (all) {
@@ -199,16 +182,16 @@ void TLineModelResult::updateFromModel(
   }
 }
 
-std::shared_ptr<const COperatorResult>
-LineModelExtremaResult::getCandidate(const int &rank,
-                                     const std::string &dataset) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
-    return std::make_shared<const TLineModelResult>(
-        this->m_ranked_candidates[rank].second);
-  else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
-    std::shared_ptr<const COperatorResult> cop =
-        this->m_savedModelFittingResults[rank];
-    return cop;
+std::shared_ptr<const COperatorResult> LineModelExtremaResult::getCandidate(
+    const int &rank, const std::string &dataset, bool firstpassResult) const {
+
+  if (firstpassResult) {
+    return getCandidateParent(rank, dataset);
+  }
+  if (dataset == "model_parameters") {
+    return this->m_ranked_candidates[rank].second;
+  } else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines") {
+    return m_savedModelFittingResults[rank];
   } else if (dataset == "model")
     return this->m_savedModelSpectrumResults[rank];
   else if (dataset == "continuum")
@@ -220,8 +203,8 @@ LineModelExtremaResult::getCandidate(const int &rank,
 
 const std::string &LineModelExtremaResult::getCandidateDatasetType(
     const std::string &dataset) const {
-  if (dataset == "model_parameters" || dataset == "fp_model_parameters")
-    return this->m_ranked_candidates[0].second.getType();
+  if (dataset == "model_parameters")
+    return this->m_ranked_candidates[0].second->getType();
   else if (dataset == "fitted_lines" || dataset == "fp_fitted_lines")
     return this->m_savedModelFittingResults[0]->getType();
   else if (dataset == "model")
@@ -237,4 +220,16 @@ bool LineModelExtremaResult::HasCandidateDataset(
   return (dataset == "model_parameters" || dataset == "model" ||
           dataset == "fp_model_parameters" || dataset == "continuum" ||
           dataset == "fitted_lines" || dataset == "fp_fitted_lines");
+}
+
+std::shared_ptr<const COperatorResult>
+LineModelExtremaResult::getCandidateParent(const int &rank,
+                                           const std::string &dataset) const {
+  if (dataset == "model_parameters") {
+    return m_ranked_candidates[rank].second->ParentObject;
+  }
+
+  else
+    throw GlobalException(UNKNOWN_ATTRIBUTE,
+                          "Unknown dataset for parentObject");
 }

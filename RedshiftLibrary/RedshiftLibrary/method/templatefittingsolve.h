@@ -87,11 +87,11 @@ private:
                       const std::string &scopeStr) const;
 
   std::shared_ptr<const ExtremaResult>
-  SaveExtremaResult(shared_ptr<const COperatorResultStore> store,
-                    const std::string &scopeStr,
-                    const TCandidateZbyRank &ranked_zCandidates,
-                    const CTemplateCatalog &tplCatalog,
-                    Float64 overlapThreshold, std::string opt_interp);
+  buildExtremaResults(shared_ptr<const COperatorResultStore> store,
+                      const std::string &scopeStr,
+                      const TCandidateZbyRank &ranked_zCandidates,
+                      const CTemplateCatalog &tplCatalog,
+                      Float64 overlapThreshold, std::string opt_interp);
 
   void StoreExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,

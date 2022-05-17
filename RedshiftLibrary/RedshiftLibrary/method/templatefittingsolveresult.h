@@ -57,10 +57,10 @@ namespace NSEpic {
 class CTemplateFittingSolveResult : public CPdfSolveResult {
 
 public:
-  CTemplateFittingSolveResult(const std::string &scope,
-                              const TCandidateZ &ExtremaResult,
-                              const std::string &opt_pdfcombination,
-                              Float64 evidence);
+  CTemplateFittingSolveResult(
+      const std::string &scope,
+      const std::shared_ptr<const TCandidateZ> &ExtremaResult,
+      const std::string &opt_pdfcombination, Float64 evidence);
 
   // Extrema results
 

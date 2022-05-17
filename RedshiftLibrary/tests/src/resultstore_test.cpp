@@ -88,7 +88,7 @@ std::shared_ptr<const CFlagLogResult> getFlagResult() {
 
 // create candidates
 TCandidateZbyRank getZCandidates() {
-  TCandidateZ zcandidates;
+  std::shared_ptr<TCandidateZ> zcandidates = std::make_shared<TCandidateZ>();
   TCandidateZbyRank zcandByRank;
   zcandByRank.push_back(std::make_pair("EXT0", zcandidates));
   return zcandByRank;

@@ -436,7 +436,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       false,              // do not allow extrema at border
       1,                  // one peak/window only
       m_linemodel.m_secondpass_parameters_extremaResult.ExtendedRedshifts,
-      m_linemodel.m_secondpass_parameters_extremaResult.GetIDs());
+      m_linemodel.m_secondpass_parameters_extremaResult.m_ranked_candidates);
 
   std::shared_ptr<PdfCandidatesZResult> candidateResult =
       pdfz.Compute(chisquares);
@@ -449,11 +449,13 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange);
   // Get linemodel results at extrema (recompute spectrum model etc.)
-  std::shared_ptr<const LineModelExtremaResult> ExtremaResult =
-      m_linemodel.SaveExtremaResults(spc, clampedlambdaRange,
-                                     candidateResult->m_ranked_candidates,
-                                     m_opt_continuumreest);
-
+  std::shared_ptr<LineModelExtremaResult> ExtremaResult =
+      m_linemodel.buildExtremaResults(
+          spc, clampedlambdaRange, candidateResult->m_ranked_candidates,
+          m_opt_continuumreest); // maybe its better to pass
+                                 // resultStore->GetGlobalResult so that we
+                                 // constuct extremaResult all at once in
+                                 // linemodel operator
   // store extrema results
   storeExtremaResults(resultStore, ExtremaResult);
 
@@ -1120,21 +1122,28 @@ bool CLineModelSolve::Solve(
   }
 
   std::shared_ptr<const LineModelExtremaResult> fpExtremaResult =
-      m_linemodel.saveFirstPassExtremaResults(
+      m_linemodel.buildFirstPassExtremaResults(
           m_linemodel.m_firstpass_extremaResult->m_ranked_candidates);
+
+  // save linemodel firstpass extrema results
+  std::string firstpassExtremaResultsStr = scopeStr;
+  firstpassExtremaResultsStr.append("_firstpass_extrema");
+  resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
+                                       fpExtremaResult);
 
   //**************************************************
   // SECOND PASS
   //**************************************************
   if (!m_opt_skipsecondpass) {
     Int32 retSecondPass = m_linemodel.ComputeSecondPass(
-        spc, rebinnedSpc, tplCatalog, lambdaRange, photBandCat, photo_weight,
-        m_opt_fittingmethod, m_opt_lineWidthType, m_opt_velocity_emission,
-        m_opt_velocity_absorption, m_opt_continuumreest, m_opt_rules,
-        m_opt_velocityfit, m_opt_rigidity, m_opt_em_velocity_fit_min,
-        m_opt_em_velocity_fit_max, m_opt_em_velocity_fit_step,
-        m_opt_abs_velocity_fit_min, m_opt_abs_velocity_fit_max,
-        m_opt_abs_velocity_fit_step, m_opt_secondpass_continuumfit);
+        spc, rebinnedSpc, tplCatalog, lambdaRange, photBandCat, fpExtremaResult,
+        photo_weight, m_opt_fittingmethod, m_opt_lineWidthType,
+        m_opt_velocity_emission, m_opt_velocity_absorption,
+        m_opt_continuumreest, m_opt_rules, m_opt_velocityfit, m_opt_rigidity,
+        m_opt_em_velocity_fit_min, m_opt_em_velocity_fit_max,
+        m_opt_em_velocity_fit_step, m_opt_abs_velocity_fit_min,
+        m_opt_abs_velocity_fit_max, m_opt_abs_velocity_fit_step,
+        m_opt_secondpass_continuumfit);
     if (retSecondPass != 0) {
       Log.LogError("Linemodel, second pass failed. Aborting");
       return false;
@@ -1149,37 +1158,16 @@ bool CLineModelSolve::Solve(
       std::dynamic_pointer_cast<const CLineModelResult>(
           m_linemodel.getResult());
 
-  if (!result) {
+  if (!result)
     throw GlobalException(INTERNAL_ERROR,
                           Formatter() << __func__
                                       << ": Failed to get linemodel result");
-  } else {
-    // save linemodel chisquare results
-    resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
 
-    // don't save linemodel extrema results, since will change with pdf
-    // computation
+  // save linemodel chisquare results
+  resultStore->StoreScopedGlobalResult(scopeStr.c_str(), result);
 
-    // save linemodel firstpass extrema results
-    std::string firstpassExtremaResultsStr = scopeStr;
-    firstpassExtremaResultsStr.append("_firstpass_extrema");
-
-    resultStore->StoreScopedGlobalResult(firstpassExtremaResultsStr.c_str(),
-                                         fpExtremaResult);
-
-    // save linemodel firstpass extrema B results
-    if (enableFirstpass_B) {
-      std::string firstpassbExtremaResultsStr = scopeStr.c_str();
-      firstpassbExtremaResultsStr.append("_firstpassb_extrema");
-      // Log.LogError("Linemodel, saving firstpassb extrema results: %s",
-      // firstpassExtremaResultsStr.c_str());
-      // TODO restore this after converting it from
-      // COperatorLineModelExtremaResult to LineModelExtremaResult
-      //   resultStore->StoreScopedGlobalResult(
-      //   firstpassbExtremaResultsStr.c_str(),
-      //   linemodel_fpb.m_firstpass_extremaResult );
-    }
-  }
+  // don't save linemodel extrema results, since will change with pdf
+  // computation
 
   return true;
 }

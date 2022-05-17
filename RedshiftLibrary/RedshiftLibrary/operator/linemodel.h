@@ -111,6 +111,7 @@ public:
       const CSpectrum &spectrum, const CSpectrum &logSampledSpectrum,
       const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
       const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
+      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults,
       const Float64 photo_weight, const std::string &opt_fittingmethod,
       const std::string &opt_lineWidthType, const Float64 opt_velocityEmission,
       const Float64 opt_velocityAbsorption,
@@ -145,12 +146,12 @@ public:
                      const TFloat64List &redshiftsGrid, Float64 &bestZ);
 
   std::shared_ptr<const LineModelExtremaResult>
-  saveFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
+  buildFirstPassExtremaResults(const TCandidateZbyRank &zCandidates);
   std::shared_ptr<LineModelExtremaResult>
-  SaveExtremaResults(const CSpectrum &spectrum,
-                     const TFloat64Range &lambdaRange,
-                     const TCandidateZbyRank &zCandidates,
-                     const std::string &opt_continuumreest = "no");
+  buildExtremaResults(const CSpectrum &spectrum,
+                      const TFloat64Range &lambdaRange,
+                      const TCandidateZbyRank &zCandidates,
+                      const std::string &opt_continuumreest = "no");
 
   void InitTplratioPriors();
 

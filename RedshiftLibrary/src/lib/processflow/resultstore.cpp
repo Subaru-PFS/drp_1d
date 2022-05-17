@@ -244,18 +244,24 @@ COperatorResultStore::GetFlagResult(const std::string &objectType,
 // than hard coded values
 
 std::shared_ptr<const TLineModelResult>
-COperatorResultStore::GetLineModelResult(const std::string &objectType,
-                                         const std::string &method,
-                                         const std::string &name,
-                                         const int &rank) const
+COperatorResultStore::GetLineModelResult(
+    const std::string &objectType, const std::string &method,
+    const std::string &name, const int &rank,
+    bool firstpassCorrespondingResult) const
 
 {
   std::shared_ptr<const COperatorResult> cop =
       GetGlobalResult(objectType, method, name)
           .lock()
-          ->getCandidate(rank, "model_parameters");
+          ->getCandidate(rank, "model_parameters",
+                         firstpassCorrespondingResult);
+
   std::shared_ptr<const TLineModelResult> tlm =
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
+  if (tlm == nullptr && cop != nullptr) // dynamic casting is not working for
+                                        // tlinemodelresult' parentObject
+    throw GlobalException(INTERNAL_ERROR,
+                          "tlm is nullptr from GetLineModelResult");
   return tlm;
 }
 

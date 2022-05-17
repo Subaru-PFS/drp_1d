@@ -133,7 +133,9 @@ public:
 
   std::shared_ptr<const TLineModelResult>
   GetLineModelResult(const std::string &objectType, const std::string &method,
-                     const std::string &name, const int &rank) const;
+                     const std::string &name, const int &rank,
+                     bool firstpassCorrespondingResult = false) const;
+
   std::shared_ptr<const TTplCombinationResult>
   GetTplCombinationResult(const std::string &objectType,
                           const std::string &method, const std::string &name,
@@ -186,6 +188,7 @@ public:
     m_GlobalResults.clear();
     m_PerTemplateResults.clear();
   }
+
 private:
   friend class ResultStore::StoreTemplateMethods_test;
   friend class ResultStore::GetMethods_test;

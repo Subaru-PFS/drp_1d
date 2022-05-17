@@ -106,7 +106,7 @@ TFloat64List CLineModelPassExtremaResult::GetRedshifts() const {
   TFloat64List redshifts;
   redshifts.reserve(m_ranked_candidates.size());
   for (auto c : m_ranked_candidates)
-    redshifts.push_back(c.second.Redshift);
+    redshifts.push_back(c.second->Redshift);
   return redshifts;
 }
 
@@ -116,12 +116,12 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
   Float64 skip_thres_absdiffz =
       5e-4; // threshold to remove duplicate extrema/candidates
   for (Int32 keb = 0; keb < results_b->m_ranked_candidates.size(); keb++) {
-    const Float64 &z_fpb = results_b->m_ranked_candidates[keb].second.Redshift;
+    const Float64 &z_fpb = results_b->m_ranked_candidates[keb].second->Redshift;
     // skip if z_fpb is nearly the same as any z_fp
     Float64 minAbsDiffz = DBL_MAX;
     bool duplicate = false;
     for (Int32 ke = 0; ke < m_ranked_candidates.size(); ke++) {
-      Float64 z_diff = z_fpb - m_ranked_candidates[ke].second.Redshift;
+      Float64 z_diff = z_fpb - m_ranked_candidates[ke].second->Redshift;
       if (std::abs(z_diff) < skip_thres_absdiffz) {
         duplicate = true;
         break; // no need to look for more
@@ -131,12 +131,4 @@ TInt32List CLineModelPassExtremaResult::getUniqueCandidates(
       uniqueIndices.push_back(keb);
   }
   return uniqueIndices;
-}
-
-TStringList CLineModelPassExtremaResult::GetIDs() const {
-  TStringList ids;
-  ids.reserve(m_ranked_candidates.size());
-  for (auto c : m_ranked_candidates)
-    ids.push_back(c.first);
-  return ids;
 }

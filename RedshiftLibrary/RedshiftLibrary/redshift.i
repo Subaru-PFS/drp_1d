@@ -490,7 +490,8 @@ class COperatorResultStore
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
 							     const std::string& name ,
-							     const int& rank
+							     const int& rank,
+                   bool firstpassResults
 							     ) const;
   std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
 										 const std::string& method,

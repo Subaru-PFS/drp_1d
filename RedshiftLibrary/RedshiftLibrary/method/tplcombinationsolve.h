@@ -94,12 +94,12 @@ private:
       std::shared_ptr<COperatorResultStore> resultStore,
       std::shared_ptr<const TplCombinationExtremaResult> &extremaResult) const;
   std::shared_ptr<const TplCombinationExtremaResult>
-  SaveExtremaResult(std::shared_ptr<const COperatorResultStore> store,
-                    const std::string &scopeStr,
-                    const TCandidateZbyRank &ranked_zCandidates,
-                    const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
-                    const TFloat64Range &lambdaRange, Float64 overlapThreshold,
-                    std::string opt_interp);
+  buildExtremaResults(std::shared_ptr<const COperatorResultStore> store,
+                      const std::string &scopeStr,
+                      const TCandidateZbyRank &ranked_zCandidates,
+                      const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
+                      const TFloat64Range &lambdaRange,
+                      Float64 overlapThreshold, std::string opt_interp);
   COperatorTplcombination m_tplcombinationOperator;
 
   std::string m_opt_pdfcombination;

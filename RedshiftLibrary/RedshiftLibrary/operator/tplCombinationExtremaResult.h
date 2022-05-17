@@ -58,24 +58,28 @@ public:
   CExtremaResult<TTplCombinationResult>() = default;
 
   CExtremaResult<TTplCombinationResult>(const TCandidateZbyRank &zCandidates) {
-    this->m_type = "TplCombinationExtremaResult";
+    m_type = "TplCombinationExtremaResult";
 
-    for (std::pair<std::string, const TCandidateZ &> cand : zCandidates) {
-      this->m_ranked_candidates.push_back(
-          std::make_pair<std::string, TTplCombinationResult>(
-              std::string(cand.first), TTplCombinationResult(cand.second)));
+    for (std::pair<std::string, const std::shared_ptr<TCandidateZ> &> cand :
+         zCandidates) {
+      m_ranked_candidates.push_back(
+          std::make_pair<std::string, std::shared_ptr<TTplCombinationResult>>(
+              std::string(cand.first),
+              std::make_shared<TTplCombinationResult>(*cand.second)));
     }
-    this->Resize(zCandidates.size());
+    Resize(zCandidates.size());
   }
 
   void Resize(Int32 size) { m_savedModelSpectrumResults.resize(size); }
 
   std::shared_ptr<const COperatorResult>
-  getCandidate(const int &rank, const std::string &dataset) const;
+  getCandidate(const int &rank, const std::string &dataset,
+               bool firstpassResults = false) const override;
 
-  const std::string &getCandidateDatasetType(const std::string &dataset) const;
+  const std::string &
+  getCandidateDatasetType(const std::string &dataset) const override;
 
-  bool HasCandidateDataset(const std::string &dataset) const;
+  bool HasCandidateDataset(const std::string &dataset) const override;
 };
 
 typedef CExtremaResult<TTplCombinationResult> TplCombinationExtremaResult;

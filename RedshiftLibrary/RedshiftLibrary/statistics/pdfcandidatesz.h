@@ -53,8 +53,9 @@ namespace NSEpic {
 
 #include "RedshiftLibrary/statistics/pdfcandidatesz.i"
 
-typedef std::map<std::string, TCandidateZ> TCandidateZbyID;
-typedef std::vector<std::pair<std::string, TCandidateZ>> TCandidateZbyRank;
+typedef std::map<std::string, std::shared_ptr<TCandidateZ>> TCandidateZbyID;
+typedef std::vector<std::pair<std::string, std::shared_ptr<TCandidateZ>>>
+    TCandidateZbyRank;
 typedef std::map<std::string, TFloat64Range> TCandidateZRangebyID;
 
 template <typename T> class CPdfCandidateszResult;
@@ -79,20 +80,21 @@ public:
   TCandidateZbyID m_candidates;
 
 private:
-  bool getCandidateSumTrapez(
-      const TRedshiftList &redshifts, const TFloat64List &valprobalog,
-      const TFloat64Range &zrange,
-      TCandidateZ &candidate) const; // default: zwidth_left = zwidth_right
+  bool getCandidateSumTrapez(const TRedshiftList &redshifts,
+                             const TFloat64List &valprobalog,
+                             const TFloat64Range &zrange,
+                             std::shared_ptr<TCandidateZ> &candidate) const;
 
-  bool getCandidateRobustGaussFit(const TRedshiftList &redshifts,
-                                  const TFloat64List &valprobalog,
-                                  const TFloat64Range &zrange,
-                                  TCandidateZ &candidate) const;
+  bool
+  getCandidateRobustGaussFit(const TRedshiftList &redshifts,
+                             const TFloat64List &valprobalog,
+                             const TFloat64Range &zrange,
+                             std::shared_ptr<TCandidateZ> &candidate) const;
 
   bool getCandidateGaussFit(const TRedshiftList &redshifts,
                             const TFloat64List &valprobalog,
                             const TFloat64Range &zrange,
-                            TCandidateZ &candidate) const;
+                            std::shared_ptr<TCandidateZ> &candidate) const;
 
   void SortByValSumProbaInt(TCandidateZbyRank &ranked_candidates) const;
 };
