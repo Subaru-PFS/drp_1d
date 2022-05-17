@@ -69,7 +69,7 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   const CLineCatalog &restlinecatalog =
-      *(inputContext->GetLineCatalog(m_objectType));
+      *(inputContext->GetLineCatalog(m_objectType, m_name));
   // We keep only emission lines, absorption lines are not handled yet (need to
   // manage continuum appropriately)
   const CLineCatalog::TLineVector restLineList =

@@ -152,7 +152,8 @@ class CalibrationLibrary:
             raise Exception(line_catalog_file + " cannot be found")
         logger.info("Loading {} linecatalog: {}".format(object_type, line_catalog_file))
 
-        self.line_catalogs[object_type] = CLineCatalog()
+        nsigmasupport = self.parameters[object_type][method]["linemodel"]["nsigmasupport"]
+        self.line_catalogs[object_type][method] = CLineCatalog(nsigmasupport)
         try:
             line_catalog = pd.read_csv( line_catalog_file, sep='\t')
         except Exception as e:
@@ -167,7 +168,7 @@ class CalibrationLibrary:
                 asymParams = TAsymParams(2., 2., 0.)
             else:
                 asymParams = TAsymParams(0, 0, 0)
-            self.line_catalogs[object_type].AddLineFromParams(row.Name,
+            self.line_catalogs[object_type][method].AddLineFromParams(row.Name,
                                                              row.WaveLength,
                                                              row.Type,
                                                              row.Force,
@@ -207,7 +208,7 @@ class CalibrationLibrary:
                                    name + ".json")) as f:
                 line_ratio_catalog_parameter = json.load(f)
             for k in range(n_ebmv_coeffs):
-                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type])
+                lr_catalog = CLineRatioCatalog(name, self.line_catalogs[object_type][method])
                 for index,row in lr_catalog_df.iterrows():
                     if row.Name in list(self.line_catalogs_df[object_type].Name):
                         lr_catalog.setLineAmplitude(self._get_linecatalog_id(row),row.NominalAmplitude)
@@ -222,8 +223,8 @@ class CalibrationLibrary:
                 lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)
 
-    def load_empty_line_catalog(self, object_type):
-        self.line_catalogs[object_type] = CLineCatalog()
+    def load_empty_line_catalog(self, object_type, method):
+        self.line_catalogs[object_type][method] = CLineCatalog()
 
     def load_empty_line_ratio_catalog_list(self, object_type):
         self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
@@ -280,14 +281,17 @@ class CalibrationLibrary:
         self.load_calzetti()
         for object_type in self.parameters["objects"]:
             self.load_templates_catalog(object_type)
-            method = self.parameters[object_type]["method"]
-            if not method:
-                method = self.parameters[object_type]["linemeas_method"]
-            if method == "LineModelSolve" or method == "LineMeasSolve":
+            #load linecatalog for linemodelsolve
+            self.line_catalogs[object_type] = dict()
+            method = self.parameters[object_type]["method"]            
+            if method == "LineModelSolve":                
                 self.load_linecatalog(object_type,method)
                 if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
                     self.load_line_ratio_catalog_list(object_type, method)
-
+            #load linecatalog for linemeassolve
+            linemeas_method = self.parameters[object_type]["linemeas_method"]
+            if linemeas_method == "LineMeasSolve":
+                self.load_linecatalog(object_type,linemeas_method)            
             # Load the reliability model
             if self.parameters[object_type].get("enable_reliability"):
                 try:
