@@ -93,7 +93,7 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
-  bestModelSolution.fillLineIds();
+
   std::shared_ptr<const CModelSpectrumResult> modelspc =
       std::make_shared<const CModelSpectrumResult>(
           m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution));

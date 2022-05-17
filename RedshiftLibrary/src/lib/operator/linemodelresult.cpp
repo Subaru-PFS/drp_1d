@@ -276,22 +276,19 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
     if (alreadysol) {
       continue;
     }
-    if (!LineModelSolutions[solutionIdx].Lines[j].GetIsStrong()) {
-      continue;
-    }
-    if (!LineModelSolutions[solutionIdx].Lines[j].GetIsEmission()) {
+    if (!restLineList[j].GetIsStrong() || !restLineList[j].GetIsEmission()) {
       continue;
     }
 
     Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
-    if (noise > 0) {
-      Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
-      Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
-                           LineModelSolutions[solutionIdx].FittingError[j];
-      if (snr >= snrThres && Fittingsnr >= fitThres) {
-        nSol++;
-        indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
-      }
+    if (noise <= 0)
+      continue;
+    Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
+    Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
+                         LineModelSolutions[solutionIdx].FittingError[j];
+    if (snr >= snrThres && Fittingsnr >= fitThres) {
+      nSol++;
+      indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
     }
   }
   return nSol;
@@ -306,24 +303,22 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
 TBoolList CLineModelResult::getStrongLinesPresence(
     Int32 filterType,
     const std::vector<CLineModelSolution> &linemodelsols) const {
+
   TBoolList strongIsPresent(linemodelsols.size(), false);
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!linemodelsols[solutionIdx].Lines[j].GetIsStrong()) {
-        continue;
-      }
-
-      if (filterType == 1 &&
-          !linemodelsols[solutionIdx].Lines[j].GetIsEmission())
-        continue;
-      else if (filterType == 2 &&
-               linemodelsols[solutionIdx].Lines[j].GetIsEmission())
+      if (!restLineList[j].GetIsStrong())
         continue;
 
-      if (linemodelsols[solutionIdx].OutsideLambdaRange[j]) {
+      if (filterType == 1 && !restLineList[j].GetIsEmission())
         continue;
-      }
+
+      if (filterType == 2 && restLineList[j].GetIsEmission())
+        continue;
+
+      if (linemodelsols[solutionIdx].OutsideLambdaRange[j])
+        continue;
 
       if (linemodelsols[solutionIdx].Amplitudes[j] > 0.0) {
         strongIsPresent[solutionIdx] = true;
@@ -355,21 +350,21 @@ TInt32List CLineModelResult::getNLinesAboveSnrcut(
 TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
   TBoolList isHaStrongest(linemodelsols.size(), false);
-  std::string ampMaxLineTag = "";
+  std::string ampMaxLineTag = "undefined";
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
     Float64 ampMax = -DBL_MAX;
     ampMaxLineTag = "undefined";
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!linemodelsols[solutionIdx].Lines[j].GetIsEmission() ||
+      if (!restLineList[j].GetIsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 
       Log.LogDebug("    linemodelresult: using line for max amp search=%s",
-                   linemodelsols[solutionIdx].Lines[j].GetName().c_str());
+                   restLineList[j].GetName().c_str());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
-        ampMaxLineTag = linemodelsols[solutionIdx].Lines[j].GetName().c_str();
+        ampMaxLineTag = restLineList[j].GetName().c_str();
       }
     }
 

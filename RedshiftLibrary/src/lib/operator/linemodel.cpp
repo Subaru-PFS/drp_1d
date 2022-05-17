@@ -946,7 +946,6 @@ COperatorLineModel::buildFirstPassExtremaResults(
     ExtremaResult->m_ranked_candidates[i].second->updateFromLineModelSolution(
         m_result->LineModelSolutions[idx]);
 
-    m_result->LineModelSolutions[idx].fillLineIds();
     ExtremaResult->m_savedModelFittingResults[i] =
         std::make_shared<CLineModelSolution>(m_result->LineModelSolutions[idx]);
   }
@@ -1426,7 +1425,6 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
         ExtremaResult->m_savedModelSpectrumResults[i] = resultspcmodel;
 
-        m_result->LineModelSolutions[idx].fillLineIds();
         ExtremaResult->m_savedModelFittingResults[i] =
             std::make_shared<CLineModelSolution>(
                 m_result->LineModelSolutions[idx]);
@@ -2340,12 +2338,12 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   std::string opt_rigidity = params->GetScoped<std::string>("rigidity");
   bool velocityfit = params->GetScoped<bool>("velocityfit");
   if (velocityfit)
-    THROWG(INTERNAL_ERROR,"velocityfit not implemented yet");
+    THROWG(INTERNAL_ERROR, "velocityfit not implemented yet");
 
   Int32 amplitudeOffsetsDegree = params->GetScoped<Int32>("polynomialdegree");
   if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
-    THROWG(INTERNAL_ERROR,"the polynomial degree "
-        "parameter should be between 0 and 2");
+    THROWG(INTERNAL_ERROR, "the polynomial degree "
+                           "parameter should be between 0 and 2");
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;
   // bool opt_tplfit_ignoreLinesSupport =
@@ -2385,7 +2383,7 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
 
   m_model->initDtd();
 
-  CLineModelSolution modelSolution;
+  CLineModelSolution modelSolution(m_RestLineList);
   CContinuumModelSolution continuumModelSolution;
   CLineModelSolution bestModelSolution;
 

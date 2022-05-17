@@ -2114,8 +2114,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         correctedAmplitudes.resize(modelSolution.Amplitudes.size());
         std::string bestTplName = "";
 
-        m_CatalogTplShape.GetBestFit(modelSolution.Lines,
-                                     modelSolution.Amplitudes,
+        m_CatalogTplShape.GetBestFit(m_RestLineList, modelSolution.Amplitudes,
                                      modelSolution.AmplitudesUncertainties,
                                      correctedAmplitudes, bestTplName);
         for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size();
@@ -2312,7 +2311,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       // if(m_rigidity=="tplcorr")
       //{
       //   Float64 tplshapePriorCoeff = m_CatalogTplShape.GetBestFit(
-      //   modelSolution.Lines, modelSolution.Amplitudes,  ); Log.LogDebug(
+      //   m_RestLineList, modelSolution.Amplitudes,  ); Log.LogDebug(
       //   "Linemodel: tplshapePriorCoeff = %f", tplshapePriorCoeff); merit =
       //   sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
       // }
@@ -5257,9 +5256,6 @@ return 0 if every was ok; else -1
 */
 void CLineModelFitting::LoadModelSolution(
     const CLineModelSolution &modelSolution) {
-  if (m_RestLineList.size() != modelSolution.Lines.size())
-    THROWG(INTERNAL_ERROR, "m_restLineList "
-                           "and modelSolution.m_Lines have different size");
 
   setRedshift(modelSolution.Redshift, false);
   SetVelocityEmission(modelSolution.EmissionVelocity);
@@ -5290,10 +5286,6 @@ void CLineModelFitting::LoadModelSolution(
     }
 
     Int32 subeIdx = m_Elements[eIdx]->findElementIndex(iRestLine);
-
-    if (m_RestLineList[iRestLine] != modelSolution.Lines[iRestLine])
-      THROWG(INTERNAL_ERROR, "m_restLineList and "
-                             "modelSolution.m_Lines dont correspond");
 
     m_Elements[eIdx]->SetFittedAmplitude(
         subeIdx, modelSolution.Amplitudes[iRestLine],
@@ -5473,36 +5465,8 @@ Int32 CLineModelFitting::improveBalmerFit() {
  **/
 CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   Int32 s = m_RestLineList.size();
-  CLineModelSolution modelSolution;
+  CLineModelSolution modelSolution(m_RestLineList);
   modelSolution.nDDL = m_Elements.GetModelNonZeroElementsNDdl();
-  modelSolution.Lines = m_RestLineList; // copying the catalog?
-  modelSolution.ElementId.resize(s);
-  modelSolution.snrHa = NAN;
-  modelSolution.lfHa = NAN;
-  modelSolution.snrOII = NAN;
-  modelSolution.lfOII = NAN;
-  modelSolution.LyaWidthCoeff = NAN;
-  modelSolution.LyaAlpha = NAN;
-  modelSolution.LyaDelta = NAN;
-  modelSolution.LyaIgm = undefIdx;
-  modelSolution.Amplitudes = TFloat64List(s, NAN);
-  modelSolution.AmplitudesUncertainties = TFloat64List(s, NAN);
-  modelSolution.FittingError = TFloat64List(s, NAN);
-  modelSolution.LambdaObs = TFloat64List(s, NAN);
-  modelSolution.Offset = TFloat64List(s, NAN);
-  modelSolution.Velocity = TFloat64List(s, NAN);
-  modelSolution.CenterContinuumFlux = TFloat64List(s, NAN);
-  modelSolution.ContinuumError = TFloat64List(s, NAN);
-  modelSolution.Sigmas = TFloat64List(s, NAN);
-  modelSolution.Fluxs = TFloat64List(s, NAN);
-  modelSolution.FluxErrors = TFloat64List(s, NAN);
-  modelSolution.FluxDirectIntegration = TFloat64List(s, NAN);
-  modelSolution.FluxDirectIntegrationError = TFloat64List(s, NAN);
-  modelSolution.OutsideLambdaRange = TBoolList(s, true);
-  modelSolution.fittingGroupInfo = TStringList(s, "undefined");
-  modelSolution.continuum_pCoeff0 = TFloat64List(s, NAN);
-  modelSolution.continuum_pCoeff1 = TFloat64List(s, NAN);
-  modelSolution.continuum_pCoeff2 = TFloat64List(s, NAN);
 
   TInt32List eIdx_oii;
   TInt32List subeIdx_oii;
