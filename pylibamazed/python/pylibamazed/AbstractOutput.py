@@ -55,6 +55,7 @@ class AbstractOutput:
         self.load_root()
         for object_type in self.object_types:
             self.load_object_level(object_type)
+            self.load_method_level(object_type)
             self.load_candidate_level(object_type)
 
     def get_solve_methods(self,object_type):

@@ -87,6 +87,25 @@ class ResultStoreOutput(AbstractOutput):
                     else:
                         self.root_results[ds][ds_row["hdf5_name"]] = self._get_attribute_from_result_store(ds_row)
 
+    def load_method_level(self, object_type):
+        level = "method"
+        rs, object_datasets = self.filter_datasets(level)
+        for ds in object_datasets:
+            methods = self.get_solve_methods(object_type)
+            self.object_results[object_type][ds] = dict()
+            for method in methods:
+                if self.results_store.HasDataset(object_type,
+                                                 method,
+                                                 ds):
+                    ds_attributes = self.filter_dataset_attributes(ds)                    
+                    for index, ds_row in ds_attributes.iterrows():
+                        attr_name = ds_row["hdf5_name"]
+                        if "<MethodType>" in ds_row["hdf5_name"]:
+                            attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
+                        methodIsLineMeasSolve = (method=="LineMeasSolve")
+                        attr = self._get_attribute_from_result_store(ds_row,object_type, None, methodIsLineMeasSolve)
+                        self.object_results[object_type][ds][attr_name] = attr
+
     def load_object_level(self, object_type):
         level = "object"
         rs, object_datasets = self.filter_datasets(level)
@@ -112,7 +131,8 @@ class ResultStoreOutput(AbstractOutput):
                     else:
                         self.object_results[object_type][ds] = dict()
                         for index, ds_row in ds_attributes.iterrows():
-                            attr = self._get_attribute_from_result_store(ds_row,object_type, None,method=="LineMeasSolve")
+                            methodIsLineMeasSolve = (method=="LineMeasSolve")
+                            attr = self._get_attribute_from_result_store(ds_row,object_type, None, methodIsLineMeasSolve)
                             self.object_results[object_type][ds][ds_row["hdf5_name"]] = attr
                     
     def load_candidate_level(self, object_type):
@@ -238,6 +258,25 @@ class ResultStoreOutput(AbstractOutput):
         for object_type in self.object_types:
             object_results = obs.create_group(object_type) #h5
             self.write_hdf5_object_level(object_type, object_results)
+            
+            # warning flag
+            rs = self.results_specifications
+            rs = rs[rs["level"] == "method"]
+            methods_datasets = list(rs["hdf5_dataset"].unique())
+            for ds in methods_datasets:
+                if self.has_dataset(object_type,ds):
+                    ds_attributes = rs[rs["hdf5_dataset"] == ds] 
+                    object_results.create_group(ds)
+                    methods = self.get_solve_methods(object_type)
+                    for method in methods:                                               
+                        for index,ds_row in ds_attributes.iterrows():
+                            if "<MethodType>" in ds_row["hdf5_name"]:
+                                attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
+                            else :
+                                attr_name = ds_row["hdf5_name"]
+                            if self.has_attribute(object_type,ds,attr_name):
+                                object_results.get(ds).attrs[attr_name] = self.object_results[object_type][ds][attr_name]
+
             if self.get_solve_method(object_type):
 
                 candidates = object_results.create_group("candidates")
@@ -280,9 +319,12 @@ class ResultStoreOutput(AbstractOutput):
     def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None):
         operator_result = self.get_operator_result(data_spec,object_type,rank, linemeas)
         if data_spec.dimension == "mono":
-            if "[" in data_spec.OperatorResult_name:
+            if "[object_type]" in data_spec.OperatorResult_name:
                 operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
                 return getattr(operator_result, operator_result_name)[object_type]
+            elif "[method_type]" in data_spec.OperatorResult_name:
+                operator_result_name = data_spec.OperatorResult_name.replace("[method_type]","")
+                return getattr(operator_result, operator_result_name)
             else:
                 return getattr(operator_result, data_spec.OperatorResult_name)
         else:
@@ -364,8 +406,23 @@ class ResultStoreOutput(AbstractOutput):
                                                                     data_spec.ResultStore_key)
                 else:
                     raise Exception("Unknown OperatorResult type " + or_type)
+        elif data_spec.level == "method":
+            if linemeas :
+                method = self.parameters[object_type]["linemeas_method"]
+            else: 
+                method = self.get_solve_method(object_type)
+            or_type = self.results_store.GetGlobalResultType(object_type,
+                                                             method,
+                                                             data_spec.ResultStore_key)
+            if or_type == "CFlagLogResult":
+                return  self.results_store.GetFlagResult(object_type,
+                                                        method,
+                                                        data_spec.ResultStore_key)
+            else:
+                raise Exception("Unknown OperatorResult type " + or_type)                                     
+
         elif data_spec.level == "object":
-            if "linemeas" in data_spec.hdf5_dataset or ("warningFlag" in data_spec.hdf5_dataset and linemeas):
+            if "linemeas" in data_spec.hdf5_dataset :
                 method = self.parameters[object_type]["linemeas_method"]
             else: 
                 method = self.get_solve_method(object_type)
@@ -386,12 +443,6 @@ class ResultStoreOutput(AbstractOutput):
                 return self.results_store.GetModelSpectrumResult(object_type,
                                                                  method,
                                                                  data_spec.ResultStore_key)
-            elif or_type == "CFlagLogResult":
-                return self.results_store.GetFlagResult(object_type,
-                                                        method,
-                                                        data_spec.ResultStore_key)
-
-
             else:
                 raise Exception("Unknown OperatorResult type " + or_type)
         elif data_spec.level == "candidate":
