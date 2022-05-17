@@ -83,12 +83,12 @@ public:
                     const CLineCatalog::TLineVector &restLineList,
                     const std::string &opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
-                    const Float64 opt_continuum_neg_threshold,
-                    const std::string &lineWidthType,
-                    const Float64 nsigmasupport, const Float64 velocityEmission,
-                    const Float64 velocityAbsorption,
+                    Float64 opt_continuum_neg_threshold,
+                    const std::string &lineWidthType, Float64 nsigmasupport,
+                    Float64 velocityEmission, Float64 velocityAbsorption,
                     const std::string &opt_rules,
-                    const std::string &opt_rigidity);
+                    const std::string &opt_rigidity,
+                    Int32 amplitudeOffsetsDegree = 2);
 
   void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
   void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
@@ -248,10 +248,10 @@ public:
   const CSpectrum &
   GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter = -1);
   Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
-  Int32 GetFluxDirectIntegration(const TInt32List &eIdx_list,
-                                 const TInt32List &subeIdx_list,
-                                 Int32 opt_cont_substract_abslinesmodel,
-                                 Float64 &fluxdi, Float64 &snrdi) const;
+  void getFluxDirectIntegration(const TInt32List &eIdx_list,
+                                const TInt32List &subeIdx_list,
+                                bool substract_abslinesmodel, Float64 &fluxdi,
+                                Float64 &snrdi) const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
   Float64 getModelFluxVal(Int32 idx) const;
   Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
@@ -300,6 +300,7 @@ public:
 
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
+  Int32 m_AmplitudeOffsetsDegree = 2;
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
@@ -387,6 +388,12 @@ private:
 
   Int32 improveBalmerFit();
   void applyRules(bool enableLogs = false);
+  TInt32List getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
+                                        const TInt32List &subeIdx_list,
+                                        const Float64 &sigma_support) const;
+  void integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
+                                   const TInt32List &indexes, Float64 &sumFlux,
+                                   Float64 &sumErr) const;
   CRegulament m_Regulament;
 
   TFloat64List m_ScaleMargCorrTplshape;
@@ -411,8 +418,8 @@ private:
   Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
   TAxisSampleList
-      m_observeGridContinuumFlux; // the continuum spectre without the amplitude
-                                  // coeff; m_ContinuumFLux = amp *
+      m_observeGridContinuumFlux; // the continuum spectre without the
+                                  // amplitude coeff; m_ContinuumFLux = amp *
                                   // m_observeGridContinuumFlux
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
   CSpectrumFluxAxis m_ContinuumFluxAxis; // rebined model continuum

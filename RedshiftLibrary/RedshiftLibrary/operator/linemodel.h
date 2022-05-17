@@ -226,8 +226,7 @@ public:
 
   void setHapriorOption(Int32 opt);
   const CSpectrum &
-  getFittedModelWithoutcontinuum(Float64 z,
-                                 const CLineModelSolution &bestModelSolution);
+  getFittedModelWithoutcontinuum(const CLineModelSolution &bestModelSolution);
 
 private:
   std::shared_ptr<CLineModelResult> m_result;

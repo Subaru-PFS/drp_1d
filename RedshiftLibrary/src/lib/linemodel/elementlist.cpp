@@ -484,9 +484,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
       continue;
     }
     TInt32RangeList s = m_Elements[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
-      support.push_back(s[iS]);
-    }
+    support.insert(support.end(), s.begin(), s.end());
   }
 
   for (Int32 iS = 0; iS < support.size(); iS++) {

@@ -14,6 +14,6 @@ ModelTplName	model_parameters	S40	FALSE	mono	False	candidate	Name	string	star/ga
 ModelDustCoeff	model_parameters	f8	FALSE	mono	False	candidate	IsmCoeff	double	star/galaxy	templatefittingsolve	FALSE
 ModelAmplitude	model_parameters	f8	FALSE	mono	False	candidate	Amp	double	star/galaxy	templatefittingsolve	FALSE
 FittedRaysLambda	fitted_rays	f8	extrema_results	multi	True	candidate		list[double]	galaxy	linemodelsolve	FALSE
-Linemeas_ContinuumCoeffX0	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff0	list[double]			
-Linemeas_ContinuumCoeffX1	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff1	list[double]			
-Linemeas_ContinuumCoeffX2	linemeas	f8	linemeas	multi	False	object	continuum_pCeoff2	list[double]			
+Linemeas_ContinuumCoeffX0	linemeas	f8	linemeas	multi	False	object	continuum_pCoeff0	list[double]			
+Linemeas_ContinuumCoeffX1	linemeas	f8	linemeas	multi	False	object	continuum_pCoeff1	list[double]			
+Linemeas_ContinuumCoeffX2	linemeas	f8	linemeas	multi	False	object	continuum_pCoeff2	list[double]			
