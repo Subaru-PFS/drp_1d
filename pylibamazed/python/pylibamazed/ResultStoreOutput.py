@@ -191,12 +191,12 @@ class ResultStoreOutput(AbstractOutput):
         if self.extended_results:
             return rs, all_datasets
 
-        #a dataset is considered as debug if all its elements have debug = True
+        #a dataset is considered as extended_results if all its elements have extended_results = True
         filtered_datasets = []
         for ds in all_datasets:
             ds_attributes = rs[rs["hdf5_dataset"]==ds]
-            debug = all(ds_row["debug"] == True for index, ds_row in ds_attributes.iterrows())
-            if not debug:
+            extended_results = all(ds_row["extended_results"] == True for index, ds_row in ds_attributes.iterrows())
+            if not extended_results:
                 filtered_datasets.append(ds) 
         
         return rs, filtered_datasets
@@ -204,10 +204,10 @@ class ResultStoreOutput(AbstractOutput):
     def filter_dataset_attributes(self, ds_name):  
         rs = self.results_specifications 
         ds_attributes = rs[rs["hdf5_dataset"]==ds_name]   
-        #filter ds_attributes by debug column
+        #filter ds_attributes by extended_results column
         if self.extended_results:
             return ds_attributes
-        filtered_df = ds_attributes[ds_attributes["debug"]==self.extended_results]     
+        filtered_df = ds_attributes[ds_attributes["extended_results"]==self.extended_results]     
         return filtered_df
 
     def write_hdf5_root(self, hdf5_spectrum_node):
