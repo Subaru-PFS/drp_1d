@@ -57,6 +57,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
   for (Int32 i = 0; i < redshifts.size(); ++i) {
     const std::string Id = "EXT" + to_string(i);
+    m_candidates[Id] = std::make_shared<TCandidateZ>();
     m_candidates[Id]->Redshift = redshifts[i];
   }
 }
