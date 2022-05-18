@@ -98,7 +98,9 @@ class AbstractOutput:
         else:
             return cr[columns]
 
-    def get_pdf(self,object_type):
+    def get_pdf(self,object_type, first_pass = False):
+        if first_pass:
+            return self.object_dataframes[object_type]["firstpass_pdf"]
         return self.object_dataframes[object_type]["pdf"]
 
     def get_classification_type(self):
