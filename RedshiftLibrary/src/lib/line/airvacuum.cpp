@@ -58,11 +58,8 @@ CAirVacuumConverter::Get(const std::string &converterName) {
   else if (converterName == "Morton2000")
     return (std::make_shared<CAirVacMorton2000>());
   else {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter()
-            << "CAirVacuum::GetConverter, unknown air->vacuum conversion: "
-            << converterName);
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "unknown air->vacuum conversion: " << converterName);
   }
 }
 
@@ -180,82 +177,69 @@ TFloat64List CAirVacuum::AirRefractiveIndex(const TFloat64List &waveVac) const {
 void CAirVacEdlen1953::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacEdlen1966::CheckWaveRange: Empty vector");
+    THROWG(INTERNAL_ERROR, " Empty vector");
 
   if (*it < 2000.0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacEdlen1953::CheckWaveRange: some wavelengths "
-                          "are below 2000 Angstroem");
+    THROWG(INTERNAL_ERROR, " some wavelengths "
+                           "are below 2000 Angstroem");
   }
 }
 
 void CAirVacEdlen1966::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacEdlen1966::CheckWaveRange: Empty vector");
+    THROWG(INTERNAL_ERROR, "Empty vector");
 
   if (*it < 2000.0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacEdlen1966::CheckWaveRange: some wavelengths "
-                          "are below 2000 Angstroem");
+    THROWG(INTERNAL_ERROR, "some wavelengths "
+                           "are below 2000 Angstroem");
   }
 }
 
 void CAirVacPeckReeder1972::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    throw GlobalException(
-        INTERNAL_ERROR, "CAirVacPeckReeder1972::CheckWaveRange: Empty vector");
+    THROWG(INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacPeckReeder1972::CheckWaveRange: some "
-                          "wavelengths are below 2300 Angstroem");
+    THROWG(INTERNAL_ERROR, "some "
+                           "wavelengths are below 2300 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacPeckReeder1972::CheckWaveRange: some "
-                          "wavelengths are above 16900 Angstroem");
+    THROWG(INTERNAL_ERROR, "some "
+                           "wavelengths are above 16900 Angstroem");
   }
 }
 
 void CAirVacCiddor1996::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacMorton2000::CheckWaveRange: Empty vector");
+    THROWG(INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacPeckReeder1972::CheckWaveRange: some "
-                          "wavelengths are below 3000 Angstroem");
+    THROWG(INTERNAL_ERROR, "some "
+                           "wavelengths are below 3000 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacPeckReeder1972::CheckWaveRange: some "
-                          "wavelengths are above 16900 Angstroem");
+    THROWG(INTERNAL_ERROR, "some "
+                           "wavelengths are above 16900 Angstroem");
   }
 }
 
 void CAirVacMorton2000::CheckWaveRange(const TFloat64List &wave) const {
   auto it = std::min_element(wave.begin(), wave.end());
   if (it == wave.end())
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacMorton2000::CheckWaveRange: Empty vector");
+    THROWG(INTERNAL_ERROR, "Empty vector");
 
   if (*it < 3000.0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacMorton2000::CheckWaveRange: some wavelengths "
-                          "are below 3000 Angstroem");
+    THROWG(INTERNAL_ERROR, "some wavelengths "
+                           "are below 3000 Angstroem");
   }
 
   if (*std::max_element(wave.begin(), wave.end()) > 19000.) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CAirVacMorton2000::CheckWaveRange: some wavelengths "
-                          "are above 16900 Angstroem");
+    THROWG(INTERNAL_ERROR, "some wavelengths "
+                           "are above 16900 Angstroem");
   }
 }

@@ -61,9 +61,7 @@ COperatorTemplateFittingLog::COperatorTemplateFittingLog(
     : COperatorTemplateFittingBase(spectrum, lambdaRange, redshifts),
       m_logSampledSpectrum(logSampledSpectrum) {
   if (!m_logSampledSpectrum.GetSpectralAxis().IsLogSampled()) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: input spectrum is not log sampled");
+    THROWG(INTERNAL_ERROR, "input spectrum is not log sampled");
   }
 
   m_logSampledSpectrum.GetSpectralAxis().ClampLambdaRange(
@@ -79,10 +77,9 @@ void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
 
 void COperatorTemplateFittingLog::CheckRedshifts() {
   if (m_redshifts.size() < 2) {
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter() << "Operator-TemplateFittingLog: Cannot "
-                                         "compute on a redshift array "
-                                      << m_redshifts.size() << " <2");
+    THROWG(INTERNAL_ERROR, Formatter() << "Operator-TemplateFittingLog: Cannot "
+                                          "compute on a redshift array "
+                                       << m_redshifts.size() << " <2");
   }
 
   // check if spectrum sampling is a multiple of redshift step
@@ -91,9 +88,9 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   m_ssRatio = m_logSampledSpectrum.GetSpectralAxis().GetLogSamplingIntegerRatio(
       m_logstep, modulo);
   if (std::abs(modulo) > 1E-12)
-    throw GlobalException(INTERNAL_ERROR,
-                          "TFLogOperator: spc and tpl do not have a lambdastep "
-                          "multiple of redshift step");
+    THROWG(INTERNAL_ERROR,
+           "TFLogOperator: spc and tpl do not have a lambdastep "
+           "multiple of redshift step");
 
   // subsample spectrum if necessary (coarse redshift grid)
   if (m_ssRatio == 1) { // no required subsampling
@@ -110,9 +107,8 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
 
     // double make sure that subsampled spectrum are is well sampled
     if (!m_ssSpectrum.GetSpectralAxis().IsLogSampled(m_logstep)) {
-      throw GlobalException(INTERNAL_ERROR,
-                            "  Operator-TemplateFittingLog: subsampled "
-                            "spectrum is not log sampled the redshift step");
+      THROWG(INTERNAL_ERROR,
+             "subsampled spectrum is not log sampled the redshift step");
     }
   }
 
@@ -178,7 +174,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   Int32 nPadBeforeTpl = 0;
 
   if (verboseLogXtYFFT) {
-    Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: Processing spc-fft "
+    Log.LogDebug("FitAllz: Processing spc-fft "
                  "with n=%d, padded to n=%d",
                  nSpc, nPadded);
   }
@@ -205,7 +201,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   if (computeSpcFFT) {
 
     if (verboseLogXtYFFT) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: Processing spc-fft "
+      Log.LogDebug("FitAllz: Processing spc-fft "
                    "with nPadBeforeSpc=%d",
                    nPadBeforeSpc);
     }
@@ -229,7 +225,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
     fftw_execute(pSpc);
     if (verboseLogXtYFFT) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: spc-fft done");
+      Log.LogDebug("FitAllz: spc-fft done");
     }
     if (verboseExportXtYFFT) {
       // save spc-fft data
@@ -246,7 +242,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
       precomputedFFT_spcFluxOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
       if (precomputedFFT_spcFluxOverErr2 == 0) {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to "
+        Log.LogError("Unable to "
                      "allocate precomputedFFT_spcFluxOverErr2");
         return -1;
       }
@@ -260,7 +256,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
       precomputedFFT_spcOneOverErr2 =
           (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
       if (precomputedFFT_spcOneOverErr2 == 0) {
-        Log.LogError("  Operator-TemplateFittingLog: InitFFT: Unable to "
+        Log.LogError("Unable to "
                      "allocate precomputedFFT_spcOneOverErr2");
         return -1;
       }
@@ -286,7 +282,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   }
 
   if (verboseLogXtYFFT) {
-    Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: Processing tpl-fft "
+    Log.LogDebug("FitAllz: Processing tpl-fft "
                  "with n=%d, padded to n=%d",
                  nTpl, nPadded);
   }
@@ -324,7 +320,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
   }
   fftw_execute(pTpl);
   if (verboseLogXtYFFT) {
-    Log.LogInfo("  Operator-TemplateFittingLog: FitAllz: tpl-fft done");
+    Log.LogInfo("FitAllz: tpl-fft done");
   }
   if (verboseExportXtYFFT) {
     // save tpl-fft data
@@ -351,7 +347,7 @@ Int32 COperatorTemplateFittingLog::EstimateXtY(const TFloat64List &X,
 
   fftw_execute(pBackward);
   if (verboseLogXtYFFT) {
-    Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: backward-fft done");
+    Log.LogDebug("FitAllz: backward-fft done");
   }
 
   XtY.resize(nshifts);
@@ -387,14 +383,10 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
   outSpc = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
   pSpc = fftw_plan_dft_r2c_1d(nPadded, inSpc, outSpc, FFTW_ESTIMATE);
   if (inSpc == 0) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: InitFFT: Unable to allocate inSpc");
+    THROWG(INTERNAL_ERROR, "Unable to allocate inSpc");
   }
   if (outSpc == 0) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: InitFFT: Unable to allocate outSpc");
+    THROWG(INTERNAL_ERROR, "Unable to allocate outSpc");
   }
 
   inTpl_padded = (Float64 *)fftw_malloc(sizeof(Float64) * nPadded);
@@ -402,19 +394,14 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
   outTpl = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
   pTpl = fftw_plan_dft_r2c_1d(nPadded, inTpl, outTpl, FFTW_ESTIMATE);
   if (inTpl_padded == 0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-TemplateFittingLog: InitFFT: Unable to "
-                          "allocate inTpl_padded");
+    THROWG(INTERNAL_ERROR, "Unable to "
+                           "allocate inTpl_padded");
   }
   if (inTpl == 0) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: InitFFT: Unable to allocate inTpl");
+    THROWG(INTERNAL_ERROR, "Unable to allocate inTpl");
   }
   if (outTpl == 0) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: InitFFT: Unable to allocate outTpl");
+    THROWG(INTERNAL_ERROR, "Unable to allocate outTpl");
   }
 
   outCombined = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nPadded);
@@ -422,14 +409,12 @@ Int32 COperatorTemplateFittingLog::InitFFT(Int32 nPadded) {
   pBackward =
       fftw_plan_dft_c2r_1d(nPadded, outCombined, inCombined, FFTW_ESTIMATE);
   if (outCombined == 0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-TemplateFittingLog: InitFFT: Unable to "
-                          "allocate outCombined");
+    THROWG(INTERNAL_ERROR, "Unable to "
+                           "allocate outCombined");
   }
   if (inCombined == 0) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-TemplateFittingLog: InitFFT: Unable to "
-                          "allocate inCombined");
+    THROWG(INTERNAL_ERROR, "Unable to "
+                           "allocate inCombined");
   }
 
   // reinit fft precomputed buffers
@@ -539,11 +524,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(
         zindexesFullLstSquare.end());
 
     if (verboseLogFitAllz) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes for full "
+      Log.LogDebug("FitAllz: indexes for full "
                    "LstSquare calculation, count = %d",
                    zindexesFullLstSquare.size());
       for (Int32 k = 0; k < zindexesFullLstSquare.size(); k++) {
-        Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes ranges: "
+        Log.LogDebug("FitAllz: indexes ranges: "
                      "for i=%d, zindexesFullLstSquare=%d",
                      k, zindexesFullLstSquare[k]);
       }
@@ -565,11 +550,11 @@ Int32 COperatorTemplateFittingLog::FitAllz(
   Int32 nzranges = izrangelist.size();
 
   if (verboseLogFitAllz) {
-    Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes - "
+    Log.LogDebug("FitAllz: indexes - "
                  "izrangelist calculation, count = %d",
                  izrangelist.size());
     for (Int32 k = 0; k < nzranges; k++) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes ranges: "
+      Log.LogDebug("FitAllz: indexes ranges: "
                    "for i=%d, zmin=%f, zmax=%f",
                    k, result->Redshifts[izrangelist[k].GetBegin()],
                    result->Redshifts[izrangelist[k].GetEnd()]);
@@ -615,20 +600,17 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     }
     TInt32Range ilbda = FindTplSpectralIndex(zrange);
     if (verboseLogFitAllz) {
-      Log.LogDebug(
-          "  Operator-TemplateFittingLog: FitAllz: zrange min=%f, max=%f",
-          zrange.GetBegin(), zrange.GetEnd());
-      Log.LogDebug(
-          "  Operator-TemplateFittingLog: FitAllz: full zmin=%f, full zmax=%f",
-          result->Redshifts[0],
-          result->Redshifts[result->Redshifts.size() - 1]);
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes tpl crop: "
+      Log.LogDebug("FitAllz: zrange min=%f, max=%f", zrange.GetBegin(),
+                   zrange.GetEnd());
+      Log.LogDebug("FitAllz: full zmin=%f, full zmax=%f", result->Redshifts[0],
+                   result->Redshifts[result->Redshifts.size() - 1]);
+      Log.LogDebug("FitAllz: indexes tpl crop: "
                    "lbda min=%d, max=%d",
                    ilbda.GetBegin(), ilbda.GetEnd());
-      Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: indexes tpl full: "
+      Log.LogDebug("FitAllz: indexes tpl full: "
                    "lbda min=%d, max=%d",
                    0, m_templateRebined_bf.GetSampleCount() - 1);
-      /*Log.LogDebug("  Operator-TemplateFittingLog: FitAllz: tpl lbda "
+      /*Log.LogDebug("FitAllz: tpl lbda "
                    "min*zmax=%f, max*zmin=%f",
                    tplRebinedLambdaGlobal[ilbda.GetBegin()] * (1.0 +
          zrange.GetEnd()), tplRebinedLambdaGlobal[ilbda.GetEnd()] * (1.0 +
@@ -687,10 +669,10 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           }
 
           if (verbose_priorA) {
-            Log.LogDebug("  Operator-TemplateFittingLog: update the amplitude "
+            Log.LogDebug("update the amplitude "
                          "(a_mean=%e, a_sigma=%e)",
                          pTZE.A_mean, pTZE.A_sigma);
-            Log.LogDebug("  Operator-TemplateFittingLog: update the amplitude "
+            Log.LogDebug("update the amplitude "
                          "(ampl was = %e, updated to %e)",
                          result->FitAmplitude[fullResultIdx], ampl);
           }
@@ -711,28 +693,25 @@ Int32 COperatorTemplateFittingLog::FitAllz(
           Float64 logPa = pTZE.betaA * (ampl - pTZE.A_mean) *
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
-            throw GlobalException(
-                INTERNAL_ERROR,
-                Formatter()
-                    << "Operator-TemplateFittingLog: logPa is NAN (a_mean="
-                    << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+            THROWG(INTERNAL_ERROR,
+                   Formatter()
+                       << "Operator-TemplateFittingLog: logPa is NAN (a_mean="
+                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
           }
           logprior += logPa;
         } else {
           if (verbose_priorA) {
-            Log.LogDebug("  Operator-TemplateFittingLog: NOT updating the "
+            Log.LogDebug("NOT updating the "
                          "amplitude (a_mean=%e, a_sigma=%e)",
                          pTZE.A_mean, pTZE.A_sigma);
           }
         }
         if (std::isnan(logprior) || logprior != logprior ||
             std::isinf(logprior)) {
-          throw GlobalException(
-              INTERNAL_ERROR,
-              Formatter()
-                  << "Operator-TemplateFittingLog: logPa is NAN (a_mean="
-                  << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma
-                  << ", precompA=" << pTZE.logprior_precompA);
+          THROWG(INTERNAL_ERROR,
+                 Formatter() << "logPa is NAN (a_mean=" << pTZE.A_mean
+                             << ", a_sigma=" << pTZE.A_sigma
+                             << ", precompA=" << pTZE.logprior_precompA);
         }
         result->ChiSquare[fullResultIdx] += logprior;
       }
@@ -807,17 +786,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   Float64 redshiftValueMeiksin = result->Redshifts[0];
 
   if (verboseLogFitFitRangez) {
-    Log.LogDebug(
-        "  Operator-TemplateFittingLog: FitRangez: redshiftValueMeiksin = %f",
-        redshiftValueMeiksin);
-    Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: spc[0] = %f",
-                 spectrumRebinedLambda[0]);
-    Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: spc[max] = %f",
-                 spectrumRebinedLambda[nSpc - 1]);
-    Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: tpl[0]*zmax = %f",
+    Log.LogDebug("FitRangez: redshiftValueMeiksin = %f", redshiftValueMeiksin);
+    Log.LogDebug("FitRangez: spc[0] = %f", spectrumRebinedLambda[0]);
+    Log.LogDebug("FitRangez: spc[max] = %f", spectrumRebinedLambda[nSpc - 1]);
+    Log.LogDebug("FitRangez: tpl[0]*zmax = %f",
                  tplRebinedLambdaGlobal[kstart] *
                      (1.0 + result->Redshifts[result->Redshifts.size() - 1]));
-    Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: tpl[max]*zmin = %f",
+    Log.LogDebug("FitRangez: tpl[max]*zmin = %f",
                  tplRebinedLambdaGlobal[kstart + nTpl - 1] *
                      (1 + result->Redshifts[0]));
   }
@@ -825,12 +800,12 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   Int32 nshifts = nTpl - nSpc + 1;
   m_nPaddedSamples = nTpl;
 
-  Log.LogDetail("  Operator-TemplateFittingLog: Now fitting using the FFT on "
+  Log.LogDetail("Now fitting using the FFT on "
                 "nshifts=%d values, for Meiksin redshift=%f",
                 nshifts, redshiftValueMeiksin);
 
   if (verboseLogFitFitRangez) {
-    Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: initializing FFT "
+    Log.LogDebug("FitRangez: initializing FFT "
                  "with n = %d points",
                  m_nPaddedSamples);
   }
@@ -852,19 +827,15 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       relative_zgrid_error_max = relative_zgrid_error;
   }
   if (verboseLogFitFitRangez)
-    Log.LogDebug(
-        "  Operator-TemplateFittingLog: FitRangez: max diff in zgrid=%e",
-        relative_zgrid_error_max);
+    Log.LogDebug("FitRangez: max diff in zgrid=%e", relative_zgrid_error_max);
   if (relative_zgrid_error_max > 5E-7) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "z_vect and z_vect_verification do not correspond.");
+    THROWG(INTERNAL_ERROR, "z_vect and z_vect_verification do not correspond.");
   }
 
   // check borders
   if (z_vect.size() != z_vect_verif.size())
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "z_vect size and z_vect_verification size do not match.");
+    THROWG(INTERNAL_ERROR,
+           "z_vect size and z_vect_verification size do not match.");
   Int32 nISM = EbmvList.size();
   Int32 nIGM = MeiksinList.size();
 
@@ -877,7 +848,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
     nIGM = 1;
     enableIGM = 0;
     if (verboseLogFitFitRangez) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: IGM disabled, "
+      Log.LogDebug("FitRangez: IGM disabled, "
                    "min-tpl-lbda=%f",
                    tplRebinedLambdaGlobal[kstart]);
     }
@@ -915,8 +886,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
   }
   for (Int32 kIGM = 0; kIGM < nIGM; kIGM++) {
     if (verboseLogFitFitRangez && enableIGM) {
-      Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: IGM index=%d",
-                   kIGM);
+      Log.LogDebug("FitRangez: IGM index=%d", kIGM);
     }
 
     if (enableIGM) {
@@ -926,8 +896,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
 
     for (Int32 kISM = 0; kISM < nISM; kISM++) {
       if (verboseLogFitFitRangez && m_enableISM) {
-        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: ISM index =%d",
-                     kISM);
+        Log.LogDebug("FitRangez: ISM index =%d", kISM);
       }
 
       if (m_enableISM) {
@@ -944,8 +913,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       TAxisSampleList tpl2RebinedFlux(nTpl);
 
       if (tplRebinedFluxcorr_cropped.size() != nTpl) {
-        throw GlobalException(INTERNAL_ERROR,
-                              "prob with retrieved vector size");
+        THROWG(INTERNAL_ERROR, "prob with retrieved vector size");
       }
       // compute the square of the corrected flux
       for (Int32 j = 0; j < nTpl; j++) {
@@ -997,19 +965,18 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       }
 
       if (verboseExportFitRangez) {
-        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: dtd = %e", dtd);
+        Log.LogDebug("FitRangez: dtd = %e", dtd);
       }
 
       // Estimate Chi2
       if (mtm_vec.size() != dtm_vec_size) {
         freeFFTPlans();
-        throw GlobalException(
-            INTERNAL_ERROR,
-            Formatter() << "Operator-TemplateFittingLog: FitRangez: xty "
-                           "vectors sizes don't match: dtm size = "
-                        << dtm_vec_size << ", mtm size =" << mtm_vec.size());
+        THROWG(INTERNAL_ERROR,
+               Formatter() << "Operator-TemplateFittingLog: FitRangez: xty "
+                              "vectors sizes don't match: dtm size = "
+                           << dtm_vec_size << ", mtm size =" << mtm_vec.size());
       }
-      // Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: kISM = %d,
+      // Log.LogDetail(FitRangez: kISM = %d,
       // kIGM = %d", kISM, kIGM);
       TFloat64List chi2(dtm_vec_size, DBL_MAX);
       TFloat64List amp(dtm_vec_size, DBL_MAX);
@@ -1030,7 +997,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
           chi2[k] =
               dtd - 2 * dtm_vec[k] * amp[k] + mtm_vec[k] * amp[k] * amp[k];
         }
-        // Log.LogDetail("  Operator-TemplateFittingLog: FitRangez: chi2[%d] =
+        // Log.LogDetail(FitRangez: chi2[%d] =
         // %f", k, chi2[k]);
       }
 
@@ -1061,14 +1028,13 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       }
 
       if (verboseExportFitRangez) {
-        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: spc lbda 0 =%f",
-                     spectrumRebinedLambda[0]);
-        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: tpl lbda 0 =%f",
+        Log.LogDebug("FitRangez: spc lbda 0 =%f", spectrumRebinedLambda[0]);
+        Log.LogDebug("FitRangez: tpl lbda 0 =%f",
                      tplRebinedLambdaGlobal[kstart]);
         Float64 z_O =
             (spectrumRebinedLambda[0] - tplRebinedLambdaGlobal[kstart]) /
             tplRebinedLambdaGlobal[kstart];
-        Log.LogDebug("  Operator-TemplateFittingLog: FitRangez: z 0 =%f", z_O);
+        Log.LogDebug("FitRangez: z 0 =%f", z_O);
 
         // save chi2 data
         FILE *f_chi2 = fopen("loglbda_chi2output_dbg.txt", "w+");
@@ -1149,22 +1115,20 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(
     if ((inGrid[0] - tgtGrid[0]) < epsilon) {
       inGrid[0] = tgtGrid[0] - epsilon;
     } else {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter()
-              << "Error while interpolating loglambda chi2 result : xrebin("
-              << tgtGrid[0] << ") < x[0](" << inGrid[0] << ")");
+      THROWG(INTERNAL_ERROR,
+             Formatter()
+                 << "Error while interpolating loglambda chi2 result : xrebin("
+                 << tgtGrid[0] << ") < x[0](" << inGrid[0] << ")");
     }
   }
   if (tgtGrid[tgtn - 1] > inGrid[n - 1]) {
     if ((tgtGrid[tgtn - 1] - inGrid[n - 1]) < epsilon) {
       inGrid[n - 1] = tgtGrid[tgtn - 1] + epsilon;
     } else {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter()
-              << "Error while interpolating loglambda chi2 result : xrebin("
-              << tgtGrid[tgtn - 1] << ") > x[n-1](" << inGrid[n - 1] << ")");
+      THROWG(INTERNAL_ERROR,
+             Formatter()
+                 << "Error while interpolating loglambda chi2 result : xrebin("
+                 << tgtGrid[tgtn - 1] << ") > x[n-1](" << inGrid[n - 1] << ")");
     }
   }
 
@@ -1173,9 +1137,7 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(
   for (Int32 j = 0; j < tgtn; j++) {
     Float64 Xrebin = tgtGrid[j];
     if (debug) {
-      Log.LogDebug(
-          "  Operator-TemplateFittingLog: InterpolateResult, j=%d, xrebin=%f",
-          j, Xrebin);
+      Log.LogDebug("InterpolateResult, j=%d, xrebin=%f", j, Xrebin);
     }
 
     status = gsl_interp_eval_e(interpolation, &inGrid.at(0), &in.at(0), Xrebin,
@@ -1183,7 +1145,7 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(
                                &out[j]); // lin
 
     if (status != GSL_SUCCESS) {
-      throw GlobalException(
+      THROWG(
           EXTERNAL_LIB_ERROR,
           Formatter()
               << "Operator-TemplateFittingLog: InterpolateError: GSL Error : "
@@ -1191,7 +1153,7 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(
               << status << " (Errtype: " << gsl_strerror(status) << ")");
     }
     // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
-    // Log.LogInfo("  Operator-TemplateFittingLog: FitAllz: interpolating
+    // Log.LogInfo(FitAllz: interpolating
     // gsl-spline z result, , ztgt=%f, rebinY=%f", tgtGrid[j], out[j]);
   }
 
@@ -1254,15 +1216,13 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
                                          // z and min min z in current range.
 
   if (ilbdamax >= tplsize || ilbdamin < 0)
-    throw GlobalException(INTERNAL_ERROR,
-                          "FindTplSpectralIndex failed to find indexes");
+    THROWG(INTERNAL_ERROR, "FindTplSpectralIndex failed to find indexes");
 
   if (ilbdamin > ilbdamax) {
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter()
-                              << "  Operator-TemplateFittingLog: Problem with "
-                                 "tpl indexes for zranges, found ilbdamin="
-                              << ilbdamin << " > ilbdamax=" << ilbdamax);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Problem with "
+                                  "tpl indexes for zranges, found ilbdamin="
+                               << ilbdamin << " > ilbdamax=" << ilbdamax);
   }
 
   return TInt32Range(ilbdamin, ilbdamax);
@@ -1290,26 +1250,19 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFitting,
     const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
     Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
-  Log.LogDetail(
-      "  Operator-TemplateFittingLog: starting computation for template: %s",
-      logSampledTpl->GetName().c_str());
+  Log.LogDetail("starting computation for template: %s",
+                logSampledTpl->GetName().c_str());
 
   if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
       logSampledTpl->CalzettiInitFailed()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-TemplateFittingLog: no calzetti calib. "
-                          "file loaded... aborting");
+    THROWG(INTERNAL_ERROR, "no calzetti calib. "
+                           "file loaded... aborting");
   }
   if (opt_dustFitting > -1 &&
       opt_dustFitting >
           logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() -
               1) {
-    Log.LogError(
-        "  Operator-TemplateFittingLog: calzetti index overflow (opt=%d, while "
-        "NPrecomputedDustCoeffs=%d)... aborting",
-        opt_dustFitting,
-        logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs());
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         Formatter()
             << "Operator-TemplateFitting: calzetti index overflow (dustfitting="
@@ -1320,24 +1273,20 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   }
 
   if (opt_extinction && logSampledTpl->MeiksinInitFailed()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-TemplateFittingLog: no meiksin calib. "
-                          "file loaded... aborting");
+    THROWG(INTERNAL_ERROR, "no meiksin calib. "
+                           "file loaded... aborting");
   }
 
   if (!logSampledTpl->GetSpectralAxis().IsLogSampled()) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-TemplateFittingLog: template is not log sampled");
+    THROWG(INTERNAL_ERROR, "template is not log sampled");
   }
 
   // check if spc and tpl have same step
   const Float64 epsilon = 1E-8;
   if (std::abs(m_logSampledSpectrum.GetSpectralAxis().GetlogGridStep() -
                logSampledTpl->GetSpectralAxis().GetlogGridStep()) > epsilon)
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "TFLogOperator: tpl and spc are not sampled the same step");
+    THROWG(INTERNAL_ERROR,
+           "TFLogOperator: tpl and spc are not sampled the same step");
 
   // subsample template if necessary
   if (m_ssRatio == 1) { // no required subsampling
@@ -1352,9 +1301,8 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
     m_templateRebined_bf = CTemplate(*logSampledTpl, mask_tpl);
     // double make sure that subsampled spectrum is well sampled
     if (!m_templateRebined_bf.GetSpectralAxis().IsLogSampled(m_logstep)) {
-      throw GlobalException(
-          INTERNAL_ERROR, "  Operator-TemplateFittingLog: subsampled template "
-                          "is not log sampled with the redshift step");
+      THROWG(INTERNAL_ERROR, "subsampled template "
+                             "is not log sampled with the redshift step");
     }
   }
 
@@ -1379,25 +1327,24 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   // WARNING: no additional masks coded for use as of 2017-06-13
   if (additional_spcMasks.size() != 0) {
-    Log.LogError("  Operator-TemplateFittingLog: No additional masks used. "
+    Log.LogError("No additional masks used. "
                  "Feature not coded for this log-lambda operator!)");
-    /*throw std::runtime_error("  Operator-TemplateFittingLog: No additional
+    /*throw std::runtime_error(No additional
        masks used. " "Feature not coded for this log-lambda operator!)");*/
   }
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter()
-                              << "Operator-TemplateFittingLog: prior list size("
-                              << logpriorze.size()
-                              << ") didn't match the input redshift-list size :"
-                              << m_redshifts.size());
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Operator-TemplateFittingLog: prior list size("
+                       << logpriorze.size()
+                       << ") didn't match the input redshift-list size :"
+                       << m_redshifts.size());
   }
 
   Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
 
   if (retFit != 0) {
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         Formatter() << "Operator-TemplateFittingLog: FitAllz failed with error "
                     << retFit);
@@ -1422,7 +1369,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   }
   if (overlapValidInfZ != m_redshifts.front() ||
       overlapValidSupZ != m_redshifts.back()) {
-    Log.LogInfo("  Operator-TemplateFittingLog: overlap warning for %s: "
+    Log.LogInfo("overlap warning for %s: "
                 "minz=%.3f, maxz=%.3f",
                 logSampledTpl->GetName().c_str(), overlapValidInfZ,
                 overlapValidSupZ);

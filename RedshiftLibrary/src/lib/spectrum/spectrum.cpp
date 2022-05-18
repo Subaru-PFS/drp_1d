@@ -103,9 +103,9 @@ CSpectrum::CSpectrum(CSpectrumSpectralAxis spectralAxis,
       m_medianWindowSize(-1), m_medianEvenReflection(true), m_Name(""),
       m_LSF(lsf) {
   if (!IsValid()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
   }
 }
 
@@ -122,9 +122,9 @@ CSpectrum::CSpectrum(const CSpectrum &other)
       m_spcType(other.m_spcType), m_LSF(other.m_LSF), m_Name(other.m_Name),
       alreadyRemoved(other.alreadyRemoved) {
   if (!IsValid()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
   }
 }
 
@@ -139,9 +139,9 @@ CSpectrum::CSpectrum(CSpectrum &&other)
       m_spcType(other.m_spcType), m_LSF(std::move(other.m_LSF)),
       m_Name(std::move(other.m_Name)), alreadyRemoved(other.alreadyRemoved) {
   if (!IsValid()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
   }
 }
 
@@ -188,27 +188,27 @@ CSpectrum &CSpectrum::operator=(CSpectrum &&other) {
 
 void CSpectrum::SetSpectralAxis(const CSpectrumSpectralAxis &spectralaxis) {
   if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "CSpectrum::SetSpectralAxis: new spectral axis has "
-                          "not the same size than flux axis");
+    THROWG(INVALID_SPECTRUM,
+           "CSpectrum::SetSpectralAxis: new spectral axis has "
+           "not the same size than flux axis");
   }
   m_SpectralAxis = spectralaxis;
 }
 
 void CSpectrum::SetSpectralAxis(CSpectrumSpectralAxis &&spectralaxis) {
   if (spectralaxis.GetSamplesCount() != GetFluxAxis().GetSamplesCount()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "CSpectrum::SetSpectralAxis: new spectral axis has "
-                          "not the same size than flux axis");
+    THROWG(INVALID_SPECTRUM,
+           "CSpectrum::SetSpectralAxis: new spectral axis has "
+           "not the same size than flux axis");
   }
   m_SpectralAxis = std::move(spectralaxis);
 }
 
 void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
   if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "CSpectrum::SetFluxAxis: new flux axis has not the "
-                          "same size than spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "CSpectrum::SetFluxAxis: new flux axis has not the "
+           "same size than spectral axis");
   }
 
   ResetContinuum();
@@ -220,9 +220,9 @@ void CSpectrum::SetFluxAxis(const CSpectrumFluxAxis &fluxaxis) {
 void CSpectrum::SetFluxAxis(CSpectrumFluxAxis &&fluxaxis) {
   if (fluxaxis.GetSamplesCount() != m_SpectralAxis.GetSamplesCount() ||
       m_SpectralAxis.isEmpty()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "CSpectrum::SetFluxAxis: new flux axis has not the "
-                          "same size than spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "CSpectrum::SetFluxAxis: new flux axis has not the "
+           "same size than spectral axis");
   }
 
   ResetContinuum();
@@ -235,9 +235,8 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
                                        CSpectrumFluxAxis fluxaxis) {
   if (fluxaxis.GetSamplesCount() != spcaxis.GetSamplesCount() ||
       spcaxis.isEmpty()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "CSpectrum::SetSpectralAndFluxAxes: new flux axis "
-                          "has not the same size than new spectral axis");
+    THROWG(INVALID_SPECTRUM, "CSpectrum::SetSpectralAndFluxAxes: new flux axis "
+                             "has not the same size than new spectral axis");
   }
 
   ResetContinuum();
@@ -250,9 +249,9 @@ void CSpectrum::SetSpectralAndFluxAxes(CSpectrumSpectralAxis spcaxis,
 
 void CSpectrum::InitSpectrum(CParameterStore &parameterStore) {
   if (!IsValid())
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
 
   Float64 smoothWidth = parameterStore.Get<Float64>("smoothWidth");
   std::string medianRemovalMethod =
@@ -351,7 +350,7 @@ void CSpectrum::EstimateContinuum() const {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
     m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
   } else {
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         "CSpectrum::EstimateContinuum Estimation method undefined or unknown");
   }
@@ -544,9 +543,9 @@ const bool CSpectrum::IsFluxValid(Float64 LambdaMin, Float64 LambdaMax) const {
   Int32 nInvalid = 0;
 
   if (!IsValid())
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
 
   const Float64 *flux = GetFluxAxis().GetSamples();
   if (LambdaMin < m_SpectralAxis[0] ||
@@ -631,9 +630,9 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
   bool corrected = false;
   Int32 nCorrected = 0;
   if (!IsValid()) {
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
   }
   CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
   TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
@@ -666,9 +665,8 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     minFlux = 0.0;
   }
   if (maxNoise == -DBL_MAX) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "CSpectrum::correctSpectrum - unable to set maxNoise value");
+    THROWG(INTERNAL_ERROR,
+           "CSpectrum::correctSpectrum - unable to set maxNoise value");
   }
 
   for (Int32 i = iMin; i < iMax; i++) {
@@ -746,9 +744,9 @@ void CSpectrum::SetContinuumEstimationMethod(
   ResetContinuum();
 
   if (ContinuumFluxAxis.GetSamplesCount() != GetSampleCount()) {
-    throw GlobalException(
-        INTERNAL_ERROR, "CSpectrum::SetContinuumEstimationMethod, manual "
-                        "setting of the continuum with a wrong continuum size");
+    THROWG(INTERNAL_ERROR,
+           "CSpectrum::SetContinuumEstimationMethod, manual "
+           "setting of the continuum with a wrong continuum size");
   }
 
   m_ContinuumFluxAxis = ContinuumFluxAxis;
@@ -779,9 +777,9 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
                       const std::string &opt_error_interp) const {
 
   if (!IsValid())
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes, non-matching size "
-                          "or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM,
+           "Invalid spectrum with empty axes, non-matching size "
+           "or unsorted spectral axis");
 
   Int32 s = targetSpectralAxis.GetSamplesCount();
   TFloat64Range logIntersectedLambdaRange(log(range.GetBegin()),
@@ -800,9 +798,8 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
   if (m_SpectralAxis[0] > currentRange.GetBegin() ||
       m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1] <
           currentRange.GetEnd()) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "CSpectrum::Rebin: input spectral range is not "
-                          "included in spectral axis");
+    THROWG(INTERNAL_ERROR, "CSpectrum::Rebin: input spectral range is not "
+                           "included in spectral axis");
   }
 
   if (opt_interp == "precomputedfinegrid" && m_FineGridInterpolated == false) {
@@ -986,9 +983,8 @@ void CSpectrum::ScaleFluxAxis(Float64 scale) {
 void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
                                  bool enableInputSpcCorrect) {
   if (!IsValid())
-    throw GlobalException(INVALID_SPECTRUM,
-                          "Invalid spectrum with empty axes or non-matching "
-                          "size or unsorted spectral axis");
+    THROWG(INVALID_SPECTRUM, "Invalid spectrum with empty axes or non-matching "
+                             "size or unsorted spectral axis");
 
   TFloat64Range clampedlambdaRange;
   m_SpectralAxis.ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -1007,10 +1003,9 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
           lmin, lmax);
 
   if (!IsFluxValid(lmin, lmax))
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter() << "Failed to validate spectrum flux on wavelength range"
-                    << lmin << ";" << lmax << ")");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Failed to validate spectrum flux on wavelength range"
+                       << lmin << ";" << lmax << ")");
   else
     Log.LogDetail("Successfully validated spectrum flux, on wavelength range "
                   "(%.1f ; %.1f)",
@@ -1018,10 +1013,9 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   // Check if the noise is valid in the clampedlambdaRange
   if (!IsNoiseValid(lmin, lmax))
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter()
-                              << "Failed to validate noise on wavelength range"
-                              << lmin << ";" << lmax << ")");
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Failed to validate noise on wavelength range"
+                               << lmin << ";" << lmax << ")");
   else
     Log.LogDetail(
         "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
@@ -1032,9 +1026,8 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
   // check if spectrum LSF spectralAxis covers lambdaRange
   if (!m_LSF->checkAvailability(lambdaRange.GetBegin()) ||
       !m_LSF->checkAvailability(lambdaRange.GetEnd())) {
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter()
-                              << "Failed to validate lsf on wavelength range"
-                              << lmin << ";" << lmax << ")");
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Failed to validate lsf on wavelength range"
+                               << lmin << ";" << lmax << ")");
   }
 }

@@ -106,6 +106,8 @@ typedef struct {
   Float64 x2;
 } TPolynomCoeffs;
 
+#include "RedshiftLibrary/common/errorcodes.i"
+
 } // namespace NSEpic
 
 #endif

@@ -52,9 +52,8 @@ CLineRatioCatalog::CLineRatioCatalog(const std::string &name,
 
 void CLineRatioCatalog::addVelocity(const std::string &name, Float64 value) {
   if (!m_Velocities.emplace(name, value).second)
-    throw GlobalException(INTERNAL_ERROR, Formatter()
-                                              << "Velocity for group " << name
-                                              << " already exists");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Velocity for group " << name << " already exists");
 }
 
 void CLineRatioCatalog::setPrior(Float64 prior) { m_Prior = prior; }

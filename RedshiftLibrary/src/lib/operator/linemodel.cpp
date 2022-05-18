@@ -258,9 +258,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
     m_model->m_CatalogTplShape = tplRatioCatalog; // pass tplRatioCatalog
     bool tplratioInitRet = m_model->initTplratioCatalogs(m_opt_tplratio_ismFit);
     if (!tplratioInitRet) {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
+      THROWG(INTERNAL_ERROR,
+             "  Operator-Linemodel: Failed to init tpl-ratios. aborting...");
     }
 
     m_model->m_opt_firstpass_forcedisableTplratioISMfit =
@@ -468,9 +467,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
   bool checkAllAmplitudes =
       AllAmplitudesAreZero(allAmplitudesZero, m_result->Redshifts.size());
   if (checkAllAmplitudes == true) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-Linemodel: All amplitudes (continuum & "
-                          "model) are zero for all z. Aborting...");
+    THROWG(INTERNAL_ERROR, "  Operator-Linemodel: All amplitudes (continuum & "
+                           "model) are zero for all z. Aborting...");
   }
 
   // now interpolate large grid merit results onto the fine grid
@@ -675,9 +673,7 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
         (m_opt_tplfit_dustFit || m_opt_tplfit_extinction)) { // refitfirstpass
       if (candidateIdx < 0 ||
           candidateIdx > m_firstpass_extremaResult->size() - 1) {
-        throw GlobalException(INTERNAL_ERROR,
-                              "COperatorLinemodel::PrecomputeContinuumFit: "
-                              "Candidate index is out of range");
+        THROWG(INTERNAL_ERROR, "Candidate index is out of range");
       }
       // using one template per Z with fixed values for ism/igm (if Z changes,
       // template change;)
@@ -716,10 +712,8 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       bool retGetPrior = m_phelperContinuum->GetTplPriorData(
           tpl->GetName(), redshiftsTplFit, zePriorData);
       if (retGetPrior == false) {
-        throw GlobalException(
-            INTERNAL_ERROR,
-            "COperatorLineModel::PrecomputeContinuumFit: Failed to get prior "
-            "for chi2 continuum precomp fit. aborting...");
+        THROWG(INTERNAL_ERROR, "Failed to get prior "
+                               "for chi2 continuum precomp fit. aborting...");
       }
 
       m_templateFittingOperator->SetRedshifts(redshiftsTplFit);
@@ -731,11 +725,10 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
                   zePriorData, keepismigm, EbmvCoeff, meiksinIdx));
 
       if (!templatefittingResult) {
-        throw GlobalException(
-            INTERNAL_ERROR,
-            Formatter() << "COperatorLineModel::PrecomputeContinuumFit: failed "
-                           "to compute chisquare value for tpl=%"
-                        << tpl->GetName());
+        THROWG(INTERNAL_ERROR, Formatter()
+                                   << "failed "
+                                      "to compute chisquare value for tpl=%"
+                                   << tpl->GetName());
       } else {
         chisquareResultsAllTpl.push_back(templatefittingResult);
         chisquareResultsTplName.push_back(tpl->GetName());
@@ -769,10 +762,8 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       // logprior = %e", chisquareResult->LogPrior[i]);
 
       if (!retAdd) {
-        throw GlobalException(
-            INTERNAL_ERROR,
-            "COperatorLineModel::PrecomputeContinuumFit: Failed to add "
-            "continuum fit to store. aborting...");
+        THROWG(INTERNAL_ERROR, "Failed to add "
+                               "continuum fit to store. aborting...");
       }
 
       Float64 tplfitsnr = -1.;
@@ -824,18 +815,16 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       tplfitStore->FindMaxAmplitudeSigma(max_fitamplitudeSigma_z, fitValues);
   if (max_fitamplitudeSigma < m_opt_continuum_neg_amp_threshold) {
     if (m_opt_continuumcomponent != "tplfitauto") {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter() << "COperatorLineModel::PrecomputeContinuumFit: Negative "
-                         "continuum amplitude found at z="
-                      << max_fitamplitudeSigma_z << ": best continuum tpl "
-                      << fitValues.tplName
-                      << ", amplitude/error = " << fitValues.fitAmplitudeSigma
-                      << " & error = " << fitValues.fitAmplitudeError);
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "Negative "
+                            "continuum amplitude found at z="
+                         << max_fitamplitudeSigma_z << ": best continuum tpl "
+                         << fitValues.tplName << ", amplitude/error = "
+                         << fitValues.fitAmplitudeSigma
+                         << " & error = " << fitValues.fitAmplitudeError);
     } else {
       Flag.warning(Flag.FORCE_FROMSPECTRUM_NEG_CONTINUUMAMP,
                    Formatter()
-                       << "  COperatorLineModel::" << __func__
                        << ": Switching to spectrum continuum since Negative "
                           "continuum amplitude found at z="
                        << max_fitamplitudeSigma_z << ": best continuum tpl "
@@ -865,9 +854,8 @@ TFloat64List COperatorLineModel::SpanRedshiftWindow(Float64 z) const {
   bool ret = secondpass_window.getClosedIntervalIndices(m_result->Redshifts,
                                                         i_min, i_max);
   if (!ret) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorLineModel::SpanRedshiftWindow: second pass "
-                          "window outside z range");
+    THROWG(INTERNAL_ERROR, "Second pass "
+                           "window outside z range");
   }
   for (Int32 i = i_min; i <= i_max; ++i) {
     extendedList.push_back(m_result->Redshifts[i]);
@@ -1119,7 +1107,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
   } else {
     // TODO this should be a parameterException thrown at parameter setting
     // stage
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         Formatter() << "Operator-Linemodel: continnuum_fit_option not found: "
                     << m_continnuum_fit_option);
@@ -1259,11 +1247,9 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
 
   Int32 extremumCount = zCandidates.size();
   if (extremumCount > m_maxModelSaveCount) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter() << "COperatorLineModel::SaveResults: ExtremumCount "
-                    << extremumCount << " is greater the maxModelSaveCount "
-                    << m_maxModelSaveCount);
+    THROWG(INTERNAL_ERROR, Formatter() << "ExtremumCount " << extremumCount
+                                       << " is greater the maxModelSaveCount "
+                                       << m_maxModelSaveCount);
   }
 
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
@@ -1287,12 +1273,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
       if (m_secondpass_parameters_extremaResult.ID(j) == parentId)
         i_2pass = j;
     if (i_2pass == -1) {
-      throw GlobalException(
-          INTERNAL_ERROR, Formatter()
-                              << __func__
-                              << ": impossible to find the first pass extrema "
-                                 "id corresponding to 2nd pass extrema "
-                              << Id.c_str());
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "Impossible to find the first pass extrema "
+                                    "id corresponding to 2nd pass extrema "
+                                 << Id.c_str());
     }
 
     Log.LogInfo("");
@@ -1898,9 +1882,8 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
   CLineModelPassExtremaResult &extremaResult =
       m_secondpass_parameters_extremaResult;
   if (extremaResult.size() < 1) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-Linemodel: RecomputeAroundCandidates n<1...");
+    THROWG(INTERNAL_ERROR,
+           "  Operator-Linemodel: RecomputeAroundCandidates n<1...");
   }
 
   Log.LogInfo("");
@@ -2058,9 +2041,8 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
   m_result = std::make_shared<CLineModelResult>();
 
   if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "  Operator-Linemodel: input spectrum is not in "
-                          "linear scale (ignored).");
+    THROWG(INTERNAL_ERROR, "  Operator-Linemodel: input spectrum is not in "
+                           "linear scale (ignored).");
   }
   m_opt_continuumcomponent = opt_continuumcomponent;
 
@@ -2361,15 +2343,11 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   std::string opt_rigidity = params->GetScoped<std::string>("rigidity");
   bool velocityfit = params->GetScoped<bool>("velocityfit");
   if (velocityfit)
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorLineModel::computeForLineMeas: velocityfit "
-                          "not implemented yet");
+    THROWG(INTERNAL_ERROR,"velocityfit not implemented yet");
 
   Int32 amplitudeOffsetsDegree = params->GetScoped<Int32>("polynomialdegree");
   if (amplitudeOffsetsDegree < 0 || amplitudeOffsetsDegree > 2)
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "COperatorLineModel::computeForLineMeas: the polynomial degree "
+    THROWG(INTERNAL_ERROR,"the polynomial degree "
         "parameter should be between 0 and 2");
 
   const TFloat64Range &lambdaRange = inputContext->m_lambdaRange;

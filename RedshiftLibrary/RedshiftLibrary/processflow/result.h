@@ -60,22 +60,19 @@ public:
   const std::string &getType() const { return m_type; }
   virtual const std::string &
   getCandidateDatasetType(const std::string &dataset) const {
-    throw GlobalException(
-        UNKNOWN_ATTRIBUTE,
-        "This operator result does not support this operation");
+    THROWG(UNKNOWN_ATTRIBUTE,
+           "This operator result does not support this operation");
   }
   virtual std::shared_ptr<const COperatorResult>
   getCandidate(const int &rank, const std::string &dataset,
                bool firstpassResults = false) const {
-    throw GlobalException(
-        UNKNOWN_ATTRIBUTE,
-        "This operator result does not support this operation");
+    THROWG(UNKNOWN_ATTRIBUTE,
+           "This operator result does not support this operation");
   }
 
   virtual bool HasCandidateDataset(const std::string &dataset) const {
-    throw GlobalException(
-        UNKNOWN_ATTRIBUTE,
-        "This operator result does not support this operation");
+    THROWG(UNKNOWN_ATTRIBUTE,
+           "This operator result does not support this operation");
   }
 
 protected:

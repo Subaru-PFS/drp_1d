@@ -80,7 +80,7 @@ void CSpectrumAxis::maskVector(const TFloat64List &mask,
                                const TFloat64List &inputVector,
                                TFloat64List &outputVector) {
   if (mask.size() != inputVector.size()) {
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         "CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
   }

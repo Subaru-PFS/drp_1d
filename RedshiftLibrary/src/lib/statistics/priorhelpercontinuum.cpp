@@ -97,11 +97,10 @@ bool CPriorHelperContinuum::Init(std::string priorDirPath) {
     bfs::path agaussfpath =
         rootFolder / "prior_continuum_gaussmean_Ac_Z" / bfs::path(fNameStr);
     if (!bfs::exists(agaussfpath)) {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter()
-              << "CPriorHelperContinuum: AgaussMean path does not exist: "
-              << agaussfpath.string());
+      THROWG(INTERNAL_ERROR,
+             Formatter()
+                 << "CPriorHelperContinuum: AgaussMean path does not exist: "
+                 << agaussfpath.string());
     }
     AGaussMeanfilesPathList.push_back(agaussfpath.string());
   }
@@ -116,11 +115,10 @@ bool CPriorHelperContinuum::Init(std::string priorDirPath) {
     bfs::path agaussfpath =
         rootFolder / "prior_continuum_gausssigma_Ac_Z" / bfs::path(fNameStr);
     if (!bfs::exists(agaussfpath)) {
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter()
-              << "CPriorHelperContinuum: AgaussSigma path does not exist: "
-              << agaussfpath.string());
+      THROWG(INTERNAL_ERROR,
+             Formatter()
+                 << "CPriorHelperContinuum: AgaussSigma path does not exist: "
+                 << agaussfpath.string());
     }
     AGaussSigmafilesPathList.push_back(agaussfpath.string());
   }
@@ -214,10 +212,9 @@ bool CPriorHelperContinuum::SetSize(Int32 size) {
 
 bool CPriorHelperContinuum::SetTNameData(Int32 k, std::string tname) {
   if (k >= m_tplnames.size()) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter() << "CPriorHelperContinuum: SetTNameData failed for k="
-                    << k);
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "CPriorHelperContinuum: SetTNameData failed for k="
+                       << k);
   }
   m_tplnames[k] = tname;
   return true;
@@ -226,9 +223,9 @@ bool CPriorHelperContinuum::SetTNameData(Int32 k, std::string tname) {
 bool CPriorHelperContinuum::SetEZTData(Int32 k,
                                        std::vector<TFloat64List> ezt_data) {
   if (k >= m_data.size()) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter() << "CPriorHelperContinuum: SetEZTData failed for k=" << k);
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "CPriorHelperContinuum: SetEZTData failed for k="
+                       << k);
   }
 
   for (Int32 kz = 0; kz < m_nZ; kz++) {
@@ -243,7 +240,7 @@ bool CPriorHelperContinuum::SetEZTData(Int32 k,
 bool CPriorHelperContinuum::SetAGaussmeanData(
     Int32 k, std::vector<TFloat64List> agaussmean_data) {
   if (k >= m_data.size()) {
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         Formatter() << "CPriorHelperContinuum: SetAgaussmeanData failed for k="
                     << k);
@@ -261,7 +258,7 @@ bool CPriorHelperContinuum::SetAGaussmeanData(
 bool CPriorHelperContinuum::SetAGausssigmaData(
     Int32 k, std::vector<TFloat64List> agausssigma_data) {
   if (k >= m_data.size()) {
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         Formatter() << "CPriorHelperContinuum: SetAgausssigmaData failed for k="
                     << k);
@@ -311,10 +308,9 @@ bool CPriorHelperContinuum::LoadFileEZ(const char *filePath,
           }
         }
         if (lineVals.size() != m_nEbv) {
-          throw GlobalException(INTERNAL_ERROR,
-                                Formatter() << "CPriorHelperContinuum: read n="
-                                            << lineVals.size()
-                                            << " cols, instead of " << m_nEbv);
+          THROWG(INTERNAL_ERROR, Formatter() << "CPriorHelperContinuum: read n="
+                                             << lineVals.size()
+                                             << " cols, instead of " << m_nEbv);
         }
         nlinesRead++;
         data.push_back(lineVals);

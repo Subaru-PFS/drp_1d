@@ -99,7 +99,7 @@ void COperatorTplcombination::BasicFit(
     const TInt32List &EbmvList) {
   bool verbose = false;
   if (verbose) {
-    Log.LogDebug("  Operator-tplcombination: BasicFit - for z=%f", redshift);
+    Log.LogDebug(" BasicFit - for z=%f", redshift);
   }
   boost::chrono::thread_clock::time_point start_prep =
       boost::chrono::thread_clock::now();
@@ -111,12 +111,11 @@ void COperatorTplcombination::BasicFit(
   const CSpectrumNoiseAxis &spcError = spcFluxAxis.GetError();
 
   if (spcMaskAdditional.GetMasksCount() != spcFluxAxis.GetSamplesCount()) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        Formatter() << "Operator-Tplcombination: spcMaskAdditional does not "
-                       "have the same size as the spectrum flux vector... ("
-                    << spcMaskAdditional.GetMasksCount() << " vs "
-                    << spcFluxAxis.GetSamplesCount() << "), aborting");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "spcMaskAdditional does not "
+                          "have the same size as the spectrum flux vector... ("
+                       << spcMaskAdditional.GetMasksCount() << " vs "
+                       << spcFluxAxis.GetSamplesCount() << "), aborting");
   }
 
   TFloat64Range currentRange;
@@ -129,9 +128,8 @@ void COperatorTplcombination::BasicFit(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorTplcombination::BasicFit: impossible to "
-                          "get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "Impossible to "
+                           "get valid kstart or kend");
   }
   Int32 kStart_model =
       kStart; // mainly used at high redshifts, when desextincting spectrum is
@@ -153,7 +151,7 @@ void COperatorTplcombination::BasicFit(
 
   // Linear fit
   Int32 n = kEnd - kStart + 1;
-  Log.LogDebug("  Operator-Tplcombination: prep. linear fitting with n=%d "
+  Log.LogDebug(" prep. linear fitting with n=%d "
                "samples in the clamped lambdarange spectrum (imin=%d, "
                "lbda_min=%.3f - imax=%d, lbda_max=%.3f)",
                n, kStart, spcSpectralAxis[kStart], kEnd, spcSpectralAxis[kEnd]);
@@ -171,7 +169,7 @@ void COperatorTplcombination::BasicFit(
   Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
 
   if (verbose) {
-    Log.LogDetail("  Operator-Tplcombination: Linear fitting, found "
+    Log.LogDetail(" Linear fitting, found "
                   "normalization Factor=%e",
                   normFactor);
   }
@@ -326,7 +324,7 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(stop_prep -
                                                                     start_prep)
               .count();
-      Log.LogDebug("  Operator-Tplcombination: Linear fitting, preparation "
+      Log.LogDebug(" Linear fitting, preparation "
                    "time = %.3f microsec",
                    duration_prep);
       boost::chrono::thread_clock::time_point start_fit =
@@ -346,9 +344,7 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit -
                                                                     start_fit)
               .count();
-      Log.LogDebug(
-          "  Operator-Tplcombination: Linear fitting, fit = %.3f microsec",
-          duration_fit);
+      Log.LogDebug(" Linear fitting, fit = %.3f microsec", duration_fit);
       boost::chrono::thread_clock::time_point start_postprocess =
           boost::chrono::thread_clock::now();
 
@@ -395,7 +391,7 @@ void COperatorTplcombination::BasicFit(
         }
       }
       if (fittingResults.fittingAmplitudes.size() != nddl) {
-        Log.LogDebug("  Operator-Tplcombination: Found nfittedamps(=%d) "
+        Log.LogDebug(" Found nfittedamps(=%d) "
                      "different than nddl(=%d)",
                      fittingResults.fittingAmplitudes.size(), nddl);
       }
@@ -420,7 +416,7 @@ void COperatorTplcombination::BasicFit(
           boost::chrono::duration_cast<boost::chrono::microseconds>(
               stop_postprocess - start_postprocess)
               .count();
-      Log.LogDebug("  Operator-Tplcombination: Linear fitting, postprocess = "
+      Log.LogDebug(" Linear fitting, postprocess = "
                    "%.3f microsec",
                    duration_postprocess);
 
@@ -483,7 +479,7 @@ void COperatorTplcombination::RebinTemplate(
   TFloat64Range intersectedAllLambdaRange(spcLambdaRange_restframe);
 
   // Now interpolating all the templates
-  Log.LogDebug("  Operator-tplcombination: BasicFit - interpolating");
+  Log.LogDebug(" BasicFit - interpolating");
   for (Int32 ktpl = 0; ktpl < tplList.size(); ktpl++) {
     const CSpectrumSpectralAxis &tplSpectralAxis =
         tplList[ktpl]->GetSpectralAxis();
@@ -511,7 +507,7 @@ void COperatorTplcombination::RebinTemplate(
     const CSpectrumSpectralAxis &itplTplSpectralAxis =
         itplTplSpectrum.GetSpectralAxis();
     Log.LogDebug(
-        "  Operator-Tplcombination: Rebinned template #%d has n=%d samples in "
+        " Rebinned template #%d has n=%d samples in "
         "lambdarange: %.2f - %.2f",
         ktpl, itplTplSpectralAxis.GetSamplesCount(), itplTplSpectralAxis[0],
         itplTplSpectralAxis[itplTplSpectralAxis.GetSamplesCount() - 1]);
@@ -522,8 +518,8 @@ void COperatorTplcombination::RebinTemplate(
 
     // Check for overlap rate
     if (overlapRate < overlapThreshold || overlapRate <= 0.0) {
-      throw GlobalException(OVERLAPRATE_NOTACCEPTABLE,
-                            Formatter() << "overlaprate of " << overlapRate);
+      THROWG(OVERLAPRATE_NOTACCEPTABLE,
+             Formatter() << "overlaprate of " << overlapRate);
     }
   }
   currentRange = intersectedAllLambdaRange;
@@ -545,38 +541,29 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     const CPriorHelper::TPriorZEList &logpriorze, bool keepigmism,
     Float64 FitEbmvCoeff, Int32 FitMeiksinIdx) {
   Int32 componentCount = tplList.size();
-  Log.LogInfo(
-      "  Operator-tplcombination: starting computation with N-template = %d",
-      componentCount);
+  Log.LogInfo(" starting computation with N-template = %d", componentCount);
 
   if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "  Operator-tplcombination: input spectrum is not in log scale");
+    THROWG(INTERNAL_ERROR, " input spectrum is not in log scale");
   }
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "Operator-tplcombination: input template k="
-                                << ktpl << " are not in log scale");
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "Operator-tplcombination: input template k=" << ktpl
+                         << " are not in log scale");
     }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
-                            "Operator-tplcombination: no calzetti calib. file "
-                            "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "Operator-tplcombination: no calzetti calib. file "
+                             "loaded... aborting");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      throw GlobalException(INTERNAL_ERROR,
-                            "  Operator-tplcombination: no meiksin calib. file "
-                            "loaded... aborting");
+      THROWG(INTERNAL_ERROR, " no meiksin calib. file "
+                             "loaded... aborting");
     }
   }
 
-  Log.LogDebug(
-      "  Operator-tplcombination: allocating memory for buffers (N = %d)",
-      componentCount);
+  Log.LogDebug(" allocating memory for buffers (N = %d)", componentCount);
 
   BasicFit_preallocateBuffers(spectrum, tplList);
 
@@ -595,7 +582,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
     sortedIndexes.push_back(vp[i].second);
   }
 
-  Log.LogDebug("  Operator-tplcombination: prepare the results");
+  Log.LogDebug(" prepare the results");
   std::shared_ptr<CTplCombinationResult> result =
       make_shared<CTplCombinationResult>();
 
@@ -606,10 +593,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
       FitEbmvCoeff, FitMeiksinIdx);
   Int32 MeiksinListSize = MeiksinList.size();
   Int32 EbmvListSize = EbmvList.size();
-  Log.LogDebug("  Operator-tplcombination: prepare N ism coeffs = %d",
-               EbmvListSize);
-  Log.LogDebug("  Operator-tplcombination: prepare N igm coeffs = %d",
-               MeiksinListSize);
+  Log.LogDebug(" prepare N ism coeffs = %d", EbmvListSize);
+  Log.LogDebug(" prepare N igm coeffs = %d", MeiksinListSize);
 
   result->Init(sortedRedshifts.size(), EbmvListSize, MeiksinListSize,
                componentCount);
@@ -625,12 +610,11 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    throw GlobalException(INTERNAL_ERROR,
-                          Formatter()
-                              << "Operator-Tplcombination: masks-list size="
-                              << additional_spcMasks.size()
-                              << "didn't match the input redshift-list size="
-                              << sortedRedshifts.size());
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Operator-Tplcombination: masks-list size="
+                               << additional_spcMasks.size()
+                               << "didn't match the input redshift-list size="
+                               << sortedRedshifts.size());
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -684,11 +668,10 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
              additional_spcMask, logp, MeiksinList, EbmvList);
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter()
-                                << "Operator-Tplcombination: found invalid "
-                                   "tplcombination products for z="
-                                << redshift);
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "Operator-Tplcombination: found invalid "
+                                    "tplcombination products for z="
+                                 << redshift);
     }
 
     result->ChiSquare[i] = fittingResults.chisquare;
@@ -725,9 +708,8 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   }
   if (overlapValidInfZ != sortedRedshifts[0] ||
       overlapValidSupZ != sortedRedshifts[sortedRedshifts.size() - 1]) {
-    Log.LogInfo(
-        "  Operator-Tplcombination: overlap warning for: minz=%.3f, maxz=%.3f",
-        overlapValidInfZ, overlapValidSupZ);
+    Log.LogInfo(" overlap warning for: minz=%.3f, maxz=%.3f", overlapValidInfZ,
+                overlapValidSupZ);
   }
 
   // only bad status warning
@@ -735,9 +717,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
     if (result->Status[i] == COperator::nStatus_OK) {
       oneValidStatusFoundIndex = i;
-      Log.LogDebug(
-          "  Operator-Tplcombination: STATUS VALID found at least at index=%d",
-          i);
+      Log.LogDebug(" STATUS VALID found at least at index=%d", i);
       break;
     }
   }
@@ -753,7 +733,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
     if (result->Status[i] == COperator::nStatus_LoopError) {
       loopErrorStatusFoundIndex = i;
-      Log.LogDebug("  Operator-Tplcombination: STATUS Loop Error found at "
+      Log.LogDebug(" STATUS Loop Error found at "
                    "least at index=%d",
                    i);
       break;
@@ -808,9 +788,8 @@ COperatorTplcombination::ComputeSpectrumModel(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorTplcombination::ComputeSpectrumModel: "
-                          "impossible to get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "COperatorTplcombination::ComputeSpectrumModel: "
+                           "impossible to get valid kstart or kend");
   }
 
   // create identityTemplate on which we apply meiksin and ism, once for all

@@ -67,11 +67,10 @@ Float64 CLineProfileLOR::GetLineFlux(Float64 A, Float64 sigma) const {
 Float64 CLineProfileLOR::GetLineProfileDerivZ(Float64 x, Float64 lambda0,
                                               Float64 redshift,
                                               Float64 sigma) const {
-  throw GlobalException(INTERNAL_ERROR,
-                        "Deriv for Z not IMPLEMENTED for profile LOR");
+  THROWG(INTERNAL_ERROR, "Deriv for Z not IMPLEMENTED for profile LOR");
 }
 
 Float64 CLineProfileLOR::GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                                   Float64 sigma) const {
-  throw GlobalException(INTERNAL_ERROR, "No derivate sigma for LOR profile");
+  THROWG(INTERNAL_ERROR, "No derivate sigma for LOR profile");
 }

@@ -79,7 +79,7 @@ void COperatorResultStore::StoreResult(
 
   TResultsMap::iterator it = map.find(name);
   if (it != map.end()) {
-    throw new GlobalException(INTERNAL_ERROR, "Result already exist");
+    THROWG(INTERNAL_ERROR, "Result already exist");
   }
 
   map[scopedName] = result;
@@ -114,7 +114,7 @@ std::weak_ptr<const COperatorResult> COperatorResultStore::GetPerTemplateResult(
     }
   }
 
-  throw GlobalException(
+  THROWG(
       INTERNAL_ERROR,
       Formatter()
           << "COperatorResultStore::GetPerTemplateResult, per template result "
@@ -167,8 +167,7 @@ COperatorResultStore::GetGlobalResult(const std::string &name) const {
   if (it != m_GlobalResults.end()) {
     return (*it).second;
   } else
-    throw GlobalException(UNKNOWN_ATTRIBUTE,
-                          Formatter() << "Unknown global result:" << name);
+    THROWG(UNKNOWN_ATTRIBUTE, Formatter() << "Unknown global result:" << name);
 }
 
 std::weak_ptr<const COperatorResult>
@@ -260,8 +259,7 @@ COperatorResultStore::GetLineModelResult(
       std::dynamic_pointer_cast<const TLineModelResult>(cop);
   if (tlm == nullptr && cop != nullptr) // dynamic casting is not working for
                                         // tlinemodelresult' parentObject
-    throw GlobalException(INTERNAL_ERROR,
-                          "tlm is nullptr from GetLineModelResult");
+    THROWG(INTERNAL_ERROR, "tlm is nullptr from GetLineModelResult");
   return tlm;
 }
 

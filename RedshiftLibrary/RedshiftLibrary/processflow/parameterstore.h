@@ -81,8 +81,7 @@ public:
   template <typename T> T Get(const std::string &name) const {
     boost::optional<T> property = m_PropertyTree.get_optional<T>(name);
     if (!property.is_initialized())
-      throw GlobalException(UNKNOWN_PARAMETER,
-                            Formatter() << "unknown parameter " << name);
+      THROWG(UNKNOWN_PARAMETER, Formatter() << "unknown parameter " << name);
     return *property;
   }
 
@@ -90,17 +89,15 @@ public:
     if (HasScoped<T>(name))
       return Get<T>(GetScopedName(name));
     else
-      throw GlobalException(UNKNOWN_PARAMETER, Formatter()
-                                                   << "unknown parameter "
-                                                   << GetScopedName(name));
+      THROWG(UNKNOWN_PARAMETER,
+             Formatter() << "unknown parameter " << GetScopedName(name));
   }
 
   template <typename T> std::vector<T> GetList(const std::string &name) const {
     boost::optional<bpt::ptree &> property =
         m_PropertyTree.get_child_optional(name);
     if (!property.is_initialized())
-      throw GlobalException(UNKNOWN_PARAMETER,
-                            Formatter() << "unknown parameter " << name);
+      THROWG(UNKNOWN_PARAMETER, Formatter() << "unknown parameter " << name);
     std::vector<T> ret = std::vector<T>((*property).size());
 
     bpt::ptree::const_iterator it;

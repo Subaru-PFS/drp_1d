@@ -140,9 +140,7 @@
 #include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
-static PyObject* pParameterException;
 static PyObject* pGlobalException;
-static PyObject* pSolveException;
 static PyObject* pAmzException;
  %}
 
@@ -150,15 +148,9 @@ static PyObject* pAmzException;
 
 %init %{
   import_array();
-  pParameterException = PyErr_NewException("redshift_.ParameterException", 0, 0);
-  Py_INCREF(pParameterException);
-  PyModule_AddObject(m, "ParameterException", pParameterException);
   pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
   Py_INCREF(pGlobalException);
   PyModule_AddObject(m, "GlobalException", pGlobalException);
-  pSolveException = PyErr_NewException("redshift_.SolveException", 0, 0);
-  Py_INCREF(pSolveException);
-  PyModule_AddObject(m, "SolveException", pSolveException);
   pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
   Py_INCREF(pAmzException);
   PyModule_AddObject(m, "AmzException", pAmzException);
@@ -180,9 +172,7 @@ static PyObject* pAmzException;
 
 // should be in "derived first" order
 #define FOR_EACH_EXCEPTION(ACTION) \
-   ACTION(ParameterException)       \
    ACTION(GlobalException) \
-   ACTION(SolveException) \
    ACTION(AmzException) \
 /**/
 %}
@@ -377,7 +367,6 @@ public:
 
 };
 
-%catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
 
 class CTemplateCatalog
 {
@@ -696,29 +685,6 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       CLSFFactory();
       ~CLSFFactory() = default;
 };
-  typedef enum ErrorCode
-    {
-      INTERNAL_ERROR=0,
-      EXTERNAL_LIB_ERROR,
-      INVALID_SPECTRA_FLUX,
-      INVALID_NOISE	,
-      SMALL_WAVELENGTH_RANGE ,
-      NEGATIVE_CONTINUUMFIT	,
-      BAD_CONTINUUMFIT	,
-      NULL_AMPLITUDES	,
-      PEAK_NOT_FOUND_PDF	,
-      MAX_AT_BORDER_PDF	,
-      UNKNOWN_PARAMETER  ,
-      BAD_PARAMETER_VALUE,
-      UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG,
-      BAD_LOGSAMPLEDSPECTRUM,
-      BAD_COUNTMATCH,
-      BAD_TEMPLATECATALOG,
-      INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE,
-      DZ_NOT_COMPUTABLE
-    } ErrorCode;
 
 typedef struct{
     virtual ~TLSFArguments(){};
@@ -789,44 +755,38 @@ public:
     TStringList GetNameListSortedByLambda() const;
 };
 
+%include "common/errorcodes.i"
+
 class AmzException : public std::exception
 {
 
- public:
-  AmzException(ErrorCode ec,std::string message);
+ public: 
+
+  AmzException(ErrorCode ec, std::string message, const char * filename_,
+		  const char * method_, int line_);
+
   virtual ~AmzException();
  
-  const char* getStackTrace() const;
   ErrorCode getErrorCode();
   virtual const char* what() ;
+  const std::string &getMessage();
+
+  std::string getFileName();
+  std::string getMethod();
+  int getLine();
+
 };
 
 
 class GlobalException: public AmzException
 {
  public:
-  GlobalException(ErrorCode ec,std::string message);
-  GlobalException(const GlobalException& e);
+  GlobalException(ErrorCode ec, std::string message, const char * filename_,
+		  const char * method_, int line_);
   virtual ~GlobalException();
+
 };
 
-
-class SolveException: public AmzException
-{
- public:
-  SolveException(ErrorCode ec,std::string message);
-  SolveException(const SolveException& e);
-  virtual ~SolveException();
-};
-
-
-class ParameterException: public AmzException
-{
- public:
-  ParameterException(ErrorCode ec,std::string message);
-  ParameterException(const ParameterException& e);
-  virtual ~ParameterException();  
-};
 
 class CSolveDescription
 {
@@ -923,3 +883,20 @@ class CSpectrumFluxCorrectionCalzetti
   public:
     CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
 };
+
+//code that runs after the cpp mapping takes place, it transfroms the cpp enum into python enum
+
+%pythoncode %{
+from enum import Enum
+def redo(prefix):
+    tmpD = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
+    for k,v in tmpD.items():
+        del globals()[k]
+    tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
+    # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
+    globals()[prefix] = Enum(prefix,tmpD)
+redo('ErrorCode')
+del redo  # cleaning up the namespace
+del Enum
+%}
+
