@@ -41,7 +41,7 @@ import os.path
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.Reliability import Reliability
-
+from pylibamazed.Parameters import Parameters
 from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineModelSolve,
                                   CTemplateFittingSolve,
@@ -169,7 +169,7 @@ class Context:
             if enable_classification:
                 self.run_method("classification", "ClassificationSolve")
 
-            rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), self.parameters, extended_results = self.extended_results)
+            rso = ResultStoreOutput(self.process_flow_context.GetResultStore(), Parameters(self.parameters,self.config), extended_results = self.extended_results)
             for object_type in reliabilities.keys():
                 rso.object_results[object_type]['reliability'] = dict()
                 rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
