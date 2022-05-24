@@ -383,7 +383,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
   } else { // in this case the line is completely inside the lambdarange or with
            // partial overlap
 
-    Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
+    Float64 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
     Float64 startLbda = spectralAxis[m_StartNoOverlap[subeIdx]];
     Float64 endLbda = spectralAxis[m_EndNoOverlap[subeIdx]];
 
