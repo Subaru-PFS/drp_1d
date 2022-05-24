@@ -65,6 +65,8 @@ public:
   Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
                                    Float64 sigma) const override;
   TSymIgmParams GetSymIgmParams() const override;
+  bool isSymIgm() const override { return true; };
+
   void SetSymIgmParams(const TSymIgmParams &params) override;
   void resetParams() override;
   Int32 getIGMIdxCount() const override;

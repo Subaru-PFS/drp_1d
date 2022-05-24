@@ -96,12 +96,10 @@ CLineModelElement::CLineModelElement(
       m_SignFactors[i] = -1.0;
   }
 
-  std::transform(catalogIndexes.begin(), catalogIndexes.end(),
-                 std::back_inserter(m_LineCatalogIndexes),
-                 [](Int32 i) { return Int32(i); });
+  m_LineCatalogIndexes = catalogIndexes;
 
   for (Int32 k2 = 0; k2 < nLines; k2++) {
-    if (getLineProfile(k2).isAsymFit())
+    if (getLineProfile(k2).isAsym() || getLineProfile(k2).isSymIgm())
       m_asymLineIndices.push_back(k2);
   }
 

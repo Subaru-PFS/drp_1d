@@ -74,6 +74,7 @@ public:
   Float64 GetNSigmaSupport() const override;
   TAsymParams GetAsymParams() const override;
   Float64 GetDelta() const override { return m_asym_delta; };
+  virtual bool isAsym() const override { return true; };
   virtual bool isAsymFixed() const override { return true; };
 
   virtual const std::string &GetCenteringMethod() const {

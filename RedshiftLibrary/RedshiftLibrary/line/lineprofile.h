@@ -114,8 +114,10 @@ public:
   virtual TAsymParams GetAsymParams() const { return TAsymParams(); };
   virtual Float64 GetDelta() const { return 0.; };
   virtual TSymIgmParams GetSymIgmParams() const { return TSymIgmParams(); };
+  virtual bool isAsym() const { return false; };
   virtual bool isAsymFit() const { return false; };
   virtual bool isAsymFixed() const { return false; };
+  virtual bool isSymIgm() const { return false; };
   virtual void SetAsymParams(const TAsymParams &params){};
   virtual void SetSymIgmParams(const TSymIgmParams &params){};
   virtual void resetParams(){};

@@ -166,6 +166,7 @@ public:
   void resetAsymfitParams();
   Int32 findElementIndex(Int32 LineCatalogIndex) const;
   Int32 findElementIndex(const std::string &LineTagStr) const;
+  const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
   const CLineProfile &getLineProfile(Int32 lineIdx) const;
 
   Float64 GetSignFactor(Int32 subeIdx) const;

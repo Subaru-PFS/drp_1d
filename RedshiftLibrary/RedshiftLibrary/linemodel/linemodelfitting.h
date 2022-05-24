@@ -361,15 +361,21 @@ private:
 
   bool SetMultilineNominalAmplitudes(Int32 iLine);
   bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
-  Int32 setLyaProfile(Float64 redshift,
+  void setLyaProfile(Float64 redshift,
+                     const CLineCatalog::TLineVector &lineList,
+                     bool tplratio = false);
+  void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
                       const CLineCatalog::TLineVector &lineList,
                       bool tplratio = false);
-  TAsymParams fitAsymParameters(const Float64 &redshift, const Int32 &idxLyaE,
-                                const TInt32List &filterEltsIdxLya,
+  void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
+                        Float64 redshift);
+  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                 const Int32 &idxLineLyaE);
-  Int32 fitAsymIGMCorrection(const Float64 &redshift, const Int32 &idxLyaE,
-                             const TInt32List &filterEltsIdxLya,
-                             const Int32 &idxLineLyaE);
+  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
+                             const TInt32List &idxLine);
+  Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
+                              const CLineCatalog::TLineVector &catalog,
+                              bool tplratio) const;
   void SetLSF();
 
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
