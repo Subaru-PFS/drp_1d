@@ -158,14 +158,16 @@ push-rc-38-osx:
     - source /venv/p36/bin/activate
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage -DCMAKE_PREFIX_PATH=/root/local"
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/root/local -DCMAKE_CXX_FLAGS="-O0 -fprofile-arcs -ftest-coverage --coverage"
     - make -j4
     - make test
     - gcovr --filter ../RedshiftLibrary/src/lib/ --xml --exclude-unreachable-branches --print-summary -o coverage.xml --root .
+    - gcovr --filter=../RedshiftLibrary/src/lib/ --filter=../RedshiftLibrary/RedshiftLibrary --html -o index.html --root .
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     paths:
       - build/coverage.xml
+      - build/index.html
     expire_in: 1 week
 
 .test-manylinux:
@@ -235,7 +237,6 @@ push-rc-38-osx:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2010
   variables:
     PLATFORM: "manylinux2010_x86_64"
-  when: manual
   cache:
     key: "manylinux2010-$CI_COMMIT_REF_SLUG"
 
@@ -259,6 +260,7 @@ wheel36-manylinux2010:
 wheel37-manylinux2010:
   variables:
     PYTHON_VERSION: "37"
+  when: manual
   extends:
     - .manylinux2010
     - .wheel-manylinux
@@ -266,6 +268,7 @@ wheel37-manylinux2010:
 wheel38-manylinux2010:
   variables:
     PYTHON_VERSION: "38"
+  when: manual
   extends:
     - .manylinux2010
     - .wheel-manylinux
@@ -297,12 +300,25 @@ push-rc-38-manylinux2010:
   dependencies:
     - wheel38-manylinux2010
 
+coverage-manylinux2010:
+  extends:
+    - .manylinux2010
+    - .build-coverage-manylinux
+
+sonar-scanner-manylinux2010:
+  extends:
+    - .manylinux2010
+    - .sonar-manylinux
+  dependencies:
+    - coverage-manylinux2010
+
 # Manylinux2014 stages
 
 .manylinux2014:
   image: $IMAGE_BUILD_DIR/amazed-manylinux2014
   variables:
     PLATFORM: "manylinux2014_x86_64"
+  when: manual
   cache:
     key: "manylinux2014-$CI_COMMIT_REF_SLUG"
 
@@ -365,15 +381,3 @@ push-rc-38-manylinux2014:
     - .push-rc-manylinux
   dependencies:
     - wheel38-manylinux2014
-
-coverage-manylinux2014:
-  extends:
-    - .manylinux2014
-    - .build-coverage-manylinux
-
-sonar-scanner-manylinux2014:
-  extends:
-    - .manylinux2014
-    - .sonar-manylinux
-  dependencies:
-    - coverage-manylinux2014
