@@ -500,7 +500,7 @@ CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
 }
 
 Int32 CLineModelElementList::getIndexAmpOffset(Int32 xIndex) const {
-  Int32 idxAmpOffset = -1;
+  Int32 idxAmpOffset = undefIdx;
 
   for (Int32 i = 0; i < m_ampOffsetsIdxStart.size(); i++) {
     if (xIndex >= m_ampOffsetsIdxStart[i] && xIndex <= m_ampOffsetsIdxStop[i]) {
@@ -508,6 +508,9 @@ Int32 CLineModelElementList::getIndexAmpOffset(Int32 xIndex) const {
       break;
     }
   }
+  if (idxAmpOffset == undefIdx)
+    THROWG(INTERNAL_ERROR, "spectral sample has no associated polynomial");
+
   Log.LogDetail("AmplitudeOffset enabled: idx offset = %d", idxAmpOffset);
   return idxAmpOffset;
 }

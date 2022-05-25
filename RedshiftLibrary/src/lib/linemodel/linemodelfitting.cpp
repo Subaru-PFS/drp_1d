@@ -447,11 +447,11 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
 
   // polynome are shared between overlapping CElements
   //  find polynome belonging to this CElement
+  // TODO: correct this for more than one CElement
   TPolynomCoeffs polynom_coeffs{0., 0., 0.};
-  if (m_enableAmplitudeOffsets) {
-    Int32 idxAmpOffset = m_Elements.getIndexAmpOffset(indexes[0]);
-    polynom_coeffs = m_Elements.m_ampOffsetsCoeffs[idxAmpOffset];
-  }
+  if (m_enableAmplitudeOffsets)
+    polynom_coeffs = getPolynomCoeffs(eIdx_list[0]);
+
   // compute continuum
   for (const auto &t : indexes) {
     continuumFlux[t] =
@@ -486,9 +486,7 @@ TInt32List CLineModelFitting::getlambdaIndexesUnderLines(
     const Float64 &sigma_support) const {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
-  const TFloat64Range lambdaRange =
-      spectralAxis.GetLambdaRange(); // using the full wavelength range for this
-                                     // error estimation
+
   TInt32List indexes;
   for (Int32 kl = 0; kl < eIdx_list.size(); kl++) {
     Int32 eIdx = eIdx_list[kl];
@@ -502,7 +500,7 @@ TInt32List CLineModelFitting::getlambdaIndexesUnderLines(
     Float64 winsizeAngstrom = LineWidth * sigma_support;
 
     TInt32Range indexRange = CLineModelElement::EstimateIndexRange(
-        spectralAxis, mu, lambdaRange, winsizeAngstrom);
+        spectralAxis, mu, m_lambdaRange, winsizeAngstrom);
 
     auto newindices = indexRange.SpreadOver(1);
     indexes.insert(indexes.end(), newindices.begin(), newindices.end());
