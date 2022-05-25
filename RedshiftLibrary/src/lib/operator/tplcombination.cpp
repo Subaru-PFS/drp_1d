@@ -114,7 +114,7 @@ void COperatorTplcombination::BasicFit(
            Formatter() << "spcMaskAdditional does not "
                           "have the same size as the spectrum flux vector... ("
                        << spcMaskAdditional.GetMasksCount() << " vs "
-                       << spcFluxAxis.GetSamplesCount() << "), aborting");
+                       << spcFluxAxis.GetSamplesCount() << ")");
   }
 
   TFloat64Range currentRange;
@@ -551,17 +551,14 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
     if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "Operator-tplcombination: input template k=" << ktpl
-                         << " are not in log scale");
+      THROWG(INTERNAL_ERROR, Formatter() << "Input template k=" << ktpl
+                                         << " is not in log scale");
     }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "Operator-tplcombination: no calzetti calib. file "
-                             "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }
     if (opt_extinction && tplList[ktpl]->MeiksinInitFailed()) {
-      THROWG(INTERNAL_ERROR, " no meiksin calib. file "
-                             "loaded... aborting");
+      THROWG(INTERNAL_ERROR, "IGM is not initialized");
     }
   }
 
@@ -613,10 +610,9 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
     THROWG(INTERNAL_ERROR, Formatter()
-                               << "Operator-Tplcombination: masks-list size="
+                               << "masks-list and redshift size do not match: "
                                << additional_spcMasks.size()
-                               << "didn't match the input redshift-list size="
-                               << sortedRedshifts.size());
+                               << "!=" << sortedRedshifts.size());
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
@@ -671,8 +667,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
 
     if (result->Status[i] == COperator::nStatus_InvalidProductsError) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Operator-Tplcombination: found invalid "
-                                    "tplcombination products for z="
+                                 << "Invalid tplcombination products for z="
                                  << redshift);
     }
 
@@ -790,8 +785,7 @@ COperatorTplcombination::ComputeSpectrumModel(
       m_templatesRebined_bf[0].GetSpectralAxis().GetSamplesVector(), kStart,
       kEnd);
   if (!kStartEnd_ok) {
-    THROWG(INTERNAL_ERROR, "COperatorTplcombination::ComputeSpectrumModel: "
-                           "impossible to get valid kstart or kend");
+    THROWG(INTERNAL_ERROR, "impossible to get valid kstart or kend");
   }
 
   // create identityTemplate on which we apply meiksin and ism, once for all

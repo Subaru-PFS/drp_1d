@@ -160,12 +160,12 @@ std::shared_ptr<CSolveResult> CTemplateFittingSolve::compute(
               (int)m_opt_enableSaveIntermediateTemplateFittingResults);
   Log.LogInfo("");
 
-  Log.LogInfo("Iterating over %d tplCategories", m_categoryList.size());
   if (tplCatalog.GetTemplateCount(m_categoryList[0]) == 0) {
     THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Template catalog for category "
-                                    << m_categoryList[0] << " is empty");
+                                    << "Empty template catalog for category "
+                                    << m_categoryList[0]);
   }
+  Log.LogInfo("Iterating over %d tplCategories", m_categoryList.size());
 
   for (Int32 i = 0; i < m_categoryList.size(); i++) {
     std::string category = m_categoryList[i];
@@ -382,10 +382,9 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
                   chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != meritResult->CstLog) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "templatefittingsolve: Found different "
-                                    "cstLog values in results... val-1="
+                                 << "cstLog values do not correspond: val1="
                                  << chisquarearray.cstLog
-                                 << " != val-2=" << meritResult->CstLog);
+                                 << " != val2=" << meritResult->CstLog);
     }
     if (chisquarearray.redshifts.size() == 0) {
       chisquarearray.redshifts = meritResult->Redshifts;
@@ -401,9 +400,8 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
         }
       }
       if (foundBadStatus) {
-        THROWG(INTERNAL_ERROR, Formatter()
-                                   << "Found bad status result... for tpl="
-                                   << (*it).first.c_str());
+        THROWG(INTERNAL_ERROR, Formatter() << " Bad status result for tpl="
+                                           << (*it).first.c_str());
       }
     }
 
@@ -463,9 +461,10 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
     auto TplFitResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>(r.second);
     if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "templatefitting results (for tpl="
-                                 << r.first.c_str() << ") has wrong size");
+      THROWG(INTERNAL_ERROR,
+             Formatter()
+                 << "Size do not match among templatefitting results, for tpl="
+                 << r.first.c_str());
     }
 
     bool foundBadStatus = false;
@@ -481,9 +480,8 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
       }
     }
     if (foundBadStatus) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Found bad status result... for tpl="
-                                 << r.first.c_str());
+      THROWG(INTERNAL_ERROR, Formatter() << "Found bad status result for tpl="
+                                         << r.first.c_str());
     }
     if (foundBadRedshift) {
       THROWG(INTERNAL_ERROR, Formatter()
@@ -555,7 +553,7 @@ std::shared_ptr<const ExtremaResult> CTemplateFittingSolve::buildExtremaResults(
             opt_interp, overlapThreshold);
 
     if (spcmodelPtr == nullptr)
-      THROWG(INTERNAL_ERROR, "Couldnt "
+      THROWG(INTERNAL_ERROR, "Could not "
                              "compute spectrum model");
     tplCatalog.m_logsampling = currentSampling;
     extremaResult->m_savedModelSpectrumResults[i] = std::move(spcmodelPtr);

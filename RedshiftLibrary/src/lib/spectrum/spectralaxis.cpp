@@ -151,8 +151,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
     const CSpectrumSpectralAxis &origin, Float64 wavelengthOffset,
     EShiftDirection direction) {
   if (wavelengthOffset < 0.)
-    THROWG(INTERNAL_ERROR, "CSpectrumSpectralAxis::ShiftByWaveLength: "
-                           "wavelengthOffset can not be negative");
+    THROWG(INTERNAL_ERROR, "wavelengthOffset can not be negative");
 
   Int32 nSamples = origin.GetSamplesCount();
   m_Samples.resize(nSamples);
@@ -163,7 +162,7 @@ void CSpectrumSpectralAxis::ShiftByWaveLength(
   const Float64 *originSamples = origin.GetSamples();
 
   if (!(direction == nShiftForward || direction == nShiftBackward)) {
-    THROWG(INTERNAL_ERROR, "Shift wavelength, bad direction");
+    THROWG(INTERNAL_ERROR, "Unknown shift direction");
   }
 
   if (wavelengthOffset == 0.0) {
@@ -506,8 +505,7 @@ bool CSpectrumSpectralAxis::IsLogSampled() const {
 
 Float64 CSpectrumSpectralAxis::GetlogGridStep() const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR,
-           "CSpectrumSpectralAxis::GetlogGridStep: axis is not logsampled");
+    THROWG(INTERNAL_ERROR, " axis is not logsampled");
   }
 
   return m_regularLogSamplingStep;
@@ -531,7 +529,7 @@ TFloat64List
 CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
                                           const TInt32Range &ilbda) const {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "Cannot subsample spectrum!");
+    THROWG(INTERNAL_ERROR, "Cannot subsample spectrum");
   }
   Int32 s = GetSamplesCount();
   if (ssratio == 1)
@@ -558,8 +556,7 @@ Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
                                                         Float64 &modulo) const {
   if (!IsLogSampled()) {
     THROWG(INTERNAL_ERROR,
-           "CSpectrumSpectralAxis::GetIntegerRatio: axis is not "
-           "logsampled, thus cannot get integer ratio");
+           "axis is not logsampled, thus cannot get integer ratio");
   }
 
   Int32 ratio = std::round(logstep / m_regularLogSamplingStep);
@@ -569,8 +566,7 @@ Int32 CSpectrumSpectralAxis::GetLogSamplingIntegerRatio(Float64 logstep,
 
 void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   if (!IsLogSampled()) {
-    THROWG(INTERNAL_ERROR, "CSpectrumSpectralAxis::RecomputePreciseLoglambda: "
-                           "axis is not logsampled");
+    THROWG(INTERNAL_ERROR, "axis is not logsampled");
   }
 
   TFloat64Range lrange = GetLambdaRange();

@@ -76,8 +76,7 @@ void COperatorTemplateFittingLog::SetRedshifts(TFloat64List redshifts) {
 
 void COperatorTemplateFittingLog::CheckRedshifts() {
   if (m_redshifts.size() < 2) {
-    THROWG(INTERNAL_ERROR, Formatter() << "Operator-TemplateFittingLog: Cannot "
-                                          "compute on a redshift array "
+    THROWG(INTERNAL_ERROR, Formatter() << "Invalid redshift array: "
                                        << m_redshifts.size() << " <2");
   }
 
@@ -87,9 +86,8 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
   m_ssRatio = m_logSampledSpectrum.GetSpectralAxis().GetLogSamplingIntegerRatio(
       m_logstep, modulo);
   if (std::abs(modulo) > 1E-12)
-    THROWG(INTERNAL_ERROR,
-           "TFLogOperator: spc and tpl do not have a lambdastep "
-           "multiple of redshift step");
+    THROWG(INTERNAL_ERROR, "spc and tpl do not have a lambdastep "
+                           "multiple of redshift step");
 
   // subsample spectrum if necessary (coarse redshift grid)
   if (m_ssRatio == 1) { // no required subsampling
@@ -104,10 +102,10 @@ void COperatorTemplateFittingLog::CheckRedshifts() {
     scaledNoise *= 1. / sqrt(m_ssRatio);
     m_ssSpectrum.SetErrorAxis(std::move(scaledNoise));
 
-    // double make sure that subsampled spectrum are is well sampled
+    // double make sure that subsampled spectrum is well sampled
     if (!m_ssSpectrum.GetSpectralAxis().IsLogSampled(m_logstep)) {
-      THROWG(INTERNAL_ERROR,
-             "subsampled spectrum is not log sampled the redshift step");
+      THROWG(INTERNAL_ERROR, "subsampled spectrum is not correctly log sampled "
+                             "at the redshift step");
     }
   }
 
@@ -695,9 +693,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
                           (ampl - pTZE.A_mean) / (pTZE.A_sigma * pTZE.A_sigma);
           if (std::isnan(logPa) || logPa != logPa || std::isinf(logPa)) {
             THROWG(INTERNAL_ERROR,
-                   Formatter()
-                       << "Operator-TemplateFittingLog: logPa is NAN (a_mean="
-                       << pTZE.A_mean << ", a_sigma=" << pTZE.A_sigma);
+                   Formatter() << " Invalid logPa value (a_mean=" << pTZE.A_mean
+                               << ", a_sigma=" << pTZE.A_sigma);
           }
           logprior += logPa;
         } else {
@@ -710,7 +707,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
         if (std::isnan(logprior) || logprior != logprior ||
             std::isinf(logprior)) {
           THROWG(INTERNAL_ERROR,
-                 Formatter() << "logPa is NAN (a_mean=" << pTZE.A_mean
+                 Formatter() << "Invalid logPa value (a_mean=" << pTZE.A_mean
                              << ", a_sigma=" << pTZE.A_sigma
                              << ", precompA=" << pTZE.logprior_precompA);
         }
@@ -914,7 +911,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       TAxisSampleList tpl2RebinedFlux(nTpl);
 
       if (tplRebinedFluxcorr_cropped.size() != nTpl) {
-        THROWG(INTERNAL_ERROR, "prob with retrieved vector size");
+        THROWG(INTERNAL_ERROR, "vector sizes do not match");
       }
       // compute the square of the corrected flux
       for (Int32 j = 0; j < nTpl; j++) {
@@ -973,8 +970,7 @@ Int32 COperatorTemplateFittingLog::FitRangez(
       if (mtm_vec.size() != dtm_vec_size) {
         freeFFTPlans();
         THROWG(INTERNAL_ERROR,
-               Formatter() << "Operator-TemplateFittingLog: FitRangez: xty "
-                              "vectors sizes don't match: dtm size = "
+               Formatter() << "xty vector size do not match: dtm size = "
                            << dtm_vec_size << ", mtm size =" << mtm_vec.size());
       }
       // Log.LogDetail(FitRangez: kISM = %d,
@@ -1146,12 +1142,9 @@ Int32 COperatorTemplateFittingLog::InterpolateResult(
                                &out[j]); // lin
 
     if (status != GSL_SUCCESS) {
-      THROWG(
-          EXTERNAL_LIB_ERROR,
-          Formatter()
-              << "Operator-TemplateFittingLog: InterpolateError: GSL Error : "
-              << " gsl: " << __FILENAME__ << ":" << __LINE__ << ": ERROR:"
-              << status << " (Errtype: " << gsl_strerror(status) << ")");
+      THROWG(EXTERNAL_LIB_ERROR,
+             Formatter() << "GSL Error : " << status
+                         << " (Errtype: " << gsl_strerror(status) << ")");
     }
     // out[j] = gsl_spline_eval (spline, Xrebin, accelerator); //spline
     // Log.LogInfo(FitAllz: interpolating
@@ -1217,7 +1210,7 @@ TInt32Range COperatorTemplateFittingLog::FindTplSpectralIndex(
                                          // z and min min z in current range.
 
   if (ilbdamax >= tplsize || ilbdamin < 0)
-    THROWG(INTERNAL_ERROR, "FindTplSpectralIndex failed to find indexes");
+    THROWG(INTERNAL_ERROR, " Failed to find indexes");
 
   if (ilbdamin > ilbdamax) {
     THROWG(INTERNAL_ERROR, Formatter()
@@ -1256,26 +1249,22 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
       logSampledTpl->CalzettiInitFailed()) {
-    THROWG(INTERNAL_ERROR, "no calzetti calib. "
-                           "file loaded... aborting");
+    THROWG(INTERNAL_ERROR, "ISM is no initialized");
   }
   if (opt_dustFitting > -1 &&
       opt_dustFitting >
           logSampledTpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() -
               1) {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter()
-            << "Operator-TemplateFitting: calzetti index overflow (dustfitting="
-            << opt_dustFitting << ",while NPrecomputedEbmvCoeffs="
-            << logSampledTpl->m_ismCorrectionCalzetti
-                   ->GetNPrecomputedEbmvCoeffs()
-            << ")");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << " Invalidcalzetti index: (dustfitting="
+                       << opt_dustFitting << ",while NPrecomputedEbmvCoeffs="
+                       << logSampledTpl->m_ismCorrectionCalzetti
+                              ->GetNPrecomputedEbmvCoeffs()
+                       << ")");
   }
 
   if (opt_extinction && logSampledTpl->MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR, "no meiksin calib. "
-                           "file loaded... aborting");
+    THROWG(INTERNAL_ERROR, "IGM is not initialized");
   }
 
   if (!logSampledTpl->GetSpectralAxis().IsLogSampled()) {
@@ -1286,8 +1275,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
   const Float64 epsilon = 1E-8;
   if (std::abs(m_logSampledSpectrum.GetSpectralAxis().GetlogGridStep() -
                logSampledTpl->GetSpectralAxis().GetlogGridStep()) > epsilon)
-    THROWG(INTERNAL_ERROR,
-           "TFLogOperator: tpl and spc are not sampled the same step");
+    THROWG(INTERNAL_ERROR, "tpl and spc are not sampled with the same step");
 
   // subsample template if necessary
   if (m_ssRatio == 1) { // no required subsampling
@@ -1336,19 +1324,16 @@ std::shared_ptr<COperatorResult> COperatorTemplateFittingLog::Compute(
 
   if (logpriorze.size() > 0 && logpriorze.size() != m_redshifts.size()) {
     THROWG(INTERNAL_ERROR,
-           Formatter() << "Operator-TemplateFittingLog: prior list size("
-                       << logpriorze.size()
-                       << ") didn't match the input redshift-list size :"
-                       << m_redshifts.size());
+           Formatter()
+               << "Vector size do not match between logpriorz and redshift: "
+               << logpriorze.size() << " != " << m_redshifts.size());
   }
 
   Int32 retFit = FitAllz(result, MeiksinList, EbmvList, logpriorze);
 
   if (retFit != 0) {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter() << "Operator-TemplateFittingLog: FitAllz failed with error "
-                    << retFit);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "FitAllz failed with error " << retFit);
   }
 
   //**************** End Fitting at all redshifts ****************//

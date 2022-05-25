@@ -349,9 +349,7 @@ void CSpectrum::EstimateContinuum() const {
     m_WithoutContinuumFluxAxis = m_RawFluxAxis;
     m_WithoutContinuumFluxAxis.Subtract(m_ContinuumFluxAxis);
   } else {
-    THROWG(
-        INTERNAL_ERROR,
-        "CSpectrum::EstimateContinuum Estimation method undefined or unknown");
+    THROWG(INTERNAL_ERROR, "Unknown Estimation method");
   }
 
   Log.LogDetail("===============================================");
@@ -664,8 +662,7 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     minFlux = 0.0;
   }
   if (maxNoise == -DBL_MAX) {
-    THROWG(INTERNAL_ERROR,
-           "CSpectrum::correctSpectrum - unable to set maxNoise value");
+    THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
   }
 
   for (Int32 i = iMin; i < iMax; i++) {
@@ -744,8 +741,7 @@ void CSpectrum::SetContinuumEstimationMethod(
 
   if (ContinuumFluxAxis.GetSamplesCount() != GetSampleCount()) {
     THROWG(INTERNAL_ERROR,
-           "CSpectrum::SetContinuumEstimationMethod, manual "
-           "setting of the continuum with a wrong continuum size");
+           "Cannot set continuum flux: non-matching size with spectral axis");
   }
 
   m_ContinuumFluxAxis = ContinuumFluxAxis;
@@ -797,7 +793,7 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
   if (m_SpectralAxis[0] > currentRange.GetBegin() ||
       m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1] <
           currentRange.GetEnd()) {
-    THROWG(INTERNAL_ERROR, "CSpectrum::Rebin: input spectral range is not "
+    THROWG(INTERNAL_ERROR, "input spectral range is not "
                            "included in spectral axis");
   }
 
@@ -1002,9 +998,10 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
           lmin, lmax);
 
   if (!IsFluxValid(lmin, lmax))
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "Failed to validate spectrum flux on wavelength range"
-                       << lmin << ";" << lmax << ")");
+    THROWG(
+        INTERNAL_ERROR,
+        Formatter() << "Failed to validate spectrum flux on wavelength range ["
+                    << lmin << ";" << lmax << "]");
   else
     Log.LogDetail("Successfully validated spectrum flux, on wavelength range "
                   "(%.1f ; %.1f)",
@@ -1012,9 +1009,9 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
 
   // Check if the noise is valid in the clampedlambdaRange
   if (!IsNoiseValid(lmin, lmax))
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Failed to validate noise on wavelength range"
-                               << lmin << ";" << lmax << ")");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "Failed to validate noise on wavelength range ["
+                       << lmin << ";" << lmax << "]");
   else
     Log.LogDetail(
         "Successfully validated noise on wavelength range (%.1f ; %.1f)", lmin,
@@ -1026,7 +1023,7 @@ void CSpectrum::ValidateSpectrum(TFloat64Range lambdaRange,
   if (!m_LSF->checkAvailability(lambdaRange.GetBegin()) ||
       !m_LSF->checkAvailability(lambdaRange.GetEnd())) {
     THROWG(INTERNAL_ERROR, Formatter()
-                               << "Failed to validate lsf on wavelength range"
-                               << lmin << ";" << lmax << ")");
+                               << "Failed to validate lsf on wavelength range ["
+                               << lmin << ";" << lmax << "]");
   }
 }

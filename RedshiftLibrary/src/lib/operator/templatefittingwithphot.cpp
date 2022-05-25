@@ -59,7 +59,7 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
       m_spectrum.GetSpectralAxis().GetSamplesVector(), kstart, kend);
   if (!b) {
     THROWG(INTERNAL_ERROR,
-           "No intersecton between spectral exis and lambda range");
+           "No intersecton between spectral axis and lambda range");
   }
 
   // initialize restframe photometric axis and rebined photmetric template
@@ -77,15 +77,12 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
     THROWG(INTERNAL_ERROR, "Photometric band "
-                           "transmision not availables");
+                           "transmision not available");
   if (m_photBandCat->empty())
-    THROWG(
-        INTERNAL_ERROR,
-        "COperatorTemplateFittingPhot: photometric bands transmission empty");
+    THROWG(INTERNAL_ERROR, "Empty photometric band transmission");
 
   if (m_spectrum.GetPhotData() == nullptr)
-    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingPhot: photometric data not "
-                           "available in spectrum");
+    THROWG(INTERNAL_ERROR, "photometric data not available in spectrum");
 
   const auto &dataNames = m_spectrum.GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())

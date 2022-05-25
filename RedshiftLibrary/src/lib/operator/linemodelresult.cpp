@@ -62,10 +62,11 @@ void CLineModelResult::Init(TFloat64List redshifts,
                             Int32 nTemplates, Int32 nTplshapes,
                             TFloat64List tplshapesPriors) {
   if (tplshapesPriors.size() != nTplshapes) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "LinemodelResult: tplshapeprior size ="
-                       << tplshapesPriors.size() << "and tplshapes size="
-                       << nTplshapes << "do not correspond");
+    THROWG(
+        INTERNAL_ERROR,
+        Formatter()
+            << "Sizes do not match between tplshapeprior and tplshapes vectors:"
+            << tplshapesPriors.size() << " vs " << nTplshapes);
   }
 
   Int32 nResults = redshifts.size();

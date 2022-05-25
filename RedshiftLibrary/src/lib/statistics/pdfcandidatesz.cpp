@@ -144,9 +144,9 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
         c[Id]->Redshift <= ranges[Id].GetEnd()) {
       continue;
     } else {
-      THROWG(INTERNAL_ERROR,
-          Formatter() << "CPdfCandidatesZ::SetIntegrationWindows: Failed to "
-                         "identify a range including the candidate "
+      THROWG(
+          INTERNAL_ERROR,
+          Formatter() << "Failed to identify a range including the candidate "
                       << c[Id]->Redshift);
     }
   }
@@ -251,11 +251,10 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
   // check that redshifts are sorted
   for (Int32 k = 1; k < redshifts.size(); k++) {
     if (redshifts[k] < redshifts[k - 1]) {
-      THROWG(
-          INTERNAL_ERROR,
-          Formatter() << "CPdfCandidatesZ::getCandidateSumTrapez - redshifts "
-                         "are not sorted for (at least) index="
-                      << k);
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "Redshifts vector "
+                                    "is not sorted for (at least) index="
+                                 << k);
     }
   }
 
@@ -267,8 +266,7 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
-    THROWG(INTERNAL_ERROR, "CPdfCandidatesZ::getCandidateSumTrapez could not "
-                           "find enclosing interval");
+    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
   }
 
   TFloat64List ZinRange =
@@ -305,18 +303,12 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
       fitSuccessful = true;
     } else {
       Log.LogDebug(
-          "    CPdfCandidatesZ::getCandidateRobustSumGaussFit - iTry=%d", iTry);
-      Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -    "
-                   "for zcandidate=%.5f",
-                   candidate->Redshift);
-      Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
-                   "found gaussAmp=%e",
-                   candidate->GaussAmp);
-      Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
-                   "found gaussSigma=%e",
-                   candidate->GaussSigma);
-      Log.LogDebug("    CPdfCandidatesZ::getCandidateRobustSumGaussFit -       "
-                   "now going to retry w. different parameters");
+          "    CPdfCandidatesZ::getCandidateRobustSumGaussFit - "
+          "iTry=%d, for zcandidate=%.5f. Found gaussAmp=%e and gaussSigma=%e",
+          iTry, candidate->Redshift, candidate->GaussAmp,
+          candidate->GaussSigma);
+
+      Log.LogDebug("Retrying with different parameters");
     }
     zwidth_max /= 2.0;
     current_zrange.IntersectWith(TFloat64Range(
@@ -398,12 +390,9 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   // check that redshifts are sorted
   for (Int32 k = 1; k < redshifts.size(); k++) {
     if (redshifts[k] < redshifts[k - 1]) {
-      THROWG(
-          INTERNAL_ERROR,
-          Formatter() << "CPdfCandidatesZ::getCandidateSumGaussFit - redshifts "
-                         "are not sorted for (at least) index="
-                      << k);
-      return false;
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "redshifts are not sorted for (at least) index="
+                         << k);
     }
   }
 
@@ -415,8 +404,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
                                                kmin, kmax);
 
   if (!ok || kmin == -1 || kmax == -1) {
-    THROWG(INTERNAL_ERROR, "CPdfCandidatesZ::getCandidateSumGaussFit could not "
-                           "find enclosing interval");
+    THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
   }
 
   if (verbose) {
@@ -455,7 +443,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
     gsl_matrix_free(J);
     Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to "
                  "allocate x_init");
-    return false;
+    THROWG(INTERNAL_ERROR, "Unable to allocate x_init");
   }
 
   // initialize lmfit with previously estimated values ?
@@ -524,13 +512,12 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
       "    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit data ready");
 
   s = gsl_multifit_fdfsolver_alloc(T, n, p);
+
   if (s == 0) {
     gsl_matrix_free(covar);
     gsl_matrix_free(J);
     free(x_init);
-    THROWG(INTERNAL_ERROR, "    CPdfCandidatesZ::getCandidateSumGaussFit - "
-                           "Unable to allocate the multifit solver");
-    return false;
+    THROWG(INTERNAL_ERROR, "Unable to allocate the multifit solver");
   }
 
   /* initialize solver with starting point and weights */

@@ -104,9 +104,8 @@ TFloat64List CZPrior::GetNLinesSNRAboveCutLogZPrior(
 TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
                                             const Float64 aCoeff) const {
   if (aCoeff <= 0.0) {
-    THROWG(INTERNAL_ERROR, Formatter() << "CZPrior::GetEuclidNhaLogZPrior: "
-                                          "problem found aCoeff<=0: aCoeff="
-                                       << aCoeff);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Invalid aCoeff (<=0) value:" << aCoeff);
   }
 
   TFloat64List zPrior(redshifts.size(), 0.0);
@@ -176,8 +175,7 @@ TFloat64List CZPrior::GetEuclidNhaLogZPrior(const TRedshiftList &redshifts,
 TFloat64List CZPrior::CombineLogZPrior(const TFloat64List &logprior1,
                                        const TFloat64List &logprior2) const {
   if (logprior1.size() != logprior2.size()) {
-    THROWG(INTERNAL_ERROR,
-           "CZPrior::CombineLogZPrior, the 2 zpriors have not the same size");
+    THROWG(INTERNAL_ERROR, "zpriors vector sizes do not match");
   }
   Int32 n = logprior1.size();
 

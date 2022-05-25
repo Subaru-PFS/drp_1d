@@ -53,7 +53,7 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
                            const Int32 gslfit) {
   Float64 dz = -1;
   if (!redshifts.size())
-    THROWG(INTERNAL_ERROR, "Deltaz: Redshift range is empty");
+    THROWG(INTERNAL_ERROR, "Redshift range is empty");
   Int32 ret = -1, deltaz_i = 0, maxIter = 2;
   while (deltaz_i < maxIter) { // iterate only twice
     Int32 izmin = -1;
@@ -112,10 +112,9 @@ Int32 CDeltaz::GetIndices(const TFloat64List &redshifts, const Float64 redshift,
 
   iz = iiz - redshifts.begin();
   if (iiz == redshifts.end() || *iiz != redshift) {
-    THROWG(INTERNAL_ERROR,
-           Formatter()
-               << "CDeltaz::GetIndices: impossible to get redshift index for z="
-               << redshift);
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "impossible to get redshift index for z="
+                               << redshift);
   }
 
   izmin = max(iz - HalfNbSamples, 0);
@@ -145,8 +144,7 @@ Float64 CDeltaz::Compute(const TFloat64List &merits,
   }
   c0 = sum / sum2;
   if (c0 <= 0) {
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
   }
   sigma = sqrt(1.0 / c0);
   return sigma;
@@ -167,8 +165,7 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
 
   n = izmax - izmin + 1;
   if (n < 3) {
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
   }
 
   X = gsl_matrix_alloc(n, 3);
@@ -256,7 +253,6 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // results.SigmaZ[indz] = sigma;
   // results.LogAreaCorrectedExtrema[indz] = zcorr;
   if (c2 <= 0)
-    THROWG(DZ_NOT_COMPUTABLE,
-           Formatter() << "CDeltaz::Compute: impossible to compute sigma");
+    THROWG(DZ_NOT_COMPUTABLE, Formatter() << "impossible to compute sigma");
   return sigma;
 }

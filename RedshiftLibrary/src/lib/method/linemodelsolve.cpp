@@ -127,8 +127,7 @@ bool CLineModelSolve::PopulateParameters(
     }
     if (m_opt_tplfit_fftprocessing && m_opt_tplfit_use_photometry)
       THROWG(INTERNAL_ERROR,
-             "CLineModelSolve::PopulateParameters: fftprocessing "
-             "not implemented with photometry enabled");
+             "fftprocessing not implemented with photometry enabled");
     m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
     m_opt_tplfit_dustfit =
         parameterStore->GetScoped<bool>("linemodel.continuumfit.ismfit");
@@ -938,9 +937,9 @@ bool CLineModelSolve::Solve(
       m_linemodel.Init(spc, redshifts, restLineList, m_categoryList,
                        m_opt_continuumcomponent, m_opt_nsigmasupport,
                        m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
-  if (retInit != 0)
-    THROWG(INTERNAL_ERROR, "Linemodel, init failed. Aborting");
-
+  if (retInit != 0) {
+    THROWG(INTERNAL_ERROR, "Linemodel, init failed");
+  }
   m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
   //
   if (m_opt_continuumcomponent == "tplfit" ||
@@ -1012,7 +1011,7 @@ bool CLineModelSolve::Solve(
       m_opt_rules, m_opt_velocityfit, m_opt_firstpass_largegridstepRatio,
       m_opt_firstpass_largegridsampling, m_opt_rigidity, m_opt_haPrior);
   if (retFirstPass != 0) {
-    THROWG(INTERNAL_ERROR, "Linemodel, first pass failed. Aborting");
+    THROWG(INTERNAL_ERROR, "Linemodel, first pass failed");
     return false;
   }
 
@@ -1057,7 +1056,7 @@ bool CLineModelSolve::Solve(
                          fpb_opt_continuumcomponent, m_opt_nsigmasupport,
                          m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
   if (retInitB != 0) {
-    Log.LogError("Linemodel fpB, init failed. Aborting");
+    Log.LogError("Linemodel fpB, init failed");
     return false;
   }
   if (enableFirstpass_B) {
@@ -1095,7 +1094,7 @@ bool CLineModelSolve::Solve(
         m_opt_firstpass_largegridstepRatio, m_opt_firstpass_largegridsampling,
         m_opt_rigidity);
     if (retFirstPass != 0) {
-      Log.LogError("Linemodel, first pass failed. Aborting");
+      Log.LogError("Linemodel, first pass failed");
       return false;
     }
 
@@ -1153,7 +1152,7 @@ bool CLineModelSolve::Solve(
         m_opt_abs_velocity_fit_max, m_opt_abs_velocity_fit_step,
         m_opt_secondpass_continuumfit);
     if (retSecondPass != 0) {
-      Log.LogError("Linemodel, second pass failed. Aborting");
+      Log.LogError("Linemodel, second pass failed.");
       return false;
     }
   } else {

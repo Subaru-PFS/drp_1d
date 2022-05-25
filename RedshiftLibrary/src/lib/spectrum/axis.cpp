@@ -80,9 +80,7 @@ void CSpectrumAxis::maskVector(const TFloat64List &mask,
                                const TFloat64List &inputVector,
                                TFloat64List &outputVector) {
   if (mask.size() != inputVector.size()) {
-    THROWG(
-        INTERNAL_ERROR,
-        "CSpectrumAxis::MaskAxis: mask and vector sizes are not equal. Abort");
+    THROWG(INTERNAL_ERROR, "mask and vector sizes do not match");
   }
   Int32 sum = Int32(std::count(mask.begin(), mask.end(), 1));
   outputVector.clear();
