@@ -119,6 +119,9 @@ private:
                   const TInt32List &MeiksinList, const TInt32List &EbmvList,
                   const Float64 &dtd);
 
+  TInt32RangeList FindZRanges(const TFloat64List &redshifts,
+                              bool verboseLogFitAllz);
+
   Int32 EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
                     TFloat64List &XtY, Int32 precomputedFFT = -1);
   Int32 InitFFT(Int32 n);

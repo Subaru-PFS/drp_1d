@@ -479,6 +479,69 @@ void COperatorTemplateFittingLog::freeFFTPlans() {
   freeFFTPrecomputedBuffers();
 }
 
+TInt32RangeList
+COperatorTemplateFittingLog::FindZRanges(const TFloat64List &redshifts,
+                                         bool verboseLogFitAllz) {
+  TInt32RangeList izrangelist;
+  TInt32List zsplit;
+  if (m_enableIGM) {
+    Float64 zmin_igm =
+        GetIGMStartingRedshiftValue(m_ssSpectrum.GetSpectralAxis()[0]);
+    if (zmin_igm > redshifts.front() && zmin_igm < redshifts.back()) {
+      Int32 i_zmin_igm = -1;
+      TFloat64Index::getClosestLowerIndex(redshifts, zmin_igm, i_zmin_igm);
+      zsplit.push_back(i_zmin_igm);
+    }
+    if (zmin_igm < redshifts.back()) {
+      TFloat64List zbins_igm =
+          m_templateRebined_bf.m_igmCorrectionMeiksin->getRedshiftBins();
+      zbins_igm.pop_back(); // extend last bin up to the end
+      for (const Float64 &z : zbins_igm) {
+        if (z <= zmin_igm || z <= redshifts.front())
+          continue;
+        if (z >= redshifts.back())
+          break;
+        Int32 iz = -1;
+        TFloat64Index::getClosestLowerIndex(redshifts, z, iz);
+        zsplit.push_back(iz);
+      }
+    }
+
+    if (verboseLogFitAllz) {
+      Log.LogDebug("FitAllz: indexes for full "
+                   "LstSquare calculation, count = %d",
+                   zsplit.size());
+      for (Int32 k = 0; k < zsplit.size(); k++) {
+        Log.LogDebug("FitAllz: indexes ranges: "
+                     "for i=%d, zsplit=%d",
+                     k, zsplit[k]);
+      }
+    }
+  }
+
+  Int32 izmin = 0;
+  for (const Int32 &izmax : zsplit) {
+    izrangelist.push_back(TInt32Range(izmin, izmax));
+    izmin = izmax + 1;
+  }
+  Int32 izmax = redshifts.size() - 1;
+  izrangelist.push_back(TInt32Range(izmin, izmax));
+
+  if (verboseLogFitAllz) {
+    Log.LogDebug("FitAllz: indexes - "
+                 "izrangelist calculation, count = %d",
+                 izrangelist.size());
+    for (Int32 k = 0; k < izrangelist.size(); k++) {
+      Log.LogDebug("FitAllz: indexes ranges: "
+                   "for i=%d, zmin=%f, zmax=%f",
+                   k, redshifts[izrangelist[k].GetBegin()],
+                   redshifts[izrangelist[k].GetEnd()]);
+    }
+  }
+
+  return izrangelist;
+}
+
 /**
  * @brief COperatorTemplateFittingLog::FitAllz
  *
@@ -494,72 +557,13 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     std::shared_ptr<CTemplateFittingResult> result,
     const TInt32List &MeiksinList, const TInt32List &EbmvList,
     const CPriorHelper::TPriorZEList &logpriorze) {
-  bool verboseLogFitAllz = true;
+  bool verboseLogFitAllz = false;
 
-  // prepare list of redshifts that need a full lbdarange lst-square
-  // calculation
-  TInt32RangeList izrangelist;
-  TInt32List zindexesFullLstSquare;
-  if (m_enableIGM && result->Redshifts.size() > 1) {
-    Float64 zmax_firstRange =
-        GetIGMStartingRedshiftValue(m_ssSpectrum.GetSpectralAxis()[0]);
-    zindexesFullLstSquare.push_back(
-        0); // first index is always a mandatory full Lstsq Calculation case
-    TFloat64List zlistsegments = m_templateRebined_bf.m_igmCorrectionMeiksin
-                                     ->getSegmentsStartRedshiftList();
-    for (Int32 k = 0; k < zlistsegments.size(); k++) {
-      Int32 i_min = -1;
-      bool b;
-      if (zlistsegments[k] < zmax_firstRange)
-        b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,
-                                                     zmax_firstRange, i_min);
-      else
-        b = CIndexing<Float64>::getClosestLowerIndex(result->Redshifts,
-                                                     zlistsegments[k], i_min);
-      if (b)
-        zindexesFullLstSquare.push_back(i_min);
-    }
-    zindexesFullLstSquare.erase(
-        std::unique(zindexesFullLstSquare.begin(), zindexesFullLstSquare.end()),
-        zindexesFullLstSquare.end());
-
-    if (verboseLogFitAllz) {
-      Log.LogDebug("FitAllz: indexes for full "
-                   "LstSquare calculation, count = %d",
-                   zindexesFullLstSquare.size());
-      for (Int32 k = 0; k < zindexesFullLstSquare.size(); k++) {
-        Log.LogDebug("FitAllz: indexes ranges: "
-                     "for i=%d, zindexesFullLstSquare=%d",
-                     k, zindexesFullLstSquare[k]);
-      }
-    }
-
-    Int32 izmin = zindexesFullLstSquare[0];
-    for (Int32 k = 1; k < zindexesFullLstSquare.size(); k++) {
-      Int32 izmax = zindexesFullLstSquare[k];
-      izrangelist.push_back(TInt32Range(izmin, izmax));
-      izmin = izmax + 1; // setting min for next range (one value overlapping)
-    }
-    if (izrangelist.size() == 0)
-      izrangelist.push_back(TInt32Range(izmin, result->Redshifts.size() - 1));
-  } else {
-    Int32 izmin = 0;
-    Int32 izmax = result->Redshifts.size() - 1;
-    izrangelist.push_back(TInt32Range(izmin, izmax));
-  }
+  // prepare list of redshifts segments that keep the same IGM extinction curves
+  TInt32RangeList izrangelist =
+      FindZRanges(result->Redshifts, verboseLogFitAllz);
   Int32 nzranges = izrangelist.size();
 
-  if (verboseLogFitAllz) {
-    Log.LogDebug("FitAllz: indexes - "
-                 "izrangelist calculation, count = %d",
-                 izrangelist.size());
-    for (Int32 k = 0; k < nzranges; k++) {
-      Log.LogDebug("FitAllz: indexes ranges: "
-                   "for i=%d, zmin=%f, zmax=%f",
-                   k, result->Redshifts[izrangelist[k].GetBegin()],
-                   result->Redshifts[izrangelist[k].GetEnd()]);
-    }
-  }
   // since dtd is cte, better compute it here
   const TAxisSampleList &error =
       m_ssSpectrum.GetFluxAxis().GetError().GetSamplesVector();

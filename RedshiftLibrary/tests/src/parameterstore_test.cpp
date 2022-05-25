@@ -238,13 +238,76 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
   TScopeStack scopeStack;
   CParameterStore store(scopeStack);
   std::string object_type = "galaxy";
+  bool check_property;
+
+  // HasTplIsmExtinction
+  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
+  store.Set(object_type + ".TemplateFittingSolve.dustfit", true);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".TemplateFittingSolve.dustfit", false);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
+
+  store.Set(object_type + ".method", std::string("TplcombinationSolve"));
+  store.Set(object_type + ".TplcombinationSolve.dustfit", true);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".TplcombinationSolve.dustfit", false);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
+
+  store.Set(object_type + ".method", std::string("LineModelSolve"));
+  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.ismfit",
+            true);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.ismfit",
+            false);
+  check_property = store.HasTplIsmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
+
+  // HasTplIgmExtinction
+  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
+  store.Set(object_type + ".TemplateFittingSolve.extinction", true);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".TemplateFittingSolve.extinction", false);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
+
+  store.Set(object_type + ".method", std::string("TplcombinationSolve"));
+  store.Set(object_type + ".TplcombinationSolve.extinction", true);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".TplcombinationSolve.extinction", false);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
+
+  store.Set(object_type + ".method", std::string("LineModelSolve"));
+  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.igmfit",
+            true);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == true);
+
+  store.Set(object_type + ".LineModelSolve.linemodel.continuumfit.igmfit",
+            false);
+  check_property = store.HasTplIgmExtinction(object_type);
+  BOOST_CHECK(check_property == false);
 
   // HasFFTProcessing
+  store.Set(object_type + ".method", std::string("TemplateFittingSolve"));
   store.Set(object_type + ".TemplateFittingSolve.fftprocessing", true);
-  bool check_property = store.HasFFTProcessing(object_type);
+  check_property = store.HasFFTProcessing(object_type);
   BOOST_CHECK(check_property == true);
 
   store.Set(object_type + ".TemplateFittingSolve.fftprocessing", false);
+  store.Set(object_type + ".method", std::string("LineModelSolve"));
   store.Set(object_type +
                 ".LineModelSolve.linemodel.continuumfit.fftprocessing",
             true);

@@ -194,17 +194,13 @@ void CInputContext::Init() {
       m_ParameterStore->Get<std::string>("LSF.LSFType") == "FROMSPECTRUMDATA")
     m_igmcorrectionMeiksin->convolveByLSF(m_Spectrum->GetLSF(), m_lambdaRange);
 
-  // Calzetti ISM & Meiksin IGM initialization, for only original templates,
-  // only when lsf changes notably when LSFType is fromspectrumdata
-  // or the first time InitIsmIgm is called
+  // insert extinction correction objects if needed
   m_TemplateCatalog->m_logsampling = 0;
   m_TemplateCatalog->m_orthogonal = 0;
-  if (m_TemplateCatalog->GetTemplate(m_TemplateCatalog->GetCategoryList()[0], 0)
-          ->CalzettiInitFailed()) {
-    m_TemplateCatalog->InitIsmIgm(m_igmcorrectionMeiksin,
-                                  m_ismcorrectionCalzetti);
-  }
+  m_TemplateCatalog->SetIsmIgmCorrection(
+      m_ParameterStore, m_igmcorrectionMeiksin, m_ismcorrectionCalzetti);
 
+  // log-lambda resampling if needed
   RebinInputs();
 
   if (m_use_LogLambaSpectrum) {

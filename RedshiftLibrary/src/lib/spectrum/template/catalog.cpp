@@ -72,25 +72,26 @@ TTemplateRefList
 CTemplateCatalog::GetTemplateList_(const TStringList &categoryList) const {
   TTemplateRefList list;
 
-  for (Int32 i = 0; i < categoryList.size(); i++) {
-    for (Int32 j = 0; j < GetTemplateCount(categoryList[i]); j++) {
-      list.push_back(GetList().at(categoryList[i])[j]);
-    }
+  for (const auto &cat : categoryList) {
+    const auto &map = GetList();
+    if (!map.count(cat))
+      continue;
+    for (const auto &tpl : map.at(cat))
+      list.push_back(tpl);
   }
-
   return list;
 }
 
 std::shared_ptr<const CTemplate>
 CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
                                     const std::string tplName) const {
-  for (Int32 i = 0; i < tplCategoryList.size(); i++) {
-    for (Int32 j = 0; j < GetTemplateCount(tplCategoryList[i]); j++) {
-      std::shared_ptr<const CTemplate> tpl = GetTemplate(tplCategoryList[i], j);
-      if (tpl->GetName() == tplName) {
+  for (const auto &cat : tplCategoryList) {
+    const auto &map = GetList();
+    if (!map.count(cat))
+      continue;
+    for (const auto &tpl : map.at(cat))
+      if (tpl->GetName() == tplName)
         return tpl;
-      }
-    }
   }
   THROWG(INTERNAL_ERROR,
          Formatter() << "Could not find template with name " << tplName);
@@ -101,7 +102,7 @@ CTemplateCatalog::GetTemplateByName(const TStringList &tplCategoryList,
  */
 TStringList CTemplateCatalog::GetCategoryList() const {
   TStringList l;
-  for (auto it : GetList()) {
+  for (const auto &it : GetList()) {
     l.push_back(it.first);
   }
   return l;
@@ -225,17 +226,26 @@ void CTemplateCatalog::InitContinuumRemoval(
   }
 }
 
-// adapt it to apply to all m_list
-void CTemplateCatalog::InitIsmIgm(
+void CTemplateCatalog::SetIsmIgmCorrection(
+    const std::shared_ptr<const CParameterStore> &parameterStore,
     const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         igmCorrectionMeiksin,
     const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         ismCorrectionCalzetti) {
-  for (auto it : GetList(0, 0)) {
-    const TTemplateRefList &TplList = it.second;
-    for (auto tpl : TplList)
-      tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-    for (auto tpl : TplList)
-      tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+
+  for (const auto &it : GetList(0, 0)) {
+    const auto &cat = it.first;
+    if (parameterStore->HasTplIsmExtinction(cat) && !it.second.empty() &&
+        it.second[0]->CalzettiInitFailed()) {
+      for (const auto &tpl : it.second) {
+        tpl->m_ismCorrectionCalzetti = ismCorrectionCalzetti;
+      }
+    }
+    if (parameterStore->HasTplIgmExtinction(cat) && !it.second.empty() &&
+        it.second[0]->MeiksinInitFailed()) {
+      for (const auto &tpl : it.second) {
+        tpl->m_igmCorrectionMeiksin = igmCorrectionMeiksin;
+      }
+    }
   }
 }

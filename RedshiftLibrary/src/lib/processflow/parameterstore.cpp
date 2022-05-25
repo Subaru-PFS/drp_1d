@@ -152,24 +152,71 @@ void CParameterStore::FromString(const std::string &json) {
   bpt::json_parser::read_json(jsonstream, m_PropertyTree);
 }
 
+bool CParameterStore::HasTplIsmExtinction(const std::string &objectType) const {
+  bool extinction = false;
+  const std::string methodScope = objectType + ".method";
+  if (!Has<std::string>(methodScope))
+    return false;
+  const auto &method = Get<std::string>(methodScope);
+  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve") {
+    const std::string scopeStr = objectType + "." + method + ".dustfit";
+    if (Has<bool>(scopeStr))
+      extinction = Get<bool>(scopeStr);
+  } else if (method == "LineModelSolve") {
+    const std::string scopeStr =
+        objectType + "." + method + ".linemodel.continuumfit.ismfit";
+    if (Has<bool>(scopeStr))
+      extinction = Get<bool>(scopeStr);
+  }
+  return extinction;
+}
+
+bool CParameterStore::HasTplIgmExtinction(const std::string &objectType) const {
+  bool extinction = false;
+  const std::string methodScope = objectType + ".method";
+  if (!Has<std::string>(methodScope))
+    return false;
+  const auto &method = Get<std::string>(methodScope);
+  if (method == "TemplateFittingSolve" || method == "TplcombinationSolve") {
+    const std::string scopeStr = objectType + "." + method + ".extinction";
+    if (Has<bool>(scopeStr))
+      extinction = Get<bool>(scopeStr);
+  } else if (method == "LineModelSolve") {
+    const std::string scopeStr =
+        objectType + "." + method + ".linemodel.continuumfit.igmfit";
+    if (Has<bool>(scopeStr))
+      extinction = Get<bool>(scopeStr);
+  }
+  return extinction;
+}
+
 bool CParameterStore::HasFFTProcessing(const std::string &objectType) const {
   bool fft_processing = false;
-
-  if (Has<bool>(objectType + ".TemplateFittingSolve.fftprocessing"))
-    fft_processing |=
-        Get<bool>(objectType + ".TemplateFittingSolve.fftprocessing");
-  if (Has<bool>(objectType +
-                ".LineModelSolve.linemodel.continuumfit.fftprocessing"))
-    fft_processing |= Get<bool>(
-        objectType + ".LineModelSolve.linemodel.continuumfit.fftprocessing");
+  const std::string methodScope = objectType + ".method";
+  if (!Has<std::string>(methodScope))
+    return false;
+  const auto &method = Get<std::string>(methodScope);
+  if (method == "TemplateFittingSolve") {
+    const std::string scopeStr =
+        objectType + ".TemplateFittingSolve.fftprocessing";
+    if (Has<bool>(scopeStr))
+      fft_processing = Get<bool>(scopeStr);
+  }
+  if (method == "LineModelSolve") {
+    const std::string scopeStr =
+        objectType + ".LineModelSolve.linemodel.continuumfit.fftprocessing";
+    if (Has<bool>(scopeStr))
+      fft_processing = Get<bool>(scopeStr);
+  }
 
   return fft_processing;
 }
 
 bool CParameterStore::HasToOrthogonalizeTemplates(
     const std::string &objectType) const {
-  bool orthogonalize =
-      Get<std::string>(objectType + ".method") == "LineModelSolve";
+
+  const std::string methodScope = objectType + ".method";
+  bool orthogonalize = Get<std::string>(methodScope) == "LineModelSolve";
   if (orthogonalize) {
     std::string continuumComponent = Get<std::string>(
         objectType + ".LineModelSolve.linemodel.continuumcomponent");
@@ -178,6 +225,7 @@ bool CParameterStore::HasToOrthogonalizeTemplates(
   }
   return orthogonalize;
 }
+
 bool CParameterStore::EnableTemplateOrthogonalization(
     const std::string &objectType) const {
   bool enableOrtho = HasToOrthogonalizeTemplates(objectType);

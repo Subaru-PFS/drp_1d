@@ -335,6 +335,14 @@ void CTemplate::InitIsmIgmConfig(
 
     // get last index in spectral axis where igm can be applied
     m_Igm_kend = GetIgmEndIndex(m_IsmIgm_kstart, m_Ism_kend);
+
+    if (m_meiksinRedshiftIdx == -1 && m_Igm_kend != -1)
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "CTemplate::InitIsmIgmConfig: missing "
+                                    "igm extinction curve for redshift z="
+                                 << redshift << " and wavelength range =["
+                                 << m_SpectralAxis[m_IsmIgm_kstart] << " ; "
+                                 << m_SpectralAxis[m_Igm_kend] << "]");
   }
 
   if (m_NoIsmIgmFluxAxis.isEmpty()) // initialize when called for the first time
@@ -366,11 +374,9 @@ Int32 CTemplate::GetIgmEndIndex(Int32 kstart, Int32 kend) const {
       m_SpectralAxis.GetSamplesVector().begin() + kend + 1;
   TAxisSampleList::const_iterator it =
       std::upper_bound(istart, iend, m_igmCorrectionMeiksin->getLambdaMax());
-  return (it == istart) ? -1
-                        : it - 1 -
-                              m_SpectralAxis.GetSamplesVector()
-                                  .begin(); // should be -1 if not applicable
-                                            // (lambdamax< lmabd[kstart])
+  return (it == istart)
+             ? -1 // should be -1 if not applicable (lambdamax< lambda[kstart])
+             : it - 1 - m_SpectralAxis.GetSamplesVector().begin();
 }
 
 void CTemplate::ScaleFluxAxis(Float64 amplitude) {

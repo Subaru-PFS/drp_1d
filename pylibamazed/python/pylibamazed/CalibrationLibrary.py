@@ -281,16 +281,15 @@ class CalibrationLibrary:
     # Important: igm curves should be loaded in the increasing order of their extinction per bin of z,
     # i.e., from the least extinction curve to the highest extinction curve 
     def load_Meiksin(self):
-        zbins = [2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0]
+        zbins = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
         columns =['restlambda', 'flux0', 'flux1', 'flux2','flux3', 'flux4', 'flux5', 'flux6']
-        #we'd better create a map between meiksin curves and their zbin
         meiksinCorrectionCurves = VecMeiksinCorrection()
-        for z in zbins: 
+        for z in zbins[1:]: 
             filename = f"Meiksin_Var_curves_{z}.txt"
             meiksin_df = ascii.read(os.path.join(self.calibration_dir, "igm", "IGM_variation_curves_meiksin", filename), names=columns)
             fluxcorr = VecTFloat64List([meiksin_df[col] for col in columns[1:]])
             meiksinCorrectionCurves.append(MeiksinCorrection(meiksin_df['restlambda'], fluxcorr))
-        self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves)
+        self.meiksin = CSpectrumFluxCorrectionMeiksin(meiksinCorrectionCurves, zbins)
 
     def load_all(self):
         """Load templates, line catalogs and template ratios for every object_type, according to parameters content

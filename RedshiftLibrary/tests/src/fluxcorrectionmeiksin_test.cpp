@@ -381,7 +381,8 @@ CSpectrumFluxCorrectionMeiksin
 fakeFluxCorrectionMeiksin(TFloat64List igmLambdas, TFloat64List fluxcorr) {
   std::vector<MeiksinCorrection> corrections;
   corrections.push_back(MeiksinCorrection(igmLambdas, {fluxcorr}));
-  CSpectrumFluxCorrectionMeiksin fluxMeiksinObj(corrections);
+  TFloat64List zbins = {0.0, 6.0};
+  CSpectrumFluxCorrectionMeiksin fluxMeiksinObj(corrections, zbins);
   return fluxMeiksinObj;
 }
 

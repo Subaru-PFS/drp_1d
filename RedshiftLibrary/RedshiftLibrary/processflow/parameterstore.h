@@ -74,6 +74,8 @@ public:
     return Has<T>(GetScopedName(name));
   }
 
+  bool HasTplIsmExtinction(const std::string &objectType) const;
+  bool HasTplIgmExtinction(const std::string &objectType) const;
   bool HasFFTProcessing(const std::string &objectType) const;
   bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
   bool EnableTemplateOrthogonalization(const std::string &objectType) const;
