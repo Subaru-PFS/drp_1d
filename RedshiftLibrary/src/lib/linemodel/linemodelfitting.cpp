@@ -529,6 +529,8 @@ void CLineModelFitting::integrateFluxes_usingTrapez(
   sumErr = 0.0;
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+  if (spectralAxis.GetSamplesCount() < 2)
+    THROWG(INTERNAL_ERROR, "Not enough samples in spectral axis");
   const auto &ErrorNoContinuum = m_ErrorNoContinuum;
   for (const auto &t : indexes) {
     Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;

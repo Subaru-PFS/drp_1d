@@ -583,7 +583,6 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     TFloat64Range zrange =
         TFloat64Range(result->Redshifts[izrangelist[k].GetBegin()],
                       result->Redshifts[izrangelist[k].GetEnd()]);
-    Float64 redshiftStep;
     if (m_enableIGM && result->Redshifts.size() > 1) {
       TFloat64List::const_iterator first = result->Redshifts.begin() +
                                            izrangelist[k].GetBegin(),
@@ -593,10 +592,7 @@ Int32 COperatorTemplateFittingLog::FitAllz(
       subresult->Init(subRedshifts.size(), EbmvList.size(), MeiksinList.size());
       subresult->Redshifts = subRedshifts;
       // slice the template
-      redshiftStep = log((subRedshifts[1] + 1.) / (subRedshifts[0] + 1.));
     } else {
-      redshiftStep =
-          log((result->Redshifts[1] + 1.) / (result->Redshifts[0] + 1.));
       subresult->Init(result->Redshifts.size(), EbmvList.size(),
                       MeiksinList.size());
       subresult->Redshifts = result->Redshifts;
@@ -625,6 +621,8 @@ Int32 COperatorTemplateFittingLog::FitAllz(
     // copy subresults into global results
     for (Int32 isubz = 0; isubz < subresult->Redshifts.size(); isubz++) {
       Int32 fullResultIdx = isubz + izrangelist[k].GetBegin();
+      if (fullResultIdx >= result->ChiSquare.size())
+        THROWG(INTERNAL_ERROR, "out-of-bound index");
       result->ChiSquare[fullResultIdx] = subresult->ChiSquare[isubz];
       result->FitAmplitude[fullResultIdx] = subresult->FitAmplitude[isubz];
       result->FitAmplitudeError[fullResultIdx] =
