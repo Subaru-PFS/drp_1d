@@ -138,6 +138,8 @@ bool CLineModelSolve::PopulateParameters(
         parameterStore->GetScoped<Int32>("linemodel.continuumfit.count");
     m_opt_continuum_neg_amp_threshold = parameterStore->GetScoped<Float64>(
         "linemodel.continuumfit.negativethreshold");
+    m_opt_continuum_null_amp_threshold = parameterStore->GetScoped<Float64>(
+        "linemodel.continuumfit.nullthreshold");
     m_opt_tplfit_ignoreLinesSupport = parameterStore->GetScoped<bool>(
         "linemodel.continuumfit.ignorelinesupport");
     m_opt_tplfit_continuumprior_betaA = parameterStore->GetScoped<Float64>(
@@ -968,6 +970,8 @@ bool CLineModelSolve::Solve(
         m_opt_tplfit_continuumprior_betaZ;
     m_linemodel.m_opt_continuum_neg_amp_threshold =
         m_opt_continuum_neg_amp_threshold;
+    m_linemodel.m_opt_continuum_null_amp_threshold =
+        m_opt_continuum_null_amp_threshold;
   }
 
   m_linemodel.m_opt_lya_forcefit = m_opt_lya_forcefit;
