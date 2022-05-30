@@ -155,7 +155,6 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
                              const TFloat64List &redshifts, const Int32 iz,
                              const Int32 izmin, const Int32 izmax) {
   Float64 sigma = -1.0; // default value
-  bool verbose = false;
 
   // quadratic fit
   Int32 i, n;
@@ -180,10 +179,8 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   for (i = 0; i < n; i++) {
     xi = redshifts[i + izmin];
     yi = merits[i + izmin];
-    if (verbose) {
-      fprintf(stderr, "  y = %+.5e ]\n", yi);
-      fprintf(stderr, "  x = %+.5e ]\n", xi);
-    }
+    Log.LogDebug("  y = %+.5e ]\n", yi);
+    Log.LogDebug("  x = %+.5e ]\n", xi);
     ei = 1.0; // todo, estimate weighting ?
     gsl_matrix_set(X, i, 0, 1.0);
     gsl_matrix_set(X, i, 1, xi - x0);
@@ -211,37 +208,17 @@ Float64 CDeltaz::Compute3ddl(const TFloat64List &merits,
   // Float64 b2sur4c = (Float64)(C(1)*C(1)/((Float64)(4.0*C(2))));
   // Float64 logK = ( -(a - b2sur4c)/2.0 );
   // Float64 logarea = log(sigma) + logK + log(2.0*M_PI);
-  if (verbose) {
-    Log.LogDebug("Center Redshift: %g", x0);
-    Log.LogDebug("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
-    fprintf(stderr, "# best fit: Y = %g + %g X + %g X^2\n", C(0), C(1), C(2));
-    if (1) // debug
-    {
-      Log.LogDebug("# covariance matrix:\n");
-      Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1),
-                   COV(0, 2));
-      Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1),
-                   COV(1, 2));
-      Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1),
-                   COV(2, 2));
-
-      fprintf(stderr, "# covariance matrix:\n");
-      fprintf(stderr, "[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1),
-              COV(0, 2));
-      fprintf(stderr, "  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1),
-              COV(1, 2));
-      fprintf(stderr, "  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1),
-              COV(2, 2));
-    }
-    Log.LogDebug("# chisq/n = %g", chisq / n);
-    Log.LogDebug("# zcorr = %g", zcorr);
-    Log.LogDebug("# sigma = %g", sigma);
-    // Log.LogDebug("# logarea = %g", logarea);
-    Log.LogDebug("\n");
-
-    fprintf(stderr, "# sigma = %g\n", sigma);
-    fprintf(stderr, "# chisq/n = %g\n", chisq / n);
-  }
+  Log.LogDebug("Center Redshift: %g", x0);
+  Log.LogDebug("# best fit: Y = %g + %g X + %g X^2", C(0), C(1), C(2));
+  Log.LogDebug("# covariance matrix:\n");
+  Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0, 0), COV(0, 1), COV(0, 2));
+  Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1, 0), COV(1, 1), COV(1, 2));
+  Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n", COV(2, 0), COV(2, 1), COV(2, 2));
+  Log.LogDebug("# chisq/n = %g", chisq / n);
+  Log.LogDebug("# zcorr = %g", zcorr);
+  Log.LogDebug("# sigma = %g", sigma);
+  // Log.LogDebug("# logarea = %g", logarea);
+  Log.LogDebug("\n");
 
   gsl_matrix_free(X);
   gsl_vector_free(y);

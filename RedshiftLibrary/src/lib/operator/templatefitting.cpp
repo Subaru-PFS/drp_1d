@@ -88,7 +88,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
-  bool verbose = false;
   bool amplForcePositive = true;
   bool status_chisquareSetAtLeastOnce = false;
 
@@ -189,17 +188,14 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       TFittingResult fitRes =
           ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
 
-      if (verbose) {
-        Log.LogDebug("");
-        Log.LogDebug("  Operator-TemplateFitting: z=%f", redshift);
-        Log.LogDebug("  Operator-TemplateFitting: fit=%e", fitRes.chiSquare);
-        Log.LogDebug("  Operator-TemplateFitting: sumT=%e", fitRes.sumT);
-        Log.LogDebug("  Operator-TemplateFitting: sumS=%e", fitRes.sumS);
-        Log.LogDebug("  Operator-TemplateFitting: sumCross=%e",
-                     fitRes.sumCross);
-        Log.LogDebug("  Operator-TemplateFitting: coeffEBMV=%.2f", coeffEBMV);
-        Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
-      }
+      Log.LogDebug("");
+      Log.LogDebug("  Operator-TemplateFitting: z=%f", redshift);
+      Log.LogDebug("  Operator-TemplateFitting: fit=%e", fitRes.chiSquare);
+      Log.LogDebug("  Operator-TemplateFitting: sumT=%e", fitRes.sumT);
+      Log.LogDebug("  Operator-TemplateFitting: sumS=%e", fitRes.sumS);
+      Log.LogDebug("  Operator-TemplateFitting: sumCross=%e", fitRes.sumCross);
+      Log.LogDebug("  Operator-TemplateFitting: coeffEBMV=%.2f", coeffEBMV);
+      Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
 
       result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;

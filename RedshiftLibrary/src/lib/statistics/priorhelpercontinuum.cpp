@@ -259,7 +259,6 @@ bool CPriorHelperContinuum::SetAGausssigmaData(
 
 bool CPriorHelperContinuum::LoadFileEZ(const char *filePath,
                                        std::vector<TFloat64List> &data) {
-  bool verboseRead = false;
   Log.LogDetail("    CPriorHelperContinuum: start load prior file: %s",
                 filePath);
   bool loadSuccess = true;
@@ -284,12 +283,6 @@ bool CPriorHelperContinuum::LoadFileEZ(const char *filePath,
             x = m_priorminval;
           }
           lineVals.push_back(x);
-
-          if (verboseRead) {
-            Log.LogDetail(
-                "    CPriorHelperContinuum: read line=%d, col=%d : valf=%e",
-                nlinesRead, lineVals.size() - 1, x);
-          }
         }
         if (lineVals.size() != m_nEbv) {
           THROWG(INTERNAL_ERROR, Formatter() << "read n=" << lineVals.size()
@@ -297,10 +290,6 @@ bool CPriorHelperContinuum::LoadFileEZ(const char *filePath,
         }
         nlinesRead++;
         data.push_back(lineVals);
-        if (verboseRead) {
-          Log.LogDetail("    CPriorHelperContinuum: read n=%d cols",
-                        lineVals.size());
-        }
       }
     }
     file.close();
@@ -322,7 +311,6 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
                                             TFloat64List redshifts,
                                             TPriorZEList &zePriorData,
                                             Int32 outsideZRangeExtensionMode) {
-  bool verbose = false;
   if (m_beta <= 0.0) {
     Log.LogError(
         "    CPriorHelperContinuum: beta coeff not initialized correctly (=%e)",
@@ -375,20 +363,8 @@ bool CPriorHelperContinuum::GetTplPriorData(std::string tplname,
         idz = m_nZ;
       }
     }
-    if (verbose) {
-      Log.LogDetail(
-          "    CPriorHelperContinuum: get prior for z=%f: found idz=%d",
-          redshifts[kz], idz);
-    }
     TPriorEList dataz = m_data[idx][idz];
     for (Int32 icol = 0; icol < m_nEbv; icol++) {
-      if (verbose) {
-        Log.LogDetail("    CPriorHelperContinuum: get prior for tpl=%s",
-                      tplname.c_str());
-        Log.LogDetail("    CPriorHelperContinuum: get prior idTpl=%d, idz=%d, "
-                      "idebmv=%d : valf=%e",
-                      idx, idz, icol, dataz[icol].logpriorTZE);
-      }
       dataz[icol].logpriorTZE /= m_dz;
       dataz[icol].logpriorTZE = m_beta * log(dataz[icol].logpriorTZE);
     }

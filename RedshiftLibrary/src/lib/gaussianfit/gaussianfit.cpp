@@ -263,37 +263,6 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   Float64 dof = n - np;
   Float64 c = GSL_MAX_DBL(1, chi / sqrt(dof));
 
-  Int32 verbose = false;
-  if (verbose) {
-
-    fprintf(stderr, "summary from method '%s'\n",
-            gsl_multifit_fdfsolver_name(multifitSolver));
-    fprintf(stderr, "number of iterations: %zu\n",
-            gsl_multifit_fdfsolver_niter(multifitSolver));
-    fprintf(stderr, "function evaluations: %zu\n", multifitFunction.nevalf);
-    fprintf(stderr, "Jacobian evaluations: %zu\n", multifitFunction.nevaldf);
-
-    fprintf(stderr, "final   |multifitFunction(x)| = %g\n", chi);
-
-    {
-      double dof = n - np;
-      double c = GSL_MAX_DBL(1, chi / sqrt(dof));
-
-      fprintf(stderr, "chisq/dof = %g\n", pow(chi, 2.0) / dof);
-
-      for (Int32 k = 0; k < np; k++) {
-        Float64 fit = gsl_vector_get(multifitSolver->x, k);
-        Float64 err = sqrt(gsl_matrix_get(covarMatrix, k, k));
-        if (fit < 1e-3) {
-          fprintf(stderr, "A %d     = %.3e +/- %.8f\n", k, fit, c * err);
-        } else {
-          fprintf(stderr, "A %d     = %.5f +/- %.8f\n", k, fit, c * err);
-        }
-      }
-    }
-    fprintf(stderr, "status = %s (%d)\n", gsl_strerror(status), status);
-  }
-
   Float64 *output = (Float64 *)calloc(n, sizeof(Float64));
   Float64 *outputError = (Float64 *)calloc(n, sizeof(Float64));
 

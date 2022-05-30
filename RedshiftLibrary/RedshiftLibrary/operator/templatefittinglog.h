@@ -98,15 +98,8 @@ private:
   Int32 m_ssRatio;
 
   // hardcoded config: FIT_RANGEZ
-  bool verboseLogFitFitRangez = false;
-  bool verboseExportFitRangez = false;
-  bool verboseExportFitRangez_model = false;
   Int32 exportIGMIdx = 5;
   Int32 exportISMIdx = -1;
-
-  // hardcoded config: XTY_FFT
-  bool verboseLogXtYFFT = false;
-  bool verboseExportXtYFFT = false;
 
   Int32 FitAllz(std::shared_ptr<CTemplateFittingResult> result,
                 const TInt32List &MeiksinList = TInt32List(1, 0),
@@ -119,8 +112,7 @@ private:
                   const TInt32List &MeiksinList, const TInt32List &EbmvList,
                   const Float64 &dtd);
 
-  TInt32RangeList FindZRanges(const TFloat64List &redshifts,
-                              bool verboseLogFitAllz);
+  TInt32RangeList FindZRanges(const TFloat64List &redshifts);
 
   Int32 EstimateXtY(const TFloat64List &X, const TFloat64List &Y, Int32 nshifts,
                     TFloat64List &XtY, Int32 precomputedFFT = -1);

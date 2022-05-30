@@ -43,16 +43,6 @@
 using namespace NSEpic;
 
 /**
- * Attribution constructor. Will only set the debugging bypass option.
- */
-CLineMatchingResult::CLineMatchingResult() { m_bypassDebug = true; }
-
-/**
- * Empty destructor.
- */
-CLineMatchingResult::~CLineMatchingResult() {}
-
-/**
  * @brief CLineMatchingResult::GetBestRedshift
  *
  * select the best redshift given a set of rules:
@@ -291,12 +281,10 @@ void CLineMatchingResult::FilterWithRules(CSpectrum spc,
     Int32 ruleId = rules.check(z, currentSet);
 
     if (ruleId <= 0) {
-      if (!m_bypassDebug)
-        Log.LogDebug("Solution %d passed!", i);
+      Log.LogDebug("Solution %d passed!", i);
       _solutionSetList.push_back(currentSet);
     } else {
-      if (!m_bypassDebug)
-        Log.LogDebug("Solution %d failed rule %d", i, ruleId);
+      Log.LogDebug("Solution %d failed rule %d", i, ruleId);
       FilteredSolutionSetList.push_back(currentSet);
       FilterTypeList.push_back(ruleId);
     }

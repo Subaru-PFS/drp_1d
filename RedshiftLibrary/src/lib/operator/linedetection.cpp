@@ -65,8 +65,6 @@ CLineDetection::CLineDetection(Int32 type, Float64 cut, Float64 strongcut,
   m_disableFitQualityCheck = disableFitQualityCheck;
 
   m_type = type;
-
-  m_bypassDebug = true;
 }
 
 /**
@@ -110,8 +108,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
     if (status != NSEpic::CGaussianFit::nStatus_Success) {
       std::string status =
           (boost::format("Peak_%1% : Fitting failed") % j).str();
-      if (!m_bypassDebug)
-        Log.LogDebug("Peak_%d : Fitting failed", j);
+      Log.LogDebug("Peak_%d : Fitting failed", j);
       result->PeakListDetectionStatus.push_back(status);
       continue;
     }
@@ -133,8 +130,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
       toAdd = false;
       std::string status =
           (boost::format("Peak_%1% : GaussAmp negative") % j).str();
-      if (!m_bypassDebug)
-        Log.LogDebug("Peak_%d : GaussAmp negative", j);
+      Log.LogDebug("Peak_%d : GaussAmp negative", j);
       result->PeakListDetectionStatus.push_back(status);
     }
 
@@ -144,8 +140,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
         toAdd = false;
         std::string status =
             (boost::format("Peak_%1% : GaussWidth negative") % j).str();
-        if (!m_bypassDebug)
-          Log.LogDebug("Peak_%d : GaussWidth negative", j);
+        Log.LogDebug("Peak_%d : GaussWidth negative", j);
         result->PeakListDetectionStatus.push_back(status);
       } else {
         Float64 fwhm = FWHM_FACTOR * gaussWidth;
@@ -153,16 +148,14 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
           toAdd = false;
           std::string status =
               (boost::format("Peak_%1% : fwhm<m_minsize") % j).str();
-          if (!m_bypassDebug)
-            Log.LogDebug("Peak_%d : fwhm<m_minsize", j);
+          Log.LogDebug("Peak_%d : fwhm<m_minsize", j);
           result->PeakListDetectionStatus.push_back(status);
         }
         if (fwhm > m_maxsize) {
           toAdd = false;
           std::string status =
               (boost::format("Peak_%1% : fwhm>m_maxsize") % j).str();
-          if (!m_bypassDebug)
-            Log.LogDebug("Peak_%d : fwhm>m_maxsize", j);
+          Log.LogDebug("Peak_%d : fwhm>m_maxsize", j);
           result->PeakListDetectionStatus.push_back(status);
         }
       }
@@ -191,8 +184,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
             (boost::format("Peak_%1% : gaussAmp far from spectrum max_value") %
              j)
                 .str();
-        if (!m_bypassDebug)
-          Log.LogDebug("Peak_%d : gaussAmp far from spectrum max_value", j);
+        Log.LogDebug("Peak_%d : gaussAmp far from spectrum max_value", j);
         result->PeakListDetectionStatus.push_back(status);
       }
 
@@ -224,10 +216,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
                              "max_position (samples)") %
                j)
                   .str();
-          if (!m_bypassDebug)
-            Log.LogDebug(
-                "Peak_%d : gaussPos far from spectrum max_position (samples)",
-                j);
+          Log.LogDebug(
+              "Peak_%d : gaussPos far from spectrum max_position (samples)", j);
           result->PeakListDetectionStatus.push_back(status);
         }
       }      // check gaussPos vs position of the max.
@@ -240,9 +230,8 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
                                               "spectrum max_value (Angstrom)") %
                                 j)
                                    .str();
-          if (!m_bypassDebug)
-            Log.LogDebug(
-                "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j);
+          Log.LogDebug(
+              "Peak_%d : gaussAmp far from spectrum max_value (Angstrom)", j);
           result->PeakListDetectionStatus.push_back(status);
         }
       }
@@ -259,8 +248,7 @@ std::shared_ptr<const CLineDetectionResult> CLineDetection::Compute(
             (boost::format("Peak_%d : ratioAmp<m_cut (%f<%f)") % j % ratioAmp %
              m_cut)
                 .str();
-        if (!m_bypassDebug)
-          Log.LogDebug("Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut);
+        Log.LogDebug("Peak_%d : ratioAmp<m_cut (%f<%f)", j, ratioAmp, m_cut);
         result->PeakListDetectionStatus.push_back(status);
         // add this peak range to retest list
         retestPeaks.push_back(resPeaks[j]);
@@ -469,9 +457,8 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
                             TGaussParamsList retestGaussParams,
                             CLineCatalog::TLineVector strongLines,
                             Int32 winsize, Float64 cut) {
-  if (!m_bypassDebug)
-    Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
-                 retestPeaks.size(), winsize, strongLines.size());
+  Log.LogDebug("Retest %d peaks, winsize = %d, strongLines.size() = %d.",
+               retestPeaks.size(), winsize, strongLines.size());
 
   TGaussParamsList selectedgaussparams;
   TInt32RangeList selectedretestPeaks;
@@ -486,24 +473,21 @@ bool CLineDetection::Retest(const CSpectrum &spectrum,
     for (int l = 0; l < strongLines.size(); l++) {
       if (strongLines[l].GetPosition() - winsize / 2.0 < center &&
           strongLines[l].GetPosition() + winsize / 2.0 > center) {
-        if (!m_bypassDebug)
-          Log.LogDebug("The strongLine[%d].GetPosition() == %f is within "
-                       "winsize centered on %f.",
-                       l, strongLines[l].GetPosition(), center);
+        Log.LogDebug("The strongLine[%d].GetPosition() == %f is within "
+                     "winsize centered on %f.",
+                     l, strongLines[l].GetPosition(), center);
         selectedretestPeaks.push_back(retestPeaks[k]);
         selectedgaussparams.push_back(retestGaussParams[k]);
       } else {
-        if (!m_bypassDebug)
-          Log.LogDebug("The strongLine[%d].GetPosition() == %f is not within "
-                       "winsize centered on %f.",
-                       l, strongLines[l].GetPosition(), center);
+        Log.LogDebug("The strongLine[%d].GetPosition() == %f is not within "
+                     "winsize centered on %f.",
+                     l, strongLines[l].GetPosition(), center);
       }
     }
   }
 
   if (selectedretestPeaks.size() < 1) {
-    if (!m_bypassDebug)
-      Log.LogDebug("No retestPeaks were selected.");
+    Log.LogDebug("No retestPeaks were selected.");
     return false;
   }
 
