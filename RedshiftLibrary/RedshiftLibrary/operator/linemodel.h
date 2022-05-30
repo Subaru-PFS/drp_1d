@@ -154,7 +154,8 @@ public:
                       const std::string &opt_continuumreest = "no");
 
   void InitTplratioPriors();
-
+  void evaluateContinuumAmplitude(
+      const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
   bool m_enableWidthFitByGroups = false;
 
   Float64 m_linesmodel_nsigmasupport;
@@ -198,7 +199,7 @@ public:
   std::string m_opt_tplratio_prior_dirpath = "";
   std::string m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
-
+  Float64 m_opt_continuum_null_amp_threshold = 3 * N_SIGMA_SUPPORT;
   bool m_opt_lya_forcefit;
   bool m_opt_lya_forcedisablefit;
   Float64 m_opt_lya_fit_asym_min;
