@@ -115,7 +115,6 @@
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
-#include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
@@ -783,17 +782,6 @@ class GlobalException: public AmzException
  public:
   using AmzException::AmzException;
 };
-
-
-class CSolveDescription
-{
- public:
-  CSolveDescription(){}
-  ~CSolveDescription(){}
-    
-  static const std::string GetDescription(const std::string& method);
-};
-
 class CSolve{
  public:
   CSolve()=delete;
