@@ -268,6 +268,20 @@ public:
     return true;
   }
 
+  static bool isoverlapping(const CRange<T> &a, const CRange<T> &b) {
+    return std::max(a.GetBegin(), b.GetBegin()) <=
+           std::min(a.GetEnd(), b.GetEnd());
+  }
+
+  static CRange<T> mergeOverlappingRanges(const CRange<T> &a,
+                                          const CRange<T> &b) {
+    CRange<T> ab(std::min(a.GetBegin(), b.GetBegin()),
+                 std::max(a.GetEnd(), b.GetEnd()));
+    /*ab.SetBegin(std::min(a.GetBegin(), b.GetBegin()));
+    ab.SetEnd(std::max(a.GetEnd(), b.GetEnd()));*/
+    return ab;
+  }
+
 private:
   T m_Begin;
   T m_End;

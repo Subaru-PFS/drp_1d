@@ -432,11 +432,11 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
   Int32 nlines = eIdx_list.size();
   if (nlines != subeIdx_list.size())
     THROWG(INTERNAL_ERROR, " index sizes do not match");
-  TInt32List indexes =
+  std::vector<CRange<Int32>> indexRangeList =
       getlambdaIndexesUnderLines(eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI);
 
-  if (!indexes.size())
-    THROWG(INTERNAL_ERROR, "empty indexes");
+  if (!indexRangeList.size())
+    THROWG(INTERNAL_ERROR, "empty indexRanges ");
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
@@ -455,25 +455,28 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
     polynom_coeffs = getPolynomCoeffs(eIdx_list[0]);
 
   // compute continuum
-  for (const auto &t : indexes) {
-    continuumFlux[t] =
-        substract_abslinesmodel ? absLinesModelFlux[t] : ContinuumFluxAxis[t];
-    if (m_enableAmplitudeOffsets)
-      continuumFlux[t] += polynom_coeffs.x0 +
-                          polynom_coeffs.x1 * spectralAxis[t] +
-                          polynom_coeffs.x2 * spectralAxis[t] * spectralAxis[t];
-  }
+  for (const auto &r : indexRangeList)
+    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++) {
+      continuumFlux[t] =
+          substract_abslinesmodel ? absLinesModelFlux[t] : ContinuumFluxAxis[t];
+      if (m_enableAmplitudeOffsets)
+        continuumFlux[t] +=
+            polynom_coeffs.x0 + polynom_coeffs.x1 * spectralAxis[t] +
+            polynom_coeffs.x2 * spectralAxis[t] * spectralAxis[t];
+    }
   // substarct continuum from spectrum flux
   const auto &SpcFluxAxis = m_SpcFluxAxis;
   CSpectrumFluxAxis fluxMinusContinuum(SpcFluxAxis);
-  for (const auto &t : indexes) {
-    fluxMinusContinuum[t] -= continuumFlux[t];
-  }
+  for (const auto &r : indexRangeList)
+    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++)
+      fluxMinusContinuum[t] -= continuumFlux[t];
+
   // estimate the integrated flux between obs. spectrum and continuum:
   // trapezoidal intg
   Float64 sumFlux = 0.0;
   Float64 sumErr = 0.0;
-  integrateFluxes_usingTrapez(fluxMinusContinuum, indexes, sumFlux, sumErr);
+  integrateFluxes_usingTrapez(fluxMinusContinuum, indexRangeList, sumFlux,
+                              sumErr);
 
   if (sumErr <= 0)
     return;
@@ -482,17 +485,24 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
   snrdi = std::abs(fluxdi) / sqrt(sumErr);
   return;
 }
-
-TInt32List CLineModelFitting::getlambdaIndexesUnderLines(
+/**
+ * @brief
+ *
+ * @param eIdx_list
+ * @param subeIdx_list
+ * @param sigma_support
+ * @return std::vector<CRange<Int32>>
+ */
+std::vector<CRange<Int32>> CLineModelFitting::getlambdaIndexesUnderLines(
     const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
     const Float64 &sigma_support) const {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
-  TInt32List indexes;
-  for (Int32 kl = 0; kl < eIdx_list.size(); kl++) {
-    Int32 eIdx = eIdx_list[kl];
-    Int32 subeIdx = subeIdx_list[kl];
+  std::vector<CRange<Int32>> indexRangeList(eIdx_list.size());
+  for (Int32 i = 0; i < eIdx_list.size(); i++) {
+    Int32 eIdx = eIdx_list[i];
+    Int32 subeIdx = subeIdx_list[i];
 
     Float64 mu = NAN;
     Float64 LineWidth = NAN;
@@ -501,29 +511,73 @@ TInt32List CLineModelFitting::getlambdaIndexesUnderLines(
 
     Float64 winsizeAngstrom = LineWidth * sigma_support;
 
-    TInt32Range indexRange = CLineModelElement::EstimateIndexRange(
+    indexRangeList[i] = CLineModelElement::EstimateIndexRange(
         spectralAxis, mu, m_lambdaRange, winsizeAngstrom);
-
-    auto newindices = indexRange.SpreadOver(1);
-    indexes.insert(indexes.end(), newindices.begin(), newindices.end());
   }
-  // remove duplicate indexes
-  std::sort(indexes.begin(), indexes.end());
-  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
-  return indexes;
+
+  if (eIdx_list.size() == 1)
+    return indexRangeList;
+  std::vector<CRange<Int32>> nonOverlappingIndexRangeList;
+  // check overlapping between elements
+  TInt32List indexesFitted;
+  // assuming eIdx_list is sorted
+  TInt32List overlappingIndices;
+  for (Int32 i = 0; i < eIdx_list.size(); i++) {
+    Int32 nooverlap = 0;
+    auto it =
+        std::find(overlappingIndices.begin(), overlappingIndices.end(), i);
+    if (it != overlappingIndices.end())
+      // i already overlaps with a previous index, skip
+      continue;
+
+    for (Int32 j = i + 1; j < eIdx_list.size(); j++) {
+      auto it =
+          std::find(overlappingIndices.begin(), overlappingIndices.end(), j);
+      if (it != overlappingIndices.end())
+        // j already overlaps with a previous index, skip
+        continue;
+      bool b =
+          CRange<Int32>::isoverlapping(indexRangeList[i], indexRangeList[j]);
+      /*
+      //below is a duplicate of the previously done computation
+      bool b = m_Elements.checkLineperElementOverlapping(
+          eIdx_list[i], eIdx_list[j], subeIdx_list[i], subeIdx_list[j],
+          m_Redshift, m_overlapThresHybridFit);*/
+
+      if (!b) {
+        nooverlap++;
+        continue;
+      }
+
+      // we identified overlapping element, crop ranges
+      CRange<Int32> mergedRange = CRange<Int32>::mergeOverlappingRanges(
+          indexRangeList[i], indexRangeList[j]);
+
+      nonOverlappingIndexRangeList.push_back(mergedRange);
+      overlappingIndices.push_back(j); // tell that j is overlapping with i
+      indexRangeList[i] = mergedRange;
+    }
+    // eIdx_[i] doesnt overlap with any element
+    if (nooverlap == eIdx_list.size() - i - 1)
+      nonOverlappingIndexRangeList.push_back(indexRangeList[i]);
+  }
+
+  return nonOverlappingIndexRangeList;
 }
 
 /**
- * @brief Construct a new clinemodelfitting::integratefluxes usingtrapez object
+ * @brief Construct a new clinemodelfitting::integratefluxes usingtrapez
+ * object
  *
  * @param fluxMinusContinuum
- * @param indexes
+ * @param indexRangeList
  * @param sumFlux
  * @param sumErr
  */
 void CLineModelFitting::integrateFluxes_usingTrapez(
-    const CSpectrumFluxAxis &fluxMinusContinuum, const TInt32List &indexes,
-    Float64 &sumFlux, Float64 &sumErr) const {
+    const CSpectrumFluxAxis &fluxMinusContinuum,
+    const std::vector<CRange<Int32>> &indexRangeList, Float64 &sumFlux,
+    Float64 &sumErr) const {
 
   sumFlux = 0.0;
   sumErr = 0.0;
@@ -531,15 +585,18 @@ void CLineModelFitting::integrateFluxes_usingTrapez(
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   if (spectralAxis.GetSamplesCount() < 2)
     THROWG(INTERNAL_ERROR, "Not enough samples in spectral axis");
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
-  for (Int32 i = 0; i < indexes.size() - 1; i++) {
-    Int32 t = indexes[i];
-    Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
-    sumFlux += trapweight * (fluxMinusContinuum[t + 1] + fluxMinusContinuum[t]);
 
-    Float64 ea = ErrorNoContinuum[t] * ErrorNoContinuum[t];
-    Float64 eb = ErrorNoContinuum[t + 1] * ErrorNoContinuum[t + 1];
-    sumErr += trapweight * trapweight * (eb + ea);
+  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  for (auto &r : indexRangeList) {
+    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++) {
+      Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
+      sumFlux +=
+          trapweight * (fluxMinusContinuum[t + 1] + fluxMinusContinuum[t]);
+
+      Float64 ea = ErrorNoContinuum[t] * ErrorNoContinuum[t];
+      Float64 eb = ErrorNoContinuum[t + 1] * ErrorNoContinuum[t + 1];
+      sumErr += trapweight * trapweight * (eb + ea);
+    }
   }
   return;
 }
@@ -609,8 +666,8 @@ Float64 CLineModelFitting::getModelFluxDerivZContinuumVal(Int32 idx) const {
 //     }
 //   }
 //   for (int idx = 0;idx<spectralAxis.GetSamplesCount(); idx ++ ){
-//     m_unscaleContinuumFluxAxisDerivZ[idx] = m_observeGridContinuumFlux[idx] *
-//     spectralAxis[idx] / (1+m_Redshift) / (1+m_Redshift);
+//     m_unscaleContinuumFluxAxisDerivZ[idx] = m_observeGridContinuumFlux[idx]
+//     * spectralAxis[idx] / (1+m_Redshift) / (1+m_Redshift);
 //   }
 //
 // }
@@ -683,13 +740,13 @@ Float64 CLineModelFitting::getModelFluxDerivVelAbsorptionVal(Int32 idx) const {
 }
 
 /**
- * \brief For each line in each group of the argument, finds the associated line
- *in the catalog and saves this information to m_Elements. Converts the argument
- *restLineList to a group list. For each entry in this list: For each line in
- *this entry: Finds the index in the catalog from the line name and type. Saves
- *the line, the catalog index and the nominal amplitude for the line thusly
- *associated to this line. If at least one line was found, save this result in
- *m_Elements.
+ * \brief For each line in each group of the argument, finds the associated
+ *line in the catalog and saves this information to m_Elements. Converts the
+ *argument restLineList to a group list. For each entry in this list: For each
+ *line in this entry: Finds the index in the catalog from the line name and
+ *type. Saves the line, the catalog index and the nominal amplitude for the
+ *line thusly associated to this line. If at least one line was found, save
+ *this result in m_Elements.
  **/
 void CLineModelFitting::LoadCatalog(
     const CLineCatalog::TLineVector &restLineList) {
@@ -844,12 +901,12 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(
 }
 
 /**
- * \brief Generates a continuum from the fitting with a set of templates : uses
- * the templatefitting operator
- * TODO: LoadFitContinuum should be limited to reading continuum values from the
- * variable class, especially that we want that continuum fitting results are
- * saved in tplfitStore container outside CElementList and these stores will be
- * injected in the class whenever required !
+ * \brief Generates a continuum from the fitting with a set of templates :
+ * uses the templatefitting operator
+ * TODO: LoadFitContinuum should be limited to reading continuum values from
+ * the variable class, especially that we want that continuum fitting results
+ * are saved in tplfitStore container outside CElementList and these stores
+ * will be injected in the class whenever required !
  * TODO: study this possibility before doing the change
  */
 void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
@@ -1037,7 +1094,8 @@ Int32 CLineModelFitting::ApplyContinuumOnGrid(
   if (spcmodel == nullptr)
     THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
 
-  // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not AxisSampleList
+  // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
+  // AxisSampleList
   m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
 
   return 0;
@@ -1272,8 +1330,8 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
   }
   if (m_ContinuumComponent == "fromspectrum") {
     m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
-    // the continuum is set to the spectrum continuum and the observed spectrum
-    // is the raw spectrum
+    // the continuum is set to the spectrum continuum and the observed
+    // spectrum is the raw spectrum
     m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
     m_SpcFluxAxis = m_inputSpc.GetRawFluxAxis();
     m_ContinuumFluxAxis = m_inputSpc.GetContinuumFluxAxis();
@@ -1341,8 +1399,8 @@ void CLineModelFitting::SetFitContinuum_FitValues(
 }
 
 /**
- * \brief This function prepares the continuum for use in the fit with the line
- *elements. Rebin with PFG buffer Find and apply amplitude factor from
+ * \brief This function prepares the continuum for use in the fit with the
+ *line elements. Rebin with PFG buffer Find and apply amplitude factor from
  *previously fitted tpl
  **/
 void CLineModelFitting::PrepareContinuum() {
@@ -1486,15 +1544,15 @@ bool CLineModelFitting::initDtd() {
 }
 
 /**
- * \brief Prepares the context and fits the Linemodel to the spectrum, returning
- *the merit of the fit. Prepare the continuum. Initialize the model spectrum.
- * Prepare the elements.
- * Fit the amplitudes of each element independently.
- * Fit the amplitude of all elements together with iterative solver: Nelder Mead
- *Simplex. Fit the amplitude of all elements together with linear solver:
- *gsl_multifit_wlinear. Fit the amplitudes of each element independently, unless
- *there is overlap. Apply a continuum iterative re-estimation with lines removed
- *from the initial spectrum. Apply rules. Create spectrum model. Return merit.
+ * \brief Prepares the context and fits the Linemodel to the spectrum,
+ *returning the merit of the fit. Prepare the continuum. Initialize the model
+ *spectrum. Prepare the elements. Fit the amplitudes of each element
+ *independently. Fit the amplitude of all elements together with iterative
+ *solver: Nelder Mead Simplex. Fit the amplitude of all elements together with
+ *linear solver: gsl_multifit_wlinear. Fit the amplitudes of each element
+ *independently, unless there is overlap. Apply a continuum iterative
+ *re-estimation with lines removed from the initial spectrum. Apply rules.
+ *Create spectrum model. Return merit.
  **/
 Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
@@ -1558,9 +1616,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   Float64 merit = INFINITY; // initializing 'on the fly' best-merit
   Float64 meritprior = 0.0; // initializing 'on the fly' best-merit-prior
   TFloat64List meritTplratio(
-      nfitting, INFINITY); // initializing 'on the fly' best-merit per tplratio
+      nfitting,
+      INFINITY); // initializing 'on the fly' best-merit per tplratio
   TFloat64List meritPriorTplratio(
-      nfitting, 0.0); // initializing 'on the fly' best-merit-prior per tplratio
+      nfitting,
+      0.0); // initializing 'on the fly' best-merit-prior per tplratio
   for (Int32 icontfitting = 0; icontfitting < ncontinuumfitting;
        icontfitting++) {
     if (m_ContinuumComponent != "nocontinuum") {
@@ -1628,8 +1688,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         setTplshapeModel(ifitting, false);
         // prepare the Lya width and asym coefficients if the asymfit profile
         // option is met INFO: tpl-shape are often ASYMFIXED in the tplshape
-        // catalog files, for the lyaE profile, as of 2016-01-11 INFO: tplshape
-        // can override the lyafitting, see m_opt_lya_forcefit
+        // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
+        // tplshape can override the lyafitting, see m_opt_lya_forcefit
         setLyaProfile(m_Redshift,
                       m_CatalogTplShape.GetCatalog(ifitting).GetList(), true);
       } else {
@@ -1707,8 +1767,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         }
       }
 
-      // fit the amplitude of all elements together (but Emission or Absorption
-      // separately) with iterative   solver: lmfit
+      // fit the amplitude of all elements together (but Emission or
+      // Absorption separately) with iterative   solver: lmfit
       if (m_fittingmethod == "lmfit") {
         // Log.LogInfo( "Linemodel: Fitting method lmfit, z= %f", m_Redshift);
         SetVelocityEmission(m_velocityEmissionInit);
@@ -1749,8 +1809,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             // Log.LogInfo("LineModel LMfit: retVal = %d", retVal);
             NegVal = controller->removeNegAmpLine();
             // Log.LogInfo("LineModel LMfit: NegVal = %s", (NegVal?"t":"f") );
-            // Log.LogInfo("LineModel LMfit: merit = %.0f ; bestMerit : %.0f ",
-            // controller->getMerit(), bestMerit );
+            // Log.LogInfo("LineModel LMfit: merit = %.0f ; bestMerit : %.0f
+            // ", controller->getMerit(), bestMerit );
             if (retVal == 0 && !NegVal && controller->getMerit() < bestMerit) {
 
               bestMerit = controller->getMerit();
@@ -1775,7 +1835,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             setFitContinuum_tplAmplitude(bestController->getContinuumAmp(),
                                          bestController->getContinuumAmpErr(),
                                          polyCoeffs);
-            // setFitContinuum_tplAmplitude( bestController->getContinuumAmp());
+            // setFitContinuum_tplAmplitude(
+            // bestController->getContinuumAmp());
           } else if (bestController->isRedshiftFitted()) {
             setRedshift(bestController->getRedshift(),
                         bestController->isContinuumLoaded());
@@ -1838,8 +1899,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_enableLambdaOffsetsFit);
       }
 
-      // fit the amplitude of all elements AND continuum amplitude together with
-      // linear solver: gsl_multifit_wlinear
+      // fit the amplitude of all elements AND continuum amplitude together
+      // with linear solver: gsl_multifit_wlinear
       if (m_fittingmethod == "svdlc" || m_fittingmethod == "svdlcp2") {
         // 1. fit only the current continuum
         // prepare continuum on the observed grid
@@ -1908,15 +1969,16 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 {
                     break;
                 }
-                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j );
+                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j
+        );
 
                 //prepare continuum on the observed grid
                 m_fitContinuum_tplFitEbmvCoeff = 0;
                 m_fitContinuum_tplFitMeiksinIdx = 0;
                 m_fitContinuum_tplName = tpl.GetName();
-                Log.LogDebug( "    model: fitting svdlc, with continuum-tpl=%s",
-        m_fitContinuum_tplName.c_str()); setRedshift(m_Redshift, true);
-                m_fitContinuum_tplFitAmplitude = 1.0;
+                Log.LogDebug( "    model: fitting svdlc, with
+        continuum-tpl=%s", m_fitContinuum_tplName.c_str());
+        setRedshift(m_Redshift, true); m_fitContinuum_tplFitAmplitude = 1.0;
                 setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude);
 
                 TInt32List validEltsIdx = GetModelValidElementsIndexes();
@@ -1938,9 +2000,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     m_fitContinuum_tplFitAmplitude =
         ampsfitted[ampsfitted.size()-1]; if(1) //not needed here ?
                     {
-                        Log.LogDebug( "    model: fitting svdlc, amp found=%e",
-        m_fitContinuum_tplFitAmplitude); Log.LogDebug( "    model: fitting
-        svdlc, chi2 found=%e", chi2_cl); m_fitContinuum_tplFitMerit = -1;
+                        Log.LogDebug( "    model: fitting svdlc, amp
+        found=%e", m_fitContinuum_tplFitAmplitude); Log.LogDebug( "    model:
+        fitting svdlc, chi2 found=%e", chi2_cl); m_fitContinuum_tplFitMerit =
+        -1;
                         //m_fitContinuum_tplFitEbmvCoeff = -1;
                         //m_fitContinuum_tplFitMeiksinIdx = -1;
                         m_fitContinuum_tplFitDtM = -1;
@@ -1984,8 +2047,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum,
                             m_ContinuumFluxAxis, redshift);
 
-        // apply a continuum iterative re-estimation with lines removed from the
-        // initial spectrum
+        // apply a continuum iterative re-estimation with lines removed from
+        // the initial spectrum
         Int32 nIt = contreest_iterations;
         Int32 it = 0;
         while (it < nIt) {
@@ -2190,9 +2253,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                     ? GetModelHaStrongest()
                     : false; // result per tplratio
 
-          TStringList strongELSNRAboveCut; // = getLinesAboveSNR(3.5); //this is
-                                           // costing a lot of processing time,
-                                           // so deactivated for now.
+          TStringList strongELSNRAboveCut; // = getLinesAboveSNR(3.5); //this
+                                           // is costing a lot of processing
+                                           // time, so deactivated for now.
           m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
 
           // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,
@@ -2256,8 +2319,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             }
 
             if (allampzero &&
-                !savedAmp) // TODO: this case should be treated more carefully,
-                           // save dtm, mtm, and more...
+                !savedAmp) // TODO: this case should be treated more
+                           // carefully, save dtm, mtm, and more...
             {
               m_FittedAmpTplshape[ifitting][iElts] = 0.0;
             }
@@ -2277,8 +2340,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           m_tplshapeBestTplIsmCoeff =
               m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
           m_tplshapeBestTplAmplitude =
-              m_FittedAmpTplshape[savedIdxFitted][0]; // Should be only 1 elt in
-                                                      // tpl ratio mode...
+              m_FittedAmpTplshape[savedIdxFitted][0]; // Should be only 1 elt
+                                                      // in tpl ratio mode...
           m_tplshapeBestTplDtm =
               m_DtmTplshape[savedIdxFitted]
                            [0]; // Should be only 1 elt in tpl ratio mode...
@@ -2327,7 +2390,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     }
 
     if (m_rigidity == "tplshape") {
-      // m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, savedIdxFitted
+      // m_CatalogTplShape.SetMultilineNominalAmplitudes( *this,
+      // savedIdxFitted
       // );
       bool retSetMultiAmplFast =
           SetMultilineNominalAmplitudesFast(savedIdxFitted);
@@ -2416,13 +2480,14 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms(Int32 dustfit,
   m_secondpass_fitContinuum_dustfit = dustfit;
   m_secondpass_fitContinuum_igm = meiksinfit;
   m_secondpass_fitContinuum_outsidelinesmask =
-      outsidelinemask; // hardcoded deactivated because ortho templates are used
+      outsidelinemask; // hardcoded deactivated because ortho templates are
+                       // used
   m_secondpass_fitContinuum_observedFrame = observedFrame;
 
   if (1) {
-    Log.LogDetail(
-        "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_dustfit = %d",
-        m_secondpass_fitContinuum_dustfit);
+    Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
+                  "fitContinuum_dustfit = %d",
+                  m_secondpass_fitContinuum_dustfit);
     Log.LogDetail(
         "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
         m_secondpass_fitContinuum_igm);
@@ -2457,8 +2522,9 @@ void CLineModelFitting::reinitModel() {
 
   /*
   //check the continuum flux axis
-  const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
-  for(Int32 j=0; j<m_ContinuumFluxAxis.GetSamplesCount(); j++)
+  const CSpectrumSpectralAxis& spectralAxis =
+  m_SpectrumModel.GetSpectralAxis(); for(Int32 j=0;
+  j<m_ContinuumFluxAxis.GetSamplesCount(); j++)
   {
       if(isnan(m_ContinuumFluxAxis[j]))
       {
@@ -2515,8 +2581,8 @@ CSpectrumFluxAxis CLineModelFitting::getModel(Int32 lineTypeFilter) const {
 /**
  * \brief Adds a new model to each m_Elements entry.
  * Calls reinitModel.
- * For each entry in m_Elements, addToSpectrumModel using the reinitModel output
- *as arguments.
+ * For each entry in m_Elements, addToSpectrumModel using the reinitModel
+ *output as arguments.
  **/
 void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
   reinitModel();
@@ -2600,8 +2666,8 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
         if(isnan(modelFluxAxis[j]))
         {
             THROWG(INTERNAL_ERROR,
-    "CLineModelFitting::refreshModel: NaN value found for the model spectrum at
-    lambda=%f", spectralAxis[j] ); break;
+    "CLineModelFitting::refreshModel: NaN value found for the model spectrum
+    at lambda=%f", spectralAxis[j] ); break;
         }
     }
     //*/
@@ -2632,9 +2698,10 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
 }
 
 /**
- * \brief refreshing all the grid and Adds a new model to each m_Elements entry
- *. Calls iterate on model flux to set it equal to continuum. For each entry in
- *m_Elements, addToSpectrumModel using the reinitModel output as arguments.
+ * \brief refreshing all the grid and Adds a new model to each m_Elements
+ *entry . Calls iterate on model flux to set it equal to continuum. For each
+ *entry in m_Elements, addToSpectrumModel using the reinitModel output as
+ *arguments.
  **/
 void CLineModelFitting::refreshModelInitAllGrid() {
 
@@ -2778,8 +2845,8 @@ CMask CLineModelFitting::getOutsideLinesMask() const {
 /**
  * \brief Estimates the STD outside the lines for the observed-model spectrum
  * NB: supposes the spectrum whithout continuum has a null mean value
- * input: which = 1: uses the spectrum flux continuum subtracted to compute STD
- * input: which = 2: uses the spectrum error to compute STD
+ * input: which = 1: uses the spectrum flux continuum subtracted to compute
+ *STD input: which = 2: uses the spectrum error to compute STD
  **/
 Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
   if (which != 1 && which != 2) {
@@ -2829,8 +2896,8 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
  *         Call fitAmplitudesLinSolve with the indexes of the non-negative
  *subelements. If the above call return is different than 1: For each
  *non-negative subelement, if the amplitude fitted is greater than 0, call
- *fitAmplitude on its entry. Else, SetElementAmplitude to 0. Update the index of
- *already-fitted subelements.
+ *fitAmplitude on its entry. Else, SetElementAmplitude to 0. Update the index
+ *of already-fitted subelements.
  **/
 Int32 CLineModelFitting::fitAmplitudesHybrid(
     const CSpectrumSpectralAxis &spectralAxis,
@@ -2852,12 +2919,9 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
     if (alreadyfitted) {
       continue;
     }
-    // do the fit on the ovelapping elements
-    Float64 overlapThres =
-        0.15; // 15% seemed necessary for Ha/SII complex when lines are very
-              // wide (either because of PSF or source size)
+
     TInt32List overlappingInds = m_Elements.getOverlappingElements(
-        iElts, indexesFitted, m_Redshift, overlapThres);
+        iElts, indexesFitted, m_Redshift, m_overlapThresHybridFit);
 
     // setting the fitting group info
     for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
@@ -2899,7 +2963,8 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
           overlappingInds, spectralAxis, spcFluxAxisNoContinuum,
           continuumfluxAxis, ampsfitted, errorsfitted,
           m_enableLambdaOffsetsFit);
-      // if all the amplitudes fitted don't have the same sign, do it separately
+      // if all the amplitudes fitted don't have the same sign, do it
+      // separately
       TInt32List overlappingIndsSameSign;
       if (retVal != 1 && ampsfitted.size() > 0) {
         for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
@@ -2961,8 +3026,8 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
  * @brief CLineModelFitting::estimateMeanSqFluxAndGradient
  * @param varPack: the variables of the model being fitted
  * @param normFactor
- * @param filteredEltsIdx: index of the elements included in the fit, also sets
- * the size of varPack (n=nElts+1)
+ * @param filteredEltsIdx: index of the elements included in the fit, also
+ * sets the size of varPack (n=nElts+1)
  * @param xInds: indexes of the samples where the data of the model is fitted
  * @param lineType: E or A
  * @param fluxdata: data to be fitted (already reshaped, no need to use xInds
@@ -3071,8 +3136,8 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
   size_t p =
       controller
           ->getNumberParameters(); // DOF = n amplitudes to fit (1 for each
-                                   // element) + 1 (EL velocity) + 1 Absorption
-                                   // VEl + 1 Amplitude Template
+                                   // element) + 1 (EL velocity) + 1
+                                   // Absorption VEl + 1 Amplitude Template
 
   n = xInds.size();
   if (n < nddl) {
@@ -3364,9 +3429,9 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
           controller->absVel_LmToModel(c * sqrt(gsl_matrix_get(covar, id, id)));
       controller->setVelocityAbsorption(vel, errVel);
       if (verbose) {
-        Log.LogDetail(
-            "LineModel LMfit: Absorption velocity found = %.3f with err = %.3f",
-            vel, errVel);
+        Log.LogDetail("LineModel LMfit: Absorption velocity found = %.3f "
+                      "with err = %.3f",
+                      vel, errVel);
       }
     }
 
@@ -3448,12 +3513,12 @@ Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(
  * \brief Returns a sorted set of line indices present in the supports of the
  *argument. Create a vector named indexes. If the argument ind is an index to
  *m_Elements that IsOutSideLambdaRange, return indexes. For each entry in
- *m_Elements: If the entry has a different linetype than the line corresponding
- *to ind, go to the next entry. If the entry IsOutsideLambdaRange, go to the
- *enxt entry. For each subentry in the support of entry: For each subsubentry in
- *the support of ind: If the overlap in the spectralAxis is smaller than -1 *
- *overlapThres * winsize, add entry to indexes. Sort indexes, remove duplicates
- *from indexes, and return indexes.
+ *m_Elements: If the entry has a different linetype than the line
+ *corresponding to ind, go to the next entry. If the entry
+ *IsOutsideLambdaRange, go to the enxt entry. For each subentry in the support
+ *of entry: For each subsubentry in the support of ind: If the overlap in the
+ *spectralAxis is smaller than -1 * overlapThres * winsize, add entry to
+ *indexes. Sort indexes, remove duplicates from indexes, and return indexes.
  **/
 TInt32List
 CLineModelFitting::getOverlappingElementsBySupport(Int32 ind,
@@ -3495,8 +3560,8 @@ CLineModelFitting::getOverlappingElementsBySupport(Int32 ind,
         y1 = s[iS].GetBegin();
         y2 = s[iS].GetEnd();
 
-        // Log.LogInfo( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1, x2);
-        // Log.LogInfo( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2);
+        // Log.LogInfo( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1,
+        // x2); Log.LogInfo( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2);
 
         //                if( std::max(x1,y1) < std::min(x2,y2) ){
         //                    indexes.push_back(iElts);
@@ -3812,7 +3877,8 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
  * @param continuumfluxAxis: must contain the continuum to be amp-fitted
  * @param ampsfitted: output
  * @param errorsfitted: output
- * @param polyOrder: order of the polynom to be fitted along with the continuum
+ * @param polyOrder: order of the polynom to be fitted along with the
+ * continuum
  * (-1 = disabled)
  * @return
  *
@@ -3946,7 +4012,8 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
   // boost::chrono::thread_clock::time_point stop_fit =
   // boost::chrono::thread_clock::now(); Float64 duration_fit =
   // boost::chrono::duration_cast<boost::chrono::microseconds>(stop_fit -
-  // start_fit).count(); Log.LogInfo("LineModel linear fit: prep = %.3f - fit =
+  // start_fit).count(); Log.LogInfo("LineModel linear fit: prep = %.3f - fit
+  // =
   // %.3f", duration_prep, duration_fit);
 
   if (verbose) {
@@ -4030,8 +4097,9 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
  * @brief CLineModelFitting::setLyaProfile
  * If a Lya line is present with SYMIGM profile, fit igmIdx
  * If a Lya line is present with ASYMFIT profile, fit the width and asymmetry
- * parameters If a Lya line is present with ASYMFIXED profile, set the width and
- * asymmetry parameters according to profile parameters given in the string
+ * parameters If a Lya line is present with ASYMFIXED profile, set the width
+ * and asymmetry parameters according to profile parameters given in the
+ * string
  * @param redshift, catalog (could be tplshape or linecatalog)
  * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya
  * not configured to be fitted in the catalog
@@ -4258,8 +4326,8 @@ Int32 CLineModelFitting::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
 
 /**
  * @brief CLineModelFitting::ReestimateContinuumUnderLines
- * For each line, reestimate the continuum using the original median routines on
- * a sub segment of the original spectrum
+ * For each line, reestimate the continuum using the original median routines
+ * on a sub segment of the original spectrum
  * - the subsegment is a contiguous segment around the support of all the
  * elements
  * @param EltsIdx
@@ -4343,7 +4411,8 @@ CLineModelFitting::ReestimateContinuumUnderLines(const TInt32List &EltsIdx) {
 
   /*
   // export for debug
-  FILE* fspc = fopen( "ReestimateContinuumUnderLines_correctedSpc_dbg.txt", "w+"
+  FILE* fspc = fopen( "ReestimateContinuumUnderLines_correctedSpc_dbg.txt",
+  "w+"
   ); Float64 coeffSaveSpc = 1e16; for( Int32
   t=0;t<spcBuffer.GetSampleCount();t++)
   {
@@ -4479,8 +4548,8 @@ CLineModelFitting::ReestimateContinuumApprox(const TInt32List &EltsIdx) {
 }
 
 /**
- * \brief Copies the continuum flux to the model flux, and the no continuum flux
- *receives the value of spectrum flux minus the continuum flux.
+ * \brief Copies the continuum flux to the model flux, and the no continuum
+ *flux receives the value of spectrum flux minus the continuum flux.
  **/
 void CLineModelFitting::refreshModelAfterContReestimation(
     const TInt32List &xInds, CSpectrumFluxAxis &modelFluxAxis,
@@ -4498,8 +4567,8 @@ void CLineModelFitting::refreshModelAfterContReestimation(
 }
 
 /**
- * \brief Accumulates the squared differences between model and spectrum in the
- *argument lambdaRange and returns the sum.
+ * \brief Accumulates the squared differences between model and spectrum in
+ *the argument lambdaRange and returns the sum.
  **/
 Float64 CLineModelFitting::getLeastSquareMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis =
@@ -5009,8 +5078,8 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
       snrIsrelevantList[k] = 1;
     }
 
-    // relevant if contributes to the 'thresRatio'*100 percent (ex. 80%) of the
-    // SumSNR value
+    // relevant if contributes to the 'thresRatio'*100 percent (ex. 80%) of
+    // the SumSNR value
     curRatio += snrList[k] / sumSNR;
     if (curRatio <= thresRatio) {
       snrIsrelevantList[k] = 1;
@@ -5208,10 +5277,10 @@ void CLineModelFitting::addDoubleLine(const CLine &r1, const CLine &r2,
  * /brief Calls the rules' methods depending on the JSON options.
  * If m_rulesoption is "no", do nothing.
  * If either "balmer" or "all" is in the rules string, call
- *ApplyBalmerRuleLinSolve. If "all" or "ratiorange" is in the rules string, call
- *ApplyAmplitudeRatioRangeRule parameterized for OII. If "all" or "strongweak"
- *is in the rules string, call ApplyStrongHigherWeakRule for emission and then
- *for absorption.
+ *ApplyBalmerRuleLinSolve. If "all" or "ratiorange" is in the rules string,
+ *call ApplyAmplitudeRatioRangeRule parameterized for OII. If "all" or
+ *"strongweak" is in the rules string, call ApplyStrongHigherWeakRule for
+ *emission and then for absorption.
  **/
 void CLineModelFitting::applyRules(bool enableLogs) {
   if (m_rulesoption == "no") {
@@ -5313,8 +5382,8 @@ Int32 CLineModelFitting::improveBalmerFit() {
   linetagsA.push_back(linetags::hbeta_abs);
   linetagsA.push_back(linetags::hgamma_abs);
   linetagsA.push_back(linetags::hdelta_abs);
-  // Additional lines to be fitted with the Balmer lines, WARNING: only EMISSION
-  // for now !!
+  // Additional lines to be fitted with the Balmer lines, WARNING: only
+  // EMISSION for now !!
   TStringList linetagsNII;
   linetagsNII.push_back(linetags::niia_em);
   linetagsNII.push_back(linetags::niib_em);
@@ -5502,15 +5571,15 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.Offset[iRestLine] =
         m_Elements[eIdx]->m_Lines[subeIdx].GetOffset();
 
-    if (opt_level) // brief, to save processing time, do not estimate fluxes and
-                   // high level line properties
+    if (opt_level) // brief, to save processing time, do not estimate fluxes
+                   // and high level line properties
     {
       modelSolution.FittingError[iRestLine] =
           m_Elements.getModelErrorUnderElement(eIdx, m_SpcFluxAxis,
                                                m_SpectrumModel.GetFluxAxis());
       TPolynomCoeffs polynom_coeffs = getPolynomCoeffs(eIdx);
-      // save polynom info to output them in hdf5, mainly to recontruct linemeas
-      // model
+      // save polynom info to output them in hdf5, mainly to recontruct
+      // linemeas model
       modelSolution.continuum_pCoeff0[iRestLine] = polynom_coeffs.x0;
       modelSolution.continuum_pCoeff1[iRestLine] = polynom_coeffs.x1;
       modelSolution.continuum_pCoeff2[iRestLine] = polynom_coeffs.x2;
@@ -5632,8 +5701,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
 
 /**
  * @brief Look for polynom coeffs corresponding to one specific Line
- * Here,we assume that we already fitted one line at a time, which is not really
- * the case
+ * Here,we assume that we already fitted one line at a time, which is not
+ * really the case
  * TODO: take into consideration lines fitted together for the element in
  * question
  *
@@ -5811,8 +5880,8 @@ Int32 CLineModelFitting::ApplyVelocityBound(Float64 inf, Float64 sup) {
 }
 
 /**
- * \brief this function estimates the continuum after removal(interpolation) of
- *the flux samples under the lines for a given redshift
+ * \brief this function estimates the continuum after removal(interpolation)
+ *of the flux samples under the lines for a given redshift
  * //todo: use lambdaRange in order to speed up the continuum estimation
  *process. (rmq: use lambdarange with some margin in order to not detetriorate
  *cont. estimation close to the borders)
@@ -5883,8 +5952,8 @@ void CLineModelFitting::EstimateSpectrumContinuum(Float64 opt_enhance_lines) {
 }
 
 /**
- * \brief this function returns the dtd value withing the wavelength range for a
- *given spcComponent
+ * \brief this function returns the dtd value withing the wavelength range for
+ *a given spcComponent
  *
  **/
 // TODO rename this ! not a simple getter
@@ -5898,8 +5967,8 @@ Float64 CLineModelFitting::getDTransposeD() {
 }
 
 /**
- * \brief this function returns the dtd value withing the wavelength range for a
- *given spcComponent
+ * \brief this function returns the dtd value withing the wavelength range for
+ *a given spcComponent
  *
  **/
 // TODO rename this ! not a simple getter
@@ -6048,8 +6117,8 @@ bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog) {
   for (Int32 kL = 0; kL < nLines; kL++) {
     Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
     Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-    // here below we retrieve ism coeff and apply it to nominal Amp to then set
-    // lines Nominal amplitudes
+    // here below we retrieve ism coeff and apply it to nominal Amp to then
+    // set lines Nominal amplitudes
     Float64 dustCoeff =
         m_tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
             ->m_ismCorrectionCalzetti->GetDustCoeff(

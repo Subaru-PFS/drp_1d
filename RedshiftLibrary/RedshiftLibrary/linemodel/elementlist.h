@@ -61,6 +61,9 @@ public:
   TInt32List getOverlappingElements(Int32 ind, const TInt32List &excludedInd,
                                     Float64 redshift,
                                     Float64 overlapThres) const;
+  bool checkLineperElementOverlapping(Int32 eIdx1, Int32 eIdx2, Int32 iLineRef,
+                                      Int32 iLineElt, Float64 redshift,
+                                      Float64 overlapThres) const;
 
   Int32 GetModelValidElementsNDdl() const;
   Int32 GetModelNonZeroElementsNDdl() const;

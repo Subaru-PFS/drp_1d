@@ -659,6 +659,18 @@ BOOST_AUTO_TEST_CASE(maskedRange_oneCommon) {
   BOOST_CHECK(kstart == 1);
   BOOST_CHECK(kend == 1);
 }
+BOOST_AUTO_TEST_CASE(overlappingRanges) {
+  TInt32Range range(3, 5);
+
+  TInt32Range overlappingRange(4, 5);
+  bool ret = CRange<Int32>::isoverlapping(range, overlappingRange);
+  BOOST_CHECK(ret == true);
+
+  TInt32Range nonOverlappingRange(6, 7);
+  ret = CRange<Int32>::isoverlapping(range, nonOverlappingRange);
+  BOOST_CHECK(ret == false);
+}
+
 //-----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_SUITE_END()
