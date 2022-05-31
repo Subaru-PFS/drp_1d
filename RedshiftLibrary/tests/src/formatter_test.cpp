@@ -36,29 +36,40 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_FORMATTER_
-#define _REDSHIFT_FORMATTER_
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/formatter.h"
 
-#include <sstream>
+#include <boost/test/unit_test.hpp>
+#include <math.h>
+#include <string>
 
-class Formatter {
-public:
-  Formatter() {}
-  Formatter(const Formatter &) = delete;
-  Formatter &operator=(Formatter &) = delete;
+using namespace NSEpic;
 
-  template <typename Type> Formatter &operator<<(const Type &value) {
-    stream_ << value;
-    return *this;
-  }
+BOOST_AUTO_TEST_SUITE(format)
 
-  std::string str() const { return stream_.str(); }
-  operator std::string() const { return stream_.str(); }
+BOOST_AUTO_TEST_CASE(formatter_test) {
+  std::string msg;
+  msg = Formatter() << "test " << 1;
+  BOOST_CHECK(msg == "test 1");
+  msg = Formatter() << "test " << 1.5;
+  BOOST_CHECK(msg == "test 1.5");
+  msg = Formatter() << "test " << false;
+  BOOST_CHECK(msg == "test 0");
+  msg = Formatter() << "test "
+                    << "str";
+  BOOST_CHECK(msg == "test str");
 
-  enum ConvertToString { to_str };
-  std::string operator>>(ConvertToString) { return stream_.str(); }
+  Formatter format_1;
+  format_1 << "test "
+           << "str";
+  msg = format_1.str();
+  BOOST_CHECK(msg == "test str");
 
-private:
-  std::stringstream stream_;
-};
-#endif
+  Formatter format_2;
+  format_2 << "test "
+           << "str_2";
+  msg = format_2 >> Formatter::to_str;
+  BOOST_CHECK(msg == "test str_2");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
