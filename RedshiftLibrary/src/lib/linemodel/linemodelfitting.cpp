@@ -1803,10 +1803,21 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           }
           refreshModelInitAllGrid();
           // modelSolution = GetModelSolution();
+          while (!controllers.empty()) {
+            CLmfitController *controller = controllers.back();
+            controllers.pop_back();
+            delete controller;
+          }
+
         } else {
           Log.LogError("LineModel LMfit: not able to fit values at z %f",
                        m_Redshift);
           // continue;
+          while (!controllers.empty()) {
+            CLmfitController *controller = controllers.back();
+            controllers.pop_back();
+            delete controller;
+          }
           return INFINITY;
         }
       }

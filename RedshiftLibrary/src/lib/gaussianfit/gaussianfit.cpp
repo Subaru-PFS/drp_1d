@@ -188,6 +188,7 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   firstGuessData[2] = gaussAmp;
 
   if (n < np) {
+    free(firstGuessData);
     return nStatus_IllegalInput;
   }
 
