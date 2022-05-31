@@ -40,13 +40,18 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
+
+#include <algorithm>
+
 using namespace NSEpic;
 
 CSpectrumFluxCorrectionMeiksin::CSpectrumFluxCorrectionMeiksin(
     std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins)
     : m_rawCorrections(std::move(meiksinCorrectionCurves)),
-      m_LambdaMin(m_rawCorrections[0].lbda.front()), m_LambdaMax(1215.),
-      m_zbins(std::move(zbins)) {}
+      m_LambdaMin(m_rawCorrections[0].lbda.front()),
+      m_LambdaMax(RESTLAMBDA_LYA),
+      m_LambdaSize(m_rawCorrections[0].lbda.size()), m_zbins(std::move(zbins)) {
+}
 
 Float64 CSpectrumFluxCorrectionMeiksin::getCorrection(
     Float64 redshift, Int32 meiksinIdx, Float64 lambdaRest) const {
@@ -83,62 +88,109 @@ Int32 CSpectrumFluxCorrectionMeiksin::getRedshiftIndex(Float64 z) const {
   return index;
 }
 
+// NGP interp
 Int32 CSpectrumFluxCorrectionMeiksin::getWaveIndex(Float64 w) const {
-  return Int32((w - getLambdaMin()) / m_finegridstep + 0.5);
+  Int32 LambdaSize = m_fineLambdaSize;
+  Int32 wIdx = Int32(std::round((w - getLambdaMin()) / m_finegridstep));
+  return std::min(LambdaSize - 1, std::max(0, wIdx));
+}
+
+// get wave vector inside range and aligned to fine lambda grid
+TFloat64List CSpectrumFluxCorrectionMeiksin::getWaveVector(
+    const TFloat64Range &wrange) const {
+  return getWaveVector(wrange, false);
+}
+
+TFloat64List
+CSpectrumFluxCorrectionMeiksin::getWaveVector(const TFloat64Range &wrange,
+                                              bool raw) const {
+  TFloat64List waves;
+  Float64 step = raw ? 1.0 : m_finegridstep;
+  TInt32Range idx = getWaveIndex(wrange, raw);
+  if (idx.GetLength() < 0)
+    return waves;
+  waves.resize(idx.GetLength() + 1);
+  for (Int32 i = 0; i < waves.size(); ++i)
+    waves[i] = getLambdaMin() + step * (idx.GetBegin() + i);
+
+  return waves;
+}
+
+TInt32Range
+CSpectrumFluxCorrectionMeiksin::getWaveIndex(const TFloat64Range &wrange,
+                                             bool raw) const {
+  Float64 step = raw ? 1.0 : m_finegridstep;
+  Int32 LambdaSize = raw ? m_LambdaSize : m_fineLambdaSize;
+  Int32 imin = std::min(
+      LambdaSize - 1,
+      std::max(0,
+               Int32(std::ceil((wrange.GetBegin() - getLambdaMin()) / step))));
+  Int32 imax = std::min(
+      LambdaSize - 1,
+      std::max(0,
+               Int32(std::floor((wrange.GetEnd() - getLambdaMin()) / step))));
+  return TInt32Range(imin, imax);
 }
 
 // loop over lambda values
 // for each lambda0, compute kernel_lambda0 and then multiply it by the igm
 // curve
-TFloat64List CSpectrumFluxCorrectionMeiksin::applyLSFKernel(
+TFloat64List CSpectrumFluxCorrectionMeiksin::ConvolveByLSFOneCurve(
     const TFloat64List &arr, const TFloat64List &lambdas,
-    const TFloat64Range &zbin, const std::shared_ptr<const CLSF> &lsf) {
+    const TFloat64List &fineLambdas, const TFloat64Range &zbin,
+    const std::shared_ptr<const CLSF> &lsf) const {
   if (!arr.size()) {
     THROWG(INTERNAL_ERROR,
            "Cannot convolve: either kernel or array is empty. ");
   }
 
   Int32 n = arr.size();
-  TFloat64List convolvedArr(lambdas.size());
+  TFloat64List convolvedArr(fineLambdas.size());
 
   // determine the restframe convolution range, i.e., convolRange/(1+z_center)
   TFloat64Range convRange_rest(m_convolRange.GetBegin() / (1 + zbin.GetEnd()),
                                m_convolRange.GetEnd() / (1 + zbin.GetBegin()));
-  Int32 i_min = -1, i_max = -1;
-  bool ret =
-      convRange_rest.getClosedIntervalIndices(lambdas, i_min, i_max, false);
-  if (!ret) {
+  bool overlap = convRange_rest.IntersectWith(TFloat64Range(fineLambdas));
+  if (!overlap)
     return convolvedArr;
-  }
-  Float64 tmp;
-  for (Int32 i = i_min; i <= i_max; i++) {
-    Float64 lambda0 = lambdas[i]; // lambda restframe
-    // compute the adpative kernel at lambda0
-    Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
-    TFloat64List kernel = lsf->getRestFrameProfileVector(lambda0, z_center);
-    Int32 Nhalf = int(kernel.size() / 2);
+
+  TInt32Range idx = getWaveIndex(convRange_rest, false);
+  Float64 z_center = (zbin.GetBegin() + zbin.GetEnd()) / 2.;
+  Float64 sigmaSupport =
+      lsf->GetProfile().GetNSigmaSupport() / 2. / (1.0 + z_center);
+  for (Int32 i = idx.GetBegin(); i <= idx.GetEnd(); i++) {
+    Float64 lambda0 = fineLambdas[i]; // lambda restframe
+
+    // compute the LSF kernel centered at lambda0 (restframe)
+    Float64 lambda0_obs = lambda0 * (1 + z_center);
+    Float64 half_lsf_range =
+        lsf->GetWidth(lambda0_obs) * sigmaSupport; // restframe
+    TFloat64Range lsf_range(lambda0 - half_lsf_range,
+                            lambda0 + half_lsf_range); // restframe
+    TInt32Range lsf_idx = getWaveIndex(lsf_range, true);
+    if (lsf_idx.GetBegin() < 0 || lsf_idx.GetEnd() >= m_LambdaSize)
+      THROWG(INTERNAL_ERROR,
+             "LSF kernel does not overlap meiksin curve samples");
+    if (lsf_idx.GetLength() < 0)
+      THROWG(INTERNAL_ERROR,
+             "LSF kernel smaller than Meiksin wavelength steps");
+    TFloat64List lambdas_obs(lsf_idx.GetLength() + 1);
+    std::transform(lambdas.cbegin() + lsf_idx.GetBegin(),
+                   lambdas.cbegin() + lsf_idx.GetEnd() + 1, lambdas_obs.begin(),
+                   [z_center](Float64 v) { return v * (1.0 + z_center); });
+    TFloat64List kernel =
+        lsf->getNormalizedProfileVector(lambdas_obs, lambda0_obs);
     if (!kernel.size()) {
       THROWG(INTERNAL_ERROR,
              "Cannot convolve: either kernel or array is empty. ");
     }
 
-    tmp = 0.0;                              // sum over the intersection area
-    for (Int32 j = -Nhalf; j <= Nhalf; j++) // center kernel at arr[j]
-    {
-      if (i + j >= 0) {
-        if (i + j >= n) {
-          tmp += kernel[Nhalf + j];
-        } else {
-          tmp += arr[i + j] * kernel[Nhalf + j];
-        }
-      } else {
-        tmp += arr[0] * kernel[Nhalf + j];
-      }
-    }
-    convolvedArr[i] = tmp;
+    for (Int32 j = 0; j < kernel.size(); ++j)
+      convolvedArr[i] += kernel[j] * arr[lsf_idx.GetBegin() + j];
   }
   return convolvedArr;
 }
+
 /**
  * convolve only on m_convolRange/(1+zbin_meiksin), while keeping vector size
  */
@@ -149,8 +201,9 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
 
   TFloat64Range range(m_LambdaMin, m_LambdaMax);
   TFloat64List finelbdaGrid = range.SpreadOver(m_finegridstep);
+  m_fineLambdaSize = finelbdaGrid.size();
 
-  std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
+  // std::vector<MeiksinCorrection> corrections(m_rawCorrections.size());
   m_corrections.resize(m_rawCorrections.size());
 
   for (Int32 i = 0; i < m_rawCorrections.size(); i++) {
@@ -159,11 +212,11 @@ void CSpectrumFluxCorrectionMeiksin::convolveByLSF(
     m_corrections[i].lbda = finelbdaGrid;
 
     for (Int32 j = 0; j < m_rawCorrections[i].fluxcorr.size(); j++) {
-      TFloat64List interpolatedConvolvedArr = applyLSFKernel(
-          m_rawCorrections[i].fluxcorr[j], m_corrections[i].lbda, zbin, lsf);
+      TFloat64List interpolatedConvolvedArr = ConvolveByLSFOneCurve(
+          m_rawCorrections[i].fluxcorr[j], m_rawCorrections[i].lbda,
+          finelbdaGrid, zbin, lsf);
       m_corrections[i].fluxcorr.push_back(std::move(interpolatedConvolvedArr));
     }
-    m_corrections[i].lbda = finelbdaGrid;
   }
 
   m_convolved = true;

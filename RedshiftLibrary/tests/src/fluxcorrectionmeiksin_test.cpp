@@ -404,13 +404,13 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test) {
   TFloat64List igmLambdas = _lbdaRange.SpreadOver(lbdaStep);
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj =
       fakeFluxCorrectionMeiksin(igmLambdas, fluxcorr);
-  fluxMeiksinObj.m_convolRange = _lbdaRange;
-  CRange<Float64> lbdaRange(fluxMeiksinObj.getLambdaMin(),
-                            fluxMeiksinObj.getLambdaMax()); // 200..1299
+  fluxMeiksinObj.m_convolRange = TFloat64Range(4000., 12000.);
+  fluxMeiksinObj.m_finegridstep = lbdaStep;
+  fluxMeiksinObj.m_fineLambdaSize = igmLambdas.size();
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr.size());
 
-  TFloat64List conv =
-      fluxMeiksinObj.applyLSFKernel(fluxcorr, igmLambdas, zbin, lsf);
+  TFloat64List conv = fluxMeiksinObj.ConvolveByLSFOneCurve(
+      fluxcorr, igmLambdas, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
@@ -442,13 +442,13 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution) {
   TFloat64List igmLambdas = _lbdaRange.SpreadOver(lbdaStep);
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj =
       fakeFluxCorrectionMeiksin(igmLambdas, fluxcorr);
-  fluxMeiksinObj.m_convolRange = _lbdaRange;
-  CRange<Float64> lbdaRange(fluxMeiksinObj.getLambdaMin(),
-                            fluxMeiksinObj.getLambdaMax()); // 200..1299
+  fluxMeiksinObj.m_convolRange = TFloat64Range(4000., 12000.);
+  fluxMeiksinObj.m_finegridstep = lbdaStep;
+  fluxMeiksinObj.m_fineLambdaSize = igmLambdas.size();
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr.size());
 
-  TFloat64List conv =
-      fluxMeiksinObj.applyLSFKernel(fluxcorr, igmLambdas, zbin, lsf);
+  TFloat64List conv = fluxMeiksinObj.ConvolveByLSFOneCurve(
+      fluxcorr, igmLambdas, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM_cteResolution.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
@@ -481,21 +481,23 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4) {
   TFloat64List igmLambdas = _lbdaRange.SpreadOver(lbdaStep);
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj =
       fakeFluxCorrectionMeiksin(igmLambdas, fluxcorr_25_4);
-  fluxMeiksinObj.m_convolRange = _lbdaRange;
-  CRange<Float64> lbdaRange(fluxMeiksinObj.getLambdaMin(),
-                            fluxMeiksinObj.getLambdaMax()); // 200..1299
+  fluxMeiksinObj.m_convolRange = TFloat64Range(4000., 12000.);
+  fluxMeiksinObj.m_finegridstep = lbdaStep;
+  fluxMeiksinObj.m_fineLambdaSize = igmLambdas.size();
 
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr_25_4.size());
 
-  TFloat64List conv =
-      fluxMeiksinObj.applyLSFKernel(fluxcorr_25_4, igmLambdas, zbin, lsf);
+  TFloat64List conv = fluxMeiksinObj.ConvolveByLSFOneCurve(
+      fluxcorr_25_4, igmLambdas, igmLambdas, zbin, lsf);
 
-  FILE *fspc = fopen("convolvedIGM_cteResolution_Z25_Curv4.csv", "w+");
-  fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
-  for (Int32 i = 0; i < igmLambdas.size(); i++) {
-    fprintf(fspc, "%f,%f,%f\n", igmLambdas[i], fluxcorr_25_4[i], conv[i]);
-  }
-  fclose(fspc);
+  /*
+   FILE *fspc = fopen("convolvedIGM_cteResolution_Z25_Curv4.csv", "w+");
+   fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");
+   for (Int32 i = 0; i < igmLambdas.size(); i++) {
+     fprintf(fspc, "%f,%f,%f\n", igmLambdas[i], fluxcorr_25_4[i], conv[i]);
+   }
+   fclose(fspc);
+   */
 
   BOOST_CHECK_EQUAL(conv.size(), fluxcorr_25_4.size());
   // BOOST_CHECK_EQUAL_COLLECTIONS(fluxcorr_25_4.begin(), fluxcorr_25_4.end(),
@@ -531,13 +533,15 @@ BOOST_AUTO_TEST_CASE(correction_multiply_test_CteResolution25_4_incontext) {
   CRange<Float64> lbdaRange(fluxMeiksinObj.getLambdaMin(),
                             fluxMeiksinObj.getLambdaMax()); // 200..1299
   BOOST_CHECK_EQUAL(igmLambdas.size(), fluxcorr_25_4.size());
-  fluxMeiksinObj.m_convolRange = _lbdaRange;
+  fluxMeiksinObj.m_convolRange = TFloat64Range(4000., 12000.);
+  fluxMeiksinObj.m_finegridstep = lbdaStep;
+  fluxMeiksinObj.m_fineLambdaSize = igmLambdas.size();
   fluxMeiksinObj.m_corrections.resize(1);
   fluxMeiksinObj.m_corrections[0].lbda = igmLambdas;
   fluxMeiksinObj.m_corrections[0].fluxcorr.push_back(fluxcorr_25_4);
 
-  TFloat64List conv =
-      fluxMeiksinObj.applyLSFKernel(fluxcorr_25_4, igmLambdas, zbin, lsf);
+  TFloat64List conv = fluxMeiksinObj.ConvolveByLSFOneCurve(
+      fluxcorr_25_4, igmLambdas, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedIGM_cteResolution_Z25_Curv4_context.csv", "w+"
     ); fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n"); for (Int32 i = 0;
@@ -578,13 +582,15 @@ BOOST_AUTO_TEST_CASE(correction_test) {
 
   CSpectrumFluxCorrectionMeiksin fluxMeiksinObj =
       fakeFluxCorrectionMeiksin(igmLambdas, {fluxsim});
-  fluxMeiksinObj.m_convolRange = _lbdaRange;
+  fluxMeiksinObj.m_convolRange = TFloat64Range(4000., 12000.);
+  fluxMeiksinObj.m_finegridstep = lbdaStep;
+  fluxMeiksinObj.m_fineLambdaSize = igmLambdas.size();
   fluxMeiksinObj.m_corrections.resize(1);
   fluxMeiksinObj.m_corrections[0].lbda = igmLambdas;
   fluxMeiksinObj.m_corrections[0].fluxcorr.push_back(fluxsim);
 
-  TFloat64List conv =
-      fluxMeiksinObj.applyLSFKernel(fluxsim, igmLambdas, zbin, lsf);
+  TFloat64List conv = fluxMeiksinObj.ConvolveByLSFOneCurve(
+      fluxsim, igmLambdas, igmLambdas, zbin, lsf);
   /*
     FILE* fspc = fopen( "convolvedRandom.csv", "w+" );
     fprintf(fspc, "lambdas,IGMCurve,IGMConvolvedCurve\n");

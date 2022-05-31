@@ -93,9 +93,8 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
   if (m_igmidx < 0 || range_rest.GetBegin() > RESTLAMBDA_LYA)
     return A * sigma * sqrt(2 * M_PI);
 
-  // lambda rest grid of convolved igm: will avoid NGP interp later on
-  Float64 step = 1.0 / IGM_OVERSAMPLING;
-  TFloat64List xlist_rest = range_rest.SpreadOver(step);
+  // Line support aligned to lambda rest grid of convolved igm
+  TFloat64List xlist_rest = m_igmCorrectionMeiksin->getWaveVector(range_rest);
 
   Float64 flux = 0.;
   for (Float64 x_rest : xlist_rest)

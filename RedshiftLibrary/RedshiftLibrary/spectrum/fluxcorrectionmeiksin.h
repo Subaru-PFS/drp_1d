@@ -79,6 +79,7 @@ public:
   }; // harcoded value from the number of cols in the ascii files
   Int32 getRedshiftIndex(Float64 z) const;
   Int32 getWaveIndex(Float64 w) const;
+  TFloat64List getWaveVector(const TFloat64Range &wrange) const;
   Float64 getCorrection(Int32 zIdx, Int32 meiksinIdx, Int32 lbdaIdx) const {
     return m_corrections[zIdx].fluxcorr[meiksinIdx].at(lbdaIdx);
   };
@@ -100,19 +101,22 @@ private:
       correction_multiply_test_CteResolution25_4_incontext;
   friend class fluxcorrectionmeiksin_test::correction_test;
 
-  TFloat64List applyLSFKernel(const TFloat64List &arr,
-                              const TFloat64List &lambdas,
-                              const TFloat64Range &zbin,
-                              const std::shared_ptr<const CLSF> &lsf);
-  TFloat64List interpolateConvolvedCurve(const TFloat64List &Xsrc,
-                                         const TFloat64List &Xtgt,
-                                         const TFloat64List &Ysrc,
-                                         const Float64 &z_center);
+  TFloat64List
+  ConvolveByLSFOneCurve(const TFloat64List &arr, const TFloat64List &lambdas,
+                        const TFloat64List &fineLambdas,
+                        const TFloat64Range &zbin,
+                        const std::shared_ptr<const CLSF> &lsf) const;
+
+  TInt32Range getWaveIndex(const TFloat64Range &wrange, bool raw) const;
+  TFloat64List getWaveVector(const TFloat64Range &wrange, bool raw) const;
+
   TFloat64List m_zbins;
   std::vector<MeiksinCorrection> m_rawCorrections;
   std::vector<MeiksinCorrection> m_corrections;
   Float64 m_LambdaMin;
   Float64 m_LambdaMax;
+  Int32 m_LambdaSize;
+  Int32 m_fineLambdaSize;
   TFloat64Range m_convolRange;
   bool m_convolved = false;
   Float64 m_finegridstep = 1.0 / IGM_OVERSAMPLING;

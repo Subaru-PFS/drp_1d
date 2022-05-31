@@ -42,6 +42,10 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/processflow/parameterstore.h"
+
+namespace LSF_test {
+class LSF_constantWidth_test;
+}
 namespace NSEpic {
 class CLineProfile;
 class CSpectrumFluxCorrectionMeiksin;
@@ -117,16 +121,18 @@ public:
     return true;
   }; // default to true
   virtual bool IsValid() const = 0;
-  Float64 GetLineProfileVal(Float64 lambda, Float64 lambda0 = 0.) const;
-  Float64 GetLineProfileVal(Float64 lambda, Float64 lambda0,
-                            Float64 sigma0) const;
-  TFloat64List getRestFrameProfileVector(Float64 lambda0_rest, Float64 z) const;
+  Float64 GetProfileVal(Float64 lambda, Float64 lambda0 = 0.) const;
+  TFloat64List getNormalizedProfileVector(TFloat64List lambda,
+                                          Float64 lambda0) const;
 
   const CLineProfile &GetProfile() const;
   const TLSFType m_name = TLSFType::NONE;
 
 protected:
+  friend class LSF_test::LSF_constantWidth_test;
+
   CLSF() = default;
+  Float64 GetProfileVal(Float64 lambda, Float64 lambda0, Float64 sigma0) const;
 
   CLineProfile_ptr m_profile;
 };
