@@ -41,6 +41,14 @@ from pylibamazed.r_specifications import rspecifications
 from pylibamazed.Parameters import Parameters
 import numpy as np
 
+def _create_dataset_from_dict(h5_node, name, source, compress=False):
+    df = pd.DataFrame(source)
+    records = df.to_records()
+    h5_node.create_dataset(name,
+                           len(records),
+                           records.dtype,
+                           records)
+
 class AbstractOutput:
 
     def __init__(self,
@@ -284,50 +292,8 @@ class AbstractOutput:
         else:
             return self.root_results[dataset]
                     
-    def get_candidate_results(self, object_type, rank, columns=[]):
-        cr = self.object_dataframes[object_type]["model_parameters"]
-        if not columns:
-            return cr[cr['Rank'] == rank]
-        else:
-            return cr[cr['Rank'] == rank][columns]
-
-    def get_candidates_results(self, object_type, columns=[]):
-        df = pd.DataFrame()
-        cr = self.object_dataframes[object_type]["model_parameters"]
-        if not columns:
-            return cr
-        else:
-            return cr[columns]
-
-    def get_pdf(self,object_type):
-        return self.object_dataframes[object_type]["pdf"]
-
-    def get_classification_type(self):
-        return self.root_results["classification"]["Type"]
-
-    def get_classification(self):
-        return self.root_results["classification"]
-    
-    def get_fitted_continuum_by_rank(self, object_type, rank):
-        return self.object_dataframes[object_type]["continuum"][rank]
-
-    def get_fitted_model_by_rank(self, object_type, rank, method):
-        if method == "LineMeasSolve":
-            return self.object_dataframes[object_type]["linemeas_model"]
-        else:
-            return self.object_dataframes[object_type]["model"][rank]
-
-    def get_fitted_lines_by_rank(self, object_type, rank, method):
-        if method == "LineMeasSolve":
-            return self.object_dataframes[object_type]["linemeas"]
-        return self.object_dataframes[object_type]["fitted_lines"][rank]
-
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
-
-    
-    def set_manual_redshift_value(self,val):
-        self.manual_redshift=val
 
     def get_reliability(self,object_type):
         return self.object_results[object_type]["reliability"]

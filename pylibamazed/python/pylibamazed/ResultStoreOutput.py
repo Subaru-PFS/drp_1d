@@ -47,13 +47,6 @@ from pylibamazed.redshift import (PC_Get_Float64Array, PC_Get_Int32Array, CLog, 
 zlog = CLog.GetInstance()
 from pylibamazed.Exception import AmazedError,APIException
 
-def _create_dataset_from_dict(h5_node, name, source, compress=False):
-    df = pd.DataFrame(source)
-    records = df.to_records(index=False)
-    h5_node.create_dataset(name,
-                           len(records),
-                           records.dtype,
-                           records)
 
 class ResultStoreOutput(AbstractOutput): 
     def __init__(self, result_store, parameters, auto_load=True, extended_results=True):
@@ -64,77 +57,6 @@ class ResultStoreOutput(AbstractOutput):
         if auto_load:
             self.load_all()
 
-    def write_hdf5_root(self, hdf5_spectrum_node):
-        level = "root"
-        rs, root_datasets = self.filter_datasets(level)
-                
-        for ds in root_datasets:
-            if ds in self.root_results:
-                if not self.root_results[ds]:
-                    continue
-                ds_attributes = self.filter_dataset_attributes(ds)
-                dsg = hdf5_spectrum_node.create_group(ds)
-                for attr_name,attr in self.root_results[ds].items():
-                    dsg.attrs[attr_name] = attr
-
-    def write_hdf5_object_level(self, object_type, object_results_node):
-        level = "object"
-        rs, object_datasets = self.filter_datasets(level)
-        for ds in object_datasets:
-            if self.has_dataset(object_type, ds):
-                ds_size = self.get_dataset_size(object_type, ds)
-                if ds_size > 1:
-                    _create_dataset_from_dict(object_results_node,
-                                              ds,
-                                              self.object_results[object_type][ds],
-                                              "firstpass_pdf" in ds)
-                else:
-                    object_results_node.create_group(ds)
-                    for attr_name,attr in self.object_results[object_type][ds].items():
-                        object_results_node.get(ds).attrs[attr_name] = attr
-
-    def write_hdf5_method_level(self, object_type, object_results_node):
-        rs = self.results_specifications
-        rs = rs[rs["level"] == "method"]
-        methods_datasets = list(rs["hdf5_dataset"].unique())
-        for ds in methods_datasets:
-            if self.has_dataset(object_type,ds):
-                object_results_node.create_group(ds)
-                for attr_name,attr in self.object_results[object_type][ds].items():
-                    object_results_node.get(ds).attrs[attr_name] = attr
-
-    def write_hdf5_candidate_level(self, object_type, object_results_node):
-        if self.parameters.get_solve_method(object_type):
-            candidates = object_results_node.create_group("candidates")
-            level = "candidate"
-            rs, candidate_datasets = self.filter_datasets(level)
-            nb_candidates = self.get_nb_candidates(object_type)
-            for rank in range(nb_candidates):
-                candidate = candidates.create_group(self.get_candidate_group_name(rank))
-                for ds in candidate_datasets:
-                    if self.has_dataset(object_type,ds):
-                        ds_dim = self.get_dataset_size(object_type, ds, rank)
-                        if ds_dim == 1:
-                            candidate.create_group(ds)
-                            for attr_name, attr in self.object_results[object_type][ds][rank].items():
-                                candidate.get(ds).attrs[attr_name] = attr
-                        else:
-                            _create_dataset_from_dict(candidate,
-                                                      ds,
-                                                      self.object_results[object_type][ds][rank])
-        
-    def write_hdf5(self,hdf5_root,spectrum_id):
-        try:
-            obs = hdf5_root.create_group(spectrum_id)
-            self.write_hdf5_root(obs)
-
-            for object_type in self.object_types:
-                object_results = obs.create_group(object_type) #h5
-                self.write_hdf5_object_level(object_type, object_results)
-                self.write_hdf5_method_level(object_type, object_results)
-                self.write_hdf5_candidate_level(object_type, object_results)
-        except Exception as e:
-            raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR,"Failed writing h5:".format(e))
         
 
     def _get_attribute_from_result_store(self,object_type,method,data_spec,rank):
