@@ -588,7 +588,7 @@ void CLineModelFitting::integrateFluxes_usingTrapez(
 
   const auto &ErrorNoContinuum = m_ErrorNoContinuum;
   for (auto &r : indexRangeList) {
-    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++) {
+    for (Int32 t = r.GetBegin(); t < r.GetEnd(); t++) {
       Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
       sumFlux +=
           trapweight * (fluxMinusContinuum[t + 1] + fluxMinusContinuum[t]);
