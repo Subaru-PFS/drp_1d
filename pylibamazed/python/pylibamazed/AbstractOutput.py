@@ -47,7 +47,8 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     h5_node.create_dataset(name,
                            len(records),
                            records.dtype,
-                           records)
+                           records,
+                           compression="lzf")
 
 class AbstractOutput:
 
@@ -295,6 +296,4 @@ class AbstractOutput:
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
 
-    def get_reliability(self,object_type):
-        return self.object_results[object_type]["reliability"]
 
