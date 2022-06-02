@@ -49,14 +49,14 @@ BOOST_AUTO_TEST_SUITE(range_test)
 Float64 precision = 1e-12;
 
 BOOST_AUTO_TEST_CASE(range_test_int1) {
-  CRange<Int32> range1;
-  CRange<Int32> range2(0, 3);
-  CRange<Int32> range3;
+  TInt32Range range1;
+  TInt32Range range2(0, 3);
+  TInt32Range range3;
   bool result;
 
   // Test on : CRange(const std::vector<T> & v)
   TInt32List myVector = {1, 2, 3};
-  CRange<Int32> range4(myVector);
+  TInt32Range range4(myVector);
   BOOST_CHECK((range4.GetBegin() == 1 && range4.GetEnd() == 3));
 
   // test on : Bool GetIsEmpty() const
@@ -81,47 +81,47 @@ BOOST_AUTO_TEST_CASE(range_test_int1) {
   //  range1 = [-5, -1]
   //  range2 = [0, 3]
   range1.Set(-5, -1);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(result == false);
 
   // range1 = [4, 8]
   // range2 = [0, 3]
   range1.Set(4, 8);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(result == false);
 
   // range1 = [-1, 2]
   // range2 = [0, 3]
   range1.Set(-1, 2);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(
       (result == true && range3.GetBegin() == 0 && range3.GetEnd() == 2));
 
   // range1 = [0, 3]
   // range2 = [0, 3]
   range1.Set(0, 3);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(
       (result == true && range3.GetBegin() == 0 && range3.GetEnd() == 3));
 
   // range1 = [1, 2]
   // range2 = [0, 3]
   range1.Set(1, 2);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(
       (result == true && range3.GetBegin() == 1 && range3.GetEnd() == 2));
 
   // range1 = [-1, 4]
   // range2 = [0, 3]
   range1.Set(-1, 4);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(
       (result == true && range3.GetBegin() == 0 && range3.GetEnd() == 3));
 
   // range1 = [2, 4]
   // range2 = [0, 3]
   range1.Set(2, 4);
-  result = CRange<Int32>::Intersect(range1, range2, range3);
+  result = TInt32Range::Intersect(range1, range2, range3);
   BOOST_CHECK(
       (result == true && range3.GetBegin() == 2 && range3.GetEnd() == 3));
 
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_Int32_test1) {
   myVector.resize(1);
   myVector[0] = 1;
 
-  CRange<Int32> myRange(1, 1);
+  TInt32Range myRange(1, 1);
   BOOST_CHECK(myRange.GetIsEmpty() == true);
 
   TInt32List functionResult = myRange.SpreadOver(delta);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test2) {
   myVector.resize(1);
   myVector[0] = 1;
 
-  CRange<Int32> myRange(1, 10);
+  TInt32Range myRange(1, 10);
   TInt32List functionResult = myRange.SpreadOver(delta);
   BOOST_CHECK(myVector == functionResult);
 }
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test3) {
   myVector.resize(1);
   myVector[0] = 1;
 
-  CRange<Int32> myRange(1, 3);
+  TInt32Range myRange(1, 3);
   BOOST_CHECK(myRange.GetIsEmpty() == false);
 
   TInt32List functionResult = myRange.SpreadOver(delta);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(SpreadOver_test3) {
 BOOST_AUTO_TEST_CASE(SpreadOver_test4) {
   Float64 delta = 2.0;
 
-  CRange<Int32> myRange(1, 11);
+  TInt32Range myRange(1, 11);
   BOOST_CHECK(myRange.GetIsEmpty() == false);
   BOOST_CHECK(myRange.GetLength() == 10);
 
@@ -663,12 +663,71 @@ BOOST_AUTO_TEST_CASE(overlappingRanges) {
   TInt32Range range(3, 5);
 
   TInt32Range overlappingRange(4, 5);
-  bool ret = CRange<Int32>::isoverlapping(range, overlappingRange);
+  bool ret = TInt32Range::HasIntersection(range, overlappingRange);
   BOOST_CHECK(ret == true);
 
   TInt32Range nonOverlappingRange(6, 7);
-  ret = CRange<Int32>::isoverlapping(range, nonOverlappingRange);
+  ret = TInt32Range::HasIntersection(range, nonOverlappingRange);
   BOOST_CHECK(ret == false);
+}
+
+BOOST_AUTO_TEST_CASE(removeDuplicates) {
+  // no overlapping
+  std::vector<TInt32Range> indexRanges{{4, 5}, {1, 2}};
+  std::vector<TInt32Range> resRanges =
+      TInt32Range::removeOverlapping(indexRanges);
+  BOOST_CHECK(resRanges.size() == 2);
+  BOOST_CHECK(resRanges[1] == TInt32Range(4, 5));
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 2));
+
+  // partial overlapping
+  std::vector<TInt32Range> indexRanges1{{4, 5}, {3, 4}, {1, 2}};
+  resRanges = TInt32Range::removeOverlapping(indexRanges1);
+  BOOST_CHECK(resRanges.size() == 2);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 2));
+  BOOST_CHECK(resRanges[1] == TInt32Range(3, 5));
+
+  // complete overlapping
+  std::vector<TInt32Range> indexRanges2{{1, 6}, {3, 4}, {1, 2}};
+  resRanges = TInt32Range::removeOverlapping(indexRanges2);
+  BOOST_CHECK(resRanges.size() == 1);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 6));
+
+  std::vector<TInt32Range> indexRanges3{{1, 2}, {2, 3}, {3, 4}};
+  resRanges = TInt32Range::removeOverlapping(indexRanges3);
+  BOOST_CHECK(resRanges.size() == 1);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 4));
+
+  std::vector<TInt32Range> indexRanges4{{1, 4}, {3, 6}, {2, 5}};
+  resRanges = TInt32Range::removeOverlapping(indexRanges4);
+  BOOST_CHECK(resRanges.size() == 1);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 6));
+}
+
+BOOST_AUTO_TEST_CASE(unique) {
+  std::vector<TInt32Range> indexRanges{{3, 5}, {1, 2}};
+  std::vector<TInt32Range> resRanges = TInt32Range::unique(indexRanges);
+  BOOST_CHECK(resRanges.size() == 2);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 2));
+  BOOST_CHECK(resRanges[1] == TInt32Range(3, 5));
+
+  indexRanges.push_back({1, 2});
+  BOOST_CHECK(indexRanges.size() == 3);
+  resRanges = TInt32Range::unique(indexRanges);
+  BOOST_CHECK(resRanges.size() == 2);
+  BOOST_CHECK(resRanges[0] == TInt32Range(1, 2));
+  BOOST_CHECK(resRanges[1] == TInt32Range(3, 5));
+
+  std::vector<TInt32Range> indexRanges2{{3, 5}};
+  resRanges = TInt32Range::unique(indexRanges2);
+  BOOST_CHECK(resRanges.size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(doubleequal) {
+  BOOST_CHECK((TInt32Range(3, 5) == TInt32Range(3, 5)) == true);
+  BOOST_CHECK((TInt32Range(3, 5) == TInt32Range(3, 6)) == false);
+  BOOST_CHECK((TInt32Range(3, 5) == TInt32Range(1, 2)) == false);
+  BOOST_CHECK((TInt32Range(3, 5) == TInt32Range()) == false);
 }
 
 //-----------------------------------------------------------------------------

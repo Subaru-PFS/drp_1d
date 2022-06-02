@@ -94,10 +94,7 @@ public:
 
   static bool Intersect(const CRange<T> &a, const CRange<T> b,
                         CRange<T> &intersect) {
-    if ((a.GetBegin() >= b.GetBegin() && a.GetBegin() <= b.GetEnd()) ||
-        (a.GetEnd() >= b.GetBegin() && a.GetEnd() <= b.GetEnd()) ||
-        (b.GetBegin() >= a.GetBegin() && b.GetBegin() <= a.GetEnd()) ||
-        (b.GetEnd() >= a.GetBegin() && b.GetEnd() <= a.GetEnd())) {
+    if (HasIntersection(a, b)) {
       intersect.Set(std::max(a.GetBegin(), b.GetBegin()),
                     std::min(a.GetEnd(), b.GetEnd()));
       return true;
@@ -268,18 +265,46 @@ public:
     return true;
   }
 
-  static bool isoverlapping(const CRange<T> &a, const CRange<T> &b) {
+  static bool HasIntersection(const CRange<T> &a, const CRange<T> &b) {
     return std::max(a.GetBegin(), b.GetBegin()) <=
            std::min(a.GetEnd(), b.GetEnd());
   }
+  bool HasIntersectionWith(const CRange<T> r) {
+    return HasIntersection(*this, r);
+  }
 
-  static CRange<T> mergeOverlappingRanges(const CRange<T> &a,
-                                          const CRange<T> &b) {
-    CRange<T> ab(std::min(a.GetBegin(), b.GetBegin()),
-                 std::max(a.GetEnd(), b.GetEnd()));
+  static CRange<T> unionr(const CRange<T> &a, const CRange<T> &b) {
+    return CRange<T>(std::min(a.GetBegin(), b.GetBegin()),
+                     std::max(a.GetEnd(), b.GetEnd()));
     /*ab.SetBegin(std::min(a.GetBegin(), b.GetBegin()));
     ab.SetEnd(std::max(a.GetEnd(), b.GetEnd()));*/
-    return ab;
+  }
+  void unionWith(const CRange<T> r) { *this = unionr(*this, r); }
+
+  static std::vector<CRange<T>> unique(std::vector<CRange<T>> &ranges) {
+    std::sort(ranges.begin(), ranges.end());
+    ranges.erase(std::unique(ranges.begin(), ranges.end()), ranges.end());
+    return ranges;
+  }
+
+  static std::vector<CRange<T>>
+  removeOverlapping(std::vector<CRange<T>> &ranges) {
+
+    std::vector<CRange<T>> result;
+    std::sort(ranges.begin(), ranges.end());
+    auto it = ranges.begin();
+    CRange<T> current = *(it)++;
+    while (it != ranges.end()) {
+      if (current.GetEnd() >= it->GetBegin()) {
+        current.SetEnd(std::max(current.GetEnd(), it->GetEnd()));
+      } else {
+        result.push_back(current);
+        current = *(it);
+      }
+      it++;
+    }
+    result.push_back(current);
+    return result;
   }
 
 private:
@@ -288,6 +313,19 @@ private:
   Float64 epsilon = 1E-6;
 };
 
+template <typename T>
+bool operator==(const CRange<T> &lhs, const CRange<T> &rhs) {
+  if (lhs.GetBegin() == rhs.GetBegin() && lhs.GetEnd() == rhs.GetEnd())
+    return true;
+  return false;
+}
+
+template <typename T>
+bool operator<(const CRange<T> &lhs, const CRange<T> &rhs) {
+  if (lhs.GetBegin() == rhs.GetBegin())
+    return (lhs.GetEnd() < rhs.GetEnd());
+  return (lhs.GetBegin() < rhs.GetBegin());
+}
 typedef CRange<Int32> TInt32Range;
 typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range TLambdaRange;

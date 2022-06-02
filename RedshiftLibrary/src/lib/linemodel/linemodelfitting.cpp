@@ -432,7 +432,7 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
   Int32 nlines = eIdx_list.size();
   if (nlines != subeIdx_list.size())
     THROWG(INTERNAL_ERROR, " index sizes do not match");
-  std::vector<CRange<Int32>> indexRangeList =
+  TInt32RangeList indexRangeList =
       getlambdaIndexesUnderLines(eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI);
 
   if (!indexRangeList.size())
@@ -491,15 +491,15 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
  * @param eIdx_list
  * @param subeIdx_list
  * @param sigma_support
- * @return std::vector<CRange<Int32>>
+ * @return TInt32RangeList
  */
-std::vector<CRange<Int32>> CLineModelFitting::getlambdaIndexesUnderLines(
+TInt32RangeList CLineModelFitting::getlambdaIndexesUnderLines(
     const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
     const Float64 &sigma_support) const {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
-  std::vector<CRange<Int32>> indexRangeList(eIdx_list.size());
+  TInt32RangeList indexRangeList(eIdx_list.size());
   for (Int32 i = 0; i < eIdx_list.size(); i++) {
     Int32 eIdx = eIdx_list[i];
     Int32 subeIdx = subeIdx_list[i];
@@ -517,50 +517,8 @@ std::vector<CRange<Int32>> CLineModelFitting::getlambdaIndexesUnderLines(
 
   if (eIdx_list.size() == 1)
     return indexRangeList;
-  std::vector<CRange<Int32>> nonOverlappingIndexRangeList;
-  // check overlapping between elements
-  TInt32List indexesFitted;
-  // assuming eIdx_list is sorted
-  TInt32List overlappingIndices;
-  for (Int32 i = 0; i < eIdx_list.size(); i++) {
-    Int32 nooverlap = 0;
-    auto it =
-        std::find(overlappingIndices.begin(), overlappingIndices.end(), i);
-    if (it != overlappingIndices.end())
-      // i already overlaps with a previous index, skip
-      continue;
-
-    for (Int32 j = i + 1; j < eIdx_list.size(); j++) {
-      auto it =
-          std::find(overlappingIndices.begin(), overlappingIndices.end(), j);
-      if (it != overlappingIndices.end())
-        // j already overlaps with a previous index, skip
-        continue;
-      bool b =
-          CRange<Int32>::isoverlapping(indexRangeList[i], indexRangeList[j]);
-      /*
-      //below is a duplicate of the previously done computation
-      bool b = m_Elements.checkLineperElementOverlapping(
-          eIdx_list[i], eIdx_list[j], subeIdx_list[i], subeIdx_list[j],
-          m_Redshift, m_overlapThresHybridFit);*/
-
-      if (!b) {
-        nooverlap++;
-        continue;
-      }
-
-      // we identified overlapping element, crop ranges
-      CRange<Int32> mergedRange = CRange<Int32>::mergeOverlappingRanges(
-          indexRangeList[i], indexRangeList[j]);
-
-      nonOverlappingIndexRangeList.push_back(mergedRange);
-      overlappingIndices.push_back(j); // tell that j is overlapping with i
-      indexRangeList[i] = mergedRange;
-    }
-    // eIdx_[i] doesnt overlap with any element
-    if (nooverlap == eIdx_list.size() - i - 1)
-      nonOverlappingIndexRangeList.push_back(indexRangeList[i]);
-  }
+  TInt32RangeList nonOverlappingIndexRangeList =
+      TInt32Range::removeOverlapping(indexRangeList);
 
   return nonOverlappingIndexRangeList;
 }
@@ -576,7 +534,7 @@ std::vector<CRange<Int32>> CLineModelFitting::getlambdaIndexesUnderLines(
  */
 void CLineModelFitting::integrateFluxes_usingTrapez(
     const CSpectrumFluxAxis &fluxMinusContinuum,
-    const std::vector<CRange<Int32>> &indexRangeList, Float64 &sumFlux,
+    const TInt32RangeList &indexRangeList, Float64 &sumFlux,
     Float64 &sumErr) const {
 
   sumFlux = 0.0;
