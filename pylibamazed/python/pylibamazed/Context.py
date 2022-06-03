@@ -177,10 +177,13 @@ class Context:
             self.process_flow_context.reset()
 
         except GlobalException as e:
+            self.process_flow_context.reset()
             raise AmazedErrorFromGlobalException(e)
         except APIException as e:
+            self.process_flow_context.reset()
             raise AmazedError(e.errCode,e.message)
         except Exception as e:
+            self.process_flow_context.reset()
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
         return rso
 
