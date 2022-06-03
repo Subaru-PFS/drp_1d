@@ -146,7 +146,8 @@ class AbstractOutput:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                return attribute in self.object_results[object_type][dataset][rank]
+                if rank < len(self.object_results[object_type][dataset]):
+                    return attribute in self.object_results[object_type][dataset][rank]
         else:
             return False
 
