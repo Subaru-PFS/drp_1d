@@ -77,10 +77,10 @@ public:
 
   void SetEnd(const T &v) { m_End = v; }
 
-  CRange<T> operator-(T t) { return CRange<T>(m_Begin - t, m_End - t); }
-  CRange<T> operator+(T t) { return CRange<T>(m_Begin + t, m_End + t); }
-  CRange<T> operator*(T t) { return CRange<T>(m_Begin * t, m_End * t); }
-  CRange<T> operator/(T t) { return CRange<T>(m_Begin / t, m_End / t); }
+  CRange<T> operator-(const T &t) { return CRange<T>(m_Begin - t, m_End - t); }
+  CRange<T> operator+(const T &t) { return CRange<T>(m_Begin + t, m_End + t); }
+  CRange<T> operator*(const T &t) { return CRange<T>(m_Begin * t, m_End * t); }
+  CRange<T> operator/(const T &t) { return CRange<T>(m_Begin / t, m_End / t); }
 
   T Interpolate(Float64 t) { return m_Begin + (m_End - m_Begin) * t; }
 
@@ -89,19 +89,6 @@ public:
   const T &GetEnd() const { return m_End; }
 
   T GetLength() const { return m_End - m_Begin; }
-
-  bool IntersectWith(const CRange<T> r) { return Intersect(*this, r, *this); }
-
-  static bool Intersect(const CRange<T> &a, const CRange<T> b,
-                        CRange<T> &intersect) {
-    if (HasIntersection(a, b)) {
-      intersect.Set(std::max(a.GetBegin(), b.GetBegin()),
-                    std::min(a.GetEnd(), b.GetEnd()));
-      return true;
-    }
-
-    return false;
-  }
 
   std::vector<T> SpreadOver(T delta) const {
     std::vector<T> v;
@@ -269,26 +256,35 @@ public:
     return std::max(a.GetBegin(), b.GetBegin()) <=
            std::min(a.GetEnd(), b.GetEnd());
   }
-  bool HasIntersectionWith(const CRange<T> r) {
+  bool HasIntersectionWith(const CRange<T> &r) {
     return HasIntersection(*this, r);
   }
 
-  static CRange<T> unionr(const CRange<T> &a, const CRange<T> &b) {
-    return CRange<T>(std::min(a.GetBegin(), b.GetBegin()),
-                     std::max(a.GetEnd(), b.GetEnd()));
-    /*ab.SetBegin(std::min(a.GetBegin(), b.GetBegin()));
-    ab.SetEnd(std::max(a.GetEnd(), b.GetEnd()));*/
-  }
-  void unionWith(const CRange<T> r) { *this = unionr(*this, r); }
+  bool IntersectWith(const CRange<T> &r) { return Intersect(*this, r, *this); }
 
-  static std::vector<CRange<T>> unique(std::vector<CRange<T>> &ranges) {
-    std::sort(ranges.begin(), ranges.end());
-    ranges.erase(std::unique(ranges.begin(), ranges.end()), ranges.end());
-    return ranges;
+  static bool Intersect(const CRange<T> &a, const CRange<T> &b,
+                        CRange<T> &intersect) {
+    if (HasIntersection(a, b)) {
+      intersect.Set(std::max(a.GetBegin(), b.GetBegin()),
+                    std::min(a.GetEnd(), b.GetEnd()));
+      return true;
+    }
+
+    return false;
   }
+
+  static bool getUnion(const CRange<T> &a, const CRange<T> &b, CRange<T> &ab) {
+    if (HasIntersection(a, b)) {
+      ab.Set(std::min(a.GetBegin(), b.GetBegin()),
+             std::max(a.GetEnd(), b.GetEnd()));
+      return true;
+    }
+    return false;
+  }
+  bool unionWith(const CRange<T> &r) { return getUnion(*this, r, *this); }
 
   static std::vector<CRange<T>>
-  removeOverlapping(std::vector<CRange<T>> &ranges) {
+  joinIntersections(std::vector<CRange<T>> ranges) {
 
     std::vector<CRange<T>> result;
     std::sort(ranges.begin(), ranges.end());
@@ -316,6 +312,13 @@ private:
 template <typename T>
 bool operator==(const CRange<T> &lhs, const CRange<T> &rhs) {
   if (lhs.GetBegin() == rhs.GetBegin() && lhs.GetEnd() == rhs.GetEnd())
+    return true;
+  return false;
+}
+
+template <typename T>
+bool operator!=(const CRange<T> &lhs, const CRange<T> &rhs) {
+  if (lhs.GetBegin() != rhs.GetBegin() || lhs.GetEnd() != rhs.GetEnd())
     return true;
   return false;
 }

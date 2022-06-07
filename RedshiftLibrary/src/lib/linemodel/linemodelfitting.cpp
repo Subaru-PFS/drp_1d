@@ -518,7 +518,7 @@ TInt32RangeList CLineModelFitting::getlambdaIndexesUnderLines(
   if (eIdx_list.size() == 1)
     return indexRangeList;
   TInt32RangeList nonOverlappingIndexRangeList =
-      TInt32Range::removeOverlapping(indexRangeList);
+      TInt32Range::joinIntersections(std::move(indexRangeList));
 
   return nonOverlappingIndexRangeList;
 }
@@ -1526,8 +1526,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   initModelAtZ(redshift, spectralAxis);
 
-  if (!(m_dTransposeDLambdaRange.GetBegin() == m_lambdaRange.GetBegin() &&
-        m_dTransposeDLambdaRange.GetEnd() == m_lambdaRange.GetEnd())) {
+  if (m_dTransposeDLambdaRange != m_lambdaRange) {
     initDtd();
   }
 
@@ -4982,8 +4981,7 @@ Float64 CLineModelFitting::getCumulSNRStrongEL() const {
     }
 
     processedSupport.push_back(k);
-    TInt32Range support =
-        TInt32Range(supportList[k].GetBegin(), supportList[k].GetEnd());
+    TInt32Range support = supportList[k];
 
     for (Int32 l = 0; l < supportList.size(); l++) {
       // skip if already fitted
@@ -5916,8 +5914,7 @@ void CLineModelFitting::EstimateSpectrumContinuum(Float64 opt_enhance_lines) {
  **/
 // TODO rename this ! not a simple getter
 Float64 CLineModelFitting::getDTransposeD() {
-  if (!(m_dTransposeDLambdaRange.GetBegin() == m_lambdaRange.GetBegin() &&
-        m_dTransposeDLambdaRange.GetEnd() == m_lambdaRange.GetEnd())) {
+  if (m_dTransposeDLambdaRange != m_lambdaRange) {
     initDtd();
   }
 
@@ -5931,8 +5928,7 @@ Float64 CLineModelFitting::getDTransposeD() {
  **/
 // TODO rename this ! not a simple getter
 Float64 CLineModelFitting::getLikelihood_cstLog() {
-  if (!(m_dTransposeDLambdaRange.GetBegin() == m_lambdaRange.GetBegin() &&
-        m_dTransposeDLambdaRange.GetEnd() == m_lambdaRange.GetEnd())) {
+  if (m_dTransposeDLambdaRange != m_lambdaRange) {
     initDtd();
   }
 

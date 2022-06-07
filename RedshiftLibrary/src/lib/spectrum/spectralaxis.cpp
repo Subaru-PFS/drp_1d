@@ -594,7 +594,8 @@ void CSpectrumSpectralAxis::RecomputePreciseLoglambda() {
   }
   bias_start /= 100;
   bias_end /= 100;
-  Float64 lstart = log(lrange.GetBegin()), lend = log(lrange.GetEnd());
+  Float64 lstart = log(lrange.GetBegin());
+  Float64 lend = log(lrange.GetEnd());
   Float64 new_lstart = lstart - bias_start;
   Float64 new_lend = lend - bias_end;
   TFloat64Range new_lrange(exp(new_lstart), exp(new_lend));

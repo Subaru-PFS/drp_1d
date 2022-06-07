@@ -342,47 +342,6 @@ TInt32List CLineModelElementList::getOverlappingElements(
   return indexes;
 }
 
-/*check if two lines from different elements overlap*/
-bool CLineModelElementList::checkLineperElementOverlapping(
-    Int32 eIdx1, Int32 eIdx2, Int32 iLineRef, Int32 iLineElt, Float64 redshift,
-    Float64 overlapThres) const {
-
-  // check if outside lambdarange
-  if (m_Elements[eIdx1]->IsOutsideLambdaRange() ||
-      m_Elements[eIdx2]->IsOutsideLambdaRange())
-    return false;
-
-  std::vector<CLine> linesRef = m_Elements[eIdx1]->GetLines();
-  // check linetype
-  if (m_Elements[eIdx2]->m_Lines[0].GetType() != linesRef[0].GetType())
-    return false;
-
-  std::vector<CLine> linesElt = m_Elements[eIdx2]->GetLines();
-
-  Float64 muRef = linesRef[iLineRef].GetPosition() * (1 + redshift);
-  Float64 cRef = m_Elements[eIdx1]->GetLineWidth(
-      muRef, redshift, linesRef[iLineRef].GetIsEmission());
-  Float64 winsizeRef =
-      linesRef[iLineRef].GetProfile().GetNSigmaSupport() * cRef;
-  Float64 overlapSizeMin = winsizeRef * overlapThres;
-  Int32 xinf = muRef - winsizeRef / 2.0;
-  Int32 xsup = muRef + winsizeRef / 2.0;
-
-  Float64 muElt = linesElt[iLineElt].GetPosition() * (1 + redshift);
-  Float64 cElt = m_Elements[eIdx2]->GetLineWidth(
-      muElt, redshift, linesElt[iLineElt].GetIsEmission());
-  Float64 winsizeElt =
-      linesElt[iLineElt].GetProfile().GetNSigmaSupport() * cElt;
-  Int32 yinf = muElt - winsizeElt / 2.0;
-  Int32 ysup = muElt + winsizeElt / 2.0;
-
-  Float64 max = std::max(xinf, yinf);
-  Float64 min = std::min(xsup, ysup);
-  if (max - min < -overlapSizeMin)
-    return true;
-
-  return false;
-}
 /**
  * \brief If argument j is a valid index of m_Elements, updates the element in
  *that index calling its SetFittedAmplitude with arguments a and snr.

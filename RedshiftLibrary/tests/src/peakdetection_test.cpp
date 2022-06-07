@@ -102,8 +102,7 @@ BOOST_AUTO_TEST_CASE(FindGaussianFitStartAndStop_test) {
   //
   // fitStop = min( peaksBorders[i+1].GetBegin(), fitStop ); --> 30
   TInt32Range range = peakDetection.FindGaussianFitStartAndStop(0, peak, 1, n);
-  BOOST_CHECK_EQUAL(range.GetBegin(), 0);
-  BOOST_CHECK_EQUAL(range.GetEnd(), 30);
+  BOOST_CHECK_EQUAL(range, TInt32Range(0, 30));
 
   // len = 250
   // width = 41
@@ -115,8 +114,7 @@ BOOST_AUTO_TEST_CASE(FindGaussianFitStartAndStop_test) {
   // fitStart = max( peaksBorders[i-1].GetEnd(), fitStart ); --> 35
   // fitStop = min( peaksBorders[i+1].GetBegin(), fitStop ); --> 80
   range = peakDetection.FindGaussianFitStartAndStop(1, peak, 1, n);
-  BOOST_CHECK_EQUAL(range.GetBegin(), 35);
-  BOOST_CHECK_EQUAL(range.GetEnd(), 80);
+  BOOST_CHECK_EQUAL(range, TInt32Range(35, 80));
 
   // len = 250
   // width = 41
@@ -128,8 +126,7 @@ BOOST_AUTO_TEST_CASE(FindGaussianFitStartAndStop_test) {
   // fitStart = max( peaksBorders[i-1].GetEnd(), fitStart ); --> 70
   // fitStop = min( peaksBorders[i+1].GetBegin(), fitStop ); --> 160
   range = peakDetection.FindGaussianFitStartAndStop(2, peak, 1, n);
-  BOOST_CHECK_EQUAL(range.GetBegin(), 70);
-  BOOST_CHECK_EQUAL(range.GetEnd(), 160);
+  BOOST_CHECK_EQUAL(range, TInt32Range(70, 160));
 
   // len = 250
   // width = 41
@@ -141,8 +138,7 @@ BOOST_AUTO_TEST_CASE(FindGaussianFitStartAndStop_test) {
   // fitStart = max( peaksBorders[i-1].GetEnd(), fitStart ); --> 120
   // fitStop = min( peaksBorders[i+1].GetBegin(), fitStop ); --> 190
   range = peakDetection.FindGaussianFitStartAndStop(3, peak, 1, n);
-  BOOST_CHECK_EQUAL(range.GetBegin(), 120);
-  BOOST_CHECK_EQUAL(range.GetEnd(), 190);
+  BOOST_CHECK_EQUAL(range, TInt32Range(120, 190));
 
   // len = 250
   // width = 41
@@ -153,8 +149,7 @@ BOOST_AUTO_TEST_CASE(FindGaussianFitStartAndStop_test) {
   //
   // fitStart = max( peaksBorders[i-1].GetEnd(), fitStart ); --> 200
   range = peakDetection.FindGaussianFitStartAndStop(4, peak, 1, n);
-  BOOST_CHECK_EQUAL(range.GetBegin(), 200);
-  BOOST_CHECK_EQUAL(range.GetEnd(), 250);
+  BOOST_CHECK_EQUAL(range, TInt32Range(200, 250));
 }
 
 BOOST_AUTO_TEST_CASE(FindPossiblePeaks_test) {
@@ -171,8 +166,7 @@ BOOST_AUTO_TEST_CASE(FindPossiblePeaks_test) {
   peakDetection.FindPossiblePeaks(modelfluxAxis, spectralAxis, peakList);
 
   BOOST_CHECK_EQUAL(peakList.size(), 1);
-  BOOST_CHECK_EQUAL(peakList[0].GetBegin(), 3);
-  BOOST_CHECK_EQUAL(peakList[0].GetEnd(), 5);
+  BOOST_CHECK_EQUAL(peakList[0], TInt32Range(3, 5));
 
   // no peak detected
   Float64 *modelSamples = modelfluxAxis.GetSamples();
@@ -220,11 +214,8 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   std::shared_ptr<const CPeakDetectionResult> result;
   result = peakDetection.Compute(spc);
   BOOST_CHECK(result != NULL);
-  BOOST_CHECK_EQUAL(result->PeakList[0].GetBegin(), 3);
-  BOOST_CHECK_EQUAL(result->PeakList[0].GetEnd(), 5);
-
-  BOOST_CHECK_EQUAL(result->EnlargedPeakList[0].GetBegin(), 0);
-  BOOST_CHECK_EQUAL(result->EnlargedPeakList[0].GetEnd(), 10);
+  BOOST_CHECK_EQUAL(result->PeakList[0], TInt32Range(3, 5));
+  BOOST_CHECK_EQUAL(result->EnlargedPeakList[0], TInt32Range(0, 10));
 
   // no peak detected
   Float64 *modelSamples = modelfluxAxis.GetSamples();
