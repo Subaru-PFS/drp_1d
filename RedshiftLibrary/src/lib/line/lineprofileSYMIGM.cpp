@@ -95,7 +95,10 @@ Float64 CLineProfileSYMIGM::GetLineFlux(Float64 x0, Float64 sigma,
 
   // Line support aligned to lambda rest grid of convolved igm
   TFloat64List xlist_rest = m_igmCorrectionMeiksin->getWaveVector(range_rest);
-
+  if (xlist_rest.empty())
+    THROWG(INTERNAL_ERROR,
+           "not enough IGM extinction samples inside line profile to compute "
+           "flux, increase IGM extinction curves resolution.");
   Float64 flux = 0.;
   for (Float64 x_rest : xlist_rest)
     flux += GetLineProfileVal(x_rest * (1 + m_redshift), x0, sigma);
