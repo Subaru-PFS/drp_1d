@@ -330,7 +330,7 @@ class ResultStoreOutput(AbstractOutput):
             raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR,"Failed writing h5:".format(e))
         
 
-    def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None, firstpass_result=None):
+    def _get_attribute_from_result_store(self,data_spec,object_type=None,rank=None, linemeas = None, firstpass_result=False):
         operator_result = self.get_operator_result(data_spec,object_type,rank,firstpass_result,linemeas)
         if data_spec.dimension == "mono":
             if "[object_type]" in data_spec.OperatorResult_name:
