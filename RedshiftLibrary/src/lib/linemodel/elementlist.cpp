@@ -413,6 +413,20 @@ Int32 CLineModelElementList::findElementIndex(const std::string &LineTagStr,
   return findElementIndex(LineTagStr, linetype, lineIdx);
 }
 
+// first element returned is the list of element indices, then all remaining
+// elts are the list of line indices, for each element listed.
+std::vector<TInt32List> CLineModelElementList::getIgmLinesIndices() const {
+  std::vector<TInt32List> lineIdxList(1);
+  for (Int32 iElts = 0; iElts < m_Elements.size(); ++iElts) {
+    TInt32List lineIdx = m_Elements[iElts]->getIgmLinesIndices();
+    if (!lineIdx.empty()) {
+      lineIdxList.front().push_back(iElts);
+      lineIdxList.push_back(std::move(lineIdx));
+    }
+  }
+  return lineIdxList;
+}
+
 /**
  * \brief Returns the error of the support for subelements under the element
  *with the argument eltId as index. Accumulate "fit", the squared difference

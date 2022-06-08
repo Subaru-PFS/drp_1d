@@ -212,6 +212,7 @@ bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   m_LyaAsymCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
   m_LyaWidthCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
   m_LyaDeltaCoeffTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
+  m_LyaIgmIdxTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
   m_FittedErrorTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
   m_MtmTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
   m_DtmTplshape.resize(m_CatalogTplShape.GetCatalogsCount());
@@ -225,6 +226,7 @@ bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
     m_LyaAsymCoeffTplshape[ktplshape].resize(m_Elements.size());
     m_LyaWidthCoeffTplshape[ktplshape].resize(m_Elements.size());
     m_LyaDeltaCoeffTplshape[ktplshape].resize(m_Elements.size());
+    m_LyaIgmIdxTplshape[ktplshape].resize(m_Elements.size());
     m_LinesLogPriorTplshape[ktplshape].resize(m_Elements.size());
   }
 
@@ -1613,6 +1615,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 m_LyaWidthCoeffTplshape[ifitting - 1][iElts];
             m_LyaDeltaCoeffTplshape[ifitting][iElts] =
                 m_LyaDeltaCoeffTplshape[ifitting - 1][iElts];
+            m_LyaIgmIdxTplshape[ifitting][iElts] =
+                m_LyaIgmIdxTplshape[ifitting - 1][iElts];
             m_LinesLogPriorTplshape[ifitting][iElts] =
                 m_LinesLogPriorTplshape[ifitting - 1][iElts];
           }
@@ -1626,12 +1630,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         setLyaProfile(m_Redshift,
                       m_CatalogTplShape.GetCatalog(ifitting).GetList(), true);
       } else {
-        if (!m_forceDisableLyaFitting) // for asymFit, disable fitting
-        {
-          // prepare the Lya width and asym coefficients if the asymfit profile
-          // option is met
-          setLyaProfile(redshift, m_RestLineList);
-        }
+        // prepare the Lya width and asym coefficients if the asymfit profile
+        // option is met
+        setLyaProfile(m_Redshift, m_RestLineList);
       }
       // generate random amplitudes
       if (m_fittingmethod == "random") {
@@ -2207,6 +2208,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_LyaAsymCoeffTplshape[ifitting][iElts] = NAN;
             m_LyaWidthCoeffTplshape[ifitting][iElts] = NAN;
             m_LyaDeltaCoeffTplshape[ifitting][iElts] = NAN;
+            m_LyaIgmIdxTplshape[ifitting][iElts] = undefIdx;
             bool allampzero = true;
             //*/
 
@@ -2240,6 +2242,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                 m_LyaAsymCoeffTplshape[ifitting][iElts] = params.alpha;
                 m_LyaWidthCoeffTplshape[ifitting][iElts] = params.sigma;
                 m_LyaDeltaCoeffTplshape[ifitting][iElts] = params.delta;
+
+                TSymIgmParams params_igm =
+                    m_Elements[iElts]->GetSymIgmParams(0);
+                m_LyaIgmIdxTplshape[ifitting][iElts] = params_igm.m_igmidx;
 
                 savedAmp = true;
                 break;
@@ -2349,6 +2355,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             {m_LyaWidthCoeffTplshape[savedIdxFitted][iElts],
              m_LyaAsymCoeffTplshape[savedIdxFitted][iElts],
              m_LyaDeltaCoeffTplshape[savedIdxFitted][iElts]});
+      }
+
+      for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+        m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(
+            m_LyaIgmIdxTplshape[savedIdxFitted][iElts], redshift));
       }
 
       refreshModel();
@@ -4014,76 +4025,137 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
 
 /**
  * @brief CLineModelFitting::setLyaProfile
+ * If a Lya line is present with SYMIGM profile, fit igmIdx
  * If a Lya line is present with ASYMFIT profile, fit the width and asymmetry
  * parameters If a Lya line is present with ASYMFIXED profile, set the width and
  * asymmetry parameters according to profile parameters given in the string
  * @param redshift, catalog (could be tplshape or linecatalog)
  * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya
  * not configured to be fitted in the catalog
+ * note: this applies to all asym or symigm profiles (for symigm: all lines
+ * below Lya)
  */
-Int32 CLineModelFitting::setLyaProfile(Float64 redshift,
+void CLineModelFitting::setLyaProfile(Float64 redshift,
+                                      const CLineCatalog::TLineVector &catalog,
+                                      bool tplratio) {
+
+  auto idxLineIGM_ = m_Elements.getIgmLinesIndices();
+  auto const idxEltIGM = std::move(idxLineIGM_.front());
+  std::vector<TInt32List> idxLineIGM(
+      std::make_move_iterator(idxLineIGM_.begin() + 1),
+      std::make_move_iterator(idxLineIGM_.end()));
+
+  if (idxEltIGM.empty())
+    return;
+
+  // assuming only one asymfit/fixed profile
+  Int32 idxLyaE = idxEltIGM.front();
+  Int32 idxLineLyaE = idxLineIGM.front().front();
+
+  if (!m_Elements[idxLyaE]->IsOutsideLambdaRange(idxLineLyaE)) {
+    const auto &profile =
+        m_Elements[idxLyaE]->m_Lines[idxLineLyaE].GetProfile();
+    if (profile.isAsym())
+      setAsymProfile(idxLyaE, idxLineLyaE, redshift, catalog, tplratio);
+  }
+
+  for (Int32 i = 0; i < idxEltIGM.size(); ++i) {
+    const auto &Elt = m_Elements[idxEltIGM[i]];
+    if (!Elt->IsOutsideLambdaRange()) {
+      TInt32List &idxLine = idxLineIGM[i];
+      auto end =
+          std::remove_if(idxLine.begin(), idxLine.end(), [Elt](Int32 idx) {
+            return !Elt->m_Lines[idx].GetProfile().isSymIgm();
+          });
+      idxLine.erase(end, idxLine.end());
+      if (!idxLine.empty())
+        setSymIgmProfile(idxEltIGM[i], idxLine, redshift);
+    }
+  }
+}
+
+void CLineModelFitting::setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE,
+                                       Float64 redshift,
                                        const CLineCatalog::TLineVector &catalog,
-                                       bool tplratio)
-
-{
-
-  // 1. retrieve the Lya index
-  std::string lyaTag = linetags::lya_em;
-
-  Int32 idxLineLyaE = undefIdx;
-  Int32 idxLyaE = m_Elements.findElementIndex(lyaTag, -1, idxLineLyaE);
-  if (idxLyaE < 0 || idxLineLyaE < 0) {
-    return 2; // Lya alpha not found
-  }
-
-  Int32 lineIndex = undefIdx;
-  // get index of lya inside tplshape catalog
-  if (tplratio) {
-    lineIndex = std::find_if(catalog.begin(), catalog.end(),
-                             [lyaTag](const CLine &line) {
-                               return line.GetName() == lyaTag;
-                             }) -
-                catalog.begin();
-    if (lineIndex == undefIdx || lineIndex > catalog.size() - 1)
-      return 2; // Lya alpha not found in tplshape catalog
-  } else {
-    lineIndex = m_Elements[idxLyaE]->m_LineCatalogIndexes[idxLineLyaE];
-  }
-
-  if (lineIndex < 0 || lineIndex > catalog.size() - 1)
-    THROWG(INTERNAL_ERROR, "out-of-bound");
+                                       bool tplratio) {
+  Int32 lineIndex =
+      getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog, tplratio);
+  if (lineIndex == undefIdx)
+    return;
 
   // finding or setting the correct profile
   CLineProfile_ptr profile;
-  if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
-    profile = std::unique_ptr<CLineProfileASYMFIT>(new CLineProfileASYMFIT(
-        m_NSigmaSupport, catalog[lineIndex].GetAsymParams(), "mean"));
+  if (m_forceDisableLyaFitting && catalog[lineIndex].GetProfile().isAsymFit())
+    // convert asymfit to asymfixed profile
+    profile = dynamic_cast<const CLineProfileASYMFIT *>(
+                  &catalog[lineIndex].GetProfile())
+                  ->cloneToASYM();
+  else if (m_forceLyaFitting && catalog[lineIndex].GetProfile().isAsymFixed())
+    // convert asymfixed to asymfit
+    profile =
+        dynamic_cast<const CLineProfileASYM *>(&catalog[lineIndex].GetProfile())
+            ->cloneToASYMFIT();
   else
     profile = catalog[lineIndex].GetProfile().Clone();
 
-  bool doasymfit =
-      profile->isAsymFit() && !m_Elements[idxLyaE]->IsOutsideLambdaRange();
+  bool doasymfit = profile->isAsymFit();
 
   m_Elements[idxLyaE]->m_Lines[idxLineLyaE].SetProfile(std::move(profile));
 
   if (!doasymfit)
-    return 3;
-  else {
-    TInt32List filterEltsIdxLya;
-    filterEltsIdxLya.push_back(idxLyaE);
-    // 3. find the best width and asym coeff. parameters
-    TAsymParams bestfitParams =
-        FitAsymParameters(redshift, idxLyaE, filterEltsIdxLya, idxLineLyaE);
-    // 4. set the associated Lya members in the element definition
-    m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
-  }
+    return;
 
-  return 1;
+  // find the best width and asym coeff. parameters
+  TAsymParams bestfitParams = fitAsymParameters(redshift, idxLyaE, idxLineLyaE);
+
+  // set the associated Lya members in the element definition
+  m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
 }
 
-TAsymParams CLineModelFitting::FitAsymParameters(
-    const Float64 &redshift, const Int32 &idxLyaE,
-    const TInt32List &filterEltsIdxLya, const Int32 &idxLineLyaE) {
+void CLineModelFitting::setSymIgmProfile(Int32 iElts,
+                                         const TInt32List &idxLineIGM,
+                                         Float64 redshift) {
+
+  bool fixedIGM =
+      m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto";
+
+  // set to false when continuum is fitted to null
+  fixedIGM &=
+      m_fitContinuum_tplFitAmplitude > abs(m_opt_fitcontinuum_neg_threshold) *
+                                           m_fitContinuum_tplFitAmplitudeError;
+
+  Int32 bestigmidx = fixedIGM
+                         ? m_fitContinuum_tplFitMeiksinIdx
+                         : fitAsymIGMCorrection(redshift, iElts, idxLineIGM);
+  m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
+}
+
+Int32 CLineModelFitting::getLineIndexInCatalog(
+    Int32 iElts, Int32 idxLine, const CLineCatalog::TLineVector &catalog,
+    bool tplratio) const {
+  Int32 lineIndex = undefIdx;
+  if (tplratio) {
+    // get index of line inside tplshape catalog
+    const std::string &strID = m_Elements[iElts]->m_Lines[idxLine].GetStrID();
+    lineIndex = std::find_if(catalog.begin(), catalog.end(),
+                             [strID](const CLine &line) {
+                               return line.GetStrID() == strID;
+                             }) -
+                catalog.begin();
+    if (lineIndex >= catalog.size())
+      lineIndex = undefIdx;
+  } else {
+    lineIndex = m_Elements[iElts]->m_LineCatalogIndexes[idxLine];
+    if (lineIndex < 0 || lineIndex >= catalog.size())
+      THROWG(INTERNAL_ERROR, "Lya idx out-of-bound");
+  }
+
+  return lineIndex;
+}
+
+TAsymParams CLineModelFitting::fitAsymParameters(Float64 redshift,
+                                                 Int32 idxLyaE,
+                                                 const Int32 &idxLineLyaE) {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   // 3. find the best width and asym coeff. parameters
@@ -4102,7 +4174,9 @@ TAsymParams CLineModelFitting::FitAsymParameters(
   Int32 nDeltaSteps = int((deltaMax - deltaMin) / deltaStep + 1.5);
 
   TAsymParams bestparams = {widthCoeffMin, asymCoeffMin, deltaMin};
-  Float64 meritMin = boost::numeric::bounds<float>::highest();
+  Float64 meritMin = DBL_MAX;
+
+  TInt32List filterEltsIdxLya(1, idxLyaE);
 
   bool verbose = false;
   for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
@@ -4121,6 +4195,7 @@ TAsymParams CLineModelFitting::FitAsymParameters(
 
         Float64 m = m_dTransposeD;
         if (1) {
+
           refreshModelUnderElements(filterEltsIdxLya, idxLineLyaE);
           m = m_Elements.getModelErrorUnderElement(
               idxLyaE, m_SpcFluxAxis, m_SpectrumModel.GetFluxAxis());
@@ -4147,6 +4222,35 @@ TAsymParams CLineModelFitting::FitAsymParameters(
                 bestparams.sigma, bestparams.alpha, bestparams.delta);
   }
   return bestparams;
+}
+
+Int32 CLineModelFitting::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
+                                              const TInt32List &idxLine) {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+  if (spectralAxis[0] / (1 + redshift) > RESTLAMBDA_LYA)
+    return -1;
+
+  Float64 meritMin = DBL_MAX;
+  Int32 bestIgmIdx = -1;
+
+  Int32 igmCount =
+      m_Elements[iElts]->getLineProfile(idxLine.front()).getIGMIdxCount();
+  for (Int32 igmIdx = 0; igmIdx < igmCount; igmIdx++) {
+    m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(igmIdx, redshift));
+    m_Elements[iElts]->fitAmplitude(spectralAxis, m_spcFluxAxisNoContinuum,
+                                    m_ContinuumFluxAxis, redshift);
+
+    refreshModelUnderElements(TInt32List(1, iElts));
+    Float64 m = m_Elements.getModelErrorUnderElement(
+        iElts, m_SpcFluxAxis, m_SpectrumModel.GetFluxAxis());
+
+    if (m < meritMin) {
+      meritMin = m;
+      bestIgmIdx = igmIdx;
+    }
+  }
+  return bestIgmIdx;
 }
 
 /**
@@ -5174,11 +5278,18 @@ void CLineModelFitting::LoadModelSolution(
 
     std::string lyaTag = linetags::lya_em;
     Int32 idxLyaE = m_Elements.findElementIndex(lyaTag);
-    if (idxLyaE != undefIdx) {
+    if (idxLyaE != undefIdx)
       m_Elements[idxLyaE]->SetAsymfitParams({modelSolution.LyaWidthCoeff,
                                              modelSolution.LyaAlpha,
                                              modelSolution.LyaDelta});
-    }
+  }
+
+  if (modelSolution.LyaIgm != undefIdx) {
+    auto const idxEltIGM = m_Elements.getIgmLinesIndices().front();
+    if (!idxEltIGM.empty())
+      for (auto const iElt : idxEltIGM)
+        m_Elements[iElt]->SetSymIgmParams(
+            {modelSolution.LyaIgm, modelSolution.Redshift});
   }
   return;
 }
@@ -5345,6 +5456,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
   modelSolution.LyaWidthCoeff = NAN;
   modelSolution.LyaAlpha = NAN;
   modelSolution.LyaDelta = NAN;
+  modelSolution.LyaIgm = undefIdx;
   modelSolution.Amplitudes = TFloat64List(s, NAN);
   modelSolution.AmplitudesUncertainties = TFloat64List(s, NAN);
   modelSolution.FittingError = TFloat64List(s, NAN);
@@ -5427,19 +5539,18 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
       getFluxDirectIntegration(eIdx_line, subeIdx_line,
                                opt_cont_substract_abslinesmodel, fluxDI, snrDI);
       if (!std::isnan(amp) && amp >= 0.0) {
-        if (isEmission) {
-          flux =
-              m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux(amp, sigma);
-          fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux(
-              sigma, ampError);
-        } else {
-          Float64 _amp = cont * amp;
-          Float64 _ampError = cont * ampError;
-          flux = -m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux(_amp,
-                                                                        sigma);
-          fluxError = m_Elements[eIdx]->getLineProfile(subeIdx).GetLineFlux(
-              sigma, _ampError);
+        if (!isEmission) {
+          amp *= cont;
+          ampError *= cont;
         }
+        const CLineProfile &profile = m_Elements[eIdx]->getLineProfile(subeIdx);
+
+        Float64 lineFlux = profile.GetLineFlux(mu, sigma);
+        flux = amp * lineFlux;
+        fluxError = ampError * lineFlux;
+
+        if (!isEmission)
+          flux = -flux;
       }
       modelSolution.Sigmas[iRestLine] = sigma;
       modelSolution.Fluxs[iRestLine] = flux;
@@ -5503,6 +5614,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.LyaWidthCoeff = params.sigma;
     modelSolution.LyaAlpha = params.alpha;
     modelSolution.LyaDelta = params.delta;
+    TSymIgmParams params_igm = m_Elements[idxLyaE]->GetSymIgmParams(0);
+    modelSolution.LyaIgm = params_igm.m_igmidx;
   }
   modelSolution.EmissionVelocity = m_velocityEmission;
   modelSolution.AbsorptionVelocity = m_velocityAbsorption;

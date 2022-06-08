@@ -332,12 +332,13 @@ public:
 			const Float64& velocityOffset,
 			const bool& enableVelocityFit,
 			const Int32& id,
-			const std::string& str_id);
+			const std::string& str_id,
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
   void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
   void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
-
-
+  void convertLineProfiles2SYMIGM(
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
 };
 
 typedef struct {

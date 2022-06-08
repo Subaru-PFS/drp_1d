@@ -171,14 +171,19 @@ class CalibrationLibrary:
         except pd.errors.ParserError:
             raise AmazedError(ErrorCode.BAD_FILEFORMAT, "bad line catalog {0} cause :{1}".format(line_catalog_file, e))
         except Exception as e:
-            raise AmazedError(ErrorCode.BAD_FILEFORMAT,"bad line catalog {0} cause :{1}".format(line_catalog_file, e))
+            raise Exception("bad line catalog " + line_catalog_file + " cause :" + "{}".format(e))
+        
+        enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
 
+        #here should go the change of profiles if igm is applied
         self.line_catalogs_df[object_type] = line_catalog
         for index, row in line_catalog.iterrows():
             if row.Profile == "ASYM":
                 asymParams = TAsymParams(1., 4.5, 0.)
             elif row.Profile == "ASYMFIT":
                 asymParams = TAsymParams(2., 2., 0.)
+            elif row.Profile == "ASYMFIXED":
+                raise Exception("Profile in linecatalog cannot be asymFixed")
             else:
                 asymParams = TAsymParams(0, 0, 0)
             self.line_catalogs[object_type][method].AddLineFromParams(row.Name,
@@ -193,7 +198,10 @@ class CalibrationLibrary:
                                                              row.WaveLengthOffset,
                                                              row.EnableFitWaveLengthOffset,
                                                              index,
-                                                             _get_linecatalog_id(row))
+                                                             _get_linecatalog_id(row),
+                                                             self.meiksin)
+            if enableIGM:
+                    self.line_catalogs[object_type][method].convertLineProfiles2SYMIGM(self.meiksin)                                  
 
     def load_line_ratio_catalog_list(self, object_type, method):
         logger = logging.getLogger("calibration_api")
@@ -216,6 +224,8 @@ class CalibrationLibrary:
             n_ebmv_coeffs = self.parameters["ebmv"]["count"]
         prior = 1./(n_ebmv_coeffs * len(line_ratio_catalog_list))
 
+        enableIGM = self.parameters[object_type][method]["linemodel"]["igmfit"]
+
         for f in line_ratio_catalog_list:
             lr_catalog_df = pd.read_csv(f,sep='\t')
             name = f.split(os.sep)[-1][:-4]
@@ -230,11 +240,16 @@ class CalibrationLibrary:
                         lr_catalog.setLineAmplitude(_get_linecatalog_id(row), row.NominalAmplitude)
                 lr_catalog.addVelocity("em_vel", line_ratio_catalog_parameter["velocities"]["em_vel"])
                 lr_catalog.addVelocity("abs_vel", line_ratio_catalog_parameter["velocities"]["abs_vel"])
+                #here also we should change the profile type
                 lr_catalog.setAsymProfileAndParams(line_ratio_catalog_parameter["asym_params"]["profile"],
                                                    TAsymParams(line_ratio_catalog_parameter["asym_params"]["sigma"],
                                                                line_ratio_catalog_parameter["asym_params"]["alpha"],
-                                                               line_ratio_catalog_parameter["asym_params"]["delta"])
+                                                               line_ratio_catalog_parameter["asym_params"]["delta"], 
+                                                               )
                                                    )
+                if enableIGM:
+                    lr_catalog.convertLineProfiles2SYMIGM(self.meiksin)
+                
                 lr_catalog.setIsmIndex(k)
                 lr_catalog.setPrior(prior)
                 self.line_ratio_catalog_lists[object_type].addLineRatioCatalog(lr_catalog)

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
+#include "RedshiftLibrary/line/lineprofileSYM.h"
 #include "RedshiftLibrary/log/log.h"
 
 using namespace NSEpic;

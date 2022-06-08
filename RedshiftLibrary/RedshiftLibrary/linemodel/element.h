@@ -155,12 +155,18 @@ public:
 
   void SetLSF(const std::shared_ptr<const CLSF> &lsf);
 
-  void SetAsymfitParams(TAsymParams params,
-                        Int32 indx = -99); //-99 means setting for all
-  const TAsymParams GetAsymfitParams(Int32 asymIdx = 0) const;
+  void
+  SetAsymfitParams(const TAsymParams &params,
+                   Int32 indx = undefIdx); // undefIdx means setting for all
+  void SetSymIgmParams(const TSymIgmParams &params,
+                       Int32 indx = undefIdx); // undefIdx means setting for all
+  TAsymParams GetAsymfitParams(Int32 asymIdx = 0) const;
+  TSymIgmParams GetSymIgmParams(Int32 asymIdx = 0) const;
+
   void resetAsymfitParams();
   Int32 findElementIndex(Int32 LineCatalogIndex) const;
   Int32 findElementIndex(const std::string &LineTagStr) const;
+  const TInt32List &getIgmLinesIndices() const { return m_asymLineIndices; };
   const CLineProfile &getLineProfile(Int32 lineIdx) const;
 
   Float64 GetSignFactor(Int32 subeIdx) const;

@@ -125,41 +125,57 @@ bool CLine::operator!=(const CLine &str) const {
   }
 }
 
-void CLine::SetAsymParams(TAsymParams asymParams) {
+void CLine::SetAsymParams(const TAsymParams &asymParams) {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
   m_Profile->SetAsymParams(asymParams);
 }
 
-void CLine::setAsymProfileAndParams(const std::string &profileName,
-                                    TAsymParams asymParams,
-                                    Float64 nSigmaSupport) {
-  if (profileName.find("ASYMFIXED") != std::string::npos) {
+void CLine::SetSymIgmParams(const TSymIgmParams &params) {
+  if (!m_Profile)
+    THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
+  m_Profile->SetSymIgmParams(params);
+}
+
+void CLine::setProfileAndParams(
+    const std::string &profileName, const TAsymParams &asymParams,
+    Float64 nSigmaSupport,
+    const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+        &igmcorrectionMeiksin) {
+  if (profileName.find("ASYMFIXED") != std::string::npos)
     m_Profile.reset(new CLineProfileASYM(nSigmaSupport, asymParams, "mean"));
-  } else if (profileName == "SYM")
+  else if (profileName == "SYM")
     m_Profile.reset(new CLineProfileSYM(nSigmaSupport));
   else if (profileName == "LOR")
     m_Profile.reset(new CLineProfileLOR(nSigmaSupport));
-  else if (profileName == "ASYM") {
-
+  else if (profileName == "ASYM")
     m_Profile.reset(new CLineProfileASYM(nSigmaSupport, asymParams, "none"));
-  } else if (profileName == "ASYMFIT") {
+  else if (profileName == "ASYMFIT")
     m_Profile.reset(new CLineProfileASYMFIT(nSigmaSupport, asymParams, "mean"));
-  } else {
+  else if (profileName == "SYMIGM")
+    m_Profile.reset(
+        new CLineProfileSYMIGM(igmcorrectionMeiksin, nSigmaSupport));
+  else
     THROWG(INTERNAL_ERROR, Formatter() << "Profile name " << profileName
                                        << " is no recognized.");
-  }
 }
 
 void CLine::resetAsymFitParams() {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
-  m_Profile->resetAsymFitParams();
+  m_Profile->resetParams();
 }
+
 TAsymParams CLine::GetAsymParams() const {
   if (!m_Profile)
     THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
   return m_Profile->GetAsymParams();
+}
+
+TSymIgmParams CLine::GetSymIgmParams() const {
+  if (!m_Profile)
+    THROWG(INTERNAL_ERROR, "lineprofile is not initialized");
+  return m_Profile->GetSymIgmParams();
 }
 
 bool CLine::GetIsStrong() const { return m_Force == nForce_Strong; }

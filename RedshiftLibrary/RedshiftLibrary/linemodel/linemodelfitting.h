@@ -296,6 +296,7 @@ public:
   std::vector<TFloat64List> m_LyaAsymCoeffTplshape;
   std::vector<TFloat64List> m_LyaWidthCoeffTplshape;
   std::vector<TFloat64List> m_LyaDeltaCoeffTplshape;
+  std::vector<TInt32List> m_LyaIgmIdxTplshape;
   std::vector<TFloat64List> m_LinesLogPriorTplshape;
 
   Int32 m_pass = 1;
@@ -360,12 +361,21 @@ private:
 
   bool SetMultilineNominalAmplitudes(Int32 iLine);
   bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
-  Int32 setLyaProfile(Float64 redshift,
+  void setLyaProfile(Float64 redshift,
+                     const CLineCatalog::TLineVector &lineList,
+                     bool tplratio = false);
+  void setAsymProfile(Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
                       const CLineCatalog::TLineVector &lineList,
                       bool tplratio = false);
-  TAsymParams FitAsymParameters(const Float64 &redshift, const Int32 &idxLyaE,
-                                const TInt32List &filterEltsIdxLya,
+  void setSymIgmProfile(Int32 iElts, const TInt32List &idxLineIGM,
+                        Float64 redshift);
+  TAsymParams fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                 const Int32 &idxLineLyaE);
+  Int32 fitAsymIGMCorrection(Float64 redshift, Int32 idxLyaE,
+                             const TInt32List &idxLine);
+  Int32 getLineIndexInCatalog(Int32 iElts, Int32 idxLine,
+                              const CLineCatalog::TLineVector &catalog,
+                              bool tplratio) const;
   void SetLSF();
 
   Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,

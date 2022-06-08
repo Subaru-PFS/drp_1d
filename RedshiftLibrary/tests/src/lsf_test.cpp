@@ -36,6 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFConstantResolution.h"
 #include "RedshiftLibrary/spectrum/LSFConstantWidth.h"
@@ -44,15 +46,11 @@
 #include "RedshiftLibrary/spectrum/LSF_NISPSIM_2016.h"
 #include "RedshiftLibrary/spectrum/LSF_NISPVSSPSF_201707.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
-
-
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/common/range.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 
-BOOST_AUTO_TEST_SUITE(LSF)
+BOOST_AUTO_TEST_SUITE(LSF_test)
 
 bool correctMessage(const GlobalException &ex) {
   BOOST_CHECK_EQUAL(ex.what(), std::string("Size do not match "));
@@ -129,17 +127,33 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   Float64 x = 8000.;
   Float64 x0 = 7999.;
 
-  Float64 res_1 = LSF->GetLineProfile(x, x0);
+  Float64 res_1 = LSF->GetProfileVal(x, x0);
 
   Float64 sigma = LSF->GetWidth(x0);
-  Float64 res_2 = LSF->GetLineProfile(x, x0, sigma);
+  Float64 res_2 = LSF->GetProfileVal(x, x0, sigma);
 
   Float64 res_ref = exp(-0.5 * ((x - x0) / sigma) * ((x - x0) / sigma));
 
   BOOST_CHECK(res_1 == res_ref);
   BOOST_CHECK(res_2 == res_ref);
 
-  TFloat64List res_3 = LSF->getRestFrameProfileVector(7200, 2.2);
+  Float64 const z = 2.2;
+  Float64 const lambda0_rest = 7200.0;
+  Float64 const lambda0_obs = lambda0_rest * (1.0 + z);
+  Float64 const sigma_obs = LSF->GetWidth(lambda0_obs);
+  Float64 const sigmaSupport = LSF->GetProfile().GetNSigmaSupport();
+  Float64 lbdastep_rest = 1.; // value in angstrom based on calibration-igm
+                              // files
+  Int32 Nhalf =
+      std::round(sigmaSupport * sigma_obs / (1.0 + z) / lbdastep_rest);
+  Int32 len = 2 * Nhalf + 1;
+  // change to observedframe
+  TFloat64List lambdas_obs(len);
+  for (Int32 i = 0; i < len; i++)
+    lambdas_obs[i] = (lambda0_rest + (i - Nhalf) * lbdastep_rest) * (1.0 + z);
+
+  TFloat64List res_3 =
+      LSF->getNormalizedProfileVector(lambdas_obs, lambda0_obs);
 
   // TEST OK constructor 2
   std::shared_ptr<TLSFArguments> args_2 =
@@ -157,10 +171,10 @@ BOOST_AUTO_TEST_CASE(LSF_constantWidth_test) {
   BOOST_CHECK(LSF_3->IsValid() == false);
   BOOST_CHECK(LSF_3->GetWidth(lambda) == 0.0);
 
-  Float64 res_4 = LSF_3->GetLineProfile(0., 0.);
+  Float64 res_4 = LSF_3->GetProfileVal(0., 0.);
   BOOST_CHECK(std::isnan(res_4));
 
-  BOOST_CHECK_THROW(LSF_3->getRestFrameProfileVector(7200, 2.2),
+  BOOST_CHECK_THROW(LSF_3->getNormalizedProfileVector(lambdas_obs, lambda0_obs),
                     GlobalException);
 }
 

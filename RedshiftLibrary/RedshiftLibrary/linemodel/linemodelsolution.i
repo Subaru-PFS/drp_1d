@@ -74,7 +74,8 @@ public:
   Float64 LyaWidthCoeff;
   Float64 LyaAlpha;
   Float64 LyaDelta;
-
+  Int32 LyaIgm;
+  
   Float64 AbsorptionVelocity;
   Float64 EmissionVelocity;
   Float64 Redshift;

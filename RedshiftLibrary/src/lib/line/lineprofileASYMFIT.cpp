@@ -43,12 +43,20 @@
 using namespace NSEpic;
 using namespace std;
 
-CLineProfileASYMFIT::CLineProfileASYMFIT(const Float64 nsigmasupport,
-                                         TAsymParams params,
-                                         const std::string centeringMethod)
+CLineProfileASYMFIT::CLineProfileASYMFIT(Float64 nsigmasupport,
+                                         const TAsymParams &params,
+                                         const std::string &centeringMethod)
     : CLineProfileASYM(ASYMFIT, nsigmasupport, params, centeringMethod) {}
 
-void CLineProfileASYMFIT::SetAsymParams(TAsymParams params) {
+CLineProfileASYMFIT::CLineProfileASYMFIT(const CLineProfileASYM &other)
+    : CLineProfileASYMFIT(other.GetNSigmaSupport(), other.GetAsymParams(),
+                          other.GetCenteringMethod()) {}
+
+std::unique_ptr<CLineProfile> CLineProfileASYMFIT::cloneToASYM() const {
+  return std::unique_ptr<CLineProfile>(new CLineProfileASYM(*this));
+}
+
+void CLineProfileASYMFIT::SetAsymParams(const TAsymParams &params) {
   if (std::isnan(params.sigma) || std::isnan(params.alpha) ||
       std::isnan(params.delta)) {
     Flag.warning(Flag.ASYMFIT_NAN_PARAMS,
@@ -60,12 +68,8 @@ void CLineProfileASYMFIT::SetAsymParams(TAsymParams params) {
   m_asym_delta = params.delta;
 }
 
-void CLineProfileASYMFIT::resetAsymFitParams() {
+void CLineProfileASYMFIT::resetParams() {
   m_asym_sigma_coeff = 2.;
   m_asym_alpha = 0.;
   m_asym_delta = 0.;
 }
-
-bool CLineProfileASYMFIT::isAsymFit() const { return 1; }
-
-bool CLineProfileASYMFIT::isAsymFixed() const { return 0; }

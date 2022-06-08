@@ -2332,7 +2332,6 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   //  params->GetScoped<std::string>("continuumfit.fittingmethod");
   std::string opt_lineWidthType =
       params->GetScoped<std::string>("linewidthtype");
-
   Float64 opt_velocityEmission = params->GetScoped<Float64>(
       "velocityemission"); // set by client, not in parameters.json
   Float64 opt_velocityAbsorption = params->GetScoped<Float64>(

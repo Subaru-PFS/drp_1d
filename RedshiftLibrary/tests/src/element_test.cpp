@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(GetLineWidth) {
   // CLine::EXTINCT), 0.001);
 }
 
-BOOST_AUTO_TEST_CASE(GetLineProfile) {
+BOOST_AUTO_TEST_CASE(GetLineProfileVal) {
   CLineProfile_ptr profilesym{
       std::unique_ptr<CLineProfileSYM>(new CLineProfileSYM())};
   CLine line = CLine("Halpha", 6564.61, 2, profilesym->Clone(), 2, 1.0, 0.5);
@@ -192,17 +192,17 @@ BOOST_AUTO_TEST_CASE(GetLineProfile) {
   CLineProfile_ptr profileasymfixed{std::unique_ptr<CLineProfileASYM>(
       new CLineProfileASYM(nsigmasupport, _asymFitParams, "mean"))};
 
-  BOOST_CHECK_CLOSE(0.237755, profilesym->GetLineProfile(6564.61, 6568., 2.),
+  BOOST_CHECK_CLOSE(0.237755, profilesym->GetLineProfileVal(6564.61, 6568., 2.),
                     0.001);
-  BOOST_CHECK_CLOSE(0.2581961, profilelor->GetLineProfile(6564.61, 6568., 2.),
-                    0.001);
-  BOOST_CHECK_CLOSE(0.373055, profileasym->GetLineProfile(6564.61, 6565., 2.),
-                    0.001);
+  BOOST_CHECK_CLOSE(0.2581961,
+                    profilelor->GetLineProfileVal(6564.61, 6568., 2.), 0.001);
+  BOOST_CHECK_CLOSE(0.373055,
+                    profileasym->GetLineProfileVal(6564.61, 6565., 2.), 0.001);
   // Theses value are for asym profile with mean shift
-  BOOST_CHECK_CLOSE(0.781894,
-                    profileasymfit->GetLineProfile(6564.61, 6568., 2.), 0.001);
   BOOST_CHECK_CLOSE(
-      0.781894, profileasymfixed->GetLineProfile(6564.61, 6568., 2.), 0.001);
+      0.781894, profileasymfit->GetLineProfileVal(6564.61, 6568., 2.), 0.001);
+  BOOST_CHECK_CLOSE(
+      0.781894, profileasymfixed->GetLineProfileVal(6564.61, 6568., 2.), 0.001);
 }
 
 BOOST_AUTO_TEST_CASE(GetLineProfileDerivSigma) {

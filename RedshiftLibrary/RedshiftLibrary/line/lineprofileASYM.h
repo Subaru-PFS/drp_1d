@@ -47,31 +47,41 @@ namespace NSEpic {
 /**
  * \ingroup Redshift
  */
+
+class CLineProfileASYMFIT;
 class CLineProfileASYM : public CLineProfile {
 public:
-  CLineProfileASYM(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-                   const TAsymParams params = ASYM_DEFAULT_PARAMS,
-                   const std::string centeringMethod = "none");
-
-  Float64 GetLineProfile(Float64 x, Float64 x0,
-                         const Float64 sigma) const override;
-  Float64 GetLineFlux(Float64 A, const Float64 sigma) const override;
-  Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
-                               const Float64 sigma) const override;
-  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
-                                   const Float64 sigma) const override;
-  Float64 GetNSigmaSupport() const override;
-
-  Float64 GetAsymDelta() const override;
-  const TAsymParams GetAsymParams() const override;
-  virtual bool isAsymFixed() const override;
-  virtual bool isAsymFit() const override;
-
+  CLineProfileASYM(Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                   const TAsymParams &params = ASYM_DEFAULT_PARAMS,
+                   const std::string &centeringMethod = "none");
   virtual ~CLineProfileASYM() = default;
   CLineProfileASYM(const CLineProfileASYM &other) = default;
   CLineProfileASYM(CLineProfileASYM &&other) = default;
   CLineProfileASYM &operator=(const CLineProfileASYM &other) = default;
   CLineProfileASYM &operator=(CLineProfileASYM &&other) = default;
+
+  CLineProfileASYM(
+      const CLineProfileASYMFIT &other); // ASYMFIT -> ASYM converter
+
+  Float64 GetLineProfileVal(Float64 x, Float64 x0,
+                            Float64 sigma) const override;
+  Float64 GetLineFlux(Float64 x0, Float64 sigma,
+                      Float64 A = 1.0) const override;
+  Float64 GetLineProfileDerivZ(Float64 x, Float64 x0, Float64 redshift,
+                               Float64 sigma) const override;
+  Float64 GetLineProfileDerivSigma(Float64 x, Float64 x0,
+                                   Float64 sigma) const override;
+  Float64 GetNSigmaSupport() const override;
+  TAsymParams GetAsymParams() const override;
+  Float64 GetDelta() const override { return m_asym_delta; };
+  virtual bool isAsym() const override { return true; };
+  virtual bool isAsymFixed() const override { return true; };
+
+  virtual const std::string &GetCenteringMethod() const {
+    return m_centeringMethod;
+  };
+
+  std::unique_ptr<CLineProfile> cloneToASYMFIT() const;
 
 private:
   virtual CLineProfile *CloneImplementation() const override {
@@ -80,16 +90,17 @@ private:
   Float64 GetXSurc(Float64 xc, Float64 &sigma, Float64 &xsurc) const;
 
 protected:
+  CLineProfileASYM(
+      TProfile pltype, Float64 nsigmasupport = N_SIGMA_SUPPORT,
+      const TAsymParams &params = ASYMF_DEFAULT_PARAMS,
+      const std::string &centeringMethod = "mean"); // used by asymfit ctor
+
   bool isValid() const;
   Float64 m_asym_sigma_coeff = ASYM_DEFAULT_PARAMS.sigma;
   Float64 m_asym_alpha = ASYM_DEFAULT_PARAMS.alpha;
   Float64 m_asym_delta = ASYM_DEFAULT_PARAMS.delta;
   std::string m_centeringMethod = "none";
-  Float64 m_constSigma = ASYM_DEFAULT_CONSTSIGMA;
-  CLineProfileASYM(
-      const TProfile pltype, const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-      const TAsymParams params = ASYMF_DEFAULT_PARAMS,
-      const std::string centeringMethod = "mean"); // mainly called by asymfit
+  Float64 m_constSigma = 1; // vs 2.5 for AsymFit and AsymFixed
 };
 } // namespace NSEpic
 #endif

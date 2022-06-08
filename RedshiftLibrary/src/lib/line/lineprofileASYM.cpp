@@ -38,29 +38,33 @@
 // ============================================================================
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include "RedshiftLibrary/common/exception.h"
+#include "RedshiftLibrary/line/lineprofileASYMFIT.h"
 #include "RedshiftLibrary/log/log.h"
 using namespace NSEpic;
 using namespace std;
 
-CLineProfileASYM::CLineProfileASYM(const Float64 nsigmasupport,
-                                   TAsymParams params,
-                                   const std::string centeringMethod)
-    : CLineProfile(nsigmasupport, ASYM), m_asym_sigma_coeff(params.sigma),
-      m_asym_alpha(params.alpha), m_asym_delta(params.delta),
-      m_centeringMethod(centeringMethod) {
-  if (m_centeringMethod == "mean" || m_centeringMethod == "mode")
-    m_constSigma = 2.5; // not sure if should be also a param
-}
+CLineProfileASYM::CLineProfileASYM(Float64 nsigmasupport,
+                                   const TAsymParams &params,
+                                   const std::string &centeringMethod)
+    : CLineProfileASYM(ASYM, nsigmasupport, params, centeringMethod) {}
 
-CLineProfileASYM::CLineProfileASYM(const TProfile pltype,
-                                   const Float64 nsigmasupport,
-                                   const TAsymParams params,
-                                   const std::string centeringMethod)
+CLineProfileASYM::CLineProfileASYM(TProfile pltype, Float64 nsigmasupport,
+                                   const TAsymParams &params,
+                                   const std::string &centeringMethod)
     : CLineProfile(nsigmasupport, pltype), m_asym_sigma_coeff(params.sigma),
       m_asym_alpha(params.alpha), m_asym_delta(params.delta),
       m_centeringMethod(centeringMethod) {
   if (m_centeringMethod == "mean" || m_centeringMethod == "mode")
     m_constSigma = 2.5;
+}
+
+// asymfit -> asymfixed converter
+CLineProfileASYM::CLineProfileASYM(const CLineProfileASYMFIT &other)
+    : CLineProfileASYM(other.m_nsigmasupport, other.GetAsymParams(),
+                       other.m_centeringMethod) {}
+
+std::unique_ptr<CLineProfile> CLineProfileASYM::cloneToASYMFIT() const {
+  return std::unique_ptr<CLineProfile>(new CLineProfileASYMFIT(*this));
 }
 
 Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
@@ -99,8 +103,8 @@ Float64 CLineProfileASYM::GetXSurc(Float64 xc, Float64 &sigma,
   return m0;
 }
 
-Float64 CLineProfileASYM::GetLineProfile(Float64 x, Float64 x0,
-                                         Float64 sigma) const {
+Float64 CLineProfileASYM::GetLineProfileVal(Float64 x, Float64 x0,
+                                            Float64 sigma) const {
   if (!isValid()) {
     THROWG(INTERNAL_ERROR, "LineProfile is not valid");
   }
@@ -116,7 +120,8 @@ Float64 CLineProfileASYM::GetNSigmaSupport() const {
   return m_nsigmasupport * m_asym_sigma_coeff * m_constSigma;
 }
 
-Float64 CLineProfileASYM::GetLineFlux(Float64 A, Float64 sigma) const {
+Float64 CLineProfileASYM::GetLineFlux(Float64 x0, Float64 sigma,
+                                      Float64 A) const {
   return A * sigma * m_asym_sigma_coeff * sqrt(2 * M_PI);
 }
 
@@ -169,18 +174,8 @@ Float64 CLineProfileASYM::GetLineProfileDerivSigma(Float64 x, Float64 x0,
   return val;
 }
 
-bool CLineProfileASYM::isAsymFixed() const { // probably we need to clean this
-  return 1;
-}
-
-bool CLineProfileASYM::isAsymFit() const { return 0; }
-Float64 CLineProfileASYM::GetAsymDelta() const {
-  return m_asym_delta; // default. Mainly used for asymfit/fixed
-}
-
-const TAsymParams CLineProfileASYM::GetAsymParams() const {
-  return {m_asym_sigma_coeff, m_asym_alpha,
-          m_asym_delta}; // default. Mainly used for asymfit/fixed
+TAsymParams CLineProfileASYM::GetAsymParams() const {
+  return {m_asym_sigma_coeff, m_asym_alpha, m_asym_delta};
 }
 
 bool CLineProfileASYM::isValid() const {

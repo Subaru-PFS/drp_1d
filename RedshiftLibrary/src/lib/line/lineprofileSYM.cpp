@@ -41,11 +41,15 @@
 using namespace NSEpic;
 using namespace std;
 
-CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport)
+CLineProfileSYM::CLineProfileSYM(Float64 nsigmasupport)
     : CLineProfile(nsigmasupport, SYM) {}
 
-Float64 CLineProfileSYM::GetLineProfile(Float64 x, Float64 x0,
-                                        Float64 sigma) const {
+CLineProfileSYM::CLineProfileSYM(const Float64 nsigmasupport,
+                                 const TProfile pltype)
+    : CLineProfile(nsigmasupport, pltype) {}
+
+Float64 CLineProfileSYM::GetLineProfileVal(Float64 x, Float64 x0,
+                                           Float64 sigma) const {
   Float64 xc = x - x0;
   Float64 val = 0.0;
   Float64 xsurc;
@@ -55,7 +59,8 @@ Float64 CLineProfileSYM::GetLineProfile(Float64 x, Float64 x0,
   return val;
 }
 
-Float64 CLineProfileSYM::GetLineFlux(Float64 A, Float64 sigma) const {
+Float64 CLineProfileSYM::GetLineFlux(Float64 x0, Float64 sigma,
+                                     Float64 A) const {
   return A * sigma * sqrt(2 * M_PI);
 }
 

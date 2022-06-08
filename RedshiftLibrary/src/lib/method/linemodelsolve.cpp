@@ -87,6 +87,7 @@ bool CLineModelSolve::PopulateParameters(
       parameterStore->GetScoped<std::string>("linemodel.lineforcefilter");
   m_opt_fittingmethod =
       parameterStore->GetScoped<std::string>("linemodel.fittingmethod");
+
   m_opt_secondpasslcfittingmethod = parameterStore->GetScoped<std::string>(
       "linemodel.secondpasslcfittingmethod");
   m_opt_skipsecondpass =
@@ -150,6 +151,11 @@ bool CLineModelSolve::PopulateParameters(
             "linemodel.continuumfit.priors.catalog_dirpath"); // no priors by
                                                               // default
   }
+
+  /*if(m_opt_igmfit!=m_opt_tplfit_igmfit)
+      throw GlobalException(INCOHERENT_INPUTPARAMETERS, "igmfit should be
+     activated for both continuum and linemodel");*/
+
   m_opt_rigidity = parameterStore->GetScoped<std::string>("linemodel.rigidity");
 
   if (m_opt_rigidity == "tplshape") {
@@ -930,9 +936,9 @@ bool CLineModelSolve::Solve(
       m_linemodel.Init(spc, redshifts, restLineList, m_categoryList,
                        m_opt_continuumcomponent, m_opt_nsigmasupport,
                        m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
-  if (retInit != 0) {
+  if (retInit != 0)
     THROWG(INTERNAL_ERROR, "Linemodel, init failed. Aborting");
-  }
+
   m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
   //
   if (m_opt_continuumcomponent == "tplfit" ||

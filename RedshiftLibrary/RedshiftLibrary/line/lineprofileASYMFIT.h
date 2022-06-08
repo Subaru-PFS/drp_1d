@@ -43,20 +43,22 @@
 #include "RedshiftLibrary/line/lineprofileASYM.h"
 #include <math.h>
 #include <string>
-
 namespace NSEpic {
 /**
  * \ingroup Redshift
  */
 class CLineProfileASYMFIT : public CLineProfileASYM {
 public:
-  CLineProfileASYMFIT(const Float64 nsigmasupport = N_SIGMA_SUPPORT,
-                      TAsymParams params = ASYMF_DEFAULT_PARAMS,
-                      const std::string centeringMethod = "mean");
-  bool isAsymFit() const override;
-  bool isAsymFixed() const override;
-  void SetAsymParams(TAsymParams params) override;
-  void resetAsymFitParams() override;
+  CLineProfileASYMFIT(Float64 nsigmasupport = N_SIGMA_SUPPORT,
+                      const TAsymParams &params = ASYMF_DEFAULT_PARAMS,
+                      const std::string &centeringMethod = "mean");
+  CLineProfileASYMFIT(
+      const CLineProfileASYM &other); // asymfit->asymfixed converter
+  bool isAsymFit() const override { return true; };
+  bool isAsymFixed() const override { return false; };
+  void SetAsymParams(const TAsymParams &params) override;
+  void resetParams() override;
+  std::unique_ptr<CLineProfile> cloneToASYM() const;
 
 private:
   CLineProfile *CloneImplementation() const override {
