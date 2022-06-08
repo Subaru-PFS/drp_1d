@@ -150,76 +150,32 @@ class ResultStoreOutput(AbstractOutput):
                                                                     attribute_info.ResultStore_key)
                 else:
                     raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
-        elif attribute_info.level == "method":
+        elif attribute_info.level == "object" or attribute_info.level == "method":
             or_type = self.results_store.GetGlobalResultType(object_type,
                                                              method,
                                                              attribute_info.ResultStore_key)
-            if or_type == "CFlagLogResult":
-                return  self.results_store.GetFlagResult(object_type,
-                                                        method,
-                                                        attribute_info.ResultStore_key)
-            else:
-                raise Exception("Unknown OperatorResult type " + or_type)                                     
-        elif attribute_info.level == "object":
-            or_type = self.results_store.GetGlobalResultType(object_type,
-                                                             method,
-                                                             attribute_info.ResultStore_key)
-
-            if or_type == "CPdfMargZLogResult":
-                return self.results_store.GetPdfMargZLogResult(object_type,
-                                                               method,
-                                                               attribute_info.ResultStore_key)
-            elif or_type == "CLineModelSolution":
-                return self.results_store.GetLineModelSolution(object_type,
-                                                               method,
-                                                               attribute_info.ResultStore_key)
-            elif or_type == "CModelSpectrumResult":
-                return self.results_store.GetModelSpectrumResult(object_type,
-                                                                 method,
-                                                                 attribute_info.ResultStore_key)
-            else:
-                raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
+            getter = getattr(self.results_store,"Get"+or_type[1:])
+            return getter(object_type,
+                          method,
+                          attribute_info.ResultStore_key)
         elif attribute_info.level == "candidate":
             or_type = self.results_store.GetCandidateResultType(object_type,
                                                                 method,
                                                                 attribute_info.ResultStore_key,
                                                                 attribute_info.dataset)
             if or_type == "TLineModelResult":
-                firstpass_result = "Firstpass" in attribute_info.name
+                firstpass_result = "Firstpass" in attribute_info["name"]
                 return self.results_store.GetLineModelResult(object_type,
                                                              method,
                                                              attribute_info.ResultStore_key,
                                                              rank, firstpass_result)
-            elif or_type == "TExtremaResult":
-                return self.results_store.GetExtremaResult(object_type,
-                                                           method,
-                                                           attribute_info.ResultStore_key,
-                                                           rank)
-            elif or_type == "CModelSpectrumResult":
-                return self.results_store.GetModelSpectrumResult(object_type,
-                                                                 method,
-                                                                 attribute_info.ResultStore_key,
-                                                                 rank)
-            elif or_type == "CSpectraFluxResult":
-                return self.results_store.GetSpectraFluxResult(object_type,
-                                                               method,
-                                                               attribute_info.ResultStore_key,
-                                                               rank)
-            elif or_type == "CModelFittingResult":
-                return self.results_store.GetModelFittingResult(object_type,
-                                                                method,
-                                                                attribute_info.ResultStore_key,
-                                                                rank)
-            elif or_type == "TTplCombinationResult":
-                return self.results_store.GetTplCombinationResult(object_type,
-                                                                method,
-                                                                attribute_info.ResultStore_key,
-                                                                rank)
-            elif or_type == "CLineModelSolution":
-                return self.results_store.GetLineModelSolution(object_type,
-                                                               method,
-                                                               attribute_info.ResultStore_key,
-                                                               rank)
             else:
-                raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(or_type))
+                getter = getattr(self.results_store,"Get"+or_type[1:])
+                return getter(object_type,
+                              method,
+                              attribute_info.ResultStore_key,
+                              rank)
+        else:
+            raise APIException(ErrorCode.OutputReaderError,
+                               "Unknown level {}".format(attribute_info.level))
 

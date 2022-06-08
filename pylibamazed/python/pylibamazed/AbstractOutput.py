@@ -204,19 +204,19 @@ class AbstractOutput:
                         if self.has_attribute_in_source(object_type,
                                                         None,
                                                         ds,
-                                                        ds_row.name):
+                                                        ds_row["name"]):
                             attr = self.get_attribute_from_source(object_type,
                                                                   None,
                                                                   ds,
-                                                                  ds_row.name)
+                                                                  ds_row["name"])
                             attr_name = ds_row["name"].replace("<ObjectType>", object_type)
                             self.root_results[ds][attr_name] = attr
                 else:
                     if self.has_attribute_in_source(object_type,
                                                     None,
                                                     ds_row.dataset,
-                                                    ds_row.name):
-                        self.root_results[ds][ds_row["name"]] = self.get_attribute_from_source("root", None, ds_row.dataset,ds_row.name)
+                                                    ds_row["name"]):
+                        self.root_results[ds][ds_row["name"]] = self.get_attribute_from_source("root", None, ds_row.dataset,ds_row["name"])
 
     def load_object_level(self, object_type):
         level = "object"
@@ -233,7 +233,7 @@ class AbstractOutput:
     def fill_object_dataset(self, object_type, method, dataset):
         ds_attributes = self.filter_dataset_attributes(dataset)
         for index, ds_row in ds_attributes.iterrows():
-            attr_name = ds_row.name
+            attr_name = ds_row["name"]
             if self.has_attribute_in_source(object_type, method, dataset,attr_name):
                 attr = self.get_attribute_from_source(object_type,
                                                       method,
@@ -259,7 +259,7 @@ class AbstractOutput:
                         attr = self.get_attribute_from_source(object_type,
                                                               method,
                                                               ds_row.dataset,
-                                                              ds_row.name)
+                                                              ds_row["name"])
                         self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):

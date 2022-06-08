@@ -475,9 +475,9 @@ class COperatorResultStore
 								    const std::string& method,
 								    const std::string& name ) const;
 
-  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
-								    const std::string& method,
-								    const std::string& name ) const;
+  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType,
+							 const std::string& method,
+							 const std::string& name ) const;
 
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
