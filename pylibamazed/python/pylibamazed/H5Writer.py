@@ -38,6 +38,9 @@
 # ============================================================================
 
 from pylibamazed.AbstractOutput import AbstractOutput
+from pylibamazed.Exception import AmazedError
+from pylibamazed.redshift import ErrorCode
+
 import pandas as pd
 
 def _create_dataset_from_dict(h5_node, name, source, compress=False):
@@ -64,19 +67,18 @@ class H5Writer():
     def write_hdf5_object_level(self, object_type, object_results_node):
         level = "object"
         for ds in self.output.get_available_datasets("object",
-                                                     object_type=object_type)
-            if self.output.has_dataset(object_type, ds):
-                ds_size = self.output.get_dataset_size(object_type, ds)
-                dataset = self.output.get_dataset(ds,
-                                           object_type=object_type)
-                if ds_size > 1:
-                    _create_dataset_from_dict(object_results_node,
-                                              ds,
-                                              dataset)
-                else:
-                    object_results_node.create_group(ds)
-                    for attr_name,attr in dataset.items():
-                        object_results_node.get(ds).attrs[attr_name] = attr
+                                                     object_type=object_type):
+            ds_size = self.output.get_dataset_size(object_type, ds)
+            dataset = self.output.get_dataset(ds,
+                                              object_type=object_type)
+            if ds_size > 1:
+                _create_dataset_from_dict(object_results_node,
+                                          ds,
+                                          dataset)
+            else:
+                object_results_node.create_group(ds)
+                for attr_name,attr in dataset.items():
+                    object_results_node.get(ds).attrs[attr_name] = attr
 
     # def write_hdf5_method_level(self, object_type, object_results_node):
     #     rs = self.output.results_specifications
@@ -100,14 +102,14 @@ class H5Writer():
                                                object_type=object_type,
                                                rank=rank)
                     ds_dim = self.output.get_dataset_size(object_type, ds, rank)
-                        if ds_dim == 1:
-                            candidate.create_group(ds)
-                            for attr_name, attr in dataset.items():
-                                candidate.get(ds).attrs[attr_name] = attr
-                        else:
-                            _create_dataset_from_dict(candidate,
-                                                      ds,
-                                                      dataset)
+                    if ds_dim == 1:
+                        candidate.create_group(ds)
+                        for attr_name, attr in dataset.items():
+                            candidate.get(ds).attrs[attr_name] = attr
+                    else:
+                        _create_dataset_from_dict(candidate,
+                                                  ds,
+                                                  dataset)
         
     def write_hdf5(self,hdf5_root,spectrum_id):
         try:
@@ -117,7 +119,7 @@ class H5Writer():
             for object_type in self.output.object_types:
                 object_results = obs.create_group(object_type) #h5
                 self.write_hdf5_object_level(object_type, object_results)
-                self.write_hdf5_method_level(object_type, object_results)
+#                self.write_hdf5_method_level(object_type, object_results)
                 self.write_hdf5_candidate_level(object_type, object_results)
         except Exception as e:
             raise AmazedError(ErrorCode.EXTERNAL_LIB_ERROR,"Failed writing h5:".format(e))

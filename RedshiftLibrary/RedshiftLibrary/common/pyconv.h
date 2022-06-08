@@ -55,7 +55,7 @@ public:
     *data = const_cast<int *>(vec.data());
     *size = vec.size();
   }
-  static void get(const TFloat32List &vec, double **data, int *size) {
+  static void get(const TFloat32List &vec, float **data, int *size) {
     *data = const_cast<float *>(vec.data());
     *size = vec.size();
   }

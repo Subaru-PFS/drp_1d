@@ -112,13 +112,13 @@ class AbstractOutput:
         elif level == "object":
             l = []
             for d in self.object_results[object_type].keys():
-                if type(self.object_results[object_type][d]) == list:
+                if type(self.object_results[object_type][d]) == dict:
                     l.append(d)
             return l
         elif level == "candidate":
             l = []
             for d in self.object_results[object_type].keys():
-                if type(self.object_results[object_type][d]) == dict:
+                if type(self.object_results[object_type][d]) == list:
                     l.append(d)
             return l
         else:
