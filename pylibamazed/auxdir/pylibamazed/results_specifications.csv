@@ -1,4 +1,4 @@
-hdf5_name	hdf5_dataset	hdf5_type	ResultStore_key	dimension	extended_results	level	OperatorResult_name	c_type
+name	dataset	hdf5_type	ResultStore_key	dimension	extended_results	level	OperatorResult_name	c_type
 Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double
 RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double
 RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double

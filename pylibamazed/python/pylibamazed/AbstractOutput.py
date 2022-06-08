@@ -158,14 +158,14 @@ class AbstractOutput:
 
     def get_level(self, dataset):
         rs = self.results_specifications
-        rs = rs[rs.hdf5_dataset == dataset]
+        rs = rs[rs.dataset == dataset]
         return rs.level.unique()[0]
     
     def filter_datasets(self, level):
         rs = self.results_specifications
         # filter by level
         rs = rs[rs["level"] == level]
-        all_datasets = list(rs["hdf5_dataset"].unique())
+        all_datasets = list(rs["dataset"].unique())
         
         # filter by extended_results
         if self.extended_results:
@@ -174,7 +174,7 @@ class AbstractOutput:
         # a dataset is considered as debug if all its elements have debug = True
         filtered_datasets = []
         for ds in all_datasets:
-            ds_attributes = rs[rs["hdf5_dataset"]==ds]
+            ds_attributes = rs[rs["dataset"]==ds]
             extended_results = all(ds_row["extended_results"] == True for index, ds_row in ds_attributes.iterrows())
             if not extended_results:
                 filtered_datasets.append(ds) 
@@ -183,7 +183,7 @@ class AbstractOutput:
 
     def filter_dataset_attributes(self, ds_name):  
         rs = self.results_specifications 
-        ds_attributes = rs[rs["hdf5_dataset"]==ds_name]   
+        ds_attributes = rs[rs["dataset"]==ds_name]   
         #filter ds_attributes by extended_results column
         if self.extended_results:
             return ds_attributes
@@ -199,24 +199,24 @@ class AbstractOutput:
             ds_attributes = self.filter_dataset_attributes(ds)
             self.root_results[ds] = dict()
             for index, ds_row in ds_attributes.iterrows():
-                if "<" in ds_row["hdf5_name"]:
+                if "<" in ds_row["name"]:
                     for object_type in self.parameters.get_objects():
                         if self.has_attribute_in_source(object_type,
                                                         None,
                                                         ds,
-                                                        ds_row.hdf5_name):
+                                                        ds_row.name):
                             attr = self.get_attribute_from_source(object_type,
                                                                   None,
                                                                   ds,
-                                                                  ds_row.hdf5_name)
-                            attr_name = ds_row["hdf5_name"].replace("<ObjectType>", object_type)
+                                                                  ds_row.name)
+                            attr_name = ds_row["name"].replace("<ObjectType>", object_type)
                             self.root_results[ds][attr_name] = attr
                 else:
                     if self.has_attribute_in_source(object_type,
                                                     None,
-                                                    ds_row.hdf5_dataset,
-                                                    ds_row.hdf5_name):
-                        self.root_results[ds][ds_row["hdf5_name"]] = self.get_attribute_from_source("root", None, ds_row.hdf5_dataset,ds_row.hdf5_name)
+                                                    ds_row.dataset,
+                                                    ds_row.name):
+                        self.root_results[ds][ds_row["name"]] = self.get_attribute_from_source("root", None, ds_row.dataset,ds_row.name)
 
     def load_object_level(self, object_type):
         level = "object"
@@ -233,7 +233,7 @@ class AbstractOutput:
     def fill_object_dataset(self, object_type, method, dataset):
         ds_attributes = self.filter_dataset_attributes(dataset)
         for index, ds_row in ds_attributes.iterrows():
-            attr_name = ds_row.hdf5_name
+            attr_name = ds_row.name
             if self.has_attribute_in_source(object_type, method, dataset,attr_name):
                 attr = self.get_attribute_from_source(object_type,
                                                       method,
@@ -253,13 +253,13 @@ class AbstractOutput:
                                               ds):
                     ds_attributes = self.filter_dataset_attributes(ds)                    
                     for index, ds_row in ds_attributes.iterrows():
-                        attr_name = ds_row["hdf5_name"]
-                        if "<MethodType>" in ds_row["hdf5_name"]:
-                            attr_name = ds_row["hdf5_name"].replace("<MethodType>", method)
+                        attr_name = ds_row["name"]
+                        if "<MethodType>" in ds_row["name"]:
+                            attr_name = ds_row["name"].replace("<MethodType>", method)
                         attr = self.get_attribute_from_source(object_type,
                                                               method,
-                                                              ds_row.hdf5_dataset,
-                                                              ds_row.hdf5_name)
+                                                              ds_row.dataset,
+                                                              ds_row.name)
                         self.object_results[object_type][ds][attr_name] = attr
 
     def load_candidate_level(self, object_type):
@@ -282,7 +282,7 @@ class AbstractOutput:
             for rank in range(nb_candidates):
                 candidates.append(dict())
                 for index, ds_row in ds_attributes.iterrows():
-                    attr_name = ds_row["hdf5_name"]
+                    attr_name = ds_row["name"]
                     if self.has_attribute_in_source(object_type,
                                                     method,
                                                     ds,

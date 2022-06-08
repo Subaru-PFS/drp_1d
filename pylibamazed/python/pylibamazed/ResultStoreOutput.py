@@ -77,8 +77,8 @@ class ResultStoreOutput(AbstractOutput):
 
     def get_attribute_from_source(self, object_type, method, dataset, attribute,  rank=None):
         rs = self.results_specifications
-        rs = rs[rs["hdf5_name"] == attribute]
-        rs = rs[rs["hdf5_dataset"] == dataset]
+        rs = rs[rs["name"] == attribute]
+        rs = rs[rs["dataset"] == dataset]
         attribute_info = rs.iloc[0]
         
         return self._get_attribute_from_result_store(object_type,
@@ -88,8 +88,8 @@ class ResultStoreOutput(AbstractOutput):
 
     def has_attribute_in_source(self,object_type,method, dataset, attribute, rank=None):
         rs = self.results_specifications
-        rs = rs[rs["hdf5_name"] == attribute]
-        rs = rs[rs["hdf5_dataset"] == dataset]
+        rs = rs[rs["name"] == attribute]
+        rs = rs[rs["dataset"] == dataset]
         
         attribute_info = rs.iloc[0]
         
@@ -98,7 +98,7 @@ class ResultStoreOutput(AbstractOutput):
             if self.results_store.HasCandidateDataset(object_type,
                                                       method,
                                                       attribute_info.ResultStore_key,
-                                                      attribute_info.hdf5_dataset):
+                                                      attribute_info.dataset):
                 operator_result = self._get_operator_result(object_type, method,attribute_info, rank)
             else:
                 return False
@@ -123,7 +123,7 @@ class ResultStoreOutput(AbstractOutput):
 
     def has_candidate_dataset_in_source(self, object_type, method, dataset):
         rs = self.results_specifications
-        rs = rs[ rs.hdf5_dataset == dataset]
+        rs = rs[ rs.dataset == dataset]
         rs_key = rs["ResultStore_key"].unique()[0]
 
         return self.results_store.HasCandidateDataset(object_type,
@@ -137,16 +137,16 @@ class ResultStoreOutput(AbstractOutput):
     def _get_operator_result(self, object_type, method, attribute_info, rank=None):
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key == "context_warningFlag":
-                return self.results_store.GetFlagResult(attribute_info.hdf5_dataset,
-                                                        attribute_info.hdf5_dataset,
+                return self.results_store.GetFlagResult(attribute_info.dataset,
+                                                        attribute_info.dataset,
                                                         attribute_info.ResultStore_key)
             else :
-                or_type = self.results_store.GetGlobalResultType(attribute_info.hdf5_dataset,
-                                                                attribute_info.hdf5_dataset,
+                or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
+                                                                attribute_info.dataset,
                                                                 attribute_info.ResultStore_key)
                 if or_type == "CClassificationResult":
-                    return self.results_store.GetClassificationResult(attribute_info.hdf5_dataset,
-                                                                    attribute_info.hdf5_dataset,
+                    return self.results_store.GetClassificationResult(attribute_info.dataset,
+                                                                    attribute_info.dataset,
                                                                     attribute_info.ResultStore_key)
                 else:
                     raise APIException(ErrorCode.OutputReaderError,"Unknown OperatorResult type {}".format(str(or_type)))
@@ -183,9 +183,9 @@ class ResultStoreOutput(AbstractOutput):
             or_type = self.results_store.GetCandidateResultType(object_type,
                                                                 method,
                                                                 attribute_info.ResultStore_key,
-                                                                attribute_info.hdf5_dataset)
+                                                                attribute_info.dataset)
             if or_type == "TLineModelResult":
-                firstpass_result = "Firstpass" in attribute_info.hdf5_name
+                firstpass_result = "Firstpass" in attribute_info.name
                 return self.results_store.GetLineModelResult(object_type,
                                                              method,
                                                              attribute_info.ResultStore_key,
