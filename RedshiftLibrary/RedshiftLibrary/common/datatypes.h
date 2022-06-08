@@ -63,6 +63,7 @@ typedef unsigned char Byte;
 typedef const char *String;
 
 typedef std::vector<Float64> TFloat64List;
+typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int64> TInt64List;
 typedef std::vector<bool> TBoolList;
 typedef std::vector<Int32> TInt32List;
