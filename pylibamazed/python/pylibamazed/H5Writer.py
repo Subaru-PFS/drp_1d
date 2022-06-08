@@ -46,7 +46,9 @@ def _create_dataset_from_dict(h5_node, name, source, compress=False):
     h5_node.create_dataset(name,
                            len(records),
                            records.dtype,
-                           records)
+                           records,
+                           compression="lzf")
+
 
 class H5Writer():
 
@@ -54,63 +56,58 @@ class H5Writer():
         self.output = output
 
     def write_hdf5_root(self, hdf5_spectrum_node):
-        level = "root"
-        rs, root_datasets = self.output.filter_datasets(level)
-                
-        for ds in root_datasets:
-            if ds in self.output.root_results:
-                if not self.output.root_results[ds]:
-                    continue
-                ds_attributes = self.output.filter_dataset_attributes(ds)
-                dsg = hdf5_spectrum_node.create_group(ds)
-                for attr_name,attr in self.output.root_results[ds].items():
-                    dsg.attrs[attr_name] = attr
+        for ds in self.output.get_available_datasets("root"):
+            dsg = hdf5_spectrum_node.create_group(ds)
+            for attr_name,attr in self.output.get_dataset(ds).items():
+                dsg.attrs[attr_name] = attr
 
     def write_hdf5_object_level(self, object_type, object_results_node):
         level = "object"
-        rs, object_datasets = self.output.filter_datasets(level)
-        for ds in object_datasets:
+        for ds in self.output.get_available_datasets("object",
+                                                     object_type=object_type)
             if self.output.has_dataset(object_type, ds):
                 ds_size = self.output.get_dataset_size(object_type, ds)
+                dataset = self.output.get_dataset(ds,
+                                           object_type=object_type)
                 if ds_size > 1:
                     _create_dataset_from_dict(object_results_node,
                                               ds,
-                                              self.output.object_results[object_type][ds],
-                                              "firstpass_pdf" in ds)
+                                              dataset)
                 else:
                     object_results_node.create_group(ds)
-                    for attr_name,attr in self.output.object_results[object_type][ds].items():
+                    for attr_name,attr in dataset.items():
                         object_results_node.get(ds).attrs[attr_name] = attr
 
-    def write_hdf5_method_level(self, object_type, object_results_node):
-        rs = self.output.results_specifications
-        rs = rs[rs["level"] == "method"]
-        methods_datasets = list(rs["hdf5_dataset"].unique())
-        for ds in methods_datasets:
-            if self.output.has_dataset(object_type,ds):
-                object_results_node.create_group(ds)
-                for attr_name,attr in self.output.object_results[object_type][ds].items():
-                    object_results_node.get(ds).attrs[attr_name] = attr
+    # def write_hdf5_method_level(self, object_type, object_results_node):
+    #     rs = self.output.results_specifications
+    #     rs = rs[rs["level"] == "method"]
+    #     methods_datasets = list(rs["hdf5_dataset"].unique())
+    #     for ds in methods_datasets:
+    #         if self.output.has_dataset(object_type,ds):
+    #             object_results_node.create_group(ds)
+    #             for attr_name,attr in self.output.object_results[object_type][ds].items():
+    #                 object_results_node.get(ds).attrs[attr_name] = attr
 
     def write_hdf5_candidate_level(self, object_type, object_results_node):
         if self.output.parameters.get_solve_method(object_type):
             candidates = object_results_node.create_group("candidates")
             level = "candidate"
-            rs, candidate_datasets = self.output.filter_datasets(level)
             nb_candidates = self.output.get_nb_candidates(object_type)
             for rank in range(nb_candidates):
                 candidate = candidates.create_group(self.output.get_candidate_group_name(rank))
-                for ds in candidate_datasets:
-                    if self.output.has_dataset(object_type,ds):
-                        ds_dim = self.output.get_dataset_size(object_type, ds, rank)
+                for ds in self.output.get_available_datasets("candidate",object_type = object_type):
+                    dataset = self.output.get_dataset(ds,
+                                               object_type=object_type,
+                                               rank=rank)
+                    ds_dim = self.output.get_dataset_size(object_type, ds, rank)
                         if ds_dim == 1:
                             candidate.create_group(ds)
-                            for attr_name, attr in self.output.object_results[object_type][ds][rank].items():
+                            for attr_name, attr in dataset.items():
                                 candidate.get(ds).attrs[attr_name] = attr
                         else:
                             _create_dataset_from_dict(candidate,
                                                       ds,
-                                                      self.output.object_results[object_type][ds][rank])
+                                                      dataset)
         
     def write_hdf5(self,hdf5_root,spectrum_id):
         try:

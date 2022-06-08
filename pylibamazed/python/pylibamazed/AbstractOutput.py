@@ -41,14 +41,6 @@ from pylibamazed.r_specifications import rspecifications
 from pylibamazed.Parameters import Parameters
 import numpy as np
 
-def _create_dataset_from_dict(h5_node, name, source, compress=False):
-    df = pd.DataFrame(source)
-    records = df.to_records()
-    h5_node.create_dataset(name,
-                           len(records),
-                           records.dtype,
-                           records,
-                           compression="lzf")
 
 class AbstractOutput:
 
@@ -60,7 +52,6 @@ class AbstractOutput:
         self.spectrum_id = ''
         self.root_results = dict()
         self.object_results = dict()
-        self.source = None # Shall be defined in subclass
         self.extended_results = extended_results 
         self.results_specifications = pd.read_csv(results_specifications,
                                                   sep='\t'
@@ -115,6 +106,37 @@ class AbstractOutput:
         else:
             return 1
 
+    def get_available_datasets(self, level,object_type=None):
+        if level == "root":
+            return self.root_results.keys()
+        elif level == "object":
+            l = []
+            for d in self.object_results[object_type].keys():
+                if type(self.object_results[object_type][d]) == list:
+                    l.append(d)
+            return l
+        elif level == "candidate":
+            l = []
+            for d in self.object_results[object_type].keys():
+                if type(self.object_results[object_type][d]) == dict:
+                    l.append(d)
+            return l
+        else:
+            raise APIException("Unknown level " + level)
+
+    def get_candidate_data(self, object_type, rank, data_name):
+        mp = self.object_results[object_type]["model_parameters"][rank][data_name]
+        return mp
+
+    def get_dataset(self, dataset, object_type=None, rank=None):
+        if object_type:
+            if rank is not None:
+                return self.object_results[object_type][dataset][rank]
+            else:
+                return self.object_results[object_type][dataset]
+        else:
+            return self.root_results[dataset]
+        
     # TODO more robust version, should iterate over candidate datasets and check existence
     def get_nb_candidates(self,object_type):
         return len(self.object_results[object_type]["model"])
@@ -138,11 +160,6 @@ class AbstractOutput:
         rs = self.results_specifications
         rs = rs[rs.hdf5_dataset == dataset]
         return rs.level.unique()[0]
-
-    def get_dimension(self, dataset):
-        rs = self.results_specifications
-        rs = rs[rs.hdf5_dataset == dataset]
-        return rs.dimension.unique()[0]
     
     def filter_datasets(self, level):
         rs = self.results_specifications
@@ -280,18 +297,6 @@ class AbstractOutput:
             self.object_results[object_type][ds] = candidates
 
                 
-    def get_candidate_data(self, object_type, rank, data_name):
-        mp = self.object_results[object_type]["model_parameters"][rank][data_name]
-        return mp
-
-    def get_dataset(self, dataset, object_type=None, rank=None):
-        if object_type:
-            if rank is not None:
-                return self.object_results[object_type][dataset][rank]
-            else:
-                return self.object_results[object_type][dataset]
-        else:
-            return self.root_results[dataset]
                     
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
