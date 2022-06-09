@@ -329,7 +329,10 @@ public:
   bool m_opt_enable_improveBalmerFit = false;
   Float64 m_opt_haprior = -1.;
   void setHaPriorOption(Float64 opt) { m_opt_haprior = opt; };
-
+  static constexpr Float64 m_overlapThresHybridFit =
+      0.15; // 15% seemed necessary for Ha/SII complex when lines are very
+            // wide (either because of PSF or source size)
+            // mainly for hybrid fitting
 private:
   Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis &spectralAxis,
                             const CSpectrumFluxAxis &spcFluxAxisNoContinuum,
@@ -398,12 +401,14 @@ private:
 
   Int32 improveBalmerFit();
   void applyRules(bool enableLogs = false);
-  TInt32List getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
-                                        const TInt32List &subeIdx_list,
-                                        const Float64 &sigma_support) const;
-  void integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
-                                   const TInt32List &indexes, Float64 &sumFlux,
-                                   Float64 &sumErr) const;
+  std::vector<CRange<Int32>>
+  getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
+                             const TInt32List &subeIdx_list,
+                             const Float64 &sigma_support) const;
+  void
+  integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
+                              const std::vector<CRange<Int32>> &indexRangeList,
+                              Float64 &sumFlux, Float64 &sumErr) const;
   CRegulament m_Regulament;
 
   TFloat64List m_ScaleMargCorrTplshape;

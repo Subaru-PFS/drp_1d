@@ -491,9 +491,10 @@ void CLineModelElement::prepareSupport(
         x2 = m_EndNoOverlap[i];
         y1 = m_StartNoOverlap[j];
         y2 = m_EndNoOverlap[j];
+        // compute overlapping region
         Int32 max = std::max(x1, y1);
         Int32 min = std::min(x2, y2);
-        if (max - min < 0) {
+        if (max - min < 0) { // case of overlapping
           m_StartNoOverlap[i] = std::min(x1, y1);
           m_EndNoOverlap[i] = std::max(x2, y2);
           m_StartNoOverlap[j] =

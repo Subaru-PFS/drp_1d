@@ -79,12 +79,8 @@ CContinuumIndexes::getIndexes(const CSpectrum &spectrum, Float64 z) {
   Int32 nIndexes = restLambdaRanges_A.size();
   CContinuumIndexes::TContinuumIndexList indexesList;
   for (Int32 i = 0; i < nIndexes; i++) {
-    TFloat64Range rangeA =
-        TFloat64Range(restLambdaRanges_A[i].GetBegin() * (z + 1),
-                      restLambdaRanges_A[i].GetEnd() * (z + 1));
-    TFloat64Range rangeB =
-        TFloat64Range(restLambdaRanges_B[i].GetBegin() * (z + 1),
-                      restLambdaRanges_B[i].GetEnd() * (z + 1));
+    TFloat64Range rangeA = restLambdaRanges_A[i] * (z + 1);
+    TFloat64Range rangeB = restLambdaRanges_B[i] * (z + 1);
     Float64 Fa = NAN;
     Float64 std = NAN;
     bool retA = spectrum.GetMeanAndStdFluxInRange(rangeA, Fa, std);
