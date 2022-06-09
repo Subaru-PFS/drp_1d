@@ -67,6 +67,7 @@ public:
                   const std::string &opt_fittingmethod,
                   const std::string &opt_continuumcomponent,
                   const Float64 opt_continuum_neg_threshold,
+                  const Float64 opt_continuum_nullamp_threshold,
                   const std::string &lineWidthType,
                   const Float64 velocityEmission,
                   const Float64 velocityAbsorption,

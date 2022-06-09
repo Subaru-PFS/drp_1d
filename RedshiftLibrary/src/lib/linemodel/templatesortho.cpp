@@ -214,6 +214,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     std::string opt_continuumcomponent = "fromspectrum";
     Float64 opt_continuum_neg_threshold =
         -INFINITY; // not relevant in the "fromspectrum" case
+    Float64 opt_continuum_nullamp_threshold =
+        0.; // not relevant in the "fromspectrum" case;
     CSpectrum spectrum = inputTemplate;
     spectrum.SetLSF(m_LSF);
 
@@ -230,8 +232,9 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     CLineModelFitting model(
         spectrum, lambdaRange, tplCatalogUnused, tplCategoryListUnused,
         restLineList, opt_fittingmethod, opt_continuumcomponent,
-        opt_continuum_neg_threshold, opt_lineWidthType, opt_nsigmasupport,
-        opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+        opt_continuum_neg_threshold, opt_continuum_nullamp_threshold,
+        opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
+        opt_velocityAbsorption, opt_rules, opt_rigidity);
 
     Float64 redshift = 0.0;
     Float64 contreest_iterations = 0;

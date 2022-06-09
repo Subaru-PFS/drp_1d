@@ -61,7 +61,8 @@ CMultiRollModel::CMultiRollModel(
     const CLineCatalogsTplShape &tplRatioCatalog,
     const std::string &opt_fittingmethod,
     const std::string &opt_continuumcomponent,
-    const Float64 opt_continuum_neg_threshold, const std::string &widthType,
+    const Float64 opt_continuum_neg_threshold,
+    const Float64 opt_continuum_nullamp_threshold, const std::string &widthType,
     const Float64 velocityEmission, const Float64 velocityAbsorption,
     const std::string &opt_rules, const std::string &opt_rigidity)
     : m_restLineList(restLineList) {
@@ -108,8 +109,8 @@ CMultiRollModel::CMultiRollModel(
     m_models.push_back(std::make_shared<CLineModelFitting>(
         *spcRolls[km], lambdaRange, tplCatalog, tplCategoryList, restLineList,
         opt_fittingmethod, opt_continuumcomponent, opt_continuum_neg_threshold,
-        widthType, lines_nsigmasupport, velocityEmission, velocityAbsorption,
-        opt_rules, opt_rigidity));
+        opt_continuum_nullamp_threshold, widthType, lines_nsigmasupport,
+        velocityEmission, velocityAbsorption, opt_rules, opt_rigidity));
   }
 }
 

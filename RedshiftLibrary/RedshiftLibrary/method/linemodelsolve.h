@@ -124,7 +124,7 @@ private:
   Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY; // no thresholding
-  Float64 m_opt_continuum_null_amp_threshold = -INFINITY;
+  Float64 m_opt_continuum_null_amp_threshold = 0.;
   std::string m_opt_tplfit_continuumprior_dirpath = "";
   bool m_opt_tplfit_ignoreLinesSupport = false;
 

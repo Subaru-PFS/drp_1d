@@ -125,9 +125,9 @@ Int32 COperatorLineModel::ComputeFirstPass(
   m_model = std::make_shared<CLineModelFitting>(
       spectrum, clampedlambdaRange, tplCatalog, m_tplCategoryList,
       m_RestLineList, opt_fittingmethod, m_opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
-      m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity);
+      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
+      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
+      opt_velocityAbsorption, opt_rules, opt_rigidity);
   m_model->setHaPriorOption(opt_haprior);
 
   /*
@@ -2381,9 +2381,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   m_model = std::make_shared<CLineModelFitting>(
       spc, clampedlambdaRange, tplCatalog, m_tplCategoryList, m_RestLineList,
       opt_fittingmethod, opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
-      m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
+      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
+      opt_velocityAbsorption, opt_rules, opt_rigidity, amplitudeOffsetsDegree);
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
 
