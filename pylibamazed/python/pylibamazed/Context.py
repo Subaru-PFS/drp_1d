@@ -89,6 +89,7 @@ class Context:
             
     def init_context(self):
         self.process_flow_context = CProcessFlowContext.GetInstance()
+        self.process_flow_context.reset()
         for object_type in self.parameters["objects"]:
             methods = []
             if self.parameters[object_type]["linemeas_method"]:
@@ -174,18 +175,13 @@ class Context:
                 rso.object_results[object_type]['reliability'] = dict()
                 rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
 
-            self.process_flow_context.reset()
-
+            return rso
         except GlobalException as e:
-            self.process_flow_context.reset()
             raise AmazedErrorFromGlobalException(e)
         except APIException as e:
-            self.process_flow_context.reset()
             raise AmazedError(e.errCode,e.message)
         except Exception as e:
-            self.process_flow_context.reset()
             raise AmazedError(ErrorCode.PYTHON_API_ERROR, str(e))
-        return rso
 
     def run_method(self, object_type, method):
 

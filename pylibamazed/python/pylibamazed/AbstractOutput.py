@@ -270,7 +270,6 @@ class AbstractOutput:
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
             ds_attributes = self.filter_dataset_attributes(ds).copy()
-            rs_key = ds_attributes["ResultStore_key"].unique()[0]
             if not self.has_candidate_dataset_in_source(object_type,
                                               method,
                                               ds):
