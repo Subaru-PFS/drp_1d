@@ -44,6 +44,10 @@
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/noiseaxis.h"
 
+namespace FluxAxis_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class ComputeMeanAndSDev_test;
+} // namespace FluxAxis_test
 namespace NSEpic {
 
 class CMask;
@@ -82,6 +86,8 @@ public:
           Int32 endIdx) const; // this is mainly applied on m_StdError
 
 private:
+  friend class FluxAxis_test::ComputeMeanAndSDev_test;
+
   bool ComputeMeanAndSDevWithoutError(const CMask &mask, Float64 &mean,
                                       Float64 &sdev) const;
   bool ComputeMeanAndSDevWithError(const CMask &mask, Float64 &mean,
