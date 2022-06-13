@@ -46,7 +46,6 @@ class Reliability:
         self.object_type = object_type
         self.parameters = parameters
         self.calibration_library = calibration
-        self.extended_results = extended_results
         
     def Compute(self, context):
         output = ResultStoreOutput(context.GetResultStore(),
