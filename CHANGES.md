@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.32.1 (2022-06-13)
+### Fixed
+* [7370] : Fix output with NN reliability
+
 ## 0.32.0 (2022-05-31)
 ### Added
 * [7093] : Centralize numerical constants in `defaults.h`
