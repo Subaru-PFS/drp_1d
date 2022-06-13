@@ -42,10 +42,14 @@ import numpy as np
 import pandas as pd
 import resource
 from collections import defaultdict
-from pylibamazed.redshift import (PC_Get_Float64Array, PC_Get_Int32Array, CLog, ErrorCode)
-#from pylibamazed.redshift import PC_Get_Float32Array #TODO ask Ali how to define this latter in the lib
-zlog = CLog.GetInstance()
+from pylibamazed.redshift import (PC_Get_Float64Array,
+                                  PC_Get_Float32Array,
+                                  PC_Get_Int32Array,
+                                  CLog, ErrorCode)
 from pylibamazed.Exception import AmazedError,APIException
+
+
+zlog = CLog.GetInstance()
 
 
 class ResultStoreOutput(AbstractOutput): 
@@ -56,24 +60,26 @@ class ResultStoreOutput(AbstractOutput):
         
         if auto_load:
             self.load_all()
-
         
 
     def _get_attribute_from_result_store(self,object_type,method,data_spec,rank):
         operator_result = self._get_operator_result(object_type, method, data_spec,rank)
-        if data_spec.dimension == "mono":
-            if "[object_type]" in data_spec.OperatorResult_name:
-                operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
-                return getattr(operator_result, operator_result_name)[object_type]
-            else:
-                return getattr(operator_result, data_spec.OperatorResult_name)
+        if "[object_type]" in data_spec.OperatorResult_name:
+            operator_result_name = data_spec.OperatorResult_name.replace("[object_type]","")
         else:
-            if data_spec.hdf5_type == 'f8':
-                return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))
-            if data_spec.hdf5_type == 'f4':#this should be Float32Array..to be corrected
-                return PC_Get_Float64Array(getattr(operator_result, data_spec.OperatorResult_name))
-            if data_spec.hdf5_type == 'i':
-                return PC_Get_Int32Array(getattr(operator_result, data_spec.OperatorResult_name))
+            operator_result_name = data_spec.OperatorResult_name
+        attr = getattr(operator_result, operator_result_name)
+        attr_type = type(attr).__name__
+        if attr_type == "TMapFloat64":
+            return attr[object_type]
+        elif attr_type == "TFloat64List":
+            return PC_Get_Float64Array(attr)
+        elif attr_type == "TFloat32List":
+            return PC_Get_Float32Array(attr)
+        elif attr_type == "TInt32List":
+            return PC_Get_Int32Array(attr)
+        else:
+            return attr
 
     def get_attribute_from_source(self, object_type, method, dataset, attribute,  rank=None):
         rs = self.results_specifications
@@ -137,9 +143,9 @@ class ResultStoreOutput(AbstractOutput):
     def _get_operator_result(self, object_type, method, attribute_info, rank=None):
         if attribute_info.level == "root":
             if attribute_info.ResultStore_key == "context_warningFlag":
-                return self.results_store.GetFlagResult(attribute_info.dataset,
-                                                        attribute_info.dataset,
-                                                        attribute_info.ResultStore_key)
+                return self.results_store.GetFlagLogResult(attribute_info.dataset,
+                                                           attribute_info.dataset,
+                                                           attribute_info.ResultStore_key)
             else :
                 or_type = self.results_store.GetGlobalResultType(attribute_info.dataset,
                                                                 attribute_info.dataset,

@@ -80,16 +80,6 @@ class H5Writer():
                 for attr_name,attr in dataset.items():
                     object_results_node.get(ds).attrs[attr_name] = attr
 
-    # def write_hdf5_method_level(self, object_type, object_results_node):
-    #     rs = self.output.results_specifications
-    #     rs = rs[rs["level"] == "method"]
-    #     methods_datasets = list(rs["hdf5_dataset"].unique())
-    #     for ds in methods_datasets:
-    #         if self.output.has_dataset(object_type,ds):
-    #             object_results_node.create_group(ds)
-    #             for attr_name,attr in self.output.object_results[object_type][ds].items():
-    #                 object_results_node.get(ds).attrs[attr_name] = attr
-
     def write_hdf5_candidate_level(self, object_type, object_results_node):
         if self.output.parameters.get_solve_method(object_type):
             candidates = object_results_node.create_group("candidates")

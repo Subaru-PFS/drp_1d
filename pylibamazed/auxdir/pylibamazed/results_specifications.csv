@@ -1,80 +1,80 @@
-name	dataset	hdf5_type	ResultStore_key	dimension	extended_results	level	OperatorResult_name	c_type
-Redshift	model_parameters	f8	extrema_results	mono	False	candidate	Redshift	double
-RedshiftUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	Deltaz	double
-RedshiftProba	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProba	double
-RedshiftLogProbaDensity	model_parameters	f8	extrema_results	mono	False	candidate	ValProba	double
-RedshiftProbaZmin	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmin	double
-RedshiftProbaZmax	model_parameters	f8	extrema_results	mono	False	candidate	ValSumProbaZmax	double
-ContinuumName	model_parameters	S40	extrema_results	mono	False	candidate	FittedTplName	string
-ContinuumIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplEbmvCoeff	double
-ContinuumIgmIndex	model_parameters	i	extrema_results	mono	False	candidate	FittedTplMeiksinIdx	int
-ContinuumAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitude	double
-ContinuumAmplitudeUncertainty	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplAmplitudeError	double
-ContinuumMtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMtm	double
-ContinuumDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDtm	double
-ContinuumLeastSquare	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMerit	double
-ContinuumLogPrior	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplLogPrior	double
-LinesRatioName	model_parameters	S60	extrema_results	mono	False	candidate	FittedTplratioName	string
-LeastSquare	model_parameters	f8	extrema_results	mono	False	candidate	Merit	double
-VelocityEmission	model_parameters	f8	extrema_results	mono	False	candidate	Elv	double
-VelocityAbsorption	model_parameters	f8	extrema_results	mono	False	candidate	Alv	double
-StrongEmissionLinesSNR	model_parameters	f8	extrema_results	mono	False	candidate	StrongELSNR	double
-LinesRatioIsmCoeff	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioIsmCoeff	double
-LinesRatioAmplitude	model_parameters	f8	extrema_results	mono	False	candidate	FittedTplratioAmplitude	double
-FittedLineLambda	fitted_lines	f8	extrema_results	multi	False	candidate	LambdaObs	list[double]
-FittedLineID	fitted_lines	i	extrema_results	multi	False	candidate	lineId	list[int]
-FittedLineFlux	fitted_lines	f8	extrema_results	multi	False	candidate	Fluxs	list[double]
-ModelLambda	model	f8	extrema_results	multi	False	candidate	ModelLambda	list[double]
-ModelFlux	model	f8	extrema_results	multi	False	candidate	ModelFlux	list[double]
-BestContinuumLambda	continuum	f8	extrema_results	multi	False	candidate	wavel	list[double]
-BestContinuumFlux	continuum	f8	extrema_results	multi	False	candidate	fluxes	list[double]
-GaussianPDFAmp	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmp	double
-GaussianPDFAmpErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussAmpErr	double
-GaussianPDFSigma	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigma	double
-GaussianPDFSigmaErr	model_parameters	f8	extrema_results	mono	True	candidate	GaussSigmaErr	double
-lfOII	model_parameters	f8	extrema_results	mono	False	candidate	lfOII	double
-snrOII	model_parameters	f8	extrema_results	mono	False	candidate	snrOII	double
-lfHa	model_parameters	f8	extrema_results	mono	False	candidate	lfHa	double
-snrHa	model_parameters	f8	extrema_results	mono	False	candidate	snrHa	double
-FirstpassRedshift	model_parameters	f8	extrema_results	mono	True	candidate	Redshift	double
-FirstpassRedshiftLogProbaDensity	model_parameters	f8	extrema_results	mono	True	candidate	ValProba	double
-FirstpassContinuumName	model_parameters	S40	extrema_results	mono	True	candidate	FittedTplName	string
-FirstpassContinuumIsmCoeff	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplEbmvCoeff	double
-FirstpassContinuumIgmIndex	model_parameters	i	extrema_results	mono	True	candidate	FittedTplMeiksinIdx	int
-FirstpassContinuumAmplitude	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplAmplitude	double
-FirstpassContinuumAmplitudeUncertainty	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplAmplitudeError	double
-FirstpassContinuumLeastSquare	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMerit	double
-FirstpassContinuumLogPrior	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplLogPrior	double
-FirstpassFittedTemplateDtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplDtm	double
-FirstpassFittedTemplateMtM	model_parameters	f8	extrema_results	mono	True	candidate	FittedTplMtm	double
-FirstpassVelocityEmission	model_parameters	f8	extrema_results	mono	True	candidate	Elv	double
-FirstpassVelocityAbsorption	model_parameters	f8	extrema_results	mono	True	candidate	Alv	double
-<ObjectType>Evidence	classification	f8	solveResult	mono	False	root	m_evidences[object_type]	double
-<ObjectType>Proba	classification	f8	solveResult	mono	False	root	m_proba[object_type]	double
-Type	classification	S1	solveResult	mono	False	root	m_TypeLabel	string
-PDFZGrid	pdf	f8	pdf	multi	False	object	Redshifts	list[double]
-PDFProbaLog	pdf	f8	pdf	multi	False	object	valProbaLog	list[double]
-ContinuumVectAmplitude	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeList	list[double]
-ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	f8	extrema_results	multi	FALSE	candidate	FittedTplAmplitudeErrorList	list[double]
-LinemeasLineLambda	linemeas	f8	linemeas	multi	False	object	LambdaObs	list[double]
-LinemeasLineID	linemeas	i	linemeas	multi	False	object	lineId	list[int]
-LinemeasLineFlux	linemeas	f8	linemeas	multi	False	object	Fluxs	list[double]
-LinemeasLineFluxDirectIntegration	linemeas	f8	linemeas	multi	False	object	FluxDirectIntegration	list[double]
-LinemeasLineFluxDirectIntegrationError	linemeas	f8	linemeas	multi	False	object	FluxDirectIntegrationError	list[double]
-LinemeasLineFluxError	linemeas	f8	linemeas	multi	False	object	FluxErrors	list[double]
-LinemeasLineFittingError	linemeas	f8	linemeas	multi	False	object	FittingError	list[double]
-LinemeasLineCenterContinuumFlux	linemeas	f8	linemeas	multi	False	object	CenterContinuumFlux	list[double]
-LinemeasLineWidth	linemeas	f8	linemeas	multi	False	object	Sigmas	list[double]
-Linemeas_snrOII	linemeas_parameters	f8	linemeas	mono	False	object	snrOII	double
-Linemeas_snrHa	linemeas_parameters	f8	linemeas	mono	False	object	snrHa	double
-LinemeasLfOII	linemeas_parameters	f8	linemeas	mono	False	object	lfOII	double
-LinemeasLfHa	linemeas_parameters	f8	linemeas	mono	False	object	lfHa	double
-Linemeas_VelocityEmission	linemeas_parameters	f8	linemeas	mono	False	object	EmissionVelocity	double
-Linemeas_VelocityAbsorption	linemeas_parameters	f8	linemeas	mono	False	object	AbsorptionVelocity	double
-ModelLambda	linemeas_model	f8	linemeas_model	multi	False	object	ModelLambda	list[double]
-ModelFlux	linemeas_model	f8	linemeas_model	multi	False	object	ModelFlux	list[double]
-Reliability	reliability	f8	solveResult	mono	False	object	m_ReliabilityLabel	double
-FirstpassPDFZGrid	firstpass_pdf	f8	firstpass_pdf	multi	False	object	Redshifts	list[double]
-FirstpassPDFProbaLog	firstpass_pdf	f8	firstpass_pdf	multi	False	object	valProbaLog	list[double]
-ContextWarningFlags	context_warningFlag	i	context_warningFlag	mono	False	root	flagValue	int
-<MethodType>WarningFlags	warningFlag	i	warningFlag	mono	False	method	flagValue	int
+name	dataset	extended_results	level	OperatorResult_name	ResultStore_key	hdf5_type
+Redshift	model_parameters	False	candidate	Redshift	extrema_results	f8
+RedshiftUncertainty	model_parameters	False	candidate	Deltaz	extrema_results	f8
+RedshiftProba	model_parameters	False	candidate	ValSumProba	extrema_results	f8
+RedshiftLogProbaDensity	model_parameters	False	candidate	ValProba	extrema_results	f8
+RedshiftProbaZmin	model_parameters	False	candidate	ValSumProbaZmin	extrema_results	f8
+RedshiftProbaZmax	model_parameters	False	candidate	ValSumProbaZmax	extrema_results	f8
+ContinuumName	model_parameters	False	candidate	FittedTplName	extrema_results	S40
+ContinuumIsmCoeff	model_parameters	False	candidate	FittedTplEbmvCoeff	extrema_results	f8
+ContinuumIgmIndex	model_parameters	False	candidate	FittedTplMeiksinIdx	extrema_results	i
+ContinuumAmplitude	model_parameters	False	candidate	FittedTplAmplitude	extrema_results	f8
+ContinuumAmplitudeUncertainty	model_parameters	False	candidate	FittedTplAmplitudeError	extrema_results	f8
+ContinuumMtM	model_parameters	True	candidate	FittedTplMtm	extrema_results	f8
+ContinuumDtM	model_parameters	True	candidate	FittedTplDtm	extrema_results	f8
+ContinuumLeastSquare	model_parameters	True	candidate	FittedTplMerit	extrema_results	f8
+ContinuumLogPrior	model_parameters	True	candidate	FittedTplLogPrior	extrema_results	f8
+LinesRatioName	model_parameters	False	candidate	FittedTplratioName	extrema_results	S60
+LeastSquare	model_parameters	False	candidate	Merit	extrema_results	f8
+VelocityEmission	model_parameters	False	candidate	Elv	extrema_results	f8
+VelocityAbsorption	model_parameters	False	candidate	Alv	extrema_results	f8
+StrongEmissionLinesSNR	model_parameters	False	candidate	StrongELSNR	extrema_results	f8
+LinesRatioIsmCoeff	model_parameters	False	candidate	FittedTplratioIsmCoeff	extrema_results	f8
+LinesRatioAmplitude	model_parameters	False	candidate	FittedTplratioAmplitude	extrema_results	f8
+FittedLineLambda	fitted_lines	False	candidate	LambdaObs	extrema_results	f8
+FittedLineID	fitted_lines	False	candidate	lineId	extrema_results	i
+FittedLineFlux	fitted_lines	False	candidate	Fluxs	extrema_results	f8
+ModelLambda	model	False	candidate	ModelLambda	extrema_results	f8
+ModelFlux	model	False	candidate	ModelFlux	extrema_results	f8
+BestContinuumLambda	continuum	False	candidate	wavel	extrema_results	f8
+BestContinuumFlux	continuum	False	candidate	fluxes	extrema_results	f8
+GaussianPDFAmp	model_parameters	True	candidate	GaussAmp	extrema_results	f8
+GaussianPDFAmpErr	model_parameters	True	candidate	GaussAmpErr	extrema_results	f8
+GaussianPDFSigma	model_parameters	True	candidate	GaussSigma	extrema_results	f8
+GaussianPDFSigmaErr	model_parameters	True	candidate	GaussSigmaErr	extrema_results	f8
+lfOII	model_parameters	False	candidate	lfOII	extrema_results	f8
+snrOII	model_parameters	False	candidate	snrOII	extrema_results	f8
+lfHa	model_parameters	False	candidate	lfHa	extrema_results	f8
+snrHa	model_parameters	False	candidate	snrHa	extrema_results	f8
+FirstpassRedshift	model_parameters	True	candidate	Redshift	extrema_results	f8
+FirstpassRedshiftLogProbaDensity	model_parameters	True	candidate	ValProba	extrema_results	f8
+FirstpassContinuumName	model_parameters	True	candidate	FittedTplName	extrema_results	S40
+FirstpassContinuumIsmCoeff	model_parameters	True	candidate	FittedTplEbmvCoeff	extrema_results	f8
+FirstpassContinuumIgmIndex	model_parameters	True	candidate	FittedTplMeiksinIdx	extrema_results	i
+FirstpassContinuumAmplitude	model_parameters	True	candidate	FittedTplAmplitude	extrema_results	f8
+FirstpassContinuumAmplitudeUncertainty	model_parameters	True	candidate	FittedTplAmplitudeError	extrema_results	f8
+FirstpassContinuumLeastSquare	model_parameters	True	candidate	FittedTplMerit	extrema_results	f8
+FirstpassContinuumLogPrior	model_parameters	True	candidate	FittedTplLogPrior	extrema_results	f8
+FirstpassFittedTemplateDtM	model_parameters	True	candidate	FittedTplDtm	extrema_results	f8
+FirstpassFittedTemplateMtM	model_parameters	True	candidate	FittedTplMtm	extrema_results	f8
+FirstpassVelocityEmission	model_parameters	True	candidate	Elv	extrema_results	f8
+FirstpassVelocityAbsorption	model_parameters	True	candidate	Alv	extrema_results	f8
+<ObjectType>Evidence	classification	False	root	m_evidences[object_type]	solveResult	f8
+<ObjectType>Proba	classification	False	root	m_proba[object_type]	solveResult	f8
+Type	classification	False	root	m_TypeLabel	solveResult	S1
+PDFZGrid	pdf	False	object	Redshifts	pdf	f8
+PDFProbaLog	pdf	False	object	valProbaLog	pdf	f8
+ContinuumVectAmplitude	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeList	extrema_results	f8
+ContinuumVectAmplitudeUncertainty	modeltplCombination_parameters	FALSE	candidate	FittedTplAmplitudeErrorList	extrema_results	f8
+LinemeasLineLambda	linemeas	False	object	LambdaObs	linemeas	f8
+LinemeasLineID	linemeas	False	object	lineId	linemeas	i
+LinemeasLineFlux	linemeas	False	object	Fluxs	linemeas	f8
+LinemeasLineFluxDirectIntegration	linemeas	False	object	FluxDirectIntegration	linemeas	f8
+LinemeasLineFluxDirectIntegrationError	linemeas	False	object	FluxDirectIntegrationError	linemeas	f8
+LinemeasLineFluxError	linemeas	False	object	FluxErrors	linemeas	f8
+LinemeasLineFittingError	linemeas	False	object	FittingError	linemeas	f8
+LinemeasLineCenterContinuumFlux	linemeas	False	object	CenterContinuumFlux	linemeas	f8
+LinemeasLineWidth	linemeas	False	object	Sigmas	linemeas	f8
+Linemeas_snrOII	linemeas_parameters	False	object	snrOII	linemeas	f8
+Linemeas_snrHa	linemeas_parameters	False	object	snrHa	linemeas	f8
+LinemeasLfOII	linemeas_parameters	False	object	lfOII	linemeas	f8
+LinemeasLfHa	linemeas_parameters	False	object	lfHa	linemeas	f8
+Linemeas_VelocityEmission	linemeas_parameters	False	object	EmissionVelocity	linemeas	f8
+Linemeas_VelocityAbsorption	linemeas_parameters	False	object	AbsorptionVelocity	linemeas	f8
+ModelLambda	linemeas_model	False	object	ModelLambda	linemeas_model	f8
+ModelFlux	linemeas_model	False	object	ModelFlux	linemeas_model	f8
+Reliability	reliability	False	object	m_ReliabilityLabel	solveResult	f8
+FirstpassPDFZGrid	firstpass_pdf	False	object	Redshifts	firstpass_pdf	f8
+FirstpassPDFProbaLog	firstpass_pdf	False	object	valProbaLog	firstpass_pdf	f8
+ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
+<MethodType>WarningFlags	warningFlag	False	method	flagValue	warningFlag	i
