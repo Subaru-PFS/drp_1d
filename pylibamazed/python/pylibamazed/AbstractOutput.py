@@ -55,6 +55,7 @@ class AbstractOutput:
         self.load_root()
         for object_type in self.object_types:
             self.load_object_level(object_type)
+            self.load_method_level(object_type)
             self.load_candidate_level(object_type)
 
     def get_solve_methods(self,object_type):
@@ -97,7 +98,9 @@ class AbstractOutput:
         else:
             return cr[columns]
 
-    def get_pdf(self,object_type):
+    def get_pdf(self,object_type, first_pass = False):
+        if first_pass:
+            return self.object_dataframes[object_type]["firstpass_pdf"]
         return self.object_dataframes[object_type]["pdf"]
 
     def get_classification_type(self):
@@ -115,10 +118,10 @@ class AbstractOutput:
         else:
             return self.object_dataframes[object_type]["model"][rank]
 
-    def get_fitted_rays_by_rank(self, object_type, rank, method):
+    def get_fitted_lines_by_rank(self, object_type, rank, method):
         if method == "LineMeasSolve":
             return self.object_dataframes[object_type]["linemeas"]
-        return self.object_dataframes[object_type]["fitted_rays"][rank]
+        return self.object_dataframes[object_type]["fitted_lines"][rank]
 
     def get_candidate_group_name(self,rank):
         return "candidate" + chr(rank+65) # 0=A, 1=B,....
@@ -143,7 +146,8 @@ class AbstractOutput:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                return attribute in self.object_results[object_type][dataset][rank]
+                if rank < len(self.object_results[object_type][dataset]):
+                    return attribute in self.object_results[object_type][dataset][rank]
         else:
             return False
 

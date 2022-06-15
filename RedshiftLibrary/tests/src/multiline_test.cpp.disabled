@@ -1,6 +1,6 @@
 #include <RedshiftLibrary/linemodel/element.h>
 #include <RedshiftLibrary/linemodel/multiline.h>
-#include <RedshiftLibrary/ray/ray.h>
+#include <RedshiftLibrary/line/line.h>
 
 #include <boost/test/unit_test.hpp>
 #include <cmath>
@@ -13,11 +13,11 @@ BOOST_AUTO_TEST_SUITE(test_element)
 
 Float64 precision = 1e-12;
 BOOST_AUTO_TEST_CASE(Instance) {
-  CRay ray = CRay("Abs", 4500., 1, CRay::SYM, 2, 0.2, 0.3);
-  CRay ray2 = CRay("Em", 6564.61, 2, CRay::SYM, 2, 1.0, 0.5);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  CLine line = CLine("Abs", 4500., 1, CLine::SYM, 2, 0.2, 0.3);
+  CLine line2 = CLine("Em", 6564.61, 2, CLine::SYM, 2, 1.0, 0.5);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -33,15 +33,15 @@ BOOST_AUTO_TEST_CASE(Instance) {
 
   CMultiLine element = CMultiLine(rs, "fixed", 8.0, 0.9, 1.0, 1.1, nominalAmplitudes,
                                   1.2, catalogIndexes);
-  BOOST_CHECK("Abs" == element.GetRayName(0));
-  BOOST_CHECK("-1" == element.GetRayName(2));
+  BOOST_CHECK("Abs" == element.GetLineName(0));
+  BOOST_CHECK("-1" == element.GetLineName(2));
   BOOST_CHECK_CLOSE(-1.0, element.GetSignFactor(0), precision);
   BOOST_CHECK_CLOSE(1.0, element.GetSignFactor(1), precision);
   BOOST_CHECK_CLOSE(0.0, element.GetWidth(0, 2.), precision);
 
-  std::vector<CRay> rayInMulti = element.GetRays();
-  for (Int32 k = 0; k < rayInMulti.size(); k++) {
-    BOOST_CHECK(rs[k].GetName() == rayInMulti[k].GetName());
+  std::vector<CLine> lineInMulti = element.GetLines();
+  for (Int32 k = 0; k < lineInMulti.size(); k++) {
+    BOOST_CHECK(rs[k].GetName() == lineInMulti[k].GetName());
   }
 
   element.SetNominalAmplitude(0, 1.5);
@@ -57,13 +57,13 @@ BOOST_AUTO_TEST_CASE(Instance) {
 
 BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
 
-  CRay ray = CRay("Abs", 5500, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 5500, 1, CLine::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 4400, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", 4400, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -82,14 +82,14 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
                                   10.2, catalogIndexes);
 
   Float64 redshift = 0.1;
-  TInt32Range supportRay = element.EstimateTheoreticalSupport(
+  TInt32Range supportLine = element.EstimateTheoreticalSupport(
       0, spectralAxis, redshift, lambdaRange);
-  BOOST_CHECK_CLOSE(6010., supportRay.GetBegin(), precision);
-  BOOST_CHECK_CLOSE(6091., supportRay.GetEnd(), precision);
-  supportRay = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
+  BOOST_CHECK_CLOSE(6010., supportLine.GetBegin(), precision);
+  BOOST_CHECK_CLOSE(6091., supportLine.GetEnd(), precision);
+  supportLine = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
                                                   lambdaRange);
-  BOOST_CHECK_CLOSE(4800., supportRay.GetBegin(), precision);
-  BOOST_CHECK_CLOSE(4881., supportRay.GetEnd(), precision);
+  BOOST_CHECK_CLOSE(4800., supportLine.GetBegin(), precision);
+  BOOST_CHECK_CLOSE(4881., supportLine.GetEnd(), precision);
 
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
   TInt32RangeList support = element.getSupport();
@@ -127,19 +127,19 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
   // ==============create problem du to lambda range =============
 
   lambdaRange = TFloat64Range(4850.0, 12500.0);
-  supportRay = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
+  supportLine = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
                                                   lambdaRange);
-  BOOST_CHECK_CLOSE(4850., supportRay.GetBegin(), precision);
+  BOOST_CHECK_CLOSE(4850., supportLine.GetBegin(), precision);
 
   lambdaRange = TFloat64Range(3900.0, 4860.0);
-  supportRay = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
+  supportLine = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
                                                   lambdaRange);
-  BOOST_CHECK_CLOSE(4860., supportRay.GetEnd(), precision);
+  BOOST_CHECK_CLOSE(4860., supportLine.GetEnd(), precision);
 
   lambdaRange = TFloat64Range(3900.0, 3880.0);
-  supportRay = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
+  supportLine = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
                                                   lambdaRange);
-  BOOST_CHECK_CLOSE(4799., supportRay.GetEnd(), precision);
+  BOOST_CHECK_CLOSE(4799., supportLine.GetEnd(), precision);
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
   support = element.getSupport();
   BOOST_CHECK(support.size() == 0);
@@ -169,13 +169,13 @@ BOOST_AUTO_TEST_CASE(prepareSupportSeparated) {
 
 BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
 
-  CRay ray = CRay("Abs", 5500, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 5500, 1, CLine::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 5520, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", 5520, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -194,14 +194,14 @@ BOOST_AUTO_TEST_CASE(prepareSupportJoined) {
                                   10.2, catalogIndexes);
 
   Float64 redshift = 0.1;
-  TInt32Range supportRay = element.EstimateTheoreticalSupport(
+  TInt32Range supportLine = element.EstimateTheoreticalSupport(
       0, spectralAxis, redshift, lambdaRange);
-  BOOST_CHECK_CLOSE(6010., supportRay.GetBegin(), precision);
-  BOOST_CHECK_CLOSE(6091., supportRay.GetEnd(), precision);
-  supportRay = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
+  BOOST_CHECK_CLOSE(6010., supportLine.GetBegin(), precision);
+  BOOST_CHECK_CLOSE(6091., supportLine.GetEnd(), precision);
+  supportLine = element.EstimateTheoreticalSupport(1, spectralAxis, redshift,
                                                   lambdaRange);
-  BOOST_CHECK_CLOSE(6032., supportRay.GetBegin(), precision);
-  BOOST_CHECK_CLOSE(6112., supportRay.GetEnd(), precision);
+  BOOST_CHECK_CLOSE(6032., supportLine.GetBegin(), precision);
+  BOOST_CHECK_CLOSE(6112., supportLine.GetEnd(), precision);
 
   element.prepareSupport(spectralAxis, redshift, lambdaRange);
   TInt32RangeList support = element.getSupport();
@@ -253,16 +253,16 @@ BOOST_AUTO_TEST_CASE(addModel_SupportAll) {
   // in this case multiline support is equal to spetral axis.
   // So all the bin continuum are duplicate in model after init model
 
-  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 10, 1, CLine::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", 15, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  CRay ray3 = CRay("Em2", 150, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line3 = CLine("Em2", 150, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
-  rs.push_back(ray3);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
+  rs.push_back(line3);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -339,13 +339,13 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
   // in this case multiline support is lower than continuum length.
   // So all the bin continuum are duplicate in model
 
-  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 10, 1, CLine::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", 15, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -424,13 +424,13 @@ BOOST_AUTO_TEST_CASE(addModel_SupportPartial) {
 
 BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
   // in this case multiline support totaly outside lambdarange
-  CRay ray = CRay("Abs", 10, 1, CRay::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 10, 1, CLine::SYM, 2, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", 15, 2, CRay::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", 15, 2, CLine::SYM, 2, 10.2, 10.3, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(0.5);
@@ -503,13 +503,13 @@ BOOST_AUTO_TEST_CASE(addModel_totalOutside) {
 BOOST_AUTO_TEST_CASE(fitAmplitude) {
   // in this case multiline support totaly outside lambdarange
   Float64 lambda0 = 15;
-  CRay ray = CRay("Abs", 100, 1, CRay::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
+  CLine line = CLine("Abs", 100, 1, CLine::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
                   "group", 10.8);
-  CRay ray2 = CRay("Em", lambda0, 2, CRay::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
+  CLine line2 = CLine("Em", lambda0, 2, CLine::SYM, 2, 1, 5, 20.4, 10.5, 10.6, 10.7,
                    "group", 10.8);
-  std::vector<CRay> rs;
-  rs.push_back(ray);
-  rs.push_back(ray2);
+  std::vector<CLine> rs;
+  rs.push_back(line);
+  rs.push_back(line2);
   TFloat64List nominalAmplitudes = TFloat64List();
   nominalAmplitudes.push_back(0.8);
   nominalAmplitudes.push_back(1);

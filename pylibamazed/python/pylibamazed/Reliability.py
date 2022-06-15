@@ -39,8 +39,8 @@
 
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 import numpy as np
-
-
+from pylibamazed.Exception import APIException
+from pylibamazed.redshift import (ErrorCode)
 class Reliability:
     def __init__(self, object_type,parameters, calibration):
         self.object_type = object_type
@@ -50,11 +50,12 @@ class Reliability:
     def Compute(self, context):
         output = ResultStoreOutput(context.GetResultStore(),
                                    self.parameters,
-                                   auto_load=False)
+                                   auto_load=False,
+                                   extended_results=False)
         pdf = output.get_attribute_from_result_store("PDFProbaLog", self.object_type, 0)
         model = self.calibration_library.reliability_models[self.object_type]
         if pdf.shape[0] != model.input_shape[1]:
-            raise ValueError('PDF and model shapes are not compatible')
+            raise APIException(ErrorCode.OutputReaderError,"PDF and model shapes are not compatible")
                 # The model needs a PDF, not LogPDF
         return  model.predict(np.exp(pdf[None, :, None]))[0, 1]
 

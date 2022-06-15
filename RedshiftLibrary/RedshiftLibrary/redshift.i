@@ -52,7 +52,7 @@
 %shared_ptr(CLogHandler)
 %shared_ptr(CParameterStore)
 %shared_ptr(COperatorResultStore)
-%shared_ptr(CRayCatalog)
+%shared_ptr(CLineCatalog)
 %shared_ptr(CLSF)
 %shared_ptr(CLSFGaussianConstantWidth)
 %shared_ptr(CLSFGaussianVariableWidth)
@@ -82,16 +82,19 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
-%shared_ptr(CRayCatalogsTplShape)
+%shared_ptr(CLineCatalogsTplShape)
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
+%shared_ptr(CSpectrumFluxCorrectionMeiksin)
+%shared_ptr(CSpectrumFluxCorrectionCalzetti) 
 %feature("director");
 %feature("nodirector") CSpectrumFluxAxis;
 
 %{
 #define SWIG_FILE_WITH_INIT
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/pyconv.h"
 #include "RedshiftLibrary/version.h"
 #include "RedshiftLibrary/common/range.h"
@@ -102,18 +105,16 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/processflow/resultstore.h"
-#include "RedshiftLibrary/ray/catalog.h"
-#include "RedshiftLibrary/ray/lineRatioCatalog.h"
-#include "RedshiftLibrary/ray/catalogsTplShape.h"
-#include "RedshiftLibrary/ray/airvacuum.h"
-#include "RedshiftLibrary/ray/lineprofile.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/lineRatioCatalog.h"
+#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/fluxaxis.h"
 #include "RedshiftLibrary/spectrum/spectralaxis.h"
 #include "RedshiftLibrary/spectrum/LSF.h"
 #include "RedshiftLibrary/spectrum/LSFFactory.h"
-#include "RedshiftLibrary/method/solvedescription.h"
 #include "RedshiftLibrary/method/classificationresult.h"
 #include "RedshiftLibrary/method/reliabilityresult.h"
 #include "RedshiftLibrary/operator/pdfMargZLogResult.h"
@@ -134,11 +135,11 @@
 #include "RedshiftLibrary/method/reliabilitysolve.h"
 #include "RedshiftLibrary/method/classificationsolve.h"
 #include "RedshiftLibrary/method/linematchingsolve.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectionmeiksin.h"
+#include "RedshiftLibrary/spectrum/fluxcorrectioncalzetti.h"
 
 using namespace NSEpic;
-static PyObject* pParameterException;
 static PyObject* pGlobalException;
-static PyObject* pSolveException;
 static PyObject* pAmzException;
  %}
 
@@ -146,15 +147,9 @@ static PyObject* pAmzException;
 
 %init %{
   import_array();
-  pParameterException = PyErr_NewException("redshift_.ParameterException", 0, 0);
-  Py_INCREF(pParameterException);
-  PyModule_AddObject(m, "ParameterException", pParameterException);
   pGlobalException = PyErr_NewException("redshift_.GlobalException", 0, 0);
   Py_INCREF(pGlobalException);
   PyModule_AddObject(m, "GlobalException", pGlobalException);
-  pSolveException = PyErr_NewException("redshift_.SolveException", 0, 0);
-  Py_INCREF(pSolveException);
-  PyModule_AddObject(m, "SolveException", pSolveException);
   pAmzException = PyErr_NewException("redshift_.AmzException", 0, 0);
   Py_INCREF(pAmzException);
   PyModule_AddObject(m, "AmzException", pAmzException);
@@ -176,9 +171,7 @@ static PyObject* pAmzException;
 
 // should be in "derived first" order
 #define FOR_EACH_EXCEPTION(ACTION) \
-   ACTION(ParameterException)       \
    ACTION(GlobalException) \
-   ACTION(SolveException) \
    ACTION(AmzException) \
 /**/
 %}
@@ -303,6 +296,7 @@ typedef std::vector<std::string> TStringList;
 %template(TFloat64List) std::vector<Float64>;
 %template(TInt32List) std::vector<Int32>;
 %template(TStringList) std::vector<std::string>;
+%template(VecTFloat64List) std::vector<  std::vector<Float64> >;
 
 %apply std::string &OUTPUT { std::string& out_str };
 %apply Int32 &OUTPUT { Int32& out_int };
@@ -321,12 +315,12 @@ class PC
 
 };
 
-class CRayCatalog
+class CLineCatalog
 {
 public:
-  CRayCatalog();
-  CRayCatalog(Float64 nSigmaSupport);
-  void AddRayFromParams(const std::string& name,
+  CLineCatalog();
+  CLineCatalog(Float64 nSigmaSupport);
+  void AddLineFromParams(const std::string& name,
 			const Float64& position,
 			const std::string& type,
 			const std::string& force,
@@ -338,24 +332,24 @@ public:
 			const Float64& velocityOffset,
 			const bool& enableVelocityFit,
 			const Int32& id,
-			const std::string& str_id);
+			const std::string& str_id,
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>& igmcorrection=nullptr);
 
   void setLineAmplitude(const std::string& str_id,const Float64& nominalAmplitude);
   void setAsymProfileAndParams(const std::string& profile, TAsymParams params);
-
-
+  void convertLineProfiles2SYMIGM(
+      const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrection);
 };
 
 typedef struct {
   TAsymParams(Float64 sigma,Float64 alpha,Float64 delta);
-        Float64 sigma, alpha, delta;
-    } TAsymParams;
+  Float64 sigma, alpha, delta;
+} TAsymParams;
 
-
-class CLineRatioCatalog : public CRayCatalog
+class CLineRatioCatalog : public CLineCatalog
 {
  public:
-  CLineRatioCatalog(const std::string& name, const CRayCatalog& lineCatalog);
+  CLineRatioCatalog(const std::string& name, const CLineCatalog& lineCatalog);
   ~CLineRatioCatalog();
   void addVelocity(const std::string& name, Float64 value);
   void setPrior(Float64 prior);
@@ -364,16 +358,15 @@ class CLineRatioCatalog : public CRayCatalog
 
 };
 
-class CRayCatalogsTplShape
+class CLineCatalogsTplShape
 {
 
 public:
-  CRayCatalogsTplShape();
+  CLineCatalogsTplShape();
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
 
 };
 
-%catches(std::string, std::runtime_error, ...) CTemplateCatalog::Load;
 
 class CTemplateCatalog
 {
@@ -424,19 +417,29 @@ public:
 
 class CProcessFlowContext {
 public:
-  CProcessFlowContext();
-  void Init();
-  void setLineCatalog(const std::string& objectType,std::shared_ptr<CRayCatalog> catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType,std::shared_ptr<CRayCatalogsTplShape> catalog); 
-  void setTemplateCatalog(std::shared_ptr<CTemplateCatalog> templateCatalog){ m_TemplateCatalog = templateCatalog;}
-  void setPhotBandCatalog(std::shared_ptr<CPhotBandCatalog> photBandCatalog){ m_photBandCatalog = photBandCatalog;}
-  void setSpectrum(std::shared_ptr<CSpectrum> spectrum){ m_Spectrum = spectrum;}
 
-  std::shared_ptr<COperatorResultStore> GetResultStore();
+  static CProcessFlowContext& GetInstance();
+
+  void Init();
+  void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
+  void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
+  void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
+  void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}
+  void setfluxCorrectionMeiksin(const std::shared_ptr<CSpectrumFluxCorrectionMeiksin> &igmcorrectionMeiksin){m_igmcorrectionMeiksin = igmcorrectionMeiksin;}
+  void setfluxCorrectionCalzetti(const std::shared_ptr<CSpectrumFluxCorrectionCalzetti> &ismcorrectionCalzetti){m_ismcorrectionCalzetti = ismcorrectionCalzetti;}
+  void reset();
+
+
+  const std::shared_ptr<COperatorResultStore> &GetResultStore();
   std::shared_ptr<const CParameterStore> LoadParameterStore(const std::string& paramsJSONString);
  
   TScopeStack  m_ScopeStack;
 
+ private:
+    CProcessFlowContext();
+    ~CProcessFlowContext();
+    
 };
 
 
@@ -476,7 +479,8 @@ class COperatorResultStore
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
 							     const std::string& name ,
-							     const int& rank
+							     const int& rank,
+                   bool firstpassResults
 							     ) const;
   std::shared_ptr<const TTplCombinationResult> GetTplCombinationResult(const std::string& objectType,
 										 const std::string& method,
@@ -593,20 +597,6 @@ class CSpectrumSpectralAxis : public CSpectrumAxis {
   CSpectrumSpectralAxis( const Float64* samples, Int32 n, std::string AirVacuum="" );
 };
 %clear (const Float64* samples, Int32 n);
-class CAirVacuum
-{
-public:
-    CAirVacuum(Float64 a, Float64 b1, Float64 b2, Float64 c1, Float64 c2);
-    virtual TFloat64List AirToVac(const TFloat64List & waveAir) const;
-    virtual TFloat64List VacToAir(const TFloat64List & waveVac) const;
-};
-class CAirVacuumConverter
-{
-public:
-    static std::shared_ptr<CAirVacuum> Get(const std::string & ConverterName);
-};
-
-//%apply (double* IN_ARRAY1, int DIM1) {(const Float64* samples, Int32 n)};
 
 %rename(CSpectrumFluxAxis_default) CSpectrumFluxAxis();
 %rename(CSpectrumFluxAxis_empty) CSpectrumFluxAxis(Int32 n);
@@ -658,10 +648,11 @@ class CLSF
       GaussianVariableWidth
     };
  public:
-  CLSF(TLSFType name);
   virtual ~CLSF();
   virtual Float64 GetWidth(Float64 lambda) const=0;
   virtual bool IsValid() const=0;
+protected:
+  CLSF();
 };
 
 class CLSFGaussianConstantWidth : public CLSF
@@ -694,29 +685,6 @@ class CLSFFactory : public CSingleton<CLSFFactory>
       CLSFFactory();
       ~CLSFFactory() = default;
 };
-  typedef enum ErrorCode
-    {
-      INTERNAL_ERROR=0,
-      EXTERNAL_LIB_ERROR,
-      INVALID_SPECTRA_FLUX,
-      INVALID_NOISE	,
-      SMALL_WAVELENGTH_RANGE ,
-      NEGATIVE_CONTINUUMFIT	,
-      BAD_CONTINUUMFIT	,
-      NULL_AMPLITUDES	,
-      PEAK_NOT_FOUND_PDF	,
-      MAX_AT_BORDER_PDF	,
-      UNKNOWN_PARAMETER  ,
-      BAD_PARAMETER_VALUE,
-      UNKNOWN_ATTRIBUTE ,
-      BAD_LINECATALOG,
-      BAD_LOGSAMPLEDSPECTRUM,
-      BAD_COUNTMATCH,
-      BAD_TEMPLATECATALOG,
-      INVALID_SPECTRUM,
-      OVERLAPRATE_NOTACCEPTABLE,
-      DZ_NOT_COMPUTABLE
-    } ErrorCode;
 
 typedef struct{
     virtual ~TLSFArguments(){};
@@ -787,64 +755,44 @@ public:
     TStringList GetNameListSortedByLambda() const;
 };
 
+%include "common/errorcodes.i"
+
 class AmzException : public std::exception
 {
 
- public:
-  AmzException(ErrorCode ec,std::string message);
+ public: 
+
+  AmzException(ErrorCode ec, const std::string &message, const char * filename_,
+		  const char * method_, int line_);
+
   virtual ~AmzException();
  
-  const char* getStackTrace() const;
   ErrorCode getErrorCode();
   virtual const char* what() ;
+  const std::string &getMessage();
+
+  const std::string &getFileName();
+  const std::string &getMethod();
+  int getLine();
+
 };
 
 
 class GlobalException: public AmzException
 {
  public:
-  GlobalException(ErrorCode ec,std::string message);
-  GlobalException(const GlobalException& e);
-  virtual ~GlobalException();
+  using AmzException::AmzException;
 };
-
-
-class SolveException: public AmzException
-{
- public:
-  SolveException(ErrorCode ec,std::string message);
-  SolveException(const SolveException& e);
-  virtual ~SolveException();
-};
-
-
-class ParameterException: public AmzException
-{
- public:
-  ParameterException(ErrorCode ec,std::string message);
-  ParameterException(const ParameterException& e);
-  virtual ~ParameterException();  
-};
-
-class CSolveDescription
-{
- public:
-  CSolveDescription(){}
-  ~CSolveDescription(){}
-    
-  static const std::string GetDescription(const std::string& method);
-};
-
 class CSolve{
  public:
   CSolve()=delete;
-    void Compute(CProcessFlowContext& context);
+    void Compute();
 };
 
 class CObjectSolve{
  public:
   CSolve()=delete;
-    void Compute(CProcessFlowContext& context);
+    void Compute();
 };
 
   class CClassificationSolve:public CSolve
@@ -897,3 +845,44 @@ public:
 
     CLineMatchingSolve(TScopeStack &scope,std::string objectType);
 };
+
+typedef struct {
+  MeiksinCorrection(TFloat64List _lbda, std::vector<TFloat64List> _fluxcorr);
+  TFloat64List lbda; // wavelength
+  std::vector<TFloat64List > fluxcorr; // 7 flux correction lists
+}MeiksinCorrection;
+
+%template(VecMeiksinCorrection) std::vector< MeiksinCorrection >;
+class CSpectrumFluxCorrectionMeiksin
+{
+  public:
+    CSpectrumFluxCorrectionMeiksin(std::vector<MeiksinCorrection> meiksinCorrectionCurves, TFloat64List zbins);
+};
+
+typedef struct {
+  CalzettiCorrection(TFloat64List _lbda, TFloat64List _fluxcorr);
+  TFloat64List lbda;
+  TFloat64List fluxcorr; 
+}CalzettiCorrection;
+class CSpectrumFluxCorrectionCalzetti
+{
+  public:
+    CSpectrumFluxCorrectionCalzetti(CalzettiCorrection _calzettiCorr, Float64 ebmv_start, Float64 ebmv_step, Float64 ebmv_n);
+};
+
+//code that runs after the cpp mapping takes place, it transfroms the cpp enum into python enum
+
+%pythoncode %{
+from enum import Enum
+def redo(prefix):
+    tmpD = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
+    for k,v in tmpD.items():
+        del globals()[k]
+    tmpD = {k[len(prefix)+1:]:v for k,v in tmpD.items()}
+    # globals()[prefix] = type(prefix,(),tmpD) # pre-Enum support
+    globals()[prefix] = Enum(prefix,tmpD)
+redo('ErrorCode')
+del redo  # cleaning up the namespace
+del Enum
+%}
+

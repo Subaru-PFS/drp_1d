@@ -38,6 +38,7 @@
 // ============================================================================
 
 #include "RedshiftLibrary/operator/templatefittingwithphot.h"
+#include "RedshiftLibrary/common/datatypes.h"
 
 using namespace NSEpic;
 using namespace std;
@@ -57,9 +58,8 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
   bool b = m_lambdaRange.getClosedIntervalIndices(
       m_spectrum.GetSpectralAxis().GetSamplesVector(), kstart, kend);
   if (!b) {
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorTemplateFittingPhot::RebinTemplate: no "
-                          "intersecton between spectral exis and lambda range");
+    THROWG(INTERNAL_ERROR,
+           "No intersecton between spectral exis and lambda range");
   }
 
   // initialize restframe photometric axis and rebined photmetric template
@@ -76,29 +76,25 @@ COperatorTemplateFittingPhot::COperatorTemplateFittingPhot(
 
 void COperatorTemplateFittingPhot::checkInputPhotometry() const {
   if (m_photBandCat == nullptr)
-    throw GlobalException(
-        INTERNAL_ERROR,
-        "COperatorTemplateFittingPhot: photometric band transmision not availables");
+    THROWG(INTERNAL_ERROR, "Photometric band "
+                           "transmision not availables");
   if (m_photBandCat->empty())
-    throw GlobalException(
+    THROWG(
         INTERNAL_ERROR,
         "COperatorTemplateFittingPhot: photometric bands transmission empty");
 
-
   if (m_spectrum.GetPhotData() == nullptr)
-    throw GlobalException(INTERNAL_ERROR,
-                          "COperatorTemplateFittingPhot: photometric data not "
-                          "available in spectrum");
+    THROWG(INTERNAL_ERROR, "COperatorTemplateFittingPhot: photometric data not "
+                           "available in spectrum");
 
   const auto &dataNames = m_spectrum.GetPhotData()->GetNameList();
   for (const auto &bandName : m_photBandCat->GetNameList())
     if (std::find(dataNames.cbegin(), dataNames.cend(), bandName) ==
         dataNames.cend())
-      throw GlobalException(INTERNAL_ERROR,
-                            Formatter() << "COperatorTemplateFittingPhot: "
-                                           "photometry point for band name: "
-                                        << bandName
-                                        << " is not available in the spectrum");
+      THROWG(INTERNAL_ERROR,
+             Formatter() << " "
+                            "photometry point for band name: "
+                         << bandName << " is not available in the spectrum");
 }
 
 void COperatorTemplateFittingPhot::RebinTemplate(
@@ -141,9 +137,7 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
                         templateRebined_phot, mskRebined, opt_interp);
 
     if (!b)
-      throw GlobalException(INTERNAL_ERROR,
-                            "COperatorTemplateFittingPhot::"
-                            "RebinTemplatePhotBand: error in rebinning tpl");
+      THROWG(INTERNAL_ERROR, "error in rebinning tpl");
 
     const Float64 overlapRate =
         photSpectralAxis_restframe.IntersectMaskAndComputeOverlapRate(
@@ -151,25 +145,23 @@ void COperatorTemplateFittingPhot::RebinTemplateOnPhotBand(
 
     if (overlapRate < 1.0) {
       // status = nStatus_NoOverlap;
-      throw GlobalException(
-          OVERLAPRATE_NOTACCEPTABLE,
-          Formatter() << "COperatorTemplateFittingPhot::RebinTemplatePhotBand: "
-                         "tpl overlap too small, overlaprate of "
-                      << overlapRate);
+      THROWG(OVERLAPRATE_NOTACCEPTABLE,
+             Formatter() << "tpl overlap too small, overlaprate of "
+                         << overlapRate);
     }
   }
 }
 
 void COperatorTemplateFittingPhot::InitIsmIgmConfig(
     Float64 redshift,
-    const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
+    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
         &ismCorrectionCalzetti,
-    const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
+    const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
         &igmCorrectionMeiksin,
     Int32 EbmvListSize) {
 
-  COperatorTemplateFitting::InitIsmIgmConfig(redshift, ismCorrectionCalzetti,
-                                             igmCorrectionMeiksin, EbmvListSize);
+  COperatorTemplateFitting::InitIsmIgmConfig(
+      redshift, ismCorrectionCalzetti, igmCorrectionMeiksin, EbmvListSize);
 
   // init ism on all rebined photometric templates
   for (auto &band : m_templateRebined_phot)
@@ -258,7 +250,7 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
   const auto &End = m_sortedBandNames.cend();
   const auto IgmEnd =
       std::lower_bound(m_sortedBandNames.cbegin(), m_sortedBandNames.cend(),
-                       1216.0, [this](const std::string &s, Float64 v) {
+                       RESTLAMBDA_LYA, [this](const std::string &s, Float64 v) {
                          return m_photBandCat->at(s).GetMinLambda() < v;
                        });
 
@@ -291,11 +283,9 @@ void COperatorTemplateFittingPhot::ComputePhotCrossProducts(
         photData->GetFluxOverErr2(bandName) * m_weight * m_weight;
 
     if (std::isinf(oneOverErr2) || std::isnan(oneOverErr2))
-      throw GlobalException(
-          INTERNAL_ERROR,
-          Formatter() << "COperatorTemplateFittingPhot::ComputeLeastSquare: "
-                         "found invalid inverse variance : err2="
-                      << oneOverErr2 << ", for band=" << bandName);
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "found invalid inverse variance : err2="
+                                 << oneOverErr2 << ", for band=" << bandName);
 
     sumCross_phot += d * integ_flux * oneOverErr2;
     sumT_phot += integ_flux * integ_flux * oneOverErr2;
@@ -321,13 +311,13 @@ Float64 COperatorTemplateFittingPhot::EstimateLikelihoodCstLog(
   Float64 cstlog =
       COperatorTemplateFitting::EstimateLikelihoodCstLog(spectrum, lambdaRange);
 
-  Float64 sumLogNoise;
+  Float64 sumLogNoise = 0.0;
   const auto &photData = m_spectrum.GetPhotData();
   for (const auto &b : *m_photBandCat) {
     const std::string &bandName = b.first;
     sumLogNoise += log(photData->GetFluxErr(bandName) * m_weight);
   }
-  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) + sumLogNoise;
+  cstlog -= m_photBandCat->size() * 0.5 * log(2 * M_PI) - sumLogNoise;
 
   return cstlog;
 }
