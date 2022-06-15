@@ -51,14 +51,13 @@ from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CPhotometricData,
                                   CLog,
                                   CFlagWarning,
-                                  
-                                  CTemplateCatalog)
+                                  ErrorCode
+                                 )
 from pylibamazed.lsf import LSFParameters, TLSFArgumentsCtor
 
 zlog = CLog.GetInstance()
 zflag = CFlagWarning.GetInstance()
-
-
+from pylibamazed.Exception import APIException
 class AbstractSpectrumReader:
     """
     Base class for spectrum reader, it handles at least wavelengths, flux and error (variance). It also handles
@@ -160,8 +159,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return self._spectra[0]
         else:
-            raise Exception("Spectrum not loaded")
-
+            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
     def get_wave(self):
         """
 
@@ -172,7 +170,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetSpectralAxis().GetSamplesVector())
         else:
-            raise Exception("Spectrum not loaded")
+            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_flux(self):
         """
@@ -184,7 +182,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList( self._spectra[0].GetFluxAxis().GetSamplesVector())
         else:
-            raise Exception("Spectrum not loaded")
+            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_error(self):
         """
@@ -196,7 +194,7 @@ class AbstractSpectrumReader:
         if self._spectra[0] is not None:
             return PC_Get_AxisSampleList(self._spectra[0].GetErrorAxis().GetSamplesVector())
         else:
-            raise Exception("Spectrum not loaded")
+            raise  APIException(ErrorCode.SPECTRUM_NOT_LOADED,"Spectrum not loaded")
 
     def get_lsf(self):
         """
@@ -214,11 +212,9 @@ class AbstractSpectrumReader:
 
     def init(self):
         if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
-            raise Exception("Numbers of error, wavelength and flux arrays should be the same : " + str(len(self.waves))
-                            + " " + str(len(self.errors)) + " " + str(len(self.fluxes))
-                            )
+            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Numbers of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves), str(len(self.errors)), str(len(self.fluxes)))))
         if len(self.lsf_data) > 1:
-            raise Exception("Multiple LSF not handled")
+            raise  APIException(ErrorCode.MULTILSF_NOT_HANDELED,"Multiple LSF not handled")
         airvacuum_method = self.parameters.get("airvacuum_method", "")
         if airvacuum_method == "default":
             airvacuum_method = "Morton2000"
@@ -248,9 +244,9 @@ class AbstractSpectrumReader:
             epsilon = np.concatenate([i for i in map(np.arange, np.bincount(codes))]) * 1e-10
             wse["wave"] = wse["wave"] + epsilon
             if len(wse["wave"].unique()) != wse.index.size:
-                raise Exception("Duplicates in wavelengths")
+                raise  APIException(ErrorCode.UNALLOWED_DUPLICATES,"Duplicates in wavelengths")
             if not (np.diff(wse["wave"]) > 0).all():
-                raise Exception("Wavelenghts are not sorted")
+                raise  APIException(ErrorCode.UNSORTED_ARRAY,"Wavelenghts are not sorted")
             spectralaxis = CSpectrumSpectralAxis(np.array(wse["wave"]), airvacuum_method)
             signal = CSpectrumFluxAxis_withError(np.array(wse["flux"]),
                                                  np.array(wse["error"]))
@@ -258,7 +254,7 @@ class AbstractSpectrumReader:
         self._spectra.append(CSpectrum(spectralaxis, signal))
         self._spectra[0].SetName(self.source_id)
 
-        ctx = CProcessFlowContext()
+        ctx = CProcessFlowContext.GetInstance()
         ctx.setSpectrum(self._spectra[0])
         parameter_lsf_type = self.parameters["LSF"]["LSFType"]
         if parameter_lsf_type == "FROMSPECTRUMDATA":
@@ -285,7 +281,4 @@ class AbstractSpectrumReader:
             flux = tuple([float(f) for f in self.photometric_data[0].Flux])
             fluxerr = tuple([float(f) for f in self.photometric_data[0].Error])
             self._spectra[0].SetPhotData(CPhotometricData(names, flux, fluxerr))
-
-        del ctx
-
 

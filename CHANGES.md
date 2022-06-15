@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.32.1 (2022-06-13)
+### Fixed
+* [7370] : Fix output with NN reliability
+
+## 0.32.0 (2022-05-31)
+### Added
+* [7093] : Centralize numerical constants in `defaults.h`
+* [7221] : Extend unit test coverage
+* [6681] : Add optional extended results output
+### Changed
+* [7123] : `CProcessFlowContext` is singleton
+* [7173] : Substract polynomial from continuum for flux `directIntegration`
+* [7110] : Warning flags are stored by object category in HDF5 file
+* [7133] : Unify all error handling in the library (C++ and python)
+* [7127] : Move Meiksin file loading from C++ to python
+* [6882] : All C++ code reformatted using clang-format tool
+* [5645] : Apply IGM on lines below 1216A
+### Removed
+* [7029] : Clean unused files
+### Fixed
+* [7209] : Use disctinct line catalogs for line measurement and z estimation
+* [7309] : Fix wrong polynomial index and raise exception if invalid index
+* [7149] : Fix IGM above last IGM z bin in `fftprocessing`
+* [7295] : Memory management and profiling
+* [7327] : Correct heap overflow bugs
+
 ## 0.30.0 (2022-03-11)
 ### Added
 * [6754] : Add generic object categories

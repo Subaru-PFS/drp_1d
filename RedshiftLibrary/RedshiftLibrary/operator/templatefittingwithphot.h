@@ -40,6 +40,7 @@
 #define _REDSHIFT_OPERATOR_TEMPLATE_FITTING_WITHPHOT
 
 #include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/photometry/photometricband.h"
@@ -72,12 +73,13 @@ private:
   void RebinTemplateOnPhotBand(const std::shared_ptr<const CTemplate> &tpl,
                                Float64 redshift, const std::string &opt_interp);
 
-  void InitIsmIgmConfig(Float64 redshift,
-                        const std::shared_ptr<CSpectrumFluxCorrectionCalzetti>
-                            &ismCorrectionCalzetti,
-                        const std::shared_ptr<CSpectrumFluxCorrectionMeiksin>
-                            &igmCorrectionMeiksin,
-                        Int32 EbmvListSize) override;
+  void
+  InitIsmIgmConfig(Float64 redshift,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+                       &ismCorrectionCalzetti,
+                   const std::shared_ptr<const CSpectrumFluxCorrectionMeiksin>
+                       &igmCorrectionMeiksin,
+                   Int32 EbmvListSize) override;
 
   bool
   CheckLyaIsInCurrentRange(const TFloat64Range &currentRange) const override;

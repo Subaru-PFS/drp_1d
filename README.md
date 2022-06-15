@@ -96,29 +96,29 @@ Name argument corresponds to the third party name and could take the following v
 
 For instance, to install the fftw and cfitsio third parties into the `thirdparty` directory, execute:
 
-    python tools/buildandinstallthirdparty fftw cfitsio
+    python tools/buildandinstallthirdparty.py fftw cfitsio
 
 Other command line options:
 
 `--workdir`: specifies the working directory for the third party building (absolute path)
 
-    python tools/buildandinstallthirdparty fftw cfitsio --workdir=/tmp
+    python tools/buildandinstallthirdparty.py fftw cfitsio --workdir=/tmp
 
 `--prefix`: specifies the installation directory for third parties (absolute path)
 
-    python tools/buildandinstallthirdparty fftw cfitsio --prefix=/usr/local
+    python tools/buildandinstallthirdparty.py fftw cfitsio --prefix=/usr/local
 
 `-j`: specifies the number of make jobs to run simultaneously 
 
-    python tools/buildandinstallthirdparty fftw cfitsio -j 4
+    python tools/buildandinstallthirdparty.py fftw cfitsio -j 4
 
 `--extra_flags`: specifies extra_flag to give to the build stage of third party
 
-    python tools/buildandinstallthirdparty fftw cfitsio --extra_flags=
+    python tools/buildandinstallthirdparty.py fftw cfitsio --extra_flags=
 
 `--force`: forces the library building and overwrites existing built library 
 
-    python tools/buildandinstallthirdparty fftw cfitsio --force
+    python tools/buildandinstallthirdparty.py fftw cfitsio --force
 
 ## Contacts
 
