@@ -61,6 +61,20 @@ class AbstractOutput:
         for object_type in self.object_types:
             self.object_results[object_type] = dict()
 
+    def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
+        raise NotImplementedError("Implement in derived class")
+
+    def has_attribute_in_source(self,object_type, method, dataset, attribute,rank=None):
+        raise NotImplementedError("Implement in derived class")    
+
+    def has_dataset_in_source(self, object_type, method, dataset):
+        raise NotImplementedError("Implement in derived class")
+
+    def has_candidate_dataset_in_source(self, object_type, method, dataset):
+        raise NotImplementedError("Implement in derived class")    
+
+    def get_nb_candidates_in_source(self, object_type, method):
+        raise NotImplementedError("Implement in derived class")
         
     def load_all(self):
         self.load_root()
@@ -141,20 +155,6 @@ class AbstractOutput:
     def get_nb_candidates(self,object_type):
         return len(self.object_results[object_type]["model"])
             
-    def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
-        raise NotImplementedError("Implement in derived class")
-
-    def has_attribute_in_source(self,object_type, method, dataset, attribute,rank=None):
-        raise NotImplementedError("Implement in derived class")    
-
-    def has_dataset_in_source(self, object_type, method, dataset):
-        raise NotImplementedError("Implement in derived class")
-
-    def has_candidate_dataset_in_source(self, object_type, method, dataset):
-        raise NotImplementedError("Implement in derived class")    
-
-    def get_nb_candidates_in_source(self, object_type, method):
-        raise NotImplementedError("Implement in derived class")
 
     def get_level(self, dataset):
         rs = self.results_specifications
