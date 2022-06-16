@@ -49,26 +49,29 @@ calibration_dir = os.path.join(module_root_dir, "..","..","auxdir","pylibamazed"
 
 def make_parameters():
     parameters = dict()
+    parameters["objects"]=["galaxy"]
     parameters["ebmv"] = dict()
     parameters["ebmv"]["count"] = 3
     parameters["galaxy"] = dict()
-    parameters["galaxy"]["linemodelsolve"]=dict()
-    parameters["galaxy"]["linemodelsolve"]["linemodel"]=dict()
-    parameters["galaxy"]["linemodelsolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H.tsv"
-    parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_catalog"]="lineratiocataloglists/lineratiocatalogs_v15/"
-    parameters["galaxy"]["linemodelsolve"]["linemodel"]["tplratio_ismfit"]=True
+    parameters["galaxy"]["LineModelSolve"]=dict()
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]=dict()
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]["linecatalog"]="linecatalogs/linecatalogamazedvacuum_H0.tsv"
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_catalog"]="lineratiocataloglists/lineratiocatalogs_v16/"
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]=True
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]["nsigmasupport"]=8
+    parameters["galaxy"]["LineModelSolve"]["linemodel"]["igmfit"]=True
     return parameters
 
 
 def test_calibration_linecatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters,calibration_dir)
-    cl.load_linecatalog("galaxy","linemodelsolve") 
+    cl.load_linecatalog("galaxy","LineModelSolve") 
 
     
 def test_calibration_lineratiocatalog():
     parameters = make_parameters()
     cl = CalibrationLibrary(parameters,calibration_dir)
-    cl.load_linecatalog("galaxy","linemodelsolve")
-    cl.load_line_ratio_catalog_list("galaxy","linemodelsolve")
+    cl.load_linecatalog("galaxy","LineModelSolve")
+    cl.load_line_ratio_catalog_list("galaxy")
 
