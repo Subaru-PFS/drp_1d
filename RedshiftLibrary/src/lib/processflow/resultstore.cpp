@@ -221,9 +221,9 @@ COperatorResultStore::GetPdfMargZLogResult(const std::string &objectType,
 }
 
 std::shared_ptr<const CFlagLogResult>
-COperatorResultStore::GetFlagResult(const std::string &objectType,
-                                    const std::string &method,
-                                    const std::string &name) const {
+COperatorResultStore::GetFlagLogResult(const std::string &objectType,
+                                       const std::string &method,
+                                       const std::string &name) const {
   std::ostringstream oss;
   if (objectType == name) {
     oss << name;

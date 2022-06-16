@@ -52,7 +52,10 @@ class Reliability:
                                    self.parameters,
                                    auto_load=False,
                                    extended_results=False)
-        pdf = output.get_attribute_from_result_store("PDFProbaLog", self.object_type, 0)
+        pdf = output.get_attribute_from_source(self.object_type,
+                                               self.parameters.get_solve_method(self.object_type),
+                                               "pdf",
+                                               "PDFProbaLog")
         model = self.calibration_library.reliability_models[self.object_type]
         if pdf.shape[0] != model.input_shape[1]:
             raise APIException(ErrorCode.OutputReaderError,"PDF and model shapes are not compatible")

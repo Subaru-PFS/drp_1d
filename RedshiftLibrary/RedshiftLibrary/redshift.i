@@ -288,6 +288,7 @@ typedef CRange<Float64> TFloat64Range;
 typedef TFloat64Range   TLambdaRange;
 typedef std::vector<std::string> TScopeStack;
 typedef std::vector<Float64> TFloat64List;
+typedef std::vector<Float32> TFloat32List;
 typedef std::vector<Int32> TInt32List;
 typedef std::vector<std::string> TStringList;
 
@@ -312,6 +313,8 @@ class PC
   static void get(const TInt32List& vec,int ** ARGOUTVIEW_ARRAY1, int * DIM1);
   %rename(Get_AxisSampleList) getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
   static void getasl(const TAxisSampleList& vec,double ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  %rename(Get_Float32Array) get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
+  static void get(const TFloat32List& vec,float ** ARGOUTVIEW_ARRAY1, int * DIM1);
 
 };
 
@@ -472,9 +475,9 @@ class COperatorResultStore
 								    const std::string& method,
 								    const std::string& name ) const;
 
-  std::shared_ptr<const CFlagLogResult> GetFlagResult(const std::string& objectType,
-								    const std::string& method,
-								    const std::string& name ) const;
+  std::shared_ptr<const CFlagLogResult> GetFlagLogResult(const std::string& objectType,
+							 const std::string& method,
+							 const std::string& name ) const;
 
   std::shared_ptr<const TLineModelResult> GetLineModelResult(const std::string& objectType,
 							     const std::string& method,
