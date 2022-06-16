@@ -181,13 +181,21 @@ class AbstractOutput:
         
         return rs, filtered_datasets
 
-    def filter_dataset_attributes(self, ds_name):  
+    def filter_dataset_attributes(self, ds_name, object_type=None): 
         rs = self.results_specifications 
         ds_attributes = rs[rs["dataset"]==ds_name]   
         #filter ds_attributes by extended_results column
-        if self.extended_results:
-            return ds_attributes
-        filtered_df = ds_attributes[ds_attributes["extended_results"]==self.extended_results]     
+        skipsecondpass = False 
+        if object_type is not None:
+            skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
+        if self.extended_results and skipsecondpass is False:
+            return ds_attributes 
+        #retrieve extended results which are not firstpass results
+        if self.extended_results and skipsecondpass is True:
+            filtered_df = ds_attributes[~ds_attributes["hdf5_name"].str.contains("Firstpass", na=True)]
+            return filtered_df   
+
+        filtered_df = ds_attributes[ds_attributes["extended_results"]==False]     
         return filtered_df
 
     # root is every first level data excluding self.objects
@@ -269,7 +277,7 @@ class AbstractOutput:
         level = "candidate"
         rs, candidate_datasets = self.filter_datasets(level)
         for ds in candidate_datasets:
-            ds_attributes = self.filter_dataset_attributes(ds).copy()
+            ds_attributes = self.filter_dataset_attributes(ds, object_type).copy()
             if not self.has_candidate_dataset_in_source(object_type,
                                               method,
                                               ds):

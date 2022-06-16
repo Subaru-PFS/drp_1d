@@ -28,6 +28,13 @@ class Parameters():
             methods.append(self.parameters[object_type]["method"]) 
         return methods
     
+    def check_lmskipsecondpass(self, object_type):
+        if self.parameters[object_type]["method"]:
+            if self.parameters[object_type]["method"] != "LineModelSolve":
+                return False 
+            else:
+                return self.parameters[object_type][self.parameters[object_type]["method"]]["linemodel"]["skipsecondpass"]
+        return False
     def get_solve_method(self, object_type):
         return self.parameters[object_type]["method"]
 
