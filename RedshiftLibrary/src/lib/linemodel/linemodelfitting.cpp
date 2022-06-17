@@ -1610,6 +1610,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
       if (m_rigidity == "tplshape") {
         if (m_forcedisableTplratioISMfit && ifitting > 0 &&
+            !m_CatalogTplShape.CalzettiInitFailed() &&
             m_CatalogTplShape.GetIsmCoeff(ifitting) > 0) {
           // copy the values for ebmv=ebmv_fixed (=0) here
           m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting - 1];
@@ -2296,7 +2297,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           m_tplshapeBestTplName =
               m_CatalogTplShape.GetCatalogName(savedIdxFitted);
           m_tplshapeBestTplIsmCoeff =
-              m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
+              m_CatalogTplShape.CalzettiInitFailed()
+                  ? NAN
+                  : m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
           m_tplshapeBestTplAmplitude =
               m_FittedAmpTplshape[savedIdxFitted][0]; // Should be only 1 elt
                                                       // in tpl ratio mode...
