@@ -62,6 +62,9 @@ class CParameterStore;
 class COperatorResultStore;
 class CClassifierStore;
 class CInputContext;
+class CLine;
+typedef std::vector<CLine> TLineVector;
+
 /**
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
@@ -128,6 +131,23 @@ public:
   const std::shared_ptr<COperatorResultStore> &GetResultStore() {
     return m_ResultStore;
   }
+
+  const TFloat64Range &GetLambdaRange() const { return m_spclambdaRange; }
+
+  const std::string &GetCurrentCategory() const {
+    if (m_ScopeStack.empty())
+      THROWG(INTERNAL_ERROR,
+             "Category unreachable at process flow begin or end");
+    return m_ScopeStack[0];
+  }
+
+  const std::string &GetCurrentMethod() const {
+    if (m_ScopeStack.size() < 2)
+      THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
+    return m_ScopeStack[1];
+  }
+
+  const CLineCatalog::TLineVector &getLineVector();
 
   TScopeStack m_ScopeStack;
 

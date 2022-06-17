@@ -77,20 +77,16 @@ class CLineProfileASYMFIXED;
 class CLineModelFitting {
 
 public:
-  CLineModelFitting(const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
-                    const CTemplateCatalog &tplCatalog,
-                    const TStringList &tplCategoryList,
-                    const CLineCatalog::TLineVector &restLineList,
-                    const std::string &opt_fittingmethod,
-                    const std::string &opt_continuumcomponent,
-                    Float64 opt_continuum_neg_threshold,
-                    Float64 opt_continuum_nullamp_threshold,
-                    const std::string &widthType, Float64 nsigmasupport,
-                    Float64 velocityEmission, Float64 velocityAbsorption,
-                    const std::string &opt_rules,
-                    const std::string &opt_rigidity,
-                    Int32 amplitudeOffsetsDegree = 2);
+  CLineModelFitting();
+  CLineModelFitting(
+      const CSpectrum &template_,
+      const TLambdaRange
+          &lambdaRange); // only used for template orthogonalization, TODO use
+                         // only one of the future subclasses ? at least inherit
+                         // from clinemodelfitting
 
+  void initParameters();
+  void initMembers();
   void LoadCatalog(const CLineCatalog::TLineVector &restLineList);
   void LoadCatalogOneMultiline(const CLineCatalog::TLineVector &restLineList);
   void
@@ -502,6 +498,8 @@ private:
   bool m_lmfit_fitContinuum;
   bool m_lmfit_fitEmissionVelocity;
   bool m_lmfit_fitAbsorptionVelocity;
+
+  std::string m_continuumComponent;
 
   const TFloat64Range m_lambdaRange;
 

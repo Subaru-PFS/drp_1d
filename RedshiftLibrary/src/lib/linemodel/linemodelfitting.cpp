@@ -50,6 +50,8 @@
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
 #include "RedshiftLibrary/extremum/extremum.h"
 #include "RedshiftLibrary/log/log.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
+#include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
@@ -75,45 +77,70 @@ using namespace std;
  * Sets many state variables.
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
-CLineModelFitting::CLineModelFitting(
-    const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
-    const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList,
-    const CLineCatalog::TLineVector &restLineList,
-    const std::string &opt_fittingmethod,
-    const std::string &opt_continuumcomponent,
-    Float64 opt_continuum_neg_threshold,
-    Float64 opt_continuum_nullamp_threshold, const std::string &widthType,
-    Float64 nsigmasupport, Float64 velocityEmission, Float64 velocityAbsorption,
-    const std::string &opt_rules, const std::string &opt_rigidity,
-    Int32 amplitudeOffsetsDegree)
-    : m_inputSpc(spectrum), m_lambdaRange(lambdaRange),
-      m_tplCatalog(tplCatalog), m_tplCategoryList(tplCategoryList),
-      m_RestLineList(restLineList), m_fittingmethod(opt_fittingmethod),
-      m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
-      m_opt_fitcontinuum_null_amp_threshold(opt_continuum_nullamp_threshold),
-      m_LineWidthType(widthType), m_NSigmaSupport(nsigmasupport),
-      m_velocityEmission(velocityEmission),
-      m_velocityAbsorption(velocityAbsorption),
-      m_velocityEmissionInit(m_velocityEmission),
-      m_velocityAbsorptionInit(m_velocityAbsorption), m_rulesoption(opt_rules),
-      m_rigidity(opt_rigidity), m_Regulament(),
-      m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()),
-      m_templateFittingOperator(spectrum, lambdaRange),
-      m_enableAmplitudeOffsets(false),
-      m_AmplitudeOffsetsDegree(amplitudeOffsetsDegree) {
+CLineModelFitting::CLineModelFitting()
+    : m_inputSpc(*(Context.GetSpectrum())),
+      m_lambdaRange(Context.GetLambdaRange()),
+      m_RestLineList(Context.getLineVector()),
+      m_tplCatalog(*(Context.GetTemplateCatalog())),
+      m_tplCategoryList({Context.GetCurrentCategory()}),
+      m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
+      m_templateFittingOperator(m_inputSpc, m_lambdaRange),
+      m_enableAmplitudeOffsets(false)
 
+{
+  initParameters();
+  initMembers();
+}
+
+CLineModelFitting::CLineModelFitting(const CSpectrum &template_,
+                                     const TLambdaRange &lambdaRange)
+    : m_inputSpc(template_), m_lambdaRange(lambdaRange), m_tplCatalog(),
+      m_tplCategoryList(),
+      m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
+      m_templateFittingOperator(m_inputSpc, m_lambdaRange),
+      m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
+  initParameters();
+  // override ortho specific parameters
+  m_continuumComponent = "fromspectrum";
+  m_fittingmethod = "hybrid";
+  // temporary options override to be removed when full tpl ortho is implemented
+  m_rigidity = "rules";
+  m_rulesoption = "no";
+  initMembers();
+}
+
+void CLineModelFitting::initParameters() {
+  CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+
+  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+  m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
+  m_opt_fitcontinuum_neg_threshold =
+      ps->GetScoped<Float64>("continuumfit.negativethreshold");
+  m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
+  m_NSigmaSupport = ps->GetScoped<Float64>("nsigmasupport");
+  m_velocityEmission = ps->GetScoped<Float64>("velocityemission");
+  m_velocityAbsorption = ps->GetScoped<Float64>("velocityabsorption");
+  m_velocityEmissionInit = m_velocityEmission;
+  m_velocityAbsorptionInit = m_velocityAbsorption;
+  m_rulesoption = ps->GetScoped<std::string>("rules");
+  m_rigidity = ps->GetScoped<std::string>("rigidity");
+  m_continuumComponent = ps->GetScoped<std::string>("continuumcomponent");
+  m_opt_fitcontinuum_null_amp_threshold = ps->GetScoped<Float64>("continuum_nullamp_threshold
+}
+
+void CLineModelFitting::initMembers() {
   // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
   m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
   m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
 
   m_enableLambdaOffsetsFit =
       true; // enable lambdaOffsetFit. Once enabled, the offset fixed value or
-            // the fitting on/off switch is done through the offset calibration
-            // file.
+  // the fitting on/off switch is done through the offset calibration
+  // file.
 
-  m_SpectrumModel = CSpectrum(spectrum);
-  m_SpcCorrectedUnderLines = CSpectrum(spectrum);
-  const Int32 spectrumSampleCount = spectrum.GetSampleCount();
+  m_SpectrumModel = CSpectrum(m_inputSpc);
+  m_SpcCorrectedUnderLines = CSpectrum(m_inputSpc);
+  const Int32 spectrumSampleCount = m_inputSpc.GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
                 m_inputSpc.GetMedianWinsize());
@@ -121,21 +148,21 @@ CLineModelFitting::CLineModelFitting(
   m_ContinuumFluxAxis.SetSize(spectrumSampleCount);
   m_SpcFluxAxisModelDerivVelEmi.SetSize(spectrumSampleCount);
   m_SpcFluxAxisModelDerivVelAbs.SetSize(spectrumSampleCount);
-  const CSpectrumFluxAxis &spectrumFluxAxis = spectrum.GetFluxAxis();
+  const CSpectrumFluxAxis &spectrumFluxAxis = m_inputSpc.GetFluxAxis();
 
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
   m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
 
-  SetContinuumComponent(opt_continuumcomponent);
+  SetContinuumComponent(m_continuumComponent);
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
   // available
   m_fitContinuum_option =
       0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
-         // values (typical use for second pass recompute)
+  // values (typical use for second pass recompute)
 
-  if (opt_fittingmethod == "lmfit") {
+  if (m_fittingmethod == "lmfit") {
     m_lmfit_noContinuumTemplate = (m_ContinuumComponent == "fromspectrum");
     m_lmfit_bestTemplate = true;
     m_lmfit_fitContinuum = true;
@@ -157,13 +184,13 @@ CLineModelFitting::CLineModelFitting(
   Log.LogDebug("About to load line catalog.");
   if (m_rigidity != "tplshape") {
     // load the regular catalog
-    LoadCatalog(restLineList);
+    LoadCatalog(m_RestLineList);
   } else {
     // load the tplshape catalog with only 1 element for all lines
     // LoadCatalogOneMultiline(restLineList);
     // load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the
     // Abs lines
-    LoadCatalogTwoMultilinesAE(restLineList);
+    LoadCatalogTwoMultilinesAE(m_RestLineList);
   }
   LogCatalogInfos();
 
@@ -172,17 +199,16 @@ CLineModelFitting::CLineModelFitting(
   const CSpectrumSpectralAxis& spectralAxis = m_SpectrumModel.GetSpectralAxis();
   for(Int32 j=0; j<m_ContinuumFluxAxis.GetSamplesCount(); j++)
   {
-      if(isnan(m_ContinuumFluxAxis[j]))
-      {
-          THROWG(INTERNAL_ERROR, "NaN value found for the ContinuumFluxAxis at
+  if(isnan(m_ContinuumFluxAxis[j]))
+  {
+  THROWG(INTERNAL_ERROR, "NaN value found for the ContinuumFluxAxis at
   lambda=%f", spectralAxis[j] );
-      }
+  }
   }
   */
 
   SetLSF();
 }
-
 // hook
 bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog

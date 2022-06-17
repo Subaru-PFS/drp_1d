@@ -122,103 +122,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
 
   TFloat64Range clampedlambdaRange;
   spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
-  m_model = std::make_shared<CLineModelFitting>(
-      spectrum, clampedlambdaRange, tplCatalog, m_tplCategoryList,
-      m_RestLineList, opt_fittingmethod, m_opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
-      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
-      opt_velocityAbsorption, opt_rules, opt_rigidity);
+  m_model = std::make_shared<CLineModelFitting>();
   m_model->setHaPriorOption(opt_haprior);
-
-  /*
-  CMultiRollModel model( spectrum,
-                         tplCatalog,//orthoTplCatalog,
-                         m_tplCategoryList,
-                         restLineList,
-                         opt_fittingmethod,
-                         opt_continuumcomponent,
-                         opt_lineWidthType,
-                         opt_velocityEmission,
-                         opt_velocityAbsorption,
-                         opt_rules,
-                         opt_rigidity);
-
-  bool enableLoadContTemplateOverride = false; //manual switch for hardcoded
-  contaminant bypass load if(enableLoadContTemplateOverride)
-  {
-      m_enableLoadContTemplate = false; //disable stock contaminant in case of
-  overrided contaminant Int32 iContTemplate = 0; //idx of the roll being
-  contaminated std::shared_ptr<CTemplate> tplContaminant;
-
-      Log.LogInfo( "  Operator-Linemodel: OVERRIDDEN loading contaminant for
-  roll #%d", iContTemplate );
-
-      //hardcoded load from file on disk: of the contaminant for first model
-      std::string templatePath =
-  "/home/aschmitt/data/euclid/simulation2017-SC3_test_zweiroll/amazed/output_rolls_source3/euc_testsc3_zweiroll_source3_roll0_F_i0/linemodelsolve.linemodel_spc_extrema_0.txt";
-      const std::string& category = "emission";
-      tplContaminant = std::shared_ptr<CTemplate>( new CTemplate(
-  "contaminant", category ) ); CSpectrumIOGenericReader asciiReader; if(
-  !asciiReader.Read( templatePath.c_str(), *tplContaminant ) ) { Log.LogError(
-  "Fail to read contaminant template: %s", templatePath.c_str() ); return -1;
-      }else{
-          Log.LogInfo( "Successfully loaded contaminant template: %s",
-  templatePath.c_str() );
-      }
-      //debug:
-      //FILE* f = fopen( "contaminantLoaded.txt", "w+" );
-      //for(Int32 k=0; k<tplContaminant->GetSampleCount(); k++)
-      //{
-      //    fprintf( f, "%f\t%e\n", tplContaminant->GetSpectralAxis()[k],
-  tplContaminant->GetFluxAxis()[k]);
-      //}
-      //fclose( f );
-      //
-
-      Float64 lambdaOffset_forSourceSpatialOffsetInDispersionDirection=2000;
-  //hardcoded
-      tplContaminant->GetSpectralAxis().ApplyOffset(lambdaOffset_forSourceSpatialOffsetInDispersionDirection);
-      //debug:
-      FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
-      for(Int32 k=0; k<tplContaminant->GetSampleCount(); k++)
-      {
-          fprintf( f2, "%f\t%e\n", tplContaminant->GetSpectralAxis()[k],
-  tplContaminant->GetFluxAxis()[k]);
-      }
-      fclose( f2 );
-
-      //tplContaminant
-      model.LoadFitContaminantTemplate(iContTemplate, *tplContaminant,
-  lambdaRange);
-  }
-  if(m_enableLoadContTemplate)
-  {
-      Log.LogInfo( "  Operator-Linemodel: loading contaminant for roll #%d",
-  m_iRollContaminated ); if(m_tplContaminant==0)
-      {
-          Log.LogError( "  Operator-Linemodel: Contaminant data is invalid" );
-  }else{
-          //
-          if(0)
-          {
-          //debug:
-          FILE* f2 = fopen( "contaminantShifted.txt", "w+" );
-          for(Int32 k=0; k<m_tplContaminant->GetSampleCount(); k++)
-          {
-              fprintf( f2, "%f\t%e\n", m_tplContaminant->GetSpectralAxis()[k],
-  m_tplContaminant->GetFluxAxis()[k]);
-          }
-          fclose( f2 );
-          //
-          }
-
-          //apply contamination to the multiroll model
-          model.LoadFitContaminantTemplate(m_iRollContaminated,
-  *m_tplContaminant, lambdaRange); m_savedContaminantSpectrumResult =
-  model.GetContaminantSpectrumResult(m_iRollContaminated);
-      }
-  }
-  //*/
 
   // set some model parameters
   m_model->m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
@@ -2369,12 +2274,14 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   TFloat64Range clampedlambdaRange;
   spc.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
+==== BASE ====
   m_model = std::make_shared<CLineModelFitting>(
       spc, clampedlambdaRange, tplCatalog, m_tplCategoryList, m_RestLineList,
       opt_fittingmethod, opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
-      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
-      opt_velocityAbsorption, opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+      m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
+      m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
+      opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+==== BASE ====
 
   m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
   m_opt_lya_forcefit = params->GetScoped<bool>("lyaforcefit");
