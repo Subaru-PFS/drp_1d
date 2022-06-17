@@ -40,11 +40,11 @@
 class CLineModelSolution : public COperatorResult {
 public:
   CLineModelSolution();
+  CLineModelSolution(const CLineCatalog::TLineVector &restLineList);
 
   TFloat64List ElementId; // id of the linemodel element it is part of
   TFloat64List Amplitudes;
-  std::vector<CLine> Lines;
-  TFloat64List AmplitudesUncertainties;       // noise sigma
+  TFloat64List AmplitudesUncertainties; // noise sigma
   TFloat64List FittingError; // ModelLeastSquare error under each line
   TFloat64List
       CenterContinuumFlux; // Continuum flux value at the center of each line
@@ -58,11 +58,12 @@ public:
                                            // integration for each line
   TInt32List lineId;
 
-  Float64 snrHa;
-  Float64 lfHa;
-  Float64 snrOII;
-  Float64 lfOII;
-  Int32 NLinesAboveSnrCut;
+  Float64 snrHa = NAN;
+  Float64 lfHa = NAN;
+  Float64 snrOII = NAN;
+  Float64 lfOII = NAN;
+  Int32 NLinesAboveSnrCut = -1;
+  Int32 nDDL = -1;
 
   TFloat64List LambdaObs; // observed position in Angstrom
   TFloat64List Velocity;  // dispersion velocity in km/s
@@ -71,19 +72,15 @@ public:
   std::vector<TInt32Range> fittingIndexRange;
   TStringList fittingGroupInfo;
 
-  Float64 LyaWidthCoeff;
-  Float64 LyaAlpha;
-  Float64 LyaDelta;
-  Int32 LyaIgm;
-  
-  Float64 AbsorptionVelocity;
-  Float64 EmissionVelocity;
-  Float64 Redshift;
+  Float64 LyaWidthCoeff = NAN;
+  Float64 LyaAlpha = NAN;
+  Float64 LyaDelta = NAN;
+  Int32 LyaIgm = undefIdx;
+  Float64 AbsorptionVelocity = NAN;
+  Float64 EmissionVelocity = NAN;
+  Float64 Redshift = NAN;
 
   TFloat64List continuum_pCoeff0;
   TFloat64List continuum_pCoeff1;
   TFloat64List continuum_pCoeff2;
-
-  Int32 nDDL;
-  void fillLineIds();
 };

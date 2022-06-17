@@ -146,6 +146,7 @@ private:
   std::string m_opt_rigidity;
   TFloat64List m_chi2tplshape;
   Int32 mIndexExportModel = 0;
+  const CLineCatalog::TLineVector &m_restLineList;
 };
 
 } // namespace NSEpic

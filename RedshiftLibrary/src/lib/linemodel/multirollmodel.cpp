@@ -63,7 +63,8 @@ CMultiRollModel::CMultiRollModel(
     const std::string &opt_continuumcomponent,
     const Float64 opt_continuum_neg_threshold, const std::string &widthType,
     const Float64 velocityEmission, const Float64 velocityAbsorption,
-    const std::string &opt_rules, const std::string &opt_rigidity) {
+    const std::string &opt_rules, const std::string &opt_rigidity)
+    : m_restLineList(restLineList) {
 
   m_opt_rigidity = opt_rigidity;
 
@@ -289,7 +290,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
   // first individual fitting: get the amps, dtm, mtm calculated
   Float64 merit = 0.0;
   for (Int32 km = 0; km < m_models.size(); km++) {
-    CLineModelSolution _modelSolution;
+    CLineModelSolution _modelSolution(m_restLineList);
     CContinuumModelSolution continuumModelSolution;
     merit += m_models[km]->fit(redshift, _modelSolution, continuumModelSolution,
                                contreest_iterations, enableLogging);
