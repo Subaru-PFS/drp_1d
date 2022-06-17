@@ -57,7 +57,7 @@ struct lmfitdata {
   CLineModelFitting *linemodel;
   TInt32List linemodel_samples_indexes;
   const Float64 *observeGridContinuumFlux;
-  CLmfitController *controller;
+  std::shared_ptr<CLmfitController> controller;
 };
 
 int lmfit_f(const gsl_vector *x, void *data, gsl_vector *f) {
@@ -66,7 +66,8 @@ int lmfit_f(const gsl_vector *x, void *data, gsl_vector *f) {
   // std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata
   // *)data)->linemodel;
   CLineModelFitting *linemodel = ((struct lmfitdata *)data)->linemodel;
-  CLmfitController *controller = ((struct lmfitdata *)data)->controller;
+  std::shared_ptr<CLmfitController> controller =
+      ((struct lmfitdata *)data)->controller;
   TInt32List elts_indexes = controller->getFilteredIdx();
   TInt32List samples_indexes =
       ((struct lmfitdata *)data)->linemodel_samples_indexes;
@@ -136,7 +137,8 @@ int lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J) {
   // std::shared_ptr<CLineModelFitting> linemodel = ((struct lmfitdata
   // *)data)->linemodel;
   CLineModelFitting *linemodel = ((struct lmfitdata *)data)->linemodel;
-  CLmfitController *controller = ((struct lmfitdata *)data)->controller;
+  std::shared_ptr<CLmfitController> controller =
+      ((struct lmfitdata *)data)->controller;
   TInt32List elts_indexes = controller->getFilteredIdx();
   TInt32List samples_indexes =
       ((struct lmfitdata *)data)->linemodel_samples_indexes;

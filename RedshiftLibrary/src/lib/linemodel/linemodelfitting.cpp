@@ -1738,12 +1738,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         std::shared_ptr<CLmfitController>
             bestController; // at each run of lmfit we create a controller, we
                             // keep the best evaluation
-        std::vector<CLmfitController *> controllers = createLmfitControllers();
+        std::vector<std::shared_ptr<CLmfitController>> controllers =
+            createLmfitControllers();
         if (controllers.size() == 0) {
           Log.LogError("LMfit : No Controller created");
         }
         for (Int32 i = 0; i < controllers.size(); i++) {
-          CLmfitController *controller = controllers[i];
+          std::shared_ptr<CLmfitController> controller = controllers[i];
           // Log.LogInfo("Continuum Template use : %s",
           // controller->getTemplate()->GetName().c_str());
           if (!controller->isNoContinuum() &&
@@ -1828,21 +1829,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           }
           refreshModelInitAllGrid();
           // modelSolution = GetModelSolution();
-          while (!controllers.empty()) {
-            CLmfitController *controller = controllers.back();
-            controllers.pop_back();
-            delete controller;
-          }
-
         } else {
           Log.LogError("LineModel LMfit: not able to fit values at z %f",
                        m_Redshift);
-          // continue;
-          while (!controllers.empty()) {
-            CLmfitController *controller = controllers.back();
-            controllers.pop_back();
-            delete controller;
-          }
           return INFINITY;
         }
       }
@@ -2400,19 +2389,20 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   return merit;
 }
 
-std::vector<CLmfitController *> CLineModelFitting::createLmfitControllers() {
-  std::vector<CLmfitController *> useLmfitControllers;
+std::vector<std::shared_ptr<CLmfitController>>
+CLineModelFitting::createLmfitControllers() {
+  std::vector<std::shared_ptr<CLmfitController>> useLmfitControllers;
   if (m_lmfit_noContinuumTemplate) {
-    useLmfitControllers.push_back(new CLmfitController(
+    useLmfitControllers.push_back(std::make_shared<CLmfitController>(
         m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
   } else {
     if (m_lmfit_bestTemplate) {
-      LoadFitContinuum(-1, 0);
+      LoadFitContinuum(0, 0);
       std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
           m_tplCategoryList, m_fitContinuum_tplName);
       if (m_fitContinuum_tplName == tpl->GetName()) {
         bool continumLoaded = true;
-        useLmfitControllers.push_back(new CLmfitController(
+        useLmfitControllers.push_back(std::make_shared<CLmfitController>(
             tpl, continumLoaded, m_lmfit_fitContinuum,
             m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
       }
@@ -2424,7 +2414,7 @@ std::vector<CLmfitController *> CLineModelFitting::createLmfitControllers() {
         for (Int32 j = 0; j < m_tplCatalog.GetTemplateCount(category); j++) {
           std::shared_ptr<const CTemplate> tpl =
               m_tplCatalog.GetTemplate(category, j);
-          useLmfitControllers.push_back(new CLmfitController(
+          useLmfitControllers.push_back(std::make_shared<CLmfitController>(
               tpl, continumLoaded, m_lmfit_fitContinuum,
               m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
         }
@@ -3044,8 +3034,9 @@ void print_state(size_t iter, gsl_multifit_fdfsolver *s) {
          gsl_vector_get(s->x, 2), gsl_blas_dnrm2(s->f));
 }
 
-Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
-                                            CLmfitController *controller)
+Int32 CLineModelFitting::fitAmplitudesLmfit(
+    const CSpectrumFluxAxis &fluxAxis,
+    std::shared_ptr<CLmfitController> controller)
 // TFloat64List& ampsfitted, TFloat64List& ampsErrfitted, Float64&
 // velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
