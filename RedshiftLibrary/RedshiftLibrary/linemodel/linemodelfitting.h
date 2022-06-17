@@ -84,7 +84,8 @@ public:
                     const std::string &opt_fittingmethod,
                     const std::string &opt_continuumcomponent,
                     Float64 opt_continuum_neg_threshold,
-                    const std::string &lineWidthType, Float64 nsigmasupport,
+                    Float64 opt_continuum_nullamp_threshold,
+                    const std::string &widthType, Float64 nsigmasupport,
                     Float64 velocityEmission, Float64 velocityAbsorption,
                     const std::string &opt_rules,
                     const std::string &opt_rigidity,
@@ -321,6 +322,7 @@ public:
 
   Int32 m_opt_fitcontinuum_maxCount = 2;
   Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
+  Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
   std::string m_opt_firstpass_fittingmethod = "hybrid";
@@ -404,7 +406,7 @@ private:
   std::vector<CRange<Int32>>
   getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
                              const TInt32List &subeIdx_list,
-                             const Float64 &sigma_support) const;
+                             Float64 sigma_support) const;
   void
   integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
                               const std::vector<CRange<Int32>> &indexRangeList,

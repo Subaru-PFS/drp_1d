@@ -81,7 +81,8 @@ CLineModelFitting::CLineModelFitting(
     const CLineCatalog::TLineVector &restLineList,
     const std::string &opt_fittingmethod,
     const std::string &opt_continuumcomponent,
-    Float64 opt_continuum_neg_threshold, const std::string &widthType,
+    Float64 opt_continuum_neg_threshold,
+    Float64 opt_continuum_nullamp_threshold, const std::string &widthType,
     Float64 nsigmasupport, Float64 velocityEmission, Float64 velocityAbsorption,
     const std::string &opt_rules, const std::string &opt_rigidity,
     Int32 amplitudeOffsetsDegree)
@@ -89,6 +90,7 @@ CLineModelFitting::CLineModelFitting(
       m_tplCatalog(tplCatalog), m_tplCategoryList(tplCategoryList),
       m_RestLineList(restLineList), m_fittingmethod(opt_fittingmethod),
       m_opt_fitcontinuum_neg_threshold(opt_continuum_neg_threshold),
+      m_opt_fitcontinuum_null_amp_threshold(opt_continuum_nullamp_threshold),
       m_LineWidthType(widthType), m_NSigmaSupport(nsigmasupport),
       m_velocityEmission(velocityEmission),
       m_velocityAbsorption(velocityAbsorption),
@@ -493,9 +495,10 @@ void CLineModelFitting::getFluxDirectIntegration(const TInt32List &eIdx_list,
  * @param sigma_support
  * @return TInt32RangeList
  */
-TInt32RangeList CLineModelFitting::getlambdaIndexesUnderLines(
-    const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
-    const Float64 &sigma_support) const {
+TInt32RangeList
+CLineModelFitting::getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
+                                              const TInt32List &subeIdx_list,
+                                              Float64 sigma_support) const {
 
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
@@ -4148,7 +4151,7 @@ void CLineModelFitting::setSymIgmProfile(Int32 iElts,
 
   // set to false when continuum is fitted to null
   fixedIGM &=
-      m_fitContinuum_tplFitAmplitude > abs(m_opt_fitcontinuum_neg_threshold) *
+      m_fitContinuum_tplFitAmplitude > m_opt_fitcontinuum_null_amp_threshold *
                                            m_fitContinuum_tplFitAmplitudeError;
 
   Int32 bestigmidx = fixedIGM

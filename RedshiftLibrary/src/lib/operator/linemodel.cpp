@@ -125,9 +125,9 @@ Int32 COperatorLineModel::ComputeFirstPass(
   m_model = std::make_shared<CLineModelFitting>(
       spectrum, clampedlambdaRange, tplCatalog, m_tplCategoryList,
       m_RestLineList, opt_fittingmethod, m_opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
-      m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity);
+      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
+      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
+      opt_velocityAbsorption, opt_rules, opt_rigidity);
   m_model->setHaPriorOption(opt_haprior);
 
   /*
@@ -806,7 +806,15 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
               duration_tplfit_seconds);
   Log.LogDetail("<proc-lm-tplfit><%d>", (Int32)duration_tplfit_seconds);
 
-  // Check if best continuum amplitudes are negative fitted amplitudes at all z
+  evaluateContinuumAmplitude(tplfitStore);
+
+  return tplfitStore;
+}
+
+void COperatorLineModel::evaluateContinuumAmplitude(
+    const std::shared_ptr<CTemplatesFitStore> &tplfitStore) {
+  // Check if best continuum amplitudes are negative fitted amplitudes at
+  // all z
   CTemplatesFitStore::TemplateFitValues fitValues;
   Float64 max_fitamplitudeSigma_z = NAN;
   Float64 max_fitamplitudeSigma =
@@ -833,10 +841,21 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       m_model->SetContinuumComponent("fromspectrum");
     }
   }
-
-  return tplfitStore;
+  // check if continuum is too weak comparing to the preset threshold
+  if (std::abs(fitValues.fitAmplitudeSigma) <
+      m_opt_continuum_null_amp_threshold) {
+    Flag.warning(Flag.FORCE_NOCONTINUUM_WEAK_CONTINUUMAMP,
+                 Formatter()
+                     << ": Switching to nocontinuum since close to null "
+                        "continuum amplitude found at z="
+                     << max_fitamplitudeSigma_z << ": best continuum tpl "
+                     << fitValues.tplName
+                     << ", amplitude/error = " << fitValues.fitAmplitudeSigma
+                     << " & error = " << fitValues.fitAmplitudeError);
+    m_opt_continuumcomponent = "nocontinuum";
+    m_model->SetContinuumComponent("nocontinuum");
+  }
 }
-
 /**
  * @brief COperatorLineModel::SpanRedshiftWindow
  * @param z
@@ -2362,9 +2381,9 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   m_model = std::make_shared<CLineModelFitting>(
       spc, clampedlambdaRange, tplCatalog, m_tplCategoryList, m_RestLineList,
       opt_fittingmethod, opt_continuumcomponent,
-      m_opt_continuum_neg_amp_threshold, opt_lineWidthType,
-      m_linesmodel_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
-      opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+      m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
+      opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
+      opt_velocityAbsorption, opt_rules, opt_rigidity, amplitudeOffsetsDegree);
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
 

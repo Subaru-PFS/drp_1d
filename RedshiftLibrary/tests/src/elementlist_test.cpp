@@ -185,14 +185,15 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   // no continuum
   CLineModelFitting model_nocontinuum(
       spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
-      "nocontinuum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
+      "nocontinuum", -INFINITY, -INFINITY, opt_lineWidthType, opt_nsigmasupport,
       opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   // continuum from spectrum
   CLineModelFitting model_fromspectrum(
       spectrum, range, tplCatalog, tplCategories, lineList, "lmfit",
-      "fromspectrum", -INFINITY, opt_lineWidthType, opt_nsigmasupport,
-      opt_velocityEmission, opt_velocityAbsorption, opt_rules, opt_rigidity);
+      "fromspectrum", -INFINITY, -INFINITY, opt_lineWidthType,
+      opt_nsigmasupport, opt_velocityEmission, opt_velocityAbsorption,
+      opt_rules, opt_rigidity);
 
   model_fromspectrum.fit(0.5, solution, c_solution, iterations, false);
 
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
   BOOST_TEST_MESSAGE("TODO : tplfit doesn't work. Bad Meiksin generation ?");
   CLineModelFitting model_tplfit(
       spectrum, range, tplCatalog, tplCategories, lineList, "lmfit", "tplfit",
-      -5.0, opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
+      -5.0, 3.0, opt_lineWidthType, opt_nsigmasupport, opt_velocityEmission,
       opt_velocityAbsorption, opt_rules, opt_rigidity);
 
   /*
