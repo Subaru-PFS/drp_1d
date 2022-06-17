@@ -57,6 +57,7 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TCandidateZbyID &candidates)
 CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
   for (Int32 i = 0; i < redshifts.size(); ++i) {
     const std::string Id = "EXT" + to_string(i);
+    m_candidates[Id] = std::make_shared<TCandidateZ>();
     m_candidates[Id]->Redshift = redshifts[i];
   }
 }
@@ -299,7 +300,7 @@ bool CPdfCandidatesZ::getCandidateRobustGaussFit(
   while (!fitSuccessful && iTry < nTry) {
     Int32 retFit =
         getCandidateGaussFit(redshifts, valprobalog, current_zrange, candidate);
-    if (!retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
+    if (retFit && candidate->GaussSigma < zwidth_max * 2.0 &&
         std::abs(candidate->GaussSigma / candidate->GaussSigmaErr) > 1e-2) {
       fitSuccessful = true;
     } else {
@@ -429,7 +430,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   int status, info;
   size_t i;
   size_t n = kmax - kmin +
-             2; // n samples on the support, /* number of data points to fit */
+             1; // n samples on the support, /* number of data points to fit */
   size_t p = 2; // DOF = 1.amplitude + 2.width
 
   if (verbose) {
@@ -450,6 +451,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   Float64 *x_init = (Float64 *)calloc(p, sizeof(Float64));
   if (x_init == 0) {
+    gsl_matrix_free(covar);
+    gsl_matrix_free(J);
     Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to "
                  "allocate x_init");
     return false;
@@ -522,6 +525,9 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   s = gsl_multifit_fdfsolver_alloc(T, n, p);
   if (s == 0) {
+    gsl_matrix_free(covar);
+    gsl_matrix_free(J);
+    free(x_init);
     THROWG(INTERNAL_ERROR, "    CPdfCandidatesZ::getCandidateSumGaussFit - "
                            "Unable to allocate the multifit solver");
     return false;
@@ -583,6 +589,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   gsl_multifit_fdfsolver_free(s);
   gsl_matrix_free(covar);
   gsl_matrix_free(J);
+  free(x_init);
 
   return true;
 }
