@@ -83,12 +83,20 @@ void CProcessFlowContext::reset() {
   m_inputContext->resetSpectrumSpecific();
 }
 
-const TLineVector &CProcessFlowContext::getLineVector() {
+const TLineVector CProcessFlowContext::getLineVector() {
   CAutoScope autoscope(m_ScopeStack, "linemodel");
-  std::shared_ptr<const CLineCatalog> restlinecatalog =
-      GetLineCatalog(GetCurrentCategory(), GetCurrentMethod());
-
-  return restlinecatalog->GetFilteredList(
+  return m_inputContext->GetFilteredLineVector(
+      GetCurrentCategory(), GetCurrentMethod(),
       m_parameterStore->GetScoped<std::string>("linetypefilter"),
       m_parameterStore->GetScoped<std::string>("lineforcefilter"));
+}
+
+std::shared_ptr<CLineCatalogsTplShape>
+CProcessFlowContext::GetTplRatioCatalog() {
+  return m_inputContext->GetTemplateRatioCatalog(m_ScopeStack[0]);
+}
+
+std::shared_ptr<const CPhotBandCatalog>
+CProcessFlowContext::GetPhotBandCatalog() {
+  return m_inputContext->GetPhotBandCatalog();
 }

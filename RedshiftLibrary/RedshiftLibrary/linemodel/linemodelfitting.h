@@ -125,8 +125,7 @@ public:
       const std::shared_ptr<const CTemplatesFitStore> &fitStore);
   const std::shared_ptr<const CTemplatesFitStore> &
   GetFitContinuum_FitStore() const;
-  Int32 SetFitContinuum_PriorHelper(
-      const std::shared_ptr<const CPriorHelper> &priorhelper);
+  std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
   void SetFitContinuum_SNRMax(Float64 snr_max);
   void SetFitContinuum_Option(Int32 opt);
   Int32 GetFitContinuum_Option() const;
@@ -162,8 +161,7 @@ public:
   const TBoolList &GetStrongELPresentTplshape() const;
   const TBoolList &getHaELPresentTplshape() const;
   const TInt32List &GetNLinesAboveSNRTplshape() const;
-  Int32 SetTplshape_PriorHelper(
-      const std::shared_ptr<const CPriorHelper> &priorhelper);
+  void SetTplshape_PriorHelper();
 
   Int32 GetNElements() const;
 
@@ -186,7 +184,7 @@ public:
               CContinuumModelSolution &continuumModelSolution,
               Int32 contreest_iterations = 0, bool enableLogging = 0);
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
-  bool initTplratioCatalogs(Int32 opt_tplratio_ismFit);
+  void initTplratioCatalogs(Int32 opt_tplratio_ismFit);
 
   bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity = false);
   bool setTplshapeAmplitude(const TFloat64List &ampsElts,
@@ -194,9 +192,7 @@ public:
 
   std::vector<std::shared_ptr<CLmfitController>> createLmfitControllers();
   void SetFittingMethod(const std::string &fitMethod);
-  void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit,
-                                     Int32 outsidelinemask,
-                                     Int32 observedFrame);
+  void SetSecondpassContinuumFitPrms();
 
   void SetAbsLinesLimit(Float64 limit);
   void SetLeastSquareFastEstimationEnabled(Int32 enabled);
@@ -269,11 +265,11 @@ public:
                                       const TInt32List &xInds, Int32 lineType,
                                       Float64 *fluxdata, Float64 *msqBuffer,
                                       Float64 &f, Float64 *g);
-
+  void logParameters();
   CLineModelElementList m_Elements;
   const CSpectrum &m_inputSpc;
   CSpectrum m_SpectrumModel; // model
-  const CLineCatalog::TLineVector &m_RestLineList;
+  const CLineCatalog::TLineVector m_RestLineList;
   CSpectrum
       m_SpcCorrectedUnderLines; // observed spectrum corrected under the lines
 
@@ -326,7 +322,7 @@ public:
 
   bool m_opt_enable_improveBalmerFit = false;
   Float64 m_opt_haprior = -1.;
-  void setHaPriorOption(Float64 opt) { m_opt_haprior = opt; };
+
   static constexpr Float64 m_overlapThresHybridFit =
       0.15; // 15% seemed necessary for Ha/SII complex when lines are very
             // wide (either because of PSF or source size)
@@ -462,7 +458,7 @@ private:
   Float64 m_tplshapeBestTplMtm = NAN;
   Int32 m_tplshapeLeastSquareFast =
       0; // for rigidity=tplshape: switch to use fast least square estimation
-  std::shared_ptr<const CPriorHelper> m_tplshape_priorhelper;
+  std::shared_ptr<CPriorHelper> m_tplshape_priorhelper;
 
   COperatorTemplateFitting m_templateFittingOperator;
   Int32 m_secondpass_fitContinuum_dustfit;
@@ -491,15 +487,13 @@ private:
                                        // m_fitContinuum_option==2 for now
   bool m_forcedisableMultipleContinuumfit = false;
   Float64 m_fitContinuum_tplFitAlpha = 0.;
-  std::shared_ptr<const CPriorHelper> m_fitContinuum_priorhelper;
+  std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 
   bool m_lmfit_noContinuumTemplate;
   bool m_lmfit_bestTemplate;
   bool m_lmfit_fitContinuum;
   bool m_lmfit_fitEmissionVelocity;
   bool m_lmfit_fitAbsorptionVelocity;
-
-  std::string m_continuumComponent;
 
   const TFloat64Range m_lambdaRange;
 

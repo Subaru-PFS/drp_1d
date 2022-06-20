@@ -67,39 +67,15 @@ class CInputContext;
 class COperatorLineModel {
 
 public:
-  Int32 Init(const CSpectrum &spectrum, const TFloat64List &redshifts,
-             const CLineCatalog::TLineVector restLineCatalog,
-             const TStringList &tplCategoryList,
-             const std::string &opt_continuumcomponent,
-             const Float64 nsigmasupport, const bool opt_enableImproveBalmerFit,
-             const Float64 halfwdwsize = NAN, const Float64 radius = NAN);
+  Int32 Init(const TFloat64List &redshifts);
 
   std::shared_ptr<COperatorResult> getResult();
 
-  std::shared_ptr<CTemplatesFitStore> PrecomputeContinuumFit(
-      const CSpectrum &spectrum, const CSpectrum &logSampledSpectrum,
-      const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
-      const TFloat64List &redshifts,
-      const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
-      const Float64 photometry_weight, bool ignoreLinesSupport = false,
-      Int32 candidateIdx = -1);
+  std::shared_ptr<CTemplatesFitStore>
+  PrecomputeContinuumFit(const TFloat64List &redshifts,
+                         Int32 candidateIdx = -1);
 
-  Int32 ComputeFirstPass(
-      const CSpectrum &spectrum, const CSpectrum &logSampledSpc,
-      const CTemplateCatalog &tplCatalog,
-      const CLineCatalogsTplShape &tplRatioCatalog,
-      const TFloat64Range &lambdaRange,
-      const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
-      const Float64 photo_weight, const std::string &opt_fittingmethod,
-      const std::string &opt_lineWidthType, const Float64 opt_velocityEmission,
-      const Float64 opt_velocityAbsorption,
-      const std::string &opt_continuumreest = "no",
-      const std::string &opt_rules = "all",
-      const bool &opt_velocityFitting = false,
-      const Int32 &opt_twosteplargegridstep_ratio = 10,
-      const string &opt_twosteplargegridsampling = "log",
-      const std::string &opt_rigidity = "rules",
-      const Float64 opt_haprior = -1.);
+  Int32 ComputeFirstPass();
 
   void CreateRedshiftLargeGrid(Int32 ratio, TFloat64List &largeGridRedshifts);
   Int32 SetFirstPassCandidates(const TCandidateZbyRank &candidatesz);
@@ -108,38 +84,13 @@ public:
       std::shared_ptr<const CLineModelPassExtremaResult> results_b);
 
   Int32 ComputeSecondPass(
-      const CSpectrum &spectrum, const CSpectrum &logSampledSpectrum,
-      const CTemplateCatalog &tplCatalog, const TFloat64Range &lambdaRange,
-      const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
-      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults,
-      const Float64 photo_weight, const std::string &opt_fittingmethod,
-      const std::string &opt_lineWidthType, const Float64 opt_velocityEmission,
-      const Float64 opt_velocityAbsorption,
-      const std::string &opt_continuumreest = "no",
-      const std::string &opt_rules = "all",
-      const bool &opt_velocityFitting = false,
-      const std::string &opt_rigidity = "rules",
-      const Float64 &opt_emvelocityfitmin = 20.,
-      const Float64 &opt_emvelocityfitmax = 500.,
-      const Float64 &opt_emvelocityfitstep = 20.,
-      const Float64 &opt_absvelocityfitmin = 150.,
-      const Float64 &opt_absvelocityfitmax = 500.,
-      const Float64 &opt_absvelocityfitstep = 20.,
-      const string &opt_continuumfit_method = "fromfirstpass");
+      const std::shared_ptr<const LineModelExtremaResult> &firstpassResults);
 
-  Int32 EstimateSecondPassParameters(
-      const CSpectrum &spectrum, const TFloat64Range &lambdaRange,
-      const std::string &opt_continuumreest, const string &opt_fittingmethod,
-      const std::string &opt_rigidity, const bool &opt_velocityFitting,
-      const Float64 &opt_emvelocityfitmin, const Float64 &opt_emvelocityfitmax,
-      const Float64 &opt_emvelocityfitstep,
-      const Float64 &opt_absvelocityfitmin,
-      const Float64 &opt_absvelocityfitmax,
-      const Float64 &opt_absvelocityfitstep);
+  Int32 EstimateSecondPassParameters(const CSpectrum &spectrum,
+                                     const TFloat64Range &lambdaRange);
 
   Int32 RecomputeAroundCandidates(
-      const TFloat64Range &lambdaRange, const std::string &opt_continuumreest,
-      const Int32 tplfit_option,
+      const std::string &opt_continuumreest, const Int32 tplfit_option,
       const bool overrideRecomputeOnlyOnTheCandidate = false);
   CLineModelSolution
   computeForLineMeas(std::shared_ptr<const CInputContext> context,
@@ -158,11 +109,8 @@ public:
       const std::shared_ptr<CTemplatesFitStore> &tplfitStore);
   bool m_enableWidthFitByGroups = false;
 
-  Float64 m_linesmodel_nsigmasupport;
-
   Int32 m_maxModelSaveCount = 20;
   Float64 m_secondPass_halfwindowsize; // = 0.005;
-  Float64 m_extremaRedshiftSeparation;
   TStringList m_tplCategoryList;
 
   bool m_enableLoadContTemplate = false;
@@ -184,35 +132,13 @@ public:
   Int32 m_opt_fitcontinuum_maxN = 2;
   bool m_opt_tplfit_ignoreLinesSupport =
       false; // default: false, as ortho templates store makes this un-necessary
-  Float64 m_opt_tplfit_continuumprior_betaA = 1.0;
-  Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
-  Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
-  std::string m_opt_tplfit_continuumprior_dirpath = "";
-  Int32 m_opt_tplratio_ismFit = 1;
-  Int32 m_opt_firstpass_tplratio_ismFit = 0;
   bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
   std::string m_opt_secondpasslcfittingmethod = "-1";
-  Float64 m_opt_tplratio_prior_betaA = 1.0;
-  Float64 m_opt_tplratio_prior_betaTE = 1.0;
-  Float64 m_opt_tplratio_prior_betaZ = 1.0;
-  std::string m_opt_tplratio_prior_dirpath = "";
   std::string m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
-  bool m_opt_lya_forcefit = false;
-  bool m_opt_lya_forcedisablefit;
-  Float64 m_opt_lya_fit_asym_min;
-  Float64 m_opt_lya_fit_asym_max;
-  Float64 m_opt_lya_fit_asym_step;
-  Float64 m_opt_lya_fit_width_min;
-  Float64 m_opt_lya_fit_width_max;
-  Float64 m_opt_lya_fit_width_step;
-  Float64 m_opt_lya_fit_delta_min;
-  Float64 m_opt_lya_fit_delta_max;
-  Float64 m_opt_lya_fit_delta_step;
 
-  bool m_opt_enableImproveBalmerFit = false;
   Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
   // candidates
   std::shared_ptr<CLineModelPassExtremaResult> m_firstpass_extremaResult;
@@ -231,7 +157,6 @@ public:
 private:
   std::shared_ptr<CLineModelResult> m_result;
   std::shared_ptr<CLineModelFitting> m_model;
-  CLineCatalog::TLineVector m_RestLineList;
   TFloat64List m_sortedRedshifts;
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;

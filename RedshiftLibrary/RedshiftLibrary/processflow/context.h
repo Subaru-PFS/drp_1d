@@ -64,7 +64,7 @@ class CClassifierStore;
 class CInputContext;
 class CLine;
 typedef std::vector<CLine> TLineVector;
-
+class CLineCatalogsTplShape;
 /**
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
@@ -117,6 +117,11 @@ public:
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_inputContext->GetTemplateCatalog();
   }
+
+  std::shared_ptr<CTemplateCatalog> GetTemplateCatalog() {
+    return m_inputContext->GetTemplateCatalog();
+  }
+
   std::shared_ptr<const CLineCatalog>
   GetLineCatalog(const std::string &objectType,
                  const std::string &method) const {
@@ -132,7 +137,9 @@ public:
     return m_ResultStore;
   }
 
-  const TFloat64Range &GetLambdaRange() const { return m_spclambdaRange; }
+  const TFloat64Range &GetLambdaRange() const {
+    return m_inputContext->m_lambdaRange;
+  }
 
   const std::string &GetCurrentCategory() const {
     if (m_ScopeStack.empty())
@@ -147,7 +154,9 @@ public:
     return m_ScopeStack[1];
   }
 
-  const CLineCatalog::TLineVector &getLineVector();
+  const CLineCatalog::TLineVector getLineVector();
+  std::shared_ptr<CLineCatalogsTplShape> GetTplRatioCatalog();
+  std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 
   TScopeStack m_ScopeStack;
 
@@ -161,7 +170,7 @@ private:
 
   // added below variables - to discuss if we only define them here (and no more
   // in processflow)
-  TFloat64Range m_spclambdaRange;
+
   TFloat64Range m_redshiftRange;
   TFloat64List m_redshifts;
   std::string m_redshiftSampling;

@@ -59,13 +59,6 @@
 using namespace NSEpic;
 using namespace std;
 using namespace boost;
-// throw GlobalException\(\s*\n*ErrorCode::([A-Z_]+),((?:\s*".+"\n*)+)\);
-// throw
-// GlobalException\(\s*\n*ErrorCode::([A-Z_]+),\n*\s+Formatter\(\)\s*\n*((?:\s*<<\s*".+"\n*)+)\);
-// throw
-// GlobalException\(\s*\n*ErrorCode::([A-Z_]+),\n*\s+Formatter\(\)\s*\n*<<((?:\s*\s*".+"\n*)+)\);
-// throw
-// GlobalException\(\s*\n*ErrorCode::([A-Z_]+),\n*\s+Formatter\(\)\s*\n*((?:\s*<<\s*"?.+"?\n*)+)\);
 /**
  * \brief Empty constructor.
  **/
@@ -79,292 +72,37 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope, string objectType)
  **/
 bool CLineModelSolve::PopulateParameters(
     std::shared_ptr<const CParameterStore> parameterStore) {
-  m_redshiftSeparation = parameterStore->Get<Float64>(
-      "extremaredshiftseparation"); //,m_redshiftSeparation,2e-3);
-  m_opt_linetypefilter =
-      parameterStore->GetScoped<std::string>("linemodel.linetypefilter");
-  m_opt_lineforcefilter =
-      parameterStore->GetScoped<std::string>("linemodel.lineforcefilter");
-  m_opt_fittingmethod =
-      parameterStore->GetScoped<std::string>("linemodel.fittingmethod");
-
-  m_opt_secondpasslcfittingmethod = parameterStore->GetScoped<std::string>(
-      "linemodel.secondpasslcfittingmethod");
-  m_opt_skipsecondpass =
-      parameterStore->GetScoped<bool>("linemodel.skipsecondpass");
-  m_opt_secondpass_continuumfit = parameterStore->GetScoped<std::string>(
-      "linemodel.secondpass.continuumfit");
-  m_opt_secondpass_halfwindowsize =
-      parameterStore->GetScoped<Float64>("linemodel.secondpass.halfwindowsize");
-
-  m_opt_firstpass_fittingmethod = parameterStore->GetScoped<std::string>(
-      "linemodel.firstpass.fittingmethod");
-  m_opt_firstpass_largegridstepRatio = parameterStore->GetScoped<Int32>(
-      "linemodel.firstpass.largegridstepratio");
-  m_opt_firstpass_tplratio_ismfit =
-      parameterStore->GetScoped<bool>("linemodel.firstpass.tplratio_ismfit");
-  m_opt_firstpass_disablemultiplecontinuumfit = parameterStore->GetScoped<bool>(
-      "linemodel.firstpass.multiplecontinuumfit_disable");
-
-  m_opt_firstpass_largegridsampling = m_redshiftSampling;
-  Log.LogDetail("    firstpass - largegridsampling (auto set from "
-                "redshiftsampling param.): %s",
-                m_opt_firstpass_largegridsampling.c_str());
-
-  m_opt_continuumcomponent =
-      parameterStore->GetScoped<std::string>("linemodel.continuumcomponent");
-  if (m_opt_continuumcomponent == "tplfit" ||
-      m_opt_continuumcomponent == "tplfitauto") {
-    m_opt_tplfit_fftprocessing =
-        parameterStore->GetScoped<bool>("linemodel.continuumfit.fftprocessing");
-    m_opt_tplfit_use_photometry = false;
-    if (parameterStore->HasScoped<bool>("linemodel.enablephotometry")) {
-      m_opt_tplfit_use_photometry =
-          parameterStore->GetScoped<bool>("linemodel.enablephotometry");
-      if (m_opt_tplfit_use_photometry)
-        m_opt_tplfit_photo_weight =
-            parameterStore->GetScoped<Float64>("linemodel.photometry.weight");
-    }
-    if (m_opt_tplfit_fftprocessing && m_opt_tplfit_use_photometry)
-      THROWG(INTERNAL_ERROR,
-             "fftprocessing not implemented with photometry enabled");
-    m_opt_tplfit_fftprocessing_secondpass = m_opt_tplfit_fftprocessing;
-    m_opt_tplfit_dustfit =
-        parameterStore->GetScoped<bool>("linemodel.continuumfit.ismfit");
-    m_opt_tplfit_igmfit =
-        parameterStore->GetScoped<bool>("linemodel.continuumfit.igmfit");
-    m_opt_continuumfitcount =
-        parameterStore->GetScoped<Int32>("linemodel.continuumfit.count");
-    m_opt_continuum_neg_amp_threshold = parameterStore->GetScoped<Float64>(
-        "linemodel.continuumfit.negativethreshold");
-    m_opt_continuum_null_amp_threshold = parameterStore->GetScoped<Float64>(
-        "linemodel.continuumfit.nullthreshold");
-    m_opt_tplfit_ignoreLinesSupport = parameterStore->GetScoped<bool>(
-        "linemodel.continuumfit.ignorelinesupport");
-    m_opt_tplfit_continuumprior_betaA = parameterStore->GetScoped<Float64>(
-        "linemodel.continuumfit.priors.betaA");
-    m_opt_tplfit_continuumprior_betaTE = parameterStore->GetScoped<Float64>(
-        "linemodel.continuumfit.priors.betaTE");
-    m_opt_tplfit_continuumprior_betaZ = parameterStore->GetScoped<Float64>(
-        "linemodel.continuumfit.priors.betaZ");
-    m_opt_tplfit_continuumprior_dirpath =
-        parameterStore->GetScoped<std::string>(
-            "linemodel.continuumfit.priors.catalog_dirpath"); // no priors by
-                                                              // default
-  }
-
-  /*if(m_opt_igmfit!=m_opt_tplfit_igmfit)
-      throw GlobalException(INCOHERENT_INPUTPARAMETERS, "igmfit should be
-     activated for both continuum and linemodel");*/
 
   m_opt_rigidity = parameterStore->GetScoped<std::string>("linemodel.rigidity");
-
-  if (m_opt_rigidity == "tplshape") {
-    m_opt_tplratio_reldirpath =
-        parameterStore->GetScoped<std::string>("linemodel.tplratio_catalog");
-    m_opt_tplratio_ismfit =
-        parameterStore->GetScoped<bool>("linemodel.tplratio_ismfit");
-
-    m_opt_tplratio_prior_betaA =
-        parameterStore->GetScoped<Float64>("linemodel.tplratio.priors.betaA");
-    m_opt_tplratio_prior_betaTE =
-        parameterStore->GetScoped<Float64>("linemodel.tplratio.priors.betaTE");
-    m_opt_tplratio_prior_betaZ =
-        parameterStore->GetScoped<Float64>("linemodel.tplratio.priors.betaZ");
-    m_opt_tplratio_prior_dirpath = parameterStore->GetScoped<std::string>(
-        "linemodel.tplratio.priors.catalog_dirpath"); // no priors by default
-  } else if (m_opt_rigidity == "rules") {
-    m_opt_enableImproveBalmerFit =
-        parameterStore->GetScoped<bool>("linemodel.improveBalmerFit");
-  }
-
-  m_opt_lineWidthType =
-      parameterStore->GetScoped<std::string>("linemodel.linewidthtype");
-  m_opt_nsigmasupport =
-      parameterStore->GetScoped<Float64>("linemodel.nsigmasupport");
-  m_opt_velocity_emission =
-      parameterStore->GetScoped<Float64>("linemodel.velocityemission");
-  m_opt_velocity_absorption =
-      parameterStore->GetScoped<Float64>("linemodel.velocityabsorption");
-  m_opt_velocityfit = parameterStore->GetScoped<bool>("linemodel.velocityfit");
-  if (m_opt_velocityfit) {
-    m_opt_em_velocity_fit_min =
-        parameterStore->GetScoped<Float64>("linemodel.emvelocityfitmin");
-    m_opt_em_velocity_fit_max =
-        parameterStore->GetScoped<Float64>("linemodel.emvelocityfitmax");
-    m_opt_em_velocity_fit_step =
-        parameterStore->GetScoped<Float64>("linemodel.emvelocityfitstep");
-    m_opt_abs_velocity_fit_min =
-        parameterStore->GetScoped<Float64>("linemodel.absvelocityfitmin");
-    m_opt_abs_velocity_fit_max =
-        parameterStore->GetScoped<Float64>("linemodel.absvelocityfitmax");
-    m_opt_abs_velocity_fit_step =
-        parameterStore->GetScoped<Float64>("linemodel.absvelocityfitstep");
-  }
-  m_opt_lya_forcefit = parameterStore->GetScoped<bool>("linemodel.lyaforcefit");
-  m_opt_lya_forcedisablefit =
-      parameterStore->GetScoped<bool>("linemodel.lyaforcedisablefit");
-  m_opt_lya_fit_asym_min =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.asymfitmin");
-  m_opt_lya_fit_asym_max =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.asymfitmax");
-  m_opt_lya_fit_asym_step =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.asymfitstep");
-  m_opt_lya_fit_width_min =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.widthfitmin");
-  m_opt_lya_fit_width_max =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.widthfitmax");
-  m_opt_lya_fit_width_step =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.widthfitstep");
-  m_opt_lya_fit_delta_min =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.deltafitmin");
-  m_opt_lya_fit_delta_max =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.deltafitmax");
-  m_opt_lya_fit_delta_step =
-      parameterStore->GetScoped<Float64>("linemodel.lyafit.deltafitstep");
-
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("linemodel.continuumreestimation");
-  m_opt_rules = parameterStore->GetScoped<std::string>("linemodel.rules");
+  m_opt_continuumcomponent =
+      parameterStore->GetScoped<std::string>("linemodel.continuumcomponent");
+
+  m_opt_pdfcombination =
+      parameterStore->GetScoped<std::string>("linemodel.pdfcombination");
   m_opt_extremacount =
       parameterStore->GetScoped<Int32>("linemodel.extremacount");
   m_opt_extremacountB =
       parameterStore->GetScoped<Int32>("linemodel.extremacountB");
-  m_opt_candidatesLogprobaCutThreshold =
-      parameterStore->GetScoped<Float64>("linemodel.extremacutprobathreshold");
+
   m_opt_stronglinesprior =
       parameterStore->GetScoped<Float64>("linemodel.stronglinesprior");
   m_opt_haPrior = parameterStore->GetScoped<Float64>("linemodel.haprior");
   m_opt_euclidNHaEmittersPriorStrength =
       parameterStore->GetScoped<Float64>("linemodel.euclidnhaemittersStrength");
-  m_opt_pdfcombination =
-      parameterStore->GetScoped<std::string>("linemodel.pdfcombination");
-  m_opt_pdf_margAmpCorrection =
-      parameterStore->GetScoped<bool>("linemodel.pdf.margampcorr");
 
-  // Auto-correct fitting method
-  std::string forcefittingmethod = "individual";
-  if (m_opt_rigidity == "tplshape" && m_opt_fittingmethod == "hybrid") {
-    THROWG(BAD_PARAMETER_VALUE, "rigidity = tplshape and fitting_method=hybrid "
-                                "imply fittingmethod=individual");
-    /*
-    m_opt_fittingmethod = forcefittingmethod;
-      parameterStore->SetScopedParam("linemodel.fittingmethod",
-    m_opt_fittingmethod); Log.LogInfo( "Linemodel fitting method auto-correct
-    due to tplshape rigidity");
-    */
-  }
-  if (m_opt_rigidity == "tplshape" &&
-      m_opt_firstpass_fittingmethod == "hybrid") {
-    THROWG(BAD_PARAMETER_VALUE,
-           "rigidity = tplshape and firstpass_fitting_method=hybrid imply "
-           "fittingmethod=individual");
+  m_opt_secondpass_halfwindowsize =
+      parameterStore->GetScoped<Float64>("linemodel.secondpass.halfwindowsize");
 
-    //   m_opt_firstpass_fittingmethod = forcefittingmethod;
-    //  parameterStore.SetScopedParam("linemodel.firstpass.fittingmethod",
-    //  m_opt_firstpass_fittingmethod);
-    // Log.LogInfo( "Linemodel first pass fitting method auto-correct due to
-    // tplshape rigidity");
-  }
+  m_opt_candidatesLogprobaCutThreshold =
+      parameterStore->GetScoped<Float64>("linemodel.extremacutprobathreshold");
 
-  Log.LogInfo("Linemodel parameters:");
-  Log.LogInfo("    -linetypefilter: %s", m_opt_linetypefilter.c_str());
-  Log.LogInfo("    -lineforcefilter: %s", m_opt_lineforcefilter.c_str());
-  Log.LogInfo("    -fittingmethod: %s", m_opt_fittingmethod.c_str());
-  Log.LogInfo("    -linewidthtype: %s", m_opt_lineWidthType.c_str());
-  if (m_opt_lineWidthType == "combined" ||
-      m_opt_lineWidthType == "velocitydriven") {
-    Log.LogInfo("    -velocity emission: %.2f", m_opt_velocity_emission);
-    Log.LogInfo("    -velocity absorption: %.2f", m_opt_velocity_absorption);
-    Log.LogInfo("    -velocity fit: %s", m_opt_velocityfit ? "true" : "false");
-  }
+  m_opt_firstpass_largegridstepRatio = parameterStore->GetScoped<Int32>(
+      "linemodel.firstpass.largegridstepratio");
 
-  Log.LogInfo("    -nsigmasupport: %.1f", m_opt_nsigmasupport);
-
-  if (m_opt_velocityfit) {
-    Log.LogInfo("    -em velocity fit min : %.1f", m_opt_em_velocity_fit_min);
-    Log.LogInfo("    -em velocity fit max : %.1f", m_opt_em_velocity_fit_max);
-    Log.LogInfo("    -em velocity fit step : %.1f", m_opt_em_velocity_fit_step);
-    Log.LogInfo("    -abs velocity fit min : %.1f", m_opt_abs_velocity_fit_min);
-    Log.LogInfo("    -abs velocity fit max : %.1f", m_opt_abs_velocity_fit_max);
-    Log.LogInfo("    -abs velocity fit step : %.1f",
-                m_opt_abs_velocity_fit_step);
-  }
-
-  Log.LogInfo("    -rigidity: %s", m_opt_rigidity.c_str());
-  if (m_opt_rigidity == "rules") {
-    Log.LogInfo("      -rules: %s", m_opt_rules.c_str());
-    if (m_opt_fittingmethod == "hybrid") {
-      Log.LogInfo("      -Improve Balmer Fit: %s",
-                  m_opt_enableImproveBalmerFit ? "true" : "false");
-    }
-  } else if (m_opt_rigidity == "tplshape") {
-    Log.LogInfo("      -tplratio_catalog: %s",
-                m_opt_tplratio_reldirpath.c_str());
-    Log.LogInfo("      -tplratio_ismfit: %s",
-                m_opt_tplratio_ismfit ? "true" : "false");
-    Log.LogInfo("      -tplfit_priors_dirpath: %s",
-                m_opt_tplratio_prior_dirpath.c_str());
-    Log.LogInfo("      -tplratio_priors_betaA:  %f",
-                m_opt_tplratio_prior_betaA);
-    Log.LogInfo("      -tplratio_priors_betaTE:  %f",
-                m_opt_tplratio_prior_betaTE);
-    Log.LogInfo("      -tplratio_priors_betaZ:  %f",
-                m_opt_tplratio_prior_betaZ);
-  }
-
-  Log.LogInfo("    -continuumcomponent: %s", m_opt_continuumcomponent.c_str());
-  if (m_opt_continuumcomponent == "tplfit" ||
-      m_opt_continuumcomponent == "tplfitauto") {
-    Log.LogInfo("      -tplfit_fftprocessing: %d", m_opt_tplfit_fftprocessing);
-    Log.LogInfo("      -tplfit_ismfit: %s",
-                m_opt_tplfit_dustfit ? "true" : "false");
-    Log.LogInfo("      -tplfit_igmfit: %s",
-                m_opt_tplfit_igmfit ? "true" : "false");
-    Log.LogInfo("      -continuum fit count:  %.0f", m_opt_continuumfitcount);
-    Log.LogInfo("      -tplfit_ignorelinesupport: %s",
-                m_opt_tplfit_ignoreLinesSupport ? "true" : "false");
-    Log.LogInfo("      -tplfit_secondpass-LC-fitting-method: %s",
-                m_opt_secondpasslcfittingmethod.c_str());
-    Log.LogInfo("      -tplfit_priors_dirpath: %s",
-                m_opt_tplfit_continuumprior_dirpath.c_str());
-    Log.LogInfo("      -tplfit_priors_betaA:  %f",
-                m_opt_tplfit_continuumprior_betaA);
-    Log.LogInfo("      -tplfit_priors_betaTE:  %f",
-                m_opt_tplfit_continuumprior_betaTE);
-    Log.LogInfo("      -tplfit_priors_betaZ:  %f",
-                m_opt_tplfit_continuumprior_betaZ);
-  }
-  Log.LogInfo("    -continuumreestimation: %s", m_opt_continuumreest.c_str());
-  Log.LogInfo("    -extremacount: %i", m_opt_extremacount);
-  Log.LogInfo("    -extremacount-firstpass B: %i", m_opt_extremacountB);
-  Log.LogInfo("    -extrema cut proba-threshold: %.0f",
-              m_opt_candidatesLogprobaCutThreshold);
-  Log.LogInfo("    -first pass:");
-  Log.LogInfo("      -largegridstepratio: %d",
-              m_opt_firstpass_largegridstepRatio);
-  Log.LogInfo("      -fittingmethod: %s",
-              m_opt_firstpass_fittingmethod.c_str());
-  Log.LogInfo("      -tplratio_ismfit: %s",
-              m_opt_firstpass_tplratio_ismfit ? "true" : "false");
-  Log.LogInfo("      -multiplecontinuumfit_disable: %s",
-              m_opt_firstpass_disablemultiplecontinuumfit ? "true" : "false");
-
-  Log.LogInfo("    -second pass:");
-  Log.LogInfo("      -skip second pass: %s",
-              m_opt_skipsecondpass ? "true" : "false");
-  Log.LogInfo("      -continuum fit method: %s",
-              m_opt_secondpass_continuumfit.c_str());
-
-  Log.LogInfo("    -pdf-stronglinesprior: %e", m_opt_stronglinesprior);
-  Log.LogInfo("    -pdf-hapriorstrength: %e", m_opt_haPrior);
-  Log.LogInfo("    -pdf-euclidNHaEmittersPriorStrength: %e",
-              m_opt_euclidNHaEmittersPriorStrength);
-  Log.LogInfo("    -pdf-combination: %s",
-              m_opt_pdfcombination
-                  .c_str()); // "marg";    // "bestchi2";    // "bestproba";
-  Log.LogInfo("    -pdf-margAmpCorrection: %s",
-              m_opt_pdf_margAmpCorrection ? "true" : "false");
+  m_opt_skipsecondpass =
+      parameterStore->GetScoped<bool>("linemodel.skipsecondpass");
 
   return true;
 }
@@ -398,14 +136,7 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>(
       "linemodel.continuumfit.fftprocessing");
 
-  CLineCatalog::TLineVector restLineList = restlinecatalog.GetFilteredList(
-      m_opt_linetypefilter, m_opt_lineforcefilter);
-  Log.LogDebug("restLineList.size() = %d", restLineList.size());
-
-  bool retSolve =
-      Solve(resultStore, useloglambdasampling ? rebinnedSpc : spc, rebinnedSpc,
-            tplCatalog, std::move(restLineList), tplRatioCatalog, m_lambdaRange,
-            m_redshifts, photBandCat, m_opt_tplfit_use_photometry);
+  bool retSolve = Solve();
 
   if (!retSolve) {
     return NULL;
@@ -624,7 +355,8 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
       bool zPriorLines = false;
       Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__,
                     result->PriorLinesTplshapes.size());
-      if (boost::filesystem::exists(m_opt_tplratio_prior_dirpath) &&
+      if ( // boost::filesystem::exists(m_opt_tplratio_prior_dirpath) &&  //TODO
+           // check this elsewhere ?
           result->PriorLinesTplshapes.size() == ntplshapes) {
         zPriorLines = true;
         Log.LogDetail("%s: Lines Prior enabled", __func__);
@@ -825,76 +557,6 @@ void CLineModelSolve::StoreChisquareTplShapeResults(
 
 /**
  * \brief
- * Retrieve the true-velocities from a hardcoded ref file path
- * nb: this is a hack for development purposes
- **/
-Int32 getVelocitiesFromRefFile(const char *filePath, std::string spcid,
-                               Float64 &elv, Float64 &alv) {
-  std::ifstream file;
-
-  file.open(filePath, std::ifstream::in);
-  if (file.rdstate() & ios_base::failbit)
-    return false;
-
-  string line;
-
-  // Read file line by line
-  while (getline(file, line)) {
-    // remove comments
-    if (line.compare(0, 1, "#", 1) == 0) {
-      continue;
-    }
-    char_separator<char> sep(" \t");
-
-    // Tokenize each line
-    typedef tokenizer<char_separator<char>> ttokenizer;
-    ttokenizer tok(line, sep);
-
-    // Check if it's not a comment
-    ttokenizer::iterator it = tok.begin();
-    if (it != tok.end() && *it != "#") {
-      string name;
-      if (it != tok.end()) {
-        name = *it;
-      }
-      std::size_t foundstr = name.find(spcid.c_str());
-      if (foundstr == std::string::npos) {
-        continue;
-      }
-
-      // Found the correct spectrum ID: now read the ref values
-      Int32 nskip = 7;
-      for (Int32 i = 0; i < nskip; i++) {
-        ++it;
-      }
-      if (it != tok.end()) {
-
-        elv = 0.0;
-        try {
-          elv = lexical_cast<double>(*it);
-        } catch (bad_lexical_cast &) {
-          elv = 0.0;
-          return false;
-        }
-      }
-      ++it;
-      if (it != tok.end()) {
-        alv = 0.0;
-        try {
-          alv = lexical_cast<double>(*it);
-        } catch (bad_lexical_cast &) {
-          alv = 0.0;
-          return false;
-        }
-      }
-    }
-  }
-  file.close();
-  return true;
-}
-
-/**
- * \brief
  * Create a continuum object by subtracting spcWithoutContinuum from the spc.
  * Configure the opt_XXX variables from the dataStore scope parameters.
  * LogInfo the opt_XXX values.
@@ -902,96 +564,22 @@ Int32 getVelocitiesFromRefFile(const char *filePath, std::string spcid,
  * If that returned true, store results.
  **/
 
-bool CLineModelSolve::Solve(
-    std::shared_ptr<COperatorResultStore> resultStore, const CSpectrum &spc,
-    const CSpectrum &rebinnedSpc, const CTemplateCatalog &tplCatalog,
-    const CLineCatalog::TLineVector &restLineList,
-    const CLineCatalogsTplShape &tplRatioCatalog,
-    const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
-    const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
-    const Float64 photo_weight) {
+bool CLineModelSolve::Solve() {
   std::string scopeStr = "linemodel";
 
+  std::shared_ptr<COperatorResultStore> resultStore = Context.GetResultStore();
   // Compute with linemodel operator
-  Int32 retInit = m_linemodel.Init(
-      spc, redshifts, restLineList, m_categoryList, m_opt_continuumcomponent,
-      m_opt_nsigmasupport, m_opt_enableImproveBalmerFit,
-      m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+  Int32 retInit = m_linemodel.Init(m_redshifts);
   if (retInit != 0) {
     THROWG(INTERNAL_ERROR, "Linemodel, init failed");
   }
-  m_linemodel.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
-  //
-  if (m_opt_continuumcomponent == "tplfit" ||
-      m_opt_continuumcomponent == "tplfitauto") {
-    Log.LogDetail(
-        "  method Linemodel wit tplfit: fitcontinuum_maxN set to %.0f",
-        m_opt_continuumfitcount);
 
-    m_linemodel.m_opt_tplfit_fftprocessing = m_opt_tplfit_fftprocessing;
-    m_linemodel.m_opt_tplfit_fftprocessing_secondpass =
-        m_opt_tplfit_fftprocessing_secondpass;
-    m_linemodel.m_opt_tplfit_use_photometry = m_opt_tplfit_use_photometry;
-    m_linemodel.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit);
-    m_linemodel.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit);
-    m_linemodel.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
-    m_linemodel.m_opt_tplfit_ignoreLinesSupport =
-        Int32(m_opt_tplfit_ignoreLinesSupport);
-    m_linemodel.m_opt_secondpasslcfittingmethod =
-        m_opt_secondpasslcfittingmethod;
-    m_linemodel.m_opt_tplfit_continuumprior_dirpath =
-        m_opt_tplfit_continuumprior_dirpath;
-    m_linemodel.m_opt_tplfit_continuumprior_betaA =
-        m_opt_tplfit_continuumprior_betaA;
-    m_linemodel.m_opt_tplfit_continuumprior_betaTE =
-        m_opt_tplfit_continuumprior_betaTE;
-    m_linemodel.m_opt_tplfit_continuumprior_betaZ =
-        m_opt_tplfit_continuumprior_betaZ;
-    m_linemodel.m_opt_continuum_neg_amp_threshold =
-        m_opt_continuum_neg_amp_threshold;
-    m_linemodel.m_opt_continuum_null_amp_threshold =
-        m_opt_continuum_null_amp_threshold;
-    m_linemodel.m_opt_firstpass_multiplecontinuumfit_disable =
-        m_opt_firstpass_disablemultiplecontinuumfit;
-  }
-
-  m_linemodel.m_opt_lya_forcefit = m_opt_lya_forcefit;
-  m_linemodel.m_opt_lya_forcedisablefit = m_opt_lya_forcedisablefit;
-  m_linemodel.m_opt_lya_fit_asym_min = m_opt_lya_fit_asym_min;
-  m_linemodel.m_opt_lya_fit_asym_max = m_opt_lya_fit_asym_max;
-  m_linemodel.m_opt_lya_fit_asym_step = m_opt_lya_fit_asym_step;
-  m_linemodel.m_opt_lya_fit_width_min = m_opt_lya_fit_width_min;
-  m_linemodel.m_opt_lya_fit_width_max = m_opt_lya_fit_width_max;
-  m_linemodel.m_opt_lya_fit_width_step = m_opt_lya_fit_width_step;
-  m_linemodel.m_opt_lya_fit_delta_min = m_opt_lya_fit_delta_min;
-  m_linemodel.m_opt_lya_fit_delta_max = m_opt_lya_fit_delta_max;
-  m_linemodel.m_opt_lya_fit_delta_step = m_opt_lya_fit_delta_step;
-
-  if (m_opt_rigidity == "tplshape") {
-    m_linemodel.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit);
-    m_linemodel.m_opt_firstpass_tplratio_ismFit =
-        Int32(m_opt_firstpass_tplratio_ismfit);
-
-    m_linemodel.m_opt_tplratio_prior_dirpath = m_opt_tplratio_prior_dirpath;
-    m_linemodel.m_opt_tplratio_prior_betaA = m_opt_tplratio_prior_betaA;
-    m_linemodel.m_opt_tplratio_prior_betaTE = m_opt_tplratio_prior_betaTE;
-    m_linemodel.m_opt_tplratio_prior_betaZ = m_opt_tplratio_prior_betaZ;
-  }
-  // this should be cleaned from here
-  if (m_opt_rigidity == "rules") {
-    m_linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
-  }
   // logstep from redshift
 
   //**************************************************
   // FIRST PASS
   //**************************************************
-  Int32 retFirstPass = m_linemodel.ComputeFirstPass(
-      spc, rebinnedSpc, tplCatalog, tplRatioCatalog, lambdaRange, photBandCat,
-      photo_weight, m_opt_fittingmethod, m_opt_lineWidthType,
-      m_opt_velocity_emission, m_opt_velocity_absorption, m_opt_continuumreest,
-      m_opt_rules, m_opt_velocityfit, m_opt_firstpass_largegridstepRatio,
-      m_opt_firstpass_largegridsampling, m_opt_rigidity, m_opt_haPrior);
+  Int32 retFirstPass = m_linemodel.ComputeFirstPass();
   if (retFirstPass != 0) {
     THROWG(INTERNAL_ERROR, "Linemodel, first pass failed");
     return false;
@@ -1033,10 +621,7 @@ bool CLineModelSolve::Solve(
   std::string fpb_opt_continuumcomponent =
       "fromspectrum"; // Note: this is hardocoded! given that condition for FPB
                       // relies on having "tplfit"
-  Int32 retInitB =
-      linemodel_fpb.Init(spc, redshifts, restLineList, m_categoryList,
-                         fpb_opt_continuumcomponent, m_opt_nsigmasupport,
-                         m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+  Int32 retInitB = linemodel_fpb.Init(m_redshifts);
   if (retInitB != 0) {
     Log.LogError("Linemodel fpB, init failed");
     return false;
@@ -1044,37 +629,10 @@ bool CLineModelSolve::Solve(
   if (enableFirstpass_B) {
     Log.LogInfo("Linemodel FIRST PASS B enabled. Computing now.");
 
-    linemodel_fpb.m_opt_firstpass_fittingmethod = m_opt_firstpass_fittingmethod;
-
-    if (fpb_opt_continuumcomponent == "tplfit" ||
-        fpb_opt_continuumcomponent == "tplfitauto") {
-      linemodel_fpb.m_opt_tplfit_dustFit = Int32(m_opt_tplfit_dustfit);
-      linemodel_fpb.m_opt_tplfit_extinction = Int32(m_opt_tplfit_igmfit);
-      Log.LogDetail("  method tplfit Linemodel: fitcontinuum_maxN set to %d",
-                    m_opt_continuumfitcount);
-      linemodel_fpb.m_opt_fitcontinuum_maxN = m_opt_continuumfitcount;
-      linemodel_fpb.m_opt_tplfit_ignoreLinesSupport =
-          Int32(m_opt_tplfit_ignoreLinesSupport);
-      linemodel_fpb.m_opt_secondpasslcfittingmethod =
-          m_opt_secondpasslcfittingmethod;
-    }
-
-    if (m_opt_rigidity == "tplshape") {
-      linemodel_fpb.m_opt_tplratio_ismFit = Int32(m_opt_tplratio_ismfit);
-      linemodel_fpb.m_opt_firstpass_tplratio_ismFit =
-          Int32(m_opt_firstpass_tplratio_ismfit);
-    }
-
     //**************************************************
     // FIRST PASS B
     //**************************************************
-    Int32 retFirstPass = linemodel_fpb.ComputeFirstPass(
-        spc, rebinnedSpc, tplCatalog, tplRatioCatalog, lambdaRange, photBandCat,
-        photo_weight, m_opt_fittingmethod, m_opt_lineWidthType,
-        m_opt_velocity_emission, m_opt_velocity_absorption,
-        m_opt_continuumreest, m_opt_rules, m_opt_velocityfit,
-        m_opt_firstpass_largegridstepRatio, m_opt_firstpass_largegridsampling,
-        m_opt_rigidity);
+    Int32 retFirstPass = linemodel_fpb.ComputeFirstPass();
     if (retFirstPass != 0) {
       Log.LogError("Linemodel, first pass failed");
       return false;
@@ -1124,15 +682,7 @@ bool CLineModelSolve::Solve(
   // SECOND PASS
   //**************************************************
   if (!m_opt_skipsecondpass) {
-    Int32 retSecondPass = m_linemodel.ComputeSecondPass(
-        spc, rebinnedSpc, tplCatalog, lambdaRange, photBandCat, fpExtremaResult,
-        photo_weight, m_opt_fittingmethod, m_opt_lineWidthType,
-        m_opt_velocity_emission, m_opt_velocity_absorption,
-        m_opt_continuumreest, m_opt_rules, m_opt_velocityfit, m_opt_rigidity,
-        m_opt_em_velocity_fit_min, m_opt_em_velocity_fit_max,
-        m_opt_em_velocity_fit_step, m_opt_abs_velocity_fit_min,
-        m_opt_abs_velocity_fit_max, m_opt_abs_velocity_fit_step,
-        m_opt_secondpass_continuumfit);
+    Int32 retSecondPass = m_linemodel.ComputeSecondPass(fpExtremaResult);
     if (retSecondPass != 0) {
       Log.LogError("Linemodel, second pass failed.");
       return false;

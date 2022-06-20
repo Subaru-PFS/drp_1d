@@ -196,7 +196,7 @@ bool CMultiRollModel::initTplratioCatalogs(
   bool ret = -1;
   for (Int32 km = 0; km < m_models.size(); km++) {
     m_models[km]->m_CatalogTplShape = tplRatioCatalog;
-    ret = m_models[km]->initTplratioCatalogs(opt_tplratio_ismFit);
+    m_models[km]->initTplratioCatalogs(opt_tplratio_ismFit);
   }
 
   //

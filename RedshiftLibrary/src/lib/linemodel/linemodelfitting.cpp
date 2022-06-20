@@ -84,10 +84,9 @@ CLineModelFitting::CLineModelFitting()
       m_tplCatalog(*(Context.GetTemplateCatalog())),
       m_tplCategoryList({Context.GetCurrentCategory()}),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
-      m_templateFittingOperator(m_inputSpc, m_lambdaRange),
-      m_enableAmplitudeOffsets(false)
-
-{
+      m_templateFittingOperator(*(Context.GetSpectrum()),
+                                Context.GetLambdaRange()),
+      m_enableAmplitudeOffsets(false) {
   initParameters();
   initMembers();
 }
@@ -97,11 +96,11 @@ CLineModelFitting::CLineModelFitting(const CSpectrum &template_,
     : m_inputSpc(template_), m_lambdaRange(lambdaRange), m_tplCatalog(),
       m_tplCategoryList(),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
-      m_templateFittingOperator(m_inputSpc, m_lambdaRange),
+      m_templateFittingOperator(m_inputSpc, lambdaRange),
       m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
   initParameters();
   // override ortho specific parameters
-  m_continuumComponent = "fromspectrum";
+  m_ContinuumComponent = "fromspectrum";
   m_fittingmethod = "hybrid";
   // temporary options override to be removed when full tpl ortho is implemented
   m_rigidity = "rules";
@@ -114,8 +113,13 @@ void CLineModelFitting::initParameters() {
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
-  m_opt_fitcontinuum_neg_threshold =
-      ps->GetScoped<Float64>("continuumfit.negativethreshold");
+  m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
+  if (m_ContinuumComponent != "nocontinuum") {
+    m_opt_fitcontinuum_neg_threshold =
+        ps->GetScoped<Float64>("continuumfit.negativethreshold");
+    m_opt_fitcontinuum_null_amp_threshold =
+        ps->GetScoped<Float64>("continuumfit.nullthreshold");
+  }
   m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
   m_NSigmaSupport = ps->GetScoped<Float64>("nsigmasupport");
   m_velocityEmission = ps->GetScoped<Float64>("velocityemission");
@@ -124,8 +128,39 @@ void CLineModelFitting::initParameters() {
   m_velocityAbsorptionInit = m_velocityAbsorption;
   m_rulesoption = ps->GetScoped<std::string>("rules");
   m_rigidity = ps->GetScoped<std::string>("rigidity");
-  m_continuumComponent = ps->GetScoped<std::string>("continuumcomponent");
-  m_opt_fitcontinuum_null_amp_threshold = ps->GetScoped<Float64>("continuum_nullamp_threshold
+  m_opt_lya_forcedisablefit = ps->GetScoped<bool>("lyaforcedisablefit");
+  if (m_rigidity == "tplshape")
+    m_opt_haprior = ps->GetScoped<Float64>("haprior");
+  if (m_rigidity == "rules" && m_fittingmethod == "hybrid")
+    m_opt_enable_improveBalmerFit = ps->GetScoped<bool>("improveBalmerFit");
+  if (Context.GetCurrentMethod() == "LineModelSolve") {
+    m_opt_firstpass_fittingmethod =
+        ps->GetScoped<std::string>("firstpass.fittingmethod");
+    m_opt_secondpass_fittingmethod = m_fittingmethod;
+    m_opt_firstpass_forcedisableMultipleContinuumfit =
+        ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
+    m_opt_firstpass_forcedisableTplratioISMfit =
+        !ps->GetScoped<bool>("firstpass.tplratio_ismfit");
+    // TODO dedicated function ?
+    m_opt_lya_forcefit = ps->GetScoped<bool>("lyaforcefit");
+
+    m_opt_lya_fit_asym_min = ps->GetScoped<Float64>("lyafit.asymfitmin");
+    m_opt_lya_fit_asym_max = ps->GetScoped<Float64>("lyafit.asymfitmax");
+    m_opt_lya_fit_asym_step = ps->GetScoped<Float64>("lyafit.asymfitstep");
+    m_opt_lya_fit_width_min = ps->GetScoped<Float64>("lyafit.widthfitmin");
+    m_opt_lya_fit_width_max = ps->GetScoped<Float64>("lyafit.widthfitmax");
+    m_opt_lya_fit_width_step = ps->GetScoped<Float64>("lyafit.widthfitstep");
+    m_opt_lya_fit_delta_min = ps->GetScoped<Float64>("lyafit.deltafitmin");
+    m_opt_lya_fit_delta_max = ps->GetScoped<Float64>("lyafit.deltafitmax");
+    m_opt_lya_fit_delta_step = ps->GetScoped<Float64>("lyafit.deltafitstep");
+
+    SetSecondpassContinuumFitPrms();
+  }
+  if (m_ContinuumComponent == "tplfit" ||
+      m_ContinuumComponent == "tplfitauto") {
+    m_opt_firstpass_forcedisableMultipleContinuumfit =
+        ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
+  }
 }
 
 void CLineModelFitting::initMembers() {
@@ -153,7 +188,7 @@ void CLineModelFitting::initMembers() {
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
   m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
 
-  SetContinuumComponent(m_continuumComponent);
+  SetContinuumComponent(m_ContinuumComponent);
 
   // NB: fitContinuum_option: this is the initialization (default value),
   // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
@@ -191,6 +226,10 @@ void CLineModelFitting::initMembers() {
     // load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the
     // Abs lines
     LoadCatalogTwoMultilinesAE(m_RestLineList);
+    m_CatalogTplShape = *(Context.GetTplRatioCatalog());
+    initTplratioCatalogs(Context.GetParameterStore()->GetScoped<bool>(
+        "linemodel.tplratio_ismfit"));
+    SetTplshape_PriorHelper();
   }
   LogCatalogInfos();
 
@@ -210,18 +249,14 @@ void CLineModelFitting::initMembers() {
   SetLSF();
 }
 // hook
-bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
+void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
   // TODO: check if m_CatalogTplShape changes between iterations
-  bool ret =
-      m_CatalogTplShape.Init(opt_tplratio_ismFit,
-                             m_tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
-                                 ->m_ismCorrectionCalzetti,
-                             m_NSigmaSupport);
-  if (!ret) {
-    Log.LogError("Unable to initialize the the tpl-shape catalogs.");
-    return false;
-  }
+
+  m_CatalogTplShape.Init(opt_tplratio_ismFit,
+                         m_tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
+                             ->m_ismCorrectionCalzetti,
+                         m_NSigmaSupport);
   m_CatalogTplShape.InitLineCorrespondingAmplitudes(m_Elements);
   SetMultilineNominalAmplitudesFast(0);
   // m_CatalogTplShape.SetMultilineNominalAmplitudes( *this, 0 );
@@ -258,7 +293,141 @@ bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   }
 
   m_tplshapeLeastSquareFast = false;
-  return true;
+}
+
+void CLineModelFitting::logParameters() {
+  Log.LogInfo(Formatter() << "m_pass" << m_pass);
+  Log.LogInfo(Formatter() << " m_enableAmplitudeOffsets"
+                          << m_enableAmplitudeOffsets);
+  Log.LogInfo(Formatter() << " m_AmplitudeOffsetsDegree"
+                          << m_AmplitudeOffsetsDegree);
+  Log.LogInfo(Formatter() << " m_LambdaOffsetMin" << m_LambdaOffsetMin);
+  Log.LogInfo(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
+  Log.LogInfo(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
+  Log.LogInfo(Formatter() << " m_enableLambdaOffsetsFit"
+                          << m_enableLambdaOffsetsFit);
+
+  Log.LogInfo(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
+  Log.LogInfo(Formatter() << " m_opt_lya_forcedisablefit"
+                          << m_opt_lya_forcedisablefit);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_min"
+                          << m_opt_lya_fit_asym_min);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_max"
+                          << m_opt_lya_fit_asym_max);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_step"
+                          << m_opt_lya_fit_asym_step);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_min"
+                          << m_opt_lya_fit_width_min);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_max"
+                          << m_opt_lya_fit_width_max);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_step"
+                          << m_opt_lya_fit_width_step);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_min"
+                          << m_opt_lya_fit_delta_min);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_max"
+                          << m_opt_lya_fit_delta_max);
+  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_step"
+                          << m_opt_lya_fit_delta_step);
+
+  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_maxCount"
+                          << m_opt_fitcontinuum_maxCount);
+  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_neg_threshold"
+                          << m_opt_fitcontinuum_neg_threshold);
+  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_null_amp_threshold"
+                          << m_opt_fitcontinuum_null_amp_threshold);
+  Log.LogInfo(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
+                          << m_opt_firstpass_forcedisableMultipleContinuumfit);
+  Log.LogInfo(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
+                          << m_opt_firstpass_forcedisableTplratioISMfit);
+  Log.LogInfo(Formatter() << "m_opt_firstpass_fittingmethod "
+                          << m_opt_firstpass_fittingmethod);
+  Log.LogInfo(Formatter() << "m_opt_secondpass_fittingmethod"
+                          << m_opt_secondpass_fittingmethod);
+
+  Log.LogInfo(Formatter() << " m_opt_enable_improveBalmerFit"
+                          << m_opt_enable_improveBalmerFit);
+  Log.LogInfo(Formatter() << " m_opt_haprior" << m_opt_haprior);
+
+  Log.LogInfo(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
+  Log.LogInfo(Formatter() << "LineWidthType=" << m_LineWidthType);
+  Log.LogInfo(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
+  Log.LogInfo(Formatter() << "velocityEmission=" << m_velocityEmission);
+  Log.LogInfo(Formatter() << "velocityAbsorption=" << m_velocityAbsorption);
+  Log.LogInfo(Formatter() << "velocityEmissionInit=" << m_velocityEmissionInit);
+  Log.LogInfo(Formatter() << "velocityAbsorptionInit="
+                          << m_velocityAbsorptionInit);
+
+  Log.LogInfo(Formatter() << "nominalWidthDefaultEmission="
+                          << m_nominalWidthDefaultEmission);
+  Log.LogInfo(Formatter() << "nominalWidthDefaultAbsorption="
+                          << m_nominalWidthDefaultAbsorption);
+
+  Log.LogInfo(Formatter() << "fittingmethod=" << m_fittingmethod);
+
+  Log.LogInfo(Formatter() << "rulesoption=" << m_rulesoption);
+  Log.LogInfo(Formatter() << "rigidity=" << m_rigidity);
+  Log.LogInfo(Formatter() << "forcedisableTplratioISMfit="
+                          << m_forcedisableTplratioISMfit);
+
+  // Log.LogInfo(Formatter()<<"tplCatalog="<<m_tplCatalog);
+  // Log.LogInfo(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
+  Log.LogInfo(Formatter() << "tplshapeBestTplName=" << m_tplshapeBestTplName);
+  Log.LogInfo(Formatter() << "tplshapeBestTplIsmCoeff="
+                          << m_tplshapeBestTplIsmCoeff);
+  Log.LogInfo(Formatter() << "tplshapeBestTplAmplitude="
+                          << m_tplshapeBestTplAmplitude);
+  Log.LogInfo(Formatter() << "tplshapeBestTplDtm=" << m_tplshapeBestTplDtm);
+  Log.LogInfo(Formatter() << "tplshapeBestTplMtm=" << m_tplshapeBestTplMtm);
+  Log.LogInfo(Formatter()
+              << "tplshapeLeastSquareFast="
+              << m_tplshapeLeastSquareFast); // for rigidity=tplshape: switch to
+                                             // use fast least square estimation
+
+  Log.LogInfo(Formatter() << "secondpass_fitContinuum_dustfit="
+                          << m_secondpass_fitContinuum_dustfit);
+  Log.LogInfo(Formatter() << "secondpass_fitContinuum_igm="
+                          << m_secondpass_fitContinuum_igm);
+  Log.LogInfo(Formatter() << "secondpass_fitContinuum_outsidelinesmask="
+                          << m_secondpass_fitContinuum_outsidelinesmask);
+  Log.LogInfo(Formatter() << "secondpass_fitContinuum_observedFrame="
+                          << m_secondpass_fitContinuum_observedFrame);
+
+  Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
+  Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum_tplName);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitude="
+                          << m_fitContinuum_tplFitAmplitude);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeError="
+                          << m_fitContinuum_tplFitAmplitudeError);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeSigmaMAX="
+                          << m_fitContinuum_tplFitAmplitudeSigmaMAX);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
+                          << m_fitContinuum_tplFitMerit);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit_phot="
+                          << m_fitContinuum_tplFitMerit_phot);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitEbmvCoeff="
+                          << m_fitContinuum_tplFitEbmvCoeff);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitMeiksinIdx="
+                          << m_fitContinuum_tplFitMeiksinIdx);
+  Log.LogInfo(
+      Formatter()
+      << "fitContinuum_tplFitRedshift="
+      << m_fitContinuum_tplFitRedshift); // only used with
+                                         // m_fitContinuum_option==2 for now
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitDtM="
+                          << m_fitContinuum_tplFitDtM);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitMtM="
+                          << m_fitContinuum_tplFitMtM);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitLogprior="
+                          << m_fitContinuum_tplFitLogprior);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitSNRMax="
+                          << m_fitContinuum_tplFitSNRMax);
+  //  Log.LogInfo(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
+  //  // only used with
+  // m_fitContinuum_option==2 for now
+  Log.LogInfo(Formatter() << "forcedisableMultipleContinuumfit="
+                          << m_forcedisableMultipleContinuumfit);
+  Log.LogInfo(Formatter() << "fitContinuum_tplFitAlpha="
+                          << m_fitContinuum_tplFitAlpha);
 }
 
 /**
@@ -1345,10 +1514,19 @@ CLineModelFitting::GetFitContinuum_FitStore() const {
   return m_fitContinuum_tplfitStore;
 }
 
-Int32 CLineModelFitting::SetFitContinuum_PriorHelper(
-    const std::shared_ptr<const CPriorHelper> &priorhelper) {
-  m_fitContinuum_priorhelper = priorhelper;
-  return 1;
+std::shared_ptr<CPriorHelper> CLineModelFitting::SetFitContinuum_PriorHelper() {
+  CAutoScope a = CAutoScope(Context.m_ScopeStack, "linemodel");
+  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumfit");
+  CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
+  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+
+  m_fitContinuum_priorhelper = std::make_shared<CPriorHelper>();
+  m_fitContinuum_priorhelper->Init(
+      ps->GetScoped<std::string>("catalog_dirpath"), 0);
+  m_fitContinuum_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
+  m_fitContinuum_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
+  m_fitContinuum_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
+  return m_fitContinuum_priorhelper;
 }
 
 void CLineModelFitting::SetFitContinuum_Option(Int32 opt) {
@@ -1503,10 +1681,18 @@ bool CLineModelFitting::setTplshapeModel(Int32 itplshape,
   return true;
 }
 
-Int32 CLineModelFitting::SetTplshape_PriorHelper(
-    const std::shared_ptr<const CPriorHelper> &priorhelper) {
-  m_tplshape_priorhelper = priorhelper;
-  return 1;
+void CLineModelFitting::SetTplshape_PriorHelper() {
+  CAutoScope a = CAutoScope(Context.m_ScopeStack, "linemodel");
+  CAutoScope b = CAutoScope(Context.m_ScopeStack, "tplratio");
+  CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
+  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+
+  m_tplshape_priorhelper = std::make_shared<CPriorHelper>();
+  m_tplshape_priorhelper->Init(ps->GetScoped<std::string>("catalog_dirpath"),
+                               0);
+  m_tplshape_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
+  m_tplshape_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
+  m_tplshape_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
 }
 
 bool CLineModelFitting::setTplshapeAmplitude(const TFloat64List &ampsElts,
@@ -2449,10 +2635,18 @@ CLineModelFitting::createLmfitControllers() {
   return useLmfitControllers;
 }
 
-void CLineModelFitting::SetSecondpassContinuumFitPrms(Int32 dustfit,
-                                                      Int32 meiksinfit,
-                                                      Int32 outsidelinemask,
-                                                      Int32 observedFrame) {
+void CLineModelFitting::SetSecondpassContinuumFitPrms() {
+
+  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+
+  Int32 dustfit = -1;
+  if (ps->GetScoped<bool>("continuumfit.ismfit"))
+    dustfit = -10;
+
+  Int32 meiksinfit = ps->GetScoped<bool>("continuumfit.igmfit");
+  Int32 outsidelinemask = ps->GetScoped<bool>("continuumfit.ignorelinesupport");
+  Int32 observedFrame =
+      0; // should be replaced with option passed in param.json?
   m_secondpass_fitContinuum_dustfit = dustfit;
   m_secondpass_fitContinuum_igm = meiksinfit;
   m_secondpass_fitContinuum_outsidelinesmask =
@@ -2460,20 +2654,18 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms(Int32 dustfit,
                        // used
   m_secondpass_fitContinuum_observedFrame = observedFrame;
 
-  if (1) {
-    Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                  "fitContinuum_dustfit = %d",
-                  m_secondpass_fitContinuum_dustfit);
-    Log.LogDetail(
-        "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
-        m_secondpass_fitContinuum_igm);
-    Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                  "fitContinuum_outsidelinemask = %d",
-                  m_secondpass_fitContinuum_outsidelinesmask);
-    Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                  "fitContinuum_observedFrame = %d",
-                  m_secondpass_fitContinuum_observedFrame);
-  }
+  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
+                "fitContinuum_dustfit = %d",
+                m_secondpass_fitContinuum_dustfit);
+  Log.LogDetail(
+      "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
+      m_secondpass_fitContinuum_igm);
+  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
+                "fitContinuum_outsidelinemask = %d",
+                m_secondpass_fitContinuum_outsidelinesmask);
+  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
+                "fitContinuum_observedFrame = %d",
+                m_secondpass_fitContinuum_observedFrame);
 }
 
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {

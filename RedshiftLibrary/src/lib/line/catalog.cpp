@@ -64,7 +64,7 @@ const CLineCatalog::TLineVector &CLineCatalog::GetList() const {
   return m_List;
 }
 
-const CLineCatalog::TLineVector
+CLineCatalog::TLineVector
 CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
 
   TLineVector filteredList;
@@ -78,7 +78,7 @@ CLineCatalog::GetFilteredList(Int32 typeFilter, Int32 forceFilter) const {
   return filteredList;
 }
 
-const CLineCatalog::TLineVector
+CLineCatalog::TLineVector
 CLineCatalog::GetFilteredList(const std::string &typeFilter,
                               const std::string &forceFilter) const {
   Int32 itypeFilter = -1;
