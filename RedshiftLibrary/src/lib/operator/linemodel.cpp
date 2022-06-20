@@ -979,12 +979,12 @@ COperatorLineModel::buildFirstPassExtremaResults(
  */
 void COperatorLineModel::Combine_firstpass_candidates(
     std::shared_ptr<const CLineModelPassExtremaResult> firstpass_results_b) {
+  Int32 startIdx = m_firstpass_extremaResult->size();
   TInt32List uniqueIdx_fpb =
       m_firstpass_extremaResult->getUniqueCandidates(firstpass_results_b);
   m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() +
                                     uniqueIdx_fpb.size());
 
-  Int32 startIdx = m_firstpass_extremaResult->size();
   for (Int32 keb = 0; keb < uniqueIdx_fpb.size(); keb++) {
     Int32 i = uniqueIdx_fpb[keb];
     // append the candidate to m_firstpass_extremaResult
