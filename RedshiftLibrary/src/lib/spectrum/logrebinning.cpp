@@ -154,8 +154,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum(
 
     if (loglambda_count_spc < 2) {
       THROWG(INTERNAL_ERROR, Formatter()
-                                 << "CSpectrumLogRebinning::"
-                                    "LoglambdaRebinSpectrum: logGridCount = "
+                                 << "Cannot rebin spectrum of a grid of size:  "
                                  << loglambda_count_spc << "<2");
     }
   }
@@ -176,7 +175,7 @@ std::shared_ptr<CSpectrum> CSpectrumLogRebinning::LoglambdaRebinSpectrum(
       spectrum->Rebin(spcLbdaRange, targetSpectralAxis, *spectrumRebinedLog,
                       mskRebinedLog, m_rebinMethod, errorRebinMethod);
   if (!ret) {
-    THROWG(INTERNAL_ERROR, "Cant rebin spectrum");
+    THROWG(INTERNAL_ERROR, "Can not rebin spectrum");
   }
 
   spectrumRebinedLog->GetSpectralAxis().IsLogSampled(
@@ -245,11 +244,9 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(
       tpl->GetSpectralAxis()[tpl->GetSampleCount() - 1])
     overlapFull = false;
   if (!overlapFull) {
-    THROWG(
-        INTERNAL_ERROR,
-        Formatter() << "CSpectrumLogRebinning::LoglambdaRebinTemplate overlap "
-                       "found to be lower than 1.0 for the template "
-                    << tpl->GetName().c_str());
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "overlap found to be lower than 1.0 for template "
+                       << tpl->GetName().c_str());
   }
 
   const CSpectrumSpectralAxis targetSpectralAxis =
@@ -257,7 +254,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(
 
   if (targetSpectralAxis[loglambda_count_tpl - 1] < targetSpectralAxis[0])
     THROWG(INTERNAL_ERROR,
-           " Last elements of the target spectral axis are not valid. Template "
+           " Last element of the target spectral axis is not valid. Template "
            "count is not well computed due to exp/conversions");
 
   auto templateRebinedLog =
@@ -273,7 +270,7 @@ std::shared_ptr<CTemplate> CSpectrumLogRebinning::LoglambdaRebinTemplate(
   bool ret = tpl->Rebin(tplLbdaRange, targetSpectralAxis, *templateRebinedLog,
                         mskRebinedLog);
   if (!ret) {
-    THROWG(INTERNAL_ERROR, "Cant rebin template");
+    THROWG(INTERNAL_ERROR, "Can't rebin template");
   }
 
   templateRebinedLog->GetSpectralAxis().IsLogSampled(m_logGridStep);
@@ -286,10 +283,8 @@ CSpectrumSpectralAxis CSpectrumLogRebinning::computeTargetLogSpectralAxis(
     Int32 count) const { // spreadoverlog expects m_Begin to be non-log value
   TFloat64List axis = lambdarange.SpreadOverLog(m_logGridStep);
   if (axis.size() != count) {
-    THROWG(
-        INTERNAL_ERROR,
-        "  CSpectrumLogRebinning::computeTargetLogSpectralAxis: computed axis "
-        "has not expected samples number");
+    THROWG(INTERNAL_ERROR,
+           "computed axis does not have the expected samples number");
   }
   CSpectrumSpectralAxis targetSpectralAxis(std::move(axis));
   return targetSpectralAxis;

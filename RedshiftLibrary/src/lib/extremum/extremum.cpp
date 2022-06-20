@@ -115,8 +115,8 @@ bool CExtremum::Find(const TFloat64List &xAxis, const TFloat64List &yAxis,
 
   if (n != yAxis.size()) {
     Log.LogError(
-        "CExtremum::Find, input X and Y vector have not the same size");
-    throw("CExtremum::Find, input X and Y vector have not the same size");
+        "CExtremum::Find, input X and Y vector do not have the same size");
+    THROWG(INTERNAL_ERROR, "input X and Y vector do not have the same size");
   }
 
   Int32 BeginIndex = 0;

@@ -105,7 +105,7 @@ CTplcombinationSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   // for now interp must be 'lin'. pfg not availbale for now...
   if (opt_interp != "lin") {
-    THROWG(INTERNAL_ERROR, "interp. parameter must be 'lin'");
+    THROWG(INTERNAL_ERROR, "interpolation parameter must be 'lin'");
   }
 
   Log.LogInfo("Method parameters:");
@@ -192,8 +192,8 @@ bool CTplcombinationSolve::Solve(
       tplCatalog.GetTemplateList(m_categoryList);
   if (tplList.empty()) {
     THROWG(BAD_TEMPLATECATALOG, Formatter()
-                                    << "Template catalog for category "
-                                    << m_categoryList[0] << " is empty");
+                                    << "Empty template catalog for category "
+                                    << m_categoryList[0]);
   }
 
   // check all templates have same spectralAxis
@@ -203,14 +203,11 @@ bool CTplcombinationSolve::Solve(
     const CSpectrumSpectralAxis &currentSpcAxis =
         tplList[ktpl]->GetSpectralAxis();
     if (axisSize != tplList[ktpl]->GetSampleCount()) {
-      THROWG(INTERNAL_ERROR,
-             "  Method-tplcombination: templates dont have same size");
+      THROWG(INTERNAL_ERROR, "templates do not have same size");
     }
     for (Int32 i = 0; i < axisSize; i++) {
       if (std::abs(refSpcAxis[i] - currentSpcAxis[i]) > 1E-8) {
-        THROWG(
-            INTERNAL_ERROR,
-            "  Method-tplcombination: templates dont have same spectralAxis");
+        THROWG(INTERNAL_ERROR, "templates do not have same spectralAxis");
       }
     }
   }
@@ -293,8 +290,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
 
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    THROWG(INTERNAL_ERROR, "tplcombinationsolve: CombinePDF - Unable to "
-                           "retrieve tplcombination results");
+    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
   }
   std::shared_ptr<const CTplCombinationResult> result =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -316,11 +312,10 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
       Log.LogInfo("tplcombinationsolve: using cstLog = %f",
                   chisquarearray.cstLog);
     } else if (chisquarearray.cstLog != result->CstLog) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "tplcombinationsolve: Found different "
-                                    "cstLog values in results... val-1="
-                                 << chisquarearray.cstLog
-                                 << " != val-2=" << result->CstLog);
+      THROWG(INTERNAL_ERROR,
+             Formatter() << "cstLog values do not match in results: val1="
+                         << chisquarearray.cstLog
+                         << " != val2=" << result->CstLog);
     }
     if (chisquarearray.redshifts.size() == 0) {
       chisquarearray.redshifts = result->Redshifts;
@@ -336,8 +331,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
         }
       }
       if (foundBadStatus) {
-        THROWG(INTERNAL_ERROR,
-               "tplcombinationsolve: Found bad status result...");
+        THROWG(INTERNAL_ERROR, " Found bad status result");
       }
     }
 
@@ -384,8 +378,7 @@ CTplcombinationSolve::buildExtremaResults(
   // tplCombination
   auto results = store->GetScopedGlobalResult(scopeStr.c_str());
   if (results.expired()) {
-    THROWG(INTERNAL_ERROR, "tplcombinationsolve: SaveExtremaResult - Unable to "
-                           "retrieve tplcombination results");
+    THROWG(INTERNAL_ERROR, "Unable to retrieve tplcombination results");
   }
   auto TplFitResult =
       std::dynamic_pointer_cast<const CTplCombinationResult>(results.lock());
@@ -394,15 +387,13 @@ CTplcombinationSolve::buildExtremaResults(
   bool foundRedshiftAtLeastOnce = false;
 
   if (TplFitResult->ChiSquare.size() != redshifts.size()) {
-    THROWG(INTERNAL_ERROR, "CTplCombinationSolve::SaveExtremaResult, "
-                           "templatefitting results has wrong size");
+    THROWG(INTERNAL_ERROR, "Size do not match among templatefitting results");
   }
 
   bool foundBadStatus = false;
 
   if (foundBadStatus) {
-    THROWG(INTERNAL_ERROR,
-           "Found bad status result");
+    THROWG(INTERNAL_ERROR, "Bad status result");
   }
 
   // prepare the list of components/templates

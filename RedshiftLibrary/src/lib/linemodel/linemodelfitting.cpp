@@ -193,8 +193,7 @@ bool CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
                                  ->m_ismCorrectionCalzetti,
                              m_NSigmaSupport);
   if (!ret) {
-    Log.LogError(
-        "Unable to initialize the the tpl-shape catalogs. aborting...");
+    Log.LogError("Unable to initialize the the tpl-shape catalogs.");
     return false;
   }
   m_CatalogTplShape.InitLineCorrespondingAmplitudes(m_Elements);
@@ -2570,31 +2569,24 @@ void CLineModelFitting::refreshModel(Int32 lineTypeFilter) {
                  "and model max=%e",
                  fmin, fmax);
   }
-
   /*
-  //check the model reinited for nan values
-  Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
-  Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
-  //Int32 imin = 0;
-  //Int32 imax = modelFluxAxis.GetSamplesCount();
+    // check the model reinited for nan values
+    Int32 imin = spectralAxis.GetIndexAtWaveLength(12500.);
+    Int32 imax = spectralAxis.GetIndexAtWaveLength(18500.);
+    // Int32 imin = 0;
+    // Int32 imax = modelFluxAxis.GetSamplesCount();
 
-  for(Int32 j=imin; j<imax; j++)
-  {
-      if(isnan(modelFluxAxis[j]))
-      {
-          THROWG(INTERNAL_ERROR,
-  "CLineModelFitting::refreshModel: NaN value found for the reinited model
-  spectrum at lambda=%f", spectralAxis[j] ); break;
+    for (Int32 j = imin; j < imax; j++) {
+      if (isnan(modelFluxAxis[j])) {
+            THROWG(INTERNAL_ERROR,"NaN value found for the reinited model
+    spectrum at lambda=%f", spectralAxis[j] ); break;
       }
-  }
-  //*/
-
-  /*
-  CSpectrumFluxAxis contFluxAxisWithAmpOffset =
-  CSpectrumFluxAxis(m_ContinuumFluxAxis.GetSamplesCount()); for( Int32 i=0;
-  i<m_ContinuumFluxAxis.GetSamplesCount(); i++ )
-  {
-      contFluxAxisWithAmpOffset[i] = m_ContinuumFluxAxis[i];
+    }
+    //*/
+  /* CSpectrumFluxAxis contFluxAxisWithAmpOffset =
+      CSpectrumFluxAxis(m_ContinuumFluxAxis.GetSamplesCount());
+  for (Int32 i = 0; i < m_ContinuumFluxAxis.GetSamplesCount(); i++) {
+    contFluxAxisWithAmpOffset[i] = m_ContinuumFluxAxis[i];
   }
   //*/
   if (m_enableAmplitudeOffsets) {
