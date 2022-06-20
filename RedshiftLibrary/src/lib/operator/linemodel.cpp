@@ -678,8 +678,10 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       EbmvCoeff = m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
       // access any template and retrieve the ismcorrection object
       opt_tplfit_integer_chi2_ebmv =
-          tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+          m_opt_tplfit_dustFit
+              ? tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
+                    ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff)
+              : -1;
     }
   }
 
