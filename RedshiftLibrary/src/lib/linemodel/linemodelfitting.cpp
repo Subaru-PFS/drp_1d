@@ -1610,8 +1610,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
       if (m_rigidity == "tplshape") {
         if (m_forcedisableTplratioISMfit && ifitting > 0 &&
-            !m_CatalogTplShape.CalzettiInitFailed() &&
-            m_CatalogTplShape.GetIsmCoeff(ifitting) > 0) {
+            m_CatalogTplShape.GetIsmIndex(ifitting) > 0) {
           // copy the values for ebmv=ebmv_fixed (=0) here
           m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting - 1];
           m_ScaleMargCorrTplshape[ifitting] =

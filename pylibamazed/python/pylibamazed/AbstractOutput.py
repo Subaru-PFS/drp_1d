@@ -188,14 +188,17 @@ class AbstractOutput:
         skipsecondpass = False 
         if object_type is not None:
             skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
-        if self.extended_results and skipsecondpass is False:
-            return ds_attributes 
-        #retrieve extended results which are not firstpass results
-        if self.extended_results and skipsecondpass is True:
-            filtered_df = ds_attributes[~ds_attributes["hdf5_name"].str.contains("Firstpass", na=True)]
-            return filtered_df   
+        
+        #retrieve results which are not firstpass results
+        if skipsecondpass:
+            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
+        else:
+            filtered_df = ds_attributes
 
-        filtered_df = ds_attributes[ds_attributes["extended_results"]==False]     
+        if self.extended_results:
+            return filtered_df 
+  
+        filtered_df = filtered_df[ds_attributes["extended_results"]==False]     
         return filtered_df
 
     # root is every first level data excluding self.objects
