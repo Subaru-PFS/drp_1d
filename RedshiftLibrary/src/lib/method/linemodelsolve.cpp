@@ -971,6 +971,8 @@ bool CLineModelSolve::Solve(
         m_opt_continuum_neg_amp_threshold;
     m_linemodel.m_opt_continuum_null_amp_threshold =
         m_opt_continuum_null_amp_threshold;
+    m_linemodel.m_opt_firstpass_multiplecontinuumfit_disable =
+        m_opt_firstpass_disablemultiplecontinuumfit;
   }
 
   m_linemodel.m_opt_lya_forcefit = m_opt_lya_forcefit;

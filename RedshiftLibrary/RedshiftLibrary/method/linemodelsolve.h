@@ -118,8 +118,7 @@ private:
   Float64 m_opt_tplfit_photo_weight = 1.0;
   bool m_opt_tplfit_dustfit = false;
   bool m_opt_tplfit_igmfit = false;
-  Float64 m_opt_continuumfitcount; // TODO is this really a double and not an
-                                   // integer ?
+  Int32 m_opt_continuumfitcount;
   Float64 m_opt_tplfit_continuumprior_betaA = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;

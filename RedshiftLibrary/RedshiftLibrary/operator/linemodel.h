@@ -190,7 +190,7 @@ public:
   std::string m_opt_tplfit_continuumprior_dirpath = "";
   Int32 m_opt_tplratio_ismFit = 1;
   Int32 m_opt_firstpass_tplratio_ismFit = 0;
-  Int32 m_opt_firstpass_multiplecontinuumfit_disable = 1;
+  bool m_opt_firstpass_multiplecontinuumfit_disable = true;
   std::string m_opt_firstpass_fittingmethod;
   std::string m_opt_secondpasslcfittingmethod = "-1";
   Float64 m_opt_tplratio_prior_betaA = 1.0;

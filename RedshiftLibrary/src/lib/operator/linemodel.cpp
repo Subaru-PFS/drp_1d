@@ -249,7 +249,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
   m_model->m_opt_lya_fit_delta_step = m_opt_lya_fit_delta_step;
 
   m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
-
+  m_model->m_opt_firstpass_forcedisableMultipleContinuumfit =
+      m_opt_firstpass_multiplecontinuumfit_disable;
   if (opt_rigidity == "tplshape") {
     // init catalog tplratios
     Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
@@ -304,14 +305,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
                                lambdaRange, largeGridRedshifts, photBandCat,
                                photo_weight, m_opt_tplfit_ignoreLinesSupport);
     tplCatalog.m_orthogonal = 0;
-  } else {
-    if (m_opt_continuumcomponent == "tplfit" ||
-        m_opt_continuumcomponent == "tplfitauto") {
-      m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
-    }
-  }
-  if (m_opt_continuumcomponent == "tplfit" ||
-      m_opt_continuumcomponent == "tplfitauto") {
+
+    m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
     m_model->m_opt_firstpass_forcedisableMultipleContinuumfit =
         m_opt_firstpass_multiplecontinuumfit_disable;
   }
