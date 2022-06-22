@@ -2043,6 +2043,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
                                const TStringList &tplCategoryList,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
+                               const bool opt_enableImproveBalmerFit,
                                const Float64 halfwdwsize,
                                const Float64 radius) {
   m_RestLineList = std::move(restLineList);
@@ -2064,7 +2065,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
   m_linesmodel_nsigmasupport = nsigmasupport;
   m_secondPass_halfwindowsize = halfwdwsize;
   m_extremaRedshiftSeparation = radius;
-
+  m_opt_enableImproveBalmerFit = opt_enableImproveBalmerFit;
   return 0;
 }
 
@@ -2379,6 +2380,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
       opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
       opt_velocityAbsorption, opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+
+  m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
+  m_opt_lya_forcefit = params->GetScoped<bool>("lyaforcefit");
+  m_model->m_opt_lya_forcefit = m_opt_lya_forcefit;
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
 

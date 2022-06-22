@@ -71,8 +71,8 @@ public:
              const CLineCatalog::TLineVector restLineCatalog,
              const TStringList &tplCategoryList,
              const std::string &opt_continuumcomponent,
-             const Float64 nsigmasupport, const Float64 halfwdwsize = NAN,
-             const Float64 radius = NAN);
+             const Float64 nsigmasupport, const bool opt_enableImproveBalmerFit,
+             const Float64 halfwdwsize = NAN, const Float64 radius = NAN);
 
   std::shared_ptr<COperatorResult> getResult();
 
@@ -200,7 +200,7 @@ public:
   std::string m_opt_continuumcomponent;
   Float64 m_opt_continuum_neg_amp_threshold = -INFINITY;
   Float64 m_opt_continuum_null_amp_threshold = 0;
-  bool m_opt_lya_forcefit;
+  bool m_opt_lya_forcefit = false;
   bool m_opt_lya_forcedisablefit;
   Float64 m_opt_lya_fit_asym_min;
   Float64 m_opt_lya_fit_asym_max;
@@ -212,7 +212,7 @@ public:
   Float64 m_opt_lya_fit_delta_max;
   Float64 m_opt_lya_fit_delta_step;
 
-  bool m_opt_enableImproveBalmerFit;
+  bool m_opt_enableImproveBalmerFit = false;
   Int32 m_continnuum_fit_option = 0; // default to "retryall" templates
   // candidates
   std::shared_ptr<CLineModelPassExtremaResult> m_firstpass_extremaResult;

@@ -142,9 +142,9 @@ private:
   Float64 m_opt_abs_velocity_fit_step;
   std::string m_opt_continuumreest;
   std::string m_opt_rules;
-  bool m_opt_enableImproveBalmerFit;
+  bool m_opt_enableImproveBalmerFit = true;
 
-  bool m_opt_lya_forcefit;
+  bool m_opt_lya_forcefit = false;
   bool m_opt_lya_forcedisablefit;
   Float64 m_opt_lya_fit_asym_min;
   Float64 m_opt_lya_fit_asym_max;
