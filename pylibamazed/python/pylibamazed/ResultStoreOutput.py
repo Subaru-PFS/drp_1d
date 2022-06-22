@@ -98,7 +98,8 @@ class ResultStoreOutput(AbstractOutput):
         rs = rs[rs["dataset"] == dataset]
         
         attribute_info = rs.iloc[0]
-        
+        if type(attribute_info.ResultStore_key) != str:
+            return False
         if rank is not None:
             method = self.parameters.get_solve_method(object_type)
             if self.results_store.HasCandidateDataset(object_type,

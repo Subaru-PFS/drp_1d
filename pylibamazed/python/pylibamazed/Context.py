@@ -37,11 +37,12 @@
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
 import os.path
-
+import sys,traceback
 from pylibamazed.CalibrationLibrary import CalibrationLibrary
 from pylibamazed.ResultStoreOutput import ResultStoreOutput
 from pylibamazed.Reliability import Reliability
 from pylibamazed.Parameters import Parameters
+from pylibamazed.SubType import SubType
 from pylibamazed.redshift import (CProcessFlowContext,
                                   CLineModelSolve,
                                   CTemplateFittingSolve,
@@ -120,6 +121,7 @@ class Context:
 
             enable_classification = False
             reliabilities = dict()
+            sub_types = dict()
             for object_type in self.parameters.get_objects():
                 method = self.parameters.get_solve_method(object_type)
                 if method:
@@ -140,7 +142,12 @@ class Context:
                 if self.parameters.reliability_enabled(object_type) and object_type in self.calibration_library.reliability_models:
                     rel = Reliability(object_type, self.parameters,self.calibration_library)
                     reliabilities[object_type] = rel.Compute(self.process_flow_context)
-
+                if self.parameters.lineratio_catalog_enabled(object_type):
+                    sub_classif = SubType(object_type,
+                                          self.parameters,
+                                          self.calibration_library)
+                    sub_types[object_type] = sub_classif.Compute(self.process_flow_context)
+            
             if enable_classification:
                 self.run_method("classification", "ClassificationSolve")
 
@@ -150,6 +157,9 @@ class Context:
             for object_type in reliabilities.keys():
                 rso.object_results[object_type]['reliability'] = dict()
                 rso.object_results[object_type]['reliability']['Reliability'] = reliabilities[object_type]
+            for object_type in sub_types.keys():
+                for rank in range(len(sub_types[object_type])):
+                    rso.object_results[object_type]['model_parameters'][rank]['SubType'] = sub_types[object_type][rank]
 
             return rso
         except GlobalException as e:

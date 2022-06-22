@@ -78,3 +78,4 @@ FirstpassPDFZGrid	firstpass_pdf	False	object	Redshifts	firstpass_pdf	f8
 FirstpassPDFProbaLog	firstpass_pdf	False	object	valProbaLog	firstpass_pdf	f8
 ContextWarningFlags	context_warningFlag	False	root	flagValue	context_warningFlag	i
 <MethodType>WarningFlags	warningFlag	False	method	flagValue	warningFlag	i
+SubType	model_parameters	False	candidate			S10

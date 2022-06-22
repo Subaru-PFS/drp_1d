@@ -3,7 +3,7 @@ from astropy.io import fits
 import numpy as np
 import pandas as pd
 
-class AmazedSpectrumWriter(AbstractSpectrumReader):
+class AmazedSpectrumWriter:
 
     def __init__(self, reader):
         self.reader = reader
@@ -19,7 +19,7 @@ class AmazedSpectrumWriter(AbstractSpectrumReader):
     
         is_sorted = all(self.reader.waves[0][i] <= self.reader.waves[0][i+1] for i in range(len(self.reader.waves[0]) - 1))
         if not is_sorted and not sort:
-    	    raise Exception(" Spectral axis is not sorted. If you wish to sort, rerun the conversion with --sort option")   
+            raise Exception(" Spectral axis is not sorted. If you wish to sort, rerun the conversion with --sort option")   
         if not is_sorted and sort:
             df = df.sort_values(by=['Wave'])     
     
