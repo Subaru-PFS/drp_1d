@@ -2,6 +2,7 @@ stages:
   - build
   - test
   - build-wheel
+  - python-test
   - build-coverage
   - sonar
   - push-rc
@@ -201,6 +202,19 @@ push-rc-38-osx:
     policy: pull
     untracked: true
 
+.pytest-manylinux:
+  stage: python-test
+  script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip install wheel/pylibamazed-*-cp$PYTHON_VERSION-*.whl
+    - pytest
+  after_script:
+    - source /venv/p$PYTHON_VERSION/bin/activate
+    - pip uninstall -y pylibamazed
+  cache:
+    policy: pull
+    untracked: true
+
 .push-rc-manylinux:
   stage: push-rc
   when: manual
@@ -272,6 +286,29 @@ wheel38-manylinux2010:
   extends:
     - .manylinux2010
     - .wheel-manylinux
+
+pytest36-manylinux2010:
+  variables:
+    PYTHON_VERSION: "36"
+  extends:
+    - .manylinux2010
+    - .pytest-manylinux
+
+pytest37-manylinux2010:
+  variables:
+    PYTHON_VERSION: "37"
+  when: manual
+  extends:
+    - .manylinux2010
+    - .pytest-manylinux
+
+pytest38-manylinux2010:
+  variables:
+    PYTHON_VERSION: "38"
+  when: manual
+  extends:
+    - .manylinux2010
+    - .pytest-manylinux
 
 push-rc-36-manylinux2010:
   variables:
@@ -354,6 +391,29 @@ wheel38-manylinux2014:
   extends:
     - .manylinux2014
     - .wheel-manylinux
+
+pytest36-manylinux2014:
+  variables:
+    PYTHON_VERSION: "36"
+  extends:
+    - .manylinux2014
+    - .pytest-manylinux
+
+pytest37-manylinux2014:
+  variables:
+    PYTHON_VERSION: "37"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-manylinux
+
+pytest38-manylinux2014:
+  variables:
+    PYTHON_VERSION: "38"
+  when: manual
+  extends:
+    - .manylinux2014
+    - .pytest-manylinux
 
 push-rc-36-manylinux2014:
   variables:
