@@ -60,7 +60,6 @@ class CLineMeasSolve : public CObjectSolve {
 public:
   CLineMeasSolve(TScopeStack &scope, std::string objectType);
 
-  void solve();
   void Init();
   std::shared_ptr<CSolveResult>
   compute(std::shared_ptr<const CInputContext> inputContext,
