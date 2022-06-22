@@ -239,8 +239,6 @@ protected:
   TInt32List m_EndTheoretical;
 
   TBoolList m_OutsideLambdaRangeList;
-
-  const bool m_verbose = false;
 };
 
 } // namespace NSEpic

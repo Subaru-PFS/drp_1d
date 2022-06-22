@@ -289,23 +289,7 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
                                const Float64 cstLog,
                                const TFloat64List &logZPrior,
                                TFloat64List &logPdf, Float64 &logEvidence) {
-  bool verbose = true;
   logPdf.clear();
-
-  if (verbose) {
-    Float64 meritmax = -DBL_MAX;
-    Float64 meritmin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (meritmax < merits[k]) {
-        meritmax = merits[k];
-      }
-      if (meritmin > merits[k]) {
-        meritmin = merits[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: using merit min=%e", meritmin);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using merit max=%e", meritmax);
-  }
 
   // check if there is at least 1 redshift value
   if (redshifts.size() == 1) // consider this as a success
@@ -323,23 +307,6 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
     THROWG(INTERNAL_ERROR, "Size do not match between redshifts and logZPrior");
   }
 
-  if (verbose) {
-    Float64 logZPriorMax = -DBL_MAX;
-    Float64 logZPriorMin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (logZPriorMax < logZPrior[k]) {
-        logZPriorMax = logZPrior[k];
-      }
-      if (logZPriorMin > logZPrior[k]) {
-        logZPriorMin = logZPrior[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logZPrior min=%e",
-                 logZPriorMax);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logZPrior max=%e",
-                 logZPriorMin);
-  }
-
   // renormalize zprior to 1
   Float64 logsumZPrior = logSumExpTrick(logZPrior, redshifts);
 
@@ -352,31 +319,8 @@ void COperatorPdfz::ComputePdf(const TFloat64List &merits,
   Float64 logsumexp = logSumExpTrick(Xi2_2withPrior, redshifts);
   logEvidence = cstLog + logsumexp;
 
-  if (verbose) {
-    Log.LogDebug("COperatorPdfz::ComputePdf: using cstLog=%e", cstLog);
-    Log.LogDebug("COperatorPdfz::ComputePdf: using logEvidence=%e",
-                 logEvidence);
-    // Log.LogDebug("Pdfz: Pdfz computation: using logPrior=%f", logPrior);
-    // //logPrior can be variable with z
-  }
-
   for (Int32 k = 0; k < redshifts.size(); k++) {
     logPdf[k] = Xi2_2withPrior[k] + cstLog - logEvidence;
-  }
-
-  if (verbose) {
-    Float64 pdfmax = -DBL_MAX;
-    Float64 pdfmin = DBL_MAX;
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (pdfmax < logPdf[k]) {
-        pdfmax = logPdf[k];
-      }
-      if (pdfmin > logPdf[k]) {
-        pdfmin = logPdf[k];
-      }
-    }
-    Log.LogDebug("COperatorPdfz::ComputePdf: found pdf min=%e", pdfmin);
-    Log.LogDebug("COperatorPdfz::ComputePdf: found pdf max=%e", pdfmax);
   }
 }
 
@@ -502,7 +446,6 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
 }
 
 void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
-  bool verbose = false;
 
   const auto nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;
@@ -515,22 +458,19 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
   ComputeAllPdfs(chisquarearray, logProbaList, LogEvidencesWPriorM,
                  logPriorModel, MaxiLogEvidence);
 
-  if (verbose)
-    Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e",
-                 MaxiLogEvidence);
+  Log.LogDebug("COperatorPdfz::Marginalize: MaxiLogEvidence=%e",
+               MaxiLogEvidence);
 
   m_postmargZResult->valEvidenceLog = m_postmargZResult->valMargEvidenceLog;
 
-  if (verbose)
-    Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e",
-                 m_postmargZResult->valMargEvidenceLog);
+  Log.LogDebug("COperatorPdfz::Marginalize: logSumEvidence=%e",
+               m_postmargZResult->valMargEvidenceLog);
 
   // marginalize: ie sum all PDFS
   TInt32List nSum(zsize, 0);
   for (Int32 km = 0; km < nmodel; km++) {
-    if (verbose)
-      Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
-                   km);
+    Log.LogDebug("COperatorPdfz::Marginalize: processing chi2-result km=%d",
+                 km);
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK
@@ -576,7 +516,6 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
                "not working !! It will produce bad results as is....");
-  bool verbose = false;
 
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
@@ -596,10 +535,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   }
 
   for (Int32 km = 0; km < meritResults.size(); km++) {
-    if (verbose) {
-      Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d",
-                   km);
-    }
+    Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
 
     // Todo: Check if the status is OK ?
     // meritResult->Status[i] == COperator::nStatus_OK
@@ -672,10 +608,8 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   }
   Float64 logEvidence = maxi + log(sumModifiedExp) + log(zstep);
 
-  if (verbose) {
-    Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
-    Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
-  }
+  Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
+  Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
 
   for (Int32 k = 0; k < redshifts.size(); k++) {
     m_postmargZResult->valProbaLog[k] =
@@ -697,7 +631,6 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
  * @return
  */
 void COperatorPdfz::BestChi2(const ChisquareArray &chisquarearray) {
-  bool verbose = false;
 
   const auto nmodel = chisquarearray.chisquares.size();
   const TFloat64List &redshifts = chisquarearray.redshifts;

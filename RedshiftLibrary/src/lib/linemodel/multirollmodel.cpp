@@ -123,22 +123,17 @@ CMultiRollModel::~CMultiRollModel() {}
 std::shared_ptr<CSpectrum>
 CMultiRollModel::LoadRollSpectrum(std::string refSpcFullPath, Int32 iRoll,
                                   Int32 iRollOffset) {
-  bool verbose = false;
   std::shared_ptr<CSpectrum> spc = std::shared_ptr<CSpectrum>(new CSpectrum());
 
-  if (verbose) {
-    Log.LogDetail("    multirollmodel: load roll #%d: ref spc full path = %s",
-                  iRoll, refSpcFullPath.c_str());
-  }
+  Log.LogDetail("    multirollmodel: load roll #%d: ref spc full path = %s",
+                iRoll, refSpcFullPath.c_str());
   std::string spcName = bfs::path(refSpcFullPath).stem().string().c_str();
   std::string spcPath =
       bfs::path(refSpcFullPath).parent_path().string().c_str();
-  if (verbose) {
-    Log.LogDetail("    multirollmodel: load roll #%d: ref spc name = %s", iRoll,
-                  spcName.c_str());
-    Log.LogDetail("    multirollmodel: load roll #%d: ref spc path = %s", iRoll,
-                  spcPath.c_str());
-  }
+  Log.LogDetail("    multirollmodel: load roll #%d: ref spc name = %s", iRoll,
+                spcName.c_str());
+  Log.LogDetail("    multirollmodel: load roll #%d: ref spc path = %s", iRoll,
+                spcPath.c_str());
   Int32 substring_start = 0;
   Int32 substring_n;
   std::string strTag = boost::str(boost::format("_roll%d_F") % iRollOffset);

@@ -2854,7 +2854,6 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
     const CSpectrumSpectralAxis &spectralAxis,
     const CSpectrumFluxAxis &spcFluxAxisNoContinuum,
     const CSpectrumFluxAxis &continuumfluxAxis, Float64 redshift) {
-  const bool verbose = true;
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TInt32List indexesFitted;
   for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
@@ -2880,27 +2879,21 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
       m_Elements[overlappingInds[ifit]]->m_fittingGroupInfo = fitGroupTag;
     }
 
-    if (verbose) {
-      // Log.LogDebug( "Redshift: %f", m_Redshift);
-      Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iValidElts,
-                   overlappingInds.size());
-      for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
-        Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
-                     ifit, overlappingInds[ifit]);
-      }
+    // Log.LogDebug( "Redshift: %f", m_Redshift);
+    Log.LogDebug("    model: hybrid fit: #%d - N overlapping=%d", iValidElts,
+                 overlappingInds.size());
+    for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
+      Log.LogDebug("    model: hybrid fit:     overlapping #%d - eltIdx=%d",
+                   ifit, overlappingInds[ifit]);
     }
     if (!m_enableAmplitudeOffsets && overlappingInds.size() < 2) {
-      if (verbose) {
-        Log.LogDebug("    model: hybrid fit:     Individual fit");
-      }
+      Log.LogDebug("    model: hybrid fit:     Individual fit");
       m_Elements[iElts]->fitAmplitudeAndLambdaOffset(
           spectralAxis, spcFluxAxisNoContinuum, continuumfluxAxis, redshift,
           undefIdx, m_enableLambdaOffsetsFit, m_LambdaOffsetStep,
           m_LambdaOffsetMin, m_LambdaOffsetMax);
     } else {
-      if (verbose) {
-        Log.LogDebug("    model: hybrid fit:     SVD fit");
-      }
+      Log.LogDebug("    model: hybrid fit:     SVD fit");
       // fit individually: mainly for mtm and dtm estimation
       for (Int32 ifit = 0; ifit < overlappingInds.size(); ifit++) {
         m_Elements[overlappingInds[ifit]]->fitAmplitudeAndLambdaOffset(
@@ -3054,11 +3047,7 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
 // velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
   // http://www.gnu.org/software/gsl/manual/html_node/Example-programs-for-Nonlinear-Least_002dSquares-Fitting.html
-  bool verbose = true;
 
-  if (verbose) {
-    // Log.LogInfo("fitAmplitudesLmfit");
-  }
   TInt32List filteredEltsIdx = controller->getFilteredIdx();
   Int32 nddl = filteredEltsIdx.size();
   if (nddl < 1) {
@@ -3119,10 +3108,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
   //   normFactor=controller->getNormFactor();
   // }
 
-  if (verbose) {
-    // Log.LogDetail("normFactor = '%.3e'", normFactor);
-  }
-
   gsl_matrix *J = gsl_matrix_alloc(n, p);
   gsl_matrix *covar = gsl_matrix_alloc(p, p);
   double y[n], weights[n];
@@ -3142,10 +3127,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
   controller->setNormAmpLine(1.0);
   //    if(bestAmpLine>0.){
   //        controller->setNormAmpLine(1/bestAmpLine);//setNormAmpLine(controller->lineAmp_LmToModel(bestAmpLine));
-  //        if(verbose){
-  //            Log.LogDetail("LineModel LMfit: normAmpLine : %f",
-  //            controller->getNormAmpLine());
-  //        }
   //    }
   for (Int32 kp = 0; kp < nddl; kp++) {
     Float64 ampInitGuess =
@@ -3159,11 +3140,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
     // Float64 ampInitGuess = 0.0;
 
     x_init[kp] = controller->lineAmp_ModelToLm(ampInitGuess); //*normFactor;
-    if (verbose) {
-      Log.LogDetail(
-          "LineModel LMfit: set init guess amp [%d] Model = %f lmfit: %f",
-          filteredEltsIdx[kp], ampInitGuess, x_init[kp]);
-    }
     x_init[kp] = ampInitGuess * normFactor;
   }
 
@@ -3172,11 +3148,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
     controller->setNormEmiFactor(normEmiFactor);
     x_init[controller->getIndEmissionVel()] =
         controller->emiVel_ModelToLm(GetVelocityEmission()); // bestAmpLine;
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: normEmiFactor = %f", normEmiFactor);
-      Log.LogDetail("LineModel LMfit: set init guess Emission velocity = %f ",
-                    GetVelocityEmission());
-    }
   }
   if (controller->isAbsorptionVelocityFitted()) {
     Float64 normAbsFactor =
@@ -3185,28 +3156,15 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
     controller->setNormAbsFactor(normAbsFactor);
     x_init[controller->getIndAbsorptionVel()] =
         controller->absVel_ModelToLm(GetVelocityAbsorption()); // bestAmpLine;
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: normAbsFactor = %f", normAbsFactor);
-      Log.LogDetail("LineModel LMfit: set init guess Absorption velocity = %f ",
-                    GetVelocityAbsorption());
-    }
   }
   if (controller->isContinuumFitted()) {
     x_init[controller->getIndContinuumAmp()] =
         controller->continuumAmp_ModelToLm(
             getFitContinuum_tplAmplitude()); //*normFactor;
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: set init guess continuum amp = %f ",
-                    getFitContinuum_tplAmplitude());
-    }
   }
 
   if (controller->isRedshiftFitted()) {
     x_init[controller->getIndRedshift()] = m_Redshift;
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: set init guess redshift = %f ",
-                    m_Redshift);
-    }
   }
 
   gsl_vector_view x = gsl_vector_view_array(x_init, p);
@@ -3261,38 +3219,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
   /* compute final residual norm */
   chi = gsl_blas_dnrm2(res_f);
 
-  if (verbose) {
-#define FIT(i) gsl_vector_get(s->x, i)
-#define ERR(i) sqrt(gsl_matrix_get(covar, i, i))
-
-    Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
-    Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
-    Log.LogDebug("function evaluations: %zu", f.nevalf);
-    Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
-    Log.LogDebug("reason for stopping: %s", (info == 1) ? "small step size"
-                                            : (info == 2)
-                                                ? "small gradient"
-                                                : "small change in f");
-    Log.LogDebug("initial |f(x)| = %g", chi0);
-    Log.LogDebug("final   |f(x)| = %g", chi);
-
-    {
-      double dof = n - p;
-      // double c = GSL_MAX_DBL(1, chi / sqrt(dof));
-
-      Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
-
-      for (Int32 k = 0; k < p; k++) {
-        if (FIT(k) < 1e-3) {
-          // Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c*ERR(k));
-        } else {
-          // Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c*ERR(k));
-        }
-      }
-    }
-    Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
-  }
-
   //=======================Result treament ====================
   Int32 ampPos = 1;
   controller->resizeAmpsLine();
@@ -3307,10 +3233,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
       ampPos = 0;
     }
     controller->setAmpLine(iddl, a, sigma);
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: set final amp [%] = %f with err = %f",
-                    iddl, a, sigma);
-    }
   }
   //
   // // Analyse if result is good or not
@@ -3342,9 +3264,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
   // finally populate the fitting results to the output
   if (ampPos && status == 0) {
     controller->setMerit(chi / normFactor / normFactor);
-    if (verbose) {
-      Log.LogDetail("LineModel LMfit: Result accepted");
-    }
     if (controller->isContinuumFitted()) {
       Int32 continuumId = controller->getIndContinuumAmp();
       Float64 continuumTplAmp = controller->continuumAmp_LmToModel(
@@ -3353,11 +3272,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
           c * sqrt(gsl_matrix_get(covar, continuumId,
                                   continuumId))); /// normFactor;
       controller->setContinummAmp(continuumTplAmp, continuumTplAmpErr);
-      if (verbose) {
-        Log.LogDetail(
-            "LineModel LMfit: continuumTplAmp calculated =%.3f err =%.3f",
-            continuumTplAmp, continuumTplAmpErr);
-      }
     }
 
     if (controller->isEmissionVelocityFitted()) {
@@ -3366,11 +3280,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
       Float64 errVel =
           controller->emiVel_LmToModel(c * sqrt(gsl_matrix_get(covar, id, id)));
       controller->setVelocityEmission(vel, errVel);
-      if (verbose) {
-        Log.LogDetail(
-            "LineModel LMfit: Emission velocity found = %.3f with err = %.3f",
-            vel, errVel);
-      }
     }
     // TODO ajouter des condition sur les err?
     if (controller->isAbsorptionVelocityFitted()) {
@@ -3379,11 +3288,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
       Float64 errVel =
           controller->absVel_LmToModel(c * sqrt(gsl_matrix_get(covar, id, id)));
       controller->setVelocityAbsorption(vel, errVel);
-      if (verbose) {
-        Log.LogDetail("LineModel LMfit: Absorption velocity found = %.3f "
-                      "with err = %.3f",
-                      vel, errVel);
-      }
     }
 
     if (controller->isRedshiftFitted()) {
@@ -3391,10 +3295,6 @@ Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
       Float64 vel = gsl_vector_get(s->x, id);
       Float64 errVel = c * sqrt(gsl_matrix_get(covar, id, id));
       controller->setRedshift(vel, errVel);
-      if (verbose) {
-        Log.LogDetail("LineModel LMfit: Redshift found = %f with err = %f", vel,
-                      errVel);
-      }
     }
 
     outputStatus = 0;
@@ -3634,7 +3534,6 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
 
-  const bool verbose = false;
   bool useAmpOffset = m_enableAmplitudeOffsets;
   Int32 idxAmpOffset = -1;
 
@@ -3696,9 +3595,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     }
   }
   Float64 normFactor = 1.0 / maxabsval;
-  if (verbose) {
-    Log.LogDetail("normFactor = '%.3e'\n", normFactor);
-  }
+  Log.LogDetail("normFactor = '%.3e'\n", normFactor);
 
   // Prepare the fit data
   for (i = 0; i < n; i++) {
@@ -3715,10 +3612,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
       fval = m_Elements[EltsIdx[iddl]]->getModelAtLambda(
           xi, m_Redshift, continuumfluxAxis[idx]);
       gsl_matrix_set(X, i, iddl, fval);
-
-      if (verbose) {
-        Log.LogDebug("fval = '%.3e'", fval);
-      }
+      Log.LogDebug("fval = '%.3e'", fval);
     }
 
     if (useAmpOffset) {
@@ -3738,31 +3632,25 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     gsl_multifit_linear_free(work);
   }
 
-  if (verbose) {
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-    if (1) {
-      Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-      Log.LogDebug("# covariance matrix:");
-      Log.LogDebug("[");
-      Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-      Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
+  Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+  Log.LogDebug("# covariance matrix:");
+  Log.LogDebug("[");
+  Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
+  Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
 
-      //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
-      //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
-      //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
-      //        COV(2,0), COV(2,1), COV(2,2));
+  //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
+  //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
+  //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
+  //        COV(2,0), COV(2,1), COV(2,2));
 
-      Log.LogDebug("]");
-      Log.LogDebug("# chisq/n = %g", chisq / n);
-    }
+  Log.LogDebug("]");
+  Log.LogDebug("# chisq/n = %g", chisq / n);
 
-    for (Int32 iddl = 0; iddl < nddl; iddl++) {
-      Float64 a = gsl_vector_get(c, iddl) / normFactor;
-      if (verbose) {
-        Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
-      }
-    }
+  for (Int32 iddl = 0; iddl < nddl; iddl++) {
+    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
   }
 
   Int32 sameSign = 1;
@@ -3775,9 +3663,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     }
   }
 
-  if (verbose) {
-    Log.LogDetail("# Found amplitudes with sameSign=%d", sameSign);
-  }
+  Log.LogDetail("# Found amplitudes with sameSign=%d", sameSign);
   if (sameSign) {
     for (Int32 iddl = 0; iddl < EltsIdx.size(); iddl++) {
       Float64 a = gsl_vector_get(c, iddl) / normFactor;
@@ -3843,7 +3729,6 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
   // boost::chrono::thread_clock::time_point start_prep =
   // boost::chrono::thread_clock::now();
 
-  bool verbose = false;
   Int32 idx = 0;
 
   Int32 nddl =
@@ -3908,9 +3793,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
     }
   }
   Float64 normFactor = 1.0 / maxabsval;
-  if (verbose) {
-    Log.LogDetail("normFactor = '%.3e'\n", normFactor);
-  }
+  Log.LogDetail("normFactor = '%.3e'\n", normFactor);
 
   // Prepare the fit data
   for (i = 0; i < n; i++) {
@@ -3925,9 +3808,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
       fval = m_Elements[EltsIdx[iddl]]->getModelAtLambda(xi, m_Redshift, ci);
       gsl_matrix_set(X, i, iddl, fval);
 
-      if (false && verbose) {
-        Log.LogDebug("fval = '%.3e'", fval);
-      }
+      Log.LogDebug("fval = '%.3e'", fval);
     }
 
     gsl_matrix_set(X, i, EltsIdx.size(), ci);
@@ -3967,32 +3848,26 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
   // =
   // %.3f", duration_prep, duration_fit);
 
-  if (verbose) {
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-    if (1) {
-      Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-      Log.LogDebug("# covariance matrix:");
-      Log.LogDebug("[");
-      Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-      Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
+  Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+  Log.LogDebug("# covariance matrix:");
+  Log.LogDebug("[");
+  Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
+  Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
 
-      //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
-      //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
-      //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
-      //        COV(2,0), COV(2,1), COV(2,2));
+  //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
+  //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
+  //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
+  //        COV(2,0), COV(2,1), COV(2,2));
 
-      Log.LogDebug("]");
-      Log.LogDebug("# chisq = %g", chisq);
-      Log.LogDebug("# chisq/n = %g", chisq / n);
-    }
+  Log.LogDebug("]");
+  Log.LogDebug("# chisq = %g", chisq);
+  Log.LogDebug("# chisq/n = %g", chisq / n);
 
-    for (Int32 iddl = 0; iddl < nddl; iddl++) {
-      Float64 a = gsl_vector_get(c, iddl) / normFactor;
-      if (verbose) {
-        Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
-      }
-    }
+  for (Int32 iddl = 0; iddl < nddl; iddl++) {
+    Float64 a = gsl_vector_get(c, iddl) / normFactor;
+    Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
   }
 
   Int32 sameSign = 1;
@@ -4005,10 +3880,8 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
     }
   }
 
-  if (verbose) {
-    Log.LogDetail("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(),
-                  sameSign);
-  }
+  Log.LogDetail("# Found n=%d amplitudes with sameSign=%d", EltsIdx.size(),
+                sameSign);
 
   ampsfitted.resize(nddl);
   errorsfitted.resize(nddl);
@@ -4023,16 +3896,14 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
     errorsfitted[iddl] = (sigma);
   }
 
-  if (verbose && polyOrder >= 0) {
+  if (polyOrder >= 0) {
     for (Int32 kCoeff = 0; kCoeff < polyOrder + 1; kCoeff++) {
       Float64 p = gsl_vector_get(c, EltsIdx.size() + 1 + kCoeff) / normFactor;
       Log.LogDetail("# Found p%d poly amplitude = %+.5e", kCoeff, p);
     }
   }
 
-  if (verbose) {
-    Log.LogDetail("# Returning (L+C) n=%d amplitudes", ampsfitted.size());
-  }
+  Log.LogDetail("# Returning (L+C) n=%d amplitudes", ampsfitted.size());
 
   gsl_matrix_free(X);
   gsl_vector_free(y);
@@ -4200,7 +4071,6 @@ TAsymParams CLineModelFitting::fitAsymParameters(Float64 redshift,
 
   TInt32List filterEltsIdxLya(1, idxLyaE);
 
-  bool verbose = false;
   for (Int32 iDelta = 0; iDelta < nDeltaSteps; iDelta++) {
     Float64 delta = deltaMin + deltaStep * iDelta;
     for (Int32 iWidth = 0; iWidth < nWidthSteps; iWidth++) {
@@ -4229,20 +4099,16 @@ TAsymParams CLineModelFitting::fitAsymParameters(Float64 redshift,
           bestparams = m_Elements[idxLyaE]->GetAsymfitParams(0);
         }
 
-        if (verbose) {
-          Log.LogInfo("Fitting Lya Profile: width=%f, asym=%f, delta=%f",
-                      asymWidthCoeff, asymAlphaCoeff, delta);
-          Log.LogInfo("Fitting Lya Profile: merit=%e", m);
-          Log.LogInfo("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d",
-                      idxLyaE, idxLineLyaE);
-        }
+        Log.LogDebug("Fitting Lya Profile: width=%f, asym=%f, delta=%f",
+                     asymWidthCoeff, asymAlphaCoeff, delta);
+        Log.LogDebug("Fitting Lya Profile: merit=%e", m);
+        Log.LogDebug("Fitting Lya Profile: idxLyaE=%d, idxLineLyaE=%d", idxLyaE,
+                     idxLineLyaE);
       }
     }
   }
-  if (verbose) {
-    Log.LogInfo("Lya Profile found: width=%f, asym=%f, delta=%f",
-                bestparams.sigma, bestparams.alpha, bestparams.delta);
-  }
+  Log.LogDebug("Lya Profile found: width=%f, asym=%f, delta=%f",
+               bestparams.sigma, bestparams.alpha, bestparams.delta);
   return bestparams;
 }
 

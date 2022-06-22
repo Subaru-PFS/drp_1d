@@ -328,7 +328,6 @@ struct pdfz_lmfitdata {
 };
 
 int pdfz_lmfit_f(const gsl_vector *x, void *data, gsl_vector *f) {
-  Int32 verbose = 0;
   size_t n = ((struct pdfz_lmfitdata *)data)->n;
   Float64 *y = ((struct pdfz_lmfitdata *)data)->y;
   Float64 *z = ((struct pdfz_lmfitdata *)data)->z;
@@ -336,20 +335,11 @@ int pdfz_lmfit_f(const gsl_vector *x, void *data, gsl_vector *f) {
 
   double a = gsl_vector_get(x, 0);
   double sigma = gsl_vector_get(x, 1);
-  if (verbose) {
-    Log.LogDebug(
-        "Pdfz: Pdfz computation: pdfz_lmfit_f : a=%e, sigma=%e, zcenter=%.5f ",
-        a, sigma, zcenter);
-  }
 
   for (Int32 i = 0; i < n; i++) {
     Float64 t = z[i] - zcenter;
     const Float64 xsurc = t / sigma;
     Float64 Yi = a * exp(-0.5 * xsurc * xsurc);
-    if (0 && verbose) {
-      Log.LogDebug("Pdfz: Pdfz computation: pdfz_lmfit_f : for i=%d, Yi=%e", i,
-                   Yi);
-    }
     gsl_vector_set(f, i, Yi - y[i]);
   }
 
@@ -383,7 +373,6 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,
     std::shared_ptr<TCandidateZ> &candidate) const {
-  Int32 verbose = 0;
   Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - Starting pdf "
                "peaks gaussian fitting");
 
@@ -407,10 +396,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
     THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
   }
 
-  if (verbose) {
-    Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - kmax index=%d",
-                 kmax);
-  }
+  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - kmax index=%d",
+               kmax);
 
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
@@ -421,10 +408,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
              1; // n samples on the support, /* number of data points to fit */
   size_t p = 2; // DOF = 1.amplitude + 2.width
 
-  if (verbose) {
-    Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - n=%d, p=%d", n,
-                 p);
-  }
+  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - n=%d, p=%d", n,
+               p);
   if (n < p) {
     Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit not "
                  "enough samples on support");
@@ -468,12 +453,10 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   x_init[1] = std::max(candidate->Redshift - zrange.GetBegin(),
                        zrange.GetEnd() - candidate->Redshift) /
               2.0;
-  if (verbose) {
-    Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e",
-                 x_init[0]);
-    Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init sigma=%e",
-                 x_init[1]);
-  }
+  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e",
+               x_init[0]);
+  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init sigma=%e",
+               x_init[1]);
 
   gsl_vector_view x = gsl_vector_view_array(x_init, p);
   //    if(x.vector==0){
@@ -539,34 +522,31 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
 
   double dof = n - p;
   double c = GSL_MAX_DBL(1, chi / sqrt(dof));
-  if (verbose) {
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar, i, i))
 
-    Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
-    Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
-    Log.LogDebug("function evaluations: %zu", f.nevalf);
-    Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
-    Log.LogDebug("reason for stopping: %s", (info == 1) ? "small step size "
-                                            : (info == 2)
-                                                ? "small gradient"
-                                                : "small change in f");
-    Log.LogDebug("initial |f(x)| = %g", chi0);
-    Log.LogDebug("final   |f(x)| = %g", chi);
+  Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
+  Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
+  Log.LogDebug("function evaluations: %zu", f.nevalf);
+  Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
+  Log.LogDebug("reason for stopping: %s", (info == 1)   ? "small step size "
+                                          : (info == 2) ? "small gradient"
+                                                        : "small change in f");
+  Log.LogDebug("initial |f(x)| = %g", chi0);
+  Log.LogDebug("final   |f(x)| = %g", chi);
 
-    {
-      Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
+  {
+    Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
 
-      for (Int32 k = 0; k < p; k++) {
-        if (FIT(k) < 1e-3) {
-          Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c * ERR(k));
-        } else {
-          Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c * ERR(k));
-        }
+    for (Int32 k = 0; k < p; k++) {
+      if (FIT(k) < 1e-3) {
+        Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c * ERR(k));
+      } else {
+        Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c * ERR(k));
       }
     }
-    Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
   }
+  Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
 
   candidate->GaussAmp = gsl_vector_get(s->x, 0) * normFactor;
   candidate->GaussAmpErr = c * ERR(0) * normFactor;

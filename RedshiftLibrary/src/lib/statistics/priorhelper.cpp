@@ -346,7 +346,6 @@ bool CPriorHelper::SetPzData(const TFloat64List &z_data) {
 
 bool CPriorHelper::LoadFileEZ(const char *filePath,
                               std::vector<TFloat64List> &data) {
-  bool verboseRead = false;
   Log.LogDetail(Formatter()
                 << "CPriorHelper: start load prior file: " << filePath);
   bool loadSuccess = true;
@@ -371,11 +370,6 @@ bool CPriorHelper::LoadFileEZ(const char *filePath,
             x = m_priorminval;
           }
           lineVals.push_back(x);
-
-          if (verboseRead) {
-            Log.LogDetail("    CPriorHelper: read line=%d, col=%d : valf=%e",
-                          nlinesRead, lineVals.size() - 1, x);
-          }
         }
         if (lineVals.size() != m_nEbv) {
           THROWG(INTERNAL_ERROR, Formatter() << "read n=" << lineVals.size()
@@ -383,9 +377,6 @@ bool CPriorHelper::LoadFileEZ(const char *filePath,
         }
         nlinesRead++;
         data.push_back(lineVals);
-        if (verboseRead) {
-          Log.LogDetail("    CPriorHelper: read n=%d cols", lineVals.size());
-        }
       }
     }
     file.close();
@@ -395,7 +386,6 @@ bool CPriorHelper::LoadFileEZ(const char *filePath,
 }
 
 bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
-  bool verboseRead = false;
   Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
   bool loadSuccess = true;
   std::ifstream file;
@@ -415,11 +405,6 @@ bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
         iss >> x;
         if (std::isnan(x) || std::isinf(x) || x != x || x < 0.) {
           x = m_priorminval;
-        }
-
-        if (verboseRead) {
-          Log.LogDetail("    CPriorHelper: read line=%d : valf=%e", nlinesRead,
-                        x);
         }
 
         nlinesRead++;
@@ -449,7 +434,6 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
                                    const TRedshiftList &redshifts,
                                    TPriorZEList &zePriorData,
                                    Int32 outsideZRangeExtensionMode) const {
-  bool verbose = false;
   if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0) {
     Log.LogError(
         "    CPriorHelper: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)",
@@ -502,19 +486,8 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
         idz = m_nZ;
       }
     }
-    if (verbose) {
-      Log.LogDetail("    CPriorHelper: get prior for z=%f: found idz=%d",
-                    redshifts[kz], idz);
-    }
     TPriorEList dataz = m_data[idx][idz];
     for (Int32 icol = 0; icol < m_nEbv; icol++) {
-      if (verbose) {
-        Log.LogDetail("    CPriorHelper: get prior for tpl=%s",
-                      tplname.c_str());
-        Log.LogDetail(
-            "    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e",
-            idx, idz, icol, dataz[icol].priorTZE);
-      }
 
       Float64 logPTE = 0.;
       Float64 logPA = 0.;
@@ -543,12 +516,6 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
 
       if (m_data_pz[idz] > 0.0) {
         logPZ = log(m_data_pz[idz] / m_dz);
-      }
-
-      if (verbose) {
-        Log.LogDetail("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d "
-                      ": logPZ=%e",
-                      idx, idz, icol, logPZ);
       }
 
       dataz[icol].logprior_precompA = logPA;

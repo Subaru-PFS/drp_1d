@@ -141,10 +141,6 @@ void CLineModelElementList::ResetElementIndexesDisabled() {
  **/
 std::vector<TInt32List>
 CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
-  bool verbose = false;
-  if (verbose) {
-    Log.LogDebug("    model: group tags for lineType=%d", lineType);
-  }
   TStringList tags;
   TInt32List nonGroupedLines;
 
@@ -153,12 +149,6 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
     Int32 iElts = nonZeroIndexes[i];
     Int32 nLines = m_Elements[iElts]->GetSize();
     for (Int32 iSubElts = 0; iSubElts < nLines; iSubElts++) {
-      if (verbose) {
-        Log.LogDebug("    model: group tags - lineType=%d", lineType);
-        Log.LogDebug("    model: group tags - "
-                     "m_Elements[iElts]->m_Lines[iSubElts].GetType()=%d",
-                     m_Elements[iElts]->m_Lines[iSubElts].GetType());
-      }
       if (lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType()) {
         std::string _tag =
             m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
@@ -171,26 +161,9 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
     }
   }
 
-  if (verbose) {
-    Log.LogDebug("    model: group tags non unique found=%d", tags.size());
-    for (Int32 itag = 0; itag < tags.size(); itag++) {
-      Log.LogDebug("    model: non unique tag %d/%d = %s", itag + 1,
-                   tags.size(), tags[itag].c_str());
-    }
-  }
-
   // create the group tag set by removing duplicates
   std::sort(tags.begin(), tags.end());
   tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
-  //*
-  if (verbose) {
-    // print the tags
-    for (Int32 itag = 0; itag < tags.size(); itag++) {
-      Log.LogDebug("    model: velfit group Tag %d/%d = %s", itag + 1,
-                   tags.size(), tags[itag].c_str());
-    }
-  }
-  //*/
 
   // add the grouped lines
   std::vector<TInt32List> groups;

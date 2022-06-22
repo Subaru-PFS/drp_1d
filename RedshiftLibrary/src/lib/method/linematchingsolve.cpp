@@ -76,9 +76,6 @@ CLineMatchingSolve::CLineMatchingSolve(TScopeStack &scope,
   m_disablegaussianfitqualitycheck = false;
   m_minMatchNum = 1;
   m_tol = 0.002;
-
-  // Log
-  m_bypassDebug = false;
 }
 
 /**
@@ -245,13 +242,11 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
   Int32 cmptMax = 100;
   Int32 iCmpt = 0;
   while (iCmpt < cmptMax) {
-    if (!m_bypassDebug) {
-      Log.LogDebug("*************************");
-      Log.LogDebug("cutCurrent == %f", cutCurrent);
-      Log.LogDebug("minimumFwhhCurrent == %f", minimumFwhhCurrent);
-      Log.LogDebug("strongcutCurrent == %f", strongcutCurrent);
-      Log.LogDebug("winsizeCurrent == %f", winsizeCurrent);
-    }
+    Log.LogDebug("*************************");
+    Log.LogDebug("cutCurrent == %f", cutCurrent);
+    Log.LogDebug("minimumFwhhCurrent == %f", minimumFwhhCurrent);
+    Log.LogDebug("strongcutCurrent == %f", strongcutCurrent);
+    Log.LogDebug("winsizeCurrent == %f", winsizeCurrent);
     CLineDetection lineDetection(lineType, cutCurrent, strongcutCurrent,
                                  winsizeCurrent, minimumFwhhCurrent, m_maxsize,
                                  m_disablegaussianfitqualitycheck);
@@ -260,8 +255,7 @@ std::shared_ptr<CLineMatchingSolveResult> CLineMatchingSolve::Compute(
                               peakDetectionResult->EnlargedPeakList);
     if (lineDetectionResult || !m_dynamicLinematching) {
       currentNumberOfPeaks = lineDetectionResult->LineCatalog.GetList().size();
-      if (!m_bypassDebug)
-        Log.LogDebug("Found %d peaks.", currentNumberOfPeaks);
+      Log.LogDebug("Found %d peaks.", currentNumberOfPeaks);
       if (currentNumberOfPeaks >= minimumNumberOfPeaks ||
           numberOfPeaksBestBypass || !m_dynamicLinematching) {
         Log.LogDebug("Storing %d lines from lineDetection in the result store.",

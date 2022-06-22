@@ -92,10 +92,6 @@ private:
   bool m_dynamicLinematching;
   Int64 m_minMatchNum;
   Float64 m_tol;
-
-  // Log
-  bool m_bypassDebug; // If True, debug messages are suppressed even if the
-                      // --verbose flag is passed.
 };
 
 } // namespace NSEpic

@@ -96,10 +96,8 @@ void COperatorTplcombination::BasicFit(
     Int32 opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
-  bool verbose = false;
-  if (verbose) {
-    Log.LogDebug(" BasicFit - for z=%f", redshift);
-  }
+  Log.LogDebug(" BasicFit - for z=%f", redshift);
+
   boost::chrono::thread_clock::time_point start_prep =
       boost::chrono::thread_clock::now();
 
@@ -167,11 +165,9 @@ void COperatorTplcombination::BasicFit(
   // Normalizing factor
   Float64 normFactor = GetNormFactor(spcFluxAxis, kStart, n);
 
-  if (verbose) {
-    Log.LogDetail(" Linear fitting, found "
-                  "normalization Factor=%e",
-                  normFactor);
-  }
+  Log.LogDetail(" Linear fitting, found "
+                "normalization Factor=%e",
+                normFactor);
 
   bool option_igmFastProcessing =
       (MeiksinList.size() == 1 ? false : true); // TODO
@@ -352,22 +348,18 @@ void COperatorTplcombination::BasicFit(
 
 #define C(i) (gsl_vector_get(c, (i)))
 #define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-      if (verbose) {
-        if (1) {
-          Log.LogInfo("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-          Log.LogInfo("# covariance matrix:");
-          Log.LogInfo("[");
-          Log.LogInfo("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-          Log.LogInfo("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-          Log.LogInfo("]");
-          Log.LogInfo("# chisq/n = %g", chisq / n);
-        }
+      Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
+      Log.LogDebug("# covariance matrix:");
+      Log.LogDebug("[");
+      Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
+      Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
+      Log.LogDebug("]");
+      Log.LogDebug("# chisq/n = %g", chisq / n);
 
-        for (Int32 iddl = 0; iddl < nddl; iddl++) {
-          Float64 a = gsl_vector_get(c, iddl) * normFactor;
-          Log.LogInfo("# Found amplitude %d: %+.5e +- %.5e", iddl, a,
-                      COV(iddl, iddl) * normFactor);
-        }
+      for (Int32 iddl = 0; iddl < nddl; iddl++) {
+        Float64 a = gsl_vector_get(c, iddl) * normFactor;
+        Log.LogDebug("# Found amplitude %d: %+.5e +- %.5e", iddl, a,
+                     COV(iddl, iddl) * normFactor);
       }
 
       // save the fitted amps and fitErrors, etc...
