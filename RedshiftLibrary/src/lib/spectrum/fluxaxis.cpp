@@ -65,7 +65,7 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const TFloat64List &samples)
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(TFloat64List &&samples)
     : CSpectrumAxis(std::move(samples)),
-      m_StdError(samples.size()) // default to 1
+      m_StdError(this->GetSamplesCount()) // default to 1
 {}
 
 CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
@@ -172,7 +172,7 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithoutError(const CMask &mask,
 
   if (ndOfSampleUsed > 1) {
     mean = sum / ndOfSampleUsed;
-    sdev = sqrt((sum2 - sum * sum * ndOfSampleUsed) / (ndOfSampleUsed - 1));
+    sdev = sqrt((sum2 - mean * mean * ndOfSampleUsed) / (ndOfSampleUsed - 1));
   } else {
     mean = NAN;
     sdev = NAN;
@@ -210,7 +210,7 @@ bool CSpectrumFluxAxis::ComputeMeanAndSDevWithError(const CMask &mask,
 
   if (weigthSum > 0.0) {
     mean = sum / weigthSum;
-    sdev = sqrt((sum2 - sum * sum * weigthSum) /
+    sdev = sqrt((sum2 - mean * mean * weigthSum) /
                 (weigthSum - weigthSum2 / weigthSum));
   } else {
     mean = NAN;
@@ -225,6 +225,9 @@ Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {
   Float64 er2 = 0.f;
   Float64 er = 0.f;
 
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(INTERNAL_ERROR, "other.GetSamplesCount() != GetSamplesCount()");
+
   int n = GetSamplesCount();
   Float64 weight = (Float64)n;
   for (int j = 0; j < n; j++) {
@@ -236,6 +239,9 @@ Float64 CSpectrumFluxAxis::ComputeRMSDiff(const CSpectrumFluxAxis &other) {
 }
 
 bool CSpectrumFluxAxis::Subtract(const CSpectrumFluxAxis &other) {
+  if (other.GetSamplesCount() != GetSamplesCount())
+    THROWG(INTERNAL_ERROR, "other.GetSamplesCount() != GetSamplesCount()");
+
   Int32 N = GetSamplesCount();
   for (Int32 i = 0; i < N; i++) {
     m_Samples[i] = m_Samples[i] - other[i];
