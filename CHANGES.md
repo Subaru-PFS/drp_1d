@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.34.0 (2022-06-23)
+### Added
+* [7106] : Add sub-classification for template ratio method
+* [7304] : Extend unit test coverage
+* [6564] : Nullify non-significant continuum, based on `nullthreshold` param
+### Changed
+* [7225] : Refactor API output classes
+### Fixed
+* [7370] : Fix useless member in reliability
+
 ## 0.32.0 (2022-05-31)
 ### Added
 * [7093] : Centralize numerical constants in `defaults.h`
