@@ -3625,22 +3625,6 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     gsl_multifit_linear_free(work);
   }
 
-#define C(i) (gsl_vector_get(c, (i)))
-#define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-  Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-  Log.LogDebug("# covariance matrix:");
-  Log.LogDebug("[");
-  Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-  Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-
-  //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
-  //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
-  //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
-  //        COV(2,0), COV(2,1), COV(2,2));
-
-  Log.LogDebug("]");
-  Log.LogDebug("# chisq/n = %g", chisq / n);
-
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
     Log.LogDetail("# Found amplitude %d: %+.5e", iddl, a);
