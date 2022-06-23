@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/log/log.h"
@@ -101,6 +102,12 @@ std::string CLineCatalogsTplShape::GetCatalogName(Int32 idx) const {
 }
 
 Float64 CLineCatalogsTplShape::GetIsmCoeff(Int32 idx) const {
+  if (m_ismCorrectionCalzetti == nullptr && m_opt_dust_calzetti)
+    THROWG(
+        INTERNAL_ERROR,
+        "ismCorrectionCalzetti is not loaded while tplratio_ism is activated");
+  if (!m_opt_dust_calzetti)
+    return NAN;
   return m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(idx));
 }
 
@@ -136,9 +143,11 @@ bool CLineCatalogsTplShape::InitLineCorrespondingAmplitudes(
       for (Int32 kL = 0; kL < currentCatalogLineList.size(); kL++) {
         Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
         Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-        Float64 dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff(
-            GetIsmIndex(iCatalog), restLambda);
-        nominalAmp *= dustCoeff;
+        if (m_opt_dust_calzetti) {
+          Float64 dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff(
+              GetIsmIndex(iCatalog), restLambda);
+          nominalAmp *= dustCoeff;
+        }
         // find line in the elementList
         Int32 nLines = LineModelElementList[iElts]->GetSize();
         for (Int32 j = 0; j < nLines; j++) {
@@ -160,7 +169,10 @@ bool CLineCatalogsTplShape::InitLineCorrespondingAmplitudes(
                                << m_lineRatioCatalogs[k].getName());
       Int32 nLines = LineModelElementList[iElts]->GetSize();
       for (Int32 j = 0; j < nLines; j++) {
-        Float64 ebv = m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k));
+        Float64 ebv =
+            m_opt_dust_calzetti
+                ? m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
+                : NAN;
         Float64 nomAmp = m_LineCatalogLinesCorrespondingNominalAmp[iElts][k][j];
         std::string lineName =
             LineModelElementList[iElts]->m_Lines[j].GetName();

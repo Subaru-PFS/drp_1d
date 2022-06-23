@@ -118,8 +118,7 @@ private:
   Float64 m_opt_tplfit_photo_weight = 1.0;
   bool m_opt_tplfit_dustfit = false;
   bool m_opt_tplfit_igmfit = false;
-  Float64 m_opt_continuumfitcount; // TODO is this really a double and not an
-                                   // integer ?
+  Int32 m_opt_continuumfitcount;
   Float64 m_opt_tplfit_continuumprior_betaA = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
   Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
@@ -142,9 +141,9 @@ private:
   Float64 m_opt_abs_velocity_fit_step;
   std::string m_opt_continuumreest;
   std::string m_opt_rules;
-  bool m_opt_enableImproveBalmerFit;
+  bool m_opt_enableImproveBalmerFit = true;
 
-  bool m_opt_lya_forcefit;
+  bool m_opt_lya_forcefit = false;
   bool m_opt_lya_forcedisablefit;
   Float64 m_opt_lya_fit_asym_min;
   Float64 m_opt_lya_fit_asym_max;

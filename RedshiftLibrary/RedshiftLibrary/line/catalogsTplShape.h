@@ -92,6 +92,8 @@ public:
     m_lineRatioCatalogs.push_back(lr_catalog);
   }
 
+  bool CalzettiInitFailed() const { return !bool(m_ismCorrectionCalzetti); }
+
 private:
   Float64 GetFit(const TFloat64List &ampsLM, const TFloat64List &errLM,
                  const TFloat64List &ampsTPL,

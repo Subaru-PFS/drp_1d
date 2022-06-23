@@ -933,10 +933,10 @@ bool CLineModelSolve::Solve(
   //    }
 
   // Compute with linemodel operator
-  Int32 retInit =
-      m_linemodel.Init(spc, redshifts, restLineList, m_categoryList,
-                       m_opt_continuumcomponent, m_opt_nsigmasupport,
-                       m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
+  Int32 retInit = m_linemodel.Init(
+      spc, redshifts, restLineList, m_categoryList, m_opt_continuumcomponent,
+      m_opt_nsigmasupport, m_opt_enableImproveBalmerFit,
+      m_opt_secondpass_halfwindowsize, m_redshiftSeparation);
   if (retInit != 0) {
     THROWG(INTERNAL_ERROR, "Linemodel, init failed");
   }
@@ -971,6 +971,8 @@ bool CLineModelSolve::Solve(
         m_opt_continuum_neg_amp_threshold;
     m_linemodel.m_opt_continuum_null_amp_threshold =
         m_opt_continuum_null_amp_threshold;
+    m_linemodel.m_opt_firstpass_multiplecontinuumfit_disable =
+        m_opt_firstpass_disablemultiplecontinuumfit;
   }
 
   m_linemodel.m_opt_lya_forcefit = m_opt_lya_forcefit;
@@ -995,7 +997,7 @@ bool CLineModelSolve::Solve(
     m_linemodel.m_opt_tplratio_prior_betaTE = m_opt_tplratio_prior_betaTE;
     m_linemodel.m_opt_tplratio_prior_betaZ = m_opt_tplratio_prior_betaZ;
   }
-
+  // this should be cleaned from here
   if (m_opt_rigidity == "rules") {
     m_linemodel.m_opt_enableImproveBalmerFit = m_opt_enableImproveBalmerFit;
   }

@@ -249,7 +249,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
   m_model->m_opt_lya_fit_delta_step = m_opt_lya_fit_delta_step;
 
   m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
-
+  m_model->m_opt_firstpass_forcedisableMultipleContinuumfit =
+      m_opt_firstpass_multiplecontinuumfit_disable;
   if (opt_rigidity == "tplshape") {
     // init catalog tplratios
     Log.LogInfo("  Operator-Linemodel: Tpl-ratios init");
@@ -304,14 +305,8 @@ Int32 COperatorLineModel::ComputeFirstPass(
                                lambdaRange, largeGridRedshifts, photBandCat,
                                photo_weight, m_opt_tplfit_ignoreLinesSupport);
     tplCatalog.m_orthogonal = 0;
-  } else {
-    if (m_opt_continuumcomponent == "tplfit" ||
-        m_opt_continuumcomponent == "tplfitauto") {
-      m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
-    }
-  }
-  if (m_opt_continuumcomponent == "tplfit" ||
-      m_opt_continuumcomponent == "tplfitauto") {
+
+    m_model->m_opt_fitcontinuum_maxCount = m_opt_fitcontinuum_maxN;
     m_model->m_opt_firstpass_forcedisableMultipleContinuumfit =
         m_opt_firstpass_multiplecontinuumfit_disable;
   }
@@ -678,8 +673,10 @@ std::shared_ptr<CTemplatesFitStore> COperatorLineModel::PrecomputeContinuumFit(
       EbmvCoeff = m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
       // access any template and retrieve the ismcorrection object
       opt_tplfit_integer_chi2_ebmv =
-          tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
-              ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff);
+          m_opt_tplfit_dustFit
+              ? tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
+                    ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff)
+              : -1;
     }
   }
 
@@ -977,12 +974,12 @@ COperatorLineModel::buildFirstPassExtremaResults(
  */
 void COperatorLineModel::Combine_firstpass_candidates(
     std::shared_ptr<const CLineModelPassExtremaResult> firstpass_results_b) {
+  Int32 startIdx = m_firstpass_extremaResult->size();
   TInt32List uniqueIdx_fpb =
       m_firstpass_extremaResult->getUniqueCandidates(firstpass_results_b);
   m_firstpass_extremaResult->Resize(m_firstpass_extremaResult->size() +
                                     uniqueIdx_fpb.size());
 
-  Int32 startIdx = m_firstpass_extremaResult->size();
   for (Int32 keb = 0; keb < uniqueIdx_fpb.size(); keb++) {
     Int32 i = uniqueIdx_fpb[keb];
     // append the candidate to m_firstpass_extremaResult
@@ -2041,6 +2038,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
                                const TStringList &tplCategoryList,
                                const std::string &opt_continuumcomponent,
                                const Float64 nsigmasupport,
+                               const bool opt_enableImproveBalmerFit,
                                const Float64 halfwdwsize,
                                const Float64 radius) {
   m_RestLineList = std::move(restLineList);
@@ -2062,7 +2060,7 @@ Int32 COperatorLineModel::Init(const CSpectrum &spectrum,
   m_linesmodel_nsigmasupport = nsigmasupport;
   m_secondPass_halfwindowsize = halfwdwsize;
   m_extremaRedshiftSeparation = radius;
-
+  m_opt_enableImproveBalmerFit = opt_enableImproveBalmerFit;
   return 0;
 }
 
@@ -2377,6 +2375,10 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
       m_opt_continuum_neg_amp_threshold, m_opt_continuum_null_amp_threshold,
       opt_lineWidthType, m_linesmodel_nsigmasupport, opt_velocityEmission,
       opt_velocityAbsorption, opt_rules, opt_rigidity, amplitudeOffsetsDegree);
+
+  m_model->m_opt_enable_improveBalmerFit = m_opt_enableImproveBalmerFit;
+  m_opt_lya_forcefit = params->GetScoped<bool>("lyaforcefit");
+  m_model->m_opt_lya_forcefit = m_opt_lya_forcefit;
 
   m_model->setPassMode(3); // does m_model->m_enableAmplitudeOffsets = true;
 

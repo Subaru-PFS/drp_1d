@@ -163,10 +163,17 @@ bool CParameterStore::HasTplIsmExtinction(const std::string &objectType) const {
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
   } else if (method == "LineModelSolve") {
+    // two parameters plays here: continuumfit.ismfit and tplratio_ismfit
+    //
     const std::string scopeStr =
         objectType + "." + method + ".linemodel.continuumfit.ismfit";
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
+
+    const std::string scopeStr_tplratio =
+        objectType + "." + method + ".linemodel.tplratio_ismfit";
+    if (Has<bool>(scopeStr_tplratio))
+      extinction |= Get<bool>(scopeStr_tplratio);
   }
   return extinction;
 }

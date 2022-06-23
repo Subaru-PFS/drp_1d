@@ -82,8 +82,13 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const std::string &opt_continuumcomponent =
       "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
 
+  bool opt_enableImproveBalmerFit =
+      inputContext->GetParameterStore()->GetScoped<bool>(
+          "linemodel.improveBalmerFit");
+
   m_linemodel.Init(spc, m_redshifts, std::move(restLineList), m_categoryList,
-                   opt_continuumcomponent, opt_nsigmasupport);
+                   opt_continuumcomponent, opt_nsigmasupport,
+                   opt_enableImproveBalmerFit);
 
   CLineModelSolution bestModelSolution;
   Float64 bestz = NAN;

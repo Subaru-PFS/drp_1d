@@ -196,7 +196,7 @@ public:
   bool setTplshapeAmplitude(const TFloat64List &ampsElts,
                             const TFloat64List &errorsElts);
 
-  std::vector<CLmfitController *> createLmfitControllers();
+  std::vector<std::shared_ptr<CLmfitController>> createLmfitControllers();
   void SetFittingMethod(const std::string &fitMethod);
   void SetSecondpassContinuumFitPrms(Int32 dustfit, Int32 meiksinfit,
                                      Int32 outsidelinemask,
@@ -342,7 +342,7 @@ private:
                             Float64 redshift);
   void fitAmplitudesSimplex();
   Int32 fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
-                           CLmfitController *controller);
+                           std::shared_ptr<CLmfitController> controller);
   Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                               const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,

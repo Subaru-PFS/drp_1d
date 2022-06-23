@@ -1610,7 +1610,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
       if (m_rigidity == "tplshape") {
         if (m_forcedisableTplratioISMfit && ifitting > 0 &&
-            m_CatalogTplShape.GetIsmCoeff(ifitting) > 0) {
+            m_CatalogTplShape.GetIsmIndex(ifitting) > 0) {
           // copy the values for ebmv=ebmv_fixed (=0) here
           m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting - 1];
           m_ScaleMargCorrTplshape[ifitting] =
@@ -1737,12 +1737,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         std::shared_ptr<CLmfitController>
             bestController; // at each run of lmfit we create a controller, we
                             // keep the best evaluation
-        std::vector<CLmfitController *> controllers = createLmfitControllers();
+        std::vector<std::shared_ptr<CLmfitController>> controllers =
+            createLmfitControllers();
         if (controllers.size() == 0) {
           Log.LogError("LMfit : No Controller created");
         }
         for (Int32 i = 0; i < controllers.size(); i++) {
-          CLmfitController *controller = controllers[i];
+          std::shared_ptr<CLmfitController> controller = controllers[i];
           // Log.LogInfo("Continuum Template use : %s",
           // controller->getTemplate()->GetName().c_str());
           if (!controller->isNoContinuum() &&
@@ -1827,21 +1828,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           }
           refreshModelInitAllGrid();
           // modelSolution = GetModelSolution();
-          while (!controllers.empty()) {
-            CLmfitController *controller = controllers.back();
-            controllers.pop_back();
-            delete controller;
-          }
-
         } else {
           Log.LogError("LineModel LMfit: not able to fit values at z %f",
                        m_Redshift);
-          // continue;
-          while (!controllers.empty()) {
-            CLmfitController *controller = controllers.back();
-            controllers.pop_back();
-            delete controller;
-          }
           return INFINITY;
         }
       }
@@ -2296,7 +2285,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           m_tplshapeBestTplName =
               m_CatalogTplShape.GetCatalogName(savedIdxFitted);
           m_tplshapeBestTplIsmCoeff =
-              m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
+              m_CatalogTplShape.CalzettiInitFailed()
+                  ? NAN
+                  : m_CatalogTplShape.GetIsmCoeff(savedIdxFitted);
           m_tplshapeBestTplAmplitude =
               m_FittedAmpTplshape[savedIdxFitted][0]; // Should be only 1 elt
                                                       // in tpl ratio mode...
@@ -2397,19 +2388,20 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   return merit;
 }
 
-std::vector<CLmfitController *> CLineModelFitting::createLmfitControllers() {
-  std::vector<CLmfitController *> useLmfitControllers;
+std::vector<std::shared_ptr<CLmfitController>>
+CLineModelFitting::createLmfitControllers() {
+  std::vector<std::shared_ptr<CLmfitController>> useLmfitControllers;
   if (m_lmfit_noContinuumTemplate) {
-    useLmfitControllers.push_back(new CLmfitController(
+    useLmfitControllers.push_back(std::make_shared<CLmfitController>(
         m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
   } else {
     if (m_lmfit_bestTemplate) {
-      LoadFitContinuum(-1, 0);
+      LoadFitContinuum(0, 0);
       std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
           m_tplCategoryList, m_fitContinuum_tplName);
       if (m_fitContinuum_tplName == tpl->GetName()) {
         bool continumLoaded = true;
-        useLmfitControllers.push_back(new CLmfitController(
+        useLmfitControllers.push_back(std::make_shared<CLmfitController>(
             tpl, continumLoaded, m_lmfit_fitContinuum,
             m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
       }
@@ -2421,7 +2413,7 @@ std::vector<CLmfitController *> CLineModelFitting::createLmfitControllers() {
         for (Int32 j = 0; j < m_tplCatalog.GetTemplateCount(category); j++) {
           std::shared_ptr<const CTemplate> tpl =
               m_tplCatalog.GetTemplate(category, j);
-          useLmfitControllers.push_back(new CLmfitController(
+          useLmfitControllers.push_back(std::make_shared<CLmfitController>(
               tpl, continumLoaded, m_lmfit_fitContinuum,
               m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
         }
@@ -3041,8 +3033,9 @@ void print_state(size_t iter, gsl_multifit_fdfsolver *s) {
          gsl_vector_get(s->x, 2), gsl_blas_dnrm2(s->f));
 }
 
-Int32 CLineModelFitting::fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
-                                            CLmfitController *controller)
+Int32 CLineModelFitting::fitAmplitudesLmfit(
+    const CSpectrumFluxAxis &fluxAxis,
+    std::shared_ptr<CLmfitController> controller)
 // TFloat64List& ampsfitted, TFloat64List& ampsErrfitted, Float64&
 // velocityFitted, Float64& continuumAmpFitted, Float64& merit, Int32 lineType
 {
@@ -3631,22 +3624,6 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
     gsl_multifit_wlinear(X, w, y, c, cov, &chisq, work);
     gsl_multifit_linear_free(work);
   }
-
-#define C(i) (gsl_vector_get(c, (i)))
-#define COV(i, j) (gsl_matrix_get(cov, (i), (j)))
-  Log.LogDebug("# best fit: Y = %g X1 + %g X2 ...", C(0), C(1));
-  Log.LogDebug("# covariance matrix:");
-  Log.LogDebug("[");
-  Log.LogDebug("  %+.5e, %+.5e", COV(0, 0), COV(0, 1));
-  Log.LogDebug("  %+.5e, %+.5e", COV(1, 0), COV(1, 1));
-
-  //        Log.LogDebug("[ %+.5e, %+.5e, %+.5e  \n", COV(0,0), COV(0,1),
-  //        COV(0,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e  \n", COV(1,0),
-  //        COV(1,1), COV(1,2)); Log.LogDebug("  %+.5e, %+.5e, %+.5e ]\n",
-  //        COV(2,0), COV(2,1), COV(2,2));
-
-  Log.LogDebug("]");
-  Log.LogDebug("# chisq/n = %g", chisq / n);
 
   for (Int32 iddl = 0; iddl < nddl; iddl++) {
     Float64 a = gsl_vector_get(c, iddl) / normFactor;
