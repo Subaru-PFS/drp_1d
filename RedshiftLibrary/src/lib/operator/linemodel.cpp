@@ -1856,9 +1856,14 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
           m_result->ContinuumModelSolutions[iz], contreest_iterations, false);
       m_result->ScaleMargCorrection[iz] = m_model->getScaleMargCorrection();
       if (m_opt_continuumcomponent == "tplfit" ||
-          m_opt_continuumcomponent == "tplfitauto")
-        m_result->SetChisquareTplContinuumResult(
-            iz, m_model->GetFitContinuum_FitStore());
+          m_opt_continuumcomponent == "tplfitauto") {
+        if (tplfit_option == 0 ||
+            tplfit_option == 3) // retryall & refitfirstpass
+          m_result->SetChisquareTplContinuumResult(
+              iz, m_model->GetFitContinuum_FitStore());
+        // nothing to do when fromfirstpass: keep
+        // m_result->ChiSquareTplContinuum from first pass
+      }
       m_result->SetChisquareTplshapeResult(
           iz, m_model->GetChisquareTplshape(), m_model->GetScaleMargTplshape(),
           m_model->GetStrongELPresentTplshape(),
