@@ -128,10 +128,12 @@ void CSpectrumSpectralAxis::MaskAxis(
   maskedSpcAxis.m_isLogSampled = indeterminate;
 }
 void CSpectrumSpectralAxis::SetSize(Int32 s) {
+  Float64 sample_size = GetSamplesCount();
+  CSpectrumAxis::SetSize(s);
   if (s < 2)
     m_isSorted = true;
   else {
-    if (GetSamplesCount() < s)
+    if (sample_size < s)
       resetAxisProperties();
   }
 }
@@ -531,6 +533,11 @@ CSpectrumSpectralAxis::GetSubSamplingMask(Int32 ssratio,
   if (!IsLogSampled()) {
     THROWG(INTERNAL_ERROR, "Cannot subsample spectrum");
   }
+  if (ilbda.GetBegin() < 0)
+    THROWG(INTERNAL_ERROR, "range's lower bound < 0");
+  if (ilbda.GetEnd() > m_Samples.size() - 1)
+    THROWG(INTERNAL_ERROR, "range's upper bound > samples size");
+
   Int32 s = GetSamplesCount();
   if (ssratio == 1)
     return TFloat64List(s, 1.);
