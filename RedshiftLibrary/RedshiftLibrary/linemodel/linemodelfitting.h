@@ -285,6 +285,9 @@ public:
   void duplicateTplratioResult(Int32 ifitting);
   void updateTplratioResults(Int32 ifitting, Float64 _merit,
                              Float64 _meritprior);
+  Float64 computelogLinePriorMerit(
+      Int32 itratio,
+      const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
   CLineCatalogsTplRatio m_CatalogTplRatio;
   TFloat64List m_ChisquareTplratio;
   std::vector<TFloat64List> m_FittedAmpTplratio;
@@ -435,7 +438,7 @@ private:
 
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   TStringList m_tplCategoryList;
-  std::string m_tplratioBestTplName = "None";
+  std::string m_tplratioBestTplName = "undefined";
   Float64 m_tplratioBestTplIsmCoeff = NAN;
   Float64 m_tplratioBestTplAmplitude = NAN;
   Float64 m_tplratioBestTplDtm = NAN;

@@ -1728,7 +1728,7 @@ bool CLineModelFitting::initDtd() {
   return true;
 }
 
-void CLineModelFitting::prepareAndLoadContinuum(Int32 icontfitting) {
+void CLineModelFitting::prepareAndLoadContinuum(Int32 k) {
   if (m_ContinuumComponent == "nocontinuum")
     return;
 
@@ -1738,7 +1738,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 icontfitting) {
                                       // when LoadFitContinuum() is called
   {
     Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
-    LoadFitContinuum(icontfitting, autoselect);
+    LoadFitContinuum(k, autoselect);
   }
 }
 
@@ -1859,16 +1859,61 @@ void CLineModelFitting::duplicateTplratioResult(Int32 idx) {
   }
   return;
 }
+
+Float64 CLineModelFitting::computelogLinePriorMerit(
+    Int32 itratio,
+    const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio) {
+
+  if (!logPriorDataTplRatio.size())
+    return 0.;
+
+  // lines prior
+  Float64 _meritprior = -2. * logPriorDataTplRatio[itratio].betaTE *
+                        logPriorDataTplRatio[itratio].logprior_precompTE;
+  _meritprior += -2. * logPriorDataTplRatio[itratio].betaA *
+                 logPriorDataTplRatio[itratio].logprior_precompA;
+  _meritprior += -2. * logPriorDataTplRatio[itratio].betaZ *
+                 logPriorDataTplRatio[itratio].logprior_precompZ;
+  if (logPriorDataTplRatio[itratio].A_sigma <= 0.0)
+    return _meritprior;
+
+  Float64 ampl = 0.0;
+  for (Int32 iElt = 0; iElt < m_Elements.size(); iElt++) {
+    bool foundAmp = false;
+    Int32 nLines = m_Elements[iElt]->GetSize();
+    for (Int32 j = 0; j < nLines; j++) {
+      Float64 amp = m_Elements[iElt]->GetFittedAmplitude(j);
+      if (amp > 0 && !m_Elements[iElt]->IsOutsideLambdaRange(j)) {
+        Float64 nominal_amp = m_Elements[iElt]->GetNominalAmplitude(j);
+        ampl = amp / nominal_amp;
+        foundAmp = true;
+        break;
+      }
+    }
+    /*if (foundAmp)
+      break;
+      //Didier: probably this is missing here??? I suppose we are
+      // looking for the first non-null and valid amplitude?
+     */
+  }
+  _meritprior += logPriorDataTplRatio[itratio].betaA *
+                 (ampl - logPriorDataTplRatio[itratio].A_mean) *
+                 (ampl - logPriorDataTplRatio[itratio].A_mean) /
+                 (logPriorDataTplRatio[itratio].A_sigma *
+                  logPriorDataTplRatio[itratio].A_sigma);
+
+  return _meritprior;
+}
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum,
- *returning the merit of the fit. Prepare the continuum. Initialize the model
- *spectrum. Prepare the elements. Fit the amplitudes of each element
+ *returning the bestContMerit of the fit. Prepare the continuum. Initialize the
+ *model spectrum. Prepare the elements. Fit the amplitudes of each element
  *independently. Fit the amplitude of all elements together with iterative
  *solver: Nelder Mead Simplex. Fit the amplitude of all elements together with
  *linear solver: gsl_multifit_wlinear. Fit the amplitudes of each element
  *independently, unless there is overlap. Apply a continuum iterative
  *re-estimation with lines removed from the initial spectrum. Apply rules.
- *Create spectrum model. Return merit.
+ *Create spectrum model. Return bestContMerit.
  **/
 Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
@@ -1887,10 +1932,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (m_dTransposeDLambdaRange != *(m_lambdaRange))
     initDtd();
 
-  Int32 nfitting = 1; // multiple fitting steps for rigidity=tplratio/tplratio
+  Int32 ntplratio = 1; // multiple fitting steps for rigidity=tplratio/tplratio
   std::vector<CPriorHelper::SPriorTZE> logPriorDataTplRatio;
   if (m_rigidity == "tplratio") {
-    nfitting = m_CatalogTplRatio.GetCatalogsCount();
+    ntplratio = m_CatalogTplRatio.GetCatalogsCount();
 
     if (!m_tplratio_priorhelper->mInitFailed) {
       // prior initilization for tplratio EL only
@@ -1898,14 +1943,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         THROWG(INTERNAL_ERROR, "model: Unable to use tplratio line priors "
                                "with nElts>1 for now");
       // NB: this could be done if the EL element idx in searched (see later
-      // in the ifitting loop, UV Abs lines would be not affected by priors
+      // in the itratio loop, UV Abs lines would be not affected by priors
       // then)
 
-      for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
+      for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
         // prepare the lines prior data
-        Int32 ebvfilter = m_CatalogTplRatio.GetIsmIndex(ifitting);
+        Int32 ebvfilter = m_CatalogTplRatio.GetIsmIndex(itratio);
         CPriorHelper::SPriorTZE logPriorData;
-        std::string tplrationame = m_CatalogTplRatio.GetCatalogName(ifitting);
+        std::string tplrationame = m_CatalogTplRatio.GetCatalogName(itratio);
         bool retGetPrior = m_tplratio_priorhelper->GetTZEPriorData(
             tplrationame, ebvfilter, redshift, logPriorData);
         if (retGetPrior == false)
@@ -1918,46 +1963,47 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   }
   Int32 savedIdxFitted = -1; // for rigidity=tplratio
 
-  Int32 ncontinuumfitting = 1;
+  Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
-    ncontinuumfitting = m_opt_fitcontinuum_maxCount;
+    nContinuum = m_opt_fitcontinuum_maxCount;
 
-  Float64 merit = INFINITY; // initializing 'on the fly' best-merit
-  Float64 meritprior = 0.0; // initializing 'on the fly' best-merit-prior
-  // initializing 'on the fly' best-merit per tplratio
-  TFloat64List meritTplratio(nfitting, INFINITY);
-  // initializing 'on the fly' best-merit-prior per tplratio
-  TFloat64List meritPriorTplratio(nfitting, 0.0);
+  Float64 bestContMerit =
+      INFINITY; // initializing 'on the fly' best-bestContMerit
+  Float64 bestContMeritPrior =
+      0.0; // initializing 'on the fly' best-bestContMerit-prior
+  // initializing 'on the fly' best-tplratiomerit per tplratio
+  TFloat64List bestTplratioMerit(ntplratio, INFINITY);
+  // initializing 'on the fly' best-tplratio-bestContMerit-prior per tplratio
+  TFloat64List bestTplratioMeritPrior(ntplratio, 0.0);
 
-  for (Int32 icontfitting = 0; icontfitting < ncontinuumfitting;
-       icontfitting++) {
+  for (Int32 k = 0; k < nContinuum; k++) {
 
-    prepareAndLoadContinuum(icontfitting);
+    Float64 _merit = INFINITY;
+    Float64 _meritprior = 0.; // only relevant for "tplratio"
+    prepareAndLoadContinuum(k);
     if (m_ContinuumComponent != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
 
     if (m_enableAmplitudeOffsets)
       m_Elements.prepareAmplitudeOffset();
 
-    for (Int32 ifitting = 0; ifitting < nfitting;
-         ifitting++) { // second loop mainly for tplratio
+    for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
       if (m_rigidity == "tplratio") {
-        if (m_forcedisableTplratioISMfit && ifitting > 0 &&
-            m_CatalogTplRatio.GetIsmIndex(ifitting) > 0) {
-
-          meritTplratio[ifitting] = meritTplratio[ifitting - 1];
-          meritPriorTplratio[ifitting] = meritPriorTplratio[ifitting - 1];
-          duplicateTplratioResult(ifitting);
+        if (m_forcedisableTplratioISMfit && itratio > 0 &&
+            m_CatalogTplRatio.GetIsmIndex(itratio) > 0) {
+          bestTplratioMerit[itratio] = bestTplratioMerit[itratio - 1];
+          bestTplratioMeritPrior[itratio] = bestTplratioMeritPrior[itratio - 1];
+          duplicateTplratioResult(itratio);
           continue;
         }
-        setTplratioModel(ifitting, false);
+        setTplratioModel(itratio, false);
         // prepare the Lya width and asym coefficients if the asymfit profile
         // option is met INFO: tpl-shape are often ASYMFIXED in the tplratio
         // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
         // tplratio can override the lyafitting, see m_opt_lya_forcefit
         setLyaProfile(m_Redshift,
-                      m_CatalogTplRatio.GetCatalog(ifitting).GetList(), true);
+                      m_CatalogTplRatio.GetCatalog(itratio).GetList(), true);
       } else {
         // prepare the Lya width and asym coefficients if the asymfit profile
         // option is met
@@ -2040,7 +2086,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         SetVelocityEmission(m_velocityEmissionInit);
         SetVelocityAbsorption(m_velocityAbsorptionInit);
         m_Redshift = redshift;
-        Float64 bestMerit = INFINITY;
+        Float64 lmfitbestMerit = INFINITY;
         std::shared_ptr<CLmfitController>
             bestController; // at each run of lmfit we create a controller, we
                             // keep the best evaluation
@@ -2076,11 +2122,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             // Log.LogInfo("LineModel LMfit: retVal = %d", retVal);
             NegVal = controller->removeNegAmpLine();
             // Log.LogInfo("LineModel LMfit: NegVal = %s", (NegVal?"t":"f") );
-            // Log.LogInfo("LineModel LMfit: merit = %.0f ; bestMerit : %.0f
-            // ", controller->getMerit(), bestMerit );
-            if (retVal == 0 && !NegVal && controller->getMerit() < bestMerit) {
+            // Log.LogInfo("LineModel LMfit: Merit = %.0f ; lmfitbestMerit :
+            // %.0f
+            // ", controller->getMerit(), lmfitbestMerit );
+            if (retVal == 0 && !NegVal &&
+                controller->getMerit() < lmfitbestMerit) {
 
-              bestMerit = controller->getMerit();
+              lmfitbestMerit = controller->getMerit();
               bestController = std::shared_ptr<CLmfitController>(controller);
               // Log.LogInfo("Pointer best Controller setted");
             }
@@ -2309,17 +2357,14 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         Int32 it = 0;
         while (it < nIt) {
           applyRules();
-
-          //*
           // iterative continuum estimation :: RAW SLOW METHOD
           refreshModel();
           Float64 enhanceLines = 0;
-          //*
+
           if (nIt > 2 * it && nIt > 3.0 && it <= 3) {
             enhanceLines = 2.0 - ((Float64)it * 0.33);
           }
 
-          //*/
           /*
           if(it==0 && nIt>1){
               enhanceLines = 1.5;
@@ -2333,7 +2378,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
             m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i] - ContinuumFluxAxis[i];
           }
-          //*/
 
           /*
       //iterative continuum estimation approx: APPROX. METHOD
@@ -2388,17 +2432,12 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         }
       }
 
+      std::string bestTplratioName = "undefined";
       if (m_rigidity == "rules") {
         // Apply rules,
         applyRules(enableLogging);
-
         refreshModel();
-        // create spectrum model
-        Int32 modelSolutionLevel = Int32(enableLogging);
-        modelSolution = GetModelSolution(modelSolutionLevel);
-        continuumModelSolution = GetContinuumModelSolution();
-
-        merit = getLeastSquareMerit();
+        _merit = getLeastSquareMerit();
       }
 
       // correct lines amplitude with tplratioPrior (tpl-corr): Warning: Rules
@@ -2406,40 +2445,34 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       if (m_rigidity == "tplcorr") {
         refreshModel();
         // create spectrum model
-        modelSolution = GetModelSolution();
-        continuumModelSolution = GetContinuumModelSolution();
-        // Log.LogInfo( "LineModel Infos: TPLCORR");
-        TFloat64List correctedAmplitudes;
-        correctedAmplitudes.resize(modelSolution.Amplitudes.size());
-        std::string bestTplName = "";
-
+        modelSolution = GetModelSolution(); // computed only to get
+                                            // amplitude/err!
+        continuumModelSolution = GetContinuumModelSolution(); // not used!
+        TFloat64List correctedAmplitudes(modelSolution.Amplitudes.size());
+        std::string tplname = "undefined";
         m_CatalogTplRatio.GetBestFit(m_RestLineList, modelSolution.Amplitudes,
                                      modelSolution.AmplitudesUncertainties,
-                                     correctedAmplitudes, bestTplName);
+                                     correctedAmplitudes, tplname);
         for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size();
              iRestLine++) {
           Int32 subeIdx = undefIdx;
           Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
-          if (eIdx == undefIdx || subeIdx == undefIdx) {
-            Log.LogInfo("indexes are  -1");
+          if (eIdx == undefIdx || subeIdx == undefIdx)
             continue;
-          }
-          Float64 er = m_Elements[eIdx]->GetFittedAmplitudeErrorSigma(
-              subeIdx); // not modifying the fitting error for now
+
+          Float64 er =
+              modelSolution
+                  .AmplitudesUncertainties[subeIdx]; // not modifying the
+                                                     // fitting error for now
           Float64 nominalAmp = m_Elements[eIdx]->GetNominalAmplitude(subeIdx);
           m_Elements[eIdx]->SetFittedAmplitude(
               correctedAmplitudes[iRestLine] / nominalAmp, er);
         }
         refreshModel();
-        modelSolution = GetModelSolution();
-        continuumModelSolution = GetContinuumModelSolution();
-        m_tplratioBestTplName = bestTplName;
-
-        merit = getLeastSquareMerit();
+        _merit = getLeastSquareMerit();
       }
 
       if (m_rigidity == "tplratio") {
-        Float64 _merit = INFINITY;
         if (!enableLogging && m_tplratioLeastSquareFast)
           _merit = getLeastSquareMeritFast();
         else {
@@ -2447,62 +2480,32 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           _merit = getLeastSquareMerit();
         }
 
-        // lines prior
-        Float64 _meritprior = 0.0;
-        if (logPriorDataTplRatio.size() > 0) {
-          _meritprior += -2. * logPriorDataTplRatio[ifitting].betaTE *
-                         logPriorDataTplRatio[ifitting].logprior_precompTE;
-          _meritprior += -2. * logPriorDataTplRatio[ifitting].betaA *
-                         logPriorDataTplRatio[ifitting].logprior_precompA;
-          _meritprior += -2. * logPriorDataTplRatio[ifitting].betaZ *
-                         logPriorDataTplRatio[ifitting].logprior_precompZ;
-          if (logPriorDataTplRatio[ifitting].A_sigma > 0.0) {
-            //
-            Float64 ampl = 0.0;
-            for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-              bool foundAmp = false;
-              Int32 nLines = m_Elements[iElts]->GetSize();
-              for (Int32 j = 0; j < nLines; j++) {
-                if (foundAmp) {
-                  break;
-                }
-                Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-                if (amp > 0 && !m_Elements[iElts]->IsOutsideLambdaRange(j)) {
-                  Float64 nominal_amp =
-                      m_Elements[iElts]->GetNominalAmplitude(j);
-                  ampl = amp / nominal_amp;
-                  foundAmp = true;
-                  break;
-                }
-              }
-            }
-            //
-            Float64 logPa = logPriorDataTplRatio[ifitting].betaA *
-                            (ampl - logPriorDataTplRatio[ifitting].A_mean) *
-                            (ampl - logPriorDataTplRatio[ifitting].A_mean) /
-                            (logPriorDataTplRatio[ifitting].A_sigma *
-                             logPriorDataTplRatio[ifitting].A_sigma);
-            _meritprior += logPa;
-          }
-        }
+        _meritprior = computelogLinePriorMerit(itratio, logPriorDataTplRatio);
 
         if (_merit + _meritprior <
-            meritTplratio[ifitting] + meritPriorTplratio[ifitting]) {
+            bestTplratioMerit[itratio] + bestTplratioMeritPrior[itratio]) {
           // update local variables
-          meritTplratio[ifitting] = _merit;
-          meritPriorTplratio[ifitting] = _meritprior;
+          bestTplratioMerit[itratio] = _merit;
+          bestTplratioMeritPrior[itratio] = _meritprior;
           // update class variables
-          updateTplratioResults(ifitting, _merit, _meritprior);
+          updateTplratioResults(itratio, _merit, _meritprior);
         }
+      }
 
-        if (merit + meritprior > _merit + _meritprior) {
-          merit = _merit;
-          meritprior = _meritprior;
-          savedIdxContinuumFitted = icontfitting;
-          savedIdxFitted = ifitting;
+      if (bestContMerit + bestContMeritPrior > _merit + _meritprior) {
+        bestContMerit = _merit;
+        bestContMeritPrior = _meritprior;
+        savedIdxContinuumFitted = k;
+        Int32 modelSolutionLevel =
+            m_rigidity == "rules" ? Int32(enableLogging) : 0;
+        modelSolution = GetModelSolution(modelSolutionLevel);
+        continuumModelSolution = GetContinuumModelSolution();
 
-          modelSolution = GetModelSolution();
-          continuumModelSolution = GetContinuumModelSolution();
+        if (m_rigidity == "tplcorr")
+          m_tplratioBestTplName = bestTplratioName;
+
+        if (m_rigidity == "tplratio") {
+          savedIdxFitted = itratio;
           m_tplratioBestTplName =
               m_CatalogTplRatio.GetCatalogName(savedIdxFitted);
           m_tplratioBestTplIsmCoeff =
@@ -2519,87 +2522,71 @@ Float64 CLineModelFitting::fit(Float64 redshift,
               m_MtmTplratio[savedIdxFitted]
                            [0]; // Should be only 1 elt in tpl ratio mode...
         }
-      } else
-        savedIdxContinuumFitted = 0;
-
-      // if(m_rigidity=="tplcorr")
-      //{
-      //   Float64 tplratioPriorCoeff = m_CatalogTplRatio.GetBestFit(
-      //   m_RestLineList, modelSolution.Amplitudes,  ); Log.LogDebug(
-      //   "Linemodel: tplratioPriorCoeff = %f", tplratioPriorCoeff); merit =
-      //   sqrt(merit*merit/2.0-log(tplratioPriorCoeff));
-      // }
-
+      }
       if (m_ContinuumComponent == "nocontinuum")
         reinitModel();
     }
   }
 
-  if (enableLogging) {
-    if (isContinuumComponentTplfitxx()) {
-      if (ncontinuumfitting > 1 && m_fittingmethod != "svdlc") {
-        Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
-        // TODO savedIdxContinuumFitted=-1 if rigidity!=tplratio
-        LoadFitContinuum(savedIdxContinuumFitted, autoselect);
-      }
-      if (m_fittingmethod == "svdlc") {
-        //
-      }
-      Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
-                    "ebmv=%.3f), and A=%e",
-                    savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
-                    m_fitContinuum_tplFitEbmvCoeff,
-                    m_fitContinuum_tplFitAmplitude);
+  if (!enableLogging)
+    return bestContMerit;
+
+  if (isContinuumComponentTplfitxx() && nContinuum > 1) {
+    if (m_fittingmethod != "svdlc") {
+      Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
+      // TODO savedIdxContinuumFitted=-1 if rigidity!=tplratio
+      LoadFitContinuum(savedIdxContinuumFitted, autoselect);
     }
-
-    if (m_rigidity == "tplratio") {
-      // m_CatalogTplRatio.SetMultilineNominalAmplitudes( *this,
-      // savedIdxFitted
-      // );
-      bool retSetMultiAmplFast =
-          SetMultilineNominalAmplitudesFast(savedIdxFitted);
-      if (!retSetMultiAmplFast) {
-        Log.LogError("Linemodel: tplratio, Unable to set Multiline "
-                     "NominalAmplitudes from Tplratio !");
-      }
-
-      // Set the velocities from templates: todo auto switch when velfit is ON
-      // m_CatalogTplRatio.GetCatalogVelocities(savedIdxFitted,
-      // m_velocityEmission, m_velocityAbsorption);
-      for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-        Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
-                      "ebmv=%.3f), and A=%e",
-                      savedIdxFitted, m_tplratioBestTplName.c_str(),
-                      m_tplratioBestTplIsmCoeff,
-                      m_FittedAmpTplratio[savedIdxFitted][iElts]);
-        m_Elements[iElts]->SetFittedAmplitude(
-            m_FittedAmpTplratio[savedIdxFitted][iElts],
-            m_FittedErrorTplratio[savedIdxFitted][iElts]);
-        m_Elements[iElts]->SetSumCross(m_DtmTplratio[savedIdxFitted][iElts]);
-        m_Elements[iElts]->SetSumGauss(m_MtmTplratio[savedIdxFitted][iElts]);
-      }
-
-      // Lya
-      for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-        m_Elements[iElts]->SetAsymfitParams(
-            {m_LyaWidthCoeffTplratio[savedIdxFitted][iElts],
-             m_LyaAsymCoeffTplratio[savedIdxFitted][iElts],
-             m_LyaDeltaCoeffTplratio[savedIdxFitted][iElts]});
-      }
-
-      for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-        m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(
-            m_LyaIgmIdxTplratio[savedIdxFitted][iElts], redshift));
-      }
-
-      refreshModel();
-
-      Int32 modelSolutionLevel = Int32(enableLogging);
-      modelSolution = GetModelSolution(modelSolutionLevel);
-      continuumModelSolution = GetContinuumModelSolution();
-    }
+    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
+                  "ebmv=%.3f), and A=%e",
+                  savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
+                  m_fitContinuum_tplFitEbmvCoeff,
+                  m_fitContinuum_tplFitAmplitude);
   }
-  return merit;
+
+  if (m_rigidity == "tplratio") {
+    bool retSetMultiAmplFast =
+        SetMultilineNominalAmplitudesFast(savedIdxFitted);
+    if (!retSetMultiAmplFast) {
+      Log.LogError("Linemodel: tplratio, Unable to set Multiline "
+                   "NominalAmplitudes from Tplratio !");
+    }
+
+    // Set the velocities from templates: todo auto switch when velfit is ON
+    // m_CatalogTplRatio.GetCatalogVelocities(savedIdxFitted,
+    // m_velocityEmission, m_velocityAbsorption);
+    for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+      Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
+                    "ebmv=%.3f), and A=%e",
+                    savedIdxFitted, m_tplratioBestTplName.c_str(),
+                    m_tplratioBestTplIsmCoeff,
+                    m_FittedAmpTplratio[savedIdxFitted][iElts]);
+      m_Elements[iElts]->SetFittedAmplitude(
+          m_FittedAmpTplratio[savedIdxFitted][iElts],
+          m_FittedErrorTplratio[savedIdxFitted][iElts]);
+      m_Elements[iElts]->SetSumCross(m_DtmTplratio[savedIdxFitted][iElts]);
+      m_Elements[iElts]->SetSumGauss(m_MtmTplratio[savedIdxFitted][iElts]);
+    }
+
+    // Lya
+    for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++)
+      m_Elements[iElts]->SetAsymfitParams(
+          {m_LyaWidthCoeffTplratio[savedIdxFitted][iElts],
+           m_LyaAsymCoeffTplratio[savedIdxFitted][iElts],
+           m_LyaDeltaCoeffTplratio[savedIdxFitted][iElts]});
+
+    for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++)
+      m_Elements[iElts]->SetSymIgmParams(
+          TSymIgmParams(m_LyaIgmIdxTplratio[savedIdxFitted][iElts], redshift));
+
+    refreshModel();
+
+    Int32 modelSolutionLevel = Int32(enableLogging);
+    modelSolution = GetModelSolution(modelSolutionLevel);
+    continuumModelSolution = GetContinuumModelSolution();
+  }
+
+  return bestContMerit;
 }
 
 std::vector<std::shared_ptr<CLmfitController>>
