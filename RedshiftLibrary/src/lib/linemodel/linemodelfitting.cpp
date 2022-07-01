@@ -161,8 +161,7 @@ void CLineModelFitting::initParameters() {
 
     SetSecondpassContinuumFitPrms();
   }
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx()) {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
     // useloglambdasampling param is relevant only if linemodel.continuumfit is
@@ -1421,8 +1420,7 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const CTemplate &tpl) {
   m_inputSpc->SetType(savetype);
   if (m_ContinuumComponent == "nocontinuum" ||
       m_ContinuumComponent == "fromspectrum" ||
-      m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+      isContinuumComponentTplfitxx()) {
     for (k = 0; k < m_SpcFluxAxis.GetSamplesCount(); k++) {
       m_SpcFluxAxis[k] =
           m_inputSpc->GetFluxAxis()[k] - tplContaminantRebinFluxAxis[k];
@@ -1499,8 +1497,7 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
     m_ContinuumFluxAxis = m_inputSpc->GetContinuumFluxAxis();
     m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   }
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx()) {
     // the continuum is set to zero and the observed spectrum is the raw
     // spectrum
     m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
@@ -1584,8 +1581,7 @@ void CLineModelFitting::PrepareContinuum() {
   if (m_ContinuumComponent == "nocontinuum")
     return;
 
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto" || m_fittingmethod == "lmfit") {
+  if (isContinuumComponentTplfitxx() || m_fittingmethod == "lmfit") {
     m_observeGridContinuumFlux.resize(m_SpectrumModel.GetSampleCount());
   } else {
     Yrebin = m_inputSpc->GetContinuumFluxAxis().GetSamplesVector();
@@ -1725,6 +1721,136 @@ bool CLineModelFitting::initDtd() {
   return true;
 }
 
+void CLineModelFitting::prepareAndLoadContinuum(Int32 icontfitting) {
+  if (m_ContinuumComponent == "nocontinuum")
+    return;
+
+  PrepareContinuum();
+
+  if (isContinuumComponentTplfitxx()) // the support has to be already computed
+                                      // when LoadFitContinuum() is called
+  {
+    Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
+    LoadFitContinuum(icontfitting, autoselect);
+  }
+}
+
+void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
+  CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
+  const auto &SpcFluxAxis = m_SpcFluxAxis;
+  const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
+  m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
+  for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
+    m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i] - ContinuumFluxAxis[i];
+  }
+}
+
+/**
+ * @brief
+ *
+ * @param idx
+ * @param _merit
+ * @param _meritprior
+ */
+void CLineModelFitting::updateTplratioResults(Int32 idx, Float64 _merit,
+                                              Float64 _meritprior) {
+
+  m_ChisquareTplshape[idx] = _merit;
+  m_ScaleMargCorrTplshape[idx] = getScaleMargCorrection();
+  m_StrongELPresentTplshape[idx] = GetModelStrongEmissionLinePresent();
+  // given that Ha is a strong emission line,
+  if (m_opt_haprior > 0.) // check first that haprior is activated
+    m_StrongHalphaELPresentTplshape[idx] = m_StrongELPresentTplshape[idx]
+                                               ? GetModelHaStrongest()
+                                               : false; // result per tplratio
+
+  TStringList strongELSNRAboveCut; // = getLinesAboveSNR(3.5); //this
+                                   // is costing a lot of processing
+                                   // time, so deactivated for now.
+  m_NLinesAboveSNRTplshape[idx] = strongELSNRAboveCut.size();
+
+  // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,
+  // needed ?) NB: this is only needed for the index=savedIdxFitted
+  // ultimately
+  for (Int32 iElt = 0; iElt < m_Elements.size(); iElt++) {
+    bool savedAmp = false;
+    bool allampzero = true;
+    m_FittedAmpTplshape[idx][iElt] = NAN;
+    m_FittedErrorTplshape[idx][iElt] = NAN;
+    m_DtmTplshape[idx][iElt] = NAN;
+    m_MtmTplshape[idx][iElt] = NAN;
+    m_LyaAsymCoeffTplshape[idx][iElt] = NAN;
+    m_LyaWidthCoeffTplshape[idx][iElt] = NAN;
+    m_LyaDeltaCoeffTplshape[idx][iElt] = NAN;
+    m_LyaIgmIdxTplshape[idx][iElt] = undefIdx;
+    m_LinesLogPriorTplshape[idx][iElt] = _meritprior;
+    Int32 nLines = m_Elements[iElt]->GetSize();
+
+    for (Int32 j = 0; j < nLines; j++) {
+      if (savedAmp) {
+        break;
+      }
+      Float64 amp = m_Elements[iElt]->GetFittedAmplitude(j);
+      if (amp > 0) {
+        allampzero = false;
+      }
+      if (amp > 0 && !m_Elements[iElt]->IsOutsideLambdaRange(j)) {
+
+        Float64 amp_error = m_Elements[iElt]->GetFittedAmplitudeErrorSigma(j);
+        Float64 nominal_amp = m_Elements[iElt]->GetNominalAmplitude(j);
+        m_FittedAmpTplshape[idx][iElt] = amp / nominal_amp;
+        Log.LogDebug("    model : fit tplratio mode, tplratio_fittedamp: %e",
+                     m_FittedAmpTplshape[idx][iElt]);
+
+        m_FittedErrorTplshape[idx][iElt] = amp_error / nominal_amp;
+        m_DtmTplshape[idx][iElt] = m_Elements[iElt]->GetSumCross();
+        m_MtmTplshape[idx][iElt] = m_Elements[iElt]->GetSumGauss();
+
+        TAsymParams params = m_Elements[iElt]->GetAsymfitParams(0);
+        m_LyaAsymCoeffTplshape[idx][iElt] = params.alpha;
+        m_LyaWidthCoeffTplshape[idx][iElt] = params.sigma;
+        m_LyaDeltaCoeffTplshape[idx][iElt] = params.delta;
+
+        TSymIgmParams params_igm = m_Elements[iElt]->GetSymIgmParams(0);
+        m_LyaIgmIdxTplshape[idx][iElt] = params_igm.m_igmidx;
+
+        savedAmp = true;
+        break;
+      }
+    }
+    if (allampzero && !savedAmp) // TODO: this case should be treated more
+                                 // carefully, save dtm, mtm, and more...
+      m_FittedAmpTplshape[idx][iElt] = 0.0;
+  }
+  return;
+}
+
+/**
+ * @brief :copy the values for ebmv=ebmv_fixed (=0)
+ *
+ * @param idx
+ */
+void CLineModelFitting::duplicateTplratioResult(Int32 idx) {
+  m_ChisquareTplshape[idx] = m_ChisquareTplshape[idx - 1];
+  m_ScaleMargCorrTplshape[idx] = m_ScaleMargCorrTplshape[idx - 1];
+  m_StrongELPresentTplshape[idx] = m_StrongELPresentTplshape[idx - 1];
+  m_StrongHalphaELPresentTplshape[idx] =
+      m_StrongHalphaELPresentTplshape[idx - 1];
+  m_NLinesAboveSNRTplshape[idx] = m_NLinesAboveSNRTplshape[idx - 1];
+
+  for (Int32 iElt = 0; iElt < m_Elements.size(); iElt++) {
+    m_FittedAmpTplshape[idx][iElt] = m_FittedAmpTplshape[idx - 1][iElt];
+    m_FittedErrorTplshape[idx][iElt] = m_FittedErrorTplshape[idx - 1][iElt];
+    m_DtmTplshape[idx][iElt] = m_DtmTplshape[idx - 1][iElt];
+    m_MtmTplshape[idx][iElt] = m_MtmTplshape[idx - 1][iElt];
+    m_LyaAsymCoeffTplshape[idx][iElt] = m_LyaAsymCoeffTplshape[idx - 1][iElt];
+    m_LyaWidthCoeffTplshape[idx][iElt] = m_LyaWidthCoeffTplshape[idx - 1][iElt];
+    m_LyaDeltaCoeffTplshape[idx][iElt] = m_LyaDeltaCoeffTplshape[idx - 1][iElt];
+    m_LyaIgmIdxTplshape[idx][iElt] = m_LyaIgmIdxTplshape[idx - 1][iElt];
+    m_LinesLogPriorTplshape[idx][iElt] = m_LinesLogPriorTplshape[idx - 1][iElt];
+  }
+  return;
+}
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum,
  *returning the merit of the fit. Prepare the continuum. Initialize the model
@@ -1750,9 +1876,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   initModelAtZ(redshift, spectralAxis);
 
-  if (m_dTransposeDLambdaRange != *(m_lambdaRange)) {
+  if (m_dTransposeDLambdaRange != *(m_lambdaRange))
     initDtd();
-  }
 
   Int32 nfitting = 1; // multiple fitting steps for rigidity=tplshape/tplratio
   std::vector<CPriorHelper::SPriorTZE> logPriorDataTplShape;
@@ -1761,13 +1886,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     if (!m_tplshape_priorhelper->mInitFailed) {
       // prior initilization for tplshape EL only
-      if (m_Elements.size() > 1) {
+      if (m_Elements.size() > 1)
         THROWG(INTERNAL_ERROR, "model: Unable to use tplshape line priors "
                                "with nElts>1 for now");
-        // NB: this could be done if the EL element idx in searched (see later
-        // in the ifitting loop, UV Abs lines would be not affected by priors
-        // then)
-      }
+      // NB: this could be done if the EL element idx in searched (see later
+      // in the ifitting loop, UV Abs lines would be not affected by priors
+      // then)
+
       for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
         // prepare the lines prior data
         Int32 ebvfilter = m_CatalogTplShape.GetIsmIndex(ifitting);
@@ -1775,12 +1900,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         std::string tplrationame = m_CatalogTplShape.GetCatalogName(ifitting);
         bool retGetPrior = m_tplshape_priorhelper->GetTZEPriorData(
             tplrationame, ebvfilter, redshift, logPriorData);
-        if (retGetPrior == false) {
+        if (retGetPrior == false)
           THROWG(INTERNAL_ERROR,
                  "model: Failed to get prior for chi2 solvecontinuum.");
-        } else {
+        else
           logPriorDataTplShape.push_back(logPriorData);
-        }
       }
     }
   }
@@ -1788,82 +1912,35 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   Int32 ncontinuumfitting = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
-  if ((m_ContinuumComponent == "tplfit" ||
-       m_ContinuumComponent == "tplfitauto") &&
-      !m_forcedisableMultipleContinuumfit) {
+  if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
     ncontinuumfitting = m_opt_fitcontinuum_maxCount;
-  }
 
   Float64 merit = INFINITY; // initializing 'on the fly' best-merit
   Float64 meritprior = 0.0; // initializing 'on the fly' best-merit-prior
-  TFloat64List meritTplratio(
-      nfitting,
-      INFINITY); // initializing 'on the fly' best-merit per tplratio
-  TFloat64List meritPriorTplratio(
-      nfitting,
-      0.0); // initializing 'on the fly' best-merit-prior per tplratio
+  // initializing 'on the fly' best-merit per tplratio
+  TFloat64List meritTplratio(nfitting, INFINITY);
+  // initializing 'on the fly' best-merit-prior per tplratio
+  TFloat64List meritPriorTplratio(nfitting, 0.0);
+
   for (Int32 icontfitting = 0; icontfitting < ncontinuumfitting;
        icontfitting++) {
-    if (m_ContinuumComponent != "nocontinuum") {
-      PrepareContinuum();
-    }
-    if (m_ContinuumComponent == "tplfit" ||
-        m_ContinuumComponent ==
-            "tplfitauto") // the support has to be already computed when
-                          // LoadFitContinuum() is called
-    {
-      Int32 autoselect = (m_ContinuumComponent == "tplfitauto");
-      LoadFitContinuum(icontfitting, autoselect);
-    }
-    if (m_ContinuumComponent != "nocontinuum") {
-      CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
-      const auto &SpcFluxAxis = m_SpcFluxAxis;
-      const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
-      m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
-      for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
-        m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i] - ContinuumFluxAxis[i];
-      }
-    }
 
-    if (m_enableAmplitudeOffsets) {
+    prepareAndLoadContinuum(icontfitting);
+    if (m_ContinuumComponent != "nocontinuum")
+      computeSpectrumFluxWithoutContinuum();
+
+    if (m_enableAmplitudeOffsets)
       m_Elements.prepareAmplitudeOffset();
-    }
 
-    for (Int32 ifitting = 0; ifitting < nfitting; ifitting++) {
+    for (Int32 ifitting = 0; ifitting < nfitting;
+         ifitting++) { // second loop mainly for tplshape
       if (m_rigidity == "tplshape") {
         if (m_forcedisableTplratioISMfit && ifitting > 0 &&
             m_CatalogTplShape.GetIsmIndex(ifitting) > 0) {
-          // copy the values for ebmv=ebmv_fixed (=0) here
-          m_ChisquareTplshape[ifitting] = m_ChisquareTplshape[ifitting - 1];
-          m_ScaleMargCorrTplshape[ifitting] =
-              m_ScaleMargCorrTplshape[ifitting - 1];
-          m_StrongELPresentTplshape[ifitting] =
-              m_StrongELPresentTplshape[ifitting - 1];
-          m_StrongHalphaELPresentTplshape[ifitting] =
-              m_StrongHalphaELPresentTplshape[ifitting - 1];
-          m_NLinesAboveSNRTplshape[ifitting] =
-              m_NLinesAboveSNRTplshape[ifitting - 1];
+
           meritTplratio[ifitting] = meritTplratio[ifitting - 1];
           meritPriorTplratio[ifitting] = meritPriorTplratio[ifitting - 1];
-          for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-            m_FittedAmpTplshape[ifitting][iElts] =
-                m_FittedAmpTplshape[ifitting - 1][iElts];
-            m_FittedErrorTplshape[ifitting][iElts] =
-                m_FittedErrorTplshape[ifitting - 1][iElts];
-            m_DtmTplshape[ifitting][iElts] = m_DtmTplshape[ifitting - 1][iElts];
-            m_MtmTplshape[ifitting][iElts] = m_MtmTplshape[ifitting - 1][iElts];
-
-            m_LyaAsymCoeffTplshape[ifitting][iElts] =
-                m_LyaAsymCoeffTplshape[ifitting - 1][iElts];
-            m_LyaWidthCoeffTplshape[ifitting][iElts] =
-                m_LyaWidthCoeffTplshape[ifitting - 1][iElts];
-            m_LyaDeltaCoeffTplshape[ifitting][iElts] =
-                m_LyaDeltaCoeffTplshape[ifitting - 1][iElts];
-            m_LyaIgmIdxTplshape[ifitting][iElts] =
-                m_LyaIgmIdxTplshape[ifitting - 1][iElts];
-            m_LinesLogPriorTplshape[ifitting][iElts] =
-                m_LinesLogPriorTplshape[ifitting - 1][iElts];
-          }
+          duplicateTplratioResult(ifitting);
           continue;
         }
         setTplshapeModel(ifitting, false);
@@ -2133,7 +2210,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             }
             std::string category = m_tplCategoryList[i];
 
-            for( Int32 j=0; j<m_tplCatalog->GetTemplateCount( category ); j++ )
+            for( Int32 j=0; j<m_tplCatalog->GetTemplateCount( category ); j++
+        )
             {
                 if(stop_loop_tpl)
                 {
@@ -2407,93 +2485,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           }
         }
 
-        if ((_merit + _meritprior) <
+        if (_merit + _meritprior <
             meritTplratio[ifitting] + meritPriorTplratio[ifitting]) {
+          // update local variables
           meritTplratio[ifitting] = _merit;
           meritPriorTplratio[ifitting] = _meritprior;
-          m_ChisquareTplshape[ifitting] = _merit;
-          m_ScaleMargCorrTplshape[ifitting] = getScaleMargCorrection();
-          m_StrongELPresentTplshape[ifitting] =
-              GetModelStrongEmissionLinePresent();
-          // given that Ha is a strong emission line,
-          if (m_opt_haprior > 0.) // check first that haprior is activated
-            m_StrongHalphaELPresentTplshape[ifitting] =
-                m_StrongELPresentTplshape[ifitting]
-                    ? GetModelHaStrongest()
-                    : false; // result per tplratio
-
-          TStringList strongELSNRAboveCut; // = getLinesAboveSNR(3.5); //this
-                                           // is costing a lot of processing
-                                           // time, so deactivated for now.
-          m_NLinesAboveSNRTplshape[ifitting] = strongELSNRAboveCut.size();
-
-          // Saving the model A, errorA, and dtm, mtm, ... (for all tplratios,
-          // needed ?) NB: this is only needed for the index=savedIdxFitted
-          // ultimately
-          for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-            m_LinesLogPriorTplshape[ifitting][iElts] = _meritprior;
-
-            bool savedAmp = false;
-            // init
-            //*
-            m_FittedAmpTplshape[ifitting][iElts] = NAN;
-            m_FittedErrorTplshape[ifitting][iElts] = NAN;
-            m_DtmTplshape[ifitting][iElts] = NAN;
-            m_MtmTplshape[ifitting][iElts] = NAN;
-            m_LyaAsymCoeffTplshape[ifitting][iElts] = NAN;
-            m_LyaWidthCoeffTplshape[ifitting][iElts] = NAN;
-            m_LyaDeltaCoeffTplshape[ifitting][iElts] = NAN;
-            m_LyaIgmIdxTplshape[ifitting][iElts] = undefIdx;
-            bool allampzero = true;
-            //*/
-
-            Int32 nLines = m_Elements[iElts]->GetSize();
-            for (Int32 j = 0; j < nLines; j++) {
-              if (savedAmp) {
-                break;
-              }
-              Float64 amp = m_Elements[iElts]->GetFittedAmplitude(j);
-              if (amp > 0) {
-                allampzero = false;
-              }
-              if (amp > 0 && !m_Elements[iElts]->IsOutsideLambdaRange(j)) {
-
-                Float64 amp_error =
-                    m_Elements[iElts]->GetFittedAmplitudeErrorSigma(j);
-                Float64 nominal_amp = m_Elements[iElts]->GetNominalAmplitude(j);
-                m_FittedAmpTplshape[ifitting][iElts] = amp / nominal_amp;
-                Log.LogDebug(
-                    "    model : fit tplratio mode, tplratio_fittedamp: %e",
-                    m_FittedAmpTplshape[ifitting][iElts]);
-
-                m_FittedErrorTplshape[ifitting][iElts] =
-                    amp_error / nominal_amp;
-                m_DtmTplshape[ifitting][iElts] =
-                    m_Elements[iElts]->GetSumCross();
-                m_MtmTplshape[ifitting][iElts] =
-                    m_Elements[iElts]->GetSumGauss();
-
-                TAsymParams params = m_Elements[iElts]->GetAsymfitParams(0);
-                m_LyaAsymCoeffTplshape[ifitting][iElts] = params.alpha;
-                m_LyaWidthCoeffTplshape[ifitting][iElts] = params.sigma;
-                m_LyaDeltaCoeffTplshape[ifitting][iElts] = params.delta;
-
-                TSymIgmParams params_igm =
-                    m_Elements[iElts]->GetSymIgmParams(0);
-                m_LyaIgmIdxTplshape[ifitting][iElts] = params_igm.m_igmidx;
-
-                savedAmp = true;
-                break;
-              }
-            }
-
-            if (allampzero &&
-                !savedAmp) // TODO: this case should be treated more
-                           // carefully, save dtm, mtm, and more...
-            {
-              m_FittedAmpTplshape[ifitting][iElts] = 0.0;
-            }
-          }
+          // update class variables
+          updateTplratioResults(ifitting, _merit, _meritprior);
         }
 
         if (merit + meritprior > _merit + _meritprior) {
@@ -2531,22 +2529,15 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       //   sqrt(merit*merit/2.0-log(tplshapePriorCoeff));
       // }
 
-      if (m_ContinuumComponent == "nocontinuum") {
+      if (m_ContinuumComponent == "nocontinuum")
         reinitModel();
-      }
     }
   }
 
   if (enableLogging) {
-    if (m_ContinuumComponent == "tplfit" ||
-        m_ContinuumComponent == "tplfitauto") {
+    if (isContinuumComponentTplfitxx()) {
       if (ncontinuumfitting > 1 && m_fittingmethod != "svdlc") {
-        Int32 autoselect = 0;
-        if (m_ContinuumComponent == "tplfit") {
-          autoselect = 0;
-        } else if (m_ContinuumComponent == "tplfitauto") {
-          autoselect = 1;
-        }
+        Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
         // TODO savedIdxContinuumFitted=-1 if rigidity!=tplshape
         LoadFitContinuum(savedIdxContinuumFitted, autoselect);
       }
@@ -4117,10 +4108,9 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
  * and asymmetry parameters according to profile parameters given in the
  * string
  * @param redshift, catalog (could be tplshape or linecatalog)
- * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if Lya
- * not configured to be fitted in the catalog
- * note: this applies to all asym or symigm profiles (for symigm: all lines
- * below Lya)
+ * @return 1 if successfully fitted, 0 if error, 2 if Lya not present, 3 if
+ * Lya not configured to be fitted in the catalog note: this applies to all
+ * asym or symigm profiles (for symigm: all lines below Lya)
  */
 void CLineModelFitting::setLyaProfile(Float64 redshift,
                                       const CLineCatalog::TLineVector &catalog,
@@ -4203,8 +4193,7 @@ void CLineModelFitting::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
 
-  bool fixedIGM =
-      m_ContinuumComponent == "tplfit" || m_ContinuumComponent == "tplfitauto";
+  bool fixedIGM = isContinuumComponentTplfitxx();
 
   // set to false when continuum is fitted to null
   fixedIGM &=
@@ -4610,8 +4599,7 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
     //        }
   }
 
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx()) {
     fit += m_fitContinuum_tplFitMerit_phot; // unconditionnal sum (if photometry
                                             // disabled, will sum 0.0)
     fit += m_fitContinuum_tplFitLogprior;
@@ -4678,8 +4666,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
     fit += (diff * diff) / (ErrorNoContinuum[j] * ErrorNoContinuum[j]);
   }
 
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx()) {
     fit += m_fitContinuum_tplFitLogprior;
   }
 
@@ -4713,15 +4700,15 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
 
   fit = m_dTransposeD;
 
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
-    Float64 term1 = m_fitContinuum_tplFitAmplitude *
-                    m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitMtM;
-    Float64 term2 =
-        -2. * m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitDtM;
-    fit += term1 + term2;
-    fit += m_fitContinuum_tplFitLogprior;
-  }
+  if (!isContinuumComponentTplfitxx())
+    return fit;
+
+  Float64 term1 = m_fitContinuum_tplFitAmplitude *
+                  m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitMtM;
+  Float64 term2 =
+      -2. * m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitDtM;
+  fit += term1 + term2;
+  fit += m_fitContinuum_tplFitLogprior;
 
   return fit;
 }
@@ -4762,17 +4749,18 @@ Float64 CLineModelFitting::getContinuumScaleMargCorrection() const {
   Float64 corr = 0.0;
 
   // scale marg for continuum
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent ==
-          "tplfitauto") // the support has to be already computed when
-                        // LoadFitContinuum() is called
-  {
+  if (isContinuumComponentTplfitxx()) // the support has to be already
+                                      // computed when LoadFitContinuum() is
+                                      // called
     corr += log(m_fitContinuum_tplFitMtM);
-  }
 
   return corr;
 }
 
+bool CLineModelFitting::isContinuumComponentTplfitxx() const {
+  return m_ContinuumComponent == "tplfit" ||
+         m_ContinuumComponent == "tplfitauto";
+}
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/

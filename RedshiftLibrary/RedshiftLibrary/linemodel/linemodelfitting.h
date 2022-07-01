@@ -279,7 +279,12 @@ public:
   Int32 GetPassNumber() const;
 
   void SetForcedisableTplratioISMfit(bool opt);
-
+  void prepareAndLoadContinuum(Int32 icontfitting);
+  void computeSpectrumFluxWithoutContinuum();
+  bool isContinuumComponentTplfitxx() const;
+  void duplicateTplratioResult(Int32 ifitting);
+  void updateTplratioResults(Int32 ifitting, Float64 _merit,
+                             Float64 _meritprior);
   CLineCatalogsTplShape m_CatalogTplShape;
   TFloat64List m_ChisquareTplshape;
   std::vector<TFloat64List> m_FittedAmpTplshape;
