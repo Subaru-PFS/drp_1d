@@ -91,7 +91,7 @@ const TLineVector CProcessFlowContext::getLineVector() {
       m_parameterStore->GetScoped<std::string>("lineforcefilter"));
 }
 
-std::shared_ptr<CLineCatalogsTplShape>
+std::shared_ptr<CLineCatalogsTplRatio>
 CProcessFlowContext::GetTplRatioCatalog() {
   return m_inputContext->GetTemplateRatioCatalog(m_ScopeStack[0]);
 }

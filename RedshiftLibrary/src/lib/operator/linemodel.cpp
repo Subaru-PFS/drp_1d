@@ -104,7 +104,7 @@ Int32 COperatorLineModel::ComputeFirstPass() {
       *(Context.GetRebinnedSpectrum()); // this is temporary
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
-  const CLineCatalogsTplShape &tplRatioCatalog =
+  const CLineCatalogsTplRatio &tplRatioCatalog =
       *(Context.GetTplRatioCatalog());
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
@@ -133,7 +133,7 @@ Int32 COperatorLineModel::ComputeFirstPass() {
     for (const auto &category : m_tplCategoryList)
       nfitcontinuum += tplCatalog->GetTemplateCount(category);
   m_result->Init(m_sortedRedshifts, Context.getLineVector(), nfitcontinuum,
-                 m_model->getTplshape_count(), m_model->getTplshape_priors());
+                 m_model->getTplratio_count(), m_model->getTplratio_priors());
 
   Log.LogInfo("  Operator-Linemodel: initialized");
 
@@ -193,8 +193,8 @@ Int32 COperatorLineModel::ComputeFirstPass() {
   Int32 indexLargeGrid = 0;
   TFloat64List calculatedLargeGridRedshifts;
   TFloat64List calculatedLargeGridMerits;
-  std::vector<TFloat64List> calculatedChiSquareTplshapes(
-      m_result->ChiSquareTplshapes.size());
+  std::vector<TFloat64List> calculatedChiSquareTplratios(
+      m_result->ChiSquareTplratios.size());
   std::vector<TFloat64List> calculatedChisquareTplContinuum(
       m_result->ChiSquareTplContinuum.size());
 
@@ -221,16 +221,16 @@ Int32 COperatorLineModel::ComputeFirstPass() {
               m_result->ChiSquareTplContinuum[k][i]);
         }
       }
-      m_result->SetChisquareTplshapeResult(
-          i, m_model->GetChisquareTplshape(), m_model->GetScaleMargTplshape(),
-          m_model->GetStrongELPresentTplshape(),
-          m_model->getHaELPresentTplshape(),
-          m_model->GetNLinesAboveSNRTplshape(),
-          m_model->GetPriorLinesTplshape());
+      m_result->SetChisquareTplratioResult(
+          i, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
+          m_model->GetStrongELPresentTplratio(),
+          m_model->getHaELPresentTplratio(),
+          m_model->GetNLinesAboveSNRTplratio(),
+          m_model->GetPriorLinesTplratio());
 
-      for (Int32 k = 0, s = m_result->ChiSquareTplshapes.size(); k < s; k++) {
-        calculatedChiSquareTplshapes[k].push_back(
-            m_result->ChiSquareTplshapes[k][i]);
+      for (Int32 k = 0, s = m_result->ChiSquareTplratios.size(); k < s; k++) {
+        calculatedChiSquareTplratios[k].push_back(
+            m_result->ChiSquareTplratios[k][i]);
       }
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[i] =
@@ -254,13 +254,13 @@ Int32 COperatorLineModel::ComputeFirstPass() {
       m_result->ContinuumModelSolutions[i] =
           m_result->ContinuumModelSolutions[i - 1];
       m_result->SetChisquareTplContinuumResultFromPrevious(i);
-      m_result->SetChisquareTplshapeResult(
-          i, m_result->getChisquareTplshapeResult(i - 1),
-          m_result->getScaleMargCorrTplshapeResult(i - 1),
-          m_result->getStrongELPresentTplshapeResult(i - 1),
-          m_result->getHaELPresentTplshapeResult(i - 1),
-          m_result->getNLinesAboveSNRTplshapeResult(i - 1),
-          m_result->getPriorLinesTplshapeResult(i - 1));
+      m_result->SetChisquareTplratioResult(
+          i, m_result->getChisquareTplratioResult(i - 1),
+          m_result->getScaleMargCorrTplratioResult(i - 1),
+          m_result->getStrongELPresentTplratioResult(i - 1),
+          m_result->getHaELPresentTplratioResult(i - 1),
+          m_result->getNLinesAboveSNRTplratioResult(i - 1),
+          m_result->getPriorLinesTplratioResult(i - 1));
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[i] =
             m_model->getLeastSquareContinuumMerit();
@@ -311,12 +311,12 @@ Int32 COperatorLineModel::ComputeFirstPass() {
     }
   }
 
-  for (Int32 kts = 0, s = m_result->ChiSquareTplshapes.size(); kts < s; kts++) {
-    if (m_result->Redshifts.size() > calculatedChiSquareTplshapes[kts].size() &&
-        calculatedChiSquareTplshapes[kts].size() > 1) {
+  for (Int32 kts = 0, s = m_result->ChiSquareTplratios.size(); kts < s; kts++) {
+    if (m_result->Redshifts.size() > calculatedChiSquareTplratios[kts].size() &&
+        calculatedChiSquareTplratios[kts].size() > 1) {
       interpolateLargeGridOnFineGrid(
           calculatedLargeGridRedshifts, m_result->Redshifts,
-          calculatedChiSquareTplshapes[kts], m_result->ChiSquareTplshapes[kts]);
+          calculatedChiSquareTplratios[kts], m_result->ChiSquareTplratios[kts]);
     }
   }
 
@@ -924,7 +924,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
       *(Context.GetRebinnedSpectrum()); // this is temporary
   std::shared_ptr<const CTemplateCatalog> tplCatalog =
       Context.GetTemplateCatalog();
-  const CLineCatalogsTplShape &tplRatioCatalog =
+  const CLineCatalogsTplRatio &tplRatioCatalog =
       *(Context.GetTplRatioCatalog());
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
@@ -1205,12 +1205,12 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
           m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
       m_result->ScaleMargCorrection[idx] = m_model->getScaleMargCorrection();
-      m_result->SetChisquareTplshapeResult(
-          idx, m_model->GetChisquareTplshape(), m_model->GetScaleMargTplshape(),
-          m_model->GetStrongELPresentTplshape(),
-          m_model->getHaELPresentTplshape(),
-          m_model->GetNLinesAboveSNRTplshape(),
-          m_model->GetPriorLinesTplshape());
+      m_result->SetChisquareTplratioResult(
+          idx, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
+          m_model->GetStrongELPresentTplratio(),
+          m_model->getHaELPresentTplratio(),
+          m_model->GetNLinesAboveSNRTplratio(),
+          m_model->GetPriorLinesTplratio());
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[idx] =
             m_model->getLeastSquareContinuumMerit();
@@ -1490,7 +1490,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
         // fit the emission and absorption width by minimizing the
         // linemodel merit with linemodel "hybrid" fitting method
         m_model->SetFittingMethod("hybrid");
-        if (opt_rigidity == "tplshape") {
+        if (opt_rigidity == "tplratio") {
           m_model->SetFittingMethod("individual");
         }
         m_model->SetForcedisableTplratioISMfit(
@@ -1864,12 +1864,12 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
         // nothing to do when fromfirstpass: keep
         // m_result->ChiSquareTplContinuum from first pass
       }
-      m_result->SetChisquareTplshapeResult(
-          iz, m_model->GetChisquareTplshape(), m_model->GetScaleMargTplshape(),
-          m_model->GetStrongELPresentTplshape(),
-          m_model->getHaELPresentTplshape(),
-          m_model->GetNLinesAboveSNRTplshape(),
-          m_model->GetPriorLinesTplshape());
+      m_result->SetChisquareTplratioResult(
+          iz, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
+          m_model->GetStrongELPresentTplratio(),
+          m_model->getHaELPresentTplratio(),
+          m_model->GetNLinesAboveSNRTplratio(),
+          m_model->GetPriorLinesTplratio());
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[iz] =
             m_model->getLeastSquareContinuumMerit();
@@ -2106,7 +2106,7 @@ CLineModelSolution COperatorLineModel::fitWidthByGroups(
 
   m_model->SetFittingMethod("hybrid");
 
-    if (opt_rigidity == "tplshape")
+    if (opt_rigidity == "tplratio")
     {
     m_model->SetFittingMethod("individual");
     }

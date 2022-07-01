@@ -36,8 +36,8 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_LINE_CATALOGSTPLSHAPE_
-#define _REDSHIFT_LINE_CATALOGSTPLSHAPE_
+#ifndef _REDSHIFT_LINE_CATALOGSTPLRATIO_
+#define _REDSHIFT_LINE_CATALOGSTPLRATIO_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -57,7 +57,7 @@ class CLineModelElementList;
 /**
  * \ingroup Redshift
  */
-class CLineCatalogsTplShape {
+class CLineCatalogsTplRatio {
 
 public:
   bool Init(Int32 enableISMCalzetti,

@@ -46,7 +46,7 @@
 #include <gsl/gsl_vector.h>
 
 #include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/line/regulament.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
@@ -148,20 +148,20 @@ public:
   Float64 getDTransposeD();
   Float64 getLikelihood_cstLog();
 
-  const std::string &getTplshape_bestTplName() const;
-  Float64 getTplshape_bestTplIsmCoeff() const;
-  Float64 getTplshape_bestAmplitude() const;
-  Float64 getTplshape_bestDtm() const;
-  Float64 getTplshape_bestMtm() const;
-  Int32 getTplshape_count() const;
-  const TFloat64List &getTplshape_priors();
-  const TFloat64List &GetChisquareTplshape() const;
-  TFloat64List GetPriorLinesTplshape() const;
-  const TFloat64List &GetScaleMargTplshape() const;
-  const TBoolList &GetStrongELPresentTplshape() const;
-  const TBoolList &getHaELPresentTplshape() const;
-  const TInt32List &GetNLinesAboveSNRTplshape() const;
-  void SetTplshape_PriorHelper();
+  const std::string &getTplratio_bestTplName() const;
+  Float64 getTplratio_bestTplIsmCoeff() const;
+  Float64 getTplratio_bestAmplitude() const;
+  Float64 getTplratio_bestDtm() const;
+  Float64 getTplratio_bestMtm() const;
+  Int32 getTplratio_count() const;
+  const TFloat64List &getTplratio_priors();
+  const TFloat64List &GetChisquareTplratio() const;
+  TFloat64List GetPriorLinesTplratio() const;
+  const TFloat64List &GetScaleMargTplratio() const;
+  const TBoolList &GetStrongELPresentTplratio() const;
+  const TBoolList &getHaELPresentTplratio() const;
+  const TInt32List &GetNLinesAboveSNRTplratio() const;
+  void SetTplratio_PriorHelper();
 
   Int32 GetNElements() const;
 
@@ -186,8 +186,8 @@ public:
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
   void initTplratioCatalogs(Int32 opt_tplratio_ismFit);
 
-  bool setTplshapeModel(Int32 itplshape, bool enableSetVelocity = false);
-  bool setTplshapeAmplitude(const TFloat64List &ampsElts,
+  bool setTplratioModel(Int32 itplratio, bool enableSetVelocity = false);
+  bool setTplratioAmplitude(const TFloat64List &ampsElts,
                             const TFloat64List &errorsElts);
 
   std::vector<std::shared_ptr<CLmfitController>> createLmfitControllers();
@@ -285,17 +285,17 @@ public:
   void duplicateTplratioResult(Int32 ifitting);
   void updateTplratioResults(Int32 ifitting, Float64 _merit,
                              Float64 _meritprior);
-  CLineCatalogsTplShape m_CatalogTplShape;
-  TFloat64List m_ChisquareTplshape;
-  std::vector<TFloat64List> m_FittedAmpTplshape;
-  std::vector<TFloat64List> m_FittedErrorTplshape;
-  std::vector<TFloat64List> m_MtmTplshape;
-  std::vector<TFloat64List> m_DtmTplshape;
-  std::vector<TFloat64List> m_LyaAsymCoeffTplshape;
-  std::vector<TFloat64List> m_LyaWidthCoeffTplshape;
-  std::vector<TFloat64List> m_LyaDeltaCoeffTplshape;
-  std::vector<TInt32List> m_LyaIgmIdxTplshape;
-  std::vector<TFloat64List> m_LinesLogPriorTplshape;
+  CLineCatalogsTplRatio m_CatalogTplRatio;
+  TFloat64List m_ChisquareTplratio;
+  std::vector<TFloat64List> m_FittedAmpTplratio;
+  std::vector<TFloat64List> m_FittedErrorTplratio;
+  std::vector<TFloat64List> m_MtmTplratio;
+  std::vector<TFloat64List> m_DtmTplratio;
+  std::vector<TFloat64List> m_LyaAsymCoeffTplratio;
+  std::vector<TFloat64List> m_LyaWidthCoeffTplratio;
+  std::vector<TFloat64List> m_LyaDeltaCoeffTplratio;
+  std::vector<TInt32List> m_LyaIgmIdxTplratio;
+  std::vector<TFloat64List> m_LinesLogPriorTplratio;
 
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
@@ -389,10 +389,10 @@ private:
                               Float64 &sumFlux, Float64 &sumErr) const;
   CRegulament m_Regulament;
 
-  TFloat64List m_ScaleMargCorrTplshape;
-  TBoolList m_StrongELPresentTplshape;
-  TBoolList m_StrongHalphaELPresentTplshape;
-  TInt32List m_NLinesAboveSNRTplshape;
+  TFloat64List m_ScaleMargCorrTplratio;
+  TBoolList m_StrongELPresentTplratio;
+  TBoolList m_StrongHalphaELPresentTplratio;
+  TInt32List m_NLinesAboveSNRTplratio;
 
   Float64 m_Redshift;
 
@@ -435,14 +435,14 @@ private:
 
   std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   TStringList m_tplCategoryList;
-  std::string m_tplshapeBestTplName = "None";
-  Float64 m_tplshapeBestTplIsmCoeff = NAN;
-  Float64 m_tplshapeBestTplAmplitude = NAN;
-  Float64 m_tplshapeBestTplDtm = NAN;
-  Float64 m_tplshapeBestTplMtm = NAN;
-  Int32 m_tplshapeLeastSquareFast =
-      0; // for rigidity=tplshape: switch to use fast least square estimation
-  std::shared_ptr<CPriorHelper> m_tplshape_priorhelper;
+  std::string m_tplratioBestTplName = "None";
+  Float64 m_tplratioBestTplIsmCoeff = NAN;
+  Float64 m_tplratioBestTplAmplitude = NAN;
+  Float64 m_tplratioBestTplDtm = NAN;
+  Float64 m_tplratioBestTplMtm = NAN;
+  Int32 m_tplratioLeastSquareFast =
+      0; // for rigidity=tplratio: switch to use fast least square estimation
+  std::shared_ptr<CPriorHelper> m_tplratio_priorhelper;
 
   std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
   Int32 m_secondpass_fitContinuum_dustfit;

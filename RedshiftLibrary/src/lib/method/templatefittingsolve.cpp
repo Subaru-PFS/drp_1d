@@ -420,7 +420,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
           logLikelihoodCorrected[kz] =
               meritResult->ChiSquareIntermediate
                   [kz][kism]
-                  [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                  [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
         Log.LogDetail("    templatefittingsolve: Pdfz combine - prepared merit "
                       " #%d for model : %s",

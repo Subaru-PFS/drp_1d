@@ -350,7 +350,7 @@ ChisquareArray CTplcombinationSolve::BuildChisquareArray(
           logLikelihoodCorrected[kz] =
               result->ChiSquareIntermediate
                   [kz][kism]
-                  [kigm]; // + resultXXX->ScaleMargCorrectionTplshapes[][]?;
+                  [kigm]; // + resultXXX->ScaleMargCorrectionTplratios[][]?;
         }
         Log.LogDetail("    tplcombinationsolve: Pdfz combine - prepared merit "
                       "#%d for ism=%d, igm=%d",

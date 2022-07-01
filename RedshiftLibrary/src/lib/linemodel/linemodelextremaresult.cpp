@@ -81,11 +81,11 @@ void TLineModelResult::updateContinuumFromModel(
 
 void TLineModelResult::updateTplRatioFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel) {
-  FittedTplratioName = lmel->getTplshape_bestTplName();
-  FittedTplratioIsmCoeff = lmel->getTplshape_bestTplIsmCoeff();
-  FittedTplratioAmplitude = lmel->getTplshape_bestAmplitude();
-  FittedTplratioDtm = lmel->getTplshape_bestDtm();
-  FittedTplratioMtm = lmel->getTplshape_bestMtm();
+  FittedTplratioName = lmel->getTplratio_bestTplName();
+  FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
+  FittedTplratioAmplitude = lmel->getTplratio_bestAmplitude();
+  FittedTplratioDtm = lmel->getTplratio_bestDtm();
+  FittedTplratioMtm = lmel->getTplratio_bestMtm();
 }
 
 void TLineModelResult::updateFromModel(

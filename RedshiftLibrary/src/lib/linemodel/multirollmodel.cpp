@@ -58,7 +58,7 @@ CMultiRollModel::CMultiRollModel(
     const CTemplateCatalog &tplCatalog, const TStringList &tplCategoryList,
     const std::string calibrationPath,
     const CLineCatalog::TLineVector &restLineList,
-    const CLineCatalogsTplShape &tplRatioCatalog,
+    const CLineCatalogsTplRatio &tplRatioCatalog,
     const std::string &opt_fittingmethod,
     const std::string &opt_continuumcomponent,
     const Float64 opt_continuum_neg_threshold,
@@ -192,33 +192,33 @@ CMultiRollModel::GetContaminantSpectrumResult(Int32 iRoll) {
 Int32 CMultiRollModel::setPassMode(Int32 iPass) { return 0; }
 
 bool CMultiRollModel::initTplratioCatalogs(
-    const CLineCatalogsTplShape &tplRatioCatalog, Int32 opt_tplratio_ismFit) {
+    const CLineCatalogsTplRatio &tplRatioCatalog, Int32 opt_tplratio_ismFit) {
   bool ret = -1;
   for (Int32 km = 0; km < m_models.size(); km++) {
-    m_models[km]->m_CatalogTplShape = tplRatioCatalog;
+    m_models[km]->m_CatalogTplRatio = tplRatioCatalog;
     m_models[km]->initTplratioCatalogs(opt_tplratio_ismFit);
   }
 
   //
-  if (m_models.size() > 0 && m_opt_rigidity == "tplshape") {
-    Int32 nTplshape = m_models[0]->getTplshape_count();
-    m_chi2tplshape.resize(nTplshape);
+  if (m_models.size() > 0 && m_opt_rigidity == "tplratio") {
+    Int32 nTplratio = m_models[0]->getTplratio_count();
+    m_chi2tplratio.resize(nTplratio);
   }
 
   return ret;
 }
 
-Int32 CMultiRollModel::getTplshape_count() {
+Int32 CMultiRollModel::getTplratio_count() {
   if (m_models.size() > 0) {
-    return m_models[0]->getTplshape_count();
+    return m_models[0]->getTplratio_count();
   } else {
     return -1;
   }
 }
 
-TFloat64List CMultiRollModel::getTplshape_priors() {
+TFloat64List CMultiRollModel::getTplratio_priors() {
   if (m_models.size() > 0) {
-    return m_models[0]->getTplshape_priors();
+    return m_models[0]->getTplratio_priors();
   } else {
     TFloat64List dumb;
     return dumb;
@@ -292,7 +292,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
   bool enableOverrideMonolinemodelFit = true;
 
   if (enableOverrideMonolinemodelFit) {
-    if (m_opt_rigidity != "tplshape") {
+    if (m_opt_rigidity != "tplratio") {
       /*
       //set amps from ref model
       Int32 irefModel = 0;
@@ -368,13 +368,13 @@ Float64 CMultiRollModel::fit(Float64 redshift,
       merit = valf;
       //*/
     } else {
-      Int32 nTplshape = m_models[0]->getTplshape_count();
-      // TFloat64List chi2tplshape(nTplshape, DBL_MAX);
-      Float64 minChi2Tplshape = DBL_MAX;
-      Int32 iBestTplshape = -1;
+      Int32 nTplratio = m_models[0]->getTplratio_count();
+      // TFloat64List chi2tplratio(nTplratio, DBL_MAX);
+      Float64 minChi2Tplratio = DBL_MAX;
+      Int32 iBestTplratio = -1;
 
       std::vector<TFloat64List> multifit_amps;
-      for (Int32 kts = 0; kts < nTplshape; kts++) {
+      for (Int32 kts = 0; kts < nTplratio; kts++) {
 
         /*
         //estimate the error weighted average amps over models
@@ -385,11 +385,11 @@ Float64 CMultiRollModel::fit(Float64 redshift,
             Float64 weightSum = 0;
             for(Int32 km=0; km<m_models.size(); km++)
             {
-                Float64 err = m_models[km]->m_FittedErrorTplshape[kts][k];
+                Float64 err = m_models[km]->m_FittedErrorTplratio[kts][k];
                 if(err>0.0)
                 {
                     Float64 weight = 1/(err*err);
-                    amps[k] += m_models[km]->m_FittedAmpTplshape[kts][k]*weight;
+                    amps[k] += m_models[km]->m_FittedAmpTplratio[kts][k]*weight;
                     weightSum += weight;
                 }
             }
@@ -400,7 +400,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
             if(enableLogging)
             {
-                Log.LogDetail( "Multifit: for tplshape=%d, for kElt=%d found
+                Log.LogDetail( "Multifit: for tplratio=%d, for kElt=%d found
         A=%f", kts, k, amps[k] );
             }
         }
@@ -415,8 +415,8 @@ Float64 CMultiRollModel::fit(Float64 redshift,
           dtm_combined.push_back(0.0);
           mtm_combined.push_back(0.0);
           for (Int32 km = 0; km < m_models.size(); km++) {
-            dtm_combined[k] += m_models[km]->m_DtmTplshape[kts][k];
-            mtm_combined[k] += m_models[km]->m_MtmTplshape[kts][k];
+            dtm_combined[k] += m_models[km]->m_DtmTplratio[kts][k];
+            mtm_combined[k] += m_models[km]->m_MtmTplratio[kts][k];
           }
         }
         for (Int32 k = 0; k < m_models[0]->m_Elements.size(); k++) {
@@ -428,7 +428,7 @@ Float64 CMultiRollModel::fit(Float64 redshift,
           amps[k] = _amp;
 
           if (enableLogging) {
-            Log.LogDetail("    multirollmodel: Multifit: for tplshape=%d, for "
+            Log.LogDetail("    multirollmodel: Multifit: for tplratio=%d, for "
                           "kElt=%d found A=%f",
                           kts, k, amps[k]);
           }
@@ -437,13 +437,13 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
         multifit_amps.push_back(amps);
 
-        // re-compute the lst-square and store it for current tplshape
+        // re-compute the lst-square and store it for current tplratio
         for (Int32 km = 0; km < m_models.size(); km++) {
 
-          // set the tplshape
-          m_models[km]->setTplshapeModel(kts, false);
-          // set the tplshape amplitude
-          // m_models[km]->setTplshapeAmplitude( ampsElts, errorsElts);
+          // set the tplratio
+          m_models[km]->setTplratioModel(kts, false);
+          // set the tplratio amplitude
+          // m_models[km]->setTplratioAmplitude( ampsElts, errorsElts);
 
           for (Int32 k = 0; k < m_models[km]->m_Elements.size(); k++) {
             m_models[km]->m_Elements[k]->SetFittedAmplitude(amps[k], 0.0);
@@ -458,25 +458,25 @@ Float64 CMultiRollModel::fit(Float64 redshift,
 
         if (enableLogging) {
           Log.LogDetail(
-              "    multirollmodel: Multifit: for tplshape=%d, found lst-sq=%f",
+              "    multirollmodel: Multifit: for tplratio=%d, found lst-sq=%f",
               kts, valf);
         }
-        m_chi2tplshape[kts] = valf;
-        if (minChi2Tplshape > valf) {
-          minChi2Tplshape = valf;
-          iBestTplshape = kts;
+        m_chi2tplratio[kts] = valf;
+        if (minChi2Tplratio > valf) {
+          minChi2Tplratio = valf;
+          iBestTplratio = kts;
           modelSolution = m_models[mIndexExportModel]->GetModelSolution();
         }
       }
-      merit = minChi2Tplshape;
+      merit = minChi2Tplratio;
 
       // set the model to the min chi2 model, for export
       if (enableLogging) {
         for (Int32 km = 0; km < m_models.size(); km++) {
-          m_models[km]->setTplshapeModel(iBestTplshape, false);
+          m_models[km]->setTplratioModel(iBestTplratio, false);
           for (Int32 k = 0; k < m_models[km]->m_Elements.size(); k++) {
             m_models[km]->m_Elements[k]->SetFittedAmplitude(
-                multifit_amps[iBestTplshape][k], 0.0);
+                multifit_amps[iBestTplratio][k], 0.0);
           }
           m_models[km]->refreshModel();
         }
@@ -497,58 +497,58 @@ Float64 CMultiRollModel::getScaleMargCorrection(Int32 idxLine) {
   return valf;
 }
 
-TFloat64List CMultiRollModel::GetChisquareTplshape() {
+TFloat64List CMultiRollModel::GetChisquareTplratio() {
   /*
-  TFloat64List chi2tplshape;
+  TFloat64List chi2tplratio;
   if(m_models.size()>0)
   {
-      chi2tplshape = m_models[0]->GetChisquareTplshape();
+      chi2tplratio = m_models[0]->GetChisquareTplratio();
   }
   for(Int32 km=1; km<m_models.size(); km++)
   {
-      TFloat64List _chi2tplshape = m_models[km]->GetChisquareTplshape();
-      for(Int32 ktpl=0; ktpl<_chi2tplshape.size(); ktpl++)
+      TFloat64List _chi2tplratio = m_models[km]->GetChisquareTplratio();
+      for(Int32 ktpl=0; ktpl<_chi2tplratio.size(); ktpl++)
       {
-          chi2tplshape[ktpl] += _chi2tplshape[ktpl];
+          chi2tplratio[ktpl] += _chi2tplratio[ktpl];
       }
   }
-  return chi2tplshape;
+  return chi2tplratio;
   //*/
 
-  return m_chi2tplshape;
+  return m_chi2tplratio;
 }
 
-TFloat64List CMultiRollModel::GetScaleMargTplshape() {
-  TFloat64List scaleMargtplshape;
+TFloat64List CMultiRollModel::GetScaleMargTplratio() {
+  TFloat64List scaleMargtplratio;
   if (m_models.size() > 0) {
-    scaleMargtplshape = m_models[0]->GetScaleMargTplshape();
+    scaleMargtplratio = m_models[0]->GetScaleMargTplratio();
   }
   for (Int32 km = 1; km < m_models.size(); km++) {
-    TFloat64List _scaleMargtplshape = m_models[km]->GetChisquareTplshape();
-    for (Int32 ktpl = 0; ktpl < _scaleMargtplshape.size(); ktpl++) {
-      scaleMargtplshape[ktpl] += _scaleMargtplshape[ktpl];
+    TFloat64List _scaleMargtplratio = m_models[km]->GetChisquareTplratio();
+    for (Int32 ktpl = 0; ktpl < _scaleMargtplratio.size(); ktpl++) {
+      scaleMargtplratio[ktpl] += _scaleMargtplratio[ktpl];
     }
   }
 
-  return scaleMargtplshape;
+  return scaleMargtplratio;
 }
 
 // todo: tbd, are these booleans to be combined by OR or AND ?
-TBoolList CMultiRollModel::GetStrongELPresentTplshape() {
-  TBoolList strongElPresentplshape;
+TBoolList CMultiRollModel::GetStrongELPresentTplratio() {
+  TBoolList strongElPresentplratio;
   if (m_models.size() > 0) {
-    strongElPresentplshape = m_models[0]->GetStrongELPresentTplshape();
+    strongElPresentplratio = m_models[0]->GetStrongELPresentTplratio();
   }
   for (Int32 km = 1; km < m_models.size(); km++) {
-    TBoolList _strongElPresentplshape =
-        m_models[km]->GetStrongELPresentTplshape();
-    for (Int32 ktpl = 0; ktpl < _strongElPresentplshape.size(); ktpl++) {
-      strongElPresentplshape[ktpl] =
-          strongElPresentplshape[ktpl] || _strongElPresentplshape[ktpl];
+    TBoolList _strongElPresentplratio =
+        m_models[km]->GetStrongELPresentTplratio();
+    for (Int32 ktpl = 0; ktpl < _strongElPresentplratio.size(); ktpl++) {
+      strongElPresentplratio[ktpl] =
+          strongElPresentplratio[ktpl] || _strongElPresentplratio[ktpl];
     }
   }
 
-  return strongElPresentplshape;
+  return strongElPresentplratio;
 }
 
 Float64 CMultiRollModel::getLeastSquareContinuumMerit() {
@@ -792,9 +792,9 @@ Float64 CMultiRollModel::getFitContinuum_tplIgmMeiksinIdx() {
 }
 
 // todo: tbd: which one should be returned in this multimodel case ?
-std::string CMultiRollModel::getTplshape_bestTplName() {
+std::string CMultiRollModel::getTplratio_bestTplName() {
   if (m_models.size() > 0) {
-    return m_models[0]->getTplshape_bestTplName();
+    return m_models[0]->getTplratio_bestTplName();
   } else {
     return "";
   }

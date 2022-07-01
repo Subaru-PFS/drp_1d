@@ -63,7 +63,7 @@ public:
                   const TStringList &tplCategoryList,
                   const std::string calibrationPath,
                   const CLineCatalog::TLineVector &restLineList,
-                  const CLineCatalogsTplShape &tplRatioCatalog,
+                  const CLineCatalogsTplRatio &tplRatioCatalog,
                   const std::string &opt_fittingmethod,
                   const std::string &opt_continuumcomponent,
                   const Float64 opt_continuum_neg_threshold,
@@ -82,16 +82,16 @@ public:
   std::shared_ptr<CModelSpectrumResult>
   GetContaminantSpectrumResult(Int32 iRoll);
 
-  Int32 getTplshape_count();
-  TFloat64List getTplshape_priors();
-  std::string getTplshape_bestTplName();
-  TFloat64List GetChisquareTplshape();
-  TFloat64List GetScaleMargTplshape();
-  TBoolList GetStrongELPresentTplshape();
+  Int32 getTplratio_count();
+  TFloat64List getTplratio_priors();
+  std::string getTplratio_bestTplName();
+  TFloat64List GetChisquareTplratio();
+  TFloat64List GetScaleMargTplratio();
+  TBoolList GetStrongELPresentTplratio();
   Float64 getLeastSquareContinuumMerit();
   Float64 getLeastSquareContinuumMeritFast();
   Float64 getContinuumScaleMargCorrection();
-  bool initTplratioCatalogs(const CLineCatalogsTplShape &tplRatioCatalog,
+  bool initTplratioCatalogs(const CLineCatalogsTplRatio &tplRatioCatalog,
                             Int32 opt_tplratio_ismFit);
 
   Int32 getSpcNSamples();
@@ -145,7 +145,7 @@ public:
 
 private:
   std::string m_opt_rigidity;
-  TFloat64List m_chi2tplshape;
+  TFloat64List m_chi2tplratio;
   Int32 mIndexExportModel = 0;
   const CLineCatalog::TLineVector &m_restLineList;
 };

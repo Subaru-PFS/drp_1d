@@ -234,7 +234,7 @@ void CLineModelSolve::GetZpriorsOptions(
 
 TFloat64List CLineModelSolve::BuildZpriors(
     const std::shared_ptr<const CLineModelResult> &result,
-    Int32 kTplShape) const {
+    Int32 kTplRatio) const {
   TFloat64List zpriors;
 
   CZPrior zpriorhelper;
@@ -247,7 +247,7 @@ TFloat64List CLineModelSolve::BuildZpriors(
                     zPriorEuclidNHa);
 
   if (zPriorStrongLinePresence) {
-    if (kTplShape == -1) {
+    if (kTplRatio == -1) {
       Int32 lineTypeFilter = 1; // for emission lines only
       const TBoolList strongLinePresence = result->getStrongLinesPresence(
           lineTypeFilter, result->LineModelSolutions);
@@ -255,7 +255,7 @@ TFloat64List CLineModelSolve::BuildZpriors(
           strongLinePresence, m_opt_stronglinesprior);
     } else {
       const TBoolList &strongLinePresence =
-          result->StrongELPresentTplshapes[kTplShape];
+          result->StrongELPresentTplratios[kTplRatio];
       zpriors = zpriorhelper.GetStrongLinePresenceLogZPrior(
           strongLinePresence, m_opt_stronglinesprior);
     }
@@ -266,14 +266,14 @@ TFloat64List CLineModelSolve::BuildZpriors(
 
   if (zPriorHaStrongestLine) {
     TFloat64List zlogPriorHaStrongest;
-    if (kTplShape == -1) {
+    if (kTplRatio == -1) {
       const TBoolList wHaStronglinePresence =
           result->getStrongestLineIsHa(result->LineModelSolutions);
       zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(
           wHaStronglinePresence, m_opt_haPrior);
     } else {
       const TBoolList &wHaStronglinePresence =
-          result->StrongHalphaELPresentTplshapes[kTplShape];
+          result->StrongHalphaELPresentTplratios[kTplRatio];
       zlogPriorHaStrongest = zpriorhelper.GetStrongLinePresenceLogZPrior(
           wHaStronglinePresence, m_opt_haPrior);
     }
@@ -289,14 +289,14 @@ TFloat64List CLineModelSolve::BuildZpriors(
   if (zPriorNLineSNR) {
     TFloat64List zlogPriorNLinesAboveSNR;
     TInt32List n_lines_above_snr;
-    if (kTplShape == -1) {
+    if (kTplRatio == -1) {
       const TInt32List n_lines_above_snr =
           result->getNLinesAboveSnrcut(result->LineModelSolutions);
       zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(
           n_lines_above_snr, opt_nlines_snr_penalization_factor);
     } else {
       const TInt32List &n_lines_above_snr =
-          result->NLinesAboveSNRTplshapes[kTplShape];
+          result->NLinesAboveSNRTplratios[kTplRatio];
       zlogPriorNLinesAboveSNR = zpriorhelper.GetNLinesSNRAboveCutLogZPrior(
           n_lines_above_snr, opt_nlines_snr_penalization_factor);
     }
@@ -328,31 +328,29 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   } else if (m_opt_pdfcombination == "bestproba" ||
              m_opt_pdfcombination == "marg") {
 
-    if (m_opt_rigidity != "tplshape") {
+    if (m_opt_rigidity != "tplratio") {
       zpriors.push_back(BuildZpriors(result));
       chisquares.push_back(result->ChiSquare);
     } else {
 
-      const Int32 ntplshapes = result->ChiSquareTplshapes.size();
+      const Int32 ntplratios = result->ChiSquareTplratios.size();
 
       bool zPriorLines = false;
-      Log.LogDetail("%s: PriorLinesTplshapes.size()=%d", __func__,
-                    result->PriorLinesTplshapes.size());
-      if ( // boost::filesystem::exists(m_opt_tplratio_prior_dirpath) &&  //TODO
-           // check this elsewhere ?
-          result->PriorLinesTplshapes.size() == ntplshapes) {
+      Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
+                    result->PriorLinesTplratios.size());
+      if (result->PriorLinesTplratios.size() == ntplratios) {
         zPriorLines = true;
         Log.LogDetail("%s: Lines Prior enabled", __func__);
       } else {
         Log.LogDetail("%s: Lines Prior disabled", __func__);
       }
 
-      chisquares.reserve(ntplshapes);
-      zpriors.reserve(ntplshapes);
+      chisquares.reserve(ntplratios);
+      zpriors.reserve(ntplratios);
 
-      for (Int32 k = 0; k < ntplshapes; ++k) {
+      for (Int32 k = 0; k < ntplratios; ++k) {
         zpriors.push_back(BuildZpriors(result, k));
-        chisquares.push_back(result->ChiSquareTplshapes[k]);
+        chisquares.push_back(result->ChiSquareTplratios[k]);
 
         // correct chi2 if necessary
         TFloat64List &logLikelihoodCorrected = chisquares.back();
@@ -363,24 +361,24 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
             Float64 maxscalemargcorr=-DBL_MAX;
             for ( Int32 kz=0; kz<zsize; kz++ )
                 if(maxscalemargcorr <
-        result->ScaleMargCorrectionTplshapes[k][kz]) maxscalemargcorr =
-        result->ScaleMargCorrectionTplshapes[k][kz];
+        result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
+        result->ScaleMargCorrectionTplratios[k][kz];
 
             Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
         maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
-                if(result->ScaleMargCorrectionTplshapes[k][kz]!=0) //warning,
+                if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
         this is experimental. logLikelihoodCorrected[kz] +=
-        result->ScaleMargCorrectionTplshapes[k][kz] - maxscalemargcorr;
+        result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
 
             // need to add maxscalemargcorr ?
         }*/
 
-        if (zPriorLines && result->PriorLinesTplshapes[k].size() == zsize)
+        if (zPriorLines && result->PriorLinesTplratios[k].size() == zsize)
           for (Int32 kz = 0; kz < zsize; kz++)
-            logLikelihoodCorrected[kz] += result->PriorLinesTplshapes[k][kz];
+            logLikelihoodCorrected[kz] += result->PriorLinesTplratios[k][kz];
       }
 
-      chisquarearray.modelpriors = result->PriorTplshapes;
+      chisquarearray.modelpriors = result->PriorTplratios;
     }
 
     if (!result->ChiSquareTplContinuum.empty()) {
@@ -407,12 +405,12 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
       // divide model prior by the number of continuum templates
       // TODO: need to add/handle tpl continuum priors
       // (note: in the case of ATEZ, which is exclusive of zpriors and
-      // Tplshapes, priors are included already in the chisquares of both
-      // tplcontinuum chi2 and tplshape chi2)
+      // Tplratios, priors are included already in the chisquares of both
+      // tplcontinuum chi2 and tplratio chi2)
       for (auto &prior : chisquarearray.modelpriors)
         prior /= result->ChiSquareTplContinuum.size();
 
-      // loop on all tplshapes (or 1 linemodel free)
+      // loop on all tplratios (or 1 linemodel free)
       // TFloat64List linemodel_alone_chi2(zsize);
       for (Int32 k = 0, ke = chisquares.size(); k < ke; ++k) {
 
@@ -458,84 +456,84 @@ void CLineModelSolve::storeExtremaResults(
   Int32 nResults = ExtremaResult->size();
 }
 
-void CLineModelSolve::StoreChisquareTplShapeResults(
+void CLineModelSolve::StoreChisquareTplRatioResults(
     std::shared_ptr<COperatorResultStore> resultStore,
     std::shared_ptr<const CLineModelResult> result) const {
-  for (Int32 km = 0; km < result->ChiSquareTplshapes.size(); km++) {
-    std::shared_ptr<CLineModelResult> result_chisquaretplshape =
+  for (Int32 km = 0; km < result->ChiSquareTplratios.size(); km++) {
+    std::shared_ptr<CLineModelResult> result_chisquaretplratio =
         std::shared_ptr<CLineModelResult>(new CLineModelResult());
-    result_chisquaretplshape->Init(result->Redshifts, result->restLineList, 0,
+    result_chisquaretplratio->Init(result->Redshifts, result->restLineList, 0,
                                    0, TFloat64List());
     for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-      result_chisquaretplshape->ChiSquare[kz] =
-          result->ChiSquareTplshapes[km][kz];
+      result_chisquaretplratio->ChiSquare[kz] =
+          result->ChiSquareTplratios[km][kz];
     }
 
     std::string resname =
         (boost::format(
-             "linemodel_chisquaretplshape/linemodel_chisquaretplshape_%d") %
+             "linemodel_chisquaretplratio/linemodel_chisquaretplratio_%d") %
          km)
             .str();
     resultStore->StoreScopedGlobalResult(resname.c_str(),
-                                         result_chisquaretplshape);
+                                         result_chisquaretplratio);
   }
 
-  // Save scaleMargCorrTplshape results
-  for (Int32 km = 0; km < result->ScaleMargCorrectionTplshapes.size(); km++) {
-    std::shared_ptr<CLineModelResult> result_chisquaretplshape =
+  // Save scaleMargCorrTplratio results
+  for (Int32 km = 0; km < result->ScaleMargCorrectionTplratios.size(); km++) {
+    std::shared_ptr<CLineModelResult> result_chisquaretplratio =
         std::shared_ptr<CLineModelResult>(new CLineModelResult());
-    result_chisquaretplshape->Init(result->Redshifts, result->restLineList, 0,
+    result_chisquaretplratio->Init(result->Redshifts, result->restLineList, 0,
                                    0, TFloat64List());
     for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-      result_chisquaretplshape->ChiSquare[kz] =
-          result->ScaleMargCorrectionTplshapes[km][kz];
+      result_chisquaretplratio->ChiSquare[kz] =
+          result->ScaleMargCorrectionTplratios[km][kz];
     }
 
     std::string resname =
         (boost::format(
-             "linemodel_chisquaretplshape/linemodel_scalemargcorrtplshape_%d") %
+             "linemodel_chisquaretplratio/linemodel_scalemargcorrtplratio_%d") %
          km)
             .str();
     resultStore->StoreScopedGlobalResult(resname.c_str(),
-                                         result_chisquaretplshape);
+                                         result_chisquaretplratio);
   }
 
-  // Save PriorLinesTplshapes results
-  for (Int32 km = 0; km < result->PriorLinesTplshapes.size(); km++) {
-    std::shared_ptr<CLineModelResult> result_chisquaretplshape =
+  // Save PriorLinesTplratios results
+  for (Int32 km = 0; km < result->PriorLinesTplratios.size(); km++) {
+    std::shared_ptr<CLineModelResult> result_chisquaretplratio =
         std::shared_ptr<CLineModelResult>(new CLineModelResult());
-    result_chisquaretplshape->Init(result->Redshifts, result->restLineList, 0,
+    result_chisquaretplratio->Init(result->Redshifts, result->restLineList, 0,
                                    0, TFloat64List());
     for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-      result_chisquaretplshape->ChiSquare[kz] =
-          result->PriorLinesTplshapes[km][kz];
+      result_chisquaretplratio->ChiSquare[kz] =
+          result->PriorLinesTplratios[km][kz];
     }
 
     std::string resname =
         (boost::format(
-             "linemodel_chisquaretplshape/linemodel_priorlinestplshape_%d") %
+             "linemodel_chisquaretplratio/linemodel_priorlinestplratio_%d") %
          km)
             .str();
     resultStore->StoreScopedGlobalResult(resname.c_str(),
-                                         result_chisquaretplshape);
+                                         result_chisquaretplratio);
   }
 
-  // Save PriorContinuumTplshapes results
-  std::shared_ptr<CLineModelResult> result_chisquaretplshape =
+  // Save PriorContinuumTplratios results
+  std::shared_ptr<CLineModelResult> result_chisquaretplratio =
       std::shared_ptr<CLineModelResult>(new CLineModelResult());
-  result_chisquaretplshape->Init(result->Redshifts, result->restLineList, 0, 0,
+  result_chisquaretplratio->Init(result->Redshifts, result->restLineList, 0, 0,
                                  TFloat64List());
   for (Int32 kz = 0; kz < result->Redshifts.size(); kz++) {
-    result_chisquaretplshape->ChiSquare[kz] =
+    result_chisquaretplratio->ChiSquare[kz] =
         result->ContinuumModelSolutions[kz].tplLogPrior;
   }
 
   std::string resname =
       (boost::format(
-           "linemodel_chisquaretplshape/linemodel_priorcontinuumtplshape"))
+           "linemodel_chisquaretplratio/linemodel_priorcontinuumtplshape"))
           .str();
   resultStore->StoreScopedGlobalResult(resname.c_str(),
-                                       result_chisquaretplshape);
+                                       result_chisquaretplratio);
 }
 
 /**

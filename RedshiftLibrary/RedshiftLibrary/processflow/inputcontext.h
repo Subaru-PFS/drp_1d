@@ -51,7 +51,7 @@ class CTemplateCatalog;
 class CLineCatalog;
 class CParameterStore;
 class CPhotBandCatalog;
-class CLineCatalogsTplShape;
+class CLineCatalogsTplRatio;
 class CLine;
 typedef std::vector<CLine> TLineVector;
 
@@ -67,7 +67,7 @@ public:
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_TemplateCatalog;
   }
-  std::shared_ptr<const CLineCatalogsTplShape>
+  std::shared_ptr<const CLineCatalogsTplRatio>
   GetTemplateRatioCatalog(const std::string &objectType) const;
   std::shared_ptr<const CLineCatalog>
   GetLineCatalog(const std::string &objectType,
@@ -87,7 +87,7 @@ public:
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;
   }
-  const std::shared_ptr<CLineCatalogsTplShape> &
+  const std::shared_ptr<CLineCatalogsTplRatio> &
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
@@ -126,7 +126,7 @@ public:
                       const std::shared_ptr<CLineCatalog> &catalog);
   void setLineRatioCatalogCatalog(
       const std::string &objectType,
-      const std::shared_ptr<CLineCatalogsTplShape> &catalog);
+      const std::shared_ptr<CLineCatalogsTplRatio> &catalog);
   void
   setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog) {
     m_TemplateCatalog = templateCatalog;
@@ -158,7 +158,7 @@ private:
   std::shared_ptr<CTemplateCatalog> m_TemplateCatalog;
   std::map<std::string, std::map<std::string, std::shared_ptr<CLineCatalog>>>
       m_lineCatalogs;
-  std::map<std::string, std::shared_ptr<CLineCatalogsTplShape>>
+  std::map<std::string, std::shared_ptr<CLineCatalogsTplRatio>>
       m_lineRatioCatalogCatalogs;
   std::shared_ptr<CSpectrumFluxCorrectionMeiksin> m_igmcorrectionMeiksin;
   std::shared_ptr<CSpectrumFluxCorrectionCalzetti> m_ismcorrectionCalzetti;
@@ -194,12 +194,12 @@ inline const CLineCatalog::TLineVector CInputContext::GetFilteredLineVector(
   return m_lineCatalogs[objectType][method]->GetFilteredList(type, force);
 }
 
-inline std::shared_ptr<const CLineCatalogsTplShape>
+inline std::shared_ptr<const CLineCatalogsTplRatio>
 CInputContext::GetTemplateRatioCatalog(const std::string &objectType) const {
   return const_cast<CInputContext *>(this)->GetTemplateRatioCatalog(objectType);
 }
 
-inline const std::shared_ptr<CLineCatalogsTplShape> &
+inline const std::shared_ptr<CLineCatalogsTplRatio> &
 CInputContext::GetTemplateRatioCatalog(const std::string &objectType) {
   //  if (std::findm_categories.find(objectType))
   // throw

@@ -561,7 +561,7 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                                                                    // always OK
                                                                    // for
                                                                    // linemodel
-                                                                   // tplshape)
+                                                                   // tplratio)
       {
         if (logProba[k] > m_postmargZResult->valProbaLog[k]) {
           m_postmargZResult->valProbaLog[k] = logProba[k];
