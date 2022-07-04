@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(logSampling_test) {
   result = spcAxisLog.CheckLoglambdaSampling();
   BOOST_CHECK(result == true);
   BOOST_ASSERT(spcAxisLog.m_isLogSampled == true);
-  BOOST_CHECK_CLOSE(spcAxisLog.m_regularLogSamplingStep, log(3.) / 2., 1e-12);
+  BOOST_CHECK_CLOSE(spcAxisLog.m_regularLogSamplingStep, 1., 1e-12);
 
   // error > 1e-1
   spcAxisLog[2] = 3.5;
@@ -691,24 +691,79 @@ BOOST_AUTO_TEST_CASE(SubSamplingMask_test) {
 }
 
 BOOST_AUTO_TEST_CASE(RecomputePreciseLoglambda_test) {
-  TFloat64List samples(100, 0);
-  for (Int32 i = 0; i < 100; i++) {
-    samples[i] = exp(i + 1.);
+  // axis not logSampled
+  TFloat64List wrong_samples = {exp(1), exp(2.2), exp(3)};
+  CSpectrumSpectralAxis wrong_spcAxis(wrong_samples, false);
+  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), GlobalException);
+
+  // not enough points
+  wrong_spcAxis[1] = exp(2);
+  BOOST_CHECK_THROW(wrong_spcAxis.RecomputePreciseLoglambda(), GlobalException);
+
+  //
+  TFloat64Range range(10, 10000);
+  TFloat64List samples = range.SpreadOverLog(0.01);
+
+  TFloat64List samples_truncated(samples.size(), 0.);
+  for (Int32 i = 0; i < samples.size(); i++) {
+    samples_truncated[i] = (int)(100 * samples[i]) / 100.0;
   }
-  CSpectrumSpectralAxis spcAxis(samples, false);
+
+  Float64 maxAbsRelativeError = 0.0;
+  Float64 logGridStep = log(samples_truncated[1] / samples_truncated[0]);
+  for (Int32 i = 1; i < samples_truncated.size(); i++) {
+    Float64 _logGridStep = log(samples_truncated[i] / samples_truncated[i - 1]);
+    Float64 relativeErrAbs =
+        std::abs((_logGridStep - logGridStep) / logGridStep);
+    maxAbsRelativeError = std::max(relativeErrAbs, maxAbsRelativeError);
+  }
+
+  CSpectrumSpectralAxis spcAxis(samples_truncated, false);
   spcAxis.RecomputePreciseLoglambda();
   TFloat64List samples_out = spcAxis.GetSamplesVector();
-  for (Int32 i = 0; i < 100; i++) {
-    BOOST_CHECK_CLOSE(samples[i], samples_out[i], precision);
+  Float64 maxAbsRelativeError_out = 0.0;
+  logGridStep = log(samples_out[1] / samples_out[0]);
+  for (Int32 i = 1; i < samples_out.size(); i++) {
+    Float64 _logGridStep = log(samples_out[i] / samples_out[i - 1]);
+    Float64 relativeErrAbs =
+        std::abs((_logGridStep - logGridStep) / logGridStep);
+    maxAbsRelativeError_out = std::max(relativeErrAbs, maxAbsRelativeError_out);
   }
 
-  TFloat64List samples_2(100, 0);
-  for (Int32 i = 0; i < 100; i++) {
-    samples_2[i] = i + 1.;
+  BOOST_CHECK(maxAbsRelativeError_out < maxAbsRelativeError);
+
+  TFloat64List samples_2(500, 0.);
+  for (Int32 i = 0; i < 500; i++) {
+    samples_2[i] = (i + 1) * log(2);
   }
 
-  CSpectrumSpectralAxis spcAxis_2(samples_2, true);
+  TFloat64List samples_truncated_2(samples_2.size(), 0.);
+  for (Int32 i = 0; i < samples_2.size(); i++) {
+    samples_truncated_2[i] = (int)(100 * samples_2[i]) / 100.0;
+  }
+
+  maxAbsRelativeError = 0.0;
+  logGridStep = samples_truncated_2[1] - samples_truncated_2[0];
+  for (Int32 i = 1; i < samples_truncated_2.size(); i++) {
+    Float64 _logGridStep = samples_truncated_2[i] - samples_truncated_2[i - 1];
+    Float64 relativeErrAbs =
+        std::abs((_logGridStep - logGridStep) / logGridStep);
+    maxAbsRelativeError = std::max(relativeErrAbs, maxAbsRelativeError);
+  }
+
+  CSpectrumSpectralAxis spcAxis_2(samples_truncated_2, true);
   spcAxis_2.RecomputePreciseLoglambda();
+  samples_out = spcAxis_2.GetSamplesVector();
+  maxAbsRelativeError_out = 0.0;
+  logGridStep = samples_out[1] - samples_out[0];
+  for (Int32 i = 1; i < samples_out.size(); i++) {
+    Float64 _logGridStep = samples_out[i] - samples_out[i - 1];
+    Float64 relativeErrAbs =
+        std::abs((_logGridStep - logGridStep) / logGridStep);
+    maxAbsRelativeError_out = std::max(relativeErrAbs, maxAbsRelativeError_out);
+  }
+
+  BOOST_CHECK(maxAbsRelativeError_out < maxAbsRelativeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
