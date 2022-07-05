@@ -64,6 +64,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/abstractfitter.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 
@@ -215,7 +216,6 @@ public:
   bool GetModelStrongEmissionLinePresent() const;
   bool GetModelHaStrongest() const;
 
-  Float64 getContinuumMeanUnderElement(Int32 eltId) const;
   void LoadModelSolution(const CLineModelSolution &modelSolution);
   CLineModelSolution GetModelSolution(Int32 opt_level = 0);
   CContinuumModelSolution GetContinuumModelSolution() const;
@@ -228,6 +228,8 @@ public:
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
+  std::shared_ptr<CAbstractFitter> m_fitter;
+
   std::shared_ptr<const CSpectrum> m_inputSpc;
   const CLineCatalog::TLineVector m_RestLineList;
 
@@ -269,7 +271,7 @@ public:
 
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
-  Int32 m_AmplitudeOffsetsDegree = 2;
+
   Float64 m_LambdaOffsetMin = -400.0;
   Float64 m_LambdaOffsetMax = 400.0;
   Float64 m_LambdaOffsetStep = 25.0;
@@ -277,33 +279,9 @@ public:
 
   Int32 m_opt_fitcontinuum_maxCount = 2;
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
-  static constexpr Float64 m_overlapThresHybridFit =
-      0.15; // 15% seemed necessary for Ha/SII complex when lines are very
-            // wide (either because of PSF or source size)
-            // mainly for hybrid fitting
-private:
-  Int32 fitAmplitudesHybrid(const CSpectrumSpectralAxis &spectralAxis,
-                            const CSpectrumFluxAxis &spcFluxAxisNoContinuum,
-                            const CSpectrumFluxAxis &continuumfluxAxis,
-                            Float64 redshift);
-  void fitAmplitudesSimplex();
-  Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
-                              const CSpectrumSpectralAxis &spectralAxis,
-                              const CSpectrumFluxAxis &fluxAxis,
-                              const CSpectrumFluxAxis &continuumfluxAxis,
-                              TFloat64List &ampsfitted,
-                              TFloat64List &errorsfitted);
-  Int32 fitAmplitudesLinSolveAndLambdaOffset(
-      TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-      const CSpectrumFluxAxis &fluxAxis,
-      const CSpectrumFluxAxis &continuumfluxAxis, TFloat64List &ampsfitted,
-      TFloat64List &errorsfitted, bool enableOffsetFitting);
 
-  Int32 fitAmplitudesLinesAndContinuumLinSolve(
-      const TInt32List &EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-      const CSpectrumFluxAxis &fluxAxis,
-      const CSpectrumFluxAxis &continuumfluxAxis, TFloat64List &ampsfitted,
-      TFloat64List &errorsfitted, Float64 &chisquare, Int32 polyOrder = -1);
+private:
+  void fitAmplitudesSimplex();
 
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;
@@ -337,7 +315,6 @@ private:
                      Int32 index2, Float64 nominalWidth, Float64 a1,
                      Float64 a2);
 
-  Int32 improveBalmerFit();
   void applyRules(bool enableLogs = false);
   std::vector<CRange<Int32>>
   getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
@@ -458,7 +435,7 @@ private:
   std::string m_opt_secondpass_fittingmethod = "hybrid";
   bool m_ignoreLinesSupport = false;
 
-  bool m_opt_enable_improveBalmerFit = false;
+  //  bool m_opt_enable_improveBalmerFit = false;
   Float64 m_opt_haprior = -1.;
   bool m_useloglambdasampling = false;
 };
