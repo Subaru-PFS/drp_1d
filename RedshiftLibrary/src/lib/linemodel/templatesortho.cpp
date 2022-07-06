@@ -64,8 +64,8 @@ void CTemplatesOrthogonalization::Orthogonalize(
 
   // check if LSF has changed, if yes reorthog all
   bool differentLSF = false;
-  Float64 lambda = (inputContext.m_lambdaRange.GetBegin() +
-                    inputContext.m_lambdaRange.GetEnd()) /
+  Float64 lambda = (inputContext.m_lambdaRange->GetBegin() +
+                    inputContext.m_lambdaRange->GetEnd()) /
                    2;
   if (tplCatalog->m_ortho_LSFWidth !=
       m_LSF->GetWidth(lambda)) // true also if m_ortho_LSFWidth is NAN

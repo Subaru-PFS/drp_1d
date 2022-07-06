@@ -439,7 +439,7 @@ private:
       0; // for rigidity=tplshape: switch to use fast least square estimation
   std::shared_ptr<CPriorHelper> m_tplshape_priorhelper;
 
-  COperatorTemplateFitting m_templateFittingOperator;
+  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
   Int32 m_secondpass_fitContinuum_dustfit;
   Int32 m_secondpass_fitContinuum_igm;
 
@@ -472,7 +472,7 @@ private:
   bool m_lmfit_fitEmissionVelocity;
   bool m_lmfit_fitAbsorptionVelocity;
 
-  const TFloat64Range m_lambdaRange;
+  std::shared_ptr<const TFloat64Range> m_lambdaRange;
 
   linetags ltags;
 

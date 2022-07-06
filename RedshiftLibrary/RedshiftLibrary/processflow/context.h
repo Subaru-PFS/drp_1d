@@ -118,10 +118,6 @@ public:
     return m_inputContext->GetTemplateCatalog();
   }
 
-  std::shared_ptr<CTemplateCatalog> GetTemplateCatalog() {
-    return m_inputContext->GetTemplateCatalog();
-  }
-
   std::shared_ptr<const CLineCatalog>
   GetLineCatalog(const std::string &objectType,
                  const std::string &method) const {
@@ -137,12 +133,16 @@ public:
     return m_ResultStore;
   }
 
-  const TFloat64Range &GetLambdaRange() const {
+  std::shared_ptr<const TFloat64Range> GetLambdaRange() const {
     return m_inputContext->m_lambdaRange;
   }
 
-  const TFloat64Range &GetClampedLambdaRange() const {
+  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange() const {
     return m_inputContext->m_clampedLambdaRange;
+  }
+
+  std::shared_ptr<const TFloat64Range> GetRebinnedClampedLambdaRange() const {
+    return m_inputContext->m_rebinnedClampedLambdaRange;
   }
 
   const std::string &GetCurrentCategory() const {

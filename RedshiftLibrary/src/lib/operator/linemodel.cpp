@@ -106,7 +106,6 @@ Int32 COperatorLineModel::ComputeFirstPass() {
       Context.GetTemplateCatalog();
   const CLineCatalogsTplShape &tplRatioCatalog =
       *(Context.GetTplRatioCatalog());
-  const TFloat64Range &lambdaRange = Context.GetLambdaRange();
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -363,7 +362,6 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
   const CSpectrum &spectrum = *(Context.GetSpectrum());
   const CSpectrum &logSampledSpectrum =
       *(Context.GetRebinnedSpectrum()); // this is temporary
-  const TFloat64Range &lambdaRange = Context.GetLambdaRange();
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -428,15 +426,13 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
                 "opt_interp = %s",
                 opt_interp.c_str());
 
-  TFloat64Range clampedlambdaRange;
   if (fftprocessing) {
     if (m_templateFittingOperator == nullptr ||
         !m_templateFittingOperator->IsFFTProcessing()) // else reuse the shared
                                                        // pointer for secondpass
       m_templateFittingOperator = std::make_shared<COperatorTemplateFittingLog>(
-          spectrum, logSampledSpectrum, lambdaRange, redshiftsTplFit);
-    logSampledSpectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange,
-                                                          clampedlambdaRange);
+          spectrum, logSampledSpectrum, *(Context.GetLambdaRange()),
+          redshiftsTplFit);
     tplCatalog->m_logsampling = true;
   } else {
     if (m_templateFittingOperator == nullptr ||
@@ -445,15 +441,13 @@ COperatorLineModel::PrecomputeContinuumFit(const TFloat64List &redshifts,
       if (m_opt_tplfit_use_photometry) {
         m_templateFittingOperator =
             std::make_shared<COperatorTemplateFittingPhot>(
-                spectrum, lambdaRange, photBandCat,
+                spectrum, *(Context.GetLambdaRange()), photBandCat,
                 ps->GetScoped<Float64>("linemodel.photometry.weight"),
                 redshiftsTplFit);
       } else {
         m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(
-            spectrum, lambdaRange, redshiftsTplFit);
+            spectrum, *(Context.GetLambdaRange()), redshiftsTplFit);
       }
-    spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange,
-                                                clampedlambdaRange);
     tplCatalog->m_logsampling = false;
   }
 
@@ -922,7 +916,6 @@ Int32 COperatorLineModel::ComputeSecondPass(
       Context.GetTemplateCatalog();
   const CLineCatalogsTplShape &tplRatioCatalog =
       *(Context.GetTplRatioCatalog());
-  const TFloat64Range &lambdaRange = Context.GetLambdaRange();
   const std::shared_ptr<const CPhotBandCatalog> &photBandCat =
       Context.GetPhotBandCatalog();
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -1028,8 +1021,6 @@ Int32 COperatorLineModel::ComputeSecondPass(
           m_firstpass_extremaResult->FittedTplpCoeffs[i];
     }
   }
-  TFloat64Range clampedlambdaRange;
-  spectrum.GetSpectralAxis().ClampLambdaRange(lambdaRange, clampedlambdaRange);
 
   // upcast LineModelExtremaResult to TCandidateZ
   m_secondpass_parameters_extremaResult.m_ranked_candidates.assign(
@@ -1039,7 +1030,7 @@ Int32 COperatorLineModel::ComputeSecondPass(
   // now that we recomputed what should be recomputed, we define once for all
   // the secondpass
   //  estimate second pass parameters (mainly elv, alv...)
-  EstimateSecondPassParameters(spectrum, clampedlambdaRange);
+  EstimateSecondPassParameters(spectrum, *(Context.GetClampedLambdaRange()));
 
   // recompute the fine grid results around the extrema
   Int32 ret = RecomputeAroundCandidates(

@@ -105,8 +105,10 @@ public:
   void SetRebinnedSpectrum(const std::shared_ptr<CSpectrum> &rebinnedSpc) {
     m_rebinnedSpectrum = rebinnedSpc;
   }
-  TFloat64Range m_lambdaRange;
-  TFloat64Range m_clampedLambdaRange;
+  std::shared_ptr<TFloat64Range> m_lambdaRange;
+  std::shared_ptr<TFloat64Range> m_clampedLambdaRange;
+  std::shared_ptr<TFloat64Range> m_rebinnedClampedLambdaRange;
+
   bool m_use_LogLambaSpectrum = 0;
   Float64 m_logGridStep;
   typedef struct {
