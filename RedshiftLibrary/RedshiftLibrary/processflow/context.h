@@ -141,6 +141,10 @@ public:
     return m_inputContext->m_lambdaRange;
   }
 
+  const TFloat64Range &GetClampedLambdaRange() const {
+    return m_inputContext->m_clampedLambdaRange;
+  }
+
   const std::string &GetCurrentCategory() const {
     if (m_ScopeStack.empty())
       THROWG(INTERNAL_ERROR,

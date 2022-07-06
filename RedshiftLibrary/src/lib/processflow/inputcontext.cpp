@@ -207,8 +207,10 @@ void CInputContext::Init() {
     m_rebinnedSpectrum->ValidateSpectrum(m_lambdaRange, enableInputSpcCorrect);
     m_rebinnedSpectrum->SetLSF(m_Spectrum->GetLSF());
   }
-
   OrthogonalizeTemplates();
+
+  m_Spectrum->GetSpectralAxis().ClampLambdaRange(m_lambdaRange,
+                                                 m_clampedLambdaRange);
 }
 
 void CInputContext::resetSpectrumSpecific() {

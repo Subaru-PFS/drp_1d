@@ -79,7 +79,7 @@ using namespace std;
  **/
 CLineModelFitting::CLineModelFitting()
     : m_inputSpc(*(Context.GetSpectrum())),
-      m_lambdaRange(Context.GetLambdaRange()),
+      m_lambdaRange(Context.GetClampedLambdaRange()),
       m_RestLineList(Context.getLineVector()),
       m_tplCatalog(*(Context.GetTemplateCatalog())),
       m_tplCategoryList({Context.GetCurrentCategory()}),
@@ -220,12 +220,15 @@ void CLineModelFitting::initMembers() {
   if (m_rigidity != "tplshape") {
     // load the regular catalog
     LoadCatalog(m_RestLineList);
+    SetLSF();
   } else {
     // load the tplshape catalog with only 1 element for all lines
     // LoadCatalogOneMultiline(restLineList);
     // load the tplshape catalog with 2 elements: 1 for the Em lines + 1 for the
     // Abs lines
     LoadCatalogTwoMultilinesAE(m_RestLineList);
+
+    SetLSF();
     m_CatalogTplShape = *(Context.GetTplRatioCatalog());
     initTplratioCatalogs(Context.GetParameterStore()->GetScoped<bool>(
         "linemodel.tplratio_ismfit"));
@@ -245,8 +248,6 @@ void CLineModelFitting::initMembers() {
   }
   }
   */
-
-  SetLSF();
 }
 // hook
 void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {

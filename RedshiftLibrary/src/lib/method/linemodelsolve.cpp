@@ -117,15 +117,7 @@ std::shared_ptr<CSolveResult>
 CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
                          std::shared_ptr<COperatorResultStore> resultStore,
                          TScopeStack &scope) {
-  const CSpectrum &rebinnedSpc = *(inputContext->GetRebinnedSpectrum());
   const CSpectrum &spc = *(inputContext->GetSpectrum());
-  const CTemplateCatalog &tplCatalog = *(inputContext->GetTemplateCatalog());
-  const CLineCatalog &restlinecatalog =
-      *(inputContext->GetLineCatalog(m_objectType, m_name));
-  const auto &photBandCat = inputContext->GetPhotBandCatalog();
-  const CLineCatalogsTplShape &tplRatioCatalog =
-      *(inputContext->GetTemplateRatioCatalog(m_objectType));
-
   PopulateParameters(inputContext->GetParameterStore());
 
   // useloglambdasampling param is relevant only if linemodel.continuumfit is
@@ -184,12 +176,11 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
 
   resultStore->StoreScopedGlobalResult("pdf", pdfz.m_postmargZResult);
 
-  TFloat64Range clampedlambdaRange;
-  spc.GetSpectralAxis().ClampLambdaRange(m_lambdaRange, clampedlambdaRange);
   // Get linemodel results at extrema (recompute spectrum model etc.)
   std::shared_ptr<LineModelExtremaResult> ExtremaResult =
       m_linemodel.buildExtremaResults(
-          spc, clampedlambdaRange, candidateResult->m_ranked_candidates,
+          spc, Context.GetClampedLambdaRange(),
+          candidateResult->m_ranked_candidates,
           m_opt_continuumreest); // maybe its better to pass
                                  // resultStore->GetGlobalResult so that we
                                  // constuct extremaResult all at once in

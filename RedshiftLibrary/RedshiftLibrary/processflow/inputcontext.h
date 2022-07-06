@@ -106,6 +106,7 @@ public:
     m_rebinnedSpectrum = rebinnedSpc;
   }
   TFloat64Range m_lambdaRange;
+  TFloat64Range m_clampedLambdaRange;
   bool m_use_LogLambaSpectrum = 0;
   Float64 m_logGridStep;
   typedef struct {
