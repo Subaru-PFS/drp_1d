@@ -267,7 +267,7 @@ public:
                                       Float64 &f, Float64 *g);
   void logParameters();
   CLineModelElementList m_Elements;
-  const CSpectrum &m_inputSpc;
+  std::shared_ptr<const CSpectrum> m_inputSpc;
   CSpectrum m_SpectrumModel; // model
   const CLineCatalog::TLineVector m_RestLineList;
   CSpectrum
@@ -300,29 +300,8 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
   bool m_enableLambdaOffsetsFit;
 
-  bool m_opt_lya_forcefit = false;
-  bool m_opt_lya_forcedisablefit = false;
-  Float64 m_opt_lya_fit_asym_min = 0.0;
-  Float64 m_opt_lya_fit_asym_max = 4.0;
-  Float64 m_opt_lya_fit_asym_step = 1.0;
-  Float64 m_opt_lya_fit_width_min = 1.;
-  Float64 m_opt_lya_fit_width_max = 4.;
-  Float64 m_opt_lya_fit_width_step = 1.;
-  Float64 m_opt_lya_fit_delta_min = 0.;
-  Float64 m_opt_lya_fit_delta_max = 0.;
-  Float64 m_opt_lya_fit_delta_step = 1.;
-
   Int32 m_opt_fitcontinuum_maxCount = 2;
-  Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
-  Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
-  bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
-  std::string m_opt_firstpass_fittingmethod = "hybrid";
-  std::string m_opt_secondpass_fittingmethod = "hybrid";
-
-  bool m_opt_enable_improveBalmerFit = false;
-  Float64 m_opt_haprior = -1.;
-
   static constexpr Float64 m_overlapThresHybridFit =
       0.15; // 15% seemed necessary for Ha/SII complex when lines are very
             // wide (either because of PSF or source size)
@@ -449,7 +428,7 @@ private:
   std::string m_rigidity;
   bool m_forcedisableTplratioISMfit = false;
 
-  CTemplateCatalog m_tplCatalog;
+  std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
   TStringList m_tplCategoryList;
   std::string m_tplshapeBestTplName = "None";
   Float64 m_tplshapeBestTplIsmCoeff = NAN;
@@ -463,8 +442,6 @@ private:
   COperatorTemplateFitting m_templateFittingOperator;
   Int32 m_secondpass_fitContinuum_dustfit;
   Int32 m_secondpass_fitContinuum_igm;
-  Int32 m_secondpass_fitContinuum_outsidelinesmask;
-  Int32 m_secondpass_fitContinuum_observedFrame;
 
   std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
   Int32 m_fitContinuum_option;
@@ -498,6 +475,30 @@ private:
   const TFloat64Range m_lambdaRange;
 
   linetags ltags;
+
+  bool m_opt_lya_forcefit = false;
+  bool m_opt_lya_forcedisablefit = false;
+  Float64 m_opt_lya_fit_asym_min = 0.0;
+  Float64 m_opt_lya_fit_asym_max = 4.0;
+  Float64 m_opt_lya_fit_asym_step = 1.0;
+  Float64 m_opt_lya_fit_width_min = 1.;
+  Float64 m_opt_lya_fit_width_max = 4.;
+  Float64 m_opt_lya_fit_width_step = 1.;
+  Float64 m_opt_lya_fit_delta_min = 0.;
+  Float64 m_opt_lya_fit_delta_max = 0.;
+  Float64 m_opt_lya_fit_delta_step = 1.;
+
+  Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
+  Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
+  bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
+
+  std::string m_opt_firstpass_fittingmethod = "hybrid";
+  std::string m_opt_secondpass_fittingmethod = "hybrid";
+  bool m_ignoreLinesSupport = false;
+
+  bool m_opt_enable_improveBalmerFit = false;
+  Float64 m_opt_haprior = -1.;
+  bool m_useloglambdasampling = false;
 };
 
 } // namespace NSEpic

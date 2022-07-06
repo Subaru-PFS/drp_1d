@@ -120,14 +120,6 @@ CLineModelSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const CSpectrum &spc = *(inputContext->GetSpectrum());
   PopulateParameters(inputContext->GetParameterStore());
 
-  // useloglambdasampling param is relevant only if linemodel.continuumfit is
-  // set to use fftprocessing below we explicit this check on this condition
-  bool useloglambdasampling =
-      inputContext->GetParameterStore()->GetScoped<bool>(
-          "linemodel.useloglambdasampling");
-  useloglambdasampling &= inputContext->GetParameterStore()->GetScoped<bool>(
-      "linemodel.continuumfit.fftprocessing");
-
   bool retSolve = Solve();
 
   if (!retSolve) {

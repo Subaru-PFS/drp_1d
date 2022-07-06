@@ -78,10 +78,9 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
 CLineModelFitting::CLineModelFitting()
-    : m_inputSpc(*(Context.GetSpectrum())),
-      m_lambdaRange(Context.GetClampedLambdaRange()),
+    : m_lambdaRange(Context.GetClampedLambdaRange()),
       m_RestLineList(Context.getLineVector()),
-      m_tplCatalog(*(Context.GetTemplateCatalog())),
+      m_tplCatalog(Context.GetTemplateCatalog()),
       m_tplCategoryList({Context.GetCurrentCategory()}),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
       m_templateFittingOperator(*(Context.GetSpectrum()),
@@ -93,11 +92,11 @@ CLineModelFitting::CLineModelFitting()
 
 CLineModelFitting::CLineModelFitting(const CSpectrum &template_,
                                      const TLambdaRange &lambdaRange)
-    : m_inputSpc(template_), m_lambdaRange(lambdaRange), m_tplCatalog(),
-      m_tplCategoryList(),
+    : m_lambdaRange(lambdaRange), m_tplCatalog(), m_tplCategoryList(),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
-      m_templateFittingOperator(m_inputSpc, lambdaRange),
+      m_templateFittingOperator(template_, lambdaRange),
       m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
+  m_inputSpc = std::make_shared<const CSpectrum>(template_);
   initParameters();
   // override ortho specific parameters
   m_ContinuumComponent = "fromspectrum";
@@ -161,9 +160,18 @@ void CLineModelFitting::initParameters() {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
   }
+
+  // useloglambdasampling param is relevant only if linemodel.continuumfit is
+  // set to use fftprocessing below we explicit this check on this condition
+  m_useloglambdasampling = ps->GetScoped<bool>("useloglambdasampling");
+  m_useloglambdasampling &= ps->GetScoped<bool>("continuumfit.fftprocessing");
 }
 
 void CLineModelFitting::initMembers() {
+  if (m_useloglambdasampling)
+    m_inputSpc = Context.GetRebinnedSpectrum();
+  else
+    m_inputSpc = Context.GetSpectrum();
   // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
   m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
   m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
@@ -173,17 +181,17 @@ void CLineModelFitting::initMembers() {
   // the fitting on/off switch is done through the offset calibration
   // file.
 
-  m_SpectrumModel = CSpectrum(m_inputSpc);
-  m_SpcCorrectedUnderLines = CSpectrum(m_inputSpc);
-  const Int32 spectrumSampleCount = m_inputSpc.GetSampleCount();
+  m_SpectrumModel = CSpectrum(*(m_inputSpc));
+  m_SpcCorrectedUnderLines = CSpectrum(*(m_inputSpc));
+  const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
-                m_inputSpc.GetMedianWinsize());
+                m_inputSpc->GetMedianWinsize());
 
   m_ContinuumFluxAxis.SetSize(spectrumSampleCount);
   m_SpcFluxAxisModelDerivVelEmi.SetSize(spectrumSampleCount);
   m_SpcFluxAxisModelDerivVelAbs.SetSize(spectrumSampleCount);
-  const CSpectrumFluxAxis &spectrumFluxAxis = m_inputSpc.GetFluxAxis();
+  const CSpectrumFluxAxis &spectrumFluxAxis = m_inputSpc->GetFluxAxis();
 
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
   m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
@@ -255,7 +263,7 @@ void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: check if m_CatalogTplShape changes between iterations
 
   m_CatalogTplShape.Init(opt_tplratio_ismFit,
-                         m_tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
+                         m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
                              ->m_ismCorrectionCalzetti,
                          m_NSigmaSupport);
   m_CatalogTplShape.InitLineCorrespondingAmplitudes(m_Elements);
@@ -388,10 +396,6 @@ void CLineModelFitting::logParameters() {
                           << m_secondpass_fitContinuum_dustfit);
   Log.LogInfo(Formatter() << "secondpass_fitContinuum_igm="
                           << m_secondpass_fitContinuum_igm);
-  Log.LogInfo(Formatter() << "secondpass_fitContinuum_outsidelinesmask="
-                          << m_secondpass_fitContinuum_outsidelinesmask);
-  Log.LogInfo(Formatter() << "secondpass_fitContinuum_observedFrame="
-                          << m_secondpass_fitContinuum_observedFrame);
 
   Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
   Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum_tplName);
@@ -1017,9 +1021,8 @@ void CLineModelFitting::LoadFitContinuumOneTemplate(
   Float64 fitLogprior = NAN;
   Float64 overlapThreshold = 1.0;
 
-  bool ignoreLinesSupport = m_secondpass_fitContinuum_outsidelinesmask;
   std::vector<CMask> maskList;
-  if (ignoreLinesSupport) {
+  if (m_ignoreLinesSupport) {
     maskList.resize(1);
     maskList[0] = getOutsideLinesMask();
   }
@@ -1108,7 +1111,7 @@ void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
 
   if (!m_fitContinuum_tplName.empty()) {
     // Retrieve the best template
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
+    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         m_tplCategoryList, m_fitContinuum_tplName);
     if (tpl->GetName() == m_fitContinuum_tplName) {
       if (autoSelect) {
@@ -1189,7 +1192,7 @@ void CLineModelFitting::setFitContinuum_tplAmplitude(
       m_ContinuumFluxAxis[k] =
           (1. - alpha) * m_observeGridContinuumFlux[k] * tplAmp;
     if (alpha != 0.0) {
-      m_ContinuumFluxAxis[k] += alpha * m_inputSpc.GetContinuumFluxAxis()[k];
+      m_ContinuumFluxAxis[k] += alpha * m_inputSpc->GetContinuumFluxAxis()[k];
     }
     if (alpha != 1.0) {
       Float64 lbdaTerm = 1.0;
@@ -1212,7 +1215,7 @@ void CLineModelFitting::setRedshift(Float64 redshift,
   m_Redshift = redshift;
 
   if (reinterpolatedContinuum) {
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
+    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
         m_tplCategoryList, m_fitContinuum_tplName);
     if (tpl->GetName() == m_fitContinuum_tplName) {
       ApplyContinuumOnGrid(tpl, redshift);
@@ -1325,8 +1328,8 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const CTemplate &tpl) {
   Int32 opt_dustFit = -1;
 
   // prepare observed spectrum without continuum
-  CSpectrum::EType savetype = m_inputSpc.GetType();
-  m_inputSpc.SetType(CSpectrum::nType_noContinuum);
+  CSpectrum::EType savetype = m_inputSpc->GetType();
+  m_inputSpc->SetType(CSpectrum::nType_noContinuum);
 
   // prepare tpl contaminant
   const CSpectrumSpectralAxis &spcSpectralAxis =
@@ -1412,14 +1415,14 @@ Int32 CLineModelFitting::LoadFitContaminantTemplate(const CTemplate &tpl) {
   fclose( f );
   //*/
 
-  m_inputSpc.SetType(savetype);
+  m_inputSpc->SetType(savetype);
   if (m_ContinuumComponent == "nocontinuum" ||
       m_ContinuumComponent == "fromspectrum" ||
       m_ContinuumComponent == "tplfit" ||
       m_ContinuumComponent == "tplfitauto") {
     for (k = 0; k < m_SpcFluxAxis.GetSamplesCount(); k++) {
       m_SpcFluxAxis[k] =
-          m_inputSpc.GetFluxAxis()[k] - tplContaminantRebinFluxAxis[k];
+          m_inputSpc->GetFluxAxis()[k] - tplContaminantRebinFluxAxis[k];
     }
   }
   return 1;
@@ -1472,7 +1475,7 @@ Float64 CLineModelFitting::getFitContinuum_tplIgmMeiksinIdx() const {
 void CLineModelFitting::SetContinuumComponent(std::string component) {
   m_ContinuumComponent = component;
 
-  const Int32 spectrumSampleCount = m_inputSpc.GetSampleCount();
+  const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
   if (m_ContinuumComponent == "nocontinuum") {
     m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
@@ -1480,7 +1483,7 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
     // without continuum
     m_spcFluxAxisNoContinuum =
         m_inputSpc
-            .GetRawFluxAxis(); // m_inputSpc.GetWithoutContinuumFluxAxis();
+            ->GetRawFluxAxis(); // m_inputSpc->GetWithoutContinuumFluxAxis();
     m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
   }
@@ -1488,16 +1491,16 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
     m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
-    m_spcFluxAxisNoContinuum = m_inputSpc.GetWithoutContinuumFluxAxis();
-    m_SpcFluxAxis = m_inputSpc.GetRawFluxAxis();
-    m_ContinuumFluxAxis = m_inputSpc.GetContinuumFluxAxis();
+    m_spcFluxAxisNoContinuum = m_inputSpc->GetWithoutContinuumFluxAxis();
+    m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
+    m_ContinuumFluxAxis = m_inputSpc->GetContinuumFluxAxis();
     m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   }
   if (m_ContinuumComponent == "tplfit" ||
       m_ContinuumComponent == "tplfitauto") {
     // the continuum is set to zero and the observed spectrum is the raw
     // spectrum
-    m_SpcFluxAxis = m_inputSpc.GetRawFluxAxis();
+    m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
   }
 }
@@ -1580,7 +1583,7 @@ void CLineModelFitting::PrepareContinuum() {
       m_ContinuumComponent == "tplfitauto" || m_fittingmethod == "lmfit") {
     m_observeGridContinuumFlux.resize(m_SpectrumModel.GetSampleCount());
   } else {
-    Yrebin = m_inputSpc.GetContinuumFluxAxis().GetSamplesVector();
+    Yrebin = m_inputSpc->GetContinuumFluxAxis().GetSamplesVector();
   }
 }
 
@@ -2069,7 +2072,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                      m_fitContinuum_tplName.c_str());
 
         // re-interpolate the continuum on the grid
-        std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
+        std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
             m_tplCategoryList, m_fitContinuum_tplName);
         ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
 
@@ -2124,13 +2127,13 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             }
             std::string category = m_tplCategoryList[i];
 
-            for( Int32 j=0; j<m_tplCatalog.GetTemplateCount( category ); j++ )
+            for( Int32 j=0; j<m_tplCatalog->GetTemplateCount( category ); j++ )
             {
                 if(stop_loop_tpl)
                 {
                     break;
                 }
-                const CTemplate& tpl = m_tplCatalog.GetTemplate( category, j
+                const CTemplate& tpl = m_tplCatalog->GetTemplate( category, j
         );
 
                 //prepare continuum on the observed grid
@@ -2610,7 +2613,7 @@ CLineModelFitting::createLmfitControllers() {
   } else {
     if (m_lmfit_bestTemplate) {
       LoadFitContinuum(0, 0);
-      std::shared_ptr<const CTemplate> tpl = m_tplCatalog.GetTemplateByName(
+      std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
           m_tplCategoryList, m_fitContinuum_tplName);
       if (m_fitContinuum_tplName == tpl->GetName()) {
         bool continumLoaded = true;
@@ -2623,9 +2626,9 @@ CLineModelFitting::createLmfitControllers() {
       for (Int32 i = 0; i < m_tplCategoryList.size(); i++) {
         std::string category = m_tplCategoryList[i];
 
-        for (Int32 j = 0; j < m_tplCatalog.GetTemplateCount(category); j++) {
+        for (Int32 j = 0; j < m_tplCatalog->GetTemplateCount(category); j++) {
           std::shared_ptr<const CTemplate> tpl =
-              m_tplCatalog.GetTemplate(category, j);
+              m_tplCatalog->GetTemplate(category, j);
           useLmfitControllers.push_back(std::make_shared<CLmfitController>(
               tpl, continumLoaded, m_lmfit_fitContinuum,
               m_lmfit_fitEmissionVelocity, m_lmfit_fitAbsorptionVelocity));
@@ -2645,15 +2648,9 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms() {
     dustfit = -10;
 
   Int32 meiksinfit = ps->GetScoped<bool>("continuumfit.igmfit");
-  Int32 outsidelinemask = ps->GetScoped<bool>("continuumfit.ignorelinesupport");
-  Int32 observedFrame =
-      0; // should be replaced with option passed in param.json?
+  m_ignoreLinesSupport = ps->GetScoped<bool>("continuumfit.ignorelinesupport");
   m_secondpass_fitContinuum_dustfit = dustfit;
   m_secondpass_fitContinuum_igm = meiksinfit;
-  m_secondpass_fitContinuum_outsidelinesmask =
-      outsidelinemask; // hardcoded deactivated because ortho templates are
-                       // used
-  m_secondpass_fitContinuum_observedFrame = observedFrame;
 
   Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
                 "fitContinuum_dustfit = %d",
@@ -2661,12 +2658,6 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms() {
   Log.LogDetail(
       "Elementlist: SetSecondpassContinuumFitPrms fitContinuum_igm = %d",
       m_secondpass_fitContinuum_igm);
-  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                "fitContinuum_outsidelinemask = %d",
-                m_secondpass_fitContinuum_outsidelinesmask);
-  Log.LogDetail("Elementlist: SetSecondpassContinuumFitPrms "
-                "fitContinuum_observedFrame = %d",
-                m_secondpass_fitContinuum_observedFrame);
 }
 
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
@@ -5743,7 +5734,7 @@ Int32 CLineModelFitting::GetNElements() const {
 }
 
 void CLineModelFitting::SetLSF() {
-  const std::shared_ptr<const CLSF> &lsf = m_inputSpc.GetLSF();
+  const std::shared_ptr<const CLSF> &lsf = m_inputSpc->GetLSF();
 
   if (lsf == nullptr) {
     THROWG(INTERNAL_ERROR,
@@ -5923,7 +5914,7 @@ void CLineModelFitting::EstimateSpectrumContinuum(Float64 opt_enhance_lines) {
   }
 
   // evaluate contiuum
-  CSpectrum spcCorrectedUnderLines(m_inputSpc);
+  CSpectrum spcCorrectedUnderLines(*(m_inputSpc));
   spcCorrectedUnderLines.SetFluxAxis(std::move(fluxAxisNothingUnderLines));
   m_ContinuumFluxAxis = spcCorrectedUnderLines.GetContinuumFluxAxis();
 }
@@ -6095,7 +6086,7 @@ bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog) {
     // here below we retrieve ism coeff and apply it to nominal Amp to then
     // set lines Nominal amplitudes
     Float64 dustCoeff =
-        m_tplCatalog.GetTemplate(m_tplCategoryList[0], 0)
+        m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
             ->m_ismCorrectionCalzetti->GetDustCoeff(
                 m_CatalogTplShape.GetIsmIndex(iCatalog), restLambda);
     nominalAmp *= dustCoeff;
