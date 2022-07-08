@@ -171,17 +171,16 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
         -INFINITY; // not relevant in the "fromspectrum" case
     Float64 opt_continuum_nullamp_threshold =
         0.; // not relevant in the "fromspectrum" case;
-    CSpectrum spectrum = inputTemplate;
-    spectrum.SetLSF(m_LSF);
+    tplOrtho->SetLSF(m_LSF);
 
     std::string saveContinuumEstimationMethod =
-        spectrum.GetContinuumEstimationMethod();
-    spectrum.SetContinuumEstimationMethod("zero");
+        tplOrtho->GetContinuumEstimationMethod();
+    tplOrtho->SetContinuumEstimationMethod("zero");
 
     // Compute linemodel on the template
     TLambdaRange lambdaRange = inputTemplate.GetLambdaRange();
 
-    CLineModelFitting model(spectrum, lambdaRange);
+    CLineModelFitting model(tplOrtho, lambdaRange);
 
     Float64 redshift = 0.0;
     Float64 contreest_iterations = 0;
@@ -193,7 +192,7 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
               contreest_iterations, enableLogging);
 
     // Restore the continuum estimation method
-    spectrum.SetContinuumEstimationMethod(saveContinuumEstimationMethod);
+    tplOrtho->SetContinuumEstimationMethod(saveContinuumEstimationMethod);
 
     // get mtm
     Float64 mtm = model.EstimateMTransposeM();
@@ -212,7 +211,8 @@ std::shared_ptr<CTemplate> CTemplatesOrthogonalization::OrthogonalizeTemplate(
     //*/
 
     const CSpectrumFluxAxis &modelFluxAxis = modelSpc.GetFluxAxis();
-    CSpectrumFluxAxis continuumOrthoFluxAxis = tplOrtho->GetFluxAxis();
+    CSpectrumFluxAxis continuumOrthoFluxAxis =
+        std::move(tplOrtho->GetFluxAxis());
     for (Int32 i = 0; i < continuumOrthoFluxAxis.GetSamplesCount(); i++) {
       continuumOrthoFluxAxis[i] -= modelFluxAxis[i];
     }

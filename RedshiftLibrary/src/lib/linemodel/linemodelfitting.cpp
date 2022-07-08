@@ -95,12 +95,13 @@ CLineModelFitting::CLineModelFitting()
   initMembers();
 }
 
-CLineModelFitting::CLineModelFitting(const CSpectrum &template_,
-                                     const TLambdaRange &lambdaRange)
+CLineModelFitting::CLineModelFitting(
+    const std::shared_ptr<const CSpectrum> &template_,
+    const TLambdaRange &lambdaRange)
     : m_tplCatalog(), m_tplCategoryList(),
       m_ErrorNoContinuum(m_spcFluxAxisNoContinuum.GetError()), m_Regulament(),
       m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
-  m_inputSpc = std::make_shared<const CSpectrum>(template_);
+  m_inputSpc = template_;
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
   initParameters();
   // override ortho specific parameters

@@ -84,7 +84,7 @@ public:
   const std::shared_ptr<CSpectrum> &GetRebinnedSpectrum() {
     return m_rebinnedSpectrum;
   }
-  std::shared_ptr<CTemplateCatalog> GetTemplateCatalog() {
+  const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
     return m_TemplateCatalog;
   }
   const std::shared_ptr<CLineCatalogsTplShape> &

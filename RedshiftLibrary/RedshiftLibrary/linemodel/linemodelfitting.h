@@ -79,7 +79,7 @@ class CLineModelFitting {
 public:
   CLineModelFitting();
   CLineModelFitting(
-      const CSpectrum &template_,
+      const std::shared_ptr<const CSpectrum> &template_,
       const TLambdaRange
           &lambdaRange); // only used for template orthogonalization, TODO use
                          // only one of the future subclasses ? at least inherit

@@ -160,8 +160,6 @@ private:
   TFloat64List m_sortedRedshifts;
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;
-  Float64 m_extremaCount;
-  Float64 m_Zlinemeasref;
 
   TFloat64List SpanRedshiftWindow(Float64 z) const;
 

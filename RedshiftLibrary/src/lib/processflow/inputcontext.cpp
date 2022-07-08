@@ -48,8 +48,8 @@ using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore)
     : m_ParameterStore(std::move(paramStore)) {
-  m_rebinnedClampedLambdaRange = std::make_shared<TLambdaRange>(TLambdaRange());
-  m_clampedLambdaRange = std::make_shared<TLambdaRange>(TLambdaRange());
+  m_rebinnedClampedLambdaRange = std::make_shared<TLambdaRange>();
+  m_clampedLambdaRange = std::make_shared<TLambdaRange>();
 }
 /*
 Two cases exist:
