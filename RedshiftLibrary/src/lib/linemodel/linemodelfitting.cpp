@@ -1737,7 +1737,7 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k) {
   if (isContinuumComponentTplfitxx()) // the support has to be already computed
                                       // when LoadFitContinuum() is called
   {
-    Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
+    Int32 autoselect = m_ContinuumComponent == "tplfitauto";
     LoadFitContinuum(k, autoselect);
   }
 }
@@ -1759,9 +1759,11 @@ void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
  * @param _merit
  * @param _meritprior
  */
-void CLineModelFitting::updateTplratioResults(Int32 idx, Float64 _merit,
-                                              Float64 _meritprior) {
-
+void CLineModelFitting::updateTplratioResults(
+    Int32 idx, Float64 _merit, Float64 _meritprior,
+    TFloat64List &bestTplratioMerit, TFloat64List &bestTplratioMeritPrior) {
+  bestTplratioMerit[idx] = _merit;
+  bestTplratioMeritPrior[idx] = _meritprior;
   m_ChisquareTplratio[idx] = _merit;
   m_ScaleMargCorrTplratio[idx] = getScaleMargCorrection();
   m_StrongELPresentTplratio[idx] = GetModelStrongEmissionLinePresent();
@@ -1838,7 +1840,11 @@ void CLineModelFitting::updateTplratioResults(Int32 idx, Float64 _merit,
  *
  * @param idx
  */
-void CLineModelFitting::duplicateTplratioResult(Int32 idx) {
+void CLineModelFitting::duplicateTplratioResult(
+    Int32 idx, TFloat64List &bestTplratioMerit,
+    TFloat64List &bestTplratioMeritPrior) {
+  bestTplratioMerit[idx] = bestTplratioMerit[idx - 1];
+  bestTplratioMeritPrior[idx] = bestTplratioMeritPrior[idx - 1];
   m_ChisquareTplratio[idx] = m_ChisquareTplratio[idx - 1];
   m_ScaleMargCorrTplratio[idx] = m_ScaleMargCorrTplratio[idx - 1];
   m_StrongELPresentTplratio[idx] = m_StrongELPresentTplratio[idx - 1];
@@ -1906,14 +1912,14 @@ Float64 CLineModelFitting::computelogLinePriorMerit(
 }
 /**
  * \brief Prepares the context and fits the Linemodel to the spectrum,
- *returning the bestContMerit of the fit. Prepare the continuum. Initialize the
+ *returning the bestMerit of the fit. Prepare the continuum. Initialize the
  *model spectrum. Prepare the elements. Fit the amplitudes of each element
  *independently. Fit the amplitude of all elements together with iterative
  *solver: Nelder Mead Simplex. Fit the amplitude of all elements together with
  *linear solver: gsl_multifit_wlinear. Fit the amplitudes of each element
  *independently, unless there is overlap. Apply a continuum iterative
  *re-estimation with lines removed from the initial spectrum. Apply rules.
- *Create spectrum model. Return bestContMerit.
+ *Create spectrum model. Return bestMerit.
  **/
 Float64 CLineModelFitting::fit(Float64 redshift,
                                CLineModelSolution &modelSolution,
@@ -1967,14 +1973,10 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
     nContinuum = m_opt_fitcontinuum_maxCount;
-
-  Float64 bestContMerit =
-      INFINITY; // initializing 'on the fly' best-bestContMerit
-  Float64 bestContMeritPrior =
-      0.0; // initializing 'on the fly' best-bestContMerit-prior
-  // initializing 'on the fly' best-tplratiomerit per tplratio
+  // 'on the fly' initialization
+  Float64 bestMerit = INFINITY;
+  Float64 bestMeritPrior = 0.0;
   TFloat64List bestTplratioMerit(ntplratio, INFINITY);
-  // initializing 'on the fly' best-tplratio-bestContMerit-prior per tplratio
   TFloat64List bestTplratioMeritPrior(ntplratio, 0.0);
 
   for (Int32 k = 0; k < nContinuum; k++) {
@@ -1992,9 +1994,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
       if (m_rigidity == "tplratio") {
         if (m_forcedisableTplratioISMfit && itratio > 0 &&
             m_CatalogTplRatio.GetIsmIndex(itratio) > 0) {
-          bestTplratioMerit[itratio] = bestTplratioMerit[itratio - 1];
-          bestTplratioMeritPrior[itratio] = bestTplratioMeritPrior[itratio - 1];
-          duplicateTplratioResult(itratio);
+          duplicateTplratioResult(itratio, bestTplratioMerit,
+                                  bestTplratioMeritPrior);
           continue;
         }
         setTplratioModel(itratio, false);
@@ -2449,10 +2450,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                             // amplitude/err!
         continuumModelSolution = GetContinuumModelSolution(); // not used!
         TFloat64List correctedAmplitudes(modelSolution.Amplitudes.size());
-        std::string tplname = "undefined";
         m_CatalogTplRatio.GetBestFit(m_RestLineList, modelSolution.Amplitudes,
                                      modelSolution.AmplitudesUncertainties,
-                                     correctedAmplitudes, tplname);
+                                     correctedAmplitudes, bestTplratioName);
         for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size();
              iRestLine++) {
           Int32 subeIdx = undefIdx;
@@ -2484,17 +2484,15 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         if (_merit + _meritprior <
             bestTplratioMerit[itratio] + bestTplratioMeritPrior[itratio]) {
-          // update local variables
-          bestTplratioMerit[itratio] = _merit;
-          bestTplratioMeritPrior[itratio] = _meritprior;
-          // update class variables
-          updateTplratioResults(itratio, _merit, _meritprior);
+          // update result variables
+          updateTplratioResults(itratio, _merit, _meritprior, bestTplratioMerit,
+                                bestTplratioMeritPrior);
         }
       }
 
-      if (bestContMerit + bestContMeritPrior > _merit + _meritprior) {
-        bestContMerit = _merit;
-        bestContMeritPrior = _meritprior;
+      if (bestMerit + bestMeritPrior > _merit + _meritprior) {
+        bestMerit = _merit;
+        bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
         Int32 modelSolutionLevel =
             m_rigidity == "rules" ? Int32(enableLogging) : 0;
@@ -2529,11 +2527,11 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   }
 
   if (!enableLogging)
-    return bestContMerit;
+    return bestMerit;
 
-  if (isContinuumComponentTplfitxx() && nContinuum > 1) {
-    if (m_fittingmethod != "svdlc") {
-      Int32 autoselect = (m_ContinuumComponent == "tplfit") ? 0 : 1;
+  if (isContinuumComponentTplfitxx()) {
+    if (m_fittingmethod != "svdlc" && nContinuum > 1) {
+      Int32 autoselect = m_ContinuumComponent == "tplfitauto";
       // TODO savedIdxContinuumFitted=-1 if rigidity!=tplratio
       LoadFitContinuum(savedIdxContinuumFitted, autoselect);
     }
@@ -2586,7 +2584,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     continuumModelSolution = GetContinuumModelSolution();
   }
 
-  return bestContMerit;
+  return bestMerit;
 }
 
 std::vector<std::shared_ptr<CLmfitController>>
@@ -4746,10 +4744,6 @@ Float64 CLineModelFitting::getContinuumScaleMargCorrection() const {
   return corr;
 }
 
-bool CLineModelFitting::isContinuumComponentTplfitxx() const {
-  return m_ContinuumComponent == "tplfit" ||
-         m_ContinuumComponent == "tplfitauto";
-}
 /**
  * \brief Returns the number of spectral samples between lambdaRange.
  **/

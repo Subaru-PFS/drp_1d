@@ -281,10 +281,16 @@ public:
   void SetForcedisableTplratioISMfit(bool opt);
   void prepareAndLoadContinuum(Int32 icontfitting);
   void computeSpectrumFluxWithoutContinuum();
-  bool isContinuumComponentTplfitxx() const;
-  void duplicateTplratioResult(Int32 ifitting);
+  bool isContinuumComponentTplfitxx() const {
+    return m_ContinuumComponent == "tplfit" ||
+           m_ContinuumComponent == "tplfitauto";
+  }
+  void duplicateTplratioResult(Int32 ifitting, TFloat64List &bestTplratioMerit,
+                               TFloat64List &bestTplratioMeritPrior);
   void updateTplratioResults(Int32 ifitting, Float64 _merit,
-                             Float64 _meritprior);
+                             Float64 _meritprior,
+                             TFloat64List &bestTplratioMerit,
+                             TFloat64List &bestTplratioMeritPrior);
   Float64 computelogLinePriorMerit(
       Int32 itratio,
       const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
