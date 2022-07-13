@@ -66,7 +66,6 @@
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 
-
 #include <memory>
 namespace NSEpic {
 
@@ -190,7 +189,6 @@ public:
   bool setTplratioAmplitude(const TFloat64List &ampsElts,
                             const TFloat64List &errorsElts);
 
-
   void SetFittingMethod(const std::string &fitMethod);
   void SetSecondpassContinuumFitPrms();
 
@@ -207,8 +205,7 @@ public:
   void refreshModelInitAllGrid();
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = -1);
- 
- 
+
   void setModelSpcObservedOnSupportZeroOutside();
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
@@ -242,7 +239,6 @@ public:
                                 bool substract_abslinesmodel, Float64 &fluxdi,
                                 Float64 &snrdi) const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
-  Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
   std::shared_ptr<const CSpectrum> m_inputSpc;
@@ -325,7 +321,6 @@ private:
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;
 
-  bool SetMultilineNominalAmplitudes(Int32 iLine);
   bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
   void setLyaProfile(Float64 redshift,
                      const CLineCatalog::TLineVector &lineList,
@@ -348,11 +343,6 @@ private:
                                              const TInt32List &EltsIdx) const;
   TInt32List getOverlappingElementsBySupport(Int32 ind,
                                              Float64 overlapThres = 0.1) const;
-  TInt32List ReestimateContinuumApprox(const TInt32List &EltsIdx);
-  TInt32List ReestimateContinuumUnderLines(const TInt32List &EltsIdx);
-  void refreshModelAfterContReestimation(
-      const TInt32List &EltsIdx, CSpectrumFluxAxis &modelFluxAxis,
-      CSpectrumFluxAxis &spcFluxAxisNoContinuum) const;
 
   TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
@@ -373,7 +363,6 @@ private:
                               const std::vector<CRange<Int32>> &indexRangeList,
                               Float64 &sumFlux, Float64 &sumErr) const;
 
-  
   CRegulament m_Regulament;
 
   TFloat64List m_ScaleMargCorrTplratio;

@@ -197,7 +197,7 @@ void CLineModelFitting::initMembers() {
                 m_inputSpc->GetMedianWinsize());
 
   m_ContinuumFluxAxis.SetSize(spectrumSampleCount);
-  
+
   const CSpectrumFluxAxis &spectrumFluxAxis = m_inputSpc->GetFluxAxis();
 
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
@@ -211,7 +211,6 @@ void CLineModelFitting::initMembers() {
   m_fitContinuum_option =
       0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
   // values (typical use for second pass recompute)
-
 
   // "New style" rules initialization:
   m_Regulament.CreateRulesFromJSONFiles();
@@ -262,7 +261,6 @@ void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
                          m_NSigmaSupport);
   m_CatalogTplRatio.InitLineCorrespondingAmplitudes(m_Elements);
   SetMultilineNominalAmplitudesFast(0);
-  // m_CatalogTplRatio.SetMultilineNominalAmplitudes( *this, 0 );
   // m_RestLineList = m_CatalogTplRatio.GetRestLinesList(0);
   // LoadCatalog(m_RestLineList);
   // LogCatalogInfos();
@@ -754,17 +752,6 @@ void CLineModelFitting::integrateFluxes_usingTrapez(
   }
   return;
 }
-
-Float64 CLineModelFitting::getModelFluxVal(Int32 idx) const {
-  const CSpectrumFluxAxis &modelFluxAxis = m_SpectrumModel.GetFluxAxis();
-  if (idx < modelFluxAxis.GetSamplesCount()) {
-    return modelFluxAxis[idx];
-  }
-
-  THROWG(INTERNAL_ERROR, "out-of-bound index");
-}
-
-
 
 /**
  * \brief For each line in each group of the argument, finds the associated
@@ -1734,7 +1721,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
 
-
   initModelAtZ(redshift, spectralAxis);
 
   if (m_dTransposeDLambdaRange != *(m_lambdaRange))
@@ -1881,7 +1867,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
           }
         }
       }
-
 
       // fit the amplitude of all elements together with linear solver:
       // gsl_multifit_wlinear
@@ -2072,46 +2057,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
             m_spcFluxAxisNoContinuum[i] = SpcFluxAxis[i] - ContinuumFluxAxis[i];
           }
 
-          /*
-      //iterative continuum estimation approx: APPROX. METHOD
-      TInt32List validEltsIdx = GetModelValidElementsIndexes();
-      TInt32List refreshIdxs = ReestimateContinuumApprox(validEltsIdx);
-      refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis,
-      spcFluxAxisNoContinuum);
-      //*/
-
-          /*
-      //iterative continuum estimation approx: FAST METHOD
-      TInt32List validEltsIdx = GetModelValidElementsIndexes();
-      TInt32List highSNRvalidEltsIdx;
-      Float64 snrthres = 5.0;
-      for( Int32 i=0; i<validEltsIdx.size(); i++ )
-      {
-          Int32 eltIdx = validEltsIdx[i];
-          bool isSnrHigh = false;
-          Int32 nlines = m_Elements[eltIdx]->GetSize();
-          for(Int32 iline=0; iline<nlines; iline++)
-          {
-              Float64 A = m_Elements[eltIdx]->GetFittedAmplitude(iline);
-              Float64 Sigma =
-      m_Elements[eltIdx]->GetFittedAmplitudeErrorSigma(iline);
-
-              Float64 snr = A/Sigma;
-              if(snr > snrthres){
-                  isSnrHigh = true;
-                  break;
-              }
-          }
-          if(isSnrHigh){
-              highSNRvalidEltsIdx.push_back(eltIdx);
-          }
-      }
-      TInt32List refreshIdxs =
-      ReestimateContinuumUnderLines(highSNRvalidEltsIdx);
-      refreshModelAfterContReestimation(refreshIdxs, modelFluxAxis,
-      spcFluxAxisNoContinuum);
-      //*/
-
           fitAmplitudesHybrid(spectralAxis, m_spcFluxAxisNoContinuum,
                               m_ContinuumFluxAxis, redshift);
           it++;
@@ -2278,7 +2223,6 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   return bestMerit;
 }
-
 
 void CLineModelFitting::SetSecondpassContinuumFitPrms() {
 
@@ -2530,8 +2474,6 @@ void CLineModelFitting::refreshModelUnderElements(
   m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
 }
 
-
-
 void CLineModelFitting::setModelSpcObservedOnSupportZeroOutside() {
   m_Redshift = 0.0;
 
@@ -2750,7 +2692,6 @@ Int32 CLineModelFitting::fitAmplitudesHybrid(
 
   return 0;
 }
-
 
 Float64 CLineModelFitting::GetWeightingAnyLineCenterProximity(
     Int32 sampleIndex, const TInt32List &EltsIdx) const {
@@ -3551,248 +3492,6 @@ Int32 CLineModelFitting::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
     }
   }
   return bestIgmIdx;
-}
-
-/**
- * @brief CLineModelFitting::ReestimateContinuumUnderLines
- * For each line, reestimate the continuum using the original median routines
- * on a sub segment of the original spectrum
- * - the subsegment is a contiguous segment around the support of all the
- * elements
- * @param EltsIdx
- * @return
- */
-TInt32List
-CLineModelFitting::ReestimateContinuumUnderLines(const TInt32List &EltsIdx) {
-  if (EltsIdx.size() < 1) {
-    TInt32List empty;
-    return empty;
-  }
-
-  // smoothing factor in continuum median filter
-  Float64 smoof = 150;
-
-  // modify m_ContinuumFluxAxis
-  CSpectrumFluxAxis &fluxAxisModified = m_ContinuumFluxAxis;
-  Float64 *Ycont = fluxAxisModified.GetSamples();
-  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
-
-  TInt32List xInds = m_Elements.getSupportIndexes(EltsIdx);
-  Int32 minInd = xInds[0];
-  Int32 maxInd = xInds[xInds.size() - 1];
-  //
-  Int32 iminMerge =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd] - 2 * smoof);
-  if (iminMerge == 0) {
-    iminMerge = 1;
-  }
-  Int32 imaxMerge =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd] + 2 * smoof);
-  //
-  //
-  Int32 iminMerge2 =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd] - smoof);
-  if (iminMerge2 == 0) {
-    iminMerge2 = 1;
-  }
-  Int32 imaxMerge2 =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd] + smoof);
-  //
-  Int32 imin =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[minInd] - 3 * smoof);
-  if (imin == 0) {
-    imin = 1;
-  }
-  Int32 imax =
-      spectralAxis.GetIndexAtWaveLength(spectralAxis[maxInd] + 3 * smoof);
-  Int32 spcSize = imax - imin + 1;
-
-  // prepare the line model with no continuum;
-  CSpectrumFluxAxis modelFluxAxisTmp = m_SpectrumModel.GetFluxAxis();
-  for (Int32 i = 0; i < spcSize; i++) {
-    modelFluxAxisTmp[i + imin] = 0.0;
-  }
-  for (Int32 idx = 0; idx < EltsIdx.size(); idx++) {
-    Int32 eltIdx = EltsIdx[idx];
-    m_Elements[eltIdx]->addToSpectrumModel(spectralAxis, modelFluxAxisTmp,
-                                           m_ContinuumFluxAxis, m_Redshift);
-  }
-
-  // gather the modified indexes
-  TInt32List modifiedIdxs;
-
-  // create the spcBuffer with spectrum minus the lines
-  CSpectrum spcBuffer;
-  CSpectrumSpectralAxis _SpectralAxis = CSpectrumSpectralAxis(spcSize, false);
-  CSpectrumFluxAxis _FluxAxis = CSpectrumFluxAxis(spcSize);
-  const auto &SpcFluxAxis = m_SpcFluxAxis;
-
-  for (Int32 i = 0; i < spcSize; i++) {
-    (_SpectralAxis)[i] = spectralAxis[i + imin];
-    (_FluxAxis)[i] =
-        SpcFluxAxis[i + imin] - as_const(modelFluxAxisTmp)[i + imin];
-    //                if( error!= NULL ){
-    //                    (*_FluxAxis).GetError()[i] = tmpError[i];
-    //                }
-  }
-  spcBuffer.SetSpectralAndFluxAxes(std::move(_SpectralAxis),
-                                   std::move(_FluxAxis));
-
-  /*
-  // export for debug
-  FILE* fspc = fopen( "ReestimateContinuumUnderLines_correctedSpc_dbg.txt",
-  "w+"
-  ); Float64 coeffSaveSpc = 1e16; for( Int32
-  t=0;t<spcBuffer.GetSampleCount();t++)
-  {
-      fprintf( fspc, "%f %f %f\n", t, spcBuffer.GetSpectralAxis()[t],
-  (m_SpcFluxAxis[t+imin])*coeffSaveSpc,
-  (spcBuffer.GetFluxAxis()[t])*coeffSaveSpc);
-  }
-  fclose( fspc );
-  //*/
-
-  // apply continuum routine on this spcbuffer
-  CContinuumIrregularSamplingMedian continuum;
-  CSpectrumFluxAxis fluxAxisWithoutContinuumCalc;
-  continuum.RemoveContinuum(spcBuffer, fluxAxisWithoutContinuumCalc);
-
-  /*
-  // export for debug
-  FILE* f = fopen( "continuum_reestimated_underlines_dbg.txt", "w+" );
-  Float64 coeffSave = 1e16;
-  for( Int32 t=iminMerge;t<imaxMerge;t++)
-  {
-      fprintf( f, "%f %f %f\n", t, spectralAxis[t],
-  (m_inputSpc->GetContinuumFluxAxis()[t])*coeffSave,
-  (spcBuffer.GetFluxAxis()[t-imin] -
-  fluxAxisWithoutContinuumCalc[t-imin])*coeffSave);
-  }
-  fclose( f );
-  //*/
-
-  Float64 modified = 0.0;
-  Float64 coeff = 0.0;
-  // merge raw continuum free with the newly calculated cont. under the line,
-  // (todo: with cross-fade on the borders)
-  for (Int32 i = iminMerge; i < imaxMerge; i++) {
-    modified = spcBuffer.GetFluxAxis()[i - imin] -
-               as_const(fluxAxisWithoutContinuumCalc)[i - imin];
-    coeff = 1.0;
-
-    if (i <= iminMerge2) {
-      coeff = (Float64(i - iminMerge) / Float64(iminMerge2 - iminMerge));
-    } else if (i >= imaxMerge2) {
-      coeff = 1.0 - (Float64(i - imaxMerge2) / Float64(imaxMerge - imaxMerge2));
-    }
-
-    Ycont[i] = coeff * modified + (1 - coeff) * as_const(Ycont)[i];
-    modifiedIdxs.push_back(i);
-  }
-
-  std::sort(modifiedIdxs.begin(), modifiedIdxs.end());
-  modifiedIdxs.erase(std::unique(modifiedIdxs.begin(), modifiedIdxs.end()),
-                     modifiedIdxs.end());
-  return modifiedIdxs;
-}
-
-/**
- * \brief Modifies the fluxAxis where SNR is good enough, and returns the list
- *of modified indexes of fluxAxis.
- **/
-TInt32List
-CLineModelFitting::ReestimateContinuumApprox(const TInt32List &EltsIdx) {
-  // smoothing factor in continuum median filter
-  Float64 smoof = 150;
-
-  //
-  TInt32List modifiedIdxs;
-
-  // modify m_ContinuumFluxAxis
-  CSpectrumFluxAxis &fluxAxisModified = m_ContinuumFluxAxis;
-  Float64 *Ycont = fluxAxisModified.GetSamples();
-  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
-
-  for (Int32 idx = 0; idx < EltsIdx.size(); idx++) {
-    Int32 eltIdx = EltsIdx[idx];
-
-    Int32 nlines = m_Elements[eltIdx]->GetSize();
-    for (Int32 iline = 0; iline < nlines; iline++) {
-      TInt32Range s = m_Elements[eltIdx]->getSupportSubElt(iline);
-      Int32 smin = s.GetBegin();
-      Int32 smax = s.GetEnd();
-      if (smax - smin < 2) {
-        continue;
-      }
-      Int32 imin =
-          spectralAxis.GetIndexAtWaveLength(spectralAxis[smin] - smoof);
-      if (imin == 0) {
-        imin = 1;
-      }
-      Int32 imax =
-          spectralAxis.GetIndexAtWaveLength(spectralAxis[smax] + smoof);
-      Int32 sSize = imax - imin + 1;
-
-      Float64 A = m_Elements[eltIdx]->GetFittedAmplitude(iline);
-      Float64 Sigma = m_Elements[eltIdx]->GetFittedAmplitudeErrorSigma(iline);
-
-      if (A <= 0 ||
-          std::abs(Sigma) > std::abs(A)) { // todo: check this error sigma rule,
-                                           // should we add a sigma thres. ?
-        continue;
-      }
-      A *= m_Elements[eltIdx]->GetSignFactor(iline);
-
-      Float64 mu = NAN;
-      Float64 sigma = NAN;
-      m_Elements[eltIdx]->getObservedPositionAndLineWidth(iline, m_Redshift, mu,
-                                                          sigma, false);
-      Float64 integratedA = A * sigma * sqrt(2 * M_PI);
-      Float64 coeffA = integratedA / (Float64)sSize;
-
-      Float64 term = 0.0;
-      for (Int32 i = imin; i < imax; i++) {
-        Float64 dx = spectralAxis[imin] - spectralAxis[imin - 1];
-        if (i > smin && i < smax) {
-          term = coeffA / dx;
-        } else if (i > imin && i <= smin) {
-          term = ((Float64(i - imin) / Float64(smin - imin))) * coeffA / dx;
-        } else if (i >= smax && i < imax) {
-          term =
-              (1.0 - (Float64(i - smax) / Float64(imax - smax))) * coeffA / dx;
-        } else {
-          term = 0.0;
-        }
-        Ycont[i] -= term;
-
-        modifiedIdxs.push_back(i);
-      }
-    }
-  }
-
-  std::sort(modifiedIdxs.begin(), modifiedIdxs.end());
-  modifiedIdxs.erase(std::unique(modifiedIdxs.begin(), modifiedIdxs.end()),
-                     modifiedIdxs.end());
-  return modifiedIdxs;
-}
-
-/**
- * \brief Copies the continuum flux to the model flux, and the no continuum
- *flux receives the value of spectrum flux minus the continuum flux.
- **/
-void CLineModelFitting::refreshModelAfterContReestimation(
-    const TInt32List &xInds, CSpectrumFluxAxis &modelFluxAxis,
-    CSpectrumFluxAxis &spcFluxAxisNoContinuum) const {
-  Int32 n = xInds.size();
-  const auto &ContinuumFluxAxis = m_ContinuumFluxAxis;
-  const auto &SpcFluxAxis = m_SpcFluxAxis;
-  Int32 idx = 0;
-  for (Int32 i = 0; i < n; i++) {
-    idx = xInds[i];
-
-    modelFluxAxis[idx] = ContinuumFluxAxis[idx];
-    spcFluxAxisNoContinuum[idx] = SpcFluxAxis[idx] - ContinuumFluxAxis[idx];
-  }
 }
 
 /**
@@ -5281,52 +4980,6 @@ bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
       nominalAmp = m_CatalogTplRatio
                        .getNominalAmplitudeCorrespondance()[iElts][iCatalog][j];
       m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
-    }
-  }
-  return true;
-}
-
-/**
- * @brief CLineModelFitting::SetMultilineNominalAmplitudes
- * This method sets the linemodel unique elt nominal amplitudes to the
- * corresponding value of the iCatalog st catalog. INFO: slow method
- * @param iCatalog
- * @return
- */
-bool CLineModelFitting::SetMultilineNominalAmplitudes(Int32 iCatalog) {
-  // first set all amplitudes to 0.0
-  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-    // get the max nominal amplitude
-    Int32 nLines = m_Elements[iElts]->GetSize();
-    for (Int32 j = 0; j < nLines; j++) {
-      m_Elements[iElts]->SetNominalAmplitude(j, 0.0);
-    }
-  }
-  // loop the amplitudes in the iLine_st catalog
-  CLineCatalog::TLineVector currentCatalogLineList =
-      m_CatalogTplRatio.GetCatalog(iCatalog).GetList();
-  Int32 nLines = currentCatalogLineList.size();
-  for (Int32 kL = 0; kL < nLines; kL++) {
-    Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
-    Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-    // here below we retrieve ism coeff and apply it to nominal Amp to then
-    // set lines Nominal amplitudes
-    Float64 dustCoeff =
-        m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-            ->m_ismCorrectionCalzetti->GetDustCoeff(
-                m_CatalogTplRatio.GetIsmIndex(iCatalog), restLambda);
-    nominalAmp *= dustCoeff;
-    // find line in the elementList
-    for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
-      // get the max nominal amplitude
-      Int32 nLines = m_Elements[iElts]->GetSize();
-      for (Int32 j = 0; j < nLines; j++) {
-
-        if (m_Elements[iElts]->m_Lines[j].GetName() ==
-            currentCatalogLineList[kL].GetName()) {
-          m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
-        }
-      }
     }
   }
   return true;
