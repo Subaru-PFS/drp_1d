@@ -52,6 +52,15 @@
 #include <string>
 #include <unordered_map>
 
+namespace Spectrum { // boost_test_suite
+// all boost_auto_test_case that use private method
+class constructor_test;
+class setXXX_test;
+class continuum_test;
+class Calcul;
+class rebin_test;
+} // namespace Spectrum
+
 namespace NSEpic {
 /**
  * \ingroup Redshift
@@ -157,6 +166,12 @@ public:
   CSpectrum extract(Int32 startIdx, Int32 endIdx) const;
 
 protected:
+  friend class Spectrum::constructor_test;
+  friend class Spectrum::setXXX_test;
+  friend class Spectrum::continuum_test;
+  friend class Spectrum::Calcul;
+  friend class Spectrum::rebin_test;
+
   // protected mutable getters
   CSpectrumFluxAxis &GetFluxAxis_();
   CSpectrumFluxAxis &GetRawFluxAxis_();
