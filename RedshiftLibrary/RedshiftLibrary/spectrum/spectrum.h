@@ -120,7 +120,6 @@ public:
   Float64 GetResolution() const;
   Float64 GetMeanResolution() const;
   TLambdaRange GetLambdaRange() const;
-  const std::string &GetBaseline() const;
 
   bool GetMeanAndStdFluxInRange(TFloat64Range wlRange, Float64 &mean,
                                 Float64 &std) const;
@@ -193,14 +192,6 @@ protected:
 
   // Flag
   mutable bool alreadyRemoved = false;
-
-  // Map method2baseline
-  const std::unordered_map<std::string, std::string> m_method2baseline = {
-      {"IrregularSamplingMedian", "baselineISMedian"},
-      {"Median", "baselineMedian"},
-      {"raw", "baselineRAW"},
-      {"zero", "baselineZERO"},
-      {"manual", "baselineMANUAL"}};
 };
 
 inline Int32 CSpectrum::GetSampleCount() const {

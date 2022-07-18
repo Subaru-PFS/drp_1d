@@ -363,10 +363,6 @@ void CSpectrum::EstimateContinuum() const {
   alreadyRemoved = true;
 }
 
-const string &CSpectrum::GetBaseline() const {
-  return m_method2baseline.at(m_estimationMethod);
-}
-
 /**
  * Invert the flux axis
  */
@@ -700,8 +696,7 @@ void CSpectrum::SetFullPath(const char *nameP) { m_FullPath = nameP; }
 
 void CSpectrum::SetMedianWinsize(Float64 winsize) {
   if (m_medianWindowSize != winsize &&
-      (m_estimationMethod == "IrregularSamplingMedian" ||
-       m_estimationMethod == "Median")) {
+      m_estimationMethod == "IrregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianWindowSize = winsize;
@@ -709,8 +704,7 @@ void CSpectrum::SetMedianWinsize(Float64 winsize) {
 
 void CSpectrum::SetMedianEvenReflection(bool medianEvenReflection) {
   if (m_medianEvenReflection != medianEvenReflection &&
-      (m_estimationMethod == "IrregularSamplingMedian" ||
-       m_estimationMethod == "Median")) {
+      m_estimationMethod == "IrregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianEvenReflection = medianEvenReflection;
