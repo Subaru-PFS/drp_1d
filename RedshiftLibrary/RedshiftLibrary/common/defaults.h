@@ -24,6 +24,8 @@ static constexpr Float64 INSTRUMENT_RESOLUTION_EMPERICALFACTOR =
     230.0 / 325.0 / 2.35;
 static const Float64 RESTLAMBDA_LYA = 1216.;
 static const Int32 IGM_OVERSAMPLING = 1;
+static const Float64 IGM_RAW_STEP =
+    0.05; //  wavelength step of input extinction curves (in Angstrom)
 
 static const Float64 OVERLAP_THRES_HYBRID_FIT =
     0.15; // 15% seemed necessary for Ha/SII complex when lines are very
