@@ -44,7 +44,6 @@
 #include "RedshiftLibrary/common/range.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/linemodel/modelrulesresult.h"
-#include "RedshiftLibrary/linemodel/multirollmodel.h"
 #include "RedshiftLibrary/operator/linemodelpassextremaresult.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"

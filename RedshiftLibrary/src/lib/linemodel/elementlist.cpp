@@ -401,59 +401,6 @@ std::vector<TInt32List> CLineModelElementList::getIgmLinesIndices() const {
 }
 
 /**
- * \brief Returns the error of the support for subelements under the element
- *with the argument eltId as index. Accumulate "fit", the squared difference
- *between model and spectrum, divided by the square of the m_ErrorNoContinuum
- *value. Accumulate "sumErr" 1 / square of the m_ErrorNoContinuum value. return
- *the square root of fit / sumErr.
- **/
-Float64 CLineModelElementList::getModelErrorUnderElement(
-    Int32 eltId, const CSpectrumFluxAxis &spcFluxAxis,
-    const CSpectrumFluxAxis &modelFluxAxis) const {
-  // before elementlistcutting this variable was
-  // CElementList::m_ErrorNoContinuum, a reference initialized twice in
-  // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
-  // and after to spectrumFluxAxis.GetError
-  const CSpectrumNoiseAxis &errorNoContinuum = spcFluxAxis.GetError();
-
-  if (eltId < 0) {
-    return -1.0;
-  }
-
-  Int32 numDevs = 0;
-  Float64 fit = 0.0;
-  const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
-  Float64 diff = 0.0;
-
-  Float64 sumErr = 0.0;
-
-  TInt32RangeList support;
-  Int32 iElts = eltId;
-  {
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
-      return 0.0;
-    }
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
-      support.push_back(s[iS]);
-    }
-  }
-
-  Float64 w = 0.0;
-  for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
-      numDevs++;
-      diff = (Yspc[j] - Ymodel[j]);
-      w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);
-      fit += (diff * diff) * w;
-      sumErr += w;
-    }
-  }
-  return sqrt(fit / sumErr);
-}
-
-/**
  * \brief Returns a sorted set of samples indices present in the supports of the
  *argument. For each EltsIdx entry, if the entry is not outside lambda range,
  *get the support of each subelement. For each selected support, get the sample

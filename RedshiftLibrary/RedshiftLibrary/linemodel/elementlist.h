@@ -74,9 +74,6 @@ public:
   std::vector<TInt32List> getIgmLinesIndices() const;
 
   Int32 findElementIndex(Int32 LineCatalogIndex, Int32 &lineIdx) const;
-  Float64
-  getModelErrorUnderElement(Int32 eltId, const CSpectrumFluxAxis &spcFluxAxis,
-                            const CSpectrumFluxAxis &modelFluxAxis) const;
 
   TInt32List getSupportIndexes(const TInt32List &EltsIdx) const;
 
