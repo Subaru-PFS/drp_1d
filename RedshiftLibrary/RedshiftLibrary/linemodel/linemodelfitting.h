@@ -361,7 +361,7 @@ private:
   std::shared_ptr<CTemplate>
       m_tplContaminantSpcRebin; // optionally used contaminant to be removed
                                 // from observed spectrum
-  CSpectrumNoiseAxis &m_ErrorNoContinuum;
+
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
                                           // cached dTransposeD values

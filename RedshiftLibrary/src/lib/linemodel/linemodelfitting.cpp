@@ -190,10 +190,6 @@ void CLineModelFitting::initMembers() {
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
                 m_inputSpc->GetMedianWinsize());
 
-  const CSpectrumFluxAxis &spectrumFluxAxis = m_inputSpc->GetFluxAxis();
-
-  m_ErrorNoContinuum = spectrumFluxAxis.GetError(); // sets the error vector
-
   SetContinuumComponent(m_ContinuumComponent);
 
   // NB: fitContinuum_option: this is the initialization (default value),
@@ -585,7 +581,7 @@ void CLineModelFitting::integrateFluxes_usingTrapez(
   if (spectralAxis.GetSamplesCount() < 2)
     THROWG(INTERNAL_ERROR, "Not enough samples in spectral axis");
 
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (auto &r : indexRangeList) {
     for (Int32 t = r.GetBegin(); t < r.GetEnd(); t++) {
       Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
@@ -1972,7 +1968,7 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
   Int32 imin = spectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
   Int32 imax = spectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetEnd());
   const auto &spcFluxAxisNoContinuum = m_model->getSpcFluxAxisNoContinuum();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (Int32 i = imin; i < imax; i++) {
     if (!_mask[i])
       continue;
@@ -2323,7 +2319,7 @@ Int32 CLineModelFitting::fitAmplitudesLinSolve(
 
   const Float64 *spectral = spectralAxis.GetSamples();
   const Float64 *flux = fluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   // Linear fit
   int i, n;
@@ -2505,7 +2501,7 @@ Int32 CLineModelFitting::fitAmplitudesLinesAndContinuumLinSolve(
 
   const Float64 *spectral = spectralAxis.GetSamples();
   const Float64 *flux = fluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   // Linear fit
   int i, n;
@@ -2900,7 +2896,7 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
   Float64 fit = 0.0;
   const Float64 *Ymodel = modelFluxAxis.GetSamples();
   const Float64 *Yspc = spcFluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   Float64 diff = 0.0;
 
   Int32 imin = spcSpectralAxis.GetIndexAtWaveLength(m_lambdaRange->GetBegin());
@@ -2968,7 +2964,7 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   Int32 numDevs = 0;
   Float64 fit = 0.0;
@@ -3105,7 +3101,8 @@ Float64 CLineModelFitting::getLeastSquareMeritUnderElements() const {
   const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
   const CSpectrumFluxAxis &modelFluxAxis =
       m_model->GetModelSpectrum().GetFluxAxis();
-  const CSpectrumNoiseAxis &ErrorNoContinuum = m_ErrorNoContinuum;
+  const CSpectrumNoiseAxis &ErrorNoContinuum =
+      m_inputSpc->GetFluxAxis().GetError();
 
   Int32 numDevs = 0;
   Float64 fit = 0;
@@ -3494,7 +3491,7 @@ Float64 CLineModelFitting::getCumulSNROnRange(TInt32Range idxRange) const {
   const CSpectrumFluxAxis &modelFluxAxis =
       m_model->GetModelSpectrum().GetFluxAxis();
   const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
 
   Int32 idx = 0;
@@ -3532,7 +3529,7 @@ Float64 CLineModelFitting::getContinuumMeanUnderElement(Int32 eltId) const {
   }
 
   const auto &ContinuumFluxAxis = m_model->getContinuumFluxAxis();
-  // const auto & ErrorNoContinuum = m_ErrorNoContinuum;
+  // const auto & ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
   for (Int32 iS = 0; iS < support.size(); iS++) {
     for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
       n++;
@@ -4197,7 +4194,7 @@ CLineModelFitting::EstimateDTransposeD(const std::string &spcComponent) const {
   const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
   const CSpectrumFluxAxis &spcFluxAxisNoContinuum =
       m_model->getSpcFluxAxisNoContinuum();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   Int32 numDevs = 0;
   Float64 dtd = 0.0;
@@ -4231,7 +4228,7 @@ Float64 CLineModelFitting::EstimateMTransposeM()
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis =
       m_model->GetModelSpectrum().GetFluxAxis();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   Int32 numDevs = 0;
   Float64 mtm = 0.0;
@@ -4271,7 +4268,7 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
  **/
 Float64 CLineModelFitting::EstimateLikelihoodCstLog() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
-  const auto &ErrorNoContinuum = m_ErrorNoContinuum;
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
 
   Int32 numDevs = 0;
   Float64 cstLog = 0.0;
