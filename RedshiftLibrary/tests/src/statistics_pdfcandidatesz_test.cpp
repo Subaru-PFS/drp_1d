@@ -404,5 +404,4 @@ BOOST_AUTO_TEST_CASE(Compute_test) {
   BOOST_CHECK_CLOSE(candidate[0].second->GaussAmp,
                     1 / (0.3 * std::sqrt(2 * M_PI)), precision);
 }
-
 BOOST_AUTO_TEST_SUITE_END()
