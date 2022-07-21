@@ -626,11 +626,11 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                                 Float64 coeffCorr) {
   bool corrected = false;
   Int32 nCorrected = 0;
-  if (!IsValid()) {
+  if (!IsValid())
     THROWG(INVALID_SPECTRUM,
            "Invalid spectrum with empty axes, non-matching size "
            "or unsorted spectral axis");
-  }
+
   CSpectrumFluxAxis fluxaxis = std::move(GetFluxAxis_());
   TFloat64List &error = fluxaxis.GetError().GetSamplesVector();
   TFloat64List &flux = fluxaxis.GetSamplesVector();
@@ -648,12 +648,8 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
     if (!checkNoise(error[i], i) || !checkFlux(flux[i], i))
       continue;
 
-    if (error[i] > maxNoise) {
-      maxNoise = error[i];
-    }
-    if (std::abs(flux[i]) < std::abs(minFlux)) {
-      minFlux = abs(flux[i]);
-    }
+    maxNoise = std::max(maxNoise, error[i]);
+    minFlux = std::min(std::abs(flux[i]), std::abs(minFlux));
   }
   if (minFlux == DBL_MAX) {
     Log.LogError("    CSpectrum::correctSpectrum - unable to set minFlux value "
@@ -661,31 +657,27 @@ bool CSpectrum::correctSpectrum(Float64 LambdaMin, Float64 LambdaMax,
                  minFlux);
     minFlux = 0.0;
   }
-  if (maxNoise == -DBL_MAX) {
+  if (maxNoise == -DBL_MAX)
     THROWG(INTERNAL_ERROR, "Unable to set maxNoise value");
-  }
 
   for (Int32 i = iMin; i < iMax; i++) {
     // check noise & flux
     bool validSample = checkNoise(error[i], i) && checkFlux(flux[i], i);
 
-    if (!validSample) {
-      error[i] = maxNoise * coeffCorr;
-      flux[i] = minFlux / coeffCorr;
-      corrected = true;
-      nCorrected++;
-    }
+    if (validSample)
+      continue;
+    error[i] = maxNoise * coeffCorr;
+    flux[i] = minFlux / coeffCorr;
+    corrected = true;
+    nCorrected++;
   }
 
   SetFluxAxis(std::move(fluxaxis));
 
-  if (nCorrected > 0) {
+  if (corrected) {
     Log.LogInfo("    CSpectrum::correctSpectrum - Corrected %d invalid samples "
                 "with coeff (=%f), minFlux=%e, maxNoise=%e",
                 nCorrected, coeffCorr, minFlux, maxNoise);
-  }
-
-  if (corrected) {
     ResetContinuum();
   }
 
