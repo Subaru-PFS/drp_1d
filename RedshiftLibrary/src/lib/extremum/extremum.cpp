@@ -455,23 +455,11 @@ bool CExtremum::FilterOutNeighboringPeaksAndTruncate(
   return true;
 }
 
-bool CExtremum::FindAllPeaks(const TFloat64List &xAxis,
-                             const TFloat64List &yAxis, Int32 BeginIndex,
-                             Int32 EndIndex, TFloat64List &maxX,
-                             TFloat64List &maxY, bool invertSearch) const {
-  const Float64 SignSearch = invertSearch ? -1.0 * m_SignSearch : m_SignSearch;
-  TFloat64List tmpY(yAxis);
-  for (Float64 &val : tmpY)
-    val *= SignSearch;
-
-  auto goup = [&tmpY](Int32 i) { return tmpY[i] < tmpY[i + 1]; };
-  auto godown = [&tmpY](Int32 i) { return tmpY[i] > tmpY[i + 1]; };
-  auto goflat = [&tmpY](Int32 i) { return tmpY[i] == tmpY[i + 1]; };
-
-  Int32 maxCount = 0;
-
+// find first and last non Nan element
+void CExtremum::getFirstandLastnonNANElementIndices(const TFloat64List &yAxis,
+                                                    Int32 &BeginIndex,
+                                                    Int32 &EndIndex) const {
   // find first and last non Nan element
-  TFloat64List::const_iterator firstNonNan;
   for (; BeginIndex != EndIndex; ++BeginIndex)
     if (!std::isnan(yAxis[BeginIndex]))
       break;
@@ -481,76 +469,121 @@ bool CExtremum::FindAllPeaks(const TFloat64List &xAxis,
       break;
 
   // check at least 3 points left (to get an extrema)
-  if ((EndIndex - BeginIndex) < 2) {
+  if ((EndIndex - BeginIndex) < 2)
     THROWG(INTERNAL_ERROR, "less than 3 contiguous non nan values");
-  }
+}
 
+TFloat64List CExtremum::applySign(const TFloat64List &yAxis,
+                                  bool invertSearch) const {
+  const Float64 SignSearch = invertSearch ? -1.0 * m_SignSearch : m_SignSearch;
+  TFloat64List tmpY(yAxis.size());
+  std::transform(yAxis.begin(), yAxis.end(), tmpY.begin(),
+                 [SignSearch](const Float64 &val) { return val * SignSearch; });
+  return tmpY;
+}
+
+bool CExtremum::FindAllPeaks(const TFloat64List &xAxis,
+                             const TFloat64List &yAxis, Int32 BeginIndex,
+                             Int32 EndIndex, TFloat64List &maxX,
+                             TFloat64List &maxY, bool invertSearch) const {
+  TFloat64List tmpY = applySign(yAxis, invertSearch);
+
+  auto goup = [&tmpY](Int32 i) { return tmpY[i] < tmpY[i + 1]; };
+  auto godown = [&tmpY](Int32 i) { return tmpY[i] > tmpY[i + 1]; };
+  auto goflat = [&tmpY](Int32 i) { return tmpY[i] == tmpY[i + 1]; };
+
+  auto isPeak = [&tmpY, goup, godown](Int32 i) {
+    return goup(i - 1) *
+           godown(i); // using multiplication rather than && to reduce cc
+  };
+  auto isStartHighPlank = [&tmpY, goup, goflat](Int32 i) {
+    return goup(i - 1) * goflat(i);
+  };
+  auto isPeakAfterPlank = [&tmpY, godown, goflat](Int32 i, bool plank) {
+    return plank * goflat(i - 1) * godown(i);
+  };
+  auto isEndPlank = [&tmpY, goup, goflat](Int32 i) {
+    return goflat(i - 1) * goup(i);
+  };
+
+  getFirstandLastnonNANElementIndices(yAxis, BeginIndex, EndIndex);
+
+  Int32 maxCount = 0;
   bool plank = false;
   Int32 cnt_plk = 0;
 
+  auto allow_extrema_border =
+      m_allow_extrema_at_border; // to not have to pass this to lambda
+  auto isLowBorderPeak = [&tmpY, allow_extrema_border,
+                          godown](Int32 BeginIndex) {
+    return allow_extrema_border * godown(BeginIndex);
+  };
+  auto isLowBorderPlank = [&tmpY, allow_extrema_border,
+                           goflat](Int32 BeginIndex) {
+    return allow_extrema_border * goflat(BeginIndex);
+  };
+
   // First element
-  if (m_allow_extrema_at_border) {
-    if (godown(BeginIndex)) {
-      maxX.push_back(xAxis[BeginIndex]);
-      maxY.push_back(tmpY[BeginIndex]);
-      maxCount++;
-    } else if (goflat(BeginIndex)) {
-      plank = true;
-      cnt_plk++;
-    }
+  if (isLowBorderPeak(BeginIndex)) {
+    maxX.push_back(xAxis[BeginIndex]);
+    maxY.push_back(tmpY[BeginIndex]);
+    maxCount++;
+  } else if (isLowBorderPlank(BeginIndex)) {
+    plank = true;
+    cnt_plk++;
   }
 
   for (Int32 i = BeginIndex + 1; i < EndIndex; i++) {
-    if (goup(i - 1) && godown(i)) {
+    if (isPeak(i)) {
       maxX.push_back(xAxis[i]);
       maxY.push_back(tmpY[i]);
       maxCount++;
       continue;
     }
-    if (goup(i - 1) && goflat(i)) {
+    if (isStartHighPlank(i)) {
       // plank start point
       plank = true;
       cnt_plk++;
       continue;
     }
-    if (goflat(i - 1)) {
-      // high plank: signal is decreasing after the plank. Peak identified
-      if (godown(i) && plank) { // check if we already identified a high plank
-        cnt_plk++;
-        Int32 idx_plk = i - round(cnt_plk / 2);
-        // plank end point
-        maxX.push_back(xAxis[idx_plk]);
-        maxY.push_back(tmpY[idx_plk]);
-        maxCount++;
-        plank = false;
-        cnt_plk = 0;
-        continue;
-      }
-      // low plank: pdf is increasing after the plank. No peak here!
-      if (goup(i)) {
-        plank = false; // end
-        cnt_plk = 0;
-      } else { // Plank is getting larger
-        cnt_plk++;
-      }
+    if (!goflat(i - 1))
+      continue;
+
+    // high plank: signal is decreasing after the plank. Peak identified
+    if (isPeakAfterPlank(i, plank)) {
+      // check if we already identified a high plank
+      cnt_plk++;
+      Int32 idx_plk = i - round(cnt_plk / 2);
+      // plank end point
+      maxX.push_back(xAxis[idx_plk]);
+      maxY.push_back(tmpY[idx_plk]);
+      maxCount++;
+      plank = false;
+      cnt_plk = 0;
+      continue;
     }
+    // low plank: pdf is increasing after the plank. No peak here!
+    if (isEndPlank(i)) {
+      plank = false; // end
+      cnt_plk = 0;
+      continue;
+    }
+    // Plank is getting larger
+    cnt_plk++;
   }
 
+  if (!m_allow_extrema_at_border)
+    return true;
   // last element: check if plank is extended
-  if (m_allow_extrema_at_border) {
-    if (goup(EndIndex - 1) || goflat(EndIndex - 1)) {
-      Int32 idx;
-      if (plank) {
-        cnt_plk++;
-        idx = EndIndex - round(cnt_plk / 2);
-      } else {
-        idx = EndIndex;
-      }
-      maxX.push_back(xAxis[idx]);
-      maxY.push_back(tmpY[idx]);
-      maxCount++;
-    }
-  }
+  if (godown(EndIndex - 1))
+    return true;
+
+  cnt_plk += Int32(plank); // if no plank, cnt_plk+=0
+  Int32 idx = EndIndex - round(cnt_plk / 2);
+
+  maxX.push_back(xAxis[idx]);
+  maxY.push_back(tmpY[idx]);
+  maxCount++;
 
   return true;
 }
