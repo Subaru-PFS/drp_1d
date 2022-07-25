@@ -44,16 +44,17 @@
 using namespace NSEpic;
 using namespace std;
 
-CSpectrumModel::CSpectrumModel(CLineModelElementList &elements)
-    : m_Elements(elements), m_inputSpc(Context.GetSpectrum()),
-      m_spcCorrectedUnderLines(*(Context.GetSpectrum())),
-      m_SpectrumModel(*(m_inputSpc))
+CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
+                               std::shared_ptr<const CSpectrum> spc)
+    : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
+      m_SpectrumModel(*(spc))
 
 {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
   m_spcFluxAxisNoContinuum.SetSize(spectrumSampleCount);
+  m_spcFluxAxisNoContinuum.setError(m_inputSpc->GetFluxAxis().GetError());
   m_ContinuumFluxAxis.SetSize(spectrumSampleCount);
 }
 
@@ -77,6 +78,9 @@ const CSpectrumFluxAxis &CSpectrumModel::GetModelContinuum() const {
   return m_ContinuumFluxAxis;
 }
 
+/**
+ * \brief Init the whole spectrum model with continuum.
+ **/
 void CSpectrumModel::reinitModel() {
   CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
@@ -88,6 +92,11 @@ void CSpectrumModel::reinitModel() {
 
 void CSpectrumModel::initModelWithContinuum() {
   m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
+
+  /* // we keep temporarily for information the way this was done before 6962
+  CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
+  m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
+  */
 }
 /**
  * \brief Init the argument elements from the spectrum model with continuum.
@@ -108,6 +117,7 @@ void CSpectrumModel::reinitModelUnderElements(const TInt32List &filterEltsIdx,
 
 void CSpectrumModel::refreshModel(Int32 lineTypeFilter) {
 
+  reinitModel();
   const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
   CSpectrumFluxAxis modelFluxAxis = m_SpectrumModel.GetFluxAxis();
 

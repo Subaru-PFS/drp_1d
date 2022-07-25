@@ -189,6 +189,8 @@ void CLineModelFitting::initMembers() {
 
   Log.LogDetail("    model: Continuum winsize found is %.2f A",
                 m_inputSpc->GetMedianWinsize());
+  m_model =
+      std::make_shared<CSpectrumModel>(CSpectrumModel(m_Elements, m_inputSpc));
 
   SetContinuumComponent(m_ContinuumComponent);
 
@@ -224,7 +226,6 @@ void CLineModelFitting::initMembers() {
   }
 
   LogCatalogInfos();
-  m_model = std::make_shared<CSpectrumModel>(CSpectrumModel(m_Elements));
 
   // TODO restore check the continuum flux axis for NaN
 }
@@ -437,6 +438,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
 
     m_forcedisableMultipleContinuumfit = false;
     m_model->m_enableAmplitudeOffsets = true;
+    m_enableAmplitudeOffsets = true;
   }
 
   return true;
@@ -1116,6 +1118,7 @@ const TInt32List &CLineModelFitting::GetNLinesAboveSNRTplratio() const {
 bool CLineModelFitting::initModelAtZ(
     Float64 redshift, const CSpectrumSpectralAxis &spectralAxis) {
   m_Redshift = redshift;
+  m_model->setRedshift(redshift);
 
   // prepare the elements support
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {

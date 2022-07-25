@@ -11,7 +11,8 @@ class CLineModelSolution;
 class CContinuumModelSolution;
 class CSpectrumModel {
 public:
-  CSpectrumModel(CLineModelElementList &elements);
+  CSpectrumModel(CLineModelElementList &elements,
+                 std::shared_ptr<const CSpectrum> spc);
 
   void reinitModel();
   void refreshModel(Int32 lineTypeFilter = -1);
@@ -43,6 +44,7 @@ public:
 
   // new methods
   void setContinuum(const CSpectrumFluxAxis &continuum);
+  void setRedshift(Float64 redshift) { m_Redshift = redshift; }
   void initModelWithContinuum();
   void substractContToFlux();
   void buildFromParameters(const CLineModelSolution &lm_solution,
