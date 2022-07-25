@@ -48,6 +48,7 @@ class median_test;
 class evenMirror_test;
 class oddMirror_test;
 class fitBorder_test;
+class removeContinuum_test;
 } // namespace continuum_test
 namespace NSEpic {
 
@@ -82,6 +83,7 @@ private:
   friend class continuum_test::evenMirror_test;
   friend class continuum_test::oddMirror_test;
   friend class continuum_test::fitBorder_test;
+  friend class continuum_test::removeContinuum_test;
 
   TFloat64List MedianSmooth(const TFloat64List &y, Int32 n_range) const;
   TFloat64List MeanSmooth(const TFloat64List &y, Int32 n) const;
@@ -96,6 +98,8 @@ private:
 
   Float64 FitBorder(const CSpectrum &s, Int32 kstart, Int32 kend,
                     bool isRightBorder) const;
+  bool FindEffectiveSpectrumBorder(const CSpectrumFluxAxis &s, Int32 &kstart,
+                                   Int32 &kend) const;
 
   Float32 m_MeanSmoothAmplitude;
   Int32 m_MedianSmoothCycles;
