@@ -121,16 +121,21 @@ BOOST_AUTO_TEST_CASE(constructor_test) {
 }
 
 BOOST_AUTO_TEST_CASE(basic_function_test) {
-  //-------------//
-  // test extract
-
   TFloat64List sample_ref = {1, 2, 3, 4, 5};
   TFloat64List noiseSample_ref = {2, 4, 6, 8, 10};
 
   Float64 Array1[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  Float64 Array2[10] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
-  CSpectrumFluxAxis object_FluxAxis(Array1, 10, Array2, 10);
+  TFloat64List Array2 = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+  CSpectrumFluxAxis object_FluxAxis(Array1, 10);
 
+  //-------------//
+  // test setError
+  CSpectrumNoiseAxis spectrumNoiseAxis(Array2);
+  object_FluxAxis.setError(spectrumNoiseAxis);
+  BOOST_CHECK(object_FluxAxis.GetError().GetSamplesVector() == Array2);
+
+  //-------------//
+  // test extract
   CSpectrumFluxAxis object_FluxAxis2 = object_FluxAxis.extract(0, 4);
   BOOST_CHECK(object_FluxAxis2.GetSamplesCount() == 5);
   BOOST_CHECK(object_FluxAxis2.GetSamplesVector() == sample_ref);
