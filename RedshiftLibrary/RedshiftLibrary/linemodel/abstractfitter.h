@@ -21,6 +21,8 @@ public:
 
   void enableAmplitudeOffsets() { m_enableAmplitudeOffsets = true; }
 
+  Int32 m_cont_reestim_iterations = 0;
+
 protected:
   CLineModelElementList &m_Elements;
   const CSpectrum &m_inputSpc;

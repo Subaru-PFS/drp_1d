@@ -2,11 +2,12 @@
 #define _REDSHIFT_SVDLC_ELEMENTLIST_
 
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
+#include "RedshiftLibrary/linemodel/continuummanager.h"
 
 namespace NSEpic
 
 {
-class CTemplateCatalog;
+
 // class CRegulament;
 class CSvdlcFitter : public CAbstractFitter {
 public:
@@ -14,13 +15,15 @@ public:
                std::shared_ptr<const CSpectrum> inputSpectrum,
                std::shared_ptr<const TLambdaRange> lambdaRange,
                std::shared_ptr<CSpectrumModel> spectrumModel,
+               std::shared_ptr<CContinuumManager> continuumManager,
                Int32 polyOrder = -1);
 
   void fit(Float64 redshift);
 
   Int32 m_fitc_polyOrder = -1;
-  std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
-  TStringList m_tplCategoryList;
+
+  std::shared_ptr<CContinuumManager> m_continuumManager;
+  const CSpectrumSpectralAxis &m_spectralAxis;
 
 private:
   Int32 fitAmplitudesLinesAndContinuumLinSolve(

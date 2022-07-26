@@ -45,6 +45,7 @@
 #include "RedshiftLibrary/linemodel/individualfitter.h"
 #include "RedshiftLibrary/linemodel/onesfitter.h"
 #include "RedshiftLibrary/linemodel/randomfitter.h"
+#include "RedshiftLibrary/linemodel/svdfitter.h"
 #include "RedshiftLibrary/linemodel/svdlcfitter.h"
 
 #include "RedshiftLibrary/common/defaults.h"
@@ -82,9 +83,7 @@ using namespace std;
  * Sets the continuum either as a nocontinuum or a fromspectrum.
  **/
 CLineModelFitting::CLineModelFitting()
-    : m_RestLineList(Context.getLineVector()),
-      m_tplCatalog(Context.GetTemplateCatalog()),
-      m_tplCategoryList({Context.GetCurrentCategory()}), m_Regulament(),
+    : m_RestLineList(Context.getLineVector()), m_Regulament(),
       m_enableAmplitudeOffsets(false) {
   initParameters();
   if (m_useloglambdasampling) {
@@ -101,8 +100,8 @@ CLineModelFitting::CLineModelFitting()
 CLineModelFitting::CLineModelFitting(
     const std::shared_ptr<const CSpectrum> &template_,
     const TLambdaRange &lambdaRange)
-    : m_tplCatalog(), m_tplCategoryList(), m_Regulament(),
-      m_enableAmplitudeOffsets(false), m_RestLineList(Context.getLineVector()) {
+    : m_Regulament(), m_enableAmplitudeOffsets(false),
+      m_RestLineList(Context.getLineVector()) {
   m_inputSpc = template_;
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
   initParameters();
@@ -121,12 +120,7 @@ void CLineModelFitting::initParameters() {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
   m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
-  if (m_ContinuumComponent != "nocontinuum") {
-    m_opt_fitcontinuum_neg_threshold =
-        ps->GetScoped<Float64>("continuumfit.negativethreshold");
-    m_opt_fitcontinuum_null_amp_threshold =
-        ps->GetScoped<Float64>("continuumfit.nullthreshold");
-  }
+
   m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
   m_NSigmaSupport = ps->GetScoped<Float64>("nsigmasupport");
   m_velocityEmission = ps->GetScoped<Float64>("velocityemission");
@@ -184,8 +178,6 @@ void CLineModelFitting::initParameters() {
 }
 
 void CLineModelFitting::initMembers() {
-  m_templateFittingOperator = std::make_shared<COperatorTemplateFitting>(
-      *(m_inputSpc), *(m_lambdaRange));
   // m_nominalWidthDefaultEmission = 1.15;// suited to new pfs simulations
   m_nominalWidthDefaultEmission = 13.4; // euclid 1 px
   m_nominalWidthDefaultAbsorption = m_nominalWidthDefaultEmission;
@@ -199,15 +191,9 @@ void CLineModelFitting::initMembers() {
                 m_inputSpc->GetMedianWinsize());
   m_model =
       std::make_shared<CSpectrumModel>(CSpectrumModel(m_Elements, m_inputSpc));
-
+  m_continuumManager = std::make_shared<CContinuumManager>(
+      CContinuumManager(m_inputSpc, m_model, *(m_lambdaRange)));
   SetContinuumComponent(m_ContinuumComponent);
-
-  // NB: fitContinuum_option: this is the initialization (default value),
-  // eventually overriden in SetFitContinuum_FitStore() when a fitStore gets
-  // available
-  m_fitContinuum_option =
-      0; // 0=interactive fitting, 1=use precomputed fit store, 2=use fixed
-  // values (typical use for second pass recompute)
 
   // "New style" rules initialization:
   m_Regulament.CreateRulesFromJSONFiles();
@@ -244,8 +230,7 @@ void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: check if m_CatalogTplRatio changes between iterations
 
   m_CatalogTplRatio.Init(opt_tplratio_ismFit,
-                         m_tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-                             ->m_ismCorrectionCalzetti,
+                         m_continuumManager->getIsmCorrectionFromTpl(),
                          m_NSigmaSupport);
   m_CatalogTplRatio.InitLineCorrespondingAmplitudes(m_Elements);
   SetMultilineNominalAmplitudesFast(0);
@@ -316,12 +301,6 @@ void CLineModelFitting::logParameters() {
   Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_step"
                           << m_opt_lya_fit_delta_step);
 
-  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_maxCount"
-                          << m_opt_fitcontinuum_maxCount);
-  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_neg_threshold"
-                          << m_opt_fitcontinuum_neg_threshold);
-  Log.LogInfo(Formatter() << " m_opt_fitcontinuum_null_amp_threshold"
-                          << m_opt_fitcontinuum_null_amp_threshold);
   Log.LogInfo(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
                           << m_opt_firstpass_forcedisableMultipleContinuumfit);
   Log.LogInfo(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
@@ -373,42 +352,11 @@ void CLineModelFitting::logParameters() {
   Log.LogInfo(Formatter() << "secondpass_fitContinuum_igm="
                           << m_secondpass_fitContinuum_igm);
 
-  Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
-  Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum_tplName);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitude="
-                          << m_fitContinuum_tplFitAmplitude);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeError="
-                          << m_fitContinuum_tplFitAmplitudeError);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitudeSigmaMAX="
-                          << m_fitContinuum_tplFitAmplitudeSigmaMAX);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit="
-                          << m_fitContinuum_tplFitMerit);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitMerit_phot="
-                          << m_fitContinuum_tplFitMerit_phot);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitEbmvCoeff="
-                          << m_fitContinuum_tplFitEbmvCoeff);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitMeiksinIdx="
-                          << m_fitContinuum_tplFitMeiksinIdx);
-  Log.LogInfo(
-      Formatter()
-      << "fitContinuum_tplFitRedshift="
-      << m_fitContinuum_tplFitRedshift); // only used with
-                                         // m_fitContinuum_option==2 for now
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitDtM="
-                          << m_fitContinuum_tplFitDtM);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitMtM="
-                          << m_fitContinuum_tplFitMtM);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitLogprior="
-                          << m_fitContinuum_tplFitLogprior);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitSNRMax="
-                          << m_fitContinuum_tplFitSNRMax);
   //  Log.LogInfo(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
   //  // only used with
   // m_fitContinuum_option==2 for now
   Log.LogInfo(Formatter() << "forcedisableMultipleContinuumfit="
                           << m_forcedisableMultipleContinuumfit);
-  Log.LogInfo(Formatter() << "fitContinuum_tplFitAlpha="
-                          << m_fitContinuum_tplFitAlpha);
 }
 
 /**
@@ -424,15 +372,14 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
     m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
     m_forcedisableMultipleContinuumfit =
         m_opt_firstpass_forcedisableMultipleContinuumfit;
-    m_fittingmethod = m_opt_firstpass_fittingmethod;
+    SetFittingMethod(m_opt_firstpass_fittingmethod);
     m_forceLyaFitting = false;
   }
   if (iPass == 2) {
     m_forceDisableLyaFitting = m_opt_lya_forcedisablefit;
     m_forcedisableTplratioISMfit = false;
     m_forcedisableMultipleContinuumfit = false;
-
-    m_fittingmethod = m_opt_secondpass_fittingmethod;
+    SetFittingMethod(m_opt_secondpass_fittingmethod);
     m_forceLyaFitting = m_opt_lya_forcefit;
     Log.LogDetail(
         "    model: set forceLyaFitting ASYMFIT for Tpl-ratio mode : %d",
@@ -444,6 +391,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
     m_forcedisableMultipleContinuumfit = false;
     m_model->m_enableAmplitudeOffsets = true;
     m_enableAmplitudeOffsets = true;
+    m_fitter->enableAmplitudeOffsets();
   }
 
   return true;
@@ -711,133 +659,6 @@ void CLineModelFitting::LogCatalogInfos() {
   Log.LogDetail("\n");
 }
 
-/**
- * \brief Generates a continuum from the fitting with a set of templates :
- * uses the templatefitting operator
- * TODO: LoadFitContinuum should be limited to reading continuum values from
- * the variable class, especially that we want that continuum fitting results
- * are saved in tplfitStore container outside CElementList and these stores
- * will be injected in the class whenever required !
- * TODO: study this possibility before doing the change
- */
-void CLineModelFitting::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect) {
-  Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
-  if (m_observeGridContinuumFlux.empty()) {
-    THROWG(INTERNAL_ERROR,
-           "Cannot loadfitcontinuum without precomputedGridTplFlux");
-  }
-
-  if (m_fitContinuum_option ==
-      1) { // using precomputed fit store, i.e., fitValues
-    CTemplatesFitStore::TemplateFitValues fitValues =
-        m_fitContinuum_tplfitStore->GetFitValues(m_Redshift, icontinuum);
-    if (fitValues.tplName.empty()) {
-      THROWG(INTERNAL_ERROR, "Empty template name");
-    }
-
-    m_fitContinuum_tplName = fitValues.tplName;
-    m_fitContinuum_tplFitAmplitude = fitValues.fitAmplitude;
-    m_fitContinuum_tplFitAmplitudeError = fitValues.fitAmplitudeError;
-    m_fitContinuum_tplFitMerit = fitValues.merit;
-    m_fitContinuum_tplFitMerit_phot = fitValues.chiSquare_phot;
-    m_fitContinuum_tplFitEbmvCoeff = fitValues.ismEbmvCoeff;
-    m_fitContinuum_tplFitMeiksinIdx = fitValues.igmMeiksinIdx;
-    m_fitContinuum_tplFitRedshift = m_Redshift;
-    m_fitContinuum_tplFitDtM = fitValues.fitDtM;
-    m_fitContinuum_tplFitMtM = fitValues.fitMtM;
-    m_fitContinuum_tplFitLogprior = fitValues.logprior;
-    m_fitContinuum_tplFitPolyCoeffs = {};
-
-    m_fitContinuum_tplFitAmplitudeSigmaMAX =
-        m_fitContinuum_tplfitStore->m_fitContinuum_fitAmplitudeSigmaMAX;
-    m_fitContinuum_tplFitSNRMax =
-        m_fitContinuum_tplfitStore->m_fitContinuum_tplFitSNRMax;
-    m_opt_fitcontinuum_maxCount =
-        m_fitContinuum_tplfitStore->m_opt_fitcontinuum_maxCount;
-
-  } else if (m_fitContinuum_option == 2) {
-    // values unmodified nothing to do
-  } else {
-    THROWG(INTERNAL_ERROR, "Cannot parse fitContinuum_option");
-  }
-
-  if (!m_fitContinuum_tplName.empty()) {
-    // Retrieve the best template
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        m_tplCategoryList, m_fitContinuum_tplName);
-    if (tpl->GetName() == m_fitContinuum_tplName) {
-      if (autoSelect) {
-        // Float64 contsnr = getFitContinuum_snr();
-        /*Float64 contsnr = m_fitContinuum_tplFitSNRMax;
-        m_fitContinuum_tplFitAlpha = 1.0;
-        if(contsnr>50.)
-        {
-            m_fitContinuum_tplFitAlpha=0.0;
-        }*/
-        m_fitContinuum_tplFitAlpha = 0.0;
-        if (m_fitContinuum_tplFitAmplitudeSigmaMAX <
-            m_opt_fitcontinuum_neg_threshold)
-          m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
-      }
-
-      ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
-
-      setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude,
-                                   m_fitContinuum_tplFitAmplitudeError,
-                                   m_fitContinuum_tplFitPolyCoeffs);
-
-      Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
-                   m_fitContinuum_tplName.c_str());
-      Log.LogDebug("    model : LoadFitContinuum, loaded with A=%e",
-                   m_fitContinuum_tplFitAmplitude);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with A_error=%e",
-                   m_fitContinuum_tplFitAmplitudeError);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with DustCoeff=%e",
-                   m_fitContinuum_tplFitEbmvCoeff);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with MeiksinIdx=%d",
-                   m_fitContinuum_tplFitMeiksinIdx);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with dtm=%e",
-                   m_fitContinuum_tplFitDtM);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with mtm=%e",
-                   m_fitContinuum_tplFitMtM);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with logprior=%e",
-                   m_fitContinuum_tplFitLogprior);
-      Float64 tplfitsnr = NAN;
-      if (m_fitContinuum_tplFitMtM > 0.0) {
-        tplfitsnr =
-            m_fitContinuum_tplFitDtM / std::sqrt(m_fitContinuum_tplFitMtM);
-      }
-      Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
-                   tplfitsnr);
-    } else {
-      THROWG(
-          INTERNAL_ERROR,
-          Formatter()
-              << "Failed to load-fit continuum. Failed to find best template="
-              << m_fitContinuum_tplName.c_str());
-    }
-  } else {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Failed to load-fit continuum for cfitopt="
-                               << m_fitContinuum_option);
-  }
-}
-
-void CLineModelFitting::setFitContinuum_tplAmplitude(
-    Float64 tplAmp, Float64 tplAmpErr, const TFloat64List &polyCoeffs) {
-
-  Float64 alpha =
-      m_fitContinuum_tplFitAlpha; // alpha blend = 1: only
-                                  // m_inputSpc->GetContinuumFluxAxis(),
-                                  // alpha=0: only tplfit
-
-  m_fitContinuum_tplFitAmplitude = tplAmp;
-  m_fitContinuum_tplFitAmplitudeError = tplAmpErr;
-  m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
-  m_model->setContinuumFromTplFit(alpha, tplAmp, polyCoeffs,
-                                  m_observeGridContinuumFlux);
-}
-
 /*
 Change the actual value of redshift.
 the continuum can be reinterpolate.
@@ -847,207 +668,8 @@ void CLineModelFitting::setRedshift(Float64 redshift,
   m_Redshift = redshift;
 
   if (reinterpolatedContinuum) {
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        m_tplCategoryList, m_fitContinuum_tplName);
-    if (tpl->GetName() == m_fitContinuum_tplName) {
-      ApplyContinuumOnGrid(tpl, redshift);
-    }
+    m_continuumManager->reinterpolateContinuum(redshift);
   }
-}
-
-/**
- * Apply the template continuum by interpolating the grid as define in Init
- * Continuum
- */
-Int32 CLineModelFitting::ApplyContinuumOnGrid(
-    const std::shared_ptr<const CTemplate> &tpl, Float64 zcontinuum) {
-  m_fitContinuum_tplName = tpl->GetName();
-  Int32 n = tpl->GetSampleCount();
-
-  Int32 idxDust = -1;
-  if (m_fitContinuum_tplFitEbmvCoeff > 0.) {
-    if (tpl->CalzettiInitFailed()) {
-      THROWG(INTERNAL_ERROR, "  no calzetti calib. file in template");
-    }
-    idxDust = tpl->m_ismCorrectionCalzetti->GetEbmvIndex(
-        m_fitContinuum_tplFitEbmvCoeff);
-  }
-  const CSpectrumSpectralAxis &tplSpectralAxis = tpl->GetSpectralAxis();
-  TFloat64Range range(tplSpectralAxis[0], tplSpectralAxis[n - 1]);
-
-  std::string inter_opt = "spline";
-  Float64 overlapThreshold = 1., amplitude = 1.;
-  std::shared_ptr<CModelSpectrumResult> spcmodel =
-      m_templateFittingOperator->ComputeSpectrumModel(
-          tpl, zcontinuum, m_fitContinuum_tplFitEbmvCoeff,
-          m_fitContinuum_tplFitMeiksinIdx, amplitude, inter_opt,
-          overlapThreshold);
-  if (spcmodel == nullptr)
-    THROWG(INTERNAL_ERROR, "Couldnt compute spectrum model");
-
-  // m_observeGridContinuumFlux should be a CSpectrumFluxAxis not
-  // AxisSampleList
-  m_observeGridContinuumFlux = std::move((*spcmodel).ModelFlux);
-
-  return 0;
-}
-
-bool CLineModelFitting::SolveContinuum(
-    const std::shared_ptr<const CTemplate> &tpl, const TFloat64List &redshifts,
-    Float64 overlapThreshold, std::vector<CMask> maskList,
-    std::string opt_interp, Int32 opt_extinction, Int32 opt_dustFit,
-    Float64 &merit, Float64 &fitAmplitude, Float64 &fitAmplitudeError,
-    Float64 &fitAmplitudeSigma, Float64 &FitEbmvCoeff, Int32 &fitMeiksinIdx,
-    Float64 &fitDtM, Float64 &fitMtM, Float64 &fitLogprior) {
-  CPriorHelper::TPriorZEList zePriorData;
-  bool retGetPrior = m_fitContinuum_priorhelper->GetTplPriorData(
-      tpl->GetName(), redshifts, zePriorData);
-  if (retGetPrior == false) {
-    THROWG(INTERNAL_ERROR,
-           "    model: Failed to get prior for chi2 solvecontinuum.");
-  }
-  bool keepigmism = false;
-  if (FitEbmvCoeff + fitMeiksinIdx != -2) {
-    keepigmism = true;
-  }
-
-  // Compute merit function
-  // Log.LogInfo("Solving continuum for %s at z=%.4e", tpl.GetName().c_str(),
-  // redshifts[0]); CRef<CChisquareResult>  chisquareResult =
-  // (CChisquareResult*)chiSquare.ExportChi2versusAZ( _spc, _tpl, lambdaRange,
-  // redshifts, overlapThreshold );
-  m_templateFittingOperator->SetRedshifts(redshifts);
-  auto templateFittingResult =
-      std::dynamic_pointer_cast<CTemplateFittingResult>(
-          m_templateFittingOperator->Compute(
-              tpl, overlapThreshold, maskList, opt_interp, opt_extinction,
-              opt_dustFit, zePriorData, keepigmism, FitEbmvCoeff,
-              fitMeiksinIdx));
-
-  if (!templateFittingResult) {
-
-    Log.LogError("Failed to compute chi square value");
-    return false;
-  } else {
-    // Store results
-    merit = templateFittingResult->ChiSquare[0];
-    fitAmplitude = templateFittingResult->FitAmplitude[0];
-    fitAmplitudeError = templateFittingResult->FitAmplitudeError[0];
-    fitAmplitudeSigma = templateFittingResult->FitAmplitudeSigma[0];
-    FitEbmvCoeff = templateFittingResult->FitEbmvCoeff[0];
-    fitMeiksinIdx = templateFittingResult->FitMeiksinIdx[0];
-    fitDtM = templateFittingResult->FitDtM[0];
-    fitMtM = templateFittingResult->FitMtM[0];
-    fitLogprior = templateFittingResult->LogPrior[0];
-    return true;
-  }
-}
-
-std::shared_ptr<CModelSpectrumResult>
-CLineModelFitting::GetContaminantSpectrumResult() const {
-  std::shared_ptr<CModelSpectrumResult> resultcont =
-      std::make_shared<CModelSpectrumResult>(*m_tplContaminantSpcRebin);
-  return resultcont;
-}
-
-const std::string &CLineModelFitting::getFitContinuum_tplName() const {
-  return m_fitContinuum_tplName;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplAmplitude() const {
-  return m_fitContinuum_tplFitAmplitude;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplAmplitudeError() const {
-  return m_fitContinuum_tplFitAmplitudeError;
-}
-
-// This SNR estimate maybe needs to use observed spectrum with lines removed ?
-Float64 CLineModelFitting::getFitContinuum_snr() const {
-  Float64 snr = -1.; // shoudnt be NAN here?
-  if (m_fitContinuum_tplFitMtM > 0.) {
-    snr = m_fitContinuum_tplFitDtM / std::sqrt(m_fitContinuum_tplFitMtM);
-  }
-  return snr;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplMerit() const {
-  return m_fitContinuum_tplFitMerit;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplMeritPhot() const {
-  return m_fitContinuum_tplFitMerit_phot;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplIsmEbmvCoeff() const {
-  return m_fitContinuum_tplFitEbmvCoeff;
-}
-
-Float64 CLineModelFitting::getFitContinuum_tplIgmMeiksinIdx() const {
-  return m_fitContinuum_tplFitMeiksinIdx;
-}
-
-Int32 CLineModelFitting::SetFitContinuum_FitStore(
-    const std::shared_ptr<const CTemplatesFitStore> &fitStore) {
-  if (fitStore) {
-    m_fitContinuum_option = 1; // enable use of the fit store
-    Log.LogDetail("Elementlist: enabling fitContinuum store.");
-  }
-  m_fitContinuum_tplfitStore = fitStore;
-  return 1;
-}
-
-const std::shared_ptr<const CTemplatesFitStore> &
-CLineModelFitting::GetFitContinuum_FitStore() const {
-  return m_fitContinuum_tplfitStore;
-}
-
-std::shared_ptr<CPriorHelper> CLineModelFitting::SetFitContinuum_PriorHelper() {
-  CAutoScope a = CAutoScope(Context.m_ScopeStack, "linemodel");
-  CAutoScope b = CAutoScope(Context.m_ScopeStack, "continuumfit");
-  CAutoScope c = CAutoScope(Context.m_ScopeStack, "priors");
-  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-
-  m_fitContinuum_priorhelper = std::make_shared<CPriorHelper>();
-  m_fitContinuum_priorhelper->Init(
-      ps->GetScoped<std::string>("catalog_dirpath"), 0);
-  m_fitContinuum_priorhelper->SetBetaA(ps->GetScoped<Float64>("betaA"));
-  m_fitContinuum_priorhelper->SetBetaTE(ps->GetScoped<Float64>("betaTE"));
-  m_fitContinuum_priorhelper->SetBetaZ(ps->GetScoped<Float64>("betaZ"));
-  return m_fitContinuum_priorhelper;
-}
-
-void CLineModelFitting::SetFitContinuum_Option(Int32 opt) {
-  m_fitContinuum_option = opt;
-}
-
-void CLineModelFitting::SetFitContinuum_SNRMax(Float64 snr_max) {
-  m_fitContinuum_tplFitSNRMax = snr_max;
-}
-
-Int32 CLineModelFitting::GetFitContinuum_Option() const {
-  return m_fitContinuum_option;
-}
-
-void CLineModelFitting::SetFitContinuum_FitValues(
-    std::string tplfit_name, Float64 tplfit_amp, Float64 tplfit_amperr,
-    Float64 tplfit_chi2, Float64 tplfit_chi2_phot, Float64 tplfit_ebmv,
-    Int32 tplfit_meiksinidx, Float64 tplfit_continuumredshift,
-    Float64 tplfit_dtm, Float64 tplfit_mtm, Float64 tplfit_logprior,
-    const TFloat64List &polyCoeffs) {
-  m_fitContinuum_tplName = tplfit_name;
-  m_fitContinuum_tplFitAmplitude = tplfit_amp;
-  m_fitContinuum_tplFitAmplitudeError = tplfit_amperr;
-  m_fitContinuum_tplFitMerit = tplfit_chi2;
-  m_fitContinuum_tplFitMerit_phot = tplfit_chi2_phot;
-  m_fitContinuum_tplFitEbmvCoeff = tplfit_ebmv;
-  m_fitContinuum_tplFitMeiksinIdx = tplfit_meiksinidx;
-  m_fitContinuum_tplFitRedshift = tplfit_continuumredshift;
-
-  m_fitContinuum_tplFitDtM = tplfit_dtm;
-  m_fitContinuum_tplFitMtM = tplfit_mtm;
-  m_fitContinuum_tplFitLogprior = tplfit_logprior;
-  m_fitContinuum_tplFitPolyCoeffs = polyCoeffs;
 }
 
 const std::string &CLineModelFitting::getTplratio_bestTplName() const {
@@ -1184,7 +806,7 @@ bool CLineModelFitting::initDtd() {
   return true;
 }
 
-void CLineModelFitting::prepareAndLoadContinuum(Int32 k) {
+void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
   if (m_ContinuumComponent == "nocontinuum")
     return;
 
@@ -1193,9 +815,10 @@ void CLineModelFitting::prepareAndLoadContinuum(Int32 k) {
   if (isContinuumComponentTplfitxx()) // the support has to be already computed
                                       // when LoadFitContinuum() is called
   {
-    m_observeGridContinuumFlux.resize(m_inputSpc->GetSampleCount());
+    m_continuumManager->initObserveGridContinuumFlux(
+        m_inputSpc->GetSampleCount());
     Int32 autoselect = m_ContinuumComponent == "tplfitauto";
-    LoadFitContinuum(k, autoselect);
+    m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
   }
 }
 
@@ -1379,7 +1002,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                                Int32 contreest_iterations, bool enableLogging) {
   // initialize the model spectrum
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
-
+  m_fitter->m_cont_reestim_iterations = contreest_iterations;
   initModelAtZ(redshift, spectralAxis);
 
   if (m_dTransposeDLambdaRange != *(m_lambdaRange))
@@ -1419,7 +1042,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
   if (isContinuumComponentTplfitxx() && !m_forcedisableMultipleContinuumfit)
-    nContinuum = m_opt_fitcontinuum_maxCount;
+    nContinuum = m_continuumManager->m_opt_fitcontinuum_maxCount;
   // 'on the fly' initialization
   Float64 bestMerit = INFINITY;
   Float64 bestMeritPrior = 0.0;
@@ -1430,7 +1053,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     Float64 _merit = INFINITY;
     Float64 _meritprior = 0.; // only relevant for "tplratio"
-    prepareAndLoadContinuum(k);
+    prepareAndLoadContinuum(k, redshift);
     if (m_ContinuumComponent != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
 
@@ -1475,7 +1098,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         // create spectrum model
         modelSolution = GetModelSolution(); // computed only to get
                                             // amplitude/err!
-        continuumModelSolution = GetContinuumModelSolution(); // not used!
+        continuumModelSolution =
+            m_continuumManager->GetContinuumModelSolution(); // not used!
         TFloat64List correctedAmplitudes(modelSolution.Amplitudes.size());
         m_CatalogTplRatio.GetBestFit(m_RestLineList, modelSolution.Amplitudes,
                                      modelSolution.AmplitudesUncertainties,
@@ -1524,7 +1148,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         Int32 modelSolutionLevel =
             m_rigidity == "rules" ? Int32(enableLogging) : 0;
         modelSolution = GetModelSolution(modelSolutionLevel);
-        continuumModelSolution = GetContinuumModelSolution();
+        continuumModelSolution =
+            m_continuumManager->GetContinuumModelSolution();
 
         if (m_rigidity == "tplcorr")
           m_tplratioBestTplName = bestTplratioName;
@@ -1560,13 +1185,15 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       Int32 autoselect = m_ContinuumComponent == "tplfitauto";
       // TODO savedIdxContinuumFitted=-1 if rigidity!=tplratio
-      LoadFitContinuum(savedIdxContinuumFitted, autoselect);
+      m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
+                                           redshift);
     }
-    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
+    /*    Log.LogDetail("    model - Linemodel: fitcontinuum = %d (%s, with "
                   "ebmv=%.3f), and A=%e",
                   savedIdxContinuumFitted, m_fitContinuum_tplName.c_str(),
                   m_fitContinuum_tplFitEbmvCoeff,
                   m_fitContinuum_tplFitAmplitude);
+    */
   }
 
   if (m_rigidity == "tplratio") {
@@ -1608,7 +1235,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     Int32 modelSolutionLevel = Int32(enableLogging);
     modelSolution = GetModelSolution(modelSolutionLevel);
-    continuumModelSolution = GetContinuumModelSolution();
+    continuumModelSolution = m_continuumManager->GetContinuumModelSolution();
   }
 
   return bestMerit;
@@ -1640,22 +1267,28 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   if (m_fittingmethod == "hybrid")
     m_fitter = std::make_shared<CHybridFitter>(
         CHybridFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
-  else if (m_fittingmethod == "svdlc") {
-    m_fitter = std::make_shared<CSvdlcFitter>(
-        CSvdlcFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
-  } else if (m_fittingmethod == "svdlcp2") {
-    m_fitter = std::make_shared<CSvdlcFitter>(
-        CSvdlcFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model, 2));
+  else if (m_fittingmethod == "svd")
+    m_fitter = std::make_shared<CSvdFitter>(
+        CSvdFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
+  else if (m_fittingmethod == "svdlc")
+    m_fitter = std::make_shared<CSvdlcFitter>(CSvdlcFitter(
+        m_Elements, m_inputSpc, m_lambdaRange, m_model, m_continuumManager));
+  else if (m_fittingmethod == "svdlcp2")
+    m_fitter = std::make_shared<CSvdlcFitter>(CSvdlcFitter(
+        m_Elements, m_inputSpc, m_lambdaRange, m_model, m_continuumManager, 2));
 
-  } else if (m_fittingmethod == "ones")
+  else if (m_fittingmethod == "ones")
     m_fitter = std::make_shared<COnesFitter>(
         COnesFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
   else if (m_fittingmethod == "random")
-    m_fitter = std::make_shared<COnesFitter>(
-        COnesFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
+    m_fitter = std::make_shared<CRandomFitter>(
+        CRandomFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
   else if (m_fittingmethod == "individual")
     m_fitter = std::make_shared<CIndividualFitter>(
         CIndividualFitter(m_Elements, m_inputSpc, m_lambdaRange, m_model));
+  else
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unknown fitting method " << fitMethod);
 }
 
 void CLineModelFitting::SetLeastSquareFastEstimationEnabled(Int32 enabled) {
@@ -1922,13 +1555,12 @@ void CLineModelFitting::setSymIgmProfile(Int32 iElts,
   bool fixedIGM = isContinuumComponentTplfitxx();
 
   // set to false when continuum is fitted to null
-  fixedIGM &=
-      m_fitContinuum_tplFitAmplitude > m_opt_fitcontinuum_null_amp_threshold *
-                                           m_fitContinuum_tplFitAmplitudeError;
+  fixedIGM &= m_continuumManager->isContFittedToNull();
 
   Int32 bestigmidx = fixedIGM
-                         ? m_fitContinuum_tplFitMeiksinIdx
+                         ? m_continuumManager->getFittedMeiksinIndex()
                          : fitAsymIGMCorrection(redshift, iElts, idxLineIGM);
+
   m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
 }
 
@@ -2083,9 +1715,8 @@ Float64 CLineModelFitting::getLeastSquareMerit() const {
   }
 
   if (isContinuumComponentTplfitxx()) {
-    fit += m_fitContinuum_tplFitMerit_phot; // unconditionnal sum (if photometry
+    fit += m_continuumManager->getFitSum(); // unconditionnal sum (if photometry
                                             // disabled, will sum 0.0)
-    fit += m_fitContinuum_tplFitLogprior;
   }
 
   Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit = %f", fit);
@@ -2149,7 +1780,7 @@ Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
   }
 
   if (isContinuumComponentTplfitxx()) {
-    fit += m_fitContinuum_tplFitLogprior;
+    fit += m_continuumManager->getFittedLogPrior();
   }
 
   return fit;
@@ -2185,12 +1816,11 @@ Float64 CLineModelFitting::getLeastSquareContinuumMeritFast() const {
   if (!isContinuumComponentTplfitxx())
     return fit;
 
-  Float64 term1 = m_fitContinuum_tplFitAmplitude *
-                  m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitMtM;
-  Float64 term2 =
-      -2. * m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitDtM;
+  Float64 term1 = m_continuumManager->getTerm1();
+  Float64 term2 = m_continuumManager->getTerm2();
+
   fit += term1 + term2;
-  fit += m_fitContinuum_tplFitLogprior;
+  fit += m_continuumManager->getFittedLogPrior();
 
   return fit;
 }
@@ -2223,18 +1853,6 @@ Float64 CLineModelFitting::getScaleMargCorrection(Int32 idxLine) const {
       corr += log(mtm);
     }
   }
-
-  return corr;
-}
-
-Float64 CLineModelFitting::getContinuumScaleMargCorrection() const {
-  Float64 corr = 0.0;
-
-  // scale marg for continuum
-  if (isContinuumComponentTplfitxx()) // the support has to be already
-                                      // computed when LoadFitContinuum() is
-                                      // called
-    corr += log(m_fitContinuum_tplFitMtM);
 
   return corr;
 }
@@ -3005,26 +2623,6 @@ void CLineModelFitting::applyPolynomCoeffs(
   return;
 }
 
-CContinuumModelSolution CLineModelFitting::GetContinuumModelSolution() const {
-  CContinuumModelSolution continuumModelSolution;
-
-  continuumModelSolution.tplName = m_fitContinuum_tplName;
-  continuumModelSolution.tplEbmvCoeff = m_fitContinuum_tplFitEbmvCoeff;
-  continuumModelSolution.tplMeiksinIdx = m_fitContinuum_tplFitMeiksinIdx;
-  continuumModelSolution.tplAmplitude = m_fitContinuum_tplFitAmplitude;
-  continuumModelSolution.tplAmplitudeError =
-      m_fitContinuum_tplFitAmplitudeError;
-  continuumModelSolution.tplMerit = m_fitContinuum_tplFitMerit;
-  continuumModelSolution.tplMeritPhot = m_fitContinuum_tplFitMerit_phot;
-  continuumModelSolution.tplDtm = m_fitContinuum_tplFitDtM;
-  continuumModelSolution.tplMtm = m_fitContinuum_tplFitMtM;
-  continuumModelSolution.tplLogPrior = m_fitContinuum_tplFitLogprior;
-  continuumModelSolution.tplRedshift = m_fitContinuum_tplFitRedshift;
-  continuumModelSolution.pCoeffs = m_fitContinuum_tplFitPolyCoeffs;
-
-  return continuumModelSolution;
-}
-
 /**
  * \brief Returns the size of m_Elements.
  **/
@@ -3242,16 +2840,7 @@ Float64 CLineModelFitting::EstimateMTransposeM()
 void CLineModelFitting::SetContinuumComponent(std::string component) {
   m_ContinuumComponent = component;
   m_model->SetContinuumComponent(component);
-  if (m_ContinuumComponent == "nocontinuum") {
-    m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
-    // the continuum is set to zero and the observed spectrum is the spectrum
-    // without continuum
-  }
-  if (m_ContinuumComponent == "fromspectrum") {
-    m_fitContinuum_tplName = "fromspectrum"; // to keep track in resultstore
-    // the continuum is set to the spectrum continuum and the observed
-    // spectrum is the raw spectrum
-  }
+  m_continuumManager->setContinuumComponent(component);
 }
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

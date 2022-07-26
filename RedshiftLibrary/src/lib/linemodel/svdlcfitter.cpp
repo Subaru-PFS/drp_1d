@@ -10,14 +10,13 @@ CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
                            std::shared_ptr<const CSpectrum> inputSpectrum,
                            std::shared_ptr<const TLambdaRange> lambdaRange,
                            std::shared_ptr<CSpectrumModel> spectrumModel,
+                           std::shared_ptr<CContinuumManager> continuumManager,
                            Int32 polyOrder)
     : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel),
-      m_fitc_polyOrder(polyOrder), m_tplCatalog(Context.GetTemplateCatalog()),
-      m_tplCategoryList({Context.GetCurrentCategory()})
+      m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
+      m_spectralAxis(inputSpectrum->GetSpectralAxis())
 
-{
-  std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
-}
+{}
 
 // fit the amplitude of all elements AND continuum amplitude together
 // with linear solver: gsl_multifit_wlinear
@@ -30,43 +29,21 @@ void CSvdlcFitter::fit(Float64 redshift) {
   //	       m_fitContinuum_tplName.c_str());
 
   // re-interpolate the continuum on the grid
-  /*temporarily break svdlc
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-                                                                         m_tplCategoryList,
-  m_fitContinuum_tplName);
 
-   ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
-
-  m_fitContinuum_tplFitAmplitude = 1.0;
-  m_fitContinuum_tplFitAmplitudeError = 1.0;
-  TFloat64List polyCoeffs_unused;
-  setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude,
-                               m_fitContinuum_tplFitAmplitudeError,
-                               polyCoeffs_unused);
-
+  m_continuumManager->reinterpolateContinuum();
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;
   Float64 chi2_cl = INFINITY;
 
   fitAmplitudesLinesAndContinuumLinSolve(
-                                         validEltsIdx, spectralAxis,
-  m_model->getSpcFluxAxis(), m_model->getContinuumFluxAxis(), ampsfitted,
-  errorsfitted, chi2_cl, redshift,m_fitc_polyOrder); Log.LogDebug("    model:
-  fitting svdlc done");
+      validEltsIdx, m_spectralAxis, m_model->getSpcFluxAxis(),
+      m_model->getContinuumFluxAxis(), ampsfitted, errorsfitted, chi2_cl,
+      redshift, m_fitc_polyOrder);
 
-  m_fitContinuum_tplFitAmplitude = ampsfitted[validEltsIdx.size()];
-  TFloat64List polyCoeffs;
-  for (Int32 kpoly = validEltsIdx.size() + 1; kpoly < ampsfitted.size();
-       kpoly++) {
-    polyCoeffs.push_back(ampsfitted[kpoly]);
-  }
-  setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude,
-                               m_fitContinuum_tplFitAmplitudeError,
-                               polyCoeffs);
+  m_continuumManager->setFitContinuumFromFittedAmps(ampsfitted, validEltsIdx);
   m_model->initModelWithContinuum();
   m_model->substractContToFlux();
-  */
 }
 
 /**

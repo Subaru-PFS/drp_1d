@@ -17,8 +17,6 @@ public:
 
   void fit(Float64 redshift);
 
-  Int32 m_cont_reestim_iterations = 0;
-
   bool m_opt_enable_improveBalmerFit = false;
 
 private:

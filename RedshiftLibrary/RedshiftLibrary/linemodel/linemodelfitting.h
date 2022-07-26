@@ -50,21 +50,17 @@
 #include "RedshiftLibrary/line/regulament.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include "RedshiftLibrary/operator/templatefitting.h"
-
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/operator/modelspectrumresult.h"
 
 #include "RedshiftLibrary/operator/pdfz.h"
 
-#include "RedshiftLibrary/linemodel/templatesfitstore.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-
 #include <boost/shared_ptr.hpp>
 
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/abstractfitter.h"
+#include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 
@@ -95,49 +91,15 @@ public:
 
   void LogCatalogInfos();
 
-  void LoadFitContinuumOneTemplate(const std::shared_ptr<const CTemplate> &tpl);
-  void LoadFitContinuum(Int32 icontinuum, Int32 autoSelect);
   void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-  Int32 ApplyContinuumOnGrid(const std::shared_ptr<const CTemplate> &tpl,
-                             Float64 zcontinuum);
-  bool SolveContinuum(const std::shared_ptr<const CTemplate> &tpl,
-                      const TFloat64List &redshifts, Float64 overlapThreshold,
-                      std::vector<CMask> maskList, std::string opt_interp,
-                      Int32 opt_extinction, Int32 opt_dustFit, Float64 &merit,
-                      Float64 &fitAmplitude, Float64 &fitAmplitudeError,
-                      Float64 &fitAmplitudeSigma, Float64 &fitEbmvCoeff,
-                      Int32 &fitMeiksinIdx, Float64 &fitDtM, Float64 &fitMtM,
-                      Float64 &fitLogprior);
-  const std::string &getFitContinuum_tplName() const;
-  Float64 getFitContinuum_tplAmplitude() const;
-  Float64 getFitContinuum_tplAmplitudeError() const;
-  Float64 getFitContinuum_snr() const;
-  Float64 getFitContinuum_tplMerit() const;
-  Float64 getFitContinuum_tplMeritPhot() const;
-  void setFitContinuum_tplAmplitude(Float64 tplAmp, Float64 tplAmpErr,
-                                    const TFloat64List &polyCoeffs);
-  Float64 getFitContinuum_tplIsmEbmvCoeff() const;
-  Float64 getFitContinuum_tplIgmMeiksinIdx() const;
   void SetContinuumComponent(std::string component);
-  Int32 SetFitContinuum_FitStore(
-      const std::shared_ptr<const CTemplatesFitStore> &fitStore);
-  const std::shared_ptr<const CTemplatesFitStore> &
-  GetFitContinuum_FitStore() const;
-  std::shared_ptr<CPriorHelper> SetFitContinuum_PriorHelper();
-  void SetFitContinuum_SNRMax(Float64 snr_max);
-  void SetFitContinuum_Option(Int32 opt);
-  Int32 GetFitContinuum_Option() const;
-  void SetFitContinuum_FitValues(std::string tplfit_name, Float64 tplfit_amp,
-                                 Float64 tplfit_amperr, Float64 tplfit_chi2,
-                                 Float64 tplfit_chi2_phot, Float64 tplfit_ebmv,
-                                 Int32 tplfit_meiksinidx,
-                                 Float64 tplfit_continuumredshift,
-                                 Float64 tplfit_dtm, Float64 tplfit_mtm,
-                                 Float64 tplfit_logprior,
-                                 const TFloat64List &polyCoeffs);
 
-  Int32 LoadFitContaminantTemplate(const CTemplate &tpl);
-  std::shared_ptr<CModelSpectrumResult> GetContaminantSpectrumResult() const;
+  std::shared_ptr<const CContinuumManager> getContinuumManager() const {
+    return m_continuumManager;
+  }
+  std::shared_ptr<CContinuumManager> getContinuumManager() {
+    return m_continuumManager;
+  }
 
   bool initDtd();
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
@@ -208,7 +170,7 @@ public:
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 idxLine = -1) const;
-  Float64 getContinuumScaleMargCorrection() const;
+
   Float64 getStrongerMultipleELAmpCoeff() const;
   TStringList getLinesAboveSNR(Float64 snrcut = 3.5) const;
   Float64 getCumulSNRStrongEL() const;
@@ -218,7 +180,6 @@ public:
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
   CLineModelSolution GetModelSolution(Int32 opt_level = 0);
-  CContinuumModelSolution GetContinuumModelSolution() const;
 
   void getFluxDirectIntegration(const TInt32List &eIdx_list,
                                 const TInt32List &subeIdx_list,
@@ -239,7 +200,7 @@ public:
   Int32 GetPassNumber() const;
 
   void SetForcedisableTplratioISMfit(bool opt);
-  void prepareAndLoadContinuum(Int32 icontfitting);
+  void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
   bool isContinuumComponentTplfitxx() const {
     return m_ContinuumComponent == "tplfit" ||
@@ -277,7 +238,6 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
   bool m_enableLambdaOffsetsFit;
 
-  Int32 m_opt_fitcontinuum_maxCount = 2;
   bool m_opt_firstpass_forcedisableTplratioISMfit = true;
 
 private:
@@ -327,6 +287,7 @@ private:
 
   CRegulament m_Regulament;
   std::shared_ptr<CSpectrumModel> m_model;
+  std::shared_ptr<CContinuumManager> m_continuumManager;
 
   TFloat64List m_ScaleMargCorrTplratio;
   TBoolList m_StrongELPresentTplratio;
@@ -335,19 +296,11 @@ private:
 
   Float64 m_Redshift;
 
-  std::shared_ptr<CTemplate>
-      m_tplContaminantSpcRebin; // optionally used contaminant to be removed
-                                // from observed spectrum
-
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
                                           // cached dTransposeD values
   Float64 m_likelihood_cstLog; // constant term for the Likelihood calculation
 
-  TAxisSampleList
-      m_observeGridContinuumFlux; // the continuum spectre without the
-                                  // amplitude coeff; m_ContinuumFLux = amp *
-                                  // m_observeGridContinuumFlux
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
 
   std::string m_ContinuumComponent;
@@ -367,8 +320,6 @@ private:
   std::string m_rigidity;
   bool m_forcedisableTplratioISMfit = false;
 
-  std::shared_ptr<const CTemplateCatalog> m_tplCatalog;
-  TStringList m_tplCategoryList;
   std::string m_tplratioBestTplName = "undefined";
   Float64 m_tplratioBestTplIsmCoeff = NAN;
   Float64 m_tplratioBestTplAmplitude = NAN;
@@ -378,32 +329,10 @@ private:
       0; // for rigidity=tplratio: switch to use fast least square estimation
   std::shared_ptr<CPriorHelper> m_tplratio_priorhelper;
 
-  std::shared_ptr<COperatorTemplateFitting> m_templateFittingOperator;
   Int32 m_secondpass_fitContinuum_dustfit;
   Int32 m_secondpass_fitContinuum_igm;
 
-  std::shared_ptr<const CTemplatesFitStore> m_fitContinuum_tplfitStore;
-  Int32 m_fitContinuum_option;
-  std::string m_fitContinuum_tplName;
-  Float64 m_fitContinuum_tplFitAmplitude = NAN;
-  Float64 m_fitContinuum_tplFitAmplitudeError = NAN;
-  Float64 m_fitContinuum_tplFitAmplitudeSigmaMAX = NAN;
-  Float64 m_fitContinuum_tplFitMerit = NAN;
-  Float64 m_fitContinuum_tplFitMerit_phot = NAN;
-  Float64 m_fitContinuum_tplFitEbmvCoeff = NAN;
-  Int32 m_fitContinuum_tplFitMeiksinIdx = -1;
-  Float64 m_fitContinuum_tplFitRedshift =
-      NAN; // only used with m_fitContinuum_option==2 for now
-  Float64 m_fitContinuum_tplFitDtM = NAN;
-  Float64 m_fitContinuum_tplFitMtM = NAN;
-  Float64 m_fitContinuum_tplFitLogprior = NAN;
-  Float64 m_fitContinuum_tplFitSNRMax = NAN;
-  TFloat64List
-      m_fitContinuum_tplFitPolyCoeffs; // only used with
-                                       // m_fitContinuum_option==2 for now
   bool m_forcedisableMultipleContinuumfit = false;
-  Float64 m_fitContinuum_tplFitAlpha = 0.;
-  std::shared_ptr<CPriorHelper> m_fitContinuum_priorhelper;
 
   bool m_lmfit_noContinuumTemplate;
   bool m_lmfit_bestTemplate;
@@ -427,8 +356,6 @@ private:
   Float64 m_opt_lya_fit_delta_max = 0.;
   Float64 m_opt_lya_fit_delta_step = 1.;
 
-  Float64 m_opt_fitcontinuum_neg_threshold = -INFINITY;
-  Float64 m_opt_fitcontinuum_null_amp_threshold = 0.;
   bool m_opt_firstpass_forcedisableMultipleContinuumfit = true;
 
   std::string m_opt_firstpass_fittingmethod = "hybrid";
