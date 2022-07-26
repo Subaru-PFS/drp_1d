@@ -135,12 +135,12 @@ void CInputContext::RebinInputs() {
 
   if (!m_Spectrum->GetSpectralAxis().IsLogSampled())
     m_rebinnedSpectrum =
-        logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
+        logReb.loglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
 
   TFloat64Range zrange;
   for (std::string cat : m_categories) {
     if (fft_processing[cat]) {
-      zrange = logReb.LogRebinTemplateCatalog(cat);
+      zrange = logReb.logRebinTemplateCatalog(cat);
       m_logRebin.insert({cat, SRebinResults{zrange}});
     }
   }
