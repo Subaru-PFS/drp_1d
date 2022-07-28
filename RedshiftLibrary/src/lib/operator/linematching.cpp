@@ -38,19 +38,8 @@
 // ============================================================================
 #include "RedshiftLibrary/operator/linematching.h"
 #include "RedshiftLibrary/log/log.h"
-
+#include <numeric>
 using namespace NSEpic;
-
-/**
- * This class's initial implementation duplicates the VIPGI method to match
- * lines found with catalog lines, as in EZELmatch.py, Line 264
- */
-CLineMatching::CLineMatching() {}
-
-/**
- * Empty destructor.
- */
-CLineMatching::~CLineMatching() {}
 
 /**
  * Executes the algorithm for matching the input sets of lines against the
@@ -71,151 +60,149 @@ CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
                        const CLineCatalog &restLineCatalog,
                        const TFloat64Range &redshiftRange, Int32 nThreshold,
                        Float64 tol, Int32 typeFilter, Int32 detectedForceFilter,
-                       Int32 restForceFilter) {
+                       Int32 restForceFilter) const {
   CLineCatalog::TLineVector detectedLineList =
       detectedLineCatalog.GetFilteredList(typeFilter, detectedForceFilter);
   CLineCatalog::TLineVector restLineList =
       restLineCatalog.GetFilteredList(typeFilter, restForceFilter);
+  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
 
   CLineMatchingResult::TSolutionSetList solutions;
-  Int32 nDetectedLine = detectedLineList.size();
-  if (nDetectedLine == 1) {
-    Log.LogDebug("CLineMatching: Only 1 line detected. n=%d", nDetectedLine);
-    // if there is only one detected line, then there are N=#restlines possible
-    // redshifts
-    for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
+  Int32 N = restLineList.size();
+  Log.LogDebug("CLineMatching: Lines detected. n=%d", N);
+
+  for (Int32 iDetectedLine = 0; iDetectedLine < detectedLineList.size();
+       iDetectedLine++) {
+    for (Int32 iRestLine = 0; iRestLine < N; iRestLine++) {
+      // for each detected line / rest line couple, enumerate how many other
+      // couples fit within the tolerance
       CLineMatchingResult::TSolutionSet solution;
-      Float64 redShift = (detectedLineList[0].GetPosition() -
-                          restLineList[iRestLine].GetPosition()) /
-                         restLineList[iRestLine].GetPosition();
-      if (redShift > 0) // we don't care about blueshift.
-      {
-        solution.push_back(CLineMatchingResult::SSolution(
-            detectedLineList[0], std::move(restLineList[iRestLine]), redShift));
+      Float64 redShift = redshiftGetter(iDetectedLine, iRestLine);
+      if (redShift < 0) // we don't care about blueshifts.
+        continue;
+      solution.push_back(CLineMatchingResult::SSolution(
+          detectedLineList[iDetectedLine], restLineList[iRestLine], redShift));
+
+      if (N == 1) {
+        // if there is only one detected line, then there are N=#restlines
+        // possible redshifts
         solutions.push_back(solution);
+        break;
       }
-    }
-  } else {
-    Log.LogDebug("CLineMatching: Lines detected. n=%d", nDetectedLine);
-
-    for (Int32 iDetectedLine = 0; iDetectedLine < detectedLineList.size();
-         iDetectedLine++) {
-      for (Int32 iRestLine = 0; iRestLine < restLineList.size(); iRestLine++) {
-        // for each detected line / rest line couple, enumerate how many other
-        // couples fit within the tolerance
-        CLineMatchingResult::TSolutionSet solution;
-        Float64 redShift = (detectedLineList[iDetectedLine].GetPosition() -
-                            restLineList[iRestLine].GetPosition()) /
-                           restLineList[iRestLine].GetPosition();
-        if (redShift < 0) // we don't care about blueshifts.
-        {
-          continue;
-        }
-        solution.push_back(
-            CLineMatchingResult::SSolution(detectedLineList[iDetectedLine],
-                                           restLineList[iRestLine], redShift));
-
-        for (Int32 iDetectedLine2 = 0; iDetectedLine2 < detectedLineList.size();
-             iDetectedLine2++) {
-          if (iDetectedLine != iDetectedLine2) {
-            for (Int32 iRestLine2 = 0; iRestLine2 < restLineList.size();
-                 iRestLine2++) {
-              Float64 redShift2 =
-                  (detectedLineList[iDetectedLine2].GetPosition() -
-                   restLineList[iRestLine2].GetPosition()) /
-                  restLineList[iRestLine2].GetPosition();
-              if (redShift2 < 0) // we don't care about blueshifts.
-              {
-                continue;
-              }
-              Float64 redshiftTolerance =
-                  tol * (1 + (redShift + redShift2) * 0.5);
-              if (fabs((redShift - redShift2)) <= redshiftTolerance) {
-                bool found = false;
-                // avoid repeated solution sets
-                for (Int32 iSet = 0; iSet < solution.size(); iSet++) {
-                  if (solution[iSet].DetectedLine.GetPosition() ==
-                      detectedLineList[iDetectedLine2].GetPosition()) {
-                    found = true;
-                    break;
-                  }
-                }
-                if (!found) {
-                  solution.push_back(CLineMatchingResult::SSolution(
-                      detectedLineList[iDetectedLine2],
-                      restLineList[iRestLine2], redShift2));
-                }
-              }
-            } // for
-          }
-        } // for
-        if (solution.size() > 0) {
-          solutions.push_back(solution);
-        }
-      }
+      updateSolution(iDetectedLine, redShift, tol, solution, // to update
+                     detectedLineList, restLineList);
+      if (solution.size() > 0)
+        solutions.push_back(solution);
     }
   }
+
   Log.LogDebug("CLineMatching: non unique solutions found n=%d",
                solutions.size());
+  const CLineMatchingResult::TSolutionSetList newSolutions =
+      refineSolutions(solutions, redshiftRange, nThreshold);
 
-  // delete duplicated solutions
-  Int32 nSolFoundLTThres = 0;
-  Int32 nSolFoundOutsideRedshiftRange = 0;
-  Int32 nSolFoundDuplicated = 0;
-  CLineMatchingResult::TSolutionSetList newSolutions;
-  for (Int32 iSol = 0; iSol < solutions.size(); iSol++) {
-    CLineMatchingResult::TSolutionSet currentSet = solutions[iSol];
-    sort(currentSet.begin(), currentSet.end());
-    bool found = false;
-    for (Int32 iNewSol = 0; iNewSol < newSolutions.size(); iNewSol++) {
-      if (AreSolutionSetsEqual(newSolutions[iNewSol], currentSet)) {
-        found = true;
-      }
-    }
-    if (!found) // if solution is new, let's check it is within the range
-    {
-      if (currentSet.size() >= nThreshold) {
-        Float64 redshiftMean = 0.f;
-        for (Int32 i = 0; i < currentSet.size(); i++) {
-          redshiftMean += currentSet[i].Redshift;
-        }
-        redshiftMean /= currentSet.size();
-        if (redshiftMean > redshiftRange.GetBegin() &&
-            redshiftMean < redshiftRange.GetEnd()) {
-          newSolutions.push_back(currentSet);
-        } else {
-          nSolFoundOutsideRedshiftRange++;
-        }
-      } else {
-        nSolFoundLTThres++;
-      }
-    } else {
-      nSolFoundDuplicated++;
-    }
-  }
-  Log.LogDebug("CLineMatching: Cropped (Duplicate) solutions found n=%d",
-               nSolFoundDuplicated);
-  Log.LogDebug("CLineMatching: Cropped (Outside zrange [ %f ; %f ]) solutions "
-               "found n=%d",
-               redshiftRange.GetBegin(), redshiftRange.GetEnd(),
-               nSolFoundOutsideRedshiftRange);
-  Log.LogDebug(
-      "CLineMatching: Cropped (Lower than thres.) solutions found n=%d",
-      nSolFoundLTThres);
-  Log.LogDebug("CLineMatching: unique solutions found n=%d",
-               newSolutions.size());
+  if (!newSolutions.size())
+    return nullptr;
 
-  if (newSolutions.size() > 0) {
-    auto result = std::make_shared<CLineMatchingResult>();
-    result->SolutionSetList = newSolutions;
-    result->m_RestCatalog = restLineCatalog;
-    result->m_DetectedCatalog = restLineCatalog;
-
-    return result;
-  }
-  return NULL;
+  auto result = std::make_shared<CLineMatchingResult>();
+  result->SolutionSetList = newSolutions;
+  result->m_RestCatalog = restLineCatalog;
+  result->m_DetectedCatalog = restLineCatalog;
+  return result;
 }
 
+std::function<Float64(Int32, Int32)> CLineMatching::getRedshift(
+    const CLineCatalog::TLineVector &detectedLineList,
+    const CLineCatalog::TLineVector &restLineList) const {
+  return [&detectedLineList, &restLineList](Int32 idx, Int32 iRestLine) {
+    return (detectedLineList[idx].GetPosition() -
+            restLineList[iRestLine].GetPosition()) /
+           restLineList[iRestLine].GetPosition();
+  };
+}
+
+void CLineMatching::updateSolution(
+    Int32 iDetectedLine, Float64 redShift, Float64 tol,
+    CLineMatchingResult::TSolutionSet &solution, // to update
+    const CLineCatalog::TLineVector &detectedLineList,
+    const CLineCatalog::TLineVector &restLineList) const {
+  auto redshiftGetter = getRedshift(detectedLineList, restLineList);
+  for (Int32 iDetectedLine2 = 0; iDetectedLine2 < detectedLineList.size();
+       iDetectedLine2++) {
+    if (iDetectedLine == iDetectedLine2)
+      continue;
+
+    for (Int32 iRestLine2 = 0; iRestLine2 < restLineList.size(); iRestLine2++) {
+      Float64 redShift2 = redshiftGetter(iDetectedLine2, iRestLine2);
+      if (redShift2 < 0) // we don't care about blueshifts.
+        continue;
+      Float64 redshiftTolerance = tol * (1 + (redShift + redShift2) * 0.5);
+      if (fabs((redShift - redShift2)) > redshiftTolerance)
+        continue;
+
+      // avoid repeated solution sets
+      if (!isLineAlreadyPresent(detectedLineList[iDetectedLine2], solution)) {
+        solution.push_back(CLineMatchingResult::SSolution(
+            detectedLineList[iDetectedLine2], restLineList[iRestLine2],
+            redShift2));
+      }
+    }
+  }
+  return;
+}
+
+/**
+ * @brief Check if line is already present in the solution
+ *
+ * @param line
+ * @param solution
+ * @return true
+ * @return false
+ */
+bool CLineMatching::isLineAlreadyPresent(
+    const CLine &line,
+    const CLineMatchingResult::TSolutionSet &solution) const {
+  for (const auto &currentSet : solution)
+    if (currentSet.DetectedLine.GetPosition() == line.GetPosition())
+      return true;
+
+  return false;
+}
+
+// delete duplicated solutions
+const CLineMatchingResult::TSolutionSetList CLineMatching::refineSolutions(
+    const CLineMatchingResult::TSolutionSetList &solutions,
+    const TFloat64Range &redshiftRange, Int32 nThreshold) const {
+
+  CLineMatchingResult::TSolutionSetList newSolutions;
+  for (auto currentSet : solutions) {
+    if (currentSet.size() < nThreshold)
+      continue;
+    std::sort(currentSet.begin(), currentSet.end());
+    bool found = false;
+    for (auto newsol : newSolutions)
+      if (AreSolutionSetsEqual(newsol, currentSet)) {
+        found = true;
+        break;
+      }
+    if (found) // found duplicate
+      continue;
+    // if solution is new, let's check it is within the range
+    Float64 redshiftMean =
+        accumulate(currentSet.begin(), currentSet.end(), 0.,
+                   [](Float64 v, const CLineMatchingResult::SSolution &s2) {
+                     return v + s2.Redshift;
+                   }) /
+        currentSet.size();
+
+    if (redshiftMean > redshiftRange.GetBegin() &&
+        redshiftMean < redshiftRange.GetEnd())
+      newSolutions.push_back(currentSet);
+  }
+  Log.LogDebug("CLineMatching: unique solutions found n=%d",
+               newSolutions.size());
+  return newSolutions;
+}
 /**
  * Given 2 TSolutionSets, returns true if they are equivalent (have the same
  * line values), false otherwise. The algorithm only works reliably if the
@@ -223,22 +210,19 @@ CLineMatching::Compute(const CLineCatalog &detectedLineCatalog,
  */
 bool CLineMatching::AreSolutionSetsEqual(
     const CLineMatchingResult::TSolutionSet &s1,
-    const CLineMatchingResult::TSolutionSet &s2) {
-  if (s1.size() != s2.size()) {
+    const CLineMatchingResult::TSolutionSet &s2) const {
+  if (s1.size() != s2.size())
     return false;
-  }
+
   bool diffFound = false;
   for (Int32 iSet = 0; iSet < s1.size(); iSet++) {
     if (s1[iSet].DetectedLine != s2[iSet].DetectedLine ||
         s1[iSet].RestLine != s2[iSet].RestLine ||
         s1[iSet].Redshift != s2[iSet].Redshift) {
       diffFound = true;
-      return false;
+      break;
     }
   }
 
-  if (!diffFound) {
-    return true;
-  }
-  return false;
+  return !diffFound;
 }
