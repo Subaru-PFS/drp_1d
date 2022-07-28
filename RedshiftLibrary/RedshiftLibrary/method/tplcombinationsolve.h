@@ -100,6 +100,8 @@ private:
                       const CSpectrum &spc, const CTemplateCatalog &tplCatalog,
                       const TFloat64Range &lambdaRange,
                       Float64 overlapThreshold, std::string opt_interp);
+  std::string getSpecBasedScope(CSpectrum::EType _spctype);
+  void checkTemplates(const TTemplateConstRefList &tplList) const;
   COperatorTplcombination m_tplcombinationOperator;
 
   std::string m_opt_pdfcombination;
