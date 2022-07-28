@@ -820,7 +820,7 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
     // Default linear interp.
     Int32 k = 0;
     // For each sample in the valid lambda range interval.
-    while (k <= m_SpectralAxis.GetSamplesCount() - 1 &&
+    while (k < m_SpectralAxis.GetSamplesCount() - 1 &&
            Xsrc[k] <= currentRange.GetEnd()) {
       // For each sample in the target spectrum that are in between two
       // continous source sample
@@ -888,8 +888,11 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
       rebinedMask[j] = 1;
 
       // note: error rebin not implemented for spline interp
-      if (opt_error_interp != "no")
+      if (opt_error_interp != "no") {
+        gsl_spline_free(spline);
+        gsl_interp_accel_free(accelerator);
         return false;
+      }
 
       j++;
     }
