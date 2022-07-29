@@ -538,15 +538,7 @@ std::shared_ptr<COperatorResult> COperatorTplcombination::Compute(
   Int32 componentCount = tplList.size();
   Log.LogInfo(" starting computation with N-template = %d", componentCount);
 
-  if (spectrum.GetSpectralAxis().IsInLinearScale() == false) {
-    THROWG(INTERNAL_ERROR, " input spectrum is not in log scale");
-  }
-
   for (Int32 ktpl = 0; ktpl < componentCount; ktpl++) {
-    if (tplList[ktpl]->GetSpectralAxis().IsInLinearScale() == false) {
-      THROWG(INTERNAL_ERROR, Formatter() << "Input template k=" << ktpl
-                                         << " is not in log scale");
-    }
     if (opt_dustFitting && tplList[ktpl]->CalzettiInitFailed()) {
       THROWG(INTERNAL_ERROR, "ISM is not initialized");
     }

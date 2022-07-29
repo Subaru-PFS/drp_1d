@@ -172,11 +172,6 @@ bool CTemplate::Save(const char *filePath) const {
   }
 
   CSpectrumSpectralAxis spectralAxis = GetSpectralAxis();
-  bool logScale = spectralAxis.IsInLogScale();
-  // alway save in Linear Scale
-  if (logScale) {
-    spectralAxis.ConvertToLinearScale();
-  }
   const CSpectrumFluxAxis &fluxAxis = GetFluxAxis();
   for (Int32 i = 0; i < GetSampleCount(); i++) {
     file.precision(10);

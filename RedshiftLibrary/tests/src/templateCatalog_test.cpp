@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_SUITE(TemplateCatalog)
 std::shared_ptr<CTemplate> CreateTemplate(std::string name,
                                           std::string category) {
   TFloat64List array = {0., 2., 3., 6.};
-  CSpectrumSpectralAxis spectralAxis(array, false);
+  CSpectrumSpectralAxis spectralAxis(array);
   CSpectrumFluxAxis fluxAxis(array);
   return std::make_shared<CTemplate>(name, category, spectralAxis, fluxAxis);
 }

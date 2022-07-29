@@ -60,8 +60,7 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
       m_medianWindowSize(other.m_medianWindowSize),
       m_medianEvenReflection(other.m_medianEvenReflection),
       m_Name(other.m_Name), m_spcType(other.m_spcType), m_LSF(other.m_LSF),
-      alreadyRemoved(other.alreadyRemoved),
-      m_SpectralAxis(Int32(0), other.m_SpectralAxis.IsInLogScale()) {
+      alreadyRemoved(other.alreadyRemoved), m_SpectralAxis(Int32(0)) {
   const CSpectrumNoiseAxis &otherRawError = other.m_RawFluxAxis.GetError(),
                            &otherContinuumError =
                                other.m_ContinuumFluxAxis.GetError(),
@@ -374,20 +373,6 @@ bool CSpectrum::InvertFlux() {
     m_WithoutContinuumFluxAxis.Invert();
   }
   return true;
-}
-
-/**
- * Convert the spectral axis to a neperian logarithm scale
- */
-bool CSpectrum::ConvertToLogScale() {
-  return m_SpectralAxis.ConvertToLogScale();
-}
-
-/**
- * Convert the spectral axis to a linear scale
- */
-bool CSpectrum::ConvertToLinearScale() {
-  return m_SpectralAxis.ConvertToLinearScale();
 }
 
 Float64 CSpectrum::GetResolution() const {
@@ -764,18 +749,8 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
            "or unsorted spectral axis");
 
   Int32 s = targetSpectralAxis.GetSamplesCount();
-  TFloat64Range logIntersectedLambdaRange(log(range.GetBegin()),
-                                          log(range.GetEnd()));
-  TFloat64Range currentRange = logIntersectedLambdaRange;
-  if (m_SpectralAxis.IsInLinearScale() !=
-      targetSpectralAxis.IsInLinearScale()) {
-    Log.LogError("Problem spectral axis and target spectral axis are not in "
-                 "the same scale\n");
-    return false;
-  }
-  if (m_SpectralAxis.IsInLinearScale()) {
-    currentRange = range;
-  }
+  TFloat64Range currentRange = range;
+
   // find start/end indexs for both axes
   if (m_SpectralAxis[0] > currentRange.GetBegin() ||
       m_SpectralAxis[m_SpectralAxis.GetSamplesCount() - 1] <
