@@ -118,6 +118,21 @@ public:
     return m_Elements[i];
   }
 
+  // for range looping over elements
+  std::vector<std::shared_ptr<CLineModelElement>>::iterator begin() {
+    return m_Elements.begin();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::iterator end() {
+    return m_Elements.end();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::const_iterator
+  begin() const {
+    return m_Elements.begin();
+  };
+  std::vector<std::shared_ptr<CLineModelElement>>::const_iterator end() const {
+    return m_Elements.end();
+  };
+
   Int32 size() const { return m_Elements.size(); }
   void push_back(const std::shared_ptr<CLineModelElement> &elt) {
     m_Elements.push_back(elt);
