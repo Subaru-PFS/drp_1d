@@ -75,6 +75,13 @@ private:
   std::shared_ptr<const CLSF> m_LSF = nullptr;
   std::shared_ptr<CTemplate>
   OrthogonalizeTemplate(const CTemplate &inputTemplate);
+  bool prepareTplCatForOrthogonalization(
+      std::shared_ptr<CTemplateCatalog> &tplCatalog,
+      CInputContext &inputContext, const std::string category,
+      TBoolList &samplingList) const;
+  bool
+  hasLogRebinnedTemplatesChanged(std::shared_ptr<CTemplateCatalog> &tplCatalog,
+                                 std::string category) const;
 };
 
 } // namespace NSEpic
