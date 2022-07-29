@@ -311,6 +311,11 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
     const std::shared_ptr<const CLineModelResult> &result) const {
   Log.LogDetail("LinemodelSolve: building chisquare array");
 
+  if (m_opt_pdfcombination != "bestchi2" &&
+      m_opt_pdfcombination != "bestproba" && m_opt_pdfcombination != "marg")
+    THROWG(BAD_PARAMETER_VALUE,
+           "PdfCombination can only be {bestchi2, bestproba, marg");
+
   ChisquareArray chisquarearray;
   std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
   std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
@@ -325,123 +330,132 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   if (m_opt_pdfcombination == "bestchi2") {
     zpriors.push_back(BuildZpriors(result));
     chisquares.push_back(result->ChiSquare);
+    return chisquarearray;
+  }
 
-  } else if (m_opt_pdfcombination == "bestproba" ||
-             m_opt_pdfcombination == "marg") {
-
-    if (m_opt_lineratiotype != "tplratio") {
-      zpriors.push_back(BuildZpriors(result));
-      chisquares.push_back(result->ChiSquare);
-    } else {
-
-      const Int32 ntplratios = result->ChiSquareTplratios.size();
-
-      bool zPriorLines = false;
-      Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
-                    result->PriorLinesTplratios.size());
-      if (result->PriorLinesTplratios.size() == ntplratios) {
-        zPriorLines = true;
-        Log.LogDetail("%s: Lines Prior enabled", __func__);
-      } else {
-        Log.LogDetail("%s: Lines Prior disabled", __func__);
-      }
-
-      chisquares.reserve(ntplratios);
-      zpriors.reserve(ntplratios);
-
-      for (Int32 k = 0; k < ntplratios; ++k) {
-        zpriors.push_back(BuildZpriors(result, k));
-        chisquares.push_back(result->ChiSquareTplratios[k]);
-
-        // correct chi2 if necessary
-        TFloat64List &logLikelihoodCorrected = chisquares.back();
-        /*
-        if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
-        {
-            //find max scalemargcorr
-            Float64 maxscalemargcorr=-DBL_MAX;
-            for ( Int32 kz=0; kz<zsize; kz++ )
-                if(maxscalemargcorr <
-        result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
-        result->ScaleMargCorrectionTplratios[k][kz];
-
-            Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
-        maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
-                if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
-        this is experimental. logLikelihoodCorrected[kz] +=
-        result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
-
-            // need to add maxscalemargcorr ?
-        }*/
-
-        if (zPriorLines && result->PriorLinesTplratios[k].size() == zsize)
-          for (Int32 kz = 0; kz < zsize; kz++)
-            logLikelihoodCorrected[kz] += result->PriorLinesTplratios[k][kz];
-      }
-
-      chisquarearray.modelpriors = result->PriorTplratios;
-    }
-
-    if (!result->ChiSquareTplContinuum.empty()) {
-
-      // Fullmodel (ie with continuum template fitting): store all continuum tpl
-      // fitting chisquares (ChiSquareTplContinuum size will be null if not
-      // tplfit)
-
-      //  note: the continuum xi2 are computed on continuum ~orthogonal to the
-      //  linemodel, ie corresponding
-      //        to a fullmodel with perfect linemodel fit (null Xi2 under the
-      //        lines). They are thus better (smaller) than the fullmodel Xi2
-      //        with which they will be summed in the marginalization. To
-      //        mitigate this, for each continuum Xi2, we have to add the Xi2
-      //        part of the linemodel alone. The latter can be obtained by
-      //        subtracting the corresponding continuum Xi2 of the fullmodel.
-
-      const auto newsize =
-          chisquares.size() * result->ChiSquareTplContinuum.size();
-      chisquares.reserve(newsize);
-      zpriors.reserve(newsize);
-      chisquarearray.modelpriors.reserve(newsize);
-
-      // divide model prior by the number of continuum templates
-      // TODO: need to add/handle tpl continuum priors
-      // (note: in the case of ATEZ, which is exclusive of zpriors and
-      // Tplratios, priors are included already in the chisquares of both
-      // tplcontinuum chi2 and tplratio chi2)
-      for (auto &prior : chisquarearray.modelpriors)
-        prior /= result->ChiSquareTplContinuum.size();
-
-      // loop on all tplratios (or 1 linemodel free)
-      // TFloat64List linemodel_alone_chi2(zsize);
-      for (Int32 k = 0, ke = chisquares.size(); k < ke; ++k) {
-
-        // loop on all continuum templates, skiping 1st one, already used with
-        // linemodel
-        for (auto it = result->ChiSquareTplContinuum.cbegin() + 1,
-                  itend = result->ChiSquareTplContinuum.cend();
-             it != itend; ++it) {
-
-          zpriors.push_back(zpriors[k]); // duplicate zpriors
-          chisquares.emplace_back(zsize);
-          TFloat64List &fullmodel_chi2 = chisquares.back();
-          for (Int32 iz = 0; iz < zsize;
-               ++iz) { // estimate chi2 of fullmodel with other continuum
-            fullmodel_chi2[iz] =
-                chisquares[k][iz] +
-                std::max(0., (*it)[iz] - result->ChiSquareTplContinuum[0][iz]);
-          }
-          if (!chisquarearray.modelpriors.empty())
-            chisquarearray.modelpriors.push_back(
-                chisquarearray.modelpriors[k]); // duplicate modelpriors
-        }
-      }
-    }
-
+  if (m_opt_lineratiotype != "tplratio") {
+    zpriors.push_back(BuildZpriors(result));
+    chisquares.push_back(result->ChiSquare);
   } else {
-    Log.LogError("Linemodel: Unable to parse pdf combination method option");
+    fillChisquareArrayForTplRatio(result, chisquarearray);
+  }
+
+  if (result->ChiSquareTplContinuum.empty())
+    return chisquarearray;
+
+  // Fullmodel (ie with continuum template fitting): store all continuum
+  // tpl fitting chisquares (ChiSquareTplContinuum size will be null if
+  // not tplfit)
+
+  //  note: the continuum xi2 are computed on continuum ~orthogonal to the
+  //  linemodel, ie corresponding
+  //        to a fullmodel with perfect linemodel fit (null Xi2 under the
+  //        lines). They are thus better (smaller) than the fullmodel Xi2
+  //        with which they will be summed in the marginalization. To
+  //        mitigate this, for each continuum Xi2, we have to add the Xi2
+  //        part of the linemodel alone. The latter can be obtained by
+  //        subtracting the corresponding continuum Xi2 of the fullmodel.
+
+  const auto newsize = chisquares.size() * result->ChiSquareTplContinuum.size();
+  chisquares.reserve(newsize);
+  zpriors.reserve(newsize);
+  chisquarearray.modelpriors.reserve(newsize);
+
+  // divide model prior by the number of continuum templates
+  // TODO: need to add/handle tpl continuum priors
+  // (note: in the case of ATEZ, which is exclusive of zpriors and
+  // Tplratios, priors are included already in the chisquares of both
+  // tplcontinuum chi2 and tplratio chi2)
+  Int32 n = result->ChiSquareTplContinuum.size();
+  std::transform(chisquarearray.modelpriors.begin(),
+                 chisquarearray.modelpriors.end(),
+                 chisquarearray.modelpriors.begin(),
+                 [n](Float64 prior) { return prior / n; });
+
+  // loop on all tplratios (or 1 linemodel free)
+  // TFloat64List linemodel_alone_chi2(zsize);
+  for (Int32 k = 0, ke = chisquares.size(); k < ke; ++k) {
+    // loop on all continuum templates, skiping 1st one, already used with
+    // linemodel
+    for (auto it = result->ChiSquareTplContinuum.cbegin() + 1,
+              itend = result->ChiSquareTplContinuum.cend();
+         it != itend; ++it) {
+
+      zpriors.push_back(zpriors[k]); // duplicate zpriors
+      chisquares.emplace_back(zsize);
+      TFloat64List &fullmodel_chi2 = chisquares.back();
+      for (Int32 iz = 0; iz < zsize; ++iz) {
+        // estimate chi2 of fullmodel with other continuum
+        fullmodel_chi2[iz] =
+            chisquares[k][iz] +
+            std::max(0., (*it)[iz] - result->ChiSquareTplContinuum[0][iz]);
+      }
+      if (!chisquarearray.modelpriors.empty())
+        chisquarearray.modelpriors.push_back(
+            chisquarearray.modelpriors[k]); // duplicate modelpriors
+    }
   }
 
   return chisquarearray;
+}
+
+void CLineModelSolve::fillChisquareArrayForTplRatio(
+    const std::shared_ptr<const CLineModelResult> &result,
+    ChisquareArray &chisquarearray) const {
+
+  std::vector<TFloat64List> &chisquares = chisquarearray.chisquares;
+  std::vector<TFloat64List> &zpriors = chisquarearray.zpriors;
+
+  const Int32 zsize = result->Redshifts.size();
+
+  const Int32 ntplratios = result->ChiSquareTplratios.size();
+
+  bool zPriorLines = false;
+  Log.LogDetail("%s: PriorLinesTplratios.size()=%d", __func__,
+                result->PriorLinesTplratios.size());
+  if (result->PriorLinesTplratios.size() == ntplratios) {
+    zPriorLines = true;
+    Log.LogDetail("%s: Lines Prior enabled", __func__);
+  } else {
+    Log.LogDetail("%s: Lines Prior disabled", __func__);
+  }
+
+  chisquares.reserve(ntplratios);
+  zpriors.reserve(ntplratios);
+
+  for (Int32 k = 0; k < ntplratios; ++k) {
+    zpriors.push_back(BuildZpriors(result, k));
+    chisquares.push_back(result->ChiSquareTplratios[k]);
+
+    // correct chi2 if necessary
+    TFloat64List &logLikelihoodCorrected = chisquares.back();
+    /*
+    if(m_opt_pdf_margAmpCorrection) //nb: this is experimental.
+    {
+        //find max scalemargcorr
+        Float64 maxscalemargcorr=-DBL_MAX;
+        for ( Int32 kz=0; kz<zsize; kz++ )
+            if(maxscalemargcorr <
+    result->ScaleMargCorrectionTplratios[k][kz]) maxscalemargcorr =
+    result->ScaleMargCorrectionTplratios[k][kz];
+
+        Log.LogDetail("%s: maxscalemargcorr= %e", __func__,
+    maxscalemargcorr); for ( Int32 kz=0; kz<zsize; kz++ )
+            if(result->ScaleMargCorrectionTplratios[k][kz]!=0) //warning,
+    this is experimental. logLikelihoodCorrected[kz] +=
+    result->ScaleMargCorrectionTplratios[k][kz] - maxscalemargcorr;
+
+        // need to add maxscalemargcorr ?
+    }*/
+    if (!zPriorLines || result->PriorLinesTplratios[k].size() != zsize)
+      continue;
+
+    for (Int32 kz = 0; kz < zsize; kz++)
+      logLikelihoodCorrected[kz] += result->PriorLinesTplratios[k][kz];
+  }
+
+  chisquarearray.modelpriors = result->PriorTplratios;
+  return;
 }
 
 ///
@@ -490,11 +504,10 @@ void CLineModelSolve::StoreChisquareTplRatioResults(
           result->ScaleMargCorrectionTplratios[km][kz];
     }
 
-    std::string resname =
-        (boost::format(
-             "linemodel_chisquaretplratio/linemodel_scalemargcorrtplratio_%d") %
-         km)
-            .str();
+    std::string resname = (boost::format("linemodel_chisquaretplratio/"
+                                         "linemodel_scalemargcorrtplratio_%d") %
+                           km)
+                              .str();
     resultStore->StoreScopedGlobalResult(resname.c_str(),
                                          result_chisquaretplratio);
   }
@@ -601,8 +614,8 @@ bool CLineModelSolve::Solve() {
                            (m_opt_extremacountB > 1);
   COperatorLineModel linemodel_fpb;
   std::string fpb_opt_continuumcomponent =
-      "fromspectrum"; // Note: this is hardocoded! given that condition for FPB
-                      // relies on having "tplfit"
+      "fromspectrum"; // Note: this is hardocoded! given that condition for
+                      // FPB relies on having "tplfit"
   Int32 retInitB = linemodel_fpb.Init(m_redshifts);
   if (retInitB != 0) {
     Log.LogError("Linemodel fpB, init failed");
