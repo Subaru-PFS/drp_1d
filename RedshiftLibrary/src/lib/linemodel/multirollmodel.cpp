@@ -106,11 +106,7 @@ CMultiRollModel::CMultiRollModel(
       "    multirollmodel: ===============================================");
   for (Int32 km = 0; km < nModels; km++) {
     Float64 lines_nsigmasupport = 6.0;
-    m_models.push_back(std::make_shared<CLineModelFitting>(
-        *spcRolls[km], lambdaRange, tplCatalog, tplCategoryList, restLineList,
-        opt_fittingmethod, opt_continuumcomponent, opt_continuum_neg_threshold,
-        opt_continuum_nullamp_threshold, widthType, lines_nsigmasupport,
-        velocityEmission, velocityAbsorption, opt_rules, opt_rigidity));
+    m_models.push_back(std::make_shared<CLineModelFitting>());
   }
 }
 
@@ -200,7 +196,7 @@ bool CMultiRollModel::initTplratioCatalogs(
   bool ret = -1;
   for (Int32 km = 0; km < m_models.size(); km++) {
     m_models[km]->m_CatalogTplShape = tplRatioCatalog;
-    ret = m_models[km]->initTplratioCatalogs(opt_tplratio_ismFit);
+    m_models[km]->initTplratioCatalogs(opt_tplratio_ismFit);
   }
 
   //

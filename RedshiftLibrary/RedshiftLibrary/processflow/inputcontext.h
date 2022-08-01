@@ -52,6 +52,8 @@ class CLineCatalog;
 class CParameterStore;
 class CPhotBandCatalog;
 class CLineCatalogsTplShape;
+class CLine;
+typedef std::vector<CLine> TLineVector;
 
 class CInputContext {
 public:
@@ -63,7 +65,6 @@ public:
     return m_rebinnedSpectrum;
   }
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
-    m_TemplateCatalog->resetCatalogState();
     return m_TemplateCatalog;
   }
   std::shared_ptr<const CLineCatalogsTplShape>
@@ -84,13 +85,16 @@ public:
     return m_rebinnedSpectrum;
   }
   const std::shared_ptr<CTemplateCatalog> &GetTemplateCatalog() {
-    m_TemplateCatalog->resetCatalogState();
     return m_TemplateCatalog;
   }
   const std::shared_ptr<CLineCatalogsTplShape> &
   GetTemplateRatioCatalog(const std::string &objectType);
   const std::shared_ptr<CLineCatalog> &
   GetLineCatalog(const std::string &objectType, const std::string &method);
+  const CLineCatalog::TLineVector
+  GetFilteredLineVector(const std::string &objectType,
+                        const std::string &method, const std::string &type,
+                        const std::string &force);
   const std::shared_ptr<CPhotBandCatalog> &GetPhotBandCatalog() {
     return m_photBandCatalog;
   }
@@ -101,7 +105,10 @@ public:
   void SetRebinnedSpectrum(const std::shared_ptr<CSpectrum> &rebinnedSpc) {
     m_rebinnedSpectrum = rebinnedSpc;
   }
-  TFloat64Range m_lambdaRange;
+  std::shared_ptr<TFloat64Range> m_lambdaRange;
+  std::shared_ptr<TFloat64Range> m_clampedLambdaRange;
+  std::shared_ptr<TFloat64Range> m_rebinnedClampedLambdaRange;
+
   bool m_use_LogLambaSpectrum = 0;
   Float64 m_logGridStep;
   typedef struct {
@@ -175,6 +182,16 @@ CInputContext::GetLineCatalog(const std::string &objectType,
   // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetLineCatalog:
   // invalid object type");
   return m_lineCatalogs[objectType][method];
+}
+
+inline const CLineCatalog::TLineVector CInputContext::GetFilteredLineVector(
+    const std::string &objectType, const std::string &method,
+    const std::string &type, const std::string &force) {
+  //  if (std::findm_categories.find(objectType))
+  // throw
+  // GlobalException(ErrorCode::INTERNAL_ERROR,"CInputContext::GetLineCatalog:
+  // invalid object type");
+  return m_lineCatalogs[objectType][method]->GetFilteredList(type, force);
 }
 
 inline std::shared_ptr<const CLineCatalogsTplShape>

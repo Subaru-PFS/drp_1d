@@ -43,7 +43,7 @@ using namespace NSEpic;
 
 void CObjectSolve::InitRanges(
     std::shared_ptr<const CInputContext> inputContext) {
-  m_lambdaRange = inputContext->m_lambdaRange; // non-clamped
+  m_lambdaRange = *(inputContext->m_lambdaRange); // non-clamped
 
   // m_redshiftSampling could be overwritten if fftprocessing is activated
   //  Warning for LineMeas :  we consider linemeas use the same redshiftsampling

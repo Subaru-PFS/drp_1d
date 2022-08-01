@@ -70,14 +70,7 @@ public:
           std::shared_ptr<COperatorResultStore> resultStore,
           TScopeStack &scope) override;
 
-  bool Solve(std::shared_ptr<COperatorResultStore> resultStore,
-             const CSpectrum &spc, const CSpectrum &rebinnedSpc,
-             const CTemplateCatalog &tplCatalog,
-             const CLineCatalog::TLineVector &restlinecatalog,
-             const CLineCatalogsTplShape &tplRatioCatalog,
-             const TFloat64Range &lambdaRange, const TFloat64List &redshifts,
-             const std::shared_ptr<const CPhotBandCatalog> &photBandCat,
-             const Float64 photo_weight);
+  bool Solve();
 
 private:
   ChisquareArray BuildChisquareArray(
@@ -104,85 +97,23 @@ private:
 
   COperatorLineModel m_linemodel;
 
-  std::string m_opt_linetypefilter;
-  std::string m_opt_lineforcefilter;
-  std::string m_opt_fittingmethod;
-  std::string m_opt_secondpasslcfittingmethod;
-  std::string m_opt_continuumcomponent;
-  bool m_opt_skipsecondpass = false;
-  std::string m_opt_secondpass_continuumfit = "fromfirstpass";
-
-  bool m_opt_tplfit_fftprocessing = true; // default to using fft
-  bool m_opt_tplfit_fftprocessing_secondpass = true;
-  bool m_opt_tplfit_use_photometry = false;
-  Float64 m_opt_tplfit_photo_weight = 1.0;
-  bool m_opt_tplfit_dustfit = false;
-  bool m_opt_tplfit_igmfit = false;
-  Int32 m_opt_continuumfitcount;
-  Float64 m_opt_tplfit_continuumprior_betaA = 1.0;
-  Float64 m_opt_tplfit_continuumprior_betaTE = 1.0;
-  Float64 m_opt_tplfit_continuumprior_betaZ = 1.0;
-  Float64 m_opt_continuum_neg_amp_threshold = -INFINITY; // no thresholding
-  Float64 m_opt_continuum_null_amp_threshold = 0.;
-  std::string m_opt_tplfit_continuumprior_dirpath = "";
-  bool m_opt_tplfit_ignoreLinesSupport = false;
-
   std::string m_opt_rigidity;
-  std::string m_opt_lineWidthType;
-  Float64 m_opt_nsigmasupport;
-  Float64 m_opt_velocity_emission;
-  Float64 m_opt_velocity_absorption;
-  bool m_opt_velocityfit;
-  Float64 m_opt_em_velocity_fit_min;
-  Float64 m_opt_em_velocity_fit_max;
-  Float64 m_opt_em_velocity_fit_step;
-  Float64 m_opt_abs_velocity_fit_min;
-  Float64 m_opt_abs_velocity_fit_max;
-  Float64 m_opt_abs_velocity_fit_step;
   std::string m_opt_continuumreest;
-  std::string m_opt_rules;
-  bool m_opt_enableImproveBalmerFit = true;
+  std::string m_opt_continuumcomponent;
 
-  bool m_opt_lya_forcefit = false;
-  bool m_opt_lya_forcedisablefit;
-  Float64 m_opt_lya_fit_asym_min;
-  Float64 m_opt_lya_fit_asym_max;
-  Float64 m_opt_lya_fit_asym_step;
-  Float64 m_opt_lya_fit_width_min;
-  Float64 m_opt_lya_fit_width_max;
-  Float64 m_opt_lya_fit_width_step;
-  Float64 m_opt_lya_fit_delta_min;
-  Float64 m_opt_lya_fit_delta_max;
-  Float64 m_opt_lya_fit_delta_step;
-
-  // options for rigidity=tplshape
-  std::string m_opt_tplratio_reldirpath = "";
-  bool m_opt_tplratio_ismfit = false;
-  Float64 m_opt_tplratio_prior_betaA = 1.0;
-  Float64 m_opt_tplratio_prior_betaTE = 1.0;
-  Float64 m_opt_tplratio_prior_betaZ = 1.0;
-  std::string m_opt_tplratio_prior_dirpath = "";
-  std::string m_opt_offsets_reldirpath = "";
-
+  std::string m_opt_pdfcombination;
   Int64 m_opt_extremacount;
   Int64 m_opt_extremacountB;
 
-  Float64 m_opt_candidatesLogprobaCutThreshold;
-  Int32 m_opt_firstpass_largegridstepRatio;
-  std::string m_opt_firstpass_largegridsampling;
-  bool m_opt_firstpass_tplratio_ismfit;
-  bool m_opt_firstpass_disablemultiplecontinuumfit;
-  std::string m_opt_firstpass_fittingmethod;
-
-  std::string m_opt_pdfcombination;
-  bool m_opt_pdf_margAmpCorrection = false;
   Float64 m_opt_stronglinesprior;
   Float64 m_opt_haPrior;
   Float64 m_opt_euclidNHaEmittersPriorStrength;
-  std::string m_opt_saveintermediateresults;
-  Float64 m_opt_secondpass_halfwindowsize;
 
-  Float64 m_redshiftSeparation;
+  Float64 m_opt_secondpass_halfwindowsize;
+  Float64 m_opt_candidatesLogprobaCutThreshold;
+
+  Int32 m_opt_firstpass_largegridstepRatio;
+  bool m_opt_skipsecondpass = false;
 };
 
 } // namespace NSEpic

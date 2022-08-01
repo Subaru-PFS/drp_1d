@@ -55,7 +55,7 @@ CSpectrumLogRebinning::CSpectrumLogRebinning(CInputContext &inputContext)
   } else {
     spc = m_inputContext.GetSpectrum();
   }
-  SetupRebinning(*spc, m_inputContext.m_lambdaRange);
+  SetupRebinning(*spc, *(m_inputContext.m_lambdaRange));
 }
 
 /**
