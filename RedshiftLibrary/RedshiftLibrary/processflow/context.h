@@ -64,7 +64,7 @@ class CClassifierStore;
 class CInputContext;
 class CLine;
 typedef std::vector<CLine> TLineVector;
-class CLineCatalogsTplShape;
+class CLineCatalogsTplRatio;
 /**
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
@@ -89,7 +89,7 @@ public:
   }
   void setLineRatioCatalogCatalog(
       const std::string &objectType,
-      const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
+      const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
     m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
   }
   void
@@ -159,7 +159,7 @@ public:
   }
 
   const CLineCatalog::TLineVector getLineVector();
-  std::shared_ptr<CLineCatalogsTplShape> GetTplRatioCatalog();
+  std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
   std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
 
   TScopeStack m_ScopeStack;

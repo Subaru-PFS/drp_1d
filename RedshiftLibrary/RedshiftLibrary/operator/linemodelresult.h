@@ -61,8 +61,8 @@ public:
   CLineModelResult() = default;
 
   void Init(TFloat64List redshifts, CLineCatalog::TLineVector restLines,
-            Int32 nTplContinuum, Int32 nTplshapes,
-            TFloat64List tplshapesPriors);
+            Int32 nTplContinuum, Int32 nTplratios,
+            TFloat64List tplratiosPriors);
 
   Int32 getNLinesOverCutThreshold(Int32 solutionIdx, Float64 snrThres,
                                   Float64 fitThres) const;
@@ -76,25 +76,25 @@ public:
 
   Float64 getMinChiSquare() const;
   Float64 getMaxChiSquare() const;
-  Int32 ResizeChisquareTplShapes(Int32 nTplshapes, Int32 nRedshifts);
+  Int32 ResizeChisquareTplRatios(Int32 nTplratios, Int32 nRedshifts);
   void SetChisquareTplContinuumResult(
       Int32 index,
       const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
   void SetChisquareTplContinuumResultFromPrevious(Int32 index);
   void
-  SetChisquareTplshapeResult(Int32 index, const TFloat64List &chisquareTplshape,
-                             const TFloat64List &scaleMargCorrTplshape,
-                             const TBoolList &strongEmissionLinePresentTplshape,
-                             const TBoolList &strongHalphaELPresentTplshapes,
-                             const TInt32List &nLinesAboveSNRTplshape,
-                             const TFloat64List &priorLinesTplshape);
+  SetChisquareTplratioResult(Int32 index, const TFloat64List &chisquareTplratio,
+                             const TFloat64List &scaleMargCorrTplratio,
+                             const TBoolList &strongEmissionLinePresentTplratio,
+                             const TBoolList &strongHalphaELPresentTplratios,
+                             const TInt32List &nLinesAboveSNRTplratio,
+                             const TFloat64List &priorLinesTplratio);
   TFloat64List getChisquareTplContinuumResult(Int32 index_z);
-  TFloat64List getChisquareTplshapeResult(Int32 index_z);
-  TFloat64List getScaleMargCorrTplshapeResult(Int32 index_z);
-  TBoolList getStrongELPresentTplshapeResult(Int32 index_z);
-  TBoolList getHaELPresentTplshapeResult(Int32 index_z);
-  TInt32List getNLinesAboveSNRTplshapeResult(Int32 index_z);
-  TFloat64List getPriorLinesTplshapeResult(Int32 index_z);
+  TFloat64List getChisquareTplratioResult(Int32 index_z);
+  TFloat64List getScaleMargCorrTplratioResult(Int32 index_z);
+  TBoolList getStrongELPresentTplratioResult(Int32 index_z);
+  TBoolList getHaELPresentTplratioResult(Int32 index_z);
+  TInt32List getNLinesAboveSNRTplratioResult(Int32 index_z);
+  TFloat64List getPriorLinesTplratioResult(Int32 index_z);
 
   // Merit results
   TFloat64List Redshifts;           // z axis
@@ -102,22 +102,22 @@ public:
   TFloat64List ScaleMargCorrection; // margCorrection for min chi2
 
   std::vector<TFloat64List>
-      ChiSquareTplshapes;      // full chi2 results (for each tplshape)
-  TFloat64List PriorTplshapes; // model prior (for each tplshape)
+      ChiSquareTplratios;      // full chi2 results (for each tplratio)
+  TFloat64List PriorTplratios; // model prior (for each tplratio)
   std::vector<TFloat64List>
-      PriorLinesTplshapes; // lines priors (for each tplshape)
+      PriorLinesTplratios; // lines priors (for each tplratio)
   std::vector<TFloat64List>
-      ScaleMargCorrectionTplshapes; // full scale marginalization correction
-                                    // results (for each tplshape)
+      ScaleMargCorrectionTplratios; // full scale marginalization correction
+                                    // results (for each tplratio)
   std::vector<TBoolList>
-      StrongELPresentTplshapes; // full strongELPresent results (for each
-                                // tplshape)
+      StrongELPresentTplratios; // full strongELPresent results (for each
+                                // tplratio)
   std::vector<TBoolList>
-      StrongHalphaELPresentTplshapes; // full strongHalphaPresent results (for
-                                      // each tplshape)
+      StrongHalphaELPresentTplratios; // full strongHalphaPresent results (for
+                                      // each tplratio)
   std::vector<TInt32List>
-      NLinesAboveSNRTplshapes;     // full n_lines_above_snr results (for each
-                                   // tplshape)
+      NLinesAboveSNRTplratios;     // full n_lines_above_snr results (for each
+                                   // tplratio)
   TFloat64List ChiSquareContinuum; // chi2 result for the continuum
   TFloat64List
       ScaleMargCorrectionContinuum; //  scale marginalization correction result

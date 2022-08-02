@@ -175,7 +175,7 @@ void CInputContext::setLineCatalog(
 
 void CInputContext::setLineRatioCatalogCatalog(
     const std::string &objectType,
-    const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
+    const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
   m_lineRatioCatalogCatalogs[objectType] = catalog;
 }
 

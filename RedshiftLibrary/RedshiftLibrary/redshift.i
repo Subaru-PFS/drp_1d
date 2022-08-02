@@ -82,7 +82,7 @@
 %shared_ptr(CPhotometricBand)
 %shared_ptr(std::map<std::string, CPhotometricBand>) // needed for CPhotBandCatalog (the base classes in the hierarchy must be declared as shared_ptr as well)
 %shared_ptr(CPhotBandCatalog)
-%shared_ptr(CLineCatalogsTplShape)
+%shared_ptr(CLineCatalogsTplRatio)
 %shared_ptr(CLineRatioCatalog)
 %shared_ptr(CFlagLogResult)
 %shared_ptr(CFlagWarning)
@@ -107,7 +107,7 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 #include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineRatioCatalog.h"
-#include "RedshiftLibrary/line/catalogsTplShape.h"
+#include "RedshiftLibrary/line/catalogsTplRatio.h"
 #include "RedshiftLibrary/line/lineprofile.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/axis.h"
@@ -361,11 +361,11 @@ class CLineRatioCatalog : public CLineCatalog
 
 };
 
-class CLineCatalogsTplShape
+class CLineCatalogsTplRatio
 {
 
 public:
-  CLineCatalogsTplShape();
+  CLineCatalogsTplRatio();
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog);
 
 };
@@ -425,7 +425,7 @@ public:
 
   void Init();
   void setLineCatalog(const std::string& objectType, const std::string& method, const std::shared_ptr<CLineCatalog> &catalog); 
-  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplShape> &catalog); 
+  void setLineRatioCatalogCatalog(const std::string& objectType, const std::shared_ptr<CLineCatalogsTplRatio> &catalog); 
   void setTemplateCatalog(const std::shared_ptr<CTemplateCatalog> &templateCatalog){ m_TemplateCatalog = templateCatalog;}
   void setPhotBandCatalog(const std::shared_ptr<CPhotBandCatalog> &photBandCatalog){ m_photBandCatalog = photBandCatalog;}
   void setSpectrum(const std::shared_ptr<CSpectrum> &spectrum){ m_Spectrum = spectrum;}

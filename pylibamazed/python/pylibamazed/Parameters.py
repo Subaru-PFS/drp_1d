@@ -85,7 +85,7 @@ class Parameters():
 
     def lineratio_catalog_enabled(self, object_type):
         if self.get_solve_method(object_type) == "LineModelSolve" :
-            return self.parameters[object_type]["LineModelSolve"]["linemodel"]["rigidity"] == "tplshape"
+            return self.parameters[object_type]["LineModelSolve"]["linemodel"]["rigidity"] == "tplratio"
         else:
             return False
         

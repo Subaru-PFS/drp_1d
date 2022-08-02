@@ -44,7 +44,7 @@ import pandas as pd
 from pylibamazed.redshift import (CSpectrumSpectralAxis,
                                   CSpectrumFluxAxis_withSpectrum,
                                   CTemplate, CTemplateCatalog,
-                                  CLineCatalog,CLineCatalogsTplShape,
+                                  CLineCatalog,CLineCatalogsTplRatio,
                                   CLineRatioCatalog,
                                   CPhotBandCatalog, CPhotometricBand,
                                   TAsymParams,
@@ -222,7 +222,7 @@ class CalibrationLibrary:
         line_ratio_catalog_list.sort()
         logger.info("Loading {} line ratio catalogs: {}".format(object_type, linemodel_params["tplratio_catalog"]))
 
-        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
         n_ebmv_coeffs = 1
         if self.parameters[object_type]["LineModelSolve"]["linemodel"]["tplratio_ismfit"]:
             n_ebmv_coeffs = self.parameters["ebmv"]["count"]
@@ -262,7 +262,7 @@ class CalibrationLibrary:
         self.line_catalogs[object_type][method] = CLineCatalog()
 
     def load_empty_line_ratio_catalog_list(self, object_type):
-        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplShape()
+        self.line_ratio_catalog_lists[object_type] = CLineCatalogsTplRatio()
 
     def load_lsf(self):
         if self.parameters["LSF"]["LSFType"] == "GaussianVariableWidth":
@@ -323,7 +323,7 @@ class CalibrationLibrary:
                 method = self.parameters[object_type]["method"]            
                 if method == "LineModelSolve":                
                     self.load_linecatalog(object_type,method)
-                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplshape":
+                    if self.parameters[object_type][method]["linemodel"]["rigidity"] == "tplratio":
                         self.load_line_ratio_catalog_list(object_type)
 		            #load linecatalog for linemeassolve
                 linemeas_method = self.parameters[object_type]["linemeas_method"]

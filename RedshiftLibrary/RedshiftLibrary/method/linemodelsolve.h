@@ -83,13 +83,13 @@ private:
 
   TFloat64List
   BuildZpriors(const std::shared_ptr<const CLineModelResult> &result,
-               Int32 kTplShape = -1) const;
+               Int32 kTplRatio = -1) const;
 
   void storeExtremaResults(
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const LineModelExtremaResult> ExtremaResult) const;
 
-  void StoreChisquareTplShapeResults(
+  void StoreChisquareTplRatioResults(
       std::shared_ptr<COperatorResultStore> dataStore,
       std::shared_ptr<const CLineModelResult> result) const;
   const CLineCatalog::TLineVector
