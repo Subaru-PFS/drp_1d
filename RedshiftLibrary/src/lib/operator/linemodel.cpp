@@ -991,8 +991,6 @@ Int32 COperatorLineModel::ComputeSecondPass(
       m_tplfitStore_secondpass.resize(1);
       if (m_continnuum_fit_option == 1 || m_continnuum_fit_option == 2)
         m_tplfitStore_secondpass[0] = m_tplfitStore_firstpass;
-      // belwo line is redundant since in the first call to precompute we
-      // already set the fitStore
       m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass);
       // duplicated: double make sure that these info are present in the
       // modelElement
@@ -1400,6 +1398,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
       if (m_continnuum_fit_option == 0 || m_continnuum_fit_option == 3)
         m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
       else {
+        m_model->SetFitContinuum_FitStore(nullptr);
         m_model->SetFitContinuum_FitValues(
             m_firstpass_extremaResult->FittedTplName[i],
             m_firstpass_extremaResult->FittedTplAmplitude[i],
@@ -1802,6 +1801,7 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
         m_opt_continuumcomponent == "tplfitauto") {
       // fix some fitcontinuum values for this extremum
       if (tplfit_option == 2) {
+        m_model->SetFitContinuum_FitStore(nullptr);
         m_model->SetFitContinuum_FitValues(
             extremaResult.FittedTplName[i], extremaResult.FittedTplAmplitude[i],
             extremaResult.FittedTplAmplitudeError[i],
@@ -1813,17 +1813,14 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
             extremaResult.FittedTplMtm[i], extremaResult.FittedTplLogPrior[i],
             extremaResult.FittedTplpCoeffs[i]);
         m_model->SetFitContinuum_Option(tplfit_option);
-      }
-      if (tplfit_option == 0 ||
-          tplfit_option == 3) // for these cases we called precompute in
-                              // secondpass, so we have new fitstore
+      } else if (tplfit_option == 0 ||
+                 tplfit_option == 3) // for these cases we called precompute in
+                                     // secondpass, so we have new fitstore
         m_model->SetFitContinuum_FitStore(m_tplfitStore_secondpass[i]);
-      else {
-        if (tplfit_option == 1) {
-          // nothing to do cause we already injected the fitStore for cases 1
-          // and 2
-          m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); // 1
-        }
+      else if (tplfit_option == 1) {
+        // nothing to do cause we already injected the fitStore for cases 1
+        // and 2
+        m_model->SetFitContinuum_FitStore(m_tplfitStore_firstpass); // 1
       }
     }
 
@@ -1859,9 +1856,14 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
           m_result->ContinuumModelSolutions[iz], contreest_iterations, false);
       m_result->ScaleMargCorrection[iz] = m_model->getScaleMargCorrection();
       if (m_opt_continuumcomponent == "tplfit" ||
-          m_opt_continuumcomponent == "tplfitauto")
-        m_result->SetChisquareTplContinuumResult(
-            iz, m_model->GetFitContinuum_FitStore());
+          m_opt_continuumcomponent == "tplfitauto") {
+        if (tplfit_option == 0 ||
+            tplfit_option == 3) // retryall & refitfirstpass
+          m_result->SetChisquareTplContinuumResult(
+              iz, m_model->GetFitContinuum_FitStore());
+        // nothing to do when fromfirstpass: keep
+        // m_result->ChiSquareTplContinuum from first pass
+      }
       m_result->SetChisquareTplshapeResult(
           iz, m_model->GetChisquareTplshape(), m_model->GetScaleMargTplshape(),
           m_model->GetStrongELPresentTplshape(),

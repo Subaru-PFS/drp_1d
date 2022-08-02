@@ -1510,8 +1510,10 @@ void CLineModelFitting::SetContinuumComponent(std::string component) {
 
 Int32 CLineModelFitting::SetFitContinuum_FitStore(
     const std::shared_ptr<const CTemplatesFitStore> &fitStore) {
-  m_fitContinuum_option = 1; // enable use of the fit store
-  Log.LogDetail("Elementlist: enabling fitContinuum store.");
+  if (fitStore) {
+    m_fitContinuum_option = 1; // enable use of the fit store
+    Log.LogDetail("Elementlist: enabling fitContinuum store.");
+  }
   m_fitContinuum_tplfitStore = fitStore;
   return 1;
 }
