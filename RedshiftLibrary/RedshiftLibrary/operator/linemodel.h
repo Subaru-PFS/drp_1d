@@ -173,7 +173,13 @@ private:
                                        const TFloat64List &redshiftsFineGrid,
                                        const TFloat64List &meritLargeGrid,
                                        TFloat64List &meritFineGrid) const;
-
+  bool isfftprocessingActive(Int32 redshiftsTplFitCount);
+  void
+  fitContinuumTemplates(Int32 candidateIdx, const TFloat64List &redshiftsTplFit,
+                        const std::vector<CMask> &maskList,
+                        std::vector<std::shared_ptr<CTemplateFittingResult>>
+                            &chisquareResultsAllTpl,
+                        TStringList &chisquareResultsTplName);
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   // lmfit
