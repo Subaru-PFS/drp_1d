@@ -65,7 +65,6 @@
 
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/linemodel/lmfitcontroller.h"
 
 #include <memory>
 namespace NSEpic {
@@ -190,7 +189,6 @@ public:
   bool setTplratioAmplitude(const TFloat64List &ampsElts,
                             const TFloat64List &errorsElts);
 
-  std::vector<std::shared_ptr<CLmfitController>> createLmfitControllers();
   void SetFittingMethod(const std::string &fitMethod);
   void SetSecondpassContinuumFitPrms();
 
@@ -207,11 +205,6 @@ public:
   void refreshModelInitAllGrid();
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = -1);
-  void refreshModelDerivVelUnderElements(const TInt32List &filterEltsIdx);
-  void
-  refreshModelDerivVelAbsorptionUnderElements(const TInt32List &filterEltsIdx);
-  void
-  refreshModelDerivVelEmissionUnderElements(const TInt32List &filterEltsIdx);
 
   void setModelSpcObservedOnSupportZeroOutside();
   CMask getOutsideLinesMask() const;
@@ -246,25 +239,6 @@ public:
                                 bool substract_abslinesmodel, Float64 &fluxdi,
                                 Float64 &snrdi) const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
-  Float64 getModelFluxVal(Int32 idx) const;
-  Float64 getModelFluxDerivEltVal(Int32 DerivEltIdx, Int32 idx) const;
-  Float64 getModelFluxDerivContinuumAmpEltVal(Int32 DerivEltIdx,
-                                              Int32 idx) const;
-  Float64 getModelFluxDerivZContinuumVal(Int32 idx) const;
-  // void calculateUnscaleContinuumDerivZ();
-  Float64 getModelFluxDerivZEltValNoContinuum(Int32 DerivEltIdx,
-                                              Int32 idx) const;
-  Float64 getModelFluxDerivZEltVal(Int32 DerivEltIdx, Int32 idx,
-                                   Float64 continuumFluxDerivZ) const;
-  Float64 getModelFluxDerivVelVal(Int32 idx) const;
-  Float64 getModelFluxDerivVelEmissionVal(Int32 idx) const;
-  Float64 getModelFluxDerivVelAbsorptionVal(Int32 idx) const;
-  Int32 estimateMeanSqFluxAndGradient(const Float64 *varPack,
-                                      const Float64 normFactor,
-                                      const TInt32List &filteredEltsIdx,
-                                      const TInt32List &xInds, Int32 lineType,
-                                      Float64 *fluxdata, Float64 *msqBuffer,
-                                      Float64 &f, Float64 *g);
   void logParameters();
   CLineModelElementList m_Elements;
   std::shared_ptr<const CSpectrum> m_inputSpc;
@@ -326,8 +300,6 @@ private:
                             const CSpectrumFluxAxis &continuumfluxAxis,
                             Float64 redshift);
   void fitAmplitudesSimplex();
-  Int32 fitAmplitudesLmfit(const CSpectrumFluxAxis &fluxAxis,
-                           std::shared_ptr<CLmfitController> controller);
   Int32 fitAmplitudesLinSolve(const TInt32List &EltsIdx,
                               const CSpectrumSpectralAxis &spectralAxis,
                               const CSpectrumFluxAxis &fluxAxis,
@@ -349,7 +321,6 @@ private:
   bool m_forceDisableLyaFitting = false;
   bool m_forceLyaFitting = false;
 
-  bool SetMultilineNominalAmplitudes(Int32 iLine);
   bool SetMultilineNominalAmplitudesFast(Int32 iCatalog);
   void setLyaProfile(Float64 redshift,
                      const CLineCatalog::TLineVector &lineList,
@@ -372,11 +343,6 @@ private:
                                              const TInt32List &EltsIdx) const;
   TInt32List getOverlappingElementsBySupport(Int32 ind,
                                              Float64 overlapThres = 0.1) const;
-  TInt32List ReestimateContinuumApprox(const TInt32List &EltsIdx);
-  TInt32List ReestimateContinuumUnderLines(const TInt32List &EltsIdx);
-  void refreshModelAfterContReestimation(
-      const TInt32List &EltsIdx, CSpectrumFluxAxis &modelFluxAxis,
-      CSpectrumFluxAxis &spcFluxAxisNoContinuum) const;
 
   TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
@@ -396,6 +362,7 @@ private:
   integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
                               const std::vector<CRange<Int32>> &indexRangeList,
                               Float64 &sumFlux, Float64 &sumErr) const;
+
   CRegulament m_Regulament;
 
   TFloat64List m_ScaleMargCorrTplratio;
@@ -412,8 +379,6 @@ private:
       m_tplContaminantSpcRebin; // optionally used contaminant to be removed
                                 // from observed spectrum
   CSpectrumNoiseAxis &m_ErrorNoContinuum;
-  CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelEmi;
-  CSpectrumFluxAxis m_SpcFluxAxisModelDerivVelAbs;
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
                                           // cached dTransposeD values
