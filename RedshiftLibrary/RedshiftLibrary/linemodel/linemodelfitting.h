@@ -114,7 +114,7 @@ public:
   Float64 getTplratio_bestDtm() const;
   Float64 getTplratio_bestMtm() const;
   Int32 getTplratio_count() const;
-  const TFloat64List &getTplratio_priors();
+  TFloat64List getTplratio_priors();
   const TFloat64List &GetChisquareTplratio() const;
   TFloat64List GetPriorLinesTplratio() const;
   const TFloat64List &GetScaleMargTplratio() const;
@@ -218,7 +218,11 @@ public:
   std::shared_ptr<CSpectrumModel> getSpectrumModel() {
     return m_model;
   } // not const because of tplortho
-  CLineCatalogsTplRatio m_CatalogTplRatio;
+  std::shared_ptr<const CLineCatalogsTplRatio> m_CatalogTplRatio;
+  std::vector<std::vector<TFloat64List>>
+      m_LineCatalogLinesCorrespondingNominalAmp;
+  bool m_opt_dust_calzetti;
+  Float64 GetIsmCoeff(Int32 idx) const;
   TFloat64List m_ChisquareTplratio;
   std::vector<TFloat64List> m_FittedAmpTplratio;
   std::vector<TFloat64List> m_FittedErrorTplratio;

@@ -58,18 +58,6 @@ using namespace NSEpic;
 using namespace std;
 using namespace boost;
 
-bool CLineCatalogsTplRatio::Init(
-    Int32 enableISMCalzetti,
-    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-        &ismCorrectionCalzetti,
-    Float64 nsigmasupport) {
-  m_nsigmasupport = nsigmasupport;
-  m_opt_dust_calzetti = enableISMCalzetti;
-  m_ismCorrectionCalzetti = ismCorrectionCalzetti;
-
-  return true;
-}
-
 /**
  * @brief CLineCatalogsTplRatio::GetRestLinesList
  * @param index
@@ -89,26 +77,17 @@ Int32 CLineCatalogsTplRatio::GetCatalogsCount() const {
   return m_lineRatioCatalogs.size();
 }
 
-const TFloat64List &CLineCatalogsTplRatio::getCatalogsPriors() {
-  if (m_catalogsPriors.empty()) {
+TFloat64List CLineCatalogsTplRatio::getCatalogsPriors() const {
+  TFloat64List catalogsPriors;
+  if (catalogsPriors.empty()) {
     for (CLineRatioCatalog cat : m_lineRatioCatalogs)
-      m_catalogsPriors.push_back(cat.getPrior());
+      catalogsPriors.push_back(cat.getPrior());
   }
-  return m_catalogsPriors;
+  return catalogsPriors;
 }
 
 std::string CLineCatalogsTplRatio::GetCatalogName(Int32 idx) const {
   return m_lineRatioCatalogs[idx].getName();
-}
-
-Float64 CLineCatalogsTplRatio::GetIsmCoeff(Int32 idx) const {
-  if (m_ismCorrectionCalzetti == nullptr && m_opt_dust_calzetti)
-    THROWG(
-        INTERNAL_ERROR,
-        "ismCorrectionCalzetti is not loaded while tplratio_ism is activated");
-  if (!m_opt_dust_calzetti)
-    return NAN;
-  return m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(idx));
 }
 
 Int32 CLineCatalogsTplRatio::GetIsmIndex(Int32 idx) const {
@@ -124,17 +103,23 @@ bool CLineCatalogsTplRatio::GetCatalogVelocities(Int32 idx, Float64 &elv,
   return true;
 }
 
-bool CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
-    const CLineModelElementList &LineModelElementList) {
+std::vector<std::vector<TFloat64List>>
+CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
+    const CLineModelElementList &LineModelElementList, Int32 enableISMCalzetti,
+    const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+        &ismCorrectionCalzetti,
+    Float64 nsigmasupport) const {
+  std::vector<std::vector<TFloat64List>>
+      lineCatalogLinesCorrespondingNominalAmp;
   // first set all corresponding amplitudes to 0.0;
+
   for (Int32 iElts = 0; iElts < LineModelElementList.size(); iElts++) {
     Int32 nLines = LineModelElementList[iElts]->GetSize();
     TFloat64List thisCatLinesCorresp(nLines, 0.0); // is nLines cte among Elts?
     std::vector<TFloat64List> thisElementLinesCorresp(GetCatalogsCount(),
                                                       thisCatLinesCorresp);
 
-    m_LineCatalogLinesCorrespondingNominalAmp.push_back(
-        thisElementLinesCorresp);
+    lineCatalogLinesCorrespondingNominalAmp.push_back(thisElementLinesCorresp);
 
     // now set the non-zero amp correspondences
     for (Int32 iCatalog = 0; iCatalog < GetCatalogsCount(); iCatalog++) {
@@ -143,8 +128,8 @@ bool CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
       for (Int32 kL = 0; kL < currentCatalogLineList.size(); kL++) {
         Float64 nominalAmp = currentCatalogLineList[kL].GetNominalAmplitude();
         Float64 restLambda = currentCatalogLineList[kL].GetPosition();
-        if (m_opt_dust_calzetti) {
-          Float64 dustCoeff = m_ismCorrectionCalzetti->GetDustCoeff(
+        if (enableISMCalzetti) {
+          Float64 dustCoeff = ismCorrectionCalzetti->GetDustCoeff(
               GetIsmIndex(iCatalog), restLambda);
           nominalAmp *= dustCoeff;
         }
@@ -154,7 +139,7 @@ bool CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
 
           if (LineModelElementList[iElts]->m_Lines[j].GetName() ==
               currentCatalogLineList[kL].GetName()) {
-            m_LineCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j] =
+            lineCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j] =
                 nominalAmp;
           }
         }
@@ -169,11 +154,10 @@ bool CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
                                << m_lineRatioCatalogs[k].getName());
       Int32 nLines = LineModelElementList[iElts]->GetSize();
       for (Int32 j = 0; j < nLines; j++) {
-        Float64 ebv =
-            m_opt_dust_calzetti
-                ? m_ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
-                : NAN;
-        Float64 nomAmp = m_LineCatalogLinesCorrespondingNominalAmp[iElts][k][j];
+        Float64 ebv = enableISMCalzetti
+                          ? ismCorrectionCalzetti->GetEbmvValue(GetIsmIndex(k))
+                          : NAN;
+        Float64 nomAmp = lineCatalogLinesCorrespondingNominalAmp[iElts][k][j];
         std::string lineName =
             LineModelElementList[iElts]->m_Lines[j].GetName();
         Log.LogDebug(
@@ -184,7 +168,7 @@ bool CLineCatalogsTplRatio::InitLineCorrespondingAmplitudes(
     }
   }
 
-  return 0;
+  return lineCatalogLinesCorrespondingNominalAmp;
 }
 
 const CLineCatalog &CLineCatalogsTplRatio::GetCatalog(Int32 iCatalog) const {
