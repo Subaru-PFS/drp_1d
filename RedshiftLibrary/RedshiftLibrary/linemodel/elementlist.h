@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 
 namespace NSEpic {
+class CLineModelSolution;
 class CLineModelElementList {
 private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
@@ -87,6 +88,17 @@ public:
   bool IsElementIndexInDisabledList(Int32 index) const;
   void SetElementIndexesDisabledAuto();
   void ResetElementIndexesDisabled();
+
+  Float64 getScaleMargCorrection(Int32 idxLine) const;
+  bool GetModelStrongEmissionLinePresent() const;
+  bool GetModelHaStrongest() const;
+
+  CLineModelSolution
+  GetModelSolution(Int32 opt_level,
+                   const CLineCatalog::TLineVector &restLineList,
+                   Float64 redshift);
+
+  TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
 
   void debug(std::ostream &os) const;
 

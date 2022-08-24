@@ -40,8 +40,11 @@
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/mask.h"
 #include "RedshiftLibrary/extremum/extremum.h"
+#include "RedshiftLibrary/linemodel/rigiditymanager.h"
+#include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
 #include "RedshiftLibrary/linemodel/templatesortho.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 #include "RedshiftLibrary/operator/templatefitting.h"
 #include "RedshiftLibrary/operator/templatefittinglog.h"
@@ -184,7 +187,9 @@ Int32 COperatorLineModel::ComputeFirstPass() {
   // note: this fast method requires continuum templates and linemodels to be
   // orthogonal. The velfit option turns this trickier...
   m_estimateLeastSquareFast = 0;
-  m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
+  // TODO should be called only with rigidity=tplratio
+  m_model->m_rigidityManager->SetLeastSquareFastEstimationEnabled(
+      m_estimateLeastSquareFast);
   Log.LogInfo("  Operator-Linemodel: set estimateLeastSquareFast to %d (ex: "
               "0 means disabled)",
               m_estimateLeastSquareFast);
@@ -222,13 +227,11 @@ Int32 COperatorLineModel::ComputeFirstPass() {
               m_result->ChiSquareTplContinuum[k][i]);
         }
       }
-      m_result->SetChisquareTplratioResult(
-          i, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
-          m_model->GetStrongELPresentTplratio(),
-          m_model->getHaELPresentTplratio(),
-          m_model->GetNLinesAboveSNRTplratio(),
-          m_model->GetPriorLinesTplratio());
-
+      if (m_model->getRigidity() == "tplratio") {
+        m_result->SetChisquareTplratioResult(
+            i,
+            dynamic_pointer_cast<CTplratioManager>(m_model->m_rigidityManager));
+      }
       for (Int32 k = 0, s = m_result->ChiSquareTplratios.size(); k < s; k++) {
         calculatedChiSquareTplratios[k].push_back(
             m_result->ChiSquareTplratios[k][i]);
@@ -1228,12 +1231,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           m_result->Redshifts[idx], m_result->LineModelSolutions[idx],
           m_result->ContinuumModelSolutions[idx], contreest_iterations, true);
       m_result->ScaleMargCorrection[idx] = m_model->getScaleMargCorrection();
-      m_result->SetChisquareTplratioResult(
-          idx, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
-          m_model->GetStrongELPresentTplratio(),
-          m_model->getHaELPresentTplratio(),
-          m_model->GetNLinesAboveSNRTplratio(),
-          m_model->GetPriorLinesTplratio());
+      if (m_model->getRigidity() == "tplratio")
+        m_result->SetChisquareTplratioResult(
+            idx, std::dynamic_pointer_cast<CTplratioManager>(
+                     m_model->m_rigidityManager));
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[idx] =
             m_model->getLeastSquareContinuumMerit();
@@ -1304,9 +1305,14 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
                 m_result->LineModelSolutions[idx]);
 
         // CModelRulesResult
-        std::shared_ptr<CModelRulesResult> resultrulesmodel =
-            std::make_shared<CModelRulesResult>(m_model->GetModelRulesLog());
-        ExtremaResult->m_savedModelRulesResults[i] = resultrulesmodel;
+        if (m_model->getRigidity() == "rules") {
+          std::shared_ptr<CModelRulesResult> resultrulesmodel =
+              std::make_shared<CModelRulesResult>(
+                  std::dynamic_pointer_cast<CRulesManager>(
+                      m_model->m_rigidityManager)
+                      ->GetModelRulesLog());
+          ExtremaResult->m_savedModelRulesResults[i] = resultrulesmodel;
+        }
 
         if (savedModels < maxSaveNLinemodelContinua) {
           // Save the reestimated continuum, only the first
@@ -1342,8 +1348,10 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         m_model->getContinuumManager()->GetContinuumModelSolution();
     ExtremaResult->m_ranked_candidates[i]
         .second->updateFromContinuumModelSolution(csolution, false);
-    ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
-        m_model);
+    if (m_model->getRigidity() == "tplratio")
+      ExtremaResult->m_ranked_candidates[i].second->updateTplRatioFromModel(
+          std::dynamic_pointer_cast<CTplratioManager>(
+              m_model->m_rigidityManager));
     // save the tplcorr/tplratio results
   }
 
@@ -1465,9 +1473,12 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
       m_model->SetFittingMethod("hybrid");
       if (opt_rigidity == "tplratio") {
         m_model->SetFittingMethod("individual");
+        std::dynamic_pointer_cast<CTplratioManager>(m_model->m_rigidityManager)
+            ->SetForcedisableTplratioISMfit(
+                std::dynamic_pointer_cast<CTplratioManager>(
+                    m_model->m_rigidityManager)
+                    ->m_opt_firstpass_forcedisableTplratioISMfit); // TODO: add
       }
-      m_model->SetForcedisableTplratioISMfit(
-          m_model->m_opt_firstpass_forcedisableTplratioISMfit); // TODO: add
       // new param
       // for this ?
       // m_model->m_enableAmplitudeOffsets = true;
@@ -1675,9 +1686,11 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
       // restore some params
       m_model->SetFittingMethod(opt_fittingmethod);
       // m_model->m_enableAmplitudeOffsets = false;
-      m_model->SetForcedisableTplratioISMfit(
-          false); // TODO: coordinate with SetPassMode() ?
-
+      if (m_model->getRigidity() == "tplratio") {
+        std::dynamic_pointer_cast<CTplratioManager>(m_model->m_rigidityManager)
+            ->SetForcedisableTplratioISMfit(
+                false); // TODO: coordinate with SetPassMode() ?
+      }
     } else {
       m_secondpass_parameters_extremaResult.Elv[i] =
           m_model->GetVelocityEmission();
@@ -1835,12 +1848,10 @@ Int32 COperatorLineModel::RecomputeAroundCandidates(
         // nothing to do when fromfirstpass: keep
         // m_result->ChiSquareTplContinuum from first pass
       }
-      m_result->SetChisquareTplratioResult(
-          iz, m_model->GetChisquareTplratio(), m_model->GetScaleMargTplratio(),
-          m_model->GetStrongELPresentTplratio(),
-          m_model->getHaELPresentTplratio(),
-          m_model->GetNLinesAboveSNRTplratio(),
-          m_model->GetPriorLinesTplratio());
+      if (m_model->getRigidity() == "tplratio")
+        m_result->SetChisquareTplratioResult(
+            iz, std::dynamic_pointer_cast<CTplratioManager>(
+                    m_model->m_rigidityManager));
       if (!m_estimateLeastSquareFast) {
         m_result->ChiSquareContinuum[iz] =
             m_model->getLeastSquareContinuumMerit();
@@ -2192,7 +2203,8 @@ CLineModelSolution COperatorLineModel::computeForLineMeas(
   // init catalog offsets
 
   m_estimateLeastSquareFast = 0;
-  m_model->SetLeastSquareFastEstimationEnabled(m_estimateLeastSquareFast);
+  m_model->m_rigidityManager->SetLeastSquareFastEstimationEnabled(
+      m_estimateLeastSquareFast);
 
   m_model->initDtd();
 

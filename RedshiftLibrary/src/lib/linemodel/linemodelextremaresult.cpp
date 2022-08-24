@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
 
@@ -82,7 +83,7 @@ void TLineModelResult::updateContinuumFromModel(
 }
 
 void TLineModelResult::updateTplRatioFromModel(
-    const std::shared_ptr<const CLineModelFitting> &lmel) {
+    const std::shared_ptr<const CTplratioManager> &lmel) {
   FittedTplratioName = lmel->getTplratio_bestTplName();
   FittedTplratioIsmCoeff = lmel->getTplratio_bestTplIsmCoeff();
   FittedTplratioAmplitude = lmel->getTplratio_bestAmplitude();

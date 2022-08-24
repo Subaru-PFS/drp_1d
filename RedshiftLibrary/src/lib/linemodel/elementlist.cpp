@@ -37,6 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/linemodelsolution.h"
+#include <cfloat>
 
 using namespace NSEpic;
 
@@ -539,4 +542,130 @@ Int32 CLineModelElementList::prepareAmplitudeOffset() {
 void CLineModelElementList::debug(std::ostream &os) const {
   for (const std::shared_ptr<CLineModelElement> &elt : m_Elements)
     elt->debug(os);
+}
+
+/**
+ * \brief Get the scale marginalization correction
+ *
+ * WARNING: (todo-check) for lm-rules or lm-free, if hybrid method was used to
+ *fit, mtm and dtm are not estimated for now...
+ **/
+Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine) const {
+  Float64 corr = 0.0;
+
+  // scale marg for continuum
+  // corr += getContinuumScaleMargCorrection();
+
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    if (idxLine != undefIdx && idxLine != iElts) {
+      continue;
+    }
+    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
+      continue;
+    }
+    // if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
+    //     continue;
+    // }
+
+    Float64 mtm = m_Elements[iElts]->GetSumGauss();
+    if (mtm > 0.0) {
+      corr += log(mtm);
+    }
+  }
+
+  return corr;
+}
+
+/**
+ * @brief CLineModelFitting::GetModelStrongLinePresent
+ * @return 1 if there is 1 strong emission line present
+ */
+bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
+
+  // TODO is this check really necessary here ?
+  //   if (!m_RestLineList.size())
+  //   THROWG(INTERNAL_ERROR, "m_RestframeList is empty");
+
+  bool isStrongPresent = false;
+
+  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
+    Int32 iElts = validEltsIdx[iValidElts];
+    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
+      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission() ||
+          !m_Elements[iElts]->m_Lines[lineIdx].GetIsStrong()) {
+        continue;
+      }
+
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      if (amp > 0.0) {
+        isStrongPresent = true;
+        Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
+                     "Strong EL: %s",
+                     m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str());
+        break;
+      }
+    }
+    if (isStrongPresent)
+      break;
+  }
+
+  return isStrongPresent;
+}
+
+/**
+ * @brief
+ * @return 1 if ha em is the strongest line present
+ */
+bool CLineModelElementList::GetModelHaStrongest() const {
+
+  Float64 ampMax = -DBL_MAX;
+  std::string ampMaxLineTag = "";
+
+  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
+    Int32 iElts = validEltsIdx[iValidElts];
+    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
+      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission()) {
+        continue;
+      }
+
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      if (amp > 0. && amp > ampMax) {
+        ampMaxLineTag = m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str();
+        ampMax = amp;
+      }
+    }
+  }
+
+  bool isHaStrongest = (!std::isnan(ampMax) && ampMax > 0. &&
+                        ampMaxLineTag == linetags::halpha_em);
+  if (isHaStrongest) {
+    Log.LogDebug("    model: GetModelHaStrongest - found to be true with "
+                 "ampMax=%e (for line=Halpha)",
+                 ampMax);
+  }
+  return isHaStrongest;
+}
+
+/**
+ * @brief Look for polynom coeffs corresponding to one specific Line
+ * Here,we assume that we already fitted one line at a time, which is not
+ * really the case
+ * TODO: take into consideration lines fitted together for the element in
+ * question
+ *
+ * @param eIdx
+ * @return TPolynomCoeffs
+ */
+TPolynomCoeffs CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
+  TInt32List xInds = getSupportIndexes({Int32(eIdx)});
+  TPolynomCoeffs polynom_coeffs = {0., 0., 0.};
+  if (xInds.size() && m_ampOffsetsCoeffs.size()) {
+    Int32 idxAmpOffset = getIndexAmpOffset(xInds[0]);
+    polynom_coeffs = m_ampOffsetsCoeffs[idxAmpOffset];
+  }
+  return polynom_coeffs;
 }

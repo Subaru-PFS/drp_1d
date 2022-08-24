@@ -54,7 +54,7 @@ public:
   void updateContinuumFromModel(
       const std::shared_ptr<const CLineModelFitting> &lmel);
   void
-  updateTplRatioFromModel(const std::shared_ptr<const CLineModelFitting> &lmel);
+  updateTplRatioFromModel(const std::shared_ptr<const CTplratioManager> &lmel);
 
   void updateFromModel(const std::shared_ptr<const CLineModelFitting> &lmel,
                        const std::shared_ptr<const CLineModelResult> &lmresult,
@@ -101,14 +101,14 @@ public:
                                  // continuum
 
   // template ratio
-  std::string FittedTplratioName;  // Name of the best template fitted for
+  std::string FittedTplratioName = "undefined";  // Name of the best template fitted for
                                    // tplcorr/tplratio
-  Float64 FittedTplratioAmplitude; // amp of the best template fitted for
+  Float64 FittedTplratioAmplitude = NAN; // amp of the best template fitted for
                                    // tplcorr/tplratio
   Float64
-      FittedTplratioDtm; // dtm of the best template fitted for tplcorr/tplratio
+      FittedTplratioDtm = NAN; // dtm of the best template fitted for tplcorr/tplratio
   Float64
-      FittedTplratioMtm; // mtm of the best template fitted for tplcorr/tplratio
-  Float64 FittedTplratioIsmCoeff; // IsmCoeff/EBMV of the best template fitted
+      FittedTplratioMtm = NAN; // mtm of the best template fitted for tplcorr/tplratio
+  Float64 FittedTplratioIsmCoeff = NAN; // IsmCoeff/EBMV of the best template fitted
                                   // for tplcorr/tplratio
 };
