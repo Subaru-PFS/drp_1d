@@ -72,7 +72,7 @@ void TLineModelResult::updateFromLineModelSolution(
 
 void TLineModelResult::updateContinuumFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel) {
-  std::shared_ptr<const CContinuumManager> ccm = lmel->getContinuumManager();
+  std::shared_ptr<const CContinuumManager> ccm = lmel->m_continuumManager;
   FittedTplName = ccm->getFitContinuum_tplName();
   FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
   FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();

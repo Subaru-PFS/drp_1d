@@ -166,34 +166,22 @@ void CLineModelResult::SetChisquareTplratioResult(
   return;
 }
 
-void CLineModelResult::SetChisquareTplratioResult(
-    Int32 index_z, const TFloat64List &chisquareTplratio,
-    const TFloat64List &scaleMargCorrTplratio,
-    const TBoolList &strongEmissionLinePresentTplratio,
-    const TBoolList &strongHalphaELPresentTplratios,
-    const TInt32List &nLinesAboveSNRTplratio,
-    const TFloat64List &priorLinesTplratio) {
-  if (chisquareTplratio.size() < 1)
-    return;
+void CLineModelResult::SetChisquareTplratioResultFromPrevious(
+    Int32 index_z) {
 
   if (index_z >= Redshifts.size())
     THROWG(INTERNAL_ERROR, "Invalid z index");
 
-  if (chisquareTplratio.size() != ChiSquareTplratios.size() ||
-      chisquareTplratio.size() != scaleMargCorrTplratio.size() ||
-      chisquareTplratio.size() != strongEmissionLinePresentTplratio.size() ||
-      chisquareTplratio.size() != nLinesAboveSNRTplratio.size() ||
-      chisquareTplratio.size() != priorLinesTplratio.size())
-    THROWG(INTERNAL_ERROR, "vector sizes do not match");
+  auto previous = index_z - 1;
 
-  for (Int32 k = 0; k < chisquareTplratio.size(); k++) {
-    ChiSquareTplratios[k][index_z] = chisquareTplratio[k];
-    ScaleMargCorrectionTplratios[k][index_z] = scaleMargCorrTplratio[k];
-    StrongELPresentTplratios[k][index_z] = strongEmissionLinePresentTplratio[k];
+  for (Int32 k = 0; k < ChiSquareTplratios.size(); k++) {
+    ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
+    ScaleMargCorrectionTplratios[k][index_z] = ScaleMargCorrectionTplratios[k][previous];
+    StrongELPresentTplratios[k][index_z] = StrongELPresentTplratios[k][previous];
     StrongHalphaELPresentTplratios[k][index_z] =
-        strongHalphaELPresentTplratios[k];
-    NLinesAboveSNRTplratios[k][index_z] = nLinesAboveSNRTplratio[k];
-    PriorLinesTplratios[k][index_z] = priorLinesTplratio[k];
+       StrongHalphaELPresentTplratios[k][previous];
+    NLinesAboveSNRTplratios[k][index_z] = NLinesAboveSNRTplratios[k][previous];
+    PriorLinesTplratios[k][index_z] = PriorLinesTplratios[k][previous];
   }
   return;
 }

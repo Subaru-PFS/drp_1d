@@ -139,12 +139,12 @@ Int32 CTplratioManager::prepareFit(Float64 redshift) {
   return ntplratio;
 }
 
-void CTplratioManager::init(Float64 redshift, Int32 itratio) {
+bool CTplratioManager::init(Float64 redshift, Int32 itratio) {
   if (m_forcedisableTplratioISMfit && itratio > 0 &&
       m_CatalogTplRatio->GetIsmIndex(itratio) > 0) {
     duplicateTplratioResult(itratio, m_bestTplratioMerit,
                             m_bestTplratioMeritPrior);
-    return;
+    return true;
   }
   setTplratioModel(itratio, false);
   // prepare the Lya width and asym coefficients if the asymfit profile
@@ -152,6 +152,7 @@ void CTplratioManager::init(Float64 redshift, Int32 itratio) {
   // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
   // tplratio can override the lyafitting, see m_opt_lya_forcefit
   setLyaProfile(redshift, m_CatalogTplRatio->GetCatalog(itratio).GetList());
+  return false;
 }
 
 /**
@@ -185,22 +186,6 @@ void CTplratioManager::duplicateTplratioResult(
   return;
 }
 
-/* never called
-bool CTplratioManager::setTplratioModel(Int32 itplratio,
-                                         bool enableSetVelocity) {
-  SetMultilineNominalAmplitudesFast(itplratio);
-
-  if (enableSetVelocity) {
-    // Set the velocities from templates: todo auto switch when velfit is ON
-    m_CatalogTplRatio->GetCatalogVelocities(itplratio, m_velocityEmission,
-                                            m_velocityAbsorption);
-  }
-
-  Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
-               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());
-  return true;
-}
-*/
 
 void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
@@ -292,20 +277,21 @@ Float64 CTplratioManager::getTplratio_bestMtm() const {
 }
 
 void CTplratioManager::logParameters() {
-  Log.LogInfo(Formatter() << " m_opt_haprior" << m_opt_haprior);
-  Log.LogInfo(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
-  Log.LogInfo(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
+  CRigidityManager::logParameters();
+  Log.LogTrace(Formatter() << " m_opt_haprior" << m_opt_haprior);
+  Log.LogTrace(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
+  Log.LogTrace(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
                           << m_opt_firstpass_forcedisableTplratioISMfit);
-  Log.LogInfo(Formatter() << "forcedisableTplratioISMfit="
+  Log.LogTrace(Formatter() << "forcedisableTplratioISMfit="
                           << m_forcedisableTplratioISMfit);
-  Log.LogInfo(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
-  Log.LogInfo(Formatter() << "tplratioBestTplIsmCoeff="
+  Log.LogTrace(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
+  Log.LogTrace(Formatter() << "tplratioBestTplIsmCoeff="
                           << m_tplratioBestTplIsmCoeff);
-  Log.LogInfo(Formatter() << "tplratioBestTplAmplitude="
+  Log.LogTrace(Formatter() << "tplratioBestTplAmplitude="
                           << m_tplratioBestTplAmplitude);
-  Log.LogInfo(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
-  Log.LogInfo(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
-  Log.LogInfo(Formatter()
+  Log.LogTrace(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
+  Log.LogTrace(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
+  Log.LogTrace(Formatter()
               << "tplratioLeastSquareFast="
               << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
                                              // use fast least square estimation
@@ -611,7 +597,7 @@ bool CTplratioManager::setTplratioModel(Int32 itplratio,
   }
   */
 
-  //  Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
-  //             m_CatalogTplRatio.GetCatalogName(itplratio).c_str());
+  Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
+               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());
   return true;
 }

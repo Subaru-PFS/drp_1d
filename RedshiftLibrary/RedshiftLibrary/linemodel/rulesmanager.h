@@ -54,7 +54,16 @@ public:
                 std::shared_ptr<const TFloat64Range> lambdaRange,
                 std::shared_ptr<CContinuumManager> continuumManager,
                 const CLineCatalog::TLineVector &restLineList);
-
+  
+  CRulesManager() = delete;
+  virtual ~CRulesManager() = default;
+  CRulesManager(CRulesManager const& other) = default;
+  CRulesManager& operator=(CRulesManager const& other) = default;
+   
+  CRulesManager(CRulesManager&& other) = default;
+  CRulesManager& operator=(CRulesManager&& other) = default;
+  
+  
   Float64 computeMerit(Int32 itratio) override;
 
   const TStringList &GetModelRulesLog() const;

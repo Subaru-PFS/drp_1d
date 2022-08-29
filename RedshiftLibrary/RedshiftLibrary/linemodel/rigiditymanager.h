@@ -59,15 +59,27 @@ public:
                    std::shared_ptr<const TFloat64Range> lambdaRange,
                    std::shared_ptr<CContinuumManager> continuumManager,
                    const CLineCatalog::TLineVector &restLineList);
-  //    virtual ~CRigidityManager();
-
+  CRigidityManager() = delete;
+  virtual ~CRigidityManager(){}
+  CRigidityManager(CRigidityManager const& other) = default;
+  CRigidityManager& operator=(CRigidityManager const& other) = default;
+   
+  CRigidityManager(CRigidityManager&& other) = default;
+  CRigidityManager& operator=(CRigidityManager&& other) = default;
+  
   virtual int prepareFit(Float64 redshift) { return 1; }
-  virtual void init(Float64 redshift, Int32 itratio = -1);
+  virtual bool init(Float64 redshift, Int32 itratio = -1);
   virtual Float64 computeMerit(Int32 itratio) = 0;
   virtual void finish(Float64 redshift) {}
   virtual void saveResults(Int32 itratio) {}
   virtual void setPassMode(Int32 iPass);
-  void logParameters();
+  virtual TFloat64List getTplratio_priors() {
+    static TFloat64List dumb;
+    return dumb;
+  }
+  virtual Int32 getTplratio_count() const{ return 0; }
+
+  virtual void logParameters();
 
   void SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   } // TODO, called in computeFirstPass in the general case but only active when
@@ -75,6 +87,13 @@ public:
 
   std::string m_ContinuumComponent;
 
+  static std::shared_ptr<CRigidityManager> makeRigidityManager(const std::string &rigidity,
+							       CLineModelElementList &elements,
+							       std::shared_ptr<CSpectrumModel> model,
+							       std::shared_ptr<const CSpectrum> inputSpc,
+							       std::shared_ptr<const TFloat64Range> lambdaRange,
+							       std::shared_ptr<CContinuumManager> continuumManager,
+							       const CLineCatalog::TLineVector &restLineList);
 protected:
   void setLyaProfile(Float64 redshift,
                      const CLineCatalog::TLineVector &lineList);

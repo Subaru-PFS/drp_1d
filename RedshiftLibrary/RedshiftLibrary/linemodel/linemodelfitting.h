@@ -92,13 +92,6 @@ public:
   void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
   void SetContinuumComponent(std::string component);
 
-  std::shared_ptr<const CContinuumManager> getContinuumManager() const {
-    return m_continuumManager;
-  }
-  std::shared_ptr<CContinuumManager> getContinuumManager() {
-    return m_continuumManager;
-  }
-
   bool initDtd();
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
   Float64 EstimateMTransposeM() const;
@@ -136,15 +129,12 @@ public:
 
   Float64 GetRedshift() const;
 
-  CSpectrumFluxAxis getModel(Int32 lineTypeFilter = -1) const;
-
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
 
   Int32 getSpcNSamples() const;
 
   Float64 getLeastSquareContinuumMeritFast() const;
-  Float64 getLeastSquareMerit() const;
   Float64 getLeastSquareContinuumMerit() const;
   Float64 getLeastSquareMeritUnderElements() const;
   Float64 getScaleMargCorrection(Int32 idxLine = -1) const {
@@ -152,22 +142,21 @@ public:
   }
 
   Float64 getStrongerMultipleELAmpCoeff() const;
-  TStringList getLinesAboveSNR(Float64 snrcut = 3.5) const;
+
+  TStringList getLinesAboveSNR(Float64 snrcut = 3.5) const {
+    return m_model->getLinesAboveSNR(*(m_lambdaRange), snrcut);
+  }
+
   Float64 getCumulSNRStrongEL() const;
   Float64 getCumulSNROnRange(TInt32Range idxRange) const;
 
   void LoadModelSolution(const CLineModelSolution &modelSolution);
   CLineModelSolution GetModelSolution(Int32 opt_level = 0);
 
-  void getFluxDirectIntegration(const TInt32List &eIdx_list,
-                                const TInt32List &subeIdx_list,
-                                bool substract_abslinesmodel, Float64 &fluxdi,
-                                Float64 &snrdi) const;
-
   Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
-  std::shared_ptr<CAbstractFitter> m_fitter;
+  std::unique_ptr<CAbstractFitter> m_fitter;
   std::shared_ptr<CRigidityManager> m_rigidityManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
   const CLineCatalog::TLineVector m_RestLineList;
@@ -186,6 +175,10 @@ public:
     return m_model;
   } // not const because of tplortho
 
+  std::shared_ptr<const CSpectrumModel> getConstSpectrumModel() {
+    return m_model;
+  }
+
   // we keep that getters temporarily, waiting for refactoring linemodel extrema
   // result
   Int32 getTplratio_count() const;
@@ -201,13 +194,12 @@ public:
   Float64 m_LambdaOffsetStep = 25.0;
   bool m_enableLambdaOffsetsFit;
 
+  std::shared_ptr<CContinuumManager> m_continuumManager;
+
 private:
   void fitAmplitudesSimplex();
 
   void SetLSF();
-
-  TInt32List getOverlappingElementsBySupport(Int32 ind,
-                                             Float64 overlapThres = 0.1) const;
 
   TInt32List findLineIdxInCatalog(const CLineCatalog::TLineVector &restLineList,
                                   const std::string &strTag, Int32 type) const;
@@ -218,19 +210,8 @@ private:
                      Float64 a2);
 
   void applyRules(bool enableLogs = false);
-  std::vector<CRange<Int32>>
-  getlambdaIndexesUnderLines(const TInt32List &eIdx_list,
-                             const TInt32List &subeIdx_list,
-                             Float64 sigma_support) const;
-  void
-  integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
-                              const std::vector<CRange<Int32>> &indexRangeList,
-                              Float64 &sumFlux, Float64 &sumErr) const;
 
   std::shared_ptr<CSpectrumModel> m_model;
-  std::shared_ptr<CContinuumManager> m_continuumManager;
-
-  Float64 m_Redshift;
 
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed

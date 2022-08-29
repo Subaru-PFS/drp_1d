@@ -1,3 +1,41 @@
+// ============================================================================
+//
+// This file is part of: AMAZED
+//
+// Copyright  Aix Marseille Univ, CNRS, CNES, LAM/CeSAM
+//
+// https://www.lam.fr/
+//
+// This software is a computer program whose purpose is to estimate the
+// spectrocopic redshift of astronomical sources (galaxy/quasar/star)
+// from there 1D spectrum.
+//
+// This software is governed by the CeCILL-C license under French law and
+// abiding by the rules of distribution of free software.  You can  use,
+// modify and/ or redistribute the software under the terms of the CeCILL-C
+// license as circulated by CEA, CNRS and INRIA at the following URL
+// "http://www.cecill.info".
+//
+// As a counterpart to the access to the source code and  rights to copy,
+// modify and redistribute granted by the license, users are provided only
+// with a limited warranty  and the software's author,  the holder of the
+// economic rights,  and the successive licensors  have only  limited
+// liability.
+//
+// In this respect, the user's attention is drawn to the risks associated
+// with loading,  using,  modifying and/or developing or reproducing the
+// software by the user in light of its specific status of free software,
+// that may mean  that it is complicated to manipulate,  and  that  also
+// therefore means  that it is reserved for developers  and  experienced
+// professionals having in-depth computer knowledge. Users are therefore
+// encouraged to load and test the software's suitability as regards their
+// requirements in conditions enabling the security of their systems and/or
+// data to be ensured and,  more generally, to use and operate it in the
+// same conditions as regards security.
+//
+// The fact that you are presently reading this means that you have had
+// knowledge of the CeCILL-C license and that you accept its terms.
+// ============================================================================
 #include "RedshiftLibrary/linemodel/hybridfitter.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/processflow/context.h"
@@ -8,8 +46,9 @@ using namespace std;
 CHybridFitter::CHybridFitter(CLineModelElementList &elements,
                              std::shared_ptr<const CSpectrum> inputSpectrum,
                              std::shared_ptr<const TLambdaRange> lambdaRange,
-                             std::shared_ptr<CSpectrumModel> spectrumModel)
-    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel)
+                             std::shared_ptr<CSpectrumModel> spectrumModel,
+			     const CLineCatalog::TLineVector &restLineList)
+  : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -49,8 +88,6 @@ void CHybridFitter::fit(Float64 redshift) {
     */
     m_model->EstimateSpectrumContinuum(enhanceLines);
     m_model->initModelWithContinuum();
-
-    m_model->substractContToFlux();
 
     fitAmplitudesHybrid(redshift);
     it++;
@@ -133,9 +170,8 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
       TFloat64List ampsfitted;
       TFloat64List errorsfitted;
       Int32 retVal = fitAmplitudesLinSolveAndLambdaOffset(
-          overlappingInds, spectralAxis, spcFluxAxisNoContinuum,
-          continuumfluxAxis, ampsfitted, errorsfitted, m_enableLambdaOffsetsFit,
-          redshift);
+          overlappingInds, spectralAxis, ampsfitted, errorsfitted,
+          m_enableLambdaOffsetsFit, redshift);
       // if all the amplitudes fitted don't have the same sign, do it
       // separately
       TInt32List overlappingIndsSameSign;
@@ -158,8 +194,7 @@ Int32 CHybridFitter::fitAmplitudesHybrid(Float64 redshift) {
               m_LambdaOffsetMin, m_LambdaOffsetMax);
         } else if (overlappingIndsSameSign.size() > 0) {
           Int32 retVal2 = fitAmplitudesLinSolveAndLambdaOffset(
-              overlappingIndsSameSign, spectralAxis, spcFluxAxisNoContinuum,
-              continuumfluxAxis, ampsfitted, errorsfitted,
+              overlappingIndsSameSign, spectralAxis, ampsfitted, errorsfitted,
               m_enableLambdaOffsetsFit, redshift);
 
           if (retVal2 != 1) {

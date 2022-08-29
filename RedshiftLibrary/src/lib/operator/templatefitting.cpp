@@ -188,14 +188,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       TFittingResult fitRes =
           ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
 
-      Log.LogDebug("");
-      Log.LogDebug("  Operator-TemplateFitting: z=%f", redshift);
-      Log.LogDebug("  Operator-TemplateFitting: fit=%e", fitRes.chiSquare);
-      Log.LogDebug("  Operator-TemplateFitting: sumT=%e", fitRes.sumT);
-      Log.LogDebug("  Operator-TemplateFitting: sumS=%e", fitRes.sumS);
-      Log.LogDebug("  Operator-TemplateFitting: sumCross=%e", fitRes.sumCross);
-      Log.LogDebug("  Operator-TemplateFitting: coeffEBMV=%.2f", coeffEBMV);
-      Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
+      Log.LogDebug(Formatter()<<"BasicFit: z="<< redshift<<" fit="<< fitRes.chiSquare<<" coeffEBMV="<< coeffEBMV<<" meiksinIdx="<<meiksinIdx);
 
       result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;

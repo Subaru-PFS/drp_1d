@@ -56,23 +56,32 @@ public:
                    std::shared_ptr<const TFloat64Range> lambdaRange,
                    std::shared_ptr<CContinuumManager> continuumManager,
                    const CLineCatalog::TLineVector &restLineList);
+  CTplratioManager() = delete;
+  virtual ~CTplratioManager() = default;
+  CTplratioManager(CTplratioManager const& other) = default;
+  CTplratioManager& operator=(CTplratioManager const& other) = default;
+   
+  CTplratioManager(CTplratioManager&& other) = default;
+  CTplratioManager& operator=(CTplratioManager&& other) = default;
 
+
+  
   int prepareFit(Float64 redshift) override;
-  void init(Float64 redshift, Int32 itratio) override;
+  bool init(Float64 redshift, Int32 itratio) override;
 
   Float64 computeMerit(Int32 itratio) override;
   void finish(Float64 redshift) override;
   void setPassMode(Int32 iPass) override;
   void saveResults(Int32 itratio) override;
-
-  void logParameters();
+  Int32 getTplratio_count() const override;
+  TFloat64List getTplratio_priors() override;
+  
+  void logParameters() override;
   const std::string &getTplratio_bestTplName() const;
   Float64 getTplratio_bestTplIsmCoeff() const;
   Float64 getTplratio_bestAmplitude() const;
   Float64 getTplratio_bestDtm() const;
   Float64 getTplratio_bestMtm() const;
-  Int32 getTplratio_count() const;
-  TFloat64List getTplratio_priors();
   const TFloat64List &GetChisquareTplratio() const;
   TFloat64List GetPriorLinesTplratio() const;
   const TFloat64List &GetScaleMargTplratio() const;

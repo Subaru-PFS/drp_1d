@@ -38,6 +38,9 @@
 // ============================================================================
 
 #include "RedshiftLibrary/linemodel/rigiditymanager.h"
+#include "RedshiftLibrary/linemodel/rulesmanager.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/linemodel/tplcorrmanager.h"
 #include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
@@ -285,10 +288,11 @@ Int32 CRigidityManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
   return bestIgmIdx;
 }
 
-void CRigidityManager::init(Float64 redshift, Int32 itratio) {
+bool CRigidityManager::init(Float64 redshift, Int32 itratio) {
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);
+  return false;
 }
 
 /**
@@ -353,7 +357,7 @@ Float64 CRigidityManager::getLeastSquareMerit() const {
                                             // disabled, will sum 0.0)
   }
 
-  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit = %f", fit);
+  //  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit = %f", fit);
   if (std::isnan(fit)) {
     Log.LogError("CLineModelFitting::getLeastSquareMerit: NaN value found on "
                  "the lambdarange = (%f, %f)",
@@ -417,25 +421,52 @@ Float64 CRigidityManager::getLeastSquareMeritFast(Int32 idxLine) const {
 
 void CRigidityManager::logParameters() {
 
-  Log.LogInfo(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
-  Log.LogInfo(Formatter() << " m_opt_lya_forcedisablefit"
+  Log.LogTrace(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
+  Log.LogTrace(Formatter() << " m_opt_lya_forcedisablefit"
                           << m_opt_lya_forcedisablefit);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_min"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_min"
                           << m_opt_lya_fit_asym_min);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_max"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_max"
                           << m_opt_lya_fit_asym_max);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_asym_step"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_step"
                           << m_opt_lya_fit_asym_step);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_min"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_min"
                           << m_opt_lya_fit_width_min);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_max"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_max"
                           << m_opt_lya_fit_width_max);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_width_step"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_step"
                           << m_opt_lya_fit_width_step);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_min"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_min"
                           << m_opt_lya_fit_delta_min);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_max"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_max"
                           << m_opt_lya_fit_delta_max);
-  Log.LogInfo(Formatter() << " m_opt_lya_fit_delta_step"
+  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_step"
                           << m_opt_lya_fit_delta_step);
+}
+
+std::shared_ptr<CRigidityManager> CRigidityManager::makeRigidityManager(const std::string &rigidity,
+						      CLineModelElementList &elements,
+						      std::shared_ptr<CSpectrumModel> model,
+						      std::shared_ptr<const CSpectrum> inputSpc,
+						      std::shared_ptr<const TFloat64Range> lambdaRange,
+						      std::shared_ptr<CContinuumManager> continuumManager,
+						      const CLineCatalog::TLineVector &restLineList)
+
+{
+
+  if (rigidity == "tplratio")
+    return std::make_shared<CTplratioManager>( 
+        CTplratioManager(elements, model, inputSpc, lambdaRange,
+                         continuumManager, restLineList));
+  else if (rigidity == "tplcorr")
+    return std::make_shared<CTplCorrManager>( 
+        CTplCorrManager(elements, model, inputSpc, lambdaRange,
+                        continuumManager, restLineList));
+  else if (rigidity == "rules")
+    return std::make_shared<CRulesManager>( 
+        CRulesManager(elements, model, inputSpc, lambdaRange,
+                      continuumManager, restLineList));
+  else
+    THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
+                              "supported for linemodel.rigidity");
 }

@@ -4,23 +4,33 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_vector.h>
 
+#include "RedshiftLibrary/linemodel/hybridfitter.h"
+#include "RedshiftLibrary/linemodel/individualfitter.h"
+#include "RedshiftLibrary/linemodel/onesfitter.h"
+#include "RedshiftLibrary/linemodel/randomfitter.h"
+#include "RedshiftLibrary/linemodel/svdfitter.h"
+#include "RedshiftLibrary/linemodel/svdlcfitter.h"
+
 using namespace NSEpic;
 
 CAbstractFitter::CAbstractFitter(
     CLineModelElementList &elements,
     std::shared_ptr<const CSpectrum> inputSpectrum,
     std::shared_ptr<const TLambdaRange> lambdaRange,
-    std::shared_ptr<CSpectrumModel> spectrumModel)
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const CLineCatalog::TLineVector &restLineList)
     : m_Elements(elements), m_inputSpc(*(inputSpectrum)),
-      m_RestLineList(Context.getLineVector()), m_lambdaRange(*(lambdaRange)),
+      m_RestLineList(restLineList), m_lambdaRange(*(lambdaRange)),
       m_model(spectrumModel) {}
 
 Int32 CAbstractFitter::fitAmplitudesLinSolveAndLambdaOffset(
     TInt32List EltsIdx, const CSpectrumSpectralAxis &spectralAxis,
-    const CSpectrumFluxAxis &fluxAxis,
-    const CSpectrumFluxAxis &continuumfluxAxis,
     std::vector<Float64> &ampsfitted, std::vector<Float64> &errorsfitted,
     bool enableOffsetFitting, Float64 redshift) {
+
+  const CSpectrumFluxAxis &fluxAxis = m_model->getSpcFluxAxisNoContinuum();
+  const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
+
   Int32 ret = -1;
   Int32 nSteps =
       int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep + 0.5);
@@ -267,4 +277,39 @@ Int32 CAbstractFitter::fitAmplitudesLinSolve(
   gsl_matrix_free(cov);
 
   return sameSign;
+}
+
+std::unique_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
+    std::string fittingMethod, CLineModelElementList &elements,
+    std::shared_ptr<const CSpectrum> inputSpectrum,
+    std::shared_ptr<const TLambdaRange> lambdaRange,
+    std::shared_ptr<CSpectrumModel> spectrumModel,
+    const CLineCatalog::TLineVector &restLineList,
+    std::shared_ptr<CContinuumManager> continuumManager) {
+  if (fittingMethod == "hybrid")
+    return std::unique_ptr<CHybridFitter>(
+					  new CHybridFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+  else if (fittingMethod == "svd")
+    return std::unique_ptr<CSvdFitter>(
+				       new CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+  else if (fittingMethod == "svdlc")
+    return std::unique_ptr<CSvdlcFitter>(new CSvdlcFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList,continuumManager));
+  else if (fittingMethod == "svdlcp2")
+    return std::unique_ptr<CSvdlcFitter>(
+        new CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList,
+                         continuumManager, 2));
+
+  else if (fittingMethod == "ones")
+    return std::unique_ptr<COnesFitter>(
+					new COnesFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+  else if (fittingMethod == "random")
+    return std::unique_ptr<CRandomFitter>(
+        new CRandomFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+  else if (fittingMethod == "individual")
+    return std::unique_ptr<CIndividualFitter>(new CIndividualFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+  else
+    THROWG(INTERNAL_ERROR, Formatter()
+                               << "Unknown fitting method " << fittingMethod);
 }
