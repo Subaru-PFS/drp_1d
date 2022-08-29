@@ -184,10 +184,9 @@ Float64 CContinuumManager::getFitContinuum_tplMeritPhot() const {
 void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
                                          Float64 redshift) {
   Log.LogDebug("Elementlist, m_fitContinuum_option=%d", m_fitContinuum_option);
-  if (m_observeGridContinuumFlux.empty()) {
+  if (m_observeGridContinuumFlux.empty())
     THROWG(INTERNAL_ERROR,
            "Cannot loadfitcontinuum without precomputedGridTplFlux");
-  }
 
   if (m_fitContinuum_option ==
       1) { // using precomputed fit store, i.e., fitValues
@@ -223,66 +222,53 @@ void CContinuumManager::LoadFitContinuum(Int32 icontinuum, Int32 autoSelect,
     THROWG(INTERNAL_ERROR, "Cannot parse fitContinuum_option");
   }
 
-  if (!m_fitContinuum_tplName.empty()) {
-    // Retrieve the best template
-    std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-        m_tplCategoryList, m_fitContinuum_tplName);
-    if (tpl->GetName() == m_fitContinuum_tplName) {
-      if (autoSelect) {
-        // Float64 contsnr = getFitContinuum_snr();
-        /*Float64 contsnr = m_fitContinuum_tplFitSNRMax;
-        m_fitContinuum_tplFitAlpha = 1.0;
-        if(contsnr>50.)
-        {
-            m_fitContinuum_tplFitAlpha=0.0;
-        }*/
-        m_fitContinuum_tplFitAlpha = 0.0;
-        if (m_fitContinuum_tplFitAmplitudeSigmaMAX <
-            m_opt_fitcontinuum_neg_threshold)
-          m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
-      }
-
-      ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
-
-      setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude,
-                                   m_fitContinuum_tplFitAmplitudeError,
-                                   m_fitContinuum_tplFitPolyCoeffs);
-
-      Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
-                   m_fitContinuum_tplName.c_str());
-      Log.LogDebug("    model : LoadFitContinuum, loaded with A=%e",
-                   m_fitContinuum_tplFitAmplitude);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with A_error=%e",
-                   m_fitContinuum_tplFitAmplitudeError);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with DustCoeff=%e",
-                   m_fitContinuum_tplFitEbmvCoeff);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with MeiksinIdx=%d",
-                   m_fitContinuum_tplFitMeiksinIdx);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with dtm=%e",
-                   m_fitContinuum_tplFitDtM);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with mtm=%e",
-                   m_fitContinuum_tplFitMtM);
-      Log.LogDebug("    model : LoadFitContinuum, loaded with logprior=%e",
-                   m_fitContinuum_tplFitLogprior);
-      Float64 tplfitsnr = NAN;
-      if (m_fitContinuum_tplFitMtM > 0.0) {
-        tplfitsnr =
-            m_fitContinuum_tplFitDtM / std::sqrt(m_fitContinuum_tplFitMtM);
-      }
-      Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e",
-                   tplfitsnr);
-    } else {
-      THROWG(
-          INTERNAL_ERROR,
-          Formatter()
-              << "Failed to load-fit continuum. Failed to find best template="
-              << m_fitContinuum_tplName.c_str());
-    }
-  } else {
+  // check that continuum is well loaded
+  if (m_fitContinuum_tplName.empty())
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Failed to load-fit continuum for cfitopt="
                                << m_fitContinuum_option);
+
+  // Retrieve the best template, otherwise Getter throws an error
+  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
+      m_tplCategoryList, m_fitContinuum_tplName);
+
+  if (autoSelect) {
+    // Float64 contsnr = getFitContinuum_snr();
+    /*Float64 contsnr = m_fitContinuum_tplFitSNRMax;
+    m_fitContinuum_tplFitAlpha = 1.0;
+    if(contsnr>50.)
+    {
+        m_fitContinuum_tplFitAlpha=0.0;
+    }*/
+    m_fitContinuum_tplFitAlpha = 0.0;
+    if (m_fitContinuum_tplFitAmplitudeSigmaMAX <
+        m_opt_fitcontinuum_neg_threshold)
+      m_fitContinuum_tplFitAlpha = 1.0; // switch to spectrum continuum
   }
+
+  ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
+
+  setFitContinuum_tplAmplitude(m_fitContinuum_tplFitAmplitude,
+                               m_fitContinuum_tplFitAmplitudeError,
+                               m_fitContinuum_tplFitPolyCoeffs);
+
+  Log.LogDebug("    model : LoadFitContinuum, loaded: %s",
+               m_fitContinuum_tplName.c_str());
+  Log.LogDebug(
+      "    model : LoadFitContinuum, loaded with A=%e, with A_error=%e",
+      m_fitContinuum_tplFitAmplitude, m_fitContinuum_tplFitAmplitudeError);
+  Log.LogDebug("    model : LoadFitContinuum, loaded with DustCoeff=%e, with "
+               "MeiksinIdx=%d",
+               m_fitContinuum_tplFitEbmvCoeff, m_fitContinuum_tplFitMeiksinIdx);
+  Log.LogDebug("    model : LoadFitContinuum, loaded with dtm=%e, with mtm=%e, "
+               "with logprior=%e",
+               m_fitContinuum_tplFitDtM, m_fitContinuum_tplFitMtM,
+               m_fitContinuum_tplFitLogprior);
+  Float64 tplfitsnr = NAN;
+  if (m_fitContinuum_tplFitMtM > 0.0) {
+    tplfitsnr = m_fitContinuum_tplFitDtM / std::sqrt(m_fitContinuum_tplFitMtM);
+  }
+  Log.LogDebug("    model : LoadFitContinuum, loaded with snr=%e", tplfitsnr);
 }
 
 void CContinuumManager::setFitContinuum_tplAmplitude(
