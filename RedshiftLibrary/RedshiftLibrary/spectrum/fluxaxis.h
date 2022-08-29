@@ -69,9 +69,9 @@ public:
                     const Int32 m);
 
   const CSpectrumNoiseAxis &GetError() const;
-  CSpectrumNoiseAxis &GetError();
 
   void setError(const CSpectrumNoiseAxis &otherError);
+  void setErrorSample(Int32 idx, Float64 s);
   void SetSize(Int32 s);
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
@@ -97,8 +97,6 @@ private:
   CSpectrumNoiseAxis m_StdError; // STD
 };
 
-inline CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() { return m_StdError; }
-
 inline const CSpectrumNoiseAxis &CSpectrumFluxAxis::GetError() const {
   return m_StdError;
 }
@@ -108,6 +106,11 @@ inline CSpectrumFluxAxis CSpectrumFluxAxis::extract(Int32 startIdx,
   return CSpectrumFluxAxis(CSpectrumAxis::extract(startIdx, endIdx),
                            m_StdError.extract(startIdx, endIdx));
 }
+
+inline void CSpectrumFluxAxis::setErrorSample(Int32 idx, Float64 s) {
+  m_StdError[idx] = s;
+}
+
 } // namespace NSEpic
 
 #endif

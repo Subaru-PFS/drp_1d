@@ -131,6 +131,7 @@ void CSpectrumSpectralAxis::MaskAxis(
     maskedSpcAxis.m_isSorted = true;
   maskedSpcAxis.m_isLogSampled = indeterminate;
 }
+
 void CSpectrumSpectralAxis::SetSize(Int32 s) {
   Float64 sample_size = GetSamplesCount();
   CSpectrumAxis::SetSize(s);

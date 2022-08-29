@@ -77,6 +77,8 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
 }
 
 void CSpectrumFluxAxis::setError(const CSpectrumNoiseAxis &otherError) {
+  if (otherError.GetSamplesCount() != m_StdError.GetSamplesCount())
+    THROWG(INTERNAL_ERROR, "FluxAxis and NoiseAxis sizes do not match");
   m_StdError = CSpectrumNoiseAxis(otherError);
 }
 

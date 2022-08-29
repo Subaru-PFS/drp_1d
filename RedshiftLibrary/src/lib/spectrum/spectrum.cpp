@@ -73,10 +73,10 @@ CSpectrum::CSpectrum(const CSpectrum &other, const TFloat64List &mask)
                            &otherWithoutContinuumError =
                                other.m_WithoutContinuumFluxAxis.GetError();
 
-  CSpectrumNoiseAxis &RawError = m_RawFluxAxis.GetError(),
-                     &ContinuumError = m_ContinuumFluxAxis.GetError(),
-                     &WithoutContinuumError =
-                         m_WithoutContinuumFluxAxis.GetError();
+  const CSpectrumNoiseAxis &RawError = m_RawFluxAxis.GetError(),
+                           &ContinuumError = m_ContinuumFluxAxis.GetError(),
+                           &WithoutContinuumError =
+                               m_WithoutContinuumFluxAxis.GetError();
 
   other.m_SpectralAxis.MaskAxis(mask, m_SpectralAxis);
   other.m_RawFluxAxis.MaskAxis(mask, m_RawFluxAxis);

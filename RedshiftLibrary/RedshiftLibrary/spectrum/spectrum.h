@@ -288,11 +288,11 @@ inline const CSpectrumNoiseAxis &CSpectrum::GetErrorAxis() const {
 }
 
 inline void CSpectrum::SetErrorAxis(const CSpectrumNoiseAxis &erroraxis) {
-  GetFluxAxis_().GetError() = erroraxis;
+  GetFluxAxis_().setError(erroraxis);
 }
 
 inline void CSpectrum::SetErrorAxis(CSpectrumNoiseAxis &&erroraxis) {
-  GetFluxAxis_().GetError() = std::move(erroraxis);
+  GetFluxAxis_().setError(std::move(erroraxis));
 }
 
 inline const std::shared_ptr<const CLSF> CSpectrum::GetLSF() const {
