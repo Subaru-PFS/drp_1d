@@ -76,7 +76,7 @@ public:
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);
   bool ApplyMedianSmooth(Int32 kernelHalfWidth);
-
+  Float64 computeMaxAbsValue(Int32 imin, Int32 imax) const;
   bool ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                           Float64 &sdev) const;
   Float64 ComputeRMSDiff(const CSpectrumFluxAxis &other);

@@ -418,6 +418,26 @@ BOOST_AUTO_TEST_CASE(Subtract_test) {
   BOOST_CHECK(sample_ref == object_FluxAxisA.GetSamplesVector());
 }
 
+BOOST_AUTO_TEST_CASE(ComputeMaxAbsValue) {
+  //--------------------//
+  // test computeMaxAbsValue
+  TFloat64List sampleA = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
+  CSpectrumFluxAxis object_FluxAxisA(sampleA);
+
+  Float64 maxAbsVal = object_FluxAxisA.computeMaxAbsValue(0, 9);
+  BOOST_CHECK_CLOSE(maxAbsVal, 10., precision);
+
+  maxAbsVal = object_FluxAxisA.computeMaxAbsValue(3, 5);
+  BOOST_CHECK_CLOSE(maxAbsVal, 6., precision);
+
+  // check with negative values
+  TFloat64List sampleB = {1., 2., 3., 4., 5., 6., 7., 8., 9., -10.};
+  CSpectrumFluxAxis object_FluxAxisB(sampleB);
+
+  maxAbsVal = object_FluxAxisB.computeMaxAbsValue(0, 9);
+  BOOST_CHECK_CLOSE(maxAbsVal, 10., precision);
+}
+
 BOOST_AUTO_TEST_CASE(Invert_test) {
   //--------------------//
   // test Invert

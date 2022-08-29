@@ -140,6 +140,15 @@ bool CSpectrumFluxAxis::ApplyMeanSmooth(Int32 kernelHalfWidth) {
   return true;
 }
 
+Float64 CSpectrumFluxAxis::computeMaxAbsValue(Int32 imin, Int32 imax) const {
+
+  Float64 maxabsval = std::abs(*std::max_element(
+      m_Samples.begin() + imin, m_Samples.begin() + imax + 1,
+      [](Float64 a, Float64 b) { return std::abs(a) < std::abs(b); }));
+
+  return maxabsval;
+}
+
 bool CSpectrumFluxAxis::ComputeMeanAndSDev(const CMask &mask, Float64 &mean,
                                            Float64 &sdev) const {
   const CSpectrumNoiseAxis &error = GetError();
