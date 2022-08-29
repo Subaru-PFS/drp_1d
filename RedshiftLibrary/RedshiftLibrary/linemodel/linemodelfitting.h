@@ -65,6 +65,8 @@
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 
 #include <memory>
+#include <unordered_set>
+
 namespace NSEpic {
 
 class CLineRatioManager;
@@ -146,8 +148,8 @@ public:
 
   Float64 getStrongerMultipleELAmpCoeff() const;
 
-  TStringList getLinesAboveSNR(Float64 snrcut = 3.5) const {
-    return m_model->getLinesAboveSNR(*(m_lambdaRange), snrcut);
+  std::unordered_set<std::string> getLinesAboveSNR(Float64 snrcut = 3.5) const {
+    return m_model->getLinesAboveSNR(*m_lambdaRange, snrcut);
   }
 
   Float64 getCumulSNRStrongEL() const;

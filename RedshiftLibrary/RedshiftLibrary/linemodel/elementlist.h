@@ -55,7 +55,7 @@ public:
   TInt32List m_elementsDisabledIndexes;
 
   TInt32List GetModelValidElementsIndexes() const;
-
+  TInt32List getValidElementIndices(Int32 lineTypeFilter) const;
   void SetElementAmplitude(Int32 j, Float64 a, Float64 snr);
   Float64 GetElementAmplitude(Int32 j) const;
 

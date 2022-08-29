@@ -130,8 +130,7 @@ void TLineModelResult::updateFromModel(
       lmel->getCumulSNRStrongEL(); // getStrongerMultipleELAmpCoeff(); //
   StrongELSNR = cumulStrongELSNR;
 
-  TStringList strongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
-  StrongELSNRAboveCut = strongELSNRAboveCut;
+  StrongELSNRAboveCut = lmel->getLinesAboveSNR(3.5);
 
   Int32 nddl = lmel->GetNElements(); // get the total number of
   // elements in the model

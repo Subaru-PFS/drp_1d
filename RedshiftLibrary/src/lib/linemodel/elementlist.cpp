@@ -418,6 +418,29 @@ Float64 CLineModelElementList::GetElementAmplitude(Int32 j) const {
 }
 
 /**
+ * @brief: get all valid elements based on whether the amplitude is null
+ *
+ * @param lineTypeFilter
+ * @return TFloat64List
+ */
+TInt32List
+CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
+
+  const TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  TInt32List nonZeroValidEltsIdx;
+  for (const Int32 eIdx : validEltsIdx) {
+    const Int32 lineType = m_Elements[eIdx]->m_Lines[0].GetType();
+    if (lineTypeFilter != -1 && lineTypeFilter != lineType)
+      continue;
+
+    if (!isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
+        m_Elements[eIdx]->GetElementAmplitude() > 0.0)
+      nonZeroValidEltsIdx.push_back(eIdx);
+  }
+  return nonZeroValidEltsIdx;
+}
+
+/**
  * \brief Returns the first index of m_Elements where calling the element's
  *findElementIndex method with LineCatalogIndex argument does not return -1.
  * Returns also the line index
@@ -488,6 +511,8 @@ TInt32List
 CLineModelElementList::getSupportIndexes(const TInt32List &EltsIdx) const {
   TInt32List indexes;
 
+  if (!EltsIdx.size())
+    return indexes;
   TInt32RangeList support;
   for (Int32 i = 0; i < EltsIdx.size(); i++) {
     Int32 iElts = EltsIdx[i];

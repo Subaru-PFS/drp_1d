@@ -1202,7 +1202,8 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
     modelSolution.LyaIgm = params_igm.m_igmidx;
   }
 
-  TStringList strongELSNRAboveCut = TStringList(); // getLinesAboveSNR(3.5);
+  std::unordered_set<std::string>
+      strongELSNRAboveCut; // = getLinesAboveSNR(3.5);
   modelSolution.NLinesAboveSnrCut = strongELSNRAboveCut.size();
 
   return modelSolution;
