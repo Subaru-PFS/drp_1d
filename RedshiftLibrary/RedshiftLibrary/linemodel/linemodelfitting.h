@@ -65,6 +65,7 @@
 
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
 
 #include <memory>
 namespace NSEpic {
@@ -92,9 +93,6 @@ public:
   LoadCatalogTwoMultilinesAE(const CLineCatalog::TLineVector &restLineList);
 
   void LogCatalogInfos();
-
-  void PrepareContinuum();
-  void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   void LoadFitContinuumOneTemplate(const std::shared_ptr<const CTemplate> &tpl);
   void LoadFitContinuum(Int32 icontinuum, Int32 autoSelect);
@@ -197,16 +195,8 @@ public:
 
   Float64 GetRedshift() const;
 
-  void reinitModel();
-  void refreshModel(Int32 lineTypeFilter = -1);
   CSpectrumFluxAxis getModel(Int32 lineTypeFilter = -1) const;
-  void reinitModelUnderElements(const TInt32List &filterEltsIdx,
-                                Int32 lineIdx = -1);
-  void refreshModelInitAllGrid();
-  void refreshModelUnderElements(const TInt32List &filterEltsIdx,
-                                 Int32 lineIdx = -1);
 
-  void setModelSpcObservedOnSupportZeroOutside();
   CMask getOutsideLinesMask() const;
   Float64 getOutsideLinesSTD(Int32 which) const;
 
@@ -229,23 +219,17 @@ public:
   void LoadModelSolution(const CLineModelSolution &modelSolution);
   CLineModelSolution GetModelSolution(Int32 opt_level = 0);
   CContinuumModelSolution GetContinuumModelSolution() const;
-  const CSpectrum &GetModelSpectrum() const;
-  CSpectrum GetSpectrumModelContinuum() const;
-  const CSpectrum &
-  GetObservedSpectrumWithLinesRemoved(Int32 lineTypeFilter = -1);
-  Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
+
   void getFluxDirectIntegration(const TInt32List &eIdx_list,
                                 const TInt32List &subeIdx_list,
                                 bool substract_abslinesmodel, Float64 &fluxdi,
                                 Float64 &snrdi) const;
-  const CSpectrumFluxAxis &GetModelContinuum() const;
+
+  Float64 getModelFluxVal(Int32 idx) const;
   void logParameters();
   CLineModelElementList m_Elements;
   std::shared_ptr<const CSpectrum> m_inputSpc;
-  CSpectrum m_SpectrumModel; // model
   const CLineCatalog::TLineVector m_RestLineList;
-  CSpectrum
-      m_SpcCorrectedUnderLines; // observed spectrum corrected under the lines
 
   const TStringList &GetModelRulesLog() const;
 
@@ -268,6 +252,9 @@ public:
   Float64 computelogLinePriorMerit(
       Int32 itratio,
       const std::vector<CPriorHelper::SPriorTZE> &logPriorDataTplRatio);
+  std::shared_ptr<CSpectrumModel> getSpectrumModel() {
+    return m_model;
+  } // not const because of tplortho
   CLineCatalogsTplRatio m_CatalogTplRatio;
   TFloat64List m_ChisquareTplratio;
   std::vector<TFloat64List> m_FittedAmpTplratio;
@@ -339,8 +326,6 @@ private:
                               bool tplratio) const;
   void SetLSF();
 
-  Float64 GetWeightingAnyLineCenterProximity(Int32 sampleIndex,
-                                             const TInt32List &EltsIdx) const;
   TInt32List getOverlappingElementsBySupport(Int32 ind,
                                              Float64 overlapThres = 0.1) const;
 
@@ -364,6 +349,7 @@ private:
                               Float64 &sumFlux, Float64 &sumErr) const;
 
   CRegulament m_Regulament;
+  std::shared_ptr<CSpectrumModel> m_model;
 
   TFloat64List m_ScaleMargCorrTplratio;
   TBoolList m_StrongELPresentTplratio;
@@ -372,13 +358,10 @@ private:
 
   Float64 m_Redshift;
 
-  CSpectrumFluxAxis m_SpcFluxAxis; // observed spectrum
-  CSpectrumFluxAxis
-      m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
   std::shared_ptr<CTemplate>
       m_tplContaminantSpcRebin; // optionally used contaminant to be removed
                                 // from observed spectrum
-  CSpectrumNoiseAxis &m_ErrorNoContinuum;
+
   Float64 m_dTransposeD; // the cached dtd (maximum chisquare value)
   TFloat64Range m_dTransposeDLambdaRange; // the lambdaRange used to computed
                                           // cached dTransposeD values
@@ -389,7 +372,7 @@ private:
                                   // amplitude coeff; m_ContinuumFLux = amp *
                                   // m_observeGridContinuumFlux
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
-  CSpectrumFluxAxis m_ContinuumFluxAxis; // rebined model continuum
+
   std::string m_ContinuumComponent;
   std::string m_LineWidthType;
   Float64 m_NSigmaSupport;

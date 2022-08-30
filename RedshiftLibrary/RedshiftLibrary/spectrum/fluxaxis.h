@@ -71,6 +71,7 @@ public:
   const CSpectrumNoiseAxis &GetError() const;
   CSpectrumNoiseAxis &GetError();
 
+  void setError(const CSpectrumNoiseAxis &otherError);
   void SetSize(Int32 s);
   void clear();
   bool ApplyMeanSmooth(Int32 kernelHalfWidth);

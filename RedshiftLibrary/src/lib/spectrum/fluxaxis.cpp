@@ -76,6 +76,10 @@ CSpectrumFluxAxis::CSpectrumFluxAxis(const Float64 *samples, Int32 n,
   }
 }
 
+void CSpectrumFluxAxis::setError(const CSpectrumNoiseAxis &otherError) {
+  m_StdError = CSpectrumNoiseAxis(otherError);
+}
+
 void CSpectrumFluxAxis::SetSize(Int32 s) {
   CSpectrumAxis::SetSize(s);
   m_StdError.SetSize(s);

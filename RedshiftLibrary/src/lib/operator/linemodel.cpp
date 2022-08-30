@@ -1258,7 +1258,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
         // 2=save model with only Em. lines removed.
         if (overrideModelSavedType == 0) {
           resultspcmodel = std::make_shared<CModelSpectrumResult>(
-              m_model->GetModelSpectrum());
+              m_model->getSpectrumModel()->GetModelSpectrum());
         } else if (overrideModelSavedType == 1 || overrideModelSavedType == 2) {
           Int32 lineTypeFilter = -1;
           if (overrideModelSavedType == 1) {
@@ -1267,7 +1267,8 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
             lineTypeFilter = CLine::nType_Emission;
           }
           resultspcmodel = std::make_shared<CModelSpectrumResult>(
-              m_model->GetObservedSpectrumWithLinesRemoved(lineTypeFilter));
+              m_model->getSpectrumModel()->GetObservedSpectrumWithLinesRemoved(
+                  lineTypeFilter));
         }
         // std::shared_ptr<CModelSpectrumResult>  resultspcmodel =
         // std::shared_ptr<CModelSpectrumResult>( new
@@ -1290,7 +1291,7 @@ COperatorLineModel::buildExtremaResults(const CSpectrum &spectrum,
           std::shared_ptr<CSpectraFluxResult> baselineResult =
               (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
           const CSpectrumFluxAxis &modelContinuumFluxAxis =
-              m_model->GetModelContinuum();
+              m_model->getSpectrumModel()->GetModelContinuum();
           Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
           baselineResult->fluxes.resize(len);
@@ -1447,7 +1448,8 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
         mlmfit_modelInfoSave = true;
         // CModelSpectrumResult
         std::shared_ptr<CModelSpectrumResult> resultspcmodel =
-            std::make_shared<CModelSpectrumResult>(m_model->GetModelSpectrum());
+            std::make_shared<CModelSpectrumResult>(
+                m_model->getSpectrumModel()->GetModelSpectrum());
 
         mlmfit_savedModelSpectrumResults_lmfit.push_back(resultspcmodel);
 
@@ -1465,7 +1467,7 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
         std::shared_ptr<CSpectraFluxResult> baselineResult_lmfit =
             (std::shared_ptr<CSpectraFluxResult>)new CSpectraFluxResult();
         const CSpectrumFluxAxis &modelContinuumFluxAxis =
-            m_model->GetModelContinuum();
+            m_model->getSpectrumModel()->GetModelContinuum();
         Int32 len = modelContinuumFluxAxis.GetSamplesCount();
 
         baselineResult_lmfit->fluxes.resize(len);
@@ -2261,6 +2263,6 @@ const CSpectrum &COperatorLineModel::getFittedModelWithoutcontinuum(
   // make sure polynom info are correctly set. it s up to refresh model to use
   // these coeffs
   m_model->LoadModelSolution(bestModelSolution);
-  m_model->refreshModel();
-  return m_model->GetModelSpectrum();
+  m_model->getSpectrumModel()->refreshModel();
+  return m_model->getSpectrumModel()->GetModelSpectrum();
 }
