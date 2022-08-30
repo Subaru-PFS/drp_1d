@@ -81,9 +81,6 @@ private:
   bool FindAllPeaks(const TFloat64List &xAxis, const TFloat64List &yAxis,
                     Int32 BeginIndex, Int32 EndIndex, TFloat64List &maxX,
                     TFloat64List &maxY, bool invertSearch = false) const;
-  TFloat64List Cut_Prominence_Merit(TFloat64List &maxX, TFloat64List &maxY,
-                                    TFloat64List &minX,
-                                    TFloat64List &minY) const;
 
   bool verifyPeakSeparation(TFloat64List &maxX) const;
   bool verifyPeakSeparation(TPointList &maxPoint) const;
