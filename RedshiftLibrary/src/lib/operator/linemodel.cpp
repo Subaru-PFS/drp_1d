@@ -416,13 +416,12 @@ void COperatorLineModel::fitContinuumTemplates(
   if (m_continnuum_fit_option == 3) { // refitfirstpass
     for (Int32 icontinuum = 0; icontinuum < m_opt_fitcontinuum_maxN;
          icontinuum++) {
+      // get the closest lower or equal redshift in coarse grid
+      Int32 coarseIdx = m_tplfitStore_firstpass->getClosestLowerRedshiftIndex(
+          m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
+              .second->Redshift);
       std::string name =
-          m_tplfitStore_firstpass
-              ->GetFitValues(
-                  m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
-                      .second->Redshift,
-                  icontinuum)
-              .tplName;
+          m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum).tplName;
       tplList.push_back(tplCatalog->GetTemplateByName(m_tplCategoryList, name));
     }
   } else {
