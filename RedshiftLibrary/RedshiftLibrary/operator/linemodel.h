@@ -53,9 +53,9 @@
 #include "RedshiftLibrary/processflow/resultstore.h"
 
 #include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-
 #include "RedshiftLibrary/linemodel/linemodelextremaresult.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 
@@ -181,6 +181,9 @@ private:
                         std::vector<std::shared_ptr<CTemplateFittingResult>>
                             &chisquareResultsAllTpl,
                         TStringList &chisquareResultsTplName);
+  bool getContinuumInfoFromFirstpassFitStore(
+      Int32 candidateIdx, TInt32List &meiksinIndices, TFloat64List &EbmvCoeffs,
+      TInt32List &ebmvIndices, TTemplateConstRefList &tplList) const;
   std::shared_ptr<COperatorTemplateFittingBase> m_templateFittingOperator;
 
   // lmfit
