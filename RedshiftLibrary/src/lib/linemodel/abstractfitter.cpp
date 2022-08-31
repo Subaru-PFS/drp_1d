@@ -32,43 +32,30 @@ Int32 CAbstractFitter::fitAmplitudesLinSolveAndLambdaOffset(
   const CSpectrumFluxAxis &continuumfluxAxis = m_model->getContinuumFluxAxis();
 
   Int32 ret = -1;
-  Int32 nSteps =
-      int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep + 0.5);
 
   bool atLeastOneOffsetToFit = false;
   if (enableOffsetFitting) {
-    for (Int32 iE = 0; iE < EltsIdx.size(); iE++) {
-      Float64 nLines = m_Elements[iE]->m_Lines.size();
-      for (Int32 iR = 0; iR < nLines; iR++) {
+    for (Int32 iE : EltsIdx)
+      for (const auto &line : m_Elements[iE]->m_Lines)
         // check if the line is to be fitted
-        if (m_Elements[iE]->m_Lines[iR].GetOffsetFitEnabled()) {
+        if (line.GetOffsetFitEnabled()) {
           atLeastOneOffsetToFit = true;
           break;
         }
-      }
-    }
   }
 
-  if (!atLeastOneOffsetToFit) {
-    nSteps = 1;
-  }
+  Int32 nSteps =
+      atLeastOneOffsetToFit
+          ? int((m_LambdaOffsetMax - m_LambdaOffsetMin) / m_LambdaOffsetStep +
+                0.5)
+          : 1;
 
   Float64 bestMerit = DBL_MAX;
   Int32 idxBestMerit = -1;
   for (Int32 iO = 0; iO < nSteps; iO++) {
     // set offset value
-    if (atLeastOneOffsetToFit) {
-      Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * iO;
-      for (Int32 iE = 0; iE < EltsIdx.size(); iE++) {
-        Float64 nLines = m_Elements[iE]->m_Lines.size();
-
-        for (Int32 iR = 0; iR < nLines; iR++) {
-          if (m_Elements[iE]->m_Lines[iR].GetOffsetFitEnabled()) {
-            m_Elements[iE]->m_Lines[iR].SetOffset(offset);
-          }
-        }
-      }
-    }
+    if (atLeastOneOffsetToFit)
+      setOffset(EltsIdx, iO);
 
     // fit for this offset
     ret = fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis,
@@ -76,44 +63,47 @@ Int32 CAbstractFitter::fitAmplitudesLinSolveAndLambdaOffset(
                                 redshift);
 
     // check fitting
-    if (atLeastOneOffsetToFit) {
-      Float64 sumFit = 0.0;
-      m_model->refreshModelUnderElements(EltsIdx);
+    if (!atLeastOneOffsetToFit)
+      continue;
 
-      // todo: replace lambdarange using elements limits for speed
-      for (Int32 iE = 0; iE < EltsIdx.size(); iE++) {
-        Float64 _fit = m_model->getModelErrorUnderElement(iE);
-        sumFit += _fit;
-      }
-      if (sumFit < bestMerit) {
-        bestMerit = sumFit;
-        idxBestMerit = iO;
-      }
+    Float64 sumFit = 0.0;
+    m_model->refreshModelUnderElements(EltsIdx);
+
+    // todo: replace lambdarange using elements limits for speed
+    for (Int32 iE : EltsIdx)
+      sumFit += m_model->getModelErrorUnderElement(iE);
+
+    if (sumFit < bestMerit) {
+      bestMerit = sumFit;
+      idxBestMerit = iO;
     }
   }
 
-  if (idxBestMerit >= 0 && atLeastOneOffsetToFit) {
-    // set offset value
-    if (atLeastOneOffsetToFit) {
-      Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * idxBestMerit;
-      for (Int32 iE = 0; iE < EltsIdx.size(); iE++) {
-        Int32 nLines = m_Elements[iE]->m_Lines.size();
-        for (Int32 iR = 0; iR < nLines; iR++) {
-          if (m_Elements[iE]->m_Lines[iR].GetOffsetFitEnabled()) {
-            m_Elements[iE]->m_Lines[iR].SetOffset(offset);
-          }
-        }
-      }
-    }
-    // fit again for this offset
-    ret = fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis,
-                                continuumfluxAxis, ampsfitted, errorsfitted,
-                                redshift);
-  }
+  if (idxBestMerit == -1 || !atLeastOneOffsetToFit)
+    return ret;
+
+  // set offset value
+  if (atLeastOneOffsetToFit)
+    setOffset(EltsIdx, idxBestMerit);
+  // fit again for this offset
+  ret =
+      fitAmplitudesLinSolve(EltsIdx, spectralAxis, fluxAxis, continuumfluxAxis,
+                            ampsfitted, errorsfitted, redshift);
 
   return ret;
 }
 
+void CAbstractFitter::setOffset(const TInt32List &EltsIdx,
+                                Int32 offsetCount) const {
+
+  Float64 offset = m_LambdaOffsetMin + m_LambdaOffsetStep * offsetCount;
+  for (Int32 iE : EltsIdx) {
+    for (auto &line : m_Elements[iE]->m_Lines)
+      if (line.GetOffsetFitEnabled())
+        line.SetOffset(offset);
+  }
+  return;
+}
 /**
  * \brief Use GSL to fit linearly the elements listed in argument EltsIdx.
  * If size of argument EltsIdx is less than 1 return -1.
