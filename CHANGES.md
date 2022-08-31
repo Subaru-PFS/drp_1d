@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.36.0 (2022-09-02)
+### Changed
+* [7470] : Correct bug on lines selected for amplitude fitting (has impact on qso and linemeas results)
+### Removed
+* [7434] : Remove `lmfit` fitting method
+### Fixed
+* [7397] : Refit the continuum.count best templates in precomputeContinuumFit
+* [7396] : Fix linemodel exception when continuumfit.count >1 and secondpass.continuumfit="fromfirstpass"
+* [5806] : Select best continuum for linemodel free/rules
+* [7437] : Remove major quality issues from fully unit-tested classes
+* [7445] : Reduce cognitive complexity
+* [7459] : Refactor `linemodel` method
+
 ## 0.34.0 (2022-06-23)
 ### Added
 * [7106] : Add sub-classification for template ratio method
