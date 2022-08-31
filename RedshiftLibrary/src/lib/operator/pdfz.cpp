@@ -103,6 +103,9 @@ COperatorPdfz::Compute(const ChisquareArray &chisquarearray, bool integ) {
     }
   }
 
+  for (int r = 0; r < CandidateszResult->size(); r++)
+    CandidateszResult->m_ranked_candidates[r].second->Rank = r;
+
   return CandidateszResult;
 }
 
