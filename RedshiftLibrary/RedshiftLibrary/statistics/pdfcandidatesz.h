@@ -63,7 +63,8 @@ typedef std::map<std::string, std::shared_ptr<TCandidateZ>> TCandidateZbyID;
 typedef std::vector<std::pair<std::string, std::shared_ptr<TCandidateZ>>>
     TCandidateZbyRank;
 typedef std::map<std::string, TFloat64Range> TCandidateZRangebyID;
-
+typedef std::pair<std::string, std::shared_ptr<TCandidateZ>>
+    pair_Id_TCandidateZ;
 template <typename T> class CPdfCandidateszResult;
 
 class CPdfCandidatesZ : public COperator {

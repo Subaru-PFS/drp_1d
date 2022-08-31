@@ -385,6 +385,9 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   CSpectrum spectra = CSpectrum(spectralAxis, fluxAxis);
   result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
   BOOST_CHECK(result == false);
+  Int32 k0, k1;
+  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  BOOST_CHECK(result == false);
 
   // TEST 2 : mean smooth defined to -75.
   // (test meanSmoothAmplitude<=0)
@@ -427,6 +430,8 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   spectra = CSpectrum(spectralAxis, fluxAxis);
   result = sample.RemoveContinuum(spectra, noContinuumFluxAxis);
   BOOST_CHECK(result == false);
+  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  BOOST_CHECK(result == false);
 
   // -------- SPECTRA WITH TWO PARTS TESTS ------------
 
@@ -447,6 +452,8 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   BOOST_CHECK(result == true);
   BOOST_TEST_MESSAGE("TEST REMOVE CONTINUUM WITH ODD REFLECTION");
   print_flux(noContinuumFluxAxis.GetSamplesVector());
+  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  BOOST_CHECK(k0 == 2 && k1 == 27);
 
   // TEST 7 : odd mirror
   sample.SetMedianEvenReflection(true);
@@ -454,6 +461,8 @@ BOOST_AUTO_TEST_CASE(removeContinuum_test) {
   BOOST_CHECK(result == true);
   BOOST_TEST_MESSAGE("TEST REMOVE CONTINUUM WITH EVEN REFLECTION");
   print_flux(noContinuumFluxAxis.GetSamplesVector());
+  result = sample.FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  BOOST_CHECK(k0 == 2 && k1 == 27);
 }
 //-----------------------------------------------------------------------------
 

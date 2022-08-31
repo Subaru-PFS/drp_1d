@@ -88,6 +88,8 @@ private:
   void RedefineBorders(TInt32RangeList &peakList, const CSpectrumAxis &waves,
                        const CSpectrumAxis &smoothFluxAxis,
                        const CSpectrumAxis &fluxAxis);
+  void GetNewBorder(const TFloat64List &smoothFluxData, Int32 &new_border,
+                    Int32 &old_border, bool isRightSide);
   TInt32Range FindGaussianFitStartAndStop(Int32 i,
                                           const TInt32RangeList &peaksBorders,
                                           Int32 enlargeRate, Int32 len);

@@ -81,12 +81,13 @@ private:
   bool FindAllPeaks(const TFloat64List &xAxis, const TFloat64List &yAxis,
                     Int32 BeginIndex, Int32 EndIndex, TFloat64List &maxX,
                     TFloat64List &maxY, bool invertSearch = false) const;
-  TFloat64List Cut_Prominence_Merit(TFloat64List &maxX, TFloat64List &maxY,
-                                    TFloat64List &minX,
-                                    TFloat64List &minY) const;
 
   bool verifyPeakSeparation(TFloat64List &maxX) const;
   bool verifyPeakSeparation(TPointList &maxPoint) const;
+  void getFirstandLastnonNANElementIndices(const TFloat64List &yAxis,
+                                           Int32 &BeginIndex,
+                                           Int32 &EndIndex) const;
+  TFloat64List applySign(const TFloat64List &yAxis, bool invertSearch) const;
   Int32 m_MaxPeakCount;
   TFloat64Range m_XRange;
   Float64 m_meritCut;

@@ -46,6 +46,7 @@
 using namespace NSEpic;
 using namespace std;
 
+#include <algorithm>
 #include <fstream>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -73,9 +74,6 @@ CPdfCandidatesZ::CPdfCandidatesZ(const TFloat64List &redshifts) {
 TStringList
 CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
                                        TCandidateZRangebyID &ranges) {
-  bool nodz = false;
-  Int32 n = m_candidates.size();
-
   ranges.clear();
 
   for (auto &c : m_candidates) {
@@ -84,7 +82,7 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
 
     // check cases where deltaz couldnt be computed or wasnt set--> use default
     // value,
-    if (cand->Deltaz == -1 || nodz)
+    if (cand->Deltaz == -1)
       cand->Deltaz = m_dzDefault * (1 + cand->Redshift);
 
     const Float64 halfWidth = 3 * cand->Deltaz;
@@ -97,10 +95,10 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
   };
 
   // sort candidate keys (Ids) by decreasing redshifts
-  TStringList Ids;
-  for (const auto &c : m_candidates) {
-    Ids.push_back(c.first); // keys = ids
-  }
+  TStringList Ids(m_candidates.size());
+  std::transform(m_candidates.begin(), m_candidates.end(), Ids.begin(),
+                 [](const pair_Id_TCandidateZ &c) { return c.first; });
+
   TCandidateZbyID &c = m_candidates;
   std::sort(Ids.rbegin(), Ids.rend(), [&c](std::string Id1, std::string Id2) {
     return c[Id1]->Redshift < c[Id2]->Redshift;
@@ -114,41 +112,39 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
     Float64 &z_h = c[Id_h]->Redshift;
     Float64 &z_l = c[Id_l]->Redshift;
     Float64 overlap = ranges[Id_h].GetBegin() - ranges[Id_l].GetEnd();
-    if (overlap < 0) {
-      // in the case of duplicates, trim completely the range of the second cand
-      if ((z_h - z_l) > 2 * 1E-4) {
-        Log.LogDebug("    CPdfCandidatesZ::SetIntegrationWindows: integration "
-                     "supports overlap for %f and %f",
-                     z_h, z_l);
-        ranges[Id_h].SetBegin((max(z_l, ranges[Id_h].GetBegin()) +
-                               min(z_h, ranges[Id_l].GetEnd())) /
-                              2);
-      } else {
-        Log.LogInfo(" CPdfCandidatesZ::SetIntegrationWindows: very close "
-                    "candidates are identified %f and %f",
-                    z_h, z_l);
-        b.push_back(Id_l);
-      }
-      ranges[Id_l].SetEnd(ranges[Id_h].GetBegin() - 1E-4);
+    if (overlap >= 0)
+      continue;
+
+    // in the case of duplicates, trim completely the range of the second cand
+    if ((z_h - z_l) > 2 * 1E-4) {
+      Log.LogDebug("    CPdfCandidatesZ::SetIntegrationWindows: integration "
+                   "supports overlap for %f and %f",
+                   z_h, z_l);
+      ranges[Id_h].SetBegin((max(z_l, ranges[Id_h].GetBegin()) +
+                             min(z_h, ranges[Id_l].GetEnd())) /
+                            2);
+    } else {
+      Log.LogInfo(" CPdfCandidatesZ::SetIntegrationWindows: very close "
+                  "candidates are identified %f and %f",
+                  z_h, z_l);
+      b.push_back(Id_l);
     }
+    ranges[Id_l].SetEnd(ranges[Id_h].GetBegin() - 1E-4);
   }
 
   // iterate over computed ranges and check that corresponding zcandidates
   // belong to that range, otherwise throw error
   for (const auto &Id : Ids) {
-    // if currend index belongs to the duplicates b vector, skip testing it and
-    // only test the others
+    // if current index belongs to the duplicates b vector, skip testing it
+    // and only test the others
     if (find(b.begin(), b.end(), Id) != b.end())
       continue;
-    if (c[Id]->Redshift >= ranges[Id].GetBegin() &&
-        c[Id]->Redshift <= ranges[Id].GetEnd()) {
-      continue;
-    } else {
+    if (c[Id]->Redshift < ranges[Id].GetBegin() ||
+        c[Id]->Redshift > ranges[Id].GetEnd())
       THROWG(
           INTERNAL_ERROR,
           Formatter() << "Failed to identify a range including the candidate "
                       << c[Id]->Redshift);
-    }
   }
   return b;
 }
@@ -159,20 +155,16 @@ CPdfCandidatesZ::SetIntegrationWindows(const TFloat64Range PdfZRange,
 std::shared_ptr<PdfCandidatesZResult>
 CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
                          TFloat64List const &PdfProbaLog) {
-  if (m_optMethod == 0) {
-    Log.LogInfo("    CPdfCandidatesZ::Compute pdf peaks info (method=direct "
-                "integration)");
-  } else {
-    Log.LogInfo("    CPdfCandidatesZ::Compute pdf peaks info (method=gaussian "
-                "fitting)");
-  }
+  Log.LogInfo(
+      "    CPdfCandidatesZ::Compute pdf peaks using method= %d {0:direct "
+      "integration; 1:gaussian fitting}",
+      m_optMethod);
 
   // compute deltaz
   CDeltaz deltaz_op;
-  for (auto &c : m_candidates) {
+  for (auto &c : m_candidates)
     c.second->Deltaz =
         deltaz_op.GetDeltaz(PdfRedshifts, PdfProbaLog, c.second->Redshift);
-  }
 
   TCandidateZRangebyID zranges;
   TStringList duplicates =
@@ -180,27 +172,24 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
   for (auto &c : m_candidates) {
     const std::string &Id = c.first;
     std::shared_ptr<TCandidateZ> &cand = c.second;
+
+    // common for both m_optmethod
+    //  check if current candidate belongs to the identified duplicates list
+    // if yes, force its pdf value to 0 and avoid calling getCandidatexxx
+    if (find(duplicates.begin(), duplicates.end(), Id) != duplicates.end()) {
+      cand->ValSumProba = 0.;
+      continue;
+    }
+
     if (m_optMethod == 0) {
-      // check if current candidate belongs to the identified duplicates list
-      // if yes, force its pdf value to 0 and avoid callling
-      // getCandidateSumTrapez
-      if (find(duplicates.begin(), duplicates.end(), Id) != duplicates.end())
-        cand->ValSumProba = 0;
-      else
-        getCandidateSumTrapez(PdfRedshifts, PdfProbaLog, zranges[Id], cand);
+      getCandidateSumTrapez(PdfRedshifts, PdfProbaLog, zranges[Id], cand);
     } else {
-      // TODO: this requires further check ?...
-      if (find(duplicates.begin(), duplicates.end(), Id) != duplicates.end()) {
-        cand->ValSumProba = 0;
-        continue;
-      }
       bool GaussFitok = getCandidateRobustGaussFit(PdfRedshifts, PdfProbaLog,
                                                    zranges[Id], cand);
-      if (GaussFitok) {
+
+      cand->ValSumProba = NAN;
+      if (GaussFitok)
         cand->ValSumProba = cand->GaussAmp * cand->GaussSigma * sqrt(2 * M_PI);
-      } else {
-        cand->ValSumProba = -1.;
-      }
     }
   }
 
@@ -214,12 +203,10 @@ CPdfCandidatesZ::Compute(TRedshiftList const &PdfRedshifts,
 
 void CPdfCandidatesZ::SortByValSumProbaInt(
     TCandidateZbyRank &ranked_candidates) const {
-
   // sort m_candidates keys (Ids) by deacreasing integ proba
-  TStringList Ids;
-  for (const auto &c : m_candidates) {
-    Ids.push_back(c.first); // keys = ids
-  }
+  TStringList Ids(m_candidates.size());
+  std::transform(m_candidates.begin(), m_candidates.end(), Ids.begin(),
+                 [](const pair_Id_TCandidateZ &c) { return c.first; });
   const TCandidateZbyID &c = m_candidates;
   std::stable_sort(Ids.rbegin(), Ids.rend(),
                    [&c](std::string Id1, std::string Id2) {
@@ -249,14 +236,8 @@ bool CPdfCandidatesZ::getCandidateSumTrapez(
   //      -> use a DEBUG directive ?
 
   // check that redshifts are sorted
-  for (Int32 k = 1; k < redshifts.size(); k++) {
-    if (redshifts[k] < redshifts[k - 1]) {
-      THROWG(INTERNAL_ERROR, Formatter()
-                                 << "Redshifts vector "
-                                    "is not sorted for (at least) index="
-                                 << k);
-    }
-  }
+  if (!std::is_sorted(redshifts.begin(), redshifts.end()))
+    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
@@ -368,7 +349,6 @@ int pdfz_lmfit_df(const gsl_vector *x, void *data, gsl_matrix *J) {
   return GSL_SUCCESS;
 }
 //** gaussian fit end**//
-
 bool CPdfCandidatesZ::getCandidateGaussFit(
     const TRedshiftList &redshifts, const TFloat64List &valprobalog,
     const TFloat64Range &zrange,
@@ -377,13 +357,8 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
                "peaks gaussian fitting");
 
   // check that redshifts are sorted
-  for (Int32 k = 1; k < redshifts.size(); k++) {
-    if (redshifts[k] < redshifts[k - 1]) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "redshifts are not sorted for (at least) index="
-                         << k);
-    }
-  }
+  if (!std::is_sorted(redshifts.begin(), redshifts.end()))
+    THROWG(INTERNAL_ERROR, Formatter() << "redshifts are not sorted");
 
   // find indexes kmin, kmax so that zmin and zmax are inside [
   // redshifts[kmin]:redshifts[kmax] ]
@@ -392,18 +367,12 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   bool ok = zrange.getEnclosingIntervalIndices(redshifts, candidate->Redshift,
                                                kmin, kmax);
 
-  if (!ok || kmin == -1 || kmax == -1) {
+  if (!ok || kmin == -1 || kmax == -1)
     THROWG(INTERNAL_ERROR, "Could not find enclosing interval");
-  }
-
-  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - kmax index=%d",
-               kmax);
 
   // initialize GSL
   const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
-  gsl_multifit_fdfsolver *s;
-  int status, info;
-  size_t i;
+
   size_t n = kmax - kmin +
              1; // n samples on the support, /* number of data points to fit */
   size_t p = 2; // DOF = 1.amplitude + 2.width
@@ -422,54 +391,32 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   const Float64 &zc = candidate->Redshift;
   gsl_multifit_function_fdf f;
 
-  Float64 *x_init = (Float64 *)calloc(p, sizeof(Float64));
-  if (x_init == 0) {
-    gsl_matrix_free(covar);
-    gsl_matrix_free(J);
-    Log.LogError("    CPdfCandidatesZ::getCandidateSumGaussFit - Unable to "
-                 "allocate x_init");
-    THROWG(INTERNAL_ERROR, "Unable to allocate x_init");
-  }
+  Float64 x_init[p];
 
   // initialize lmfit with previously estimated values ?
-  //
   Float64 maxP = 0.0;
-  for (i = 0; i < n; i++) {
-    Float64 idx = i + kmin;
-    Float64 _p = exp(valprobalog[idx]);
-    if (_p > maxP) {
-      maxP = _p;
-    }
-  }
-  Float64 normFactor = maxP;
-  if (normFactor <= 0.0) {
-    normFactor = 1.0;
-  }
-  if (maxP > 0.0) {
-    x_init[0] = maxP / normFactor;
-  } else {
-    x_init[0] = 1.0;
-  }
+  std::for_each(valprobalog.begin() + kmin, valprobalog.begin() + kmin + n,
+                [&maxP](const Float64 &vp) { maxP = std::max(maxP, exp(vp)); });
+
+  Float64 normFactor = (maxP <= 0.0) ? 1. : maxP;
+  x_init[0] = (maxP > 0.0) ? maxP / normFactor : 1.0;
   x_init[1] = std::max(candidate->Redshift - zrange.GetBegin(),
                        zrange.GetEnd() - candidate->Redshift) /
               2.0;
-  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e",
-               x_init[0]);
-  Log.LogDebug("    CPdfCandidatesZ::getCandidateSumGaussFit - init sigma=%e",
-               x_init[1]);
+  Log.LogDebug(
+      "    CPdfCandidatesZ::getCandidateSumGaussFit - init a=%e, sigma=%e",
+      x_init[0], x_init[1]);
 
   gsl_vector_view x = gsl_vector_view_array(x_init, p);
   //    if(x.vector==0){
-  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit - Unable
-  //        to allocate x"); return -1;
+  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit -
+  //        Unable to allocate x"); return -1;
   //    }
   gsl_vector_view w = gsl_vector_view_array(weights, n);
   //    if(w.vector==0){
-  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit - Unable
-  //        to allocate w"); return -1;
+  //        Log.LogError( "    CPdfCandidatesZ::getCandidateSumGaussFit -
+  //        Unable to allocate w"); return -1;
   //    }
-  gsl_vector *res_f;
-  double chi, chi0;
 
   const double xtol = 1e-8;
   const double gtol = 1e-8;
@@ -477,7 +424,7 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   Int32 maxIterations = 500;
 
   // This is the data to be fitted;
-  for (i = 0; i < n; i++) {
+  for (Int32 i = 0; i < n; i++) {
     Float64 idx = i + kmin;
     weights[i] = 1.0; // no weights
     y[i] = exp(valprobalog[idx]) / normFactor;
@@ -494,12 +441,11 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   Log.LogDebug(
       "    CPdfCandidatesZ::getCandidateSumGaussFit - LMfit data ready");
 
-  s = gsl_multifit_fdfsolver_alloc(T, n, p);
+  gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, n, p);
 
   if (s == 0) {
     gsl_matrix_free(covar);
     gsl_matrix_free(J);
-    free(x_init);
     THROWG(INTERNAL_ERROR, "Unable to allocate the multifit solver");
   }
 
@@ -507,47 +453,45 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   gsl_multifit_fdfsolver_wset(s, &f, &x.vector, &w.vector);
 
   /* compute initial residual norm */
-  res_f = gsl_multifit_fdfsolver_residual(s);
-  chi0 = gsl_blas_dnrm2(res_f);
+  gsl_vector *res_f = gsl_multifit_fdfsolver_residual(s);
+  double chi0 = gsl_blas_dnrm2(res_f);
 
   /* solve the system with a maximum of maxIterations iterations */
-  status =
+  Int32 info;
+  Int32 status =
       gsl_multifit_fdfsolver_driver(s, maxIterations, xtol, gtol, ftol, &info);
-
   gsl_multifit_fdfsolver_jac(s, J);
   gsl_multifit_covar(J, 0.0, covar);
 
   /* compute final residual norm */
-  chi = gsl_blas_dnrm2(res_f);
-
+  double chi = gsl_blas_dnrm2(res_f);
   double dof = n - p;
   double c = GSL_MAX_DBL(1, chi / sqrt(dof));
 #define FIT(i) gsl_vector_get(s->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar, i, i))
 
-  Log.LogDebug("summary from method '%s'", gsl_multifit_fdfsolver_name(s));
-  Log.LogDebug("number of iterations: %zu", gsl_multifit_fdfsolver_niter(s));
-  Log.LogDebug("function evaluations: %zu", f.nevalf);
-  Log.LogDebug("Jacobian evaluations: %zu", f.nevaldf);
-  Log.LogDebug("reason for stopping: %s", (info == 1)   ? "small step size "
-                                          : (info == 2) ? "small gradient"
-                                                        : "small change in f");
-  Log.LogDebug("initial |f(x)| = %g", chi0);
-  Log.LogDebug("final   |f(x)| = %g", chi);
+  Log.LogDebug(
+      "summary from method '%s': status = %s (%d), number of iterations: %zu",
+      gsl_multifit_fdfsolver_name(s), gsl_strerror(status), status,
+      gsl_multifit_fdfsolver_niter(s));
+  Log.LogDebug("function evaluations: %zu , Jacobian evaluations: %zu",
+               f.nevalf, f.nevaldf);
+  Log.LogDebug("reason for stopping: %d where {1:small step size, 2:small "
+               "gradient, small change in f }",
+               info);
+  Log.LogDebug("initial |f(x)| = %g", "final   |f(x)| = %g", chi0, chi);
 
   {
     Log.LogDebug("chisq/dof = %g", pow(chi, 2.0) / dof);
-
+    /*
     for (Int32 k = 0; k < p; k++) {
       if (FIT(k) < 1e-3) {
         Log.LogDebug("A %d     = %.3e +/- %.8f", k, FIT(k), c * ERR(k));
       } else {
         Log.LogDebug("A %d     = %.5f +/- %.8f", k, FIT(k), c * ERR(k));
       }
-    }
+    }*/
   }
-  Log.LogDebug("status = %s (%d)", gsl_strerror(status), status);
-
   candidate->GaussAmp = gsl_vector_get(s->x, 0) * normFactor;
   candidate->GaussAmpErr = c * ERR(0) * normFactor;
   candidate->GaussSigma = abs(gsl_vector_get(s->x, 1));
@@ -556,7 +500,6 @@ bool CPdfCandidatesZ::getCandidateGaussFit(
   gsl_multifit_fdfsolver_free(s);
   gsl_matrix_free(covar);
   gsl_matrix_free(J);
-  free(x_init);
 
   return true;
 }
