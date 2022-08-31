@@ -60,6 +60,8 @@
 namespace NSEpic {
 
 class CInputContext;
+class CTemplateFittingResult;
+class COperatorTemplateFittingBase;
 /**
  * \ingroup Redshift
  */

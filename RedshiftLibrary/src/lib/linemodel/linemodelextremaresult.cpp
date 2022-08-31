@@ -40,6 +40,7 @@
 
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
+#include "RedshiftLibrary/linemodel/continuummanager.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 #include "RedshiftLibrary/operator/spectraFluxResult.h"
 using namespace NSEpic;
@@ -70,13 +71,14 @@ void TLineModelResult::updateFromLineModelSolution(
 
 void TLineModelResult::updateContinuumFromModel(
     const std::shared_ptr<const CLineModelFitting> &lmel) {
-  FittedTplName = lmel->getFitContinuum_tplName();
-  FittedTplAmplitude = lmel->getFitContinuum_tplAmplitude();
-  FittedTplAmplitudeError = lmel->getFitContinuum_tplAmplitudeError();
-  FittedTplMerit = lmel->getFitContinuum_tplMerit();
-  FittedTplMeritPhot = lmel->getFitContinuum_tplMeritPhot();
-  FittedTplEbmvCoeff = lmel->getFitContinuum_tplIsmEbmvCoeff();
-  FittedTplMeiksinIdx = lmel->getFitContinuum_tplIgmMeiksinIdx();
+  std::shared_ptr<const CContinuumManager> ccm = lmel->getContinuumManager();
+  FittedTplName = ccm->getFitContinuum_tplName();
+  FittedTplAmplitude = ccm->getFitContinuum_tplAmplitude();
+  FittedTplAmplitudeError = ccm->getFitContinuum_tplAmplitudeError();
+  FittedTplMerit = ccm->getFitContinuum_tplMerit();
+  FittedTplMeritPhot = ccm->getFitContinuum_tplMeritPhot();
+  FittedTplEbmvCoeff = ccm->getFitContinuum_tplIsmEbmvCoeff();
+  FittedTplMeiksinIdx = ccm->getFitContinuum_tplIgmMeiksinIdx();
 }
 
 void TLineModelResult::updateTplRatioFromModel(
