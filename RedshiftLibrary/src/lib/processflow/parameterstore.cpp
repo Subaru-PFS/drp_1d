@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/processflow/parameterstore.h"
-
+#include <cfloat>
 namespace bpt = boost::property_tree;
 
 namespace NSEpic {
@@ -244,4 +244,27 @@ bool CParameterStore::EnableTemplateOrthogonalization(
   return enableOrtho;
 }
 
+bool CParameterStore::hasToLogRebin(
+    const TStringList &categories,
+    std::map<std::string, bool> &fft_processing) const {
+  bool usefftSpectrum = false;
+  for (std::string cat : categories) {
+    fft_processing[cat] = HasFFTProcessing(cat);
+    if (fft_processing[cat])
+      usefftSpectrum = true;
+  }
+  return usefftSpectrum;
+}
+
+Float64 CParameterStore::getMinZStepForFFTProcessing(
+    std::map<std::string, bool> fftprocessing) const {
+  Float64 logGridStep = DBL_MAX;
+  for (const auto &p : fftprocessing) {
+    if (!p.second)
+      continue;
+    Float64 redshift_step = Get<Float64>(p.first + ".redshiftstep");
+    logGridStep = std::min(redshift_step, logGridStep);
+  }
+  return logGridStep;
+}
 } // namespace NSEpic

@@ -56,25 +56,27 @@ public:
   // applying Rule of zero
   CSpectrumLogRebinning(CInputContext &inputContext);
   std::shared_ptr<CSpectrum>
-  LoglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
+  loglambdaRebinSpectrum(std::shared_ptr<const CSpectrum> spectrum,
                          std::string errorRebinMethod = "rebinVariance") const;
   std::shared_ptr<CTemplate>
-  LoglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl,
+  loglambdaRebinTemplate(std::shared_ptr<const CTemplate> tpl,
                          TFloat64Range &lambdaRange_tpl,
                          const Int32 loglambda_count_tpl) const;
-  TFloat64Range LogRebinTemplateCatalog(const std::string &category) const;
+  TFloat64Range logRebinTemplateCatalog(const std::string &category) const;
   Float64 m_logGridStep;
   TFloat64Range m_lambdaRange_ref;
 
 private:
-  void SetupRebinning(CSpectrum &spectrum, const TFloat64Range &lambdaRange);
+  void setupRebinning(CSpectrum &spectrum, const TFloat64Range &lambdaRange);
   CSpectrumSpectralAxis
   computeTargetLogSpectralAxis(const TFloat64Range &lambdarange,
                                Int32 gridCount) const;
-  Int32 InferTemplateRebinningSetup(const TFloat64Range &z_range,
+  Int32 inferTemplateRebinningSetup(const TFloat64Range &z_range,
                                     TFloat64Range &lambdaRange_tpl) const;
-  bool CheckTemplateAlignment(const std::shared_ptr<const CTemplate> &tpl,
+  bool checkTemplateAlignment(const std::shared_ptr<const CTemplate> &tpl,
                               const TFloat64Range &lambdaRange_tpl) const;
+  bool isRebinningNeeded(const std::shared_ptr<const CTemplate> &tpl,
+                         const TFloat64Range &lambdaRange_tpl) const;
   const std::string m_rebinMethod = "lin";
 
   CInputContext &m_inputContext;

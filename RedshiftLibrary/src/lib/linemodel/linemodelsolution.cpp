@@ -73,3 +73,9 @@ CLineModelSolution::CLineModelSolution(
   continuum_pCoeff1 = TFloat64List(s, NAN);
   continuum_pCoeff2 = TFloat64List(s, NAN);
 }
+
+bool CLineModelSolution::isLineValid(Int32 lineIdx) const {
+  if (!lineId.size())
+    THROWG(INTERNAL_ERROR, "lineModelSolution is empty");
+  return !OutsideLambdaRange[lineIdx] & Amplitudes[lineIdx] > 0.0;
+}

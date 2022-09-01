@@ -127,6 +127,12 @@ public:
                         TInt32List &EbmvList,    // return
                         bool keepigmism = 0, Float64 FitEbmvCoeff = NAN,
                         Int32 FitMeiksinIdx = -1) const;
+  void GetIsmIdxList(Int32 opt_dustFitting,
+                     TInt32List &EbmvList, // return
+                     bool keepigmism, Float64 FitEbmvCoeff) const;
+  void GetIgmIdxList(Int32 opt_extinction,
+                     TInt32List &MeiksinList, // return
+                     bool keepigmism, Int32 FitMeiksinIdx) const;
 
 private:
   std::string m_Category;

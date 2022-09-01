@@ -86,13 +86,8 @@ the client has the responsibility to add these info to each spectrum
 void CInputContext::RebinInputs() {
 
   std::map<std::string, bool> fft_processing;
-  m_use_LogLambaSpectrum = false;
-  for (std::string cat : m_categories) {
-    fft_processing[cat] = m_ParameterStore->HasFFTProcessing(cat);
-    if (fft_processing[cat])
-      m_use_LogLambaSpectrum = true;
-  }
-
+  m_use_LogLambaSpectrum =
+      m_ParameterStore->hasToLogRebin(m_categories, fft_processing);
   if (!m_use_LogLambaSpectrum)
     return;
 
@@ -116,17 +111,8 @@ void CInputContext::RebinInputs() {
         m_Spectrum->GetFluxAxis().extract(kstart, kend));
     m_logGridStep = m_rebinnedSpectrum->GetSpectralAxis().GetlogGridStep();
   } else {
-    m_logGridStep = DBL_MAX;
-    for (std::string cat : m_categories) {
-      if (fft_processing[cat]) {
-        Float64 redshift_step =
-            m_ParameterStore->Get<Float64>(cat + ".redshiftstep");
-
-        if (redshift_step < m_logGridStep) {
-          m_logGridStep = redshift_step;
-        }
-      }
-    }
+    m_logGridStep =
+        m_ParameterStore->getMinZStepForFFTProcessing(fft_processing);
   }
   Log.LogInfo(Formatter() << "loggrid step=" << m_logGridStep);
   std::string category;
@@ -135,12 +121,12 @@ void CInputContext::RebinInputs() {
 
   if (!m_Spectrum->GetSpectralAxis().IsLogSampled())
     m_rebinnedSpectrum =
-        logReb.LoglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
+        logReb.loglambdaRebinSpectrum(m_Spectrum, errorRebinMethod);
 
   TFloat64Range zrange;
   for (std::string cat : m_categories) {
     if (fft_processing[cat]) {
-      zrange = logReb.LogRebinTemplateCatalog(cat);
+      zrange = logReb.logRebinTemplateCatalog(cat);
       m_logRebin.insert({cat, SRebinResults{zrange}});
     }
   }

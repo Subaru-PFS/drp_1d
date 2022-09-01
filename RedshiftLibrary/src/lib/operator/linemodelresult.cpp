@@ -262,24 +262,16 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
                                                   Float64 snrThres,
                                                   Float64 fitThres) const {
   Int32 nSol = 0;
-
   TInt32List indexesSols;
   for (Int32 j = 0; j < LineModelSolutions[solutionIdx].Amplitudes.size();
        j++) {
     // skip if already sol
-    bool alreadysol = false;
-    for (Int32 i = 0; i < indexesSols.size(); i++) {
-      if (LineModelSolutions[solutionIdx].ElementId[j] == indexesSols[i]) {
-        alreadysol = true;
-        break;
-      }
-    }
-    if (alreadysol) {
+    bool alreadysol = std::find(indexesSols.begin(), indexesSols.end(),
+                                LineModelSolutions[solutionIdx].ElementId[j]) !=
+                      indexesSols.end();
+    if (alreadysol || !restLineList[j].GetIsStrong() ||
+        !restLineList[j].GetIsEmission())
       continue;
-    }
-    if (!restLineList[j].GetIsStrong() || !restLineList[j].GetIsEmission()) {
-      continue;
-    }
 
     Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
     if (noise <= 0)
@@ -305,23 +297,21 @@ TBoolList CLineModelResult::getStrongLinesPresence(
     Int32 filterType,
     const std::vector<CLineModelSolution> &linemodelsols) const {
 
+  auto lineDoesntMatchStrongFilter = [&filterType](const CLine &line) {
+    return !line.GetIsStrong() ||
+           // i have a doubt on these below conditions. didier ?
+           (filterType == 1 && !line.GetIsEmission()) ||
+           (filterType == 2 && line.GetIsEmission());
+  };
   TBoolList strongIsPresent(linemodelsols.size(), false);
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
+    // search for the first strong line, with valid amplitude
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!restLineList[j].GetIsStrong())
+      if (lineDoesntMatchStrongFilter(restLineList[j]))
         continue;
 
-      if (filterType == 1 && !restLineList[j].GetIsEmission())
-        continue;
-
-      if (filterType == 2 && restLineList[j].GetIsEmission())
-        continue;
-
-      if (linemodelsols[solutionIdx].OutsideLambdaRange[j])
-        continue;
-
-      if (linemodelsols[solutionIdx].Amplitudes[j] > 0.0) {
+      if (linemodelsols[solutionIdx].isLineValid(j)) {
         strongIsPresent[solutionIdx] = true;
         break;
       }
@@ -333,12 +323,10 @@ TBoolList CLineModelResult::getStrongLinesPresence(
 
 TInt32List CLineModelResult::getNLinesAboveSnrcut(
     const std::vector<CLineModelSolution> &linemodelsols) const {
-  TInt32List nlinesabove(linemodelsols.size(), 0);
-  for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
-       solutionIdx++) {
-    nlinesabove[solutionIdx] = linemodelsols[solutionIdx].NLinesAboveSnrCut;
-  }
-
+  TInt32List nlinesabove(linemodelsols.size());
+  std::transform(
+      linemodelsols.cbegin(), linemodelsols.cend(), nlinesabove.begin(),
+      [](const CLineModelSolution &sol) { return sol.NLinesAboveSnrCut; });
   return nlinesabove;
 }
 

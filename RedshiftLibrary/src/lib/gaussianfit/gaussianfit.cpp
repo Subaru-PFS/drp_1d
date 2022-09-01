@@ -51,18 +51,10 @@
 
 using namespace NSEpic;
 
-/**
- * Stack attribution constructor.
- */
 CGaussianFit::CGaussianFit()
     : m_AbsTol(0.0), m_Amplitude(0.0), m_AmplitudeErr(0.0), m_C(0.0),
       m_CErr(0.0), m_Mu(0.0), m_MuErr(0.0), m_RelTol(1e-12), m_coeff0(0.0),
       m_PolyOrder(2) {}
-
-/**
- * Empty destructor.
- */
-CGaussianFit::~CGaussianFit() {}
 
 /**
  * Sets amplitude to m_Amplitude, position to m_Mu and width to m_C.
@@ -167,13 +159,13 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
                                             const TInt32Range &studyRange) {
   Int32 np = (3 + m_PolyOrder + 1);
   Int32 n = studyRange.GetLength();
-  if (n < 1) {
+  if (n < 1 || n < np) {
     return nStatus_IllegalInput;
   }
 
   // Create suitable first guess
   // To BE improved, trivial version now
-  Float64 *firstGuessData = (Float64 *)calloc(np, sizeof(Float64));
+  Float64 firstGuessData[np];
   gsl_vector_view firstGuessView = gsl_vector_view_array(firstGuessData, np);
 
   Float64 peakValue;
@@ -186,11 +178,6 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   firstGuessData[0] = peakValue;
   firstGuessData[1] = peakPos;
   firstGuessData[2] = gaussAmp;
-
-  if (n < np) {
-    free(firstGuessData);
-    return nStatus_IllegalInput;
-  }
 
   SUserData userData;
   userData.spectrum = &spectrum;
@@ -222,9 +209,8 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
       iter++;
       status = gsl_multifit_fdfsolver_iterate(multifitSolver);
 
-      if (status) {
+      if (status)
         break;
-      }
 
       status = gsl_multifit_test_delta(multifitSolver->dx, multifitSolver->x,
                                        m_AbsTol, m_RelTol);
@@ -274,48 +260,43 @@ CGaussianFit::EStatus CGaussianFit::Compute(const CSpectrum &spectrum,
   // Set amplitude > 0 by default
   output[2] = fabs(output[2]);
 
-  EStatus returnCode = nStatus_Success;
-  if (status == GSL_ETOLX) {
-    returnCode = nStatus_Success; // GSL_ETOLX, the change in the position
-                                  // vector falls below machine precision
-  } else {
-    if (status == GSL_CONTINUE) {
-      returnCode = nStatus_IterationHasNotConverged;
-    } else {
-      if (status != GSL_SUCCESS) {
-        returnCode = nStatus_FailToReachTolerance;
-      }
-    }
-  }
-
   m_Amplitude = output[0];
   m_AmplitudeErr = outputError[0];
-
   m_Mu = output[1];
   m_MuErr = outputError[1];
-
   m_C = output[2] / sqrt(2);
   // WARNING: this coefficient (sqrt(2)) has been added to compensate for the
   // gaussian expression used in GaussF and GaussDF
   //  so that the gaussian function denominator ( originally:
   //  c0*exp(-1*(x-mu)**2/c2**2) ) becomes c0*exp(-1*(x-mu)**2/ (2*c2**2))
   m_CErr = outputError[2] / sqrt(2);
-
   m_coeff0 = output[3];
 
   gsl_multifit_fdfsolver_free(multifitSolver);
   gsl_matrix_free(covarMatrix);
   gsl_matrix_free(J);
 
-  free(firstGuessData);
   free(output);
   free(outputError);
-
-  return returnCode;
+  return getReturnCode(status);
 }
 
+CGaussianFit::EStatus CGaussianFit::getReturnCode(int status) const {
+
+  if (status == GSL_ETOLX)
+    return nStatus_Success; // GSL_ETOLX, the change in the position
+                            // vector falls below machine precision
+  if (status == GSL_CONTINUE)
+    return nStatus_IterationHasNotConverged;
+
+  if (status != GSL_SUCCESS)
+    return nStatus_FailToReachTolerance;
+
+  return nStatus_Success;
+}
 /**
- * Set of functions used to model a fit of Gaussian + polynomial term P(mu) = c3
+ * Set of functions used to model a fit of Gaussian + polynomial term P(mu)
+ * = c3
  *
  * mu = c1
  * Y[i] = c0*exp(-1*(x-mu)**2/c2**2) + c3 + c4*(x-mu) + c5*(x-mu)**2 + ... +

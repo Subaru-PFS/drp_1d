@@ -69,7 +69,6 @@ public:
   };
 
   CGaussianFit();
-  ~CGaussianFit();
 
   EStatus Compute(const CSpectrum &s, const TInt32Range &studyRange);
 
@@ -88,7 +87,7 @@ private:
                          const TInt32Range &studyRange, Int32 polyOrder,
                          Float64 &peakValue, Float64 &peakPos,
                          Float64 &gaussAmp);
-
+  EStatus getReturnCode(int status) const;
   struct SUserData {
     const CSpectrum *spectrum;
     const TInt32Range *studyRange;

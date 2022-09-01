@@ -120,7 +120,7 @@ private:
   void BestChi2(const ChisquareArray &chisquarearray);
 
   void isPdfValid() const;
-
+  void validateChisquareArray(const ChisquareArray &chisquarearray) const;
   TCandidateZbyID searchMaxPDFcandidates() const;
 
   const std::string m_opt_combine;

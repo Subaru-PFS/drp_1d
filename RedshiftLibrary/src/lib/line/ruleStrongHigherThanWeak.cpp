@@ -39,9 +39,9 @@
 #include <cstdarg>
 #include <iostream>
 
+#include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/ruleStrongHigherThanWeak.h"
 #include "RedshiftLibrary/log/log.h"
-
 using namespace NSEpic;
 using namespace std;
 
@@ -69,33 +69,19 @@ void CRuleStrongHigherThanWeak::Correct(
     CLineModelElementList &LineModelElementList) {
   Float64 coeff = 1.0;
   Float64 erStrong = -1.0;
-  std::string strongName = "";
+  std::string strongName = "undefined";
   Float64 maxiStrong = FindHighestStrongLineAmp(
       m_LineType, erStrong, strongName, LineModelElementList);
-  if (maxiStrong == -1) {
-    // Log.LogDebug( "Rule %s: no strong line detected.", Name.c_str() );
-
-    // case 0
+  if (maxiStrong == -1.)
     return;
 
-    // case 1:
-    // maxiStrong = 0.0;
-    // erStrong = 0.0;
-  }
   for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
-    Int32 nLines = LineModelElementList[iedx]->m_Lines.size();
-    for (Int32 iLineWeak = 0; iLineWeak < nLines;
-         iLineWeak++) // loop on the weak lines
-    {
-      if (LineModelElementList[iedx]->m_Lines[iLineWeak].GetForce() !=
-          CLine::nForce_Weak) {
-        continue;
-      }
-      if (LineModelElementList[iedx]->m_Lines[iLineWeak].GetType() !=
-          m_LineType) {
-        continue;
-      }
-      if (LineModelElementList[iedx]->IsOutsideLambdaRange(iLineWeak) == true) {
+    auto &eList = LineModelElementList[iedx];
+    Int32 nLines = eList->m_Lines.size();
+    for (Int32 iLineWeak = 0; iLineWeak < nLines; iLineWeak++) {
+      if (eList->IsOutsideLambdaRange(iLineWeak) ||
+          eList->m_Lines[iLineWeak].GetForce() != CLine::nForce_Weak ||
+          eList->m_Lines[iLineWeak].GetType() != m_LineType) {
         continue;
       }
       // Log.LogDebug( "Rule %s: element %d has force weak, type %d and is not
@@ -103,7 +89,7 @@ void CRuleStrongHigherThanWeak::Correct(
       Float64 nSigma = 1.0;
       Float64 ampA = maxiStrong;
       Float64 erA = erStrong;
-      Float64 ampB = LineModelElementList[iedx]->GetFittedAmplitude(iLineWeak);
+      Float64 ampB = eList->GetFittedAmplitude(iLineWeak);
 
       // Method 0 : no noise taken into acccount
       // Float64 maxB = (coeff*ampA);
@@ -122,26 +108,30 @@ void CRuleStrongHigherThanWeak::Correct(
       //      }
       //
 
-      if (maxB == std::min(maxB, ampB) && maxB != ampB) {
-        LineModelElementList[iedx]->LimitFittedAmplitude(iLineWeak, maxB);
-        // log the correction
-        {
-          std::string nameWeak =
-              LineModelElementList[iedx]->m_Lines[iLineWeak].GetName();
-          if (Logs.size() == 0) {
-            std::string strTmp0 =
-                boost::str((boost::format("correct - %-10s") % "STRONG_WEAK"));
-            Logs.append(strTmp0.c_str());
-          }
-          std::string strTmp =
-              boost::str((boost::format("\n\tlineWeak=%-10s, lineStrong=%-10s, "
-                                        "previousAmp=%.4e, correctedAmp=%.4e") %
-                          nameWeak % strongName % ampB % maxB));
-          Logs.append(strTmp.c_str());
-        }
-      }
+      if (maxB == ampB || maxB != std::min(maxB, ampB))
+        continue; // no correction
+
+      // apply correction and log the correction
+      eList->LimitFittedAmplitude(iLineWeak, maxB);
+      constructLogMsg(eList->m_Lines[iLineWeak].GetName(), strongName, ampB,
+                      maxB);
     }
   }
+}
+
+void CRuleStrongHigherThanWeak::constructLogMsg(const std::string &nameWeak,
+                                                const std::string &strongName,
+                                                Float64 ampB, Float64 maxB) {
+  if (Logs.size() == 0) {
+    std::string strTmp0 =
+        boost::str((boost::format("correct - %-10s") % "STRONG_WEAK"));
+    Logs.append(strTmp0.c_str());
+  }
+  std::string strTmp =
+      boost::str((boost::format("\n\tlineWeak=%-10s, lineStrong=%-10s, "
+                                "previousAmp=%.4e, correctedAmp=%.4e") %
+                  nameWeak % strongName % ampB % maxB));
+  Logs.append(strTmp.c_str());
 }
 
 bool CRuleStrongHigherThanWeak::Check(
@@ -159,38 +149,25 @@ Float64 CRuleStrongHigherThanWeak::FindHighestStrongLineAmp(
     CLineModelElementList &LineModelElementList) {
   Float64 maxi = -1.0;
   for (Int32 iedx = 0; iedx < LineModelElementList.size(); iedx++) {
-    Int32 nLines = LineModelElementList[iedx]->m_Lines.size();
+    const auto &eList = LineModelElementList[iedx];
+    Int32 nLines = eList->m_Lines.size();
     for (Int32 iLineStrong = 0; iLineStrong < nLines;
          iLineStrong++) // loop on the strong lines
     {
-      if (LineModelElementList[iedx]->m_Lines[iLineStrong].GetForce() !=
-          CLine::nForce_Strong) {
-        continue;
-      }
-      if (LineModelElementList[iedx]->m_Lines[iLineStrong].GetType() !=
-          m_LineType) {
-        continue;
-      }
-      if (LineModelElementList[iedx]->IsOutsideLambdaRange(iLineStrong) ==
-          true) {
+      if (eList->IsOutsideLambdaRange(iLineStrong) ||
+          eList->m_Lines[iLineStrong].GetForce() != CLine::nForce_Strong ||
+          eList->m_Lines[iLineStrong].GetType() != m_LineType) {
         continue;
       }
 
-      Float64 ampStrong =
-          LineModelElementList[iedx]->GetFittedAmplitude(iLineStrong);
-      Float64 erStrong =
-          LineModelElementList[iedx]->GetFittedAmplitudeErrorSigma(iLineStrong);
-      // if(erStrong>0.0 && ampStrong>0.0)
-      // {
-      //     lineSnr = ampStrong/erStrong;
-      // }
+      Float64 ampStrong = eList->GetFittedAmplitude(iLineStrong);
+      Float64 erStrong = eList->GetFittedAmplitudeErrorSigma(iLineStrong);
       if (maxi < ampStrong /*&& lineSnr>validSNRCut*/) {
         maxi = ampStrong;
         er = erStrong;
-        name = LineModelElementList[iedx]->m_Lines[iLineStrong].GetName();
+        name = eList->m_Lines[iLineStrong].GetName();
       }
     }
   }
-  // Log.LogDebug( "Highest strong line amplitude = %f", maxi );
   return maxi;
 }

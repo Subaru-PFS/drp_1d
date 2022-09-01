@@ -46,7 +46,7 @@ using namespace std;
 #include <algorithm>
 #include <cfloat>
 #include <fstream>
-
+#include <numeric>
 COperatorPdfz::COperatorPdfz(
     const std::string &opt_combine, Float64 peakSeparation, Float64 meritcut,
     Int32 maxCandidate, const std::string &Id_prefix,
@@ -372,16 +372,12 @@ void COperatorPdfz::ComputeEvidenceAll(const TFloat64List &LogEvidencesWPriorM,
                                  // classification
 }
 
-void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
-                                   std::vector<TFloat64List> &logProbaList,
-                                   TFloat64List &LogEvidencesWPriorM,
-                                   TFloat64List &logPriorModel,
-                                   Float64 &MaxiLogEvidence) {
+void COperatorPdfz::validateChisquareArray(
+    const ChisquareArray &chisquarearray) const {
+
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
-  const Float64 &cstLog = chisquarearray.cstLog;
-  const TFloat64List &modelPriors = chisquarearray.modelpriors;
 
   if (meritResults.size() != zPriors.size())
     THROWG(INTERNAL_ERROR, Formatter()
@@ -400,6 +396,21 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
       if (m != m) // test NAN value
         THROWG(INTERNAL_ERROR, "merit result "
                                "has at least one nan value");
+  return;
+}
+
+void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
+                                   std::vector<TFloat64List> &logProbaList,
+                                   TFloat64List &LogEvidencesWPriorM,
+                                   TFloat64List &logPriorModel,
+                                   Float64 &MaxiLogEvidence) {
+  const TFloat64List &redshifts = chisquarearray.redshifts;
+  const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
+  const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
+  const Float64 &cstLog = chisquarearray.cstLog;
+  const TFloat64List &modelPriors = chisquarearray.modelpriors;
+
+  validateChisquareArray(chisquarearray);
 
   if (modelPriors.empty()) {
     const Float64 priorModelCst = 1.0 / Float64(meritResults.size());
@@ -407,7 +418,6 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
                 "constant priors (=%f)",
                 priorModelCst);
     logPriorModel = TFloat64List(meritResults.size(), log(priorModelCst));
-
   } else {
     if (modelPriors.size() != meritResults.size())
       THROWG(INTERNAL_ERROR, "modelPriors has wrong size");
@@ -416,14 +426,10 @@ void COperatorPdfz::ComputeAllPdfs(const ChisquareArray &chisquarearray,
     std::transform(modelPriors.cbegin(), modelPriors.cend(),
                    logPriorModel.begin(), [](Float64 v) { return log(v); });
 
-    // logging priors used
-    Float64 sumPriors = 0.0;
-    for (Int32 km = 0; km < meritResults.size(); km++) {
-      sumPriors += exp(logPriorModel[km]);
-      Log.LogDetail(
-          "COperatorPdfz::ComputeAllPdfs: for model k=%d, using prior=%f", km,
-          exp(logPriorModel[km]));
-    }
+    // summing priors used
+    Float64 sumPriors = accumulate(
+        logPriorModel.begin(), logPriorModel.end(), 0.0,
+        [](Float64 sum, Float64 logprior) { return sum + exp(logprior); });
 
     Log.LogInfo("COperatorPdfz::ComputeAllPdfs: sumPriors=%f", sumPriors);
     if (sumPriors > 1.1 || sumPriors < 0.9)
@@ -516,23 +522,12 @@ void COperatorPdfz::Marginalize(const ChisquareArray &chisquarearray) {
 void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Log.LogError("Pdfz: Pdfz-bestproba computation ! This method is currently "
                "not working !! It will produce bad results as is....");
+  validateChisquareArray(chisquarearray);
 
   const TFloat64List &redshifts = chisquarearray.redshifts;
   const std::vector<TFloat64List> &meritResults = chisquarearray.chisquares;
   const std::vector<TFloat64List> &zPriors = chisquarearray.zpriors;
   const Float64 &cstLog = chisquarearray.cstLog;
-
-  if (meritResults.size() != zPriors.size()) {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "merit.size (" << meritResults.size()
-                               << ") != prior.size (" << zPriors.size() << ")");
-  }
-  if (meritResults.size() < 1 || zPriors.size() < 1 || redshifts.size() < 1) {
-    THROWG(INTERNAL_ERROR, Formatter() << "merit.size(" << meritResults.size()
-                                       << "), prior.size(" << zPriors.size()
-                                       << ") or redshifts.size("
-                                       << redshifts.size() << ") is zero");
-  }
 
   for (Int32 km = 0; km < meritResults.size(); km++) {
     Log.LogDebug("COperatorPdfz::BestProba: processing chi2-result km=%d", km);
@@ -546,12 +541,11 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                logEvidence);
 
     // check if the redshift bins are the same
-    for (Int32 k = 0; k < redshifts.size(); k++) {
-      if (m_postmargZResult->Redshifts[k] != redshifts[k]) {
+    for (Int32 k = 0; k < redshifts.size(); k++)
+      if (m_postmargZResult->Redshifts[k] != redshifts[k])
         THROWG(INTERNAL_ERROR,
                Formatter() << "z-bins comparison failed for result km=" << km);
-      }
-    }
+
     for (Int32 k = 0; k < redshifts.size(); k++) {
       if (true /*meritResult->Status[k]== COperator::nStatus_OK*/) // todo:
                                                                    // check
@@ -563,9 +557,8 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
                                                                    // linemodel
                                                                    // tplratio)
       {
-        if (logProba[k] > m_postmargZResult->valProbaLog[k]) {
-          m_postmargZResult->valProbaLog[k] = logProba[k];
-        }
+        m_postmargZResult->valProbaLog[k] =
+            std::max(logProba[k], m_postmargZResult->valProbaLog[k]);
       }
     }
   }
@@ -578,43 +571,36 @@ void COperatorPdfz::BestProba(const ChisquareArray &chisquarearray) {
   Float64 maxdz = -DBL_MAX;
   for (Int32 k = 1; k < redshifts.size(); k++) {
     Float64 diff = redshifts[k] - redshifts[k - 1];
-    if (mindz > diff) {
-      mindz = diff;
-    }
-    if (maxdz < diff) {
-      maxdz = diff;
-    }
+    mindz = std::min(mindz, diff);
+    maxdz = std::max(maxdz, diff);
   }
   Float64 zstep = (maxdz + mindz) / 2.0;
-  if (abs(maxdz - mindz) / zstep > reldzThreshold) {
+  if (abs(maxdz - mindz) / zstep > reldzThreshold)
     THROWG(INTERNAL_ERROR, "Impossible to normalize: zstep is not constant");
-  }
 
   // 2. prepare LogEvidence
   Float64 maxi = -DBL_MAX;
   TFloat64List smallVALUES(redshifts.size(), 0.0);
   for (Int32 k = 0; k < redshifts.size(); k++) {
     smallVALUES[k] = m_postmargZResult->valProbaLog[k];
-    if (maxi < smallVALUES[k]) {
-      maxi = smallVALUES[k]; // maxi will be used to avoid underflows when
-                             // summing exponential of small values
-    }
+    maxi = std::max(maxi,
+                    smallVALUES[k]); // maxi will be used to avoid underflows
+                                     // when summing exponential of small values
   }
 
-  Float64 sumModifiedExp = 0.0;
-  for (Int32 k = 0; k < redshifts.size(); k++) {
-    Float64 modifiedEXPO = exp(smallVALUES[k] - maxi);
-    sumModifiedExp += modifiedEXPO;
-  }
+  Float64 sumModifiedExp = accumulate(
+      smallVALUES.begin(), smallVALUES.end(), 0.0,
+      [maxi](Float64 sum, Float64 value) { return sum + exp(value - maxi); });
+
   Float64 logEvidence = maxi + log(sumModifiedExp) + log(zstep);
 
   Log.LogDebug("COperatorPdfz::BestProba: using logEvidence=%e", logEvidence);
   Log.LogDebug("COperatorPdfz::BestProba: using log(zstep)=%e", log(zstep));
 
-  for (Int32 k = 0; k < redshifts.size(); k++) {
-    m_postmargZResult->valProbaLog[k] =
-        m_postmargZResult->valProbaLog[k] - logEvidence;
-  }
+  std::transform(m_postmargZResult->valProbaLog.cbegin(),
+                 m_postmargZResult->valProbaLog.cend(),
+                 m_postmargZResult->valProbaLog.begin(),
+                 [logEvidence](Float64 v) { return v - logEvidence; });
 }
 
 /**
