@@ -67,7 +67,6 @@ public:
   typedef SValues TemplateFitValues;
 
   CTemplatesFitStore(const TFloat64List &redshifts);
-  ~CTemplatesFitStore();
 
   bool Add(std::string tplName, Float64 ismEbmvCoeff, Int32 igmMeiksinIdx,
            Float64 redshift, Float64 merit, Float64 chiSquare_phot,
@@ -77,7 +76,7 @@ public:
 
   void initFitValues();
   Int32 GetRedshiftIndex(Float64 z) const;
-
+  Int32 getClosestLowerRedshiftIndex(Float64 z) const;
   const TFloat64List &GetRedshiftList() const;
   TemplateFitValues GetFitValues(Int32 idxz,
                                  Int32 continuumCandidateRank) const;

@@ -37,6 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 
 #include <float.h>
@@ -47,10 +48,6 @@ CTemplatesFitStore::CTemplatesFitStore(const TFloat64List &redshifts)
     : redshiftgrid(redshifts) {
   initFitValues();
 }
-/**
- * \brief Empty destructor.
- **/
-CTemplatesFitStore::~CTemplatesFitStore() {}
 
 /**
  * @brief CTemplatesFitStore::initFitValues
@@ -72,6 +69,12 @@ Int32 CTemplatesFitStore::GetRedshiftIndex(Float64 z) const {
     return std::distance(redshiftgrid.begin(), it);
   else
     return -1;
+}
+
+Int32 CTemplatesFitStore::getClosestLowerRedshiftIndex(Float64 z) const {
+  Int32 idx = -1;
+  CIndexing<Float64>::getClosestLowerIndex(redshiftgrid, z, idx);
+  return idx;
 }
 
 /**

@@ -379,54 +379,22 @@ void COperatorLineModel::fitContinuumTemplates(
   Log.LogDetail("COperatorLineModel::PrecomputeContinuumFit: fitContinuum "
                 "opt_interp = %s",
                 opt_interp.c_str());
-  // case where we only want to refit around the m_opt_fitcontinuum_maxN
-  // best continuum from firstpass
-
-  Int32 opt_tplfit_integer_chi2_ebmv = -1;
-  if (m_opt_tplfit_dustFit) {
-    opt_tplfit_integer_chi2_ebmv = -10;
-  }
-
-  // decide on fitting ism and igm
-  Float64 EbmvCoeff = -1.;
-  Int32 meiksinIdx = -1;
-  bool keepismigm = false;
-  if (m_model->GetPassNumber() == 2) { // if we are in secondpass
-    if (m_continnuum_fit_option == 3 &&
-        (m_opt_tplfit_dustFit || m_opt_tplfit_extinction)) { // refitfirstpass
-      if (candidateIdx < 0 ||
-          candidateIdx > m_firstpass_extremaResult->size() - 1) {
-        THROWG(INTERNAL_ERROR, "Candidate index is out of range");
-      }
-      // using one template per Z with fixed values for ism/igm (if Z changes,
-      // template change;)
-      keepismigm = true; // telling that we want to keep the ism and igm indexes
-      meiksinIdx = m_firstpass_extremaResult->FittedTplMeiksinIdx[candidateIdx];
-      EbmvCoeff = m_firstpass_extremaResult->FittedTplEbmvCoeff[candidateIdx];
-      // access any template and retrieve the ismcorrection object
-      opt_tplfit_integer_chi2_ebmv =
-          m_opt_tplfit_dustFit
-              ? tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
-                    ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeff)
-              : -1;
-    }
-  }
-
+  TInt32List meiksinIndices;
+  TInt32List ebmvIndices;
+  TFloat64List EbmvCoeffs;
   TTemplateConstRefList tplList;
-  if (m_continnuum_fit_option == 3) { // refitfirstpass
-    for (Int32 icontinuum = 0; icontinuum < m_opt_fitcontinuum_maxN;
-         icontinuum++) {
-      std::string name =
-          m_tplfitStore_firstpass
-              ->GetFitValues(
-                  m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
-                      .second->Redshift,
-                  icontinuum)
-              .tplName;
-      tplList.push_back(tplCatalog->GetTemplateByName(m_tplCategoryList, name));
-    }
+
+  bool keepismigm = false;
+  if (m_model->GetPassNumber() == 2 && m_continnuum_fit_option == 3) {
+    // case where we only want to refit around the m_opt_fitcontinuum_maxN
+    // best continuum from firstpass
+    keepismigm = getContinuumInfoFromFirstpassFitStore(
+        candidateIdx, meiksinIndices, EbmvCoeffs, ebmvIndices, tplList);
   } else {
     tplList = tplCatalog->GetTemplateList(m_tplCategoryList);
+    meiksinIndices.resize(tplList.size(), -1);
+    ebmvIndices.resize(tplList.size(), m_opt_tplfit_dustFit ? -10 : -1);
+    EbmvCoeffs.resize(tplList.size(), NAN);
   }
   Log.LogDebug(Formatter() << "Processing " << tplList.size() << " templates");
 
@@ -446,8 +414,8 @@ void COperatorLineModel::fitContinuumTemplates(
         std::dynamic_pointer_cast<CTemplateFittingResult>(
             m_templateFittingOperator->Compute(
                 tplList[i], overlapThreshold, maskList, opt_interp,
-                m_opt_tplfit_extinction, opt_tplfit_integer_chi2_ebmv,
-                zePriorData, keepismigm, EbmvCoeff, meiksinIdx));
+                m_opt_tplfit_extinction, ebmvIndices[i], zePriorData,
+                keepismigm, EbmvCoeffs[i], meiksinIndices[i]));
 
     if (!templatefittingResult) {
       THROWG(INTERNAL_ERROR, Formatter()
@@ -461,6 +429,56 @@ void COperatorLineModel::fitContinuumTemplates(
   }
   return;
 }
+
+// get tplName, Meiksin and ISM coeff for all continuum
+// returns vectors of these entities
+bool COperatorLineModel::getContinuumInfoFromFirstpassFitStore(
+    Int32 candidateIdx, TInt32List &meiksinIndices, TFloat64List &EbmvCoeffs,
+    TInt32List &ebmvIndices, TTemplateConstRefList &tplList) const {
+
+  if (m_model->GetPassNumber() != 2 ||
+      m_continnuum_fit_option != 3) // not secondpass or not refitfirstpass
+    return false;
+
+  if (candidateIdx < 0 ||
+      candidateIdx > m_firstpass_extremaResult->size() - 1) {
+    THROWG(INTERNAL_ERROR, "Candidate index is out of range");
+  }
+  std::shared_ptr<const CTemplateCatalog> tplCatalog =
+      Context.GetTemplateCatalog();
+  bool keepismigm = m_opt_tplfit_dustFit || m_opt_tplfit_extinction;
+  // telling that we want to keep the ism and igm indexes
+
+  meiksinIndices.resize(m_opt_fitcontinuum_maxN, -1);
+  EbmvCoeffs.resize(m_opt_fitcontinuum_maxN, NAN);
+  ebmvIndices.resize(m_opt_fitcontinuum_maxN, -1);
+  for (Int32 icontinuum = 0; icontinuum < m_opt_fitcontinuum_maxN;
+       icontinuum++) {
+    // get the closest lower or equal redshift in coarse grid
+    Int32 coarseIdx = m_tplfitStore_firstpass->getClosestLowerRedshiftIndex(
+        m_firstpass_extremaResult->m_ranked_candidates[candidateIdx]
+            .second->Redshift);
+
+    CTemplatesFitStore::TemplateFitValues fitValue =
+        m_tplfitStore_firstpass->GetFitValues(coarseIdx, icontinuum);
+
+    tplList.push_back(
+        tplCatalog->GetTemplateByName(m_tplCategoryList, fitValue.tplName));
+
+    if (!keepismigm)
+      continue;
+
+    meiksinIndices[icontinuum] = fitValue.igmMeiksinIdx;
+    EbmvCoeffs[icontinuum] = fitValue.ismEbmvCoeff;
+    // access any template and retrieve the ismcorrection object
+    if (m_opt_tplfit_dustFit)
+      ebmvIndices[icontinuum] =
+          tplCatalog->GetTemplate(m_tplCategoryList[0], 0)
+              ->m_ismCorrectionCalzetti->GetEbmvIndex(EbmvCoeffs[icontinuum]);
+  }
+  return keepismigm;
+}
+
 /**
  * Estimate once for all the continuum amplitude which is only dependent
  * from the tplName, ism and igm indexes. This is useful when the model
