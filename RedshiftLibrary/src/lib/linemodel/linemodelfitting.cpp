@@ -202,11 +202,11 @@ void CLineModelFitting::initMembers() {
   SetFittingMethod(m_fittingmethod);
   // Load the line catalog
   Log.LogDebug("About to load line catalog.");
-  if (m_rigidity != "tplratio") {
+  if (m_rigidity == "rules") {
     // load the regular catalog
     LoadCatalog(m_RestLineList);
     SetLSF();
-  } else {
+  } else { //"tplratio" and "tplcorr"
     // load the tplratio catalog with only 1 element for all lines
     // LoadCatalogOneMultiline(restLineList);
     // load the tplratio catalog with 2 elements: 1 for the Em lines + 1 for the
@@ -692,14 +692,14 @@ Float64 CLineModelFitting::getTplratio_bestMtm() const {
 }
 
 Int32 CLineModelFitting::getTplratio_count() const {
-  if (m_rigidity != "tplratio") {
+  if (m_rigidity == "rules")
     return 0;
-  }
+
   return m_CatalogTplRatio.GetCatalogsCount();
 }
 
 const TFloat64List &CLineModelFitting::getTplratio_priors() {
-  if (m_rigidity != "tplratio") {
+  if (m_rigidity == "rules") {
     static TFloat64List dumb;
     return dumb;
   }
