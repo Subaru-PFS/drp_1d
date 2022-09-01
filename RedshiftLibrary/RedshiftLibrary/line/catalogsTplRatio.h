@@ -60,11 +60,6 @@ class CLineModelElementList;
 class CLineCatalogsTplRatio {
 
 public:
-  bool Init(Int32 enableISMCalzetti,
-            const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-                &ismCorrectionCalzetti,
-            Float64 nsigmasupport);
-
   // bool AreCatalogsAligned( const CLineCatalog::TLineVector& restLineList,
   // Int32 typeFilter, Int32 forceFilter  );
   Float64 GetBestFit(const CLineCatalog::TLineVector &restLineList,
@@ -74,25 +69,23 @@ public:
                      std::string &bestTplName) const;
   CLineCatalog::TLineVector GetRestLinesList(Int32 index) const;
   Int32 GetCatalogsCount() const;
-  const TFloat64List &getCatalogsPriors();
+  TFloat64List getCatalogsPriors() const;
   std::string GetCatalogName(Int32 idx) const;
   Int32 GetIsmIndex(Int32 idx) const;
   Float64 GetIsmCoeff(Int32 idx) const;
 
   bool GetCatalogVelocities(Int32 idx, Float64 &elv, Float64 &alv) const;
-  bool InitLineCorrespondingAmplitudes(
-      const CLineModelElementList &LineModelElementList);
+  std::vector<std::vector<TFloat64List>> InitLineCorrespondingAmplitudes(
+      const CLineModelElementList &LineModelElementList,
+      Int32 enableISMCalzetti,
+      const std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
+          &ismCorrectionCalzetti,
+      Float64 nsigmasupport) const;
   const CLineCatalog &GetCatalog(Int32 icatlog) const;
-  const std::vector<std::vector<TFloat64List>> &
-  getNominalAmplitudeCorrespondance() const {
-    return m_LineCatalogLinesCorrespondingNominalAmp;
-  };
 
   void addLineRatioCatalog(const CLineRatioCatalog &lr_catalog) {
     m_lineRatioCatalogs.push_back(lr_catalog);
   }
-
-  bool CalzettiInitFailed() const { return !bool(m_ismCorrectionCalzetti); }
 
 private:
   Float64 GetFit(const TFloat64List &ampsLM, const TFloat64List &errLM,
@@ -100,15 +93,6 @@ private:
                  TFloat64List &ampsCorrected) const;
 
   std::vector<CLineRatioCatalog> m_lineRatioCatalogs;
-  std::vector<std::vector<TFloat64List>>
-      m_LineCatalogLinesCorrespondingNominalAmp;
-  TFloat64List m_catalogsPriors; // TODO temporary hack before reviewing
-                                 // getCatalogsPrior uses
-
-  std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
-      m_ismCorrectionCalzetti;
-  Int32 m_opt_dust_calzetti;
-  Float64 m_nsigmasupport;
 };
 
 } // namespace NSEpic

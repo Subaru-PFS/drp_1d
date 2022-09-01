@@ -214,7 +214,7 @@ void CLineModelFitting::initMembers() {
     LoadCatalogTwoMultilinesAE(m_RestLineList);
 
     SetLSF();
-    m_CatalogTplRatio = *(Context.GetTplRatioCatalog());
+    m_CatalogTplRatio = Context.GetTplRatioCatalog();
     initTplratioCatalogs(Context.GetParameterStore()->GetScoped<bool>(
         "linemodel.tplratio_ismfit"));
     SetTplratio_PriorHelper();
@@ -229,31 +229,32 @@ void CLineModelFitting::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
   // TODO: check if m_CatalogTplRatio changes between iterations
 
-  m_CatalogTplRatio.Init(opt_tplratio_ismFit,
-                         m_continuumManager->getIsmCorrectionFromTpl(),
-                         m_NSigmaSupport);
-  m_CatalogTplRatio.InitLineCorrespondingAmplitudes(m_Elements);
+  m_LineCatalogLinesCorrespondingNominalAmp =
+      m_CatalogTplRatio->InitLineCorrespondingAmplitudes(
+          m_Elements, opt_tplratio_ismFit,
+          m_continuumManager->getIsmCorrectionFromTpl(), m_NSigmaSupport);
+  m_opt_dust_calzetti = opt_tplratio_ismFit;
   SetMultilineNominalAmplitudesFast(0);
-  // m_RestLineList = m_CatalogTplRatio.GetRestLinesList(0);
+  // m_RestLineList = m_CatalogTplRatio->GetRestLinesList(0);
   // LoadCatalog(m_RestLineList);
   // LogCatalogInfos();
 
   // Resize tplratio buffers
-  m_ChisquareTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_ScaleMargCorrTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_StrongELPresentTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_StrongHalphaELPresentTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_NLinesAboveSNRTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_FittedAmpTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_LyaAsymCoeffTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_LyaWidthCoeffTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_LyaDeltaCoeffTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_LyaIgmIdxTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_FittedErrorTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_MtmTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_DtmTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  m_LinesLogPriorTplratio.resize(m_CatalogTplRatio.GetCatalogsCount());
-  for (Int32 ktplratio = 0; ktplratio < m_CatalogTplRatio.GetCatalogsCount();
+  m_ChisquareTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_ScaleMargCorrTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_StrongELPresentTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_StrongHalphaELPresentTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_NLinesAboveSNRTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_FittedAmpTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_LyaAsymCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_LyaWidthCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_LyaDeltaCoeffTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_LyaIgmIdxTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_FittedErrorTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_MtmTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_DtmTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  m_LinesLogPriorTplratio.resize(m_CatalogTplRatio->GetCatalogsCount());
+  for (Int32 ktplratio = 0; ktplratio < m_CatalogTplRatio->GetCatalogsCount();
        ktplratio++) {
     m_FittedAmpTplratio[ktplratio].resize(m_Elements.size());
     m_FittedErrorTplratio[ktplratio].resize(m_Elements.size());
@@ -695,15 +696,15 @@ Int32 CLineModelFitting::getTplratio_count() const {
   if (m_rigidity == "rules")
     return 0;
 
-  return m_CatalogTplRatio.GetCatalogsCount();
+  return m_CatalogTplRatio->GetCatalogsCount();
 }
 
-const TFloat64List &CLineModelFitting::getTplratio_priors() {
+TFloat64List CLineModelFitting::getTplratio_priors() {
   if (m_rigidity == "rules") {
     static TFloat64List dumb;
     return dumb;
   }
-  return m_CatalogTplRatio.getCatalogsPriors();
+  return m_CatalogTplRatio->getCatalogsPriors();
 }
 
 const TFloat64List &CLineModelFitting::GetChisquareTplratio() const {
@@ -762,12 +763,12 @@ bool CLineModelFitting::setTplratioModel(Int32 itplratio,
 
   if (enableSetVelocity) {
     // Set the velocities from templates: todo auto switch when velfit is ON
-    m_CatalogTplRatio.GetCatalogVelocities(itplratio, m_velocityEmission,
-                                           m_velocityAbsorption);
+    m_CatalogTplRatio->GetCatalogVelocities(itplratio, m_velocityEmission,
+                                            m_velocityAbsorption);
   }
 
   Log.LogDebug("    model : setTplratioModel, loaded: %d = %s", itplratio,
-               m_CatalogTplRatio.GetCatalogName(itplratio).c_str());
+               m_CatalogTplRatio->GetCatalogName(itplratio).c_str());
   return true;
 }
 
@@ -1011,7 +1012,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   Int32 ntplratio = 1; // multiple fitting steps for rigidity=tplratio/tplratio
   std::vector<CPriorHelper::SPriorTZE> logPriorDataTplRatio;
   if (m_rigidity == "tplratio") {
-    ntplratio = m_CatalogTplRatio.GetCatalogsCount();
+    ntplratio = m_CatalogTplRatio->GetCatalogsCount();
 
     if (!m_tplratio_priorhelper->mInitFailed) {
       // prior initilization for tplratio EL only
@@ -1024,9 +1025,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
       for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
         // prepare the lines prior data
-        Int32 ebvfilter = m_CatalogTplRatio.GetIsmIndex(itratio);
+        Int32 ebvfilter = m_CatalogTplRatio->GetIsmIndex(itratio);
         CPriorHelper::SPriorTZE logPriorData;
-        std::string tplrationame = m_CatalogTplRatio.GetCatalogName(itratio);
+        std::string tplrationame = m_CatalogTplRatio->GetCatalogName(itratio);
         bool retGetPrior = m_tplratio_priorhelper->GetTZEPriorData(
             tplrationame, ebvfilter, redshift, logPriorData);
         if (retGetPrior == false)
@@ -1063,7 +1064,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
       if (m_rigidity == "tplratio") {
         if (m_forcedisableTplratioISMfit && itratio > 0 &&
-            m_CatalogTplRatio.GetIsmIndex(itratio) > 0) {
+            m_CatalogTplRatio->GetIsmIndex(itratio) > 0) {
           duplicateTplratioResult(itratio, bestTplratioMerit,
                                   bestTplratioMeritPrior);
           continue;
@@ -1074,7 +1075,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         // catalog files, for the lyaE profile, as of 2016-01-11 INFO:
         // tplratio can override the lyafitting, see m_opt_lya_forcefit
         setLyaProfile(m_Redshift,
-                      m_CatalogTplRatio.GetCatalog(itratio).GetList(), true);
+                      m_CatalogTplRatio->GetCatalog(itratio).GetList(), true);
       } else {
         // prepare the Lya width and asym coefficients if the asymfit profile
         // option is met
@@ -1101,9 +1102,9 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolution(); // not used!
         TFloat64List correctedAmplitudes(modelSolution.Amplitudes.size());
-        m_CatalogTplRatio.GetBestFit(m_RestLineList, modelSolution.Amplitudes,
-                                     modelSolution.AmplitudesUncertainties,
-                                     correctedAmplitudes, bestTplratioName);
+        m_CatalogTplRatio->GetBestFit(m_RestLineList, modelSolution.Amplitudes,
+                                      modelSolution.AmplitudesUncertainties,
+                                      correctedAmplitudes, bestTplratioName);
         for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size();
              iRestLine++) {
           Int32 subeIdx = undefIdx;
@@ -1157,11 +1158,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
         if (m_rigidity == "tplratio") {
           savedIdxFitted = itratio;
           m_tplratioBestTplName =
-              m_CatalogTplRatio.GetCatalogName(savedIdxFitted);
-          m_tplratioBestTplIsmCoeff =
-              m_CatalogTplRatio.CalzettiInitFailed()
-                  ? NAN
-                  : m_CatalogTplRatio.GetIsmCoeff(savedIdxFitted);
+              m_CatalogTplRatio->GetCatalogName(savedIdxFitted);
+          m_tplratioBestTplIsmCoeff = GetIsmCoeff(savedIdxFitted);
           m_tplratioBestTplAmplitude =
               m_FittedAmpTplratio[savedIdxFitted][0]; // Should be only 1 elt
                                                       // in tpl ratio mode...
@@ -1205,7 +1203,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     }
 
     // Set the velocities from templates: todo auto switch when velfit is ON
-    // m_CatalogTplRatio.GetCatalogVelocities(savedIdxFitted,
+    // m_CatalogTplRatio->GetCatalogVelocities(savedIdxFitted,
     // m_velocityEmission, m_velocityAbsorption);
     for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
       Log.LogDetail("    model - Linemodel: tplratio = %d (%s, with "
@@ -2885,10 +2883,22 @@ bool CLineModelFitting::SetMultilineNominalAmplitudesFast(Int32 iCatalog) {
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
     Int32 nLines = m_Elements[iElts]->GetSize();
     for (Int32 j = 0; j < nLines; j++) {
-      nominalAmp = m_CatalogTplRatio
-                       .getNominalAmplitudeCorrespondance()[iElts][iCatalog][j];
+      nominalAmp =
+          m_LineCatalogLinesCorrespondingNominalAmp[iElts][iCatalog][j];
       m_Elements[iElts]->SetNominalAmplitude(j, nominalAmp);
     }
   }
   return true;
+}
+
+Float64 CLineModelFitting::GetIsmCoeff(Int32 idx) const {
+  if (m_continuumManager->getIsmCorrectionFromTpl() == nullptr &&
+      m_opt_dust_calzetti)
+    THROWG(
+        INTERNAL_ERROR,
+        "ismCorrectionCalzetti is not loaded while tplratio_ism is activated");
+  if (!m_opt_dust_calzetti)
+    return NAN;
+  return m_continuumManager->getIsmCorrectionFromTpl()->GetEbmvValue(
+      m_CatalogTplRatio->GetIsmIndex(idx));
 }
