@@ -363,10 +363,6 @@ void CSpectrum::EstimateContinuum() const {
   alreadyRemoved = true;
 }
 
-const string &CSpectrum::GetBaseline() const {
-  return m_method2baseline.at(m_estimationMethod);
-}
-
 /**
  * Invert the flux axis
  */
@@ -700,8 +696,7 @@ void CSpectrum::SetFullPath(const char *nameP) { m_FullPath = nameP; }
 
 void CSpectrum::SetMedianWinsize(Float64 winsize) {
   if (m_medianWindowSize != winsize &&
-      (m_estimationMethod == "IrregularSamplingMedian" ||
-       m_estimationMethod == "Median")) {
+      m_estimationMethod == "IrregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianWindowSize = winsize;
@@ -709,8 +704,7 @@ void CSpectrum::SetMedianWinsize(Float64 winsize) {
 
 void CSpectrum::SetMedianEvenReflection(bool medianEvenReflection) {
   if (m_medianEvenReflection != medianEvenReflection &&
-      (m_estimationMethod == "IrregularSamplingMedian" ||
-       m_estimationMethod == "Median")) {
+      m_estimationMethod == "IrregularSamplingMedian") {
     ResetContinuum();
   }
   m_medianEvenReflection = medianEvenReflection;
@@ -826,7 +820,7 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
     // Default linear interp.
     Int32 k = 0;
     // For each sample in the valid lambda range interval.
-    while (k <= m_SpectralAxis.GetSamplesCount() - 1 &&
+    while (k < m_SpectralAxis.GetSamplesCount() - 1 &&
            Xsrc[k] <= currentRange.GetEnd()) {
       // For each sample in the target spectrum that are in between two
       // continous source sample
@@ -894,8 +888,11 @@ bool CSpectrum::Rebin(const TFloat64Range &range,
       rebinedMask[j] = 1;
 
       // note: error rebin not implemented for spline interp
-      if (opt_error_interp != "no")
+      if (opt_error_interp != "no") {
+        gsl_spline_free(spline);
+        gsl_interp_accel_free(accelerator);
         return false;
+      }
 
       j++;
     }
