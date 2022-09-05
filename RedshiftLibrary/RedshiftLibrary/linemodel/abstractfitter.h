@@ -98,6 +98,9 @@ protected:
                               std::vector<Float64> &ampsfitted,
                               std::vector<Float64> &errorsfitted,
                               Float64 redshift);
+
+private:
+  void setOffset(const TInt32List &EltsIdx, Int32 offsetCount) const;
 };
 } // namespace NSEpic
 
