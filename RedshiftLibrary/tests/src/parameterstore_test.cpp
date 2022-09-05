@@ -238,6 +238,7 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
   TScopeStack scopeStack;
   CParameterStore store(scopeStack);
   std::string object_type = "galaxy";
+  std::string object_type2 = "qso";
   bool check_property;
 
   // HasTplIsmExtinction
@@ -319,6 +320,26 @@ BOOST_AUTO_TEST_CASE(ParameterStore_SpecificTest) {
             false);
   check_property = store.HasFFTProcessing(object_type);
   BOOST_CHECK(check_property == false);
+
+  // hasToLogRebin
+  store.Set(object_type +
+                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+            true);
+  store.Set(object_type2 +
+                ".LineModelSolve.linemodel.continuumfit.fftprocessing",
+            true);
+  std::map<std::string, bool> fft_processing;
+  bool m_use_LogLambaSpectrum =
+      store.hasToLogRebin({object_type, object_type2}, fft_processing);
+  BOOST_CHECK(fft_processing[object_type] = true);
+  BOOST_CHECK(fft_processing[object_type2] = true);
+  BOOST_CHECK(m_use_LogLambaSpectrum = true);
+
+  // getMinZStepForFFTProcessing
+  store.Set(object_type + ".redshiftstep", 0.0005);
+  store.Set(object_type2 + ".redshiftstep", 0.0003);
+  Float64 logGridStep = store.getMinZStepForFFTProcessing(fft_processing);
+  BOOST_CHECK(logGridStep == 0.0003);
 
   // HasToOrthogonalizeTemplates
   store.Set(object_type + ".method", std::string("LineModelSolve"));
