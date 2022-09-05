@@ -82,12 +82,11 @@ public:
       const std::shared_ptr<const CTemplatesFitStore> &tplFitStore);
   void SetChisquareTplContinuumResultFromPrevious(Int32 index);
   void
-  SetChisquareTplratioResult(Int32 index, const TFloat64List &chisquareTplratio,
-                             const TFloat64List &scaleMargCorrTplratio,
-                             const TBoolList &strongEmissionLinePresentTplratio,
-                             const TBoolList &strongHalphaELPresentTplratios,
-                             const TInt32List &nLinesAboveSNRTplratio,
-                             const TFloat64List &priorLinesTplratio);
+  SetChisquareTplratioResult(Int32 index,
+                             std::shared_ptr<CTplratioManager> tplratioManager);
+  void
+  SetChisquareTplratioResultFromPrevious(Int32 index);
+
   TFloat64List getChisquareTplContinuumResult(Int32 index_z);
   TFloat64List getChisquareTplratioResult(Int32 index_z);
   TFloat64List getScaleMargCorrTplratioResult(Int32 index_z);

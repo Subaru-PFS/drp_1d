@@ -36,23 +36,37 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RANDOM_FITTER_
-#define _REDSHIFT_RANDOM_FITTER_
 
-#include "RedshiftLibrary/linemodel/abstractfitter.h"
+#ifndef _REDSHIFT_TPLCORR_MANAGER_
+#define _REDSHIFT_TPLCORR_MANAGER_
 
-namespace NSEpic
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
+#include "RedshiftLibrary/statistics/priorhelper.h"
 
-{
+namespace NSEpic {
 
-class CRandomFitter : public CAbstractFitter {
+class CLineCatalogsTplRatio;
+
+class CTplCorrManager : public CTplratioManager {
 public:
-  using CAbstractFitter::CAbstractFitter;
+  CTplCorrManager(CLineModelElementList &elements,
+                  std::shared_ptr<CSpectrumModel> model,
+                  std::shared_ptr<const CSpectrum> inputSpc,
+                  std::shared_ptr<const TFloat64Range> lambdaRange,
+                  std::shared_ptr<CContinuumManager> continuumManager,
+                  const CLineCatalog::TLineVector &restLineList);
+  CTplCorrManager() = delete;
+  CTplCorrManager(CTplCorrManager const& other) = default;
+  CTplCorrManager& operator=(CTplCorrManager const& other) = default;
+   
+  CTplCorrManager(CTplCorrManager&& other) = default;
+  CTplCorrManager& operator=(CTplCorrManager&& other) = default;
 
-  void fit(Float64 redshift) override;
-
-private:
-  Float64 getContinuumMeanUnderElement(Int32 eltId) const;
+  Float64 computeMerit(Int32 itratio) override;
+  void saveResults(Int32 itratio) override;
 };
+
 } // namespace NSEpic
+
 #endif

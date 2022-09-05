@@ -36,19 +36,60 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/linemodel/svdfitter.h"
-#include "RedshiftLibrary/line/linetags.h"
+
+#include "RedshiftLibrary/linemodel/rulesmanager.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 
 using namespace NSEpic;
-using namespace std;
 
-// set all the amplitudes to 1.0
-void CSvdFitter::fit(Float64 redshift) {
-  TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
-  TFloat64List ampsfitted;
-  TFloat64List errorsfitted;
-  fitAmplitudesLinSolveAndLambdaOffset(
-      validEltsIdx, m_inputSpc.GetSpectralAxis(), ampsfitted, errorsfitted,
-      m_enableLambdaOffsetsFit, redshift);
+CRulesManager::CRulesManager(
+    CLineModelElementList &elements, std::shared_ptr<CSpectrumModel> model,
+    std::shared_ptr<const CSpectrum> inputSpc,
+    std::shared_ptr<const TFloat64Range> lambdaRange,
+    std::shared_ptr<CContinuumManager> continuumManager,
+    const CLineCatalog::TLineVector &restLineList)
+    : CLineRatioManager(elements, model, inputSpc, lambdaRange, continuumManager,
+                       restLineList) {}
+
+Float64 CRulesManager::computeMerit(Int32 iratio) {
+  applyRules(true); // enableLogging);
+  m_model->refreshModel();
+  return getLeastSquareMerit();
+}
+
+/**
+ * /brief Calls the rules' methods depending on the JSON options.
+ * If m_rulesoption is "no", do nothing.
+ * If either "balmer" or "all" is in the rules string, call
+ *ApplyBalmerRuleLinSolve. If "all" or "ratiorange" is in the rules string,
+ *call ApplyAmplitudeRatioRangeRule parameterized for OII. If "all" or
+ *"strongweak" is in the rules string, call ApplyStrongHigherWeakRule for
+ *emission and then for absorption.
+ **/
+void CRulesManager::applyRules(bool enableLogs) {
+  if (m_rulesoption == "no") {
+    return;
+  }
+
+  m_Regulament.EnableLogs(enableLogs);
+  m_Regulament.Apply(m_Elements);
+}
+
+const TStringList &CRulesManager::GetModelRulesLog() const {
+  return m_Regulament.GetLogs();
+}
+
+void CRulesManager::setRulesOption(std::string rulesOption) {
+
+  m_Regulament.CreateRulesFromJSONFiles();
+  if (rulesOption == "") {
+    CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
+    std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+    m_rulesoption = ps->GetScoped<std::string>("rules");
+  } else
+    m_rulesoption = rulesOption;
+
+  m_Regulament.EnableRulesAccordingToParameters(m_rulesoption);
 }

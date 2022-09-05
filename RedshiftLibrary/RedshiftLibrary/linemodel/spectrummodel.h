@@ -12,7 +12,8 @@ class CContinuumModelSolution;
 class CSpectrumModel {
 public:
   CSpectrumModel(CLineModelElementList &elements,
-                 std::shared_ptr<const CSpectrum> spc);
+                 std::shared_ptr<const CSpectrum> spc,
+                 const CLineCatalog::TLineVector &m_RestLineList);
 
   void reinitModel();
   void refreshModel(Int32 lineTypeFilter = -1);
@@ -21,6 +22,7 @@ public:
   void refreshModelUnderElements(const TInt32List &filterEltsIdx,
                                  Int32 lineIdx = -1);
 
+  CSpectrumFluxAxis getModel(Int32 lineTypeFilter = -1) const;
   // methods modifying/initializing continuum (m_ContinuumFluxAxis)
   // void prepareContinuum(std::string continuumComponent);
   void PrepareContinuum();
@@ -28,7 +30,6 @@ public:
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
-  CSpectrum GetSpectrumModelContinuum() const;
   const CSpectrumFluxAxis &GetModelContinuum() const;
 
   const CSpectrum &
@@ -38,15 +39,24 @@ public:
 
   Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
   Float64 getModelErrorUnderElement(Int32 eltId) const;
+  void getFluxDirectIntegration(const TInt32List &eIdx_list,
+                                const TInt32List &subeIdx_list,
+                                bool substract_abslinesmodel, Float64 &fluxdi,
+                                Float64 &snrdi,
+                                const TFloat64Range &lambdaRange) const;
+  TStringList getLinesAboveSNR(const TFloat64Range &lambdaRange,
+                               Float64 snrcut = 3.5) const;
+
+  void
+  integrateFluxes_usingTrapez(const CSpectrumFluxAxis &continuumFlux,
+                              const std::vector<CRange<Int32>> &indexRangeList,
+                              Float64 &sumFlux, Float64 &sumErr) const;
 
   bool m_enableAmplitudeOffsets = false;
   Float64 m_Redshift = 0.;
-
   // new methods
-  void setContinuum(const CSpectrumFluxAxis &continuum);
-  void setRedshift(Float64 redshift) { m_Redshift = redshift; }
+
   void initModelWithContinuum();
-  void substractContToFlux();
   void buildFromParameters(const CLineModelSolution &lm_solution,
                            const CContinuumModelSolution &c_solution);
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
@@ -62,17 +72,14 @@ public:
 
 private:
   std::shared_ptr<const CSpectrum> m_inputSpc; // model
+  const CLineCatalog::TLineVector &m_RestLineList;
 
   CSpectrum m_SpectrumModel; // model
   CLineModelElementList &m_Elements;
   CSpectrumFluxAxis m_ContinuumFluxAxis;
   CSpectrumFluxAxis m_modelFluxAxis;
   CSpectrum m_spcCorrectedUnderLines;
-  CSpectrumFluxAxis m_SpcFluxAxis; // observed spectrum //this is DUBIOUS ! why
-                                   // isnt'it a const ref ? why initializing
-                                   // this way ? why  const auto &SpcFluxAxis =
-                                   // m_SpcFluxAxis; and not directly a const
-                                   // ref ?
+  CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
 

@@ -42,6 +42,7 @@
 #include "RedshiftLibrary/linemodel/element.h"
 
 namespace NSEpic {
+class CLineModelSolution;
 class CLineModelElementList {
 private:
   std::vector<std::shared_ptr<CLineModelElement>> m_Elements;
@@ -61,11 +62,20 @@ public:
   TInt32List getOverlappingElements(Int32 ind, const TInt32List &excludedInd,
                                     Float64 redshift,
                                     Float64 overlapThres) const;
+  TInt32List
+  getOverlappingElementsBySupport(Int32 ind, Float64 redshift,
+                                  const CSpectrumSpectralAxis &spectralAxis,
+                                  Float64 overlapThres = 0.1) const;
 
   Int32 GetModelValidElementsNDdl() const;
   Int32 GetModelNonZeroElementsNDdl() const;
 
   std::vector<TInt32List> GetModelVelfitGroups(Int32 lineType) const;
+
+  std::vector<CRange<Int32>> getlambdaIndexesUnderLines(
+      const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
+      Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
+      const TFloat64Range &lambdaRange, Float64 redshift) const;
 
   Int32 findElementIndex(const std::string &LineTagStr,
                          Int32 linetype = -1) const;
@@ -87,6 +97,17 @@ public:
   bool IsElementIndexInDisabledList(Int32 index) const;
   void SetElementIndexesDisabledAuto();
   void ResetElementIndexesDisabled();
+
+  Float64 getScaleMargCorrection(Int32 idxLine) const;
+  bool GetModelStrongEmissionLinePresent() const;
+  bool GetModelHaStrongest() const;
+
+  CLineModelSolution
+  GetModelSolution(Int32 opt_level,
+                   const CLineCatalog::TLineVector &restLineList,
+                   Float64 redshift);
+
+  TPolynomCoeffs getPolynomCoeffs(Int32 eIdx) const;
 
   void debug(std::ostream &os) const;
 

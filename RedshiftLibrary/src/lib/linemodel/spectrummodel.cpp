@@ -38,6 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/linemodel/spectrummodel.h"
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
+#include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/element.h"
 #include "RedshiftLibrary/processflow/context.h"
 
@@ -45,11 +46,10 @@ using namespace NSEpic;
 using namespace std;
 
 CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
-                               std::shared_ptr<const CSpectrum> spc)
+                               std::shared_ptr<const CSpectrum> spc,
+                               const CLineCatalog::TLineVector &restLineList)
     : m_Elements(elements), m_inputSpc(spc), m_spcCorrectedUnderLines(*(spc)),
-      m_SpectrumModel(*(spc))
-
-{
+      m_SpectrumModel(*(spc)), m_RestLineList(restLineList) {
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
   m_SpcFluxAxis.SetSize(spectrumSampleCount);
@@ -63,12 +63,6 @@ CSpectrumModel::CSpectrumModel(CLineModelElementList &elements,
  **/
 const CSpectrum &CSpectrumModel::GetModelSpectrum() const {
   return m_SpectrumModel;
-}
-
-CSpectrum CSpectrumModel::GetSpectrumModelContinuum() const {
-  CSpectrum spc(m_SpectrumModel);
-  spc.SetFluxAxis(m_ContinuumFluxAxis);
-  return spc;
 }
 
 /**
@@ -92,11 +86,9 @@ void CSpectrumModel::reinitModel() {
 
 void CSpectrumModel::initModelWithContinuum() {
   m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
-
-  /* // we keep temporarily for information the way this was done before 6962
-  CSpectrumFluxAxis modelFluxAxis = m_ContinuumFluxAxis;
-  m_SpectrumModel.SetFluxAxis(std::move(modelFluxAxis));
-  */
+  for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
+    m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i] - m_ContinuumFluxAxis[i];
+  }
 }
 /**
  * \brief Init the argument elements from the spectrum model with continuum.
@@ -366,8 +358,6 @@ Float64 CSpectrumModel::GetWeightingAnyLineCenterProximity(
  * @param subeIdx
  * @param spectralAxis
  * @param spectrumfluxAxis
- * @param redshift
- * @param continuumfluxAxis
  * @return -1: zero samples found for error estimation, NAN: not enough samples
  * found for error estimation
  */
@@ -504,12 +494,6 @@ void CSpectrumModel::SetContinuumComponent(std::string component) {
   }
 }
 
-void CSpectrumModel::substractContToFlux() {
-  for (Int32 i = 0; i < m_SpectrumModel.GetSampleCount(); i++) {
-    m_spcFluxAxisNoContinuum[i] = m_SpcFluxAxis[i] - m_ContinuumFluxAxis[i];
-  }
-}
-
 void CSpectrumModel::setContinuumFromTplFit(
     Float64 alpha, Float64 tplAmp, const TFloat64List &polyCoeffs,
     const TAxisSampleList &observeGridContinuumFlux) {
@@ -534,4 +518,262 @@ void CSpectrumModel::setContinuumFromTplFit(
     m_spcFluxAxisNoContinuum[k] =
         SpcFluxAxis[k] - as_const(m_ContinuumFluxAxis)[k];
   }
+}
+
+/**
+ * @brief CLineModelFitting::getFluxDirectIntegration
+ * Integrates the flux (F-continuum) in a lbda range around the center observed
+ * wavelength of the line. The wavelength range is defined by the instrument
+ * resolution and a hardcoded nsigma factor
+ * @param eIdx
+ * @param subeIdx
+ * @return
+ */
+void CSpectrumModel::getFluxDirectIntegration(
+    const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
+    bool substract_abslinesmodel, Float64 &fluxdi, Float64 &snrdi,
+    const TFloat64Range &lambdaRange) const {
+
+  fluxdi = NAN;
+  snrdi = NAN;
+  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+  Int32 nlines = eIdx_list.size();
+  if (nlines != subeIdx_list.size())
+    THROWG(INTERNAL_ERROR, " index sizes do not match");
+  TInt32RangeList indexRangeList = m_Elements.getlambdaIndexesUnderLines(
+      eIdx_list, subeIdx_list, N_SIGMA_SUPPORT_DI, spectralAxis, lambdaRange,
+      m_Redshift);
+
+  if (!indexRangeList.size())
+    THROWG(INTERNAL_ERROR, "empty indexRanges ");
+
+  const auto &ContinuumFluxAxis = getContinuumFluxAxis();
+  CSpectrumFluxAxis continuumFlux(ContinuumFluxAxis.GetSamplesCount());
+  CSpectrumFluxAxis absLinesModelFlux;
+  if (substract_abslinesmodel)
+    absLinesModelFlux =
+        getModel(CLine::nType_Absorption); // contains the continuum
+                                           // and abs lines model;
+
+  // polynome are shared between overlapping CElements
+  //  find polynome belonging to this CElement
+  // TODO: correct this for more than one CElement
+  TPolynomCoeffs polynom_coeffs{0., 0., 0.};
+  if (m_enableAmplitudeOffsets)
+    polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx_list[0]);
+
+  // compute continuum
+  for (const auto &r : indexRangeList)
+    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++) {
+      continuumFlux[t] =
+          substract_abslinesmodel ? absLinesModelFlux[t] : ContinuumFluxAxis[t];
+      if (m_enableAmplitudeOffsets)
+        continuumFlux[t] +=
+            polynom_coeffs.x0 + polynom_coeffs.x1 * spectralAxis[t] +
+            polynom_coeffs.x2 * spectralAxis[t] * spectralAxis[t];
+    }
+  // substarct continuum from spectrum flux
+  const auto &SpcFluxAxis = getSpcFluxAxis();
+  CSpectrumFluxAxis fluxMinusContinuum(SpcFluxAxis);
+  for (const auto &r : indexRangeList)
+    for (Int32 t = r.GetBegin(); t <= r.GetEnd(); t++)
+      fluxMinusContinuum[t] -= continuumFlux[t];
+
+  // estimate the integrated flux between obs. spectrum and continuum:
+  // trapezoidal intg
+  Float64 sumFlux = 0.0;
+  Float64 sumErr = 0.0;
+  integrateFluxes_usingTrapez(fluxMinusContinuum, indexRangeList, sumFlux,
+                              sumErr);
+
+  if (sumErr <= 0)
+    return;
+
+  fluxdi = sumFlux;
+  snrdi = std::abs(fluxdi) / sqrt(sumErr);
+  return;
+}
+
+/**
+ * @brief CLineModelFitting::getLinesAboveSNR
+ * Only considering a list of strong emission lines for now
+ * @param snrcut
+ * @return
+ */
+TStringList CSpectrumModel::getLinesAboveSNR(const TFloat64Range &lambdaRange,
+                                             Float64 snrcut) const {
+  TInt32List eIdx_oii;
+  TInt32List subeIdx_oii;
+  TInt32List eIdx_ciii;
+  TInt32List subeIdx_ciii;
+
+  Float64 snr_ha = NAN;
+  Float64 snr_oii = NAN;
+  Float64 snr_oiiia = NAN;
+  // snr_oiiib = NAN;
+  Float64 snr_hb = NAN;
+  Float64 snr_ciii = NAN;
+  Float64 snr_lya = NAN;
+
+  for (Int32 iRestLine = 0; iRestLine < m_RestLineList.size(); iRestLine++) {
+    Int32 subeIdx = undefIdx;
+    Int32 eIdx = m_Elements.findElementIndex(iRestLine, subeIdx);
+    if (eIdx < 0 || subeIdx < 0 ||
+        m_Elements[eIdx]->IsOutsideLambdaRange(subeIdx))
+      continue;
+
+    TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
+    Float64 cont = m_Elements[eIdx]->GetContinuumAtCenterProfile(
+        subeIdx, m_inputSpc->GetSpectralAxis(), m_Redshift,
+        getContinuumFluxAxis(), polynom_coeffs);
+    Float64 mu = NAN;
+    Float64 sigma = NAN;
+    m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, m_Redshift, mu,
+                                                      sigma, false);
+
+    Float64 flux = NAN;
+    Float64 fluxError = NAN;
+    Float64 fluxDI = NAN;
+    Float64 snrDI = NAN;
+    TInt32List eIdx_line(1, eIdx);
+    TInt32List subeIdx_line(1, subeIdx);
+    bool isEmission =
+        m_RestLineList[iRestLine].GetType() == CLine::nType_Emission;
+    bool opt_cont_substract_abslinesmodel = isEmission;
+    getFluxDirectIntegration(eIdx_line, subeIdx_line,
+                             opt_cont_substract_abslinesmodel, fluxDI, snrDI,
+                             lambdaRange);
+
+    if (m_RestLineList[iRestLine].GetName() == linetags::halpha_em &&
+        isEmission)
+      snr_ha = snrDI;
+
+    if (m_RestLineList[iRestLine].GetName() == linetags::oIIIa_em && isEmission)
+      snr_oiiia = snrDI;
+
+    if (m_RestLineList[iRestLine].GetName() == linetags::hbeta_em && isEmission)
+      snr_hb = snrDI;
+
+    if (m_RestLineList[iRestLine].GetName() == linetags::lya_em && isEmission)
+      snr_lya = snrDI;
+
+    if ((m_RestLineList[iRestLine].GetName() == linetags::oII3726_em ||
+         m_RestLineList[iRestLine].GetName() == linetags::oII3729_em) &&
+        isEmission) {
+      // here we only cover the fluxDI case.
+      eIdx_oii.push_back(eIdx);
+      subeIdx_oii.push_back(subeIdx);
+      fluxDI = NAN;
+      snrDI = NAN;
+      opt_cont_substract_abslinesmodel = false;
+      getFluxDirectIntegration(eIdx_oii, subeIdx_oii,
+                               opt_cont_substract_abslinesmodel, fluxDI, snrDI,
+                               lambdaRange);
+
+      snr_oii = snrDI;
+    }
+    if ((m_RestLineList[iRestLine].GetName() == linetags::cIII1907_em ||
+         m_RestLineList[iRestLine].GetName() == linetags::cIII1909_em) &&
+        isEmission) {
+      // here we only cover the fluxDI case.
+      eIdx_ciii.push_back(eIdx);
+      subeIdx_ciii.push_back(subeIdx);
+      fluxDI = NAN;
+      snrDI = NAN;
+      opt_cont_substract_abslinesmodel = false;
+      getFluxDirectIntegration(eIdx_ciii, subeIdx_ciii,
+                               opt_cont_substract_abslinesmodel, fluxDI, snrDI,
+                               lambdaRange);
+
+      snr_ciii = snrDI;
+    }
+  }
+
+  // sum snr ht cut
+  Int32 nhtcut = 0;
+  TStringList str_above_cut;
+  if (snr_ha > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("Ha");
+  }
+  if (snr_oiiia > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("OIIIa");
+  }
+  if (snr_hb > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("Hb");
+  }
+  if (snr_oii > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("OII");
+  }
+  if (snr_lya > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("Lya");
+  }
+  if (snr_ciii > snrcut) {
+    nhtcut++;
+    str_above_cut.push_back("CIII");
+  }
+
+  return str_above_cut;
+}
+
+// TODO should be renamed
+CSpectrumFluxAxis CSpectrumModel::getModel(Int32 lineTypeFilter) const {
+
+  const CSpectrumSpectralAxis &spectralAxis = m_SpectrumModel.GetSpectralAxis();
+  CSpectrumFluxAxis modelfluxAxis(spectralAxis.GetSamplesCount());
+
+  Int32 nElements = m_Elements.size();
+  for (Int32 iElts = 0; iElts < nElements; iElts++) {
+    m_Elements[iElts]->initSpectrumModel(modelfluxAxis, getContinuumFluxAxis());
+  }
+
+  for (Int32 iElts = 0; iElts < nElements; iElts++) {
+    Int32 lineType = m_Elements[iElts]->m_Lines[0].GetType();
+    if (lineTypeFilter == -1 || lineTypeFilter == lineType) {
+      m_Elements[iElts]->addToSpectrumModel(spectralAxis, modelfluxAxis,
+                                            getContinuumFluxAxis(), m_Redshift);
+    }
+  }
+
+  return modelfluxAxis;
+}
+
+/**
+ * @brief Construct a new clinemodelfitting::integratefluxes usingtrapez
+ * object
+ *
+ * @param fluxMinusContinuum
+ * @param indexRangeList
+ * @param sumFlux
+ * @param sumErr
+ */
+void CSpectrumModel::integrateFluxes_usingTrapez(
+    const CSpectrumFluxAxis &fluxMinusContinuum,
+    const TInt32RangeList &indexRangeList, Float64 &sumFlux,
+    Float64 &sumErr) const {
+
+  sumFlux = 0.0;
+  sumErr = 0.0;
+
+  const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
+  if (spectralAxis.GetSamplesCount() < 2)
+    THROWG(INTERNAL_ERROR, "Not enough samples in spectral axis");
+
+  const auto &ErrorNoContinuum = m_inputSpc->GetFluxAxis().GetError();
+  for (auto &r : indexRangeList) {
+    for (Int32 t = r.GetBegin(); t < r.GetEnd(); t++) {
+      Float64 trapweight = (spectralAxis[t + 1] - spectralAxis[t]) * 0.5;
+      sumFlux +=
+          trapweight * (fluxMinusContinuum[t + 1] + fluxMinusContinuum[t]);
+
+      Float64 ea = ErrorNoContinuum[t] * ErrorNoContinuum[t];
+      Float64 eb = ErrorNoContinuum[t + 1] * ErrorNoContinuum[t + 1];
+      sumErr += trapweight * trapweight * (eb + ea);
+    }
+  }
+  return;
 }

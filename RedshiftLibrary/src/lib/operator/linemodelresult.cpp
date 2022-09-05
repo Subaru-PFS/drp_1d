@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 
@@ -130,33 +131,57 @@ void CLineModelResult::SetChisquareTplContinuumResultFromPrevious(
 }
 
 void CLineModelResult::SetChisquareTplratioResult(
-    Int32 index_z, const TFloat64List &chisquareTplratio,
-    const TFloat64List &scaleMargCorrTplratio,
-    const TBoolList &strongEmissionLinePresentTplratio,
-    const TBoolList &strongHalphaELPresentTplratios,
-    const TInt32List &nLinesAboveSNRTplratio,
-    const TFloat64List &priorLinesTplratio) {
-  if (chisquareTplratio.size() < 1)
+    Int32 index_z, std::shared_ptr<CTplratioManager> tplratioManager) {
+  if (tplratioManager->GetChisquareTplratio().size() < 1)
     return;
 
   if (index_z >= Redshifts.size())
     THROWG(INTERNAL_ERROR, "Invalid z index");
 
-  if (chisquareTplratio.size() != ChiSquareTplratios.size() ||
-      chisquareTplratio.size() != scaleMargCorrTplratio.size() ||
-      chisquareTplratio.size() != strongEmissionLinePresentTplratio.size() ||
-      chisquareTplratio.size() != nLinesAboveSNRTplratio.size() ||
-      chisquareTplratio.size() != priorLinesTplratio.size())
+  if (tplratioManager->GetChisquareTplratio().size() !=
+          ChiSquareTplratios.size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetScaleMargTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetStrongELPresentTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetNLinesAboveSNRTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetPriorLinesTplratio().size())
     THROWG(INTERNAL_ERROR, "vector sizes do not match");
 
-  for (Int32 k = 0; k < chisquareTplratio.size(); k++) {
-    ChiSquareTplratios[k][index_z] = chisquareTplratio[k];
-    ScaleMargCorrectionTplratios[k][index_z] = scaleMargCorrTplratio[k];
-    StrongELPresentTplratios[k][index_z] = strongEmissionLinePresentTplratio[k];
+  for (Int32 k = 0; k < tplratioManager->GetChisquareTplratio().size(); k++) {
+    ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
+    ScaleMargCorrectionTplratios[k][index_z] =
+        tplratioManager->GetScaleMargTplratio()[k];
+    StrongELPresentTplratios[k][index_z] =
+        tplratioManager->GetStrongELPresentTplratio()[k];
     StrongHalphaELPresentTplratios[k][index_z] =
-        strongHalphaELPresentTplratios[k];
-    NLinesAboveSNRTplratios[k][index_z] = nLinesAboveSNRTplratio[k];
-    PriorLinesTplratios[k][index_z] = priorLinesTplratio[k];
+        tplratioManager->getHaELPresentTplratio()[k];
+    NLinesAboveSNRTplratios[k][index_z] =
+        tplratioManager->GetNLinesAboveSNRTplratio()[k];
+    PriorLinesTplratios[k][index_z] =
+        tplratioManager->GetPriorLinesTplratio()[k];
+  }
+  return;
+}
+
+void CLineModelResult::SetChisquareTplratioResultFromPrevious(
+    Int32 index_z) {
+
+  if (index_z >= Redshifts.size())
+    THROWG(INTERNAL_ERROR, "Invalid z index");
+
+  auto previous = index_z - 1;
+
+  for (Int32 k = 0; k < ChiSquareTplratios.size(); k++) {
+    ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
+    ScaleMargCorrectionTplratios[k][index_z] = ScaleMargCorrectionTplratios[k][previous];
+    StrongELPresentTplratios[k][index_z] = StrongELPresentTplratios[k][previous];
+    StrongHalphaELPresentTplratios[k][index_z] =
+       StrongHalphaELPresentTplratios[k][previous];
+    NLinesAboveSNRTplratios[k][index_z] = NLinesAboveSNRTplratios[k][previous];
+    PriorLinesTplratios[k][index_z] = PriorLinesTplratios[k][previous];
   }
   return;
 }

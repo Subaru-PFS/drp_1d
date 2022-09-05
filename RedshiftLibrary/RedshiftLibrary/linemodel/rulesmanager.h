@@ -36,23 +36,45 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#ifndef _REDSHIFT_RANDOM_FITTER_
-#define _REDSHIFT_RANDOM_FITTER_
 
-#include "RedshiftLibrary/linemodel/abstractfitter.h"
+#ifndef _REDSHIFT_RULES_MANAGER_
+#define _REDSHIFT_RULES_MANAGER_
 
-namespace NSEpic
+#include "RedshiftLibrary/common/datatypes.h"
+#include "RedshiftLibrary/line/regulament.h"
+#include "RedshiftLibrary/linemodel/lineratiomanager.h"
 
-{
+namespace NSEpic {
 
-class CRandomFitter : public CAbstractFitter {
+class CRulesManager : public CLineRatioManager {
 public:
-  using CAbstractFitter::CAbstractFitter;
+  CRulesManager(CLineModelElementList &elements,
+                std::shared_ptr<CSpectrumModel> model,
+                std::shared_ptr<const CSpectrum> inputSpc,
+                std::shared_ptr<const TFloat64Range> lambdaRange,
+                std::shared_ptr<CContinuumManager> continuumManager,
+                const CLineCatalog::TLineVector &restLineList);
+  
+  CRulesManager() = delete;
+  virtual ~CRulesManager() = default;
+  CRulesManager(CRulesManager const& other) = default;
+  CRulesManager& operator=(CRulesManager const& other) = default;
+   
+  CRulesManager(CRulesManager&& other) = default;
+  CRulesManager& operator=(CRulesManager&& other) = default;
+  
+  
+  Float64 computeMerit(Int32 itratio) override;
 
-  void fit(Float64 redshift) override;
+  const TStringList &GetModelRulesLog() const;
+  void setRulesOption(std::string rulesOption = "");
 
 private:
-  Float64 getContinuumMeanUnderElement(Int32 eltId) const;
+  void applyRules(bool enableLogging);
+  std::string m_rulesoption;
+  CRegulament m_Regulament;
 };
+
 } // namespace NSEpic
+
 #endif

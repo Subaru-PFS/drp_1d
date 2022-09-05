@@ -431,9 +431,7 @@ void CContinuumManager::logParameters() {
 void CContinuumManager::reinterpolateContinuum(Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
       m_tplCategoryList, m_fitContinuum_tplName);
-  if (tpl->GetName() == m_fitContinuum_tplName) {
-    ApplyContinuumOnGrid(tpl, redshift);
-  }
+  ApplyContinuumOnGrid(tpl, redshift);
 }
 
 void CContinuumManager::initObserveGridContinuumFlux(Int32 size) {
