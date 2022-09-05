@@ -278,20 +278,20 @@ Float64 CTplratioManager::getTplratio_bestMtm() const {
 
 void CTplratioManager::logParameters() {
   CRigidityManager::logParameters();
-  Log.LogTrace(Formatter() << " m_opt_haprior" << m_opt_haprior);
-  Log.LogTrace(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
-  Log.LogTrace(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
+  Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
+  Log.LogDetail(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
+  Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
                           << m_opt_firstpass_forcedisableTplratioISMfit);
-  Log.LogTrace(Formatter() << "forcedisableTplratioISMfit="
+  Log.LogDetail(Formatter() << "forcedisableTplratioISMfit="
                           << m_forcedisableTplratioISMfit);
-  Log.LogTrace(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
-  Log.LogTrace(Formatter() << "tplratioBestTplIsmCoeff="
+  Log.LogDetail(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
+  Log.LogDetail(Formatter() << "tplratioBestTplIsmCoeff="
                           << m_tplratioBestTplIsmCoeff);
-  Log.LogTrace(Formatter() << "tplratioBestTplAmplitude="
+  Log.LogDetail(Formatter() << "tplratioBestTplAmplitude="
                           << m_tplratioBestTplAmplitude);
-  Log.LogTrace(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
-  Log.LogTrace(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
-  Log.LogTrace(Formatter()
+  Log.LogDetail(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
+  Log.LogDetail(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
+  Log.LogDetail(Formatter()
               << "tplratioLeastSquareFast="
               << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
                                              // use fast least square estimation

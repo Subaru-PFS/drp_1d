@@ -421,26 +421,26 @@ Float64 CRigidityManager::getLeastSquareMeritFast(Int32 idxLine) const {
 
 void CRigidityManager::logParameters() {
 
-  Log.LogTrace(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
-  Log.LogTrace(Formatter() << " m_opt_lya_forcedisablefit"
+  Log.LogDetail(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
+  Log.LogDetail(Formatter() << " m_opt_lya_forcedisablefit"
                           << m_opt_lya_forcedisablefit);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_min"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_asym_min"
                           << m_opt_lya_fit_asym_min);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_max"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_asym_max"
                           << m_opt_lya_fit_asym_max);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_asym_step"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_asym_step"
                           << m_opt_lya_fit_asym_step);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_min"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_width_min"
                           << m_opt_lya_fit_width_min);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_max"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_width_max"
                           << m_opt_lya_fit_width_max);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_width_step"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_width_step"
                           << m_opt_lya_fit_width_step);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_min"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_delta_min"
                           << m_opt_lya_fit_delta_min);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_max"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_delta_max"
                           << m_opt_lya_fit_delta_max);
-  Log.LogTrace(Formatter() << " m_opt_lya_fit_delta_step"
+  Log.LogDetail(Formatter() << " m_opt_lya_fit_delta_step"
                           << m_opt_lya_fit_delta_step);
 }
 

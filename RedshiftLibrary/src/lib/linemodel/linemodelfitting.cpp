@@ -196,52 +196,52 @@ void CLineModelFitting::initMembers() {
 // hook
 
 void CLineModelFitting::logParameters() {
-  Log.LogTrace(Formatter() << "m_pass" << m_pass);
-  Log.LogTrace(Formatter() << " m_enableAmplitudeOffsets"
+  Log.LogDetail(Formatter() << "m_pass" << m_pass);
+  Log.LogDetail(Formatter() << " m_enableAmplitudeOffsets"
                           << m_enableAmplitudeOffsets);
-  Log.LogTrace(Formatter() << " m_LambdaOffsetMin" << m_LambdaOffsetMin);
-  Log.LogTrace(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
-  Log.LogTrace(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
-  Log.LogTrace(Formatter() << " m_enableLambdaOffsetsFit"
+  Log.LogDetail(Formatter() << " m_LambdaOffsetMin" << m_LambdaOffsetMin);
+  Log.LogDetail(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
+  Log.LogDetail(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
+  Log.LogDetail(Formatter() << " m_enableLambdaOffsetsFit"
                           << m_enableLambdaOffsetsFit);
 
-  Log.LogTrace(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
+  Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
                           << m_opt_firstpass_forcedisableMultipleContinuumfit);
-  Log.LogTrace(Formatter() << "m_opt_firstpass_fittingmethod "
+  Log.LogDetail(Formatter() << "m_opt_firstpass_fittingmethod "
                           << m_opt_firstpass_fittingmethod);
-  Log.LogTrace(Formatter() << "m_opt_secondpass_fittingmethod"
+  Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
                           << m_opt_secondpass_fittingmethod);
 
-  Log.LogTrace(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
-  Log.LogTrace(Formatter() << "LineWidthType=" << m_LineWidthType);
+  Log.LogDetail(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
+  Log.LogDetail(Formatter() << "LineWidthType=" << m_LineWidthType);
 
-  Log.LogTrace(Formatter() << "velocityEmission=" << m_velocityEmission);
-  Log.LogTrace(Formatter() << "velocityAbsorption=" << m_velocityAbsorption);
-  Log.LogTrace(Formatter() << "velocityEmissionInit=" << m_velocityEmissionInit);
-  Log.LogTrace(Formatter() << "velocityAbsorptionInit="
+  Log.LogDetail(Formatter() << "velocityEmission=" << m_velocityEmission);
+  Log.LogDetail(Formatter() << "velocityAbsorption=" << m_velocityAbsorption);
+  Log.LogDetail(Formatter() << "velocityEmissionInit=" << m_velocityEmissionInit);
+  Log.LogDetail(Formatter() << "velocityAbsorptionInit="
                           << m_velocityAbsorptionInit);
 
-  Log.LogTrace(Formatter() << "nominalWidthDefaultEmission="
+  Log.LogDetail(Formatter() << "nominalWidthDefaultEmission="
                           << m_nominalWidthDefaultEmission);
-  Log.LogTrace(Formatter() << "nominalWidthDefaultAbsorption="
+  Log.LogDetail(Formatter() << "nominalWidthDefaultAbsorption="
                           << m_nominalWidthDefaultAbsorption);
 
-  Log.LogTrace(Formatter() << "fittingmethod=" << m_fittingmethod);
+  Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
 
-  Log.LogTrace(Formatter() << "rigidity=" << m_rigidity);
+  Log.LogDetail(Formatter() << "rigidity=" << m_rigidity);
 
-  // Log.LogTrace(Formatter()<<"tplCatalog="<<m_tplCatalog);
-  // Log.LogTrace(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
+  // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
+  // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
 
-  Log.LogTrace(Formatter() << "secondpass_fitContinuum_dustfit="
+  Log.LogDetail(Formatter() << "secondpass_fitContinuum_dustfit="
                           << m_secondpass_fitContinuum_dustfit);
-  Log.LogTrace(Formatter() << "secondpass_fitContinuum_igm="
+  Log.LogDetail(Formatter() << "secondpass_fitContinuum_igm="
                           << m_secondpass_fitContinuum_igm);
 
-  //  Log.LogTrace(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
+  //  Log.LogDetail(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
   //  // only used with
   // m_fitContinuum_option==2 for now
-  Log.LogTrace(Formatter() << "forcedisableMultipleContinuumfit="
+  Log.LogDetail(Formatter() << "forcedisableMultipleContinuumfit="
                           << m_forcedisableMultipleContinuumfit);
 }
 
