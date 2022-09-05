@@ -93,9 +93,9 @@ CLineModelFitting::CLineModelFitting()
   }
 
   initMembers();
-  setRigidity(m_rigidity);
-  if (m_rigidity == "rules")
-    dynamic_cast<CRulesManager *>(m_rigidityManager.get())
+  setLineRatioType(m_lineRatioType);
+  if (m_lineRatioType == "rules")
+    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
         ->setRulesOption();
 }
 
@@ -110,14 +110,14 @@ CLineModelFitting::CLineModelFitting(
   m_ContinuumComponent = "fromspectrum";
   m_fittingmethod = "hybrid";
   // temporary options override to be removed when full tpl ortho is implemented
-  m_rigidity = "rules";
+  m_lineRatioType = "rules";
 
   initMembers();
-  setRigidity(m_rigidity);
+  setLineRatioType(m_lineRatioType);
 
-  dynamic_cast<CRulesManager *>(m_rigidityManager.get())
+  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
       ->setRulesOption("no");
-  m_rigidityManager->m_ContinuumComponent = "fromspectrum";
+  m_lineRatioManager->m_ContinuumComponent = "fromspectrum";
 }
 
 void CLineModelFitting::initParameters() {
@@ -134,7 +134,7 @@ void CLineModelFitting::initParameters() {
   m_velocityEmissionInit = m_velocityEmission;
   m_velocityAbsorptionInit = m_velocityAbsorption;
 
-  m_rigidity = ps->GetScoped<std::string>("rigidity");
+  m_lineRatioType = ps->GetScoped<std::string>("lineRatioType");
 
   if (Context.GetCurrentMethod() == "LineModelSolve") {
     m_opt_firstpass_fittingmethod =
@@ -170,7 +170,7 @@ void CLineModelFitting::initMembers() {
                 m_inputSpc->GetMedianWinsize());
   // Load the line catalog
   Log.LogDebug("About to load line catalog.");
-  if (m_rigidity == "rules") {
+  if (m_lineRatioType == "rules") {
     // load the regular catalog
     LoadCatalog(m_RestLineList);
   } else { //"tplratio" and "tplcorr"
@@ -228,7 +228,7 @@ void CLineModelFitting::logParameters() {
 
   Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
 
-  Log.LogDetail(Formatter() << "rigidity=" << m_rigidity);
+  Log.LogDetail(Formatter() << "lineRatioType=" << m_lineRatioType);
 
   // Log.LogDetail(Formatter()<<"tplCatalog="<<m_tplCatalog);
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
@@ -271,7 +271,7 @@ Int32 CLineModelFitting::setPassMode(Int32 iPass) {
     m_fitter->enableAmplitudeOffsets();
   }
 
-  m_rigidityManager->setPassMode(iPass);
+  m_lineRatioManager->setPassMode(iPass);
 
   return true;
 }
@@ -399,11 +399,11 @@ void CLineModelFitting::setRedshift(Float64 redshift,
 }
 
 Int32 CLineModelFitting::getTplratio_count() const {
-  return m_rigidityManager->getTplratio_count();
+  return m_lineRatioManager->getTplratio_count();
 }
 
 TFloat64List CLineModelFitting::getTplratio_priors() {
-  return m_rigidityManager->getTplratio_priors();
+  return m_lineRatioManager->getTplratio_priors();
 }
 
 bool CLineModelFitting::initModelAtZ(
@@ -476,8 +476,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (m_dTransposeDLambdaRange != *(m_lambdaRange))
     initDtd();
 
-  Int32 ntplratio = m_rigidityManager->prepareFit(
-      redshift); // multiple fitting steps for rigidity=tplratio/tplratio
+  Int32 ntplratio = m_lineRatioManager->prepareFit(
+      redshift); // multiple fitting steps for lineRatioType=tplratio/tplratio
 
   Int32 nContinuum = 1;
   Int32 savedIdxContinuumFitted = -1; // for continuum tplfit
@@ -500,25 +500,25 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
-      if(m_rigidityManager->init(redshift, itratio)) continue;
+      if(m_lineRatioManager->init(redshift, itratio)) continue;
 
       m_fitter->fit(redshift);
 
       std::string bestTplratioName = "undefined";
 
-      _merit = m_rigidityManager->computeMerit(itratio);
+      _merit = m_lineRatioManager->computeMerit(itratio);
 
       if (bestMerit + bestMeritPrior > _merit + _meritprior) {
         bestMerit = _merit;
         bestMeritPrior = _meritprior;
         savedIdxContinuumFitted = k;
         Int32 modelSolutionLevel =
-            m_rigidity == "rules" ? Int32(enableLogging) : 0;
+            m_lineRatioType == "rules" ? Int32(enableLogging) : 0;
         modelSolution = GetModelSolution(modelSolutionLevel);
         continuumModelSolution =
             m_continuumManager->GetContinuumModelSolution();
 
-        m_rigidityManager->saveResults(itratio);
+        m_lineRatioManager->saveResults(itratio);
       }
       if (m_ContinuumComponent == "nocontinuum")
         m_model->reinitModel();
@@ -531,7 +531,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
   if (isContinuumComponentTplfitxx()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
       Int32 autoselect = m_ContinuumComponent == "tplfitauto";
-      // TODO savedIdxContinuumFitted=-1 if rigidity!=tplratio
+      // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
                                            redshift);
     }
@@ -542,8 +542,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
                   m_fitContinuum_tplFitAmplitude);
     */
   }
-  if (m_rigidity == "tplratio") {
-    m_rigidityManager->finish(redshift);
+  if (m_lineRatioType == "tplratio") {
+    m_lineRatioManager->finish(redshift);
     Int32 modelSolutionLevel = Int32(enableLogging);
     modelSolution = GetModelSolution(modelSolutionLevel);
     continuumModelSolution = m_continuumManager->GetContinuumModelSolution();
@@ -579,8 +579,8 @@ void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
                                   m_lambdaRange, m_model, m_RestLineList, m_continuumManager);
 }
 
-void CLineModelFitting::setRigidity(const std::string &rigidity) {
-  m_rigidityManager = CRigidityManager::makeRigidityManager(rigidity, m_Elements, m_model, m_inputSpc,
+void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
+  m_lineRatioManager = CLineRatioManager::makeLineRatioManager(lineRatioType, m_Elements, m_model, m_inputSpc,
 							    m_lambdaRange, m_continuumManager,  m_RestLineList);
 }
 

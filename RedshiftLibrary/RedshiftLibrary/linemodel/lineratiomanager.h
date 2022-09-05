@@ -37,8 +37,8 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#ifndef _REDSHIFT_RIGIDITY_MANAGER_
-#define _REDSHIFT_RIGIDITY_MANAGER_
+#ifndef _REDSHIFT_LINE_RATIO_MANAGER_
+#define _REDSHIFT_LINE_RATIO_MANAGER_
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/catalog.h"
@@ -51,21 +51,21 @@ class CSpectrum;
 class CContinuumManager;
 class CLineModelSolution;
 class CContinuumModelSolution;
-class CRigidityManager {
+class CLineRatioManager {
 public:
-  CRigidityManager(CLineModelElementList &elements,
+  CLineRatioManager(CLineModelElementList &elements,
                    std::shared_ptr<CSpectrumModel> model,
                    std::shared_ptr<const CSpectrum> inputSpc,
                    std::shared_ptr<const TFloat64Range> lambdaRange,
                    std::shared_ptr<CContinuumManager> continuumManager,
                    const CLineCatalog::TLineVector &restLineList);
-  CRigidityManager() = delete;
-  virtual ~CRigidityManager(){}
-  CRigidityManager(CRigidityManager const& other) = default;
-  CRigidityManager& operator=(CRigidityManager const& other) = default;
+  CLineRatioManager() = delete;
+  virtual ~CLineRatioManager(){}
+  CLineRatioManager(CLineRatioManager const& other) = default;
+  CLineRatioManager& operator=(CLineRatioManager const& other) = default;
    
-  CRigidityManager(CRigidityManager&& other) = default;
-  CRigidityManager& operator=(CRigidityManager&& other) = default;
+  CLineRatioManager(CLineRatioManager&& other) = default;
+  CLineRatioManager& operator=(CLineRatioManager&& other) = default;
   
   virtual int prepareFit(Float64 redshift) { return 1; }
   virtual bool init(Float64 redshift, Int32 itratio = -1);
@@ -83,11 +83,11 @@ public:
 
   void SetLeastSquareFastEstimationEnabled(Int32 enabled) {
   } // TODO, called in computeFirstPass in the general case but only active when
-    // rigidity = tplratio -> should be reviewed
+    // line_ratio_type = tplratio -> should be reviewed
 
   std::string m_ContinuumComponent;
 
-  static std::shared_ptr<CRigidityManager> makeRigidityManager(const std::string &rigidity,
+  static std::shared_ptr<CLineRatioManager> makeLineRatioManager(const std::string &lineRatioType,
 							       CLineModelElementList &elements,
 							       std::shared_ptr<CSpectrumModel> model,
 							       std::shared_ptr<const CSpectrum> inputSpc,

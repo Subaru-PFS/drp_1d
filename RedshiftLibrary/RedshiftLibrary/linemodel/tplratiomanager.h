@@ -41,14 +41,14 @@
 #define _REDSHIFT_TPLRATIO_MANAGER_
 
 #include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/linemodel/rigiditymanager.h"
+#include "RedshiftLibrary/linemodel/lineratiomanager.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
 namespace NSEpic {
 
 class CLineCatalogsTplRatio;
 
-class CTplratioManager : public CRigidityManager {
+class CTplratioManager : public CLineRatioManager {
 public:
   CTplratioManager(CLineModelElementList &elements,
                    std::shared_ptr<CSpectrumModel> model,

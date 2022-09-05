@@ -53,7 +53,7 @@ CTplratioManager::CTplratioManager(
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineCatalog::TLineVector &restLineList)
-    : CRigidityManager(elements, model, inputSpc, lambdaRange, continuumManager,
+    : CLineRatioManager(elements, model, inputSpc, lambdaRange, continuumManager,
                        restLineList) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
@@ -277,7 +277,7 @@ Float64 CTplratioManager::getTplratio_bestMtm() const {
 }
 
 void CTplratioManager::logParameters() {
-  CRigidityManager::logParameters();
+  CLineRatioManager::logParameters();
   Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
   Log.LogDetail(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
   Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
@@ -298,7 +298,7 @@ void CTplratioManager::logParameters() {
 }
 
 void CTplratioManager::setPassMode(Int32 iPass) {
-  CRigidityManager::setPassMode(iPass);
+  CLineRatioManager::setPassMode(iPass);
   if (iPass == 1) {
     m_forcedisableTplratioISMfit = m_opt_firstpass_forcedisableTplratioISMfit;
   }

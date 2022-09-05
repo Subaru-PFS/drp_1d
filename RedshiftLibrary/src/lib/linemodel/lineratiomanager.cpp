@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 
-#include "RedshiftLibrary/linemodel/rigiditymanager.h"
+#include "RedshiftLibrary/linemodel/lineratiomanager.h"
 #include "RedshiftLibrary/linemodel/rulesmanager.h"
 #include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/linemodel/tplcorrmanager.h"
@@ -50,7 +50,7 @@
 
 using namespace NSEpic;
 
-CRigidityManager::CRigidityManager(
+CLineRatioManager::CLineRatioManager(
     CLineModelElementList &elements, std::shared_ptr<CSpectrumModel> model,
     std::shared_ptr<const CSpectrum> inputSpc,
     std::shared_ptr<const TFloat64Range> lambdaRange,
@@ -95,7 +95,7 @@ CRigidityManager::CRigidityManager(
  * below Lya)
  */
 
-void CRigidityManager::setLyaProfile(Float64 redshift,
+void CLineRatioManager::setLyaProfile(Float64 redshift,
                                      const CLineCatalog::TLineVector &catalog) {
   auto idxLineIGM_ = m_Elements.getIgmLinesIndices();
   auto const idxEltIGM = std::move(idxLineIGM_.front());
@@ -132,7 +132,7 @@ void CRigidityManager::setLyaProfile(Float64 redshift,
   }
 }
 
-void CRigidityManager::setAsymProfile(
+void CLineRatioManager::setAsymProfile(
     Int32 idxLyaE, Int32 idxLineLyaE, Float64 redshift,
     const CLineCatalog::TLineVector &catalog) {
   Int32 lineIndex = getLineIndexInCatalog(idxLyaE, idxLineLyaE, catalog);
@@ -168,7 +168,7 @@ void CRigidityManager::setAsymProfile(
   m_Elements[idxLyaE]->SetAsymfitParams(bestfitParams);
 }
 
-TAsymParams CRigidityManager::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
+TAsymParams CLineRatioManager::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
                                                 const Int32 &idxLineLyaE) {
 
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
@@ -232,7 +232,7 @@ TAsymParams CRigidityManager::fitAsymParameters(Float64 redshift, Int32 idxLyaE,
   return bestparams;
 }
 
-Int32 CRigidityManager::getLineIndexInCatalog(
+Int32 CLineRatioManager::getLineIndexInCatalog(
     Int32 iElts, Int32 idxLine,
     const CLineCatalog::TLineVector &catalog) const {
   Int32 lineIndex = undefIdx;
@@ -243,7 +243,7 @@ Int32 CRigidityManager::getLineIndexInCatalog(
   return lineIndex;
 }
 
-void CRigidityManager::setSymIgmProfile(Int32 iElts,
+void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                         const TInt32List &idxLineIGM,
                                         Float64 redshift) {
 
@@ -259,7 +259,7 @@ void CRigidityManager::setSymIgmProfile(Int32 iElts,
   m_Elements[iElts]->SetSymIgmParams(TSymIgmParams(bestigmidx, redshift));
 }
 
-Int32 CRigidityManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
+Int32 CLineRatioManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
                                              const TInt32List &idxLine) {
 
   const CSpectrumSpectralAxis &spectralAxis = m_inputSpc->GetSpectralAxis();
@@ -288,7 +288,7 @@ Int32 CRigidityManager::fitAsymIGMCorrection(Float64 redshift, Int32 iElts,
   return bestIgmIdx;
 }
 
-bool CRigidityManager::init(Float64 redshift, Int32 itratio) {
+bool CLineRatioManager::init(Float64 redshift, Int32 itratio) {
   // prepare the Lya width and asym coefficients if the asymfit profile
   // option is met
   setLyaProfile(redshift, m_RestLineList);
@@ -301,7 +301,7 @@ bool CRigidityManager::init(Float64 redshift, Int32 itratio) {
  * set the fitting parameters according the the iPass argument.
  * @return
  */
-void CRigidityManager::setPassMode(Int32 iPass) {
+void CLineRatioManager::setPassMode(Int32 iPass) {
 
   if (iPass == 1) {
     m_forceDisableLyaFitting = true;
@@ -323,7 +323,7 @@ void CRigidityManager::setPassMode(Int32 iPass) {
  * \brief Accumulates the squared differences between model and spectrum in
  *the argument lambdaRange and returns the sum.
  **/
-Float64 CRigidityManager::getLeastSquareMerit() const {
+Float64 CLineRatioManager::getLeastSquareMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
   const CSpectrumFluxAxis &spcFluxAxis = m_model->getSpcFluxAxis();
   const CSpectrumFluxAxis &modelFluxAxis =
@@ -400,7 +400,7 @@ Float64 CRigidityManager::getLeastSquareMerit() const {
 /**
  * \brief Get the squared difference by fast method proposed by D. Vibert
  **/
-Float64 CRigidityManager::getLeastSquareMeritFast(Int32 idxLine) const {
+Float64 CLineRatioManager::getLeastSquareMeritFast(Int32 idxLine) const {
   Float64 fit = -1; // TODO restore getLeastSquareContinuumMeritFast();
 
   for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
@@ -419,7 +419,7 @@ Float64 CRigidityManager::getLeastSquareMeritFast(Int32 idxLine) const {
   return fit;
 }
 
-void CRigidityManager::logParameters() {
+void CLineRatioManager::logParameters() {
 
   Log.LogDetail(Formatter() << " m_opt_lya_forcefit" << m_opt_lya_forcefit);
   Log.LogDetail(Formatter() << " m_opt_lya_forcedisablefit"
@@ -444,7 +444,7 @@ void CRigidityManager::logParameters() {
                           << m_opt_lya_fit_delta_step);
 }
 
-std::shared_ptr<CRigidityManager> CRigidityManager::makeRigidityManager(const std::string &rigidity,
+std::shared_ptr<CLineRatioManager> CLineRatioManager::makeLineRatioManager(const std::string &lineRatioType,
 						      CLineModelElementList &elements,
 						      std::shared_ptr<CSpectrumModel> model,
 						      std::shared_ptr<const CSpectrum> inputSpc,
@@ -454,19 +454,19 @@ std::shared_ptr<CRigidityManager> CRigidityManager::makeRigidityManager(const st
 
 {
 
-  if (rigidity == "tplratio")
+  if (lineRatioType == "tplratio")
     return std::make_shared<CTplratioManager>( 
         CTplratioManager(elements, model, inputSpc, lambdaRange,
                          continuumManager, restLineList));
-  else if (rigidity == "tplcorr")
+  else if (lineRatioType == "tplcorr")
     return std::make_shared<CTplCorrManager>( 
         CTplCorrManager(elements, model, inputSpc, lambdaRange,
                         continuumManager, restLineList));
-  else if (rigidity == "rules")
+  else if (lineRatioType == "rules")
     return std::make_shared<CRulesManager>( 
         CRulesManager(elements, model, inputSpc, lambdaRange,
                       continuumManager, restLineList));
   else
     THROWG(INVALID_PARAMETER, "Only {tplratio, rules, tpcorr} values are "
-                              "supported for linemodel.rigidity");
+                              "supported for linemodel.lineRatioType");
 }

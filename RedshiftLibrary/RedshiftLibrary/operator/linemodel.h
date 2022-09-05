@@ -157,7 +157,7 @@ public:
 
 private:
   std::shared_ptr<CLineModelResult> m_result;
-  std::shared_ptr<CLineModelFitting> m_model;
+  std::shared_ptr<CLineModelFitting> m_fittingManager;
   TFloat64List m_sortedRedshifts;
   Int32 m_enableFastFitLargeGrid = 0;
   Int32 m_estimateLeastSquareFast = 0;

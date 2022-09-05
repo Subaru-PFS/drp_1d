@@ -97,7 +97,7 @@ private:
 
   COperatorLineModel m_linemodel;
 
-  std::string m_opt_rigidity;
+  std::string m_opt_lineratiotype;
   std::string m_opt_continuumreest;
   std::string m_opt_continuumcomponent;
 

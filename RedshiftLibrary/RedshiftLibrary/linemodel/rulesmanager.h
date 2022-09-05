@@ -42,11 +42,11 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/line/regulament.h"
-#include "RedshiftLibrary/linemodel/rigiditymanager.h"
+#include "RedshiftLibrary/linemodel/lineratiomanager.h"
 
 namespace NSEpic {
 
-class CRulesManager : public CRigidityManager {
+class CRulesManager : public CLineRatioManager {
 public:
   CRulesManager(CLineModelElementList &elements,
                 std::shared_ptr<CSpectrumModel> model,

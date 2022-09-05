@@ -67,7 +67,7 @@
 #include <memory>
 namespace NSEpic {
 
-class CRigidityManager;
+class CLineRatioManager;
 
 class CLineModelFitting {
 
@@ -122,7 +122,7 @@ public:
   TFloat64Range &getLambdaRange() { return m_dTransposeDLambdaRange; };
 
   void SetFittingMethod(const std::string &fitMethod);
-  void setRigidity(const std::string &rigidity);
+  void setLineRatioType(const std::string &lineratio);
   void SetSecondpassContinuumFitPrms();
 
   void SetAbsLinesLimit(Float64 limit);
@@ -157,7 +157,7 @@ public:
   void logParameters();
   CLineModelElementList m_Elements;
   std::unique_ptr<CAbstractFitter> m_fitter;
-  std::shared_ptr<CRigidityManager> m_rigidityManager;
+  std::shared_ptr<CLineRatioManager> m_lineRatioManager;
   std::shared_ptr<const CSpectrum> m_inputSpc;
   const CLineCatalog::TLineVector m_RestLineList;
 
@@ -184,7 +184,7 @@ public:
   Int32 getTplratio_count() const;
   TFloat64List getTplratio_priors();
 
-  std::string getRigidity() { return m_rigidity; }
+  std::string getLineRatioType() { return m_lineRatioType; }
 
   Int32 m_pass = 1;
   bool m_enableAmplitudeOffsets;
@@ -233,7 +233,7 @@ private:
 
   std::string m_fittingmethod;
 
-  std::string m_rigidity;
+  std::string m_lineRatioType;
 
   Int32 m_secondpass_fitContinuum_dustfit;
   Int32 m_secondpass_fitContinuum_igm;

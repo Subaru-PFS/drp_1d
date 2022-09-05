@@ -73,7 +73,7 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope, string objectType)
 bool CLineModelSolve::PopulateParameters(
     std::shared_ptr<const CParameterStore> parameterStore) {
 
-  m_opt_rigidity = parameterStore->GetScoped<std::string>("linemodel.rigidity");
+  m_opt_lineratiotype = parameterStore->GetScoped<std::string>("linemodel.lineRatioType");
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("linemodel.continuumreestimation");
   m_opt_continuumcomponent =
@@ -328,7 +328,7 @@ ChisquareArray CLineModelSolve::BuildChisquareArray(
   } else if (m_opt_pdfcombination == "bestproba" ||
              m_opt_pdfcombination == "marg") {
 
-    if (m_opt_rigidity != "tplratio") {
+    if (m_opt_lineratiotype != "tplratio") {
       zpriors.push_back(BuildZpriors(result));
       chisquares.push_back(result->ChiSquare);
     } else {

@@ -53,7 +53,7 @@ CHybridFitter::CHybridFitter(CLineModelElementList &elements,
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  if (ps->GetScoped<std::string>("linemodel.rigidity") == "rules")
+  if (ps->GetScoped<std::string>("linemodel.lineRatioType") == "rules")
     m_opt_enable_improveBalmerFit =
         ps->GetScoped<bool>("linemodel.improveBalmerFit");
 }
