@@ -36,24 +36,23 @@
 // The fact that you are presently reading this means that you have had
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
-#include "RedshiftLibrary/common/datatypes.h"
-#include "RedshiftLibrary/spectrum/fluxaxis.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
+#ifndef _REDSHIFT_RANDOM_FITTER_
+#define _REDSHIFT_RANDOM_FITTER_
 
-#include <boost/test/unit_test.hpp>
+#include "RedshiftLibrary/linemodel/abstractfitter.h"
 
-using namespace NSEpic;
+namespace NSEpic
 
-BOOST_AUTO_TEST_SUITE(Smooth)
+{
 
-BOOST_AUTO_TEST_CASE(Mean) {
-  CSpectrumFluxAxis flux({10, 5, 10});
-  flux.ApplyMeanSmooth(1);
+class CRandomFitter : public CAbstractFitter {
+public:
+  using CAbstractFitter::CAbstractFitter;
 
-  const CSpectrumFluxAxis &const_flux = flux;
-  BOOST_CHECK_CLOSE_FRACTION(7.5, const_flux[0], 0.0001);
-  BOOST_CHECK_CLOSE_FRACTION(8.3333, const_flux[1], 0.0001);
-  BOOST_CHECK_CLOSE_FRACTION(7.5, const_flux[2], 0.0001);
-}
+  void fit(Float64 redshift) override;
 
-BOOST_AUTO_TEST_SUITE_END()
+private:
+  Float64 getContinuumMeanUnderElement(Int32 eltId) const;
+};
+} // namespace NSEpic
+#endif

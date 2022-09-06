@@ -62,6 +62,9 @@ class CParameterStore;
 class COperatorResultStore;
 class CClassifierStore;
 class CInputContext;
+class CLine;
+typedef std::vector<CLine> TLineVector;
+class CLineCatalogsTplRatio;
 /**
  * \ingroup Redshift
  * Store all data concerning computation and processing of a given spectrum.
@@ -86,7 +89,7 @@ public:
   }
   void setLineRatioCatalogCatalog(
       const std::string &objectType,
-      const std::shared_ptr<CLineCatalogsTplShape> &catalog) {
+      const std::shared_ptr<CLineCatalogsTplRatio> &catalog) {
     m_inputContext->setLineRatioCatalogCatalog(objectType, catalog);
   }
   void
@@ -114,6 +117,7 @@ public:
   std::shared_ptr<const CTemplateCatalog> GetTemplateCatalog() const {
     return m_inputContext->GetTemplateCatalog();
   }
+
   std::shared_ptr<const CLineCatalog>
   GetLineCatalog(const std::string &objectType,
                  const std::string &method) const {
@@ -129,6 +133,35 @@ public:
     return m_ResultStore;
   }
 
+  std::shared_ptr<const TFloat64Range> GetLambdaRange() const {
+    return m_inputContext->m_lambdaRange;
+  }
+
+  std::shared_ptr<const TFloat64Range> GetClampedLambdaRange() const {
+    return m_inputContext->m_clampedLambdaRange;
+  }
+
+  std::shared_ptr<const TFloat64Range> GetRebinnedClampedLambdaRange() const {
+    return m_inputContext->m_rebinnedClampedLambdaRange;
+  }
+
+  const std::string &GetCurrentCategory() const {
+    if (m_ScopeStack.empty())
+      THROWG(INTERNAL_ERROR,
+             "Category unreachable at process flow begin or end");
+    return m_ScopeStack[0];
+  }
+
+  const std::string &GetCurrentMethod() const {
+    if (m_ScopeStack.size() < 2)
+      THROWG(INTERNAL_ERROR, "Method unreachable at process flow begin or end");
+    return m_ScopeStack[1];
+  }
+
+  const CLineCatalog::TLineVector getLineVector();
+  std::shared_ptr<CLineCatalogsTplRatio> GetTplRatioCatalog();
+  std::shared_ptr<const CPhotBandCatalog> GetPhotBandCatalog();
+
   TScopeStack m_ScopeStack;
 
 private:
@@ -141,7 +174,7 @@ private:
 
   // added below variables - to discuss if we only define them here (and no more
   // in processflow)
-  TFloat64Range m_spclambdaRange;
+
   TFloat64Range m_redshiftRange;
   TFloat64List m_redshifts;
   std::string m_redshiftSampling;

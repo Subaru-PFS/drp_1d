@@ -72,9 +72,6 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
       *(inputContext->GetLineCatalog(m_objectType, m_name));
   // We keep only emission lines, absorption lines are not handled yet (need to
   // manage continuum appropriately)
-  const CLineCatalog::TLineVector restLineList =
-      restlinecatalog.GetFilteredList(CLine::nType_Emission, -1);
-  Log.LogDebug("restLineList.size() = %d", restLineList.size());
 
   Float64 opt_nsigmasupport =
       inputContext->GetParameterStore()->GetScoped<Float64>(
@@ -82,18 +79,16 @@ CLineMeasSolve::compute(std::shared_ptr<const CInputContext> inputContext,
   const std::string &opt_continuumcomponent =
       "nocontinuum"; // params->GetScoped<std::string>("continuumcomponent");
 
-  m_linemodel.Init(spc, m_redshifts, std::move(restLineList), m_categoryList,
-                   opt_continuumcomponent, opt_nsigmasupport);
+  m_linemodel.Init(m_redshifts);
 
   CLineModelSolution bestModelSolution;
   Float64 bestz = NAN;
   {
-    CAutoScope autoscope(scope, "linemodel");
 
     bestModelSolution =
         m_linemodel.computeForLineMeas(inputContext, m_redshifts, bestz);
   }
-  bestModelSolution.fillLineIds();
+
   std::shared_ptr<const CModelSpectrumResult> modelspc =
       std::make_shared<const CModelSpectrumResult>(
           m_linemodel.getFittedModelWithoutcontinuum(bestModelSolution));

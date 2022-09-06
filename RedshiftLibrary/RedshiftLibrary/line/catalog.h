@@ -76,10 +76,10 @@ public:
           nullptr);
 
   const TLineVector &GetList() const;
-  const TLineVector GetFilteredList(Int32 typeFilter = -1,
-                                    Int32 forceFilter = -1) const;
-  const TLineVector GetFilteredList(const std::string &typeFilter,
-                                    const std::string &forceFilter) const;
+  TLineVector GetFilteredList(Int32 typeFilter = -1,
+                              Int32 forceFilter = -1) const;
+  TLineVector GetFilteredList(const std::string &typeFilter,
+                              const std::string &forceFilter) const;
   static const std::vector<CLineCatalog::TLineVector>
   ConvertToGroupList(const TLineVector &filteredList);
 

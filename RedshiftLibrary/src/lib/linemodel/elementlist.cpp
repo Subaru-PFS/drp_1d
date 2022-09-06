@@ -37,6 +37,9 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/linemodel/linemodelsolution.h"
+#include <cfloat>
 
 using namespace NSEpic;
 
@@ -141,10 +144,6 @@ void CLineModelElementList::ResetElementIndexesDisabled() {
  **/
 std::vector<TInt32List>
 CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
-  bool verbose = false;
-  if (verbose) {
-    Log.LogDebug("    model: group tags for lineType=%d", lineType);
-  }
   TStringList tags;
   TInt32List nonGroupedLines;
 
@@ -153,12 +152,6 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
     Int32 iElts = nonZeroIndexes[i];
     Int32 nLines = m_Elements[iElts]->GetSize();
     for (Int32 iSubElts = 0; iSubElts < nLines; iSubElts++) {
-      if (verbose) {
-        Log.LogDebug("    model: group tags - lineType=%d", lineType);
-        Log.LogDebug("    model: group tags - "
-                     "m_Elements[iElts]->m_Lines[iSubElts].GetType()=%d",
-                     m_Elements[iElts]->m_Lines[iSubElts].GetType());
-      }
       if (lineType == m_Elements[iElts]->m_Lines[iSubElts].GetType()) {
         std::string _tag =
             m_Elements[iElts]->m_Lines[iSubElts].GetVelGroupName();
@@ -171,26 +164,9 @@ CLineModelElementList::GetModelVelfitGroups(Int32 lineType) const {
     }
   }
 
-  if (verbose) {
-    Log.LogDebug("    model: group tags non unique found=%d", tags.size());
-    for (Int32 itag = 0; itag < tags.size(); itag++) {
-      Log.LogDebug("    model: non unique tag %d/%d = %s", itag + 1,
-                   tags.size(), tags[itag].c_str());
-    }
-  }
-
   // create the group tag set by removing duplicates
   std::sort(tags.begin(), tags.end());
   tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
-  //*
-  if (verbose) {
-    // print the tags
-    for (Int32 itag = 0; itag < tags.size(); itag++) {
-      Log.LogDebug("    model: velfit group Tag %d/%d = %s", itag + 1,
-                   tags.size(), tags[itag].c_str());
-    }
-  }
-  //*/
 
   // add the grouped lines
   std::vector<TInt32List> groups;
@@ -342,6 +318,81 @@ TInt32List CLineModelElementList::getOverlappingElements(
   return indexes;
 }
 
+// TODO never called function, keep it ?
+/**
+ * \brief Returns a sorted set of line indices present in the supports of the
+ *argument. Create a vector named indexes. If the argument ind is an index to
+ *m_Elements that IsOutSideLambdaRange, return indexes. For each entry in
+ *m_Elements: If the entry has a different linetype than the line
+ *corresponding to ind, go to the next entry. If the entry
+ *IsOutsideLambdaRange, go to the enxt entry. For each subentry in the support
+ *of entry: For each subsubentry in the support of ind: If the overlap in the
+ *spectralAxis is smaller than -1 * overlapThres * winsize, add entry to
+ *indexes. Sort indexes, remove duplicates from indexes, and return indexes.
+ **/
+TInt32List CLineModelElementList::getOverlappingElementsBySupport(
+    Int32 ind, Float64 redshift, const CSpectrumSpectralAxis &spectralAxis,
+    Float64 overlapThres) const {
+
+  TInt32List indexes;
+
+  if (m_Elements[ind]->IsOutsideLambdaRange()) {
+    indexes.push_back(ind);
+    return indexes;
+  }
+  TInt32RangeList refsupport = m_Elements[ind]->getSupport();
+  const CLine &line = m_Elements[ind]->m_Lines[0];
+  Int32 linetype = line.GetType();
+  Float64 mu = line.GetPosition() * (1 + redshift);
+  Float64 c = m_Elements[ind]->GetLineWidth(mu, redshift, line.GetIsEmission());
+  Float64 winsize = line.GetProfile().GetNSigmaSupport() * c;
+  Float64 overlapThresholdMin = winsize * overlapThres;
+  // overlapThresholdMin = 0.0;
+
+  Int32 x1 = 0;
+  Int32 y1 = 0;
+  Int32 x2 = 0;
+  Int32 y2 = 0;
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    if (m_Elements[iElts]->m_Lines[0].GetType() != linetype) {
+      continue;
+    }
+
+    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
+      continue;
+    }
+    TInt32RangeList s = m_Elements[iElts]->getSupport();
+    for (Int32 iS = 0; iS < s.size(); iS++) {
+      for (Int32 iRefS = 0; iRefS < refsupport.size(); iRefS++) {
+        x1 = refsupport[iRefS].GetBegin();
+        x2 = refsupport[iRefS].GetEnd();
+        y1 = s[iS].GetBegin();
+        y2 = s[iS].GetEnd();
+
+        // Log.LogInfo( "hybrid fit: iRefS=%d - support=%d,%d", iRefS, x1,
+        // x2); Log.LogInfo( "hybrid fit: iS=%d - support=%d,%d", iS, y1, y2);
+
+        //                if( std::max(x1,y1) < std::min(x2,y2) ){
+        //                    indexes.push_back(iElts);
+        //                    break;
+        //                }
+
+        Float64 max = spectralAxis[std::max(x1, y1)];
+        Float64 min = spectralAxis[std::min(x2, y2)];
+        if (max - min < -overlapThresholdMin) {
+          indexes.push_back(iElts);
+          break;
+        }
+      }
+    }
+  }
+
+  std::sort(indexes.begin(), indexes.end());
+  indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
+
+  return indexes;
+}
+
 /**
  * \brief If argument j is a valid index of m_Elements, updates the element in
  *that index calling its SetFittedAmplitude with arguments a and snr.
@@ -425,59 +476,6 @@ std::vector<TInt32List> CLineModelElementList::getIgmLinesIndices() const {
     }
   }
   return lineIdxList;
-}
-
-/**
- * \brief Returns the error of the support for subelements under the element
- *with the argument eltId as index. Accumulate "fit", the squared difference
- *between model and spectrum, divided by the square of the m_ErrorNoContinuum
- *value. Accumulate "sumErr" 1 / square of the m_ErrorNoContinuum value. return
- *the square root of fit / sumErr.
- **/
-Float64 CLineModelElementList::getModelErrorUnderElement(
-    Int32 eltId, const CSpectrumFluxAxis &spcFluxAxis,
-    const CSpectrumFluxAxis &modelFluxAxis) const {
-  // before elementlistcutting this variable was
-  // CElementList::m_ErrorNoContinuum, a reference initialized twice in
-  // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
-  // and after to spectrumFluxAxis.GetError
-  const CSpectrumNoiseAxis &errorNoContinuum = spcFluxAxis.GetError();
-
-  if (eltId < 0) {
-    return -1.0;
-  }
-
-  Int32 numDevs = 0;
-  Float64 fit = 0.0;
-  const Float64 *Ymodel = modelFluxAxis.GetSamples();
-  const Float64 *Yspc = spcFluxAxis.GetSamples();
-  Float64 diff = 0.0;
-
-  Float64 sumErr = 0.0;
-
-  TInt32RangeList support;
-  Int32 iElts = eltId;
-  {
-    if (m_Elements[iElts]->IsOutsideLambdaRange()) {
-      return 0.0;
-    }
-    TInt32RangeList s = m_Elements[iElts]->getSupport();
-    for (Int32 iS = 0; iS < s.size(); iS++) {
-      support.push_back(s[iS]);
-    }
-  }
-
-  Float64 w = 0.0;
-  for (Int32 iS = 0; iS < support.size(); iS++) {
-    for (Int32 j = support[iS].GetBegin(); j < support[iS].GetEnd(); j++) {
-      numDevs++;
-      diff = (Yspc[j] - Ymodel[j]);
-      w = 1.0 / (errorNoContinuum[j] * errorNoContinuum[j]);
-      fit += (diff * diff) * w;
-      sumErr += w;
-    }
-  }
-  return sqrt(fit / sumErr);
 }
 
 /**
@@ -619,4 +617,167 @@ Int32 CLineModelElementList::prepareAmplitudeOffset() {
 void CLineModelElementList::debug(std::ostream &os) const {
   for (const std::shared_ptr<CLineModelElement> &elt : m_Elements)
     elt->debug(os);
+}
+
+/**
+ * \brief Get the scale marginalization correction
+ *
+ * WARNING: (todo-check) for lm-rules or lm-free, if hybrid method was used to
+ *fit, mtm and dtm are not estimated for now...
+ **/
+Float64 CLineModelElementList::getScaleMargCorrection(Int32 idxLine) const {
+  Float64 corr = 0.0;
+
+  // scale marg for continuum
+  // corr += getContinuumScaleMargCorrection();
+
+  for (Int32 iElts = 0; iElts < m_Elements.size(); iElts++) {
+    if (idxLine != undefIdx && idxLine != iElts) {
+      continue;
+    }
+    if (m_Elements[iElts]->IsOutsideLambdaRange() == true) {
+      continue;
+    }
+    // if(m_Elements[iElts]->GetElementAmplitude()<=0.0){
+    //     continue;
+    // }
+
+    Float64 mtm = m_Elements[iElts]->GetSumGauss();
+    if (mtm > 0.0) {
+      corr += log(mtm);
+    }
+  }
+
+  return corr;
+}
+
+/**
+ * @brief CLineModelFitting::GetModelStrongLinePresent
+ * @return 1 if there is 1 strong emission line present
+ */
+bool CLineModelElementList::GetModelStrongEmissionLinePresent() const {
+
+  // TODO is this check really necessary here ?
+  //   if (!m_RestLineList.size())
+  //   THROWG(INTERNAL_ERROR, "m_RestframeList is empty");
+
+  bool isStrongPresent = false;
+
+  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
+    Int32 iElts = validEltsIdx[iValidElts];
+    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
+      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission() ||
+          !m_Elements[iElts]->m_Lines[lineIdx].GetIsStrong()) {
+        continue;
+      }
+
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      if (amp > 0.0) {
+        isStrongPresent = true;
+        Log.LogDebug("    model: GetModelStrongEmissionLinePresent - found "
+                     "Strong EL: %s",
+                     m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str());
+        break;
+      }
+    }
+    if (isStrongPresent)
+      break;
+  }
+
+  return isStrongPresent;
+}
+
+/**
+ * @brief
+ * @return 1 if ha em is the strongest line present
+ */
+bool CLineModelElementList::GetModelHaStrongest() const {
+
+  Float64 ampMax = -DBL_MAX;
+  std::string ampMaxLineTag = "";
+
+  TInt32List validEltsIdx = GetModelValidElementsIndexes();
+  for (Int32 iValidElts = 0; iValidElts < validEltsIdx.size(); iValidElts++) {
+    Int32 iElts = validEltsIdx[iValidElts];
+    Int32 nlines = m_Elements[iElts]->GetLines().size();
+    for (Int32 lineIdx = 0; lineIdx < nlines; lineIdx++) {
+      if (!m_Elements[iElts]->m_Lines[lineIdx].GetIsEmission()) {
+        continue;
+      }
+
+      Float64 amp = m_Elements[iElts]->GetFittedAmplitude(lineIdx);
+      if (amp > 0. && amp > ampMax) {
+        ampMaxLineTag = m_Elements[iElts]->m_Lines[lineIdx].GetName().c_str();
+        ampMax = amp;
+      }
+    }
+  }
+
+  bool isHaStrongest = (!std::isnan(ampMax) && ampMax > 0. &&
+                        ampMaxLineTag == linetags::halpha_em);
+  if (isHaStrongest) {
+    Log.LogDebug("    model: GetModelHaStrongest - found to be true with "
+                 "ampMax=%e (for line=Halpha)",
+                 ampMax);
+  }
+  return isHaStrongest;
+}
+
+/**
+ * @brief Look for polynom coeffs corresponding to one specific Line
+ * Here,we assume that we already fitted one line at a time, which is not
+ * really the case
+ * TODO: take into consideration lines fitted together for the element in
+ * question
+ *
+ * @param eIdx
+ * @return TPolynomCoeffs
+ */
+TPolynomCoeffs CLineModelElementList::getPolynomCoeffs(Int32 eIdx) const {
+  TInt32List xInds = getSupportIndexes({Int32(eIdx)});
+  TPolynomCoeffs polynom_coeffs = {0., 0., 0.};
+  if (xInds.size() && m_ampOffsetsCoeffs.size()) {
+    Int32 idxAmpOffset = getIndexAmpOffset(xInds[0]);
+    polynom_coeffs = m_ampOffsetsCoeffs[idxAmpOffset];
+  }
+  return polynom_coeffs;
+}
+
+/**
+ * @brief
+ *
+ * @param eIdx_list
+ * @param subeIdx_list
+ * @param sigma_support
+ * @return TInt32RangeList
+ */
+TInt32RangeList CLineModelElementList::getlambdaIndexesUnderLines(
+    const TInt32List &eIdx_list, const TInt32List &subeIdx_list,
+    Float64 sigma_support, const CSpectrumSpectralAxis &spectralAxis,
+    const TFloat64Range &lambdaRange, Float64 redshift) const {
+
+  TInt32RangeList indexRangeList(eIdx_list.size());
+  for (Int32 i = 0; i < eIdx_list.size(); i++) {
+    Int32 eIdx = eIdx_list[i];
+    Int32 subeIdx = subeIdx_list[i];
+
+    Float64 mu = NAN;
+    Float64 LineWidth = NAN;
+    m_Elements[eIdx]->getObservedPositionAndLineWidth(subeIdx, redshift, mu,
+                                                      LineWidth);
+
+    Float64 winsizeAngstrom = LineWidth * sigma_support;
+
+    indexRangeList[i] = CLineModelElement::EstimateIndexRange(
+        spectralAxis, mu, lambdaRange, winsizeAngstrom);
+  }
+
+  if (eIdx_list.size() == 1)
+    return indexRangeList;
+  TInt32RangeList nonOverlappingIndexRangeList =
+      TInt32Range::joinIntersections(std::move(indexRangeList));
+
+  return nonOverlappingIndexRangeList;
 }

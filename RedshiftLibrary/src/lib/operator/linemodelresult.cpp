@@ -39,6 +39,7 @@
 #include "RedshiftLibrary/operator/linemodelresult.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/templatesfitstore.h"
+#include "RedshiftLibrary/linemodel/tplratiomanager.h"
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 
@@ -54,18 +55,19 @@ using namespace NSEpic;
  *  - setting the size of chisquare vectors
  * @param redshifts
  * @param restLines
- * @param nTplshapes
+ * @param nTplratios
  * @return
  */
 void CLineModelResult::Init(TFloat64List redshifts,
                             CLineCatalog::TLineVector restLines,
-                            Int32 nTemplates, Int32 nTplshapes,
-                            TFloat64List tplshapesPriors) {
-  if (tplshapesPriors.size() != nTplshapes) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "LinemodelResult: tplshapeprior size ="
-                       << tplshapesPriors.size() << "and tplshapes size="
-                       << nTplshapes << "do not correspond");
+                            Int32 nTemplates, Int32 nTplratios,
+                            TFloat64List tplratiosPriors) {
+  if (tplratiosPriors.size() != nTplratios) {
+    THROWG(
+        INTERNAL_ERROR,
+        Formatter()
+            << "Sizes do not match between tplratioprior and tplratios vectors:"
+            << tplratiosPriors.size() << " vs " << nTplratios);
   }
 
   Int32 nResults = redshifts.size();
@@ -85,24 +87,24 @@ void CLineModelResult::Init(TFloat64List redshifts,
   else
     ChiSquareTplContinuum.clear();
 
-  // init the tplshape chisquare results
-  if (nTplshapes > 0) {
-    ChiSquareTplshapes.assign(nTplshapes, TFloat64List(nResults, DBL_MAX));
-    ScaleMargCorrectionTplshapes.assign(nTplshapes,
+  // init the tplratio chisquare results
+  if (nTplratios > 0) {
+    ChiSquareTplratios.assign(nTplratios, TFloat64List(nResults, DBL_MAX));
+    ScaleMargCorrectionTplratios.assign(nTplratios,
                                         TFloat64List(nResults, 0.0));
-    StrongELPresentTplshapes.assign(nTplshapes, TBoolList(nResults, false));
-    StrongHalphaELPresentTplshapes.assign(nTplshapes,
+    StrongELPresentTplratios.assign(nTplratios, TBoolList(nResults, false));
+    StrongHalphaELPresentTplratios.assign(nTplratios,
                                           TBoolList(nResults, false));
-    NLinesAboveSNRTplshapes.assign(nTplshapes, TInt32List(nResults, false));
-    PriorTplshapes = std::move(tplshapesPriors);
-    PriorLinesTplshapes.assign(nTplshapes, TFloat64List(nResults, 0.0));
+    NLinesAboveSNRTplratios.assign(nTplratios, TInt32List(nResults, false));
+    PriorTplratios = std::move(tplratiosPriors);
+    PriorLinesTplratios.assign(nTplratios, TFloat64List(nResults, 0.0));
   } else {
-    ChiSquareTplshapes.clear();
-    ScaleMargCorrectionTplshapes.clear();
-    StrongELPresentTplshapes.clear();
-    NLinesAboveSNRTplshapes.clear();
-    PriorTplshapes.clear();
-    PriorLinesTplshapes.clear();
+    ChiSquareTplratios.clear();
+    ScaleMargCorrectionTplratios.clear();
+    StrongELPresentTplratios.clear();
+    NLinesAboveSNRTplratios.clear();
+    PriorTplratios.clear();
+    PriorLinesTplratios.clear();
   }
 }
 
@@ -128,34 +130,58 @@ void CLineModelResult::SetChisquareTplContinuumResultFromPrevious(
     it->at(index_z) = it->at(previous);
 }
 
-void CLineModelResult::SetChisquareTplshapeResult(
-    Int32 index_z, const TFloat64List &chisquareTplshape,
-    const TFloat64List &scaleMargCorrTplshape,
-    const TBoolList &strongEmissionLinePresentTplshape,
-    const TBoolList &strongHalphaELPresentTplshapes,
-    const TInt32List &nLinesAboveSNRTplshape,
-    const TFloat64List &priorLinesTplshape) {
-  if (chisquareTplshape.size() < 1)
+void CLineModelResult::SetChisquareTplratioResult(
+    Int32 index_z, std::shared_ptr<CTplratioManager> tplratioManager) {
+  if (tplratioManager->GetChisquareTplratio().size() < 1)
     return;
 
   if (index_z >= Redshifts.size())
     THROWG(INTERNAL_ERROR, "Invalid z index");
 
-  if (chisquareTplshape.size() != ChiSquareTplshapes.size() ||
-      chisquareTplshape.size() != scaleMargCorrTplshape.size() ||
-      chisquareTplshape.size() != strongEmissionLinePresentTplshape.size() ||
-      chisquareTplshape.size() != nLinesAboveSNRTplshape.size() ||
-      chisquareTplshape.size() != priorLinesTplshape.size())
+  if (tplratioManager->GetChisquareTplratio().size() !=
+          ChiSquareTplratios.size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetScaleMargTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetStrongELPresentTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetNLinesAboveSNRTplratio().size() ||
+      tplratioManager->GetChisquareTplratio().size() !=
+          tplratioManager->GetPriorLinesTplratio().size())
     THROWG(INTERNAL_ERROR, "vector sizes do not match");
 
-  for (Int32 k = 0; k < chisquareTplshape.size(); k++) {
-    ChiSquareTplshapes[k][index_z] = chisquareTplshape[k];
-    ScaleMargCorrectionTplshapes[k][index_z] = scaleMargCorrTplshape[k];
-    StrongELPresentTplshapes[k][index_z] = strongEmissionLinePresentTplshape[k];
-    StrongHalphaELPresentTplshapes[k][index_z] =
-        strongHalphaELPresentTplshapes[k];
-    NLinesAboveSNRTplshapes[k][index_z] = nLinesAboveSNRTplshape[k];
-    PriorLinesTplshapes[k][index_z] = priorLinesTplshape[k];
+  for (Int32 k = 0; k < tplratioManager->GetChisquareTplratio().size(); k++) {
+    ChiSquareTplratios[k][index_z] = tplratioManager->GetChisquareTplratio()[k];
+    ScaleMargCorrectionTplratios[k][index_z] =
+        tplratioManager->GetScaleMargTplratio()[k];
+    StrongELPresentTplratios[k][index_z] =
+        tplratioManager->GetStrongELPresentTplratio()[k];
+    StrongHalphaELPresentTplratios[k][index_z] =
+        tplratioManager->getHaELPresentTplratio()[k];
+    NLinesAboveSNRTplratios[k][index_z] =
+        tplratioManager->GetNLinesAboveSNRTplratio()[k];
+    PriorLinesTplratios[k][index_z] =
+        tplratioManager->GetPriorLinesTplratio()[k];
+  }
+  return;
+}
+
+void CLineModelResult::SetChisquareTplratioResultFromPrevious(
+    Int32 index_z) {
+
+  if (index_z >= Redshifts.size())
+    THROWG(INTERNAL_ERROR, "Invalid z index");
+
+  auto previous = index_z - 1;
+
+  for (Int32 k = 0; k < ChiSquareTplratios.size(); k++) {
+    ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
+    ScaleMargCorrectionTplratios[k][index_z] = ScaleMargCorrectionTplratios[k][previous];
+    StrongELPresentTplratios[k][index_z] = StrongELPresentTplratios[k][previous];
+    StrongHalphaELPresentTplratios[k][index_z] =
+       StrongHalphaELPresentTplratios[k][previous];
+    NLinesAboveSNRTplratios[k][index_z] = NLinesAboveSNRTplratios[k][previous];
+    PriorLinesTplratios[k][index_z] = PriorLinesTplratios[k][previous];
   }
   return;
 }
@@ -171,127 +197,116 @@ TFloat64List CLineModelResult::getChisquareTplContinuumResult(Int32 index_z) {
   return ret;
 }
 
-TFloat64List CLineModelResult::getChisquareTplshapeResult(Int32 index_z) {
+TFloat64List CLineModelResult::getChisquareTplratioResult(Int32 index_z) {
   TFloat64List ret;
-  ret.reserve(ChiSquareTplshapes.size());
-  for (auto it = ChiSquareTplshapes.begin(), e = ChiSquareTplshapes.end();
+  ret.reserve(ChiSquareTplratios.size());
+  for (auto it = ChiSquareTplratios.begin(), e = ChiSquareTplratios.end();
        it != e; ++it)
     ret.push_back(it->at(index_z));
 
   return ret;
 }
 
-TFloat64List CLineModelResult::getScaleMargCorrTplshapeResult(Int32 index_z) {
-  TFloat64List scaleMargCorrTplshape;
+TFloat64List CLineModelResult::getScaleMargCorrTplratioResult(Int32 index_z) {
+  TFloat64List scaleMargCorrTplratio;
   if (index_z >= Redshifts.size()) {
-    return scaleMargCorrTplshape;
+    return scaleMargCorrTplratio;
   }
-  if (ScaleMargCorrectionTplshapes.size() < 1) {
-    return scaleMargCorrTplshape;
-  }
-
-  for (Int32 k = 0; k < ScaleMargCorrectionTplshapes.size(); k++) {
-    scaleMargCorrTplshape.push_back(ScaleMargCorrectionTplshapes[k][index_z]);
+  if (ScaleMargCorrectionTplratios.size() < 1) {
+    return scaleMargCorrTplratio;
   }
 
-  return scaleMargCorrTplshape;
+  for (Int32 k = 0; k < ScaleMargCorrectionTplratios.size(); k++) {
+    scaleMargCorrTplratio.push_back(ScaleMargCorrectionTplratios[k][index_z]);
+  }
+
+  return scaleMargCorrTplratio;
 }
 
-TBoolList CLineModelResult::getStrongELPresentTplshapeResult(Int32 index_z) {
-  TBoolList _strongELPresentTplshape;
-  if (index_z >= Redshifts.size() || StrongELPresentTplshapes.size() < 1) {
-    return _strongELPresentTplshape;
+TBoolList CLineModelResult::getStrongELPresentTplratioResult(Int32 index_z) {
+  TBoolList _strongELPresentTplratio;
+  if (index_z >= Redshifts.size() || StrongELPresentTplratios.size() < 1) {
+    return _strongELPresentTplratio;
   }
 
-  for (Int32 k = 0; k < StrongELPresentTplshapes.size(); k++) {
-    _strongELPresentTplshape.push_back(StrongELPresentTplshapes[k][index_z]);
+  for (Int32 k = 0; k < StrongELPresentTplratios.size(); k++) {
+    _strongELPresentTplratio.push_back(StrongELPresentTplratios[k][index_z]);
   }
 
-  return _strongELPresentTplshape;
+  return _strongELPresentTplratio;
 }
 
-TBoolList CLineModelResult::getHaELPresentTplshapeResult(Int32 index_z) {
-  TBoolList _strongHaPresentTplshape;
+TBoolList CLineModelResult::getHaELPresentTplratioResult(Int32 index_z) {
+  TBoolList _strongHaPresentTplratio;
   if (index_z >= Redshifts.size() ||
-      StrongHalphaELPresentTplshapes.size() < 1) {
-    return _strongHaPresentTplshape;
+      StrongHalphaELPresentTplratios.size() < 1) {
+    return _strongHaPresentTplratio;
   }
 
-  for (Int32 k = 0; k < StrongHalphaELPresentTplshapes.size(); k++) {
-    _strongHaPresentTplshape.push_back(
-        StrongHalphaELPresentTplshapes[k][index_z]);
+  for (Int32 k = 0; k < StrongHalphaELPresentTplratios.size(); k++) {
+    _strongHaPresentTplratio.push_back(
+        StrongHalphaELPresentTplratios[k][index_z]);
   }
 
-  return _strongHaPresentTplshape;
+  return _strongHaPresentTplratio;
 }
 
-TInt32List CLineModelResult::getNLinesAboveSNRTplshapeResult(Int32 index_z) {
-  TInt32List priorTplshape;
+TInt32List CLineModelResult::getNLinesAboveSNRTplratioResult(Int32 index_z) {
+  TInt32List priorTplratio;
   if (index_z >= Redshifts.size()) {
-    return priorTplshape;
+    return priorTplratio;
   }
-  if (NLinesAboveSNRTplshapes.size() < 1) {
-    return priorTplshape;
-  }
-
-  for (Int32 k = 0; k < NLinesAboveSNRTplshapes.size(); k++) {
-    priorTplshape.push_back(NLinesAboveSNRTplshapes[k][index_z]);
+  if (NLinesAboveSNRTplratios.size() < 1) {
+    return priorTplratio;
   }
 
-  return priorTplshape;
+  for (Int32 k = 0; k < NLinesAboveSNRTplratios.size(); k++) {
+    priorTplratio.push_back(NLinesAboveSNRTplratios[k][index_z]);
+  }
+
+  return priorTplratio;
 }
 
-TFloat64List CLineModelResult::getPriorLinesTplshapeResult(Int32 index_z) {
-  TFloat64List priorTplshape;
+TFloat64List CLineModelResult::getPriorLinesTplratioResult(Int32 index_z) {
+  TFloat64List priorTplratio;
   if (index_z >= Redshifts.size()) {
-    return priorTplshape;
+    return priorTplratio;
   }
-  if (PriorLinesTplshapes.size() < 1) {
-    return priorTplshape;
-  }
-
-  for (Int32 k = 0; k < PriorLinesTplshapes.size(); k++) {
-    priorTplshape.push_back(PriorLinesTplshapes[k][index_z]);
+  if (PriorLinesTplratios.size() < 1) {
+    return priorTplratio;
   }
 
-  return priorTplshape;
+  for (Int32 k = 0; k < PriorLinesTplratios.size(); k++) {
+    priorTplratio.push_back(PriorLinesTplratios[k][index_z]);
+  }
+
+  return priorTplratio;
 }
 
 Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
                                                   Float64 snrThres,
                                                   Float64 fitThres) const {
   Int32 nSol = 0;
-
   TInt32List indexesSols;
   for (Int32 j = 0; j < LineModelSolutions[solutionIdx].Amplitudes.size();
        j++) {
     // skip if already sol
-    bool alreadysol = false;
-    for (Int32 i = 0; i < indexesSols.size(); i++) {
-      if (LineModelSolutions[solutionIdx].ElementId[j] == indexesSols[i]) {
-        alreadysol = true;
-        break;
-      }
-    }
-    if (alreadysol) {
+    bool alreadysol = std::find(indexesSols.begin(), indexesSols.end(),
+                                LineModelSolutions[solutionIdx].ElementId[j]) !=
+                      indexesSols.end();
+    if (alreadysol || !restLineList[j].GetIsStrong() ||
+        !restLineList[j].GetIsEmission())
       continue;
-    }
-    if (!LineModelSolutions[solutionIdx].Lines[j].GetIsStrong()) {
-      continue;
-    }
-    if (!LineModelSolutions[solutionIdx].Lines[j].GetIsEmission()) {
-      continue;
-    }
 
     Float64 noise = LineModelSolutions[solutionIdx].AmplitudesUncertainties[j];
-    if (noise > 0) {
-      Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
-      Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
-                           LineModelSolutions[solutionIdx].FittingError[j];
-      if (snr >= snrThres && Fittingsnr >= fitThres) {
-        nSol++;
-        indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
-      }
+    if (noise <= 0)
+      continue;
+    Float64 snr = LineModelSolutions[solutionIdx].Amplitudes[j] / noise;
+    Float64 Fittingsnr = LineModelSolutions[solutionIdx].Amplitudes[j] /
+                         LineModelSolutions[solutionIdx].FittingError[j];
+    if (snr >= snrThres && Fittingsnr >= fitThres) {
+      nSol++;
+      indexesSols.push_back(LineModelSolutions[solutionIdx].ElementId[j]);
     }
   }
   return nSol;
@@ -306,26 +321,22 @@ Int32 CLineModelResult::getNLinesOverCutThreshold(Int32 solutionIdx,
 TBoolList CLineModelResult::getStrongLinesPresence(
     Int32 filterType,
     const std::vector<CLineModelSolution> &linemodelsols) const {
+
+  auto lineDoesntMatchStrongFilter = [&filterType](const CLine &line) {
+    return !line.GetIsStrong() ||
+           // i have a doubt on these below conditions. didier ?
+           (filterType == 1 && !line.GetIsEmission()) ||
+           (filterType == 2 && line.GetIsEmission());
+  };
   TBoolList strongIsPresent(linemodelsols.size(), false);
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
+    // search for the first strong line, with valid amplitude
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!linemodelsols[solutionIdx].Lines[j].GetIsStrong()) {
-        continue;
-      }
-
-      if (filterType == 1 &&
-          !linemodelsols[solutionIdx].Lines[j].GetIsEmission())
-        continue;
-      else if (filterType == 2 &&
-               linemodelsols[solutionIdx].Lines[j].GetIsEmission())
+      if (lineDoesntMatchStrongFilter(restLineList[j]))
         continue;
 
-      if (linemodelsols[solutionIdx].OutsideLambdaRange[j]) {
-        continue;
-      }
-
-      if (linemodelsols[solutionIdx].Amplitudes[j] > 0.0) {
+      if (linemodelsols[solutionIdx].isLineValid(j)) {
         strongIsPresent[solutionIdx] = true;
         break;
       }
@@ -337,12 +348,10 @@ TBoolList CLineModelResult::getStrongLinesPresence(
 
 TInt32List CLineModelResult::getNLinesAboveSnrcut(
     const std::vector<CLineModelSolution> &linemodelsols) const {
-  TInt32List nlinesabove(linemodelsols.size(), 0);
-  for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
-       solutionIdx++) {
-    nlinesabove[solutionIdx] = linemodelsols[solutionIdx].NLinesAboveSnrCut;
-  }
-
+  TInt32List nlinesabove(linemodelsols.size());
+  std::transform(
+      linemodelsols.cbegin(), linemodelsols.cend(), nlinesabove.begin(),
+      [](const CLineModelSolution &sol) { return sol.NLinesAboveSnrCut; });
   return nlinesabove;
 }
 
@@ -355,21 +364,21 @@ TInt32List CLineModelResult::getNLinesAboveSnrcut(
 TBoolList CLineModelResult::getStrongestLineIsHa(
     const std::vector<CLineModelSolution> &linemodelsols) const {
   TBoolList isHaStrongest(linemodelsols.size(), false);
-  std::string ampMaxLineTag = "";
+  std::string ampMaxLineTag = "undefined";
   for (Int32 solutionIdx = 0; solutionIdx < linemodelsols.size();
        solutionIdx++) {
     Float64 ampMax = -DBL_MAX;
     ampMaxLineTag = "undefined";
     for (Int32 j = 0; j < linemodelsols[solutionIdx].Amplitudes.size(); j++) {
-      if (!linemodelsols[solutionIdx].Lines[j].GetIsEmission() ||
+      if (!restLineList[j].GetIsEmission() ||
           linemodelsols[solutionIdx].OutsideLambdaRange[j])
         continue;
 
       Log.LogDebug("    linemodelresult: using line for max amp search=%s",
-                   linemodelsols[solutionIdx].Lines[j].GetName().c_str());
+                   restLineList[j].GetName().c_str());
       if (linemodelsols[solutionIdx].Amplitudes[j] > ampMax) {
         ampMax = linemodelsols[solutionIdx].Amplitudes[j];
-        ampMaxLineTag = linemodelsols[solutionIdx].Lines[j].GetName().c_str();
+        ampMaxLineTag = restLineList[j].GetName().c_str();
       }
     }
 

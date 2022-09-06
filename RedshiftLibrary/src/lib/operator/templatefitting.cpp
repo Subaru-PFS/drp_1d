@@ -88,7 +88,6 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
     Int32 opt_extinction, Int32 opt_dustFitting, CMask spcMaskAdditional,
     const CPriorHelper::TPriorEList &logpriore, const TInt32List &MeiksinList,
     const TInt32List &EbmvList) {
-  bool verbose = false;
   bool amplForcePositive = true;
   bool status_chisquareSetAtLeastOnce = false;
 
@@ -100,7 +99,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
   if (spcMaskAdditional.GetMasksCount() != m_spectrum.GetSampleCount()) {
     Log.LogInfo(
         "COperatorTemplateFitting::BasicFit: spcMaskAdditional does not have "
-        "the same size as the spectrum flux vector... (%d vs %d), aborting",
+        "the same size as the spectrum flux vector... (%d vs %d)",
         spcMaskAdditional.GetMasksCount(),
         m_spectrum.GetFluxAxis().GetSamplesCount());
     result.status = nStatus_DataError;
@@ -189,17 +188,7 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       TFittingResult fitRes =
           ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
 
-      if (verbose) {
-        Log.LogDebug("");
-        Log.LogDebug("  Operator-TemplateFitting: z=%f", redshift);
-        Log.LogDebug("  Operator-TemplateFitting: fit=%e", fitRes.chiSquare);
-        Log.LogDebug("  Operator-TemplateFitting: sumT=%e", fitRes.sumT);
-        Log.LogDebug("  Operator-TemplateFitting: sumS=%e", fitRes.sumS);
-        Log.LogDebug("  Operator-TemplateFitting: sumCross=%e",
-                     fitRes.sumCross);
-        Log.LogDebug("  Operator-TemplateFitting: coeffEBMV=%.2f", coeffEBMV);
-        Log.LogDebug("  Operator-TemplateFitting: meiksinIdx=%d", meiksinIdx);
-      }
+      Log.LogDebug(Formatter()<<"BasicFit: z="<< redshift<<" fit="<< fitRes.chiSquare<<" coeffEBMV="<< coeffEBMV<<" meiksinIdx="<<meiksinIdx);
 
       result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;
@@ -311,23 +300,15 @@ COperatorTemplateFitting::ComputeCrossProducts(Int32 kM, Int32 kEbmv_,
 
       if (std::isinf(sumS) || std::isnan(sumS) || sumS != sumS) {
         Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
-                     "invalid dtd : dtd=%e, for index=%d at restframe wl=%f",
-                     sumS, j, Xtpl[j]);
-        Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
-                     "invalid dtd : Yspc=%e, for index=%d at restframe wl=%f",
-                     Yspc[j], j, Xtpl[j]);
-        Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
-                     "invalid dtd : err2=%e, for index=%d at restframe wl=%f",
-                     err2, j, Xtpl[j]);
-        Log.LogError("COperatorTemplateFitting::ComputeCrossProducts: found "
-                     "invalid dtd : error=%e, for index=%d at restframe wl=%f",
-                     error[j], j, Xtpl[j]);
-        THROWG(INTERNAL_ERROR,
-               Formatter() << "ComputeCrossProducts: found invalid dtd");
+                     "invalid dtd : dtd=%e, Yspc=%e, err2=%e, error=%e, for "
+                     "index=%d at "
+                     "restframe wl=%f",
+                     sumS, Yspc[j], err2, error[j], j, Xtpl[j]);
+        THROWG(INTERNAL_ERROR, Formatter() << "Invalid dtd value");
       }
 
       if (std::isinf(sumT) || std::isnan(sumT)) {
-        THROWG(INTERNAL_ERROR, Formatter() << "found invalid mtm : mtm=" << sumT
+        THROWG(INTERNAL_ERROR, Formatter() << "Invalid mtm value:" << sumT
                                            << " for index=" << j
                                            << " at restframe wl=" << Xtpl[j]);
       }
@@ -440,30 +421,27 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   if ((opt_dustFitting == -10 || opt_dustFitting > -1) &&
       tpl->CalzettiInitFailed()) {
-    THROWG(INTERNAL_ERROR,
-           "  Operator-TemplateFitting: no calzetti calib. file in template");
+    THROWG(INTERNAL_ERROR, "ISM is not initialized");
   }
   if (opt_dustFitting > -1 &&
       opt_dustFitting >
           tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs() - 1) {
     THROWG(
         INTERNAL_ERROR,
-        Formatter()
-            << "Operator-TemplateFitting: calzetti index overflow (dustfitting="
-            << opt_dustFitting << ",while NPrecomputedEbmvCoeffs="
-            << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
-            << ")");
+        Formatter() << "Invalid calzetti index. (dustfitting="
+                    << opt_dustFitting << ", while NPrecomputedEbmvCoeffs="
+                    << tpl->m_ismCorrectionCalzetti->GetNPrecomputedEbmvCoeffs()
+                    << ")");
   }
 
   if (opt_extinction && tpl->MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR,
-           "  Operator-TemplateFitting: no meiksin calib. file in template");
+    THROWG(INTERNAL_ERROR, "IGM is not initialized");
   }
 
   if (m_spectrum.GetSpectralAxis().IsInLinearScale() == false ||
       tpl->GetSpectralAxis().IsInLinearScale() == false) {
     Log.LogError("  Operator-TemplateFitting: input spectrum or template are "
-                 "not in linear scale (ignored)");
+                 "not in linear scale");
   }
 
   // sort the redshift and keep track of the indexes
@@ -503,17 +481,15 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
   if (additional_spcMasks.size() != sortedRedshifts.size() &&
       additional_spcMasks.size() != 0)
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "Operator-TemplateFitting: masks-list size ("
-                               << additional_spcMasks.size()
-                               << ") didn't match the input redshift-list ("
-                               << sortedRedshifts.size() << ") !)");
+    THROWG(INTERNAL_ERROR,
+           Formatter() << "masks-list size (" << additional_spcMasks.size()
+                       << ") does not match the input redshift-list ("
+                       << sortedRedshifts.size() << ") !)");
 
   if (logpriorze.size() > 0 && logpriorze.size() != sortedRedshifts.size())
     THROWG(INTERNAL_ERROR,
-           Formatter() << "Operator-TemplateFitting: prior list size("
-                       << logpriorze.size()
-                       << ") didn't match the input redshift-list size :"
+           Formatter() << "prior list size(" << logpriorze.size()
+                       << ") does not match the input redshift-list size :"
                        << sortedRedshifts.size());
 
   for (Int32 i = 0; i < sortedRedshifts.size(); i++) {
@@ -536,7 +512,7 @@ std::shared_ptr<COperatorResult> COperatorTemplateFitting::Compute(
 
     if (result->Status[i] == nStatus_InvalidProductsError) {
       Log.LogError("  Operator-TemplateFitting: found invalid chisquare "
-                   "products for z=%f. Now breaking z loop.",
+                   "products for z=%f. Breaking z loop.",
                    redshift);
       break;
     }

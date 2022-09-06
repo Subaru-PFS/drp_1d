@@ -51,7 +51,7 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
     : m_transmission(std::move(trans)), m_lambda(std::move(lambda)) {
   // check all sizes are the same
   if (m_transmission.size() != m_lambda.size()) {
-    THROWG(INTERNAL_ERROR, "CPhotometryBand::CPhotometryBand: transmission and "
+    THROWG(INTERNAL_ERROR, "Transmission and "
                            "wavelength have not the same size");
   }
 
@@ -79,7 +79,7 @@ CPhotometricBand::CPhotometricBand(TFloat64List trans, TFloat64List lambda)
 Float64 CPhotometricBand::IntegrateFlux(const TFloat64List &inFlux) const {
 
   if (inFlux.size() != m_transmission.size())
-    THROWG(INTERNAL_ERROR, "CPhotometryBand::IntegrateFlux: flux and "
+    THROWG(INTERNAL_ERROR, "Flux and "
                            "transmission sizes are different");
 
   // convert flux from Flambda in Erg/s/cm2/Angstrom to Fnu in Erg/s/cm2/Hz

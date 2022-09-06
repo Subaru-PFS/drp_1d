@@ -37,7 +37,7 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/processflow/parameterstore.h"
-
+#include <cfloat>
 namespace bpt = boost::property_tree;
 
 namespace NSEpic {
@@ -163,10 +163,17 @@ bool CParameterStore::HasTplIsmExtinction(const std::string &objectType) const {
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
   } else if (method == "LineModelSolve") {
+    // two parameters plays here: continuumfit.ismfit and tplratio_ismfit
+    //
     const std::string scopeStr =
         objectType + "." + method + ".linemodel.continuumfit.ismfit";
     if (Has<bool>(scopeStr))
       extinction = Get<bool>(scopeStr);
+
+    const std::string scopeStr_tplratio =
+        objectType + "." + method + ".linemodel.tplratio_ismfit";
+    if (Has<bool>(scopeStr_tplratio))
+      extinction |= Get<bool>(scopeStr_tplratio);
   }
   return extinction;
 }
@@ -237,4 +244,27 @@ bool CParameterStore::EnableTemplateOrthogonalization(
   return enableOrtho;
 }
 
+bool CParameterStore::hasToLogRebin(
+    const TStringList &categories,
+    std::map<std::string, bool> &fft_processing) const {
+  bool usefftSpectrum = false;
+  for (std::string cat : categories) {
+    fft_processing[cat] = HasFFTProcessing(cat);
+    if (fft_processing[cat])
+      usefftSpectrum = true;
+  }
+  return usefftSpectrum;
+}
+
+Float64 CParameterStore::getMinZStepForFFTProcessing(
+    std::map<std::string, bool> fftprocessing) const {
+  Float64 logGridStep = DBL_MAX;
+  for (const auto &p : fftprocessing) {
+    if (!p.second)
+      continue;
+    Float64 redshift_step = Get<Float64>(p.first + ".redshiftstep");
+    logGridStep = std::min(redshift_step, logGridStep);
+  }
+  return logGridStep;
+}
 } // namespace NSEpic

@@ -383,7 +383,7 @@ void CLineModelElement::EstimateTheoreticalSupport(
   } else { // in this case the line is completely inside the lambdarange or with
            // partial overlap
 
-    Int32 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
+    Float64 minLineOverlap = m_OutsideLambdaRangeOverlapThreshold * winsize;
     Float64 startLbda = spectralAxis[m_StartNoOverlap[subeIdx]];
     Float64 endLbda = spectralAxis[m_EndNoOverlap[subeIdx]];
 
@@ -856,14 +856,10 @@ void CLineModelElement::fitAmplitudeAndLambdaOffset(
   }
 
   if (!atLeastOneOffsetToFit) {
-    if (m_verbose) {
-      Log.LogDebug("    multiline: no offsets to fit");
-    }
+    Log.LogDebug("    multiline: no offsets to fit");
     nSteps = 1;
   } else {
-    if (m_verbose) {
-      Log.LogDebug("    multiline: offsets to fit n=%d", nSteps);
-    }
+    Log.LogDebug("    multiline: offsets to fit n=%d", nSteps);
   }
 
   Float64 bestMerit = DBL_MAX;
@@ -902,9 +898,7 @@ void CLineModelElement::fitAmplitudeAndLambdaOffset(
     // set offset value
     if (atLeastOneOffsetToFit) {
       Float64 offset = min + step * idxBestMerit;
-      if (m_verbose) {
-        Log.LogDebug("    multiline: offset best found=%f", offset);
-      }
+      Log.LogDebug("    multiline: offset best found=%f", offset);
       for (Int32 iR = 0; iR < nLines; iR++) {
         if (m_Lines[iR].GetOffsetFitEnabled()) {
           m_Lines[iR].SetOffset(offset);
@@ -943,9 +937,7 @@ void CLineModelElement::fitAmplitude(
   const Float64 *spectral = spectralAxis.GetSamples();
   const CSpectrumNoiseAxis &error = noContinuumfluxAxis.GetError();
 
-  if (m_verbose) {
-    Log.LogDebug("    error[0]:%e", error[0]);
-  }
+  Log.LogDebug("    error[0]:%e", error[0]);
   const Float64 *fluxContinuum = continuumfluxAxis.GetSamples();
 
   Float64 y = 0.0;
@@ -955,9 +947,7 @@ void CLineModelElement::fitAmplitude(
 
   Float64 err2 = 0.0;
   Int32 num = 0;
-  if (m_verbose) {
-    Log.LogDebug("    multiline: nLines=%d", nLines);
-  }
+  Log.LogDebug("    multiline: nLines=%d", nLines);
 
   for (Int32 k = 0; k < nLines; k++) { // loop for the intervals
     if (m_OutsideLambdaRangeList[k]) {
@@ -1000,11 +990,9 @@ void CLineModelElement::fitAmplitude(
     Log.LogDebug("CLineModelElement::fitAmplitude: Could not fit amplitude:    "
                  " num=%d, mtm=%f",
                  num, m_sumGauss);
-    if (m_verbose) {
-      for (Int32 k2 = 0; k2 < nLines; k2++) {
-        Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2,
-                     m_NominalAmplitudes[k2]);
-      }
+    for (Int32 k2 = 0; k2 < nLines; k2++) {
+      Log.LogDebug("    multiline failed:     subE=%d, nominal_amp=%f", k2,
+                   m_NominalAmplitudes[k2]);
     }
     return;
   }

@@ -61,4 +61,6 @@ public:
   Float64 GaussAmpErr = NAN;
   Float64 GaussSigma = NAN;
   Float64 GaussSigmaErr = NAN;
+
+  Int32 Rank = -1;
 };

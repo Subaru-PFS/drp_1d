@@ -36,20 +36,45 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-C license and that you accept its terms.
 # ============================================================================
-import abc
 import pandas as pd
+from pylibamazed.r_specifications import rspecifications
+from pylibamazed.Parameters import Parameters
+import numpy as np
 
 
 class AbstractOutput:
 
-    def __init__(self):
+    def __init__(self,
+                 parameters,
+                 results_specifications=rspecifications,
+                 extended_results = True):
+        self.parameters = parameters
         self.spectrum_id = ''
         self.root_results = dict()
-        self.root_dataframes = dict()
         self.object_results = dict()
-        self.object_dataframes = dict()
-        self.reference_redshift = None # TODO should be a map or np array with all attributes presents in the ref file
-        self.manual_redshift = None
+        self.extended_results = extended_results 
+        self.results_specifications = pd.read_csv(results_specifications,
+                                                  sep='\t'
+                                                  )
+        self.object_types = self.parameters.get_objects()
+
+        for object_type in self.object_types:
+            self.object_results[object_type] = dict()
+
+    def get_attribute_from_source(self,object_type, method, dataset, attribute ,rank=None):
+        raise NotImplementedError("Implement in derived class")
+
+    def has_attribute_in_source(self,object_type, method, dataset, attribute,rank=None):
+        raise NotImplementedError("Implement in derived class")    
+
+    def has_dataset_in_source(self, object_type, method, dataset):
+        raise NotImplementedError("Implement in derived class")
+
+    def has_candidate_dataset_in_source(self, object_type, method, dataset):
+        raise NotImplementedError("Implement in derived class")    
+
+    def get_nb_candidates_in_source(self, object_type, method):
+        raise NotImplementedError("Implement in derived class")
         
     def load_all(self):
         self.load_root()
@@ -57,19 +82,6 @@ class AbstractOutput:
             self.load_object_level(object_type)
             self.load_method_level(object_type)
             self.load_candidate_level(object_type)
-
-    def get_solve_methods(self,object_type):
-        method = self.parameters[object_type]["method"]
-        linemeas_method = self.parameters[object_type]["linemeas_method"]
-        methods = []
-        if method:
-            methods.append(method)
-        if linemeas_method:
-            methods.append(linemeas_method)
-        return methods
-
-    def get_solve_method(self, object_type):
-        return self.parameters[object_type]["method"]
 
     def get_attribute(self,object_type, dataset, attribute, rank = None):
         if object_type:
@@ -80,61 +92,6 @@ class AbstractOutput:
         else:
             return self.root_results[dataset][attribute]
     
-    def get_candidate_data(self, object_type, rank, data_name):
-        mp = self.object_dataframes[object_type]["model_parameters"]
-        return mp[mp['Rank'] == rank][data_name].iat[0]
-    
-    def get_candidate_results(self, object_type, rank, columns=[]):
-        cr = self.object_dataframes[object_type]["model_parameters"]
-        if not columns:
-            return cr[cr['Rank'] == rank]
-        else:
-            return cr[cr['Rank'] == rank][columns]
-
-    def get_candidates_results(self, object_type, columns=[]):
-        cr = self.object_dataframes[object_type]["model_parameters"]
-        if not columns:
-            return cr
-        else:
-            return cr[columns]
-
-    def get_pdf(self,object_type, first_pass = False):
-        if first_pass:
-            return self.object_dataframes[object_type]["firstpass_pdf"]
-        return self.object_dataframes[object_type]["pdf"]
-
-    def get_classification_type(self):
-        return self.root_results["classification"]["Type"]
-
-    def get_classification(self):
-        return self.root_results["classification"]
-    
-    def get_fitted_continuum_by_rank(self, object_type, rank):
-        return self.object_dataframes[object_type]["continuum"][rank]
-
-    def get_fitted_model_by_rank(self, object_type, rank, method):
-        if method == "LineMeasSolve":
-            return self.object_dataframes[object_type]["linemeas_model"]
-        else:
-            return self.object_dataframes[object_type]["model"][rank]
-
-    def get_fitted_lines_by_rank(self, object_type, rank, method):
-        if method == "LineMeasSolve":
-            return self.object_dataframes[object_type]["linemeas"]
-        return self.object_dataframes[object_type]["fitted_lines"][rank]
-
-    def get_candidate_group_name(self,rank):
-        return "candidate" + chr(rank+65) # 0=A, 1=B,....
-
-    def get_nb_candidates(self,object_type):
-        return len(self.object_dataframes[object_type]["model"])
-    
-    def set_manual_redshift_value(self,val):
-        self.manual_redshift=val
-
-    def get_reliability(self,object_type):
-        return self.object_results[object_type]["reliability"]
-
     def has_dataset(self, object_type, dataset):
         if object_type in self.object_results:
             return dataset in self.object_results[object_type]
@@ -146,20 +103,212 @@ class AbstractOutput:
             if rank is None:
                 return attribute in self.object_results[object_type][dataset]
             else:
-                if rank < len(self.object_results[object_type][dataset]):
-                    return attribute in self.object_results[object_type][dataset][rank]
+                return attribute in self.object_results[object_type][dataset][rank]
         else:
             return False
 
-# TODO this method should not exit, dataset size should be inferred in an other way
     def get_dataset_size(self, object_type, dataset, rank = None):
         if rank is None:
-            if dataset in self.object_dataframes[object_type]:
-                return self.object_dataframes[object_type][dataset].index.size
+            if dataset in self.object_results[object_type]:
+                first_attr = next(iter(self.object_results[object_type][dataset].values()))
             else:
-                return 1
+                raise APIException("Dataset " + dataset + " does not exist")
         else:
-            if type(self.object_dataframes[object_type][dataset]) == pd.DataFrame:
-                return 1
+            first_attr = next(iter(self.object_results[object_type][dataset][rank].values()))
+        if type(first_attr) == np.ndarray:
+            return len(first_attr)
+        else:
+            return 1
+
+    def get_available_datasets(self, level,object_type=None):
+        if level == "root":
+            return self.root_results.keys()
+        elif level == "object":
+            l = []
+            for d in self.object_results[object_type].keys():
+                if type(self.object_results[object_type][d]) == dict:
+                    l.append(d)
+            return l
+        elif level == "candidate":
+            l = []
+            for d in self.object_results[object_type].keys():
+                if type(self.object_results[object_type][d]) == list:
+                    l.append(d)
+            return l
+        else:
+            raise APIException("Unknown level " + level)
+
+    def get_candidate_data(self, object_type, rank, data_name):
+        mp = self.object_results[object_type]["model_parameters"][rank][data_name]
+        return mp
+
+    def get_dataset(self, dataset, object_type=None, rank=None):
+        if object_type:
+            if rank is not None:
+                return self.object_results[object_type][dataset][rank]
             else:
-                return self.object_dataframes[object_type][dataset][rank].index.size
+                return self.object_results[object_type][dataset]
+        else:
+            return self.root_results[dataset]
+        
+    # TODO more robust version, should iterate over candidate datasets and check existence
+    def get_nb_candidates(self,object_type):
+        return len(self.object_results[object_type]["model"])
+            
+
+    def get_level(self, dataset):
+        rs = self.results_specifications
+        rs = rs[rs.dataset == dataset]
+        return rs.level.unique()[0]
+    
+    def filter_datasets(self, level):
+        rs = self.results_specifications
+        # filter by level
+        rs = rs[rs["level"] == level]
+        all_datasets = list(rs["dataset"].unique())
+        
+        # filter by extended_results
+        if self.extended_results:
+            return rs, all_datasets
+
+        # a dataset is considered as debug if all its elements have debug = True
+        filtered_datasets = []
+        for ds in all_datasets:
+            ds_attributes = rs[rs["dataset"]==ds]
+            extended_results = all(ds_row["extended_results"] == True for index, ds_row in ds_attributes.iterrows())
+            if not extended_results:
+                filtered_datasets.append(ds) 
+        
+        return rs, filtered_datasets
+
+    def filter_dataset_attributes(self, ds_name, object_type=None): 
+        rs = self.results_specifications 
+        ds_attributes = rs[rs["dataset"]==ds_name]   
+        #filter ds_attributes by extended_results column
+        skipsecondpass = False 
+        if object_type is not None:
+            skipsecondpass = self.parameters.check_lmskipsecondpass(object_type)
+        
+        #retrieve results which are not firstpass results
+        if skipsecondpass:
+            filtered_df = ds_attributes[~ds_attributes["name"].str.contains("Firstpass", na=True)]
+        else:
+            filtered_df = ds_attributes
+
+        if self.extended_results:
+            return filtered_df 
+  
+        filtered_df = filtered_df[ds_attributes["extended_results"]==False]     
+        return filtered_df
+
+    # root is every first level data excluding self.objects
+    # (currently, only classification)
+    def load_root(self):
+        level = "root"
+        rs, root_datasets = self.filter_datasets(level)
+        for ds in root_datasets:
+            ds_attributes = self.filter_dataset_attributes(ds)
+            self.root_results[ds] = dict()
+            for index, ds_row in ds_attributes.iterrows():
+                if "<" in ds_row["name"]:
+                    for object_type in self.parameters.get_objects():
+                        if self.has_attribute_in_source(object_type,
+                                                        None,
+                                                        ds,
+                                                        ds_row["name"]):
+                            attr = self.get_attribute_from_source(object_type,
+                                                                  None,
+                                                                  ds,
+                                                                  ds_row["name"])
+                            attr_name = ds_row["name"].replace("<ObjectType>", object_type)
+                            self.root_results[ds][attr_name] = attr
+                else:
+                    if self.has_attribute_in_source(object_type,
+                                                    None,
+                                                    ds_row.dataset,
+                                                    ds_row["name"]):
+                        self.root_results[ds][ds_row["name"]] = self.get_attribute_from_source("root", None, ds_row.dataset,ds_row["name"])
+
+    def load_object_level(self, object_type):
+        level = "object"
+        rs, object_datasets = self.filter_datasets(level)
+        for dataset in object_datasets:
+            methods = self.parameters.get_solve_methods(object_type)
+            for method in methods:
+                if self.has_dataset_in_source(object_type,
+                                              method,
+                                              dataset):
+                    self.object_results[object_type][dataset] = dict()
+                    self.fill_object_dataset(object_type, method, dataset)
+                    
+    def fill_object_dataset(self, object_type, method, dataset):
+        ds_attributes = self.filter_dataset_attributes(dataset)
+        for index, ds_row in ds_attributes.iterrows():
+            attr_name = ds_row["name"]
+            if self.has_attribute_in_source(object_type, method, dataset,attr_name):
+                attr = self.get_attribute_from_source(object_type,
+                                                      method,
+                                                      dataset,
+                                                      attr_name)
+                self.object_results[object_type][dataset][attr_name] = attr
+
+    def load_method_level(self, object_type):
+        level = "method"
+        rs, object_datasets = self.filter_datasets(level)
+        for ds in object_datasets:
+            methods = self.parameters.get_solve_methods(object_type)
+            self.object_results[object_type][ds] = dict()
+            for method in methods:
+                if self.has_dataset_in_source(object_type,
+                                              method,
+                                              ds):
+                    ds_attributes = self.filter_dataset_attributes(ds)                    
+                    for index, ds_row in ds_attributes.iterrows():
+                        attr_name = ds_row["name"]
+                        if "<MethodType>" in ds_row["name"]:
+                            attr_name = ds_row["name"].replace("<MethodType>", method)
+                        attr = self.get_attribute_from_source(object_type,
+                                                              method,
+                                                              ds_row.dataset,
+                                                              ds_row["name"])
+                        self.object_results[object_type][ds][attr_name] = attr
+
+    def load_candidate_level(self, object_type):
+        method = self.parameters.get_solve_method(object_type)
+        if not method:
+            return
+        level = "candidate"
+        rs, candidate_datasets = self.filter_datasets(level)
+        for ds in candidate_datasets:
+            ds_attributes = self.filter_dataset_attributes(ds, object_type).copy()
+            if not self.has_candidate_dataset_in_source(object_type,
+                                              method,
+                                              ds):
+                continue
+
+            nb_candidates = self.get_nb_candidates_in_source(object_type,
+                                                             method)
+            candidates = []
+            for rank in range(nb_candidates):
+                candidates.append(dict())
+                for index, ds_row in ds_attributes.iterrows():
+                    attr_name = ds_row["name"]
+                    if self.has_attribute_in_source(object_type,
+                                                    method,
+                                                    ds,
+                                                    attr_name,
+                                                    rank):
+                        attr = self.get_attribute_from_source(object_type,
+                                                              method,
+                                                              ds,
+                                                              attr_name,
+                                                              rank)
+                        candidates[rank][attr_name] = attr
+            self.object_results[object_type][ds] = candidates
+
+                
+                    
+    def get_candidate_group_name(self,rank):
+        return "candidate" + chr(rank+65) # 0=A, 1=B,....
+
+

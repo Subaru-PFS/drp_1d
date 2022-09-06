@@ -51,12 +51,15 @@ class CTplCombinationResult : public CTemplateFittingResult {
 
 public:
   void Init(Int32 n, Int32 nISM, Int32 nIGM, Int32 componentSize);
-
+  Int32 getISMCount() const { return nISM; };
+  Int32 getIGMCount() const { return nIGM; };
   // best fit results
   std::vector<TFloat64List> FitAmplitude;
   std::vector<TFloat64List> FitAmplitudeError;
   std::vector<TFloat64List> FitAmplitudeSigma;
   std::vector<std::vector<TFloat64List>> FitCOV;
+  Int32 nISM = -1;
+  Int32 nIGM = -1;
 };
 
 } // namespace NSEpic

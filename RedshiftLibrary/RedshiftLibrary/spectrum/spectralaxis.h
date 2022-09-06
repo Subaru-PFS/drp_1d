@@ -45,6 +45,12 @@
 #include <boost/logic/tribool.hpp>
 #include <vector>
 using namespace boost::logic;
+
+namespace spectralaxis_test { // boost_test_suite
+// all boost_auto_test_case that use private method
+class basic_functions_test;
+class logSampling_test;
+} // namespace spectralaxis_test
 namespace NSEpic {
 
 class CMask;
@@ -118,6 +124,9 @@ public:
   void SetSize(Int32 s) override;
 
 private:
+  friend class spectralaxis_test::basic_functions_test;
+  friend class spectralaxis_test::logSampling_test;
+
   mutable Float64 m_regularLogSamplingStep =
       NAN; // sampling log step with which sampling was validated in
            // CheckLoglambdaSampling

@@ -77,6 +77,11 @@ public:
   bool HasTplIsmExtinction(const std::string &objectType) const;
   bool HasTplIgmExtinction(const std::string &objectType) const;
   bool HasFFTProcessing(const std::string &objectType) const;
+  bool hasToLogRebin(const TStringList &categories,
+                     std::map<std::string, bool> &fft_processing)
+      const; // wrapper for HasFFTProcessing
+  Float64
+  getMinZStepForFFTProcessing(std::map<std::string, bool> fftprocessing) const;
   bool HasToOrthogonalizeTemplates(const std::string &objectType) const;
   bool EnableTemplateOrthogonalization(const std::string &objectType) const;
 

@@ -59,7 +59,6 @@ public:
   CRules(CSpectrum &spc, CLineCatalog &detectedCatalog,
          CLineCatalog &restCatalog, TFloat64Range &lambdaRange,
          Float64 winsize);
-  ~CRules();
 
   Int32 check(Float64 z,
               CLineMatchingResult::TSolutionSet &matchingSolutionSet);
@@ -73,7 +72,7 @@ private:
                    CLineMatchingResult::TSolutionSet &matchingSolutionSet);
 
   Float64 getRestLineLambda(std::string nametag);
-
+  bool isLineInsideRange(Float64 lambda, bool winsize = false) const;
   CSpectrum m_spc;
   CLineCatalog m_DetectedCatalog;
   CLineCatalog m_RestCatalog;

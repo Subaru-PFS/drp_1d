@@ -127,6 +127,12 @@ public:
                         TInt32List &EbmvList,    // return
                         bool keepigmism = 0, Float64 FitEbmvCoeff = NAN,
                         Int32 FitMeiksinIdx = -1) const;
+  void GetIsmIdxList(Int32 opt_dustFitting,
+                     TInt32List &EbmvList, // return
+                     bool keepigmism, Float64 FitEbmvCoeff) const;
+  void GetIgmIdxList(Int32 opt_extinction,
+                     TInt32List &MeiksinList, // return
+                     bool keepigmism, Int32 FitMeiksinIdx) const;
 
 private:
   std::string m_Category;
@@ -191,7 +197,7 @@ inline void CTemplate::SetType(const CSpectrum::EType type) const {
     if (!CheckIsmIgmEnabled())
       CSpectrum::SetType(type);
     else {
-      THROWG(INTERNAL_ERROR, "CTemplate::SetType: cannot change component type "
+      THROWG(INTERNAL_ERROR, "Cannot change component type "
                              "when ism/igm enabled on a const CTemplate");
     }
   }
@@ -207,24 +213,21 @@ inline void CTemplate::DisableIsmIgm() {
 
 inline Int32 CTemplate::GetIsmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR,
-           "CTemplate::GetIsmCoeff:  ismigm initialization not done");
+    THROWG(INTERNAL_ERROR, "ism/igm not initialized");
   }
   return m_kDust;
 }
 
 inline Int32 CTemplate::GetIgmCoeff() const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR,
-           "CTemplate::GetIgmCoeff:  ismigm initialization not done");
+    THROWG(INTERNAL_ERROR, "ism/igm not initialized");
   }
   return m_meiksinIdx;
 }
 
 inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
   if (!CheckIsmIgmEnabled()) {
-    THROWG(INTERNAL_ERROR,
-           "CTemplate::GetIsmIgmRangeIndex:  ism initialization not done");
+    THROWG(INTERNAL_ERROR, "ism not initialized");
   }
   begin = m_IsmIgm_kstart;
   ismend = m_Ism_kend;
@@ -232,8 +235,7 @@ inline void CTemplate::GetIsmIgmRangeIndex(Int32 &begin, Int32 &ismend) const {
 
 inline Int32 CTemplate::GetIgmEndIndex() const {
   if (!CheckIsmIgmEnabled() || MeiksinInitFailed()) {
-    THROWG(INTERNAL_ERROR,
-           "CTemplate::GetIgmEndIndex: igm initialization not done");
+    THROWG(INTERNAL_ERROR, "igm not initialized");
   }
   return m_Igm_kend;
 }

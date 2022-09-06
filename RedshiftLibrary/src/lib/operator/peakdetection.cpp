@@ -119,6 +119,20 @@ CPeakDetection::FindGaussianFitStartAndStop(Int32 i,
   return TInt32Range(fitStart, fitStop);
 }
 
+void CPeakDetection::GetNewBorder(const TFloat64List &smoothFluxData,
+                                  Int32 &new_border, Int32 &old_border,
+                                  bool isRightSide) {
+  Int32 border = isRightSide ? smoothFluxData.size() - 1 : 0;
+  while (smoothFluxData[new_border] <= smoothFluxData[old_border]) {
+    if (new_border == border) {
+      old_border = isRightSide ? new_border : 0;
+      break;
+    }
+    old_border = new_border;
+    new_border = isRightSide ? max(0, new_border + 1) : max(0, new_border - 1);
+  }
+}
+
 /**
  * Not fully implemented.
  * Does not seam to do any vital things (CF ez.function.lines.EZELfind: 697)
@@ -160,22 +174,10 @@ void CPeakDetection::RedefineBorders(TInt32RangeList &peakList,
       // if the max is found on the border, then erase this range
       peakList.erase(peakList.begin() + iPeak);
     } else {
-      while (smoothFluxData[new_left] <= smoothFluxData[old_left]) {
-        if (new_left == 0) {
-          old_left = 0;
-          break;
-        }
-        old_left = new_left;
-        new_left = max(0, new_left - 1);
-      }
-      while (smoothFluxData[new_right] <= smoothFluxData[old_right]) {
-        if (new_right == fluxAxis.GetSamplesCount() - 1) {
-          old_right = new_right;
-          break;
-        }
-        old_right = new_right;
-        new_right = max(0, new_right + 1);
-      }
+      GetNewBorder(smoothFluxAxis.GetSamplesVector(), new_left, old_left,
+                   false);
+      GetNewBorder(smoothFluxAxis.GetSamplesVector(), new_right, old_right,
+                   true);
       if (new_right == new_left) {
         peakList.erase(peakList.begin() + iPeak);
       }

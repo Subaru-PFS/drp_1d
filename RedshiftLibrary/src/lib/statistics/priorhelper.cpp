@@ -118,9 +118,8 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     bfs::path agaussfpath =
         rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
     if (!bfs::exists(agaussfpath)) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "CPriorHelper: AgaussMean path does not exist: "
-                         << agaussfpath.string());
+      THROWG(INVALID_FILEPATH,
+             Formatter() << "path does not exist: " << agaussfpath.string());
     }
     AGaussMeanfilesPathList.push_back(agaussfpath.string());
   }
@@ -148,9 +147,8 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     bfs::path agaussfpath =
         rootFolder / a_dirpath.c_str() / bfs::path(fNameStr);
     if (!bfs::exists(agaussfpath)) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "CPriorHelper: AgaussSigma path does not exist: "
-                         << agaussfpath.string());
+      THROWG(INVALID_FILEPATH,
+             Formatter() << "path does not exist: " << agaussfpath.string());
     }
     AGaussSigmafilesPathList.push_back(agaussfpath.string());
   }
@@ -173,7 +171,7 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     std::vector<TFloat64List> read_buffer;
     bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
     if (!ret) {
-      Log.LogError("Unable to load the EZT continuum prior data. aborting...");
+      Log.LogError("Unable to load the EZT continuum prior data.");
       mInitFailed = true;
       return false;
     }
@@ -189,8 +187,7 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     std::vector<TFloat64List> read_buffer;
     bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
     if (!ret) {
-      Log.LogError(
-          "Unable to load the A-gaussmean continuum prior data. aborting...");
+      Log.LogError("Unable to load the A-gaussmean continuum prior data.");
       mInitFailed = true;
       return false;
     }
@@ -206,8 +203,7 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
     std::vector<TFloat64List> read_buffer;
     bool ret = LoadFileEZ(fPathStr.c_str(), read_buffer);
     if (!ret) {
-      Log.LogError(
-          "Unable to load the A-gausssigma continuum prior data. aborting...");
+      Log.LogError("Unable to load the A-gausssigma continuum prior data.");
       mInitFailed = true;
       return false;
     }
@@ -226,14 +222,13 @@ bool CPriorHelper::Init(std::string priorDirPath, Int32 type) {
   }
   bfs::path pz_fpath = rootFolder / z_dirpath.c_str() / z_filepath.c_str();
   if (!bfs::exists(pz_fpath)) {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "CPriorHelper: Pz path does not exist: "
-                               << pz_fpath.string());
+    THROWG(INVALID_FILEPATH,
+           Formatter() << "Pz path does not exist: " << pz_fpath.string());
   } else {
     TFloat64List read_buffer;
     bool ret = LoadFileZ(pz_fpath.string().c_str(), read_buffer);
     if (!ret) {
-      Log.LogError("Unable to load the Pz prior data. aborting...");
+      Log.LogError("Unable to load the Pz prior data.");
       mInitFailed = true;
       return false;
     }
@@ -286,8 +281,7 @@ bool CPriorHelper::SetSize(Int32 size) {
 
 bool CPriorHelper::SetTNameData(Int32 k, std::string tname) {
   if (k >= m_tplnames.size()) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "CPriorHelper: SetTNameData failed for k=" << k);
+    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
   }
   m_tplnames[k] = tname;
   return true;
@@ -296,8 +290,7 @@ bool CPriorHelper::SetTNameData(Int32 k, std::string tname) {
 bool CPriorHelper::SetEZTData(Int32 k,
                               const std::vector<TFloat64List> &ezt_data) {
   if (k >= m_data.size()) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "CPriorHelper: SetEZTData failed for k=" << k);
+    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
   }
 
   for (Int32 kz = 0; kz < m_nZ; kz++) {
@@ -312,8 +305,7 @@ bool CPriorHelper::SetEZTData(Int32 k,
 bool CPriorHelper::SetAGaussmeanData(
     Int32 k, const std::vector<TFloat64List> &agaussmean_data) {
   if (k >= m_data.size()) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "CPriorHelper: SetAgaussmeanData failed for k=" << k);
+    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
   }
 
   for (Int32 kz = 0; kz < m_nZ; kz++) {
@@ -328,9 +320,7 @@ bool CPriorHelper::SetAGaussmeanData(
 bool CPriorHelper::SetAGausssigmaData(
     Int32 k, const std::vector<TFloat64List> &agausssigma_data) {
   if (k >= m_data.size()) {
-    THROWG(INTERNAL_ERROR,
-           Formatter() << "CPriorHelper: SetAgausssigmaData failed for k="
-                       << k);
+    THROWG(INTERNAL_ERROR, Formatter() << "Out-of-bound index k=" << k);
   }
 
   for (Int32 kz = 0; kz < m_nZ; kz++) {
@@ -344,8 +334,7 @@ bool CPriorHelper::SetAGausssigmaData(
 
 bool CPriorHelper::SetPzData(const TFloat64List &z_data) {
   if (z_data.size() != m_data_pz.size()) {
-    THROWG(INTERNAL_ERROR,
-           "    CPriorHelper: SetPzData failed for bad data size");
+    THROWG(INTERNAL_ERROR, " Data and prior sizes do not match");
   }
 
   for (Int32 kz = 0; kz < m_nZ; kz++) {
@@ -357,7 +346,6 @@ bool CPriorHelper::SetPzData(const TFloat64List &z_data) {
 
 bool CPriorHelper::LoadFileEZ(const char *filePath,
                               std::vector<TFloat64List> &data) {
-  bool verboseRead = false;
   Log.LogDetail(Formatter()
                 << "CPriorHelper: start load prior file: " << filePath);
   bool loadSuccess = true;
@@ -382,22 +370,13 @@ bool CPriorHelper::LoadFileEZ(const char *filePath,
             x = m_priorminval;
           }
           lineVals.push_back(x);
-
-          if (verboseRead) {
-            Log.LogDetail("    CPriorHelper: read line=%d, col=%d : valf=%e",
-                          nlinesRead, lineVals.size() - 1, x);
-          }
         }
         if (lineVals.size() != m_nEbv) {
-          THROWG(INTERNAL_ERROR,
-                 Formatter() << "CPriorHelper: read n=" << lineVals.size()
-                             << " cols, instead of " << m_nEbv);
+          THROWG(INTERNAL_ERROR, Formatter() << "read n=" << lineVals.size()
+                                             << " cols, instead of " << m_nEbv);
         }
         nlinesRead++;
         data.push_back(lineVals);
-        if (verboseRead) {
-          Log.LogDetail("    CPriorHelper: read n=%d cols", lineVals.size());
-        }
       }
     }
     file.close();
@@ -407,7 +386,6 @@ bool CPriorHelper::LoadFileEZ(const char *filePath,
 }
 
 bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
-  bool verboseRead = false;
   Log.LogDetail("    CPriorHelper: start load prior file: %s", filePath);
   bool loadSuccess = true;
   std::ifstream file;
@@ -429,11 +407,6 @@ bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
           x = m_priorminval;
         }
 
-        if (verboseRead) {
-          Log.LogDetail("    CPriorHelper: read line=%d : valf=%e", nlinesRead,
-                        x);
-        }
-
         nlinesRead++;
         data.push_back(x);
       }
@@ -441,8 +414,8 @@ bool CPriorHelper::LoadFileZ(const char *filePath, TFloat64List &data) {
     file.close();
 
     if (nlinesRead != m_nZ) {
-      THROWG(INTERNAL_ERROR,
-             Formatter() << "CPriorHelper: read n=" << nlinesRead << " lines");
+      THROWG(INTERNAL_ERROR, Formatter()
+                                 << "read n=" << nlinesRead << " lines");
     }
   }
   return loadSuccess;
@@ -461,7 +434,6 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
                                    const TRedshiftList &redshifts,
                                    TPriorZEList &zePriorData,
                                    Int32 outsideZRangeExtensionMode) const {
-  bool verbose = false;
   if (m_betaA <= 0.0 && m_betaTE <= 0.0 && m_betaZ <= 0.0) {
     Log.LogError(
         "    CPriorHelper: beta coeff all zero (betaA=%e, betaTE=%e, betaZ=%e)",
@@ -514,19 +486,8 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
         idz = m_nZ;
       }
     }
-    if (verbose) {
-      Log.LogDetail("    CPriorHelper: get prior for z=%f: found idz=%d",
-                    redshifts[kz], idz);
-    }
     TPriorEList dataz = m_data[idx][idz];
     for (Int32 icol = 0; icol < m_nEbv; icol++) {
-      if (verbose) {
-        Log.LogDetail("    CPriorHelper: get prior for tpl=%s",
-                      tplname.c_str());
-        Log.LogDetail(
-            "    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d : valf=%e",
-            idx, idz, icol, dataz[icol].priorTZE);
-      }
 
       Float64 logPTE = 0.;
       Float64 logPA = 0.;
@@ -544,25 +505,17 @@ bool CPriorHelper::GetTplPriorData(const std::string &tplname,
           Log.LogError(
               "    CPriorHelper: logP_TZE is NAN (priorTZE=%e, logP_TZE=%e)",
               dataz[icol].priorTZE, logPTE);
-          THROWG(INTERNAL_ERROR,
-                 "    CPriorHelper: logP_TZE is NAN or inf, or invalid");
+          THROWG(INTERNAL_ERROR, "logP_TZE is NAN or inf, or invalid");
         }
       } else {
         Log.LogError(
             "    CPriorHelper: P_TZE is 0 (priorTZE=%e) which is forbidden",
             dataz[icol].priorTZE);
-        THROWG(INTERNAL_ERROR,
-               "    CPriorHelper: P_TZE is 0, which is forbidden");
+        THROWG(INTERNAL_ERROR, "P_TZE cannot be null");
       }
 
       if (m_data_pz[idz] > 0.0) {
         logPZ = log(m_data_pz[idz] / m_dz);
-      }
-
-      if (verbose) {
-        Log.LogDetail("    CPriorHelper: get prior idTpl=%d, idz=%d, idebmv=%d "
-                      ": logPZ=%e",
-                      idx, idz, icol, logPZ);
       }
 
       dataz[icol].logprior_precompA = logPA;
@@ -583,9 +536,8 @@ bool CPriorHelper::GetTZEPriorData(const std::string &tplname,
                                    SPriorTZE &tzePrioData,
                                    Int32 outsideZRangeExtensionMode) const {
   if (EBVIndexfilter < 0 || EBVIndexfilter > m_nEbv - 1) {
-    THROWG(INTERNAL_ERROR, Formatter()
-                               << "CPriorHelper: Bad EBV index requested ="
-                               << EBVIndexfilter << " nEBV=" << m_nEbv);
+    THROWG(INTERNAL_ERROR, Formatter() << "Bad EBV index requested ="
+                                       << EBVIndexfilter << " nEBV=" << m_nEbv);
   }
   TFloat64List redshifts(1, redshift);
   TPriorZEList zePriorData;

@@ -200,11 +200,49 @@ Float64 CContinuumIrregularSamplingMedian::FitBorder(const CSpectrum &s,
   return fitValue;
 }
 
+bool CContinuumIrregularSamplingMedian::FindEffectiveSpectrumBorder(
+    const CSpectrumFluxAxis &fluxAxis, Int32 &k0, Int32 &k1) const {
+  // Find the first not null element, and put its index in k0
+  Int32 norig = fluxAxis.GetSamplesCount();
+  Int32 j;
+  Int32 k = 0;
+  for (j = 0; j < norig; j++) {
+    if (fluxAxis[j] != 0) {
+      k0 = j;
+      break;
+    }
+  }
+
+  // Find the last not null element, and put its index in k1
+  for (j = norig - 1; j >= 0; j--) {
+    if (fluxAxis[j] != 0) {
+      k1 = j;
+      break;
+    }
+  }
+
+  // Strange test Here, ask MARCO why it's there
+  k = 0;
+  for (j = 0; j < norig; j++) {
+    if (fluxAxis[j] != 0) {
+      k++;
+    }
+    if (k > 10)
+      break;
+  }
+
+  if (k <= 10) {
+    return false;
+  }
+
+  return true;
+}
+
 /**
- * This algorithm computes the spectrum continuum using the following procedure:
- * estimate the 'middle' resolution (ex: for PFS the resolution doesn't vary
- *more than ~ 25 % in a spectral axis') compute the continuum using the median
- *technique with that adapted resolution
+ * This algorithm computes the spectrum continuum using the following
+ *procedure: estimate the 'middle' resolution (ex: for PFS the resolution
+ *doesn't vary more than ~ 25 % in a spectral axis') compute the continuum
+ *using the median technique with that adapted resolution
  **/
 bool CContinuumIrregularSamplingMedian::RemoveContinuum(
     const CSpectrum &s, CSpectrumFluxAxis &noContinuumFluxAxis) const {
@@ -256,36 +294,10 @@ bool CContinuumIrregularSamplingMedian::ProcessRemoveContinuum(
 
   noContinuumFluxAxis = CSpectrumFluxAxis(norig, 0.);
   noContinuumFluxAxis.GetError() = fluxAxis.GetError();
-  // Find the first not null element, and put its index in k0
-  k = 0;
-  for (j = 0; j < norig; j++) {
-    if (fluxAxis[j] != 0) {
-      k0 = j;
-      break;
-    }
-  }
 
-  // Find the last not null element, and put its index in k1
-  for (j = norig - 1; j >= 0; j--) {
-    if (fluxAxis[j] != 0) {
-      k1 = j;
-      break;
-    }
-  }
-
-  // Strange test Here, ask MARCO why it's there
-  k = 0;
-  for (j = 0; j < norig; j++) {
-    if (fluxAxis[j] != 0) {
-      k++;
-    }
-    if (k > 10)
-      break;
-  }
-
-  if (k <= 10) {
+  bool result = FindEffectiveSpectrumBorder(fluxAxis, k0, k1);
+  if (!result)
     return false;
-  }
 
   nd = k1 - k0 + 1;
 

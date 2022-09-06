@@ -136,10 +136,6 @@ private:
                                TGaussParamsList selectedgaussparams,
                                Float64 winsize, Float64 cut);
   Float64 XMadFind(const Float64 *x, Int32 n, Float64 median);
-
-  // Log
-  bool m_bypassDebug; // If true, debug messages are ignored even if --verbose
-                      // has been set.
 };
 } // namespace NSEpic
 
