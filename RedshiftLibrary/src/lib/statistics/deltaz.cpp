@@ -77,14 +77,11 @@ Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
         throw GlobalException(e.getErrorCode(), msg, __FILE__, __func__,
                               __LINE__);
       }
-      if (deltaz_i < maxIter) {
-        Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED,
-                     Formatter()
-                         << "  CDeltaz::" << __func__
-                         << ": Deltaz computation failed for half range "
-                         << half_samples_nb << " samples");
-        deltaz_i++;
-      }
+      Flag.warning(Flag.DELTAZ_COMPUTATION_FAILED,
+                   Formatter() << "  CDeltaz::" << __func__
+                               << ": Deltaz computation failed for half range "
+                               << half_samples_nb << " samples");
+      deltaz_i++;
     }
   }
   if (std::isnan(dz))
