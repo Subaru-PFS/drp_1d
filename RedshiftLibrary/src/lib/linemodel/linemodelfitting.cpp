@@ -115,7 +115,7 @@ CLineModelFitting::CLineModelFitting(
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
-  m_lineRatioManager->m_ContinuumComponent = "fromspectrum";
+  m_continuumManager->setContinuumComponent("fromspectrum");
 }
 
 void CLineModelFitting::initParameters() {

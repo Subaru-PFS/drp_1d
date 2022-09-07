@@ -83,7 +83,11 @@ public:
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum_tplFitMeiksinIdx; }
   Float64 getFitSum() {
-    return m_fitContinuum_tplFitMerit_phot + m_fitContinuum_tplFitLogprior;
+    if (!isContinuumComponentTplfitxx())
+      return 0.0;
+    return m_fitContinuum_tplFitMerit_phot +
+           m_fitContinuum_tplFitLogprior; // unconditionnal sum (if photometry
+                                          // disabled, will sum 0.0)
   }
   Float64 getTerm1() {
     return m_fitContinuum_tplFitAmplitude * m_fitContinuum_tplFitAmplitude *

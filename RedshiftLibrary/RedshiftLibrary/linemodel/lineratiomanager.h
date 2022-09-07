@@ -54,19 +54,19 @@ class CContinuumModelSolution;
 class CLineRatioManager {
 public:
   CLineRatioManager(CLineModelElementList &elements,
-                   std::shared_ptr<CSpectrumModel> model,
-                   std::shared_ptr<const CSpectrum> inputSpc,
-                   std::shared_ptr<const TFloat64Range> lambdaRange,
-                   std::shared_ptr<CContinuumManager> continuumManager,
-                   const CLineCatalog::TLineVector &restLineList);
+                    std::shared_ptr<CSpectrumModel> model,
+                    std::shared_ptr<const CSpectrum> inputSpc,
+                    std::shared_ptr<const TFloat64Range> lambdaRange,
+                    std::shared_ptr<CContinuumManager> continuumManager,
+                    const CLineCatalog::TLineVector &restLineList);
   CLineRatioManager() = delete;
-  virtual ~CLineRatioManager(){}
-  CLineRatioManager(CLineRatioManager const& other) = default;
-  CLineRatioManager& operator=(CLineRatioManager const& other) = default;
-   
-  CLineRatioManager(CLineRatioManager&& other) = default;
-  CLineRatioManager& operator=(CLineRatioManager&& other) = default;
-  
+  virtual ~CLineRatioManager() {}
+  CLineRatioManager(CLineRatioManager const &other) = default;
+  CLineRatioManager &operator=(CLineRatioManager const &other) = default;
+
+  CLineRatioManager(CLineRatioManager &&other) = default;
+  CLineRatioManager &operator=(CLineRatioManager &&other) = default;
+
   virtual int prepareFit(Float64 redshift) { return 1; }
   virtual bool init(Float64 redshift, Int32 itratio = -1);
   virtual Float64 computeMerit(Int32 itratio) = 0;
@@ -77,7 +77,7 @@ public:
     static TFloat64List dumb;
     return dumb;
   }
-  virtual Int32 getTplratio_count() const{ return 0; }
+  virtual Int32 getTplratio_count() const { return 0; }
 
   virtual void logParameters();
 
@@ -85,15 +85,15 @@ public:
   } // TODO, called in computeFirstPass in the general case but only active when
     // line_ratio_type = tplratio -> should be reviewed
 
-  std::string m_ContinuumComponent;
+  static std::shared_ptr<CLineRatioManager>
+  makeLineRatioManager(const std::string &lineRatioType,
+                       CLineModelElementList &elements,
+                       std::shared_ptr<CSpectrumModel> model,
+                       std::shared_ptr<const CSpectrum> inputSpc,
+                       std::shared_ptr<const TFloat64Range> lambdaRange,
+                       std::shared_ptr<CContinuumManager> continuumManager,
+                       const CLineCatalog::TLineVector &restLineList);
 
-  static std::shared_ptr<CLineRatioManager> makeLineRatioManager(const std::string &lineRatioType,
-							       CLineModelElementList &elements,
-							       std::shared_ptr<CSpectrumModel> model,
-							       std::shared_ptr<const CSpectrum> inputSpc,
-							       std::shared_ptr<const TFloat64Range> lambdaRange,
-							       std::shared_ptr<CContinuumManager> continuumManager,
-							       const CLineCatalog::TLineVector &restLineList);
 protected:
   void setLyaProfile(Float64 redshift,
                      const CLineCatalog::TLineVector &lineList);
@@ -136,11 +136,6 @@ protected:
   Float64 m_opt_lya_fit_delta_min = 0.;
   Float64 m_opt_lya_fit_delta_max = 0.;
   Float64 m_opt_lya_fit_delta_step = 1.;
-
-  bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplfit" ||
-           m_ContinuumComponent == "tplfitauto";
-  }
 };
 
 } // namespace NSEpic

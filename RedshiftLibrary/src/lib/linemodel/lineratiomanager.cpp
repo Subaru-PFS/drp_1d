@@ -63,8 +63,6 @@ CLineRatioManager::CLineRatioManager(
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
-  m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
-
   if (Context.GetCurrentMethod() == "LineModelSolve") {
 
     m_opt_lya_forcefit = ps->GetScoped<bool>("lyaforcefit");
@@ -249,7 +247,7 @@ void CLineRatioManager::setSymIgmProfile(Int32 iElts,
                                          const TInt32List &idxLineIGM,
                                          Float64 redshift) {
 
-  bool fixedIGM = isContinuumComponentTplfitxx();
+  bool fixedIGM = m_continuumManager->isContinuumComponentTplfitxx();
 
   // set to false when continuum is fitted to null
   fixedIGM &= m_continuumManager->isContFittedToNull();
@@ -355,10 +353,7 @@ Float64 CLineRatioManager::getLeastSquareMerit() const {
     //        }
   }
 
-  if (isContinuumComponentTplfitxx()) {
-    fit += m_continuumManager->getFitSum(); // unconditionnal sum (if photometry
-                                            // disabled, will sum 0.0)
-  }
+  fit += m_continuumManager->getFitSum();
 
   //  Log.LogDebug("CLineModelFitting::getLeastSquareMerit fit = %f", fit);
   if (std::isnan(fit)) {
