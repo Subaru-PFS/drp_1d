@@ -47,8 +47,9 @@ CHybridFitter::CHybridFitter(CLineModelElementList &elements,
                              std::shared_ptr<const CSpectrum> inputSpectrum,
                              std::shared_ptr<const TLambdaRange> lambdaRange,
                              std::shared_ptr<CSpectrumModel> spectrumModel,
-			     const CLineCatalog::TLineVector &restLineList)
-  : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList)
+                             const CLineCatalog::TLineVector &restLineList)
+    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                      restLineList)
 
 {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
@@ -317,7 +318,8 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
     }
 
     // simulatneous fit with linsolve
-    Float64 modelErr_init = m_model->getModelErrorUnderElement(ilineA);
+    Float64 modelErr_init =
+        m_model->getModelErrorUnderElement(ilineA, m_model->getSpcFluxAxis());
     Float64 ampA = m_Elements[ilineA]->GetFittedAmplitude(0);
     Float64 amp_errorA = m_Elements[ilineA]->GetFittedAmplitudeErrorSigma(0);
     Float64 ampE = m_Elements[ilineE]->GetFittedAmplitude(0);
@@ -353,7 +355,8 @@ Int32 CHybridFitter::improveBalmerFit(Float64 redshift) {
       elts.push_back(ilinesMore[imore]);
     }
     m_model->refreshModelUnderElements(elts);
-    Float64 modelErr_withfit = m_model->getModelErrorUnderElement(ilineA);
+    Float64 modelErr_withfit =
+        m_model->getModelErrorUnderElement(ilineA, m_model->getSpcFluxAxis());
     if (modelErr_withfit > modelErr_init) {
       Float64 nominal_ampA = m_Elements[ilineA]->GetNominalAmplitude(0);
       Float64 nominal_ampE = m_Elements[ilineE]->GetNominalAmplitude(0);

@@ -71,7 +71,7 @@ Int32 CAbstractFitter::fitAmplitudesLinSolveAndLambdaOffset(
 
     // todo: replace lambdarange using elements limits for speed
     for (Int32 iE : EltsIdx)
-      sumFit += m_model->getModelErrorUnderElement(iE);
+      sumFit += m_model->getModelErrorUnderElement(iE, fluxAxis);
 
     if (sumFit < bestMerit) {
       bestMerit = sumFit;
@@ -277,28 +277,29 @@ std::unique_ptr<CAbstractFitter> CAbstractFitter::makeFitter(
     const CLineCatalog::TLineVector &restLineList,
     std::shared_ptr<CContinuumManager> continuumManager) {
   if (fittingMethod == "hybrid")
-    return std::unique_ptr<CHybridFitter>(
-					  new CHybridFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+    return std::unique_ptr<CHybridFitter>(new CHybridFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
   else if (fittingMethod == "svd")
-    return std::unique_ptr<CSvdFitter>(
-				       new CSvdFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+    return std::unique_ptr<CSvdFitter>(new CSvdFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
   else if (fittingMethod == "svdlc")
-    return std::unique_ptr<CSvdlcFitter>(new CSvdlcFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList,continuumManager));
+    return std::unique_ptr<CSvdlcFitter>(
+        new CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                         restLineList, continuumManager));
   else if (fittingMethod == "svdlcp2")
     return std::unique_ptr<CSvdlcFitter>(
-        new CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList,
-                         continuumManager, 2));
+        new CSvdlcFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                         restLineList, continuumManager, 2));
 
   else if (fittingMethod == "ones")
-    return std::unique_ptr<COnesFitter>(
-					new COnesFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+    return std::unique_ptr<COnesFitter>(new COnesFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
   else if (fittingMethod == "random")
-    return std::unique_ptr<CRandomFitter>(
-        new CRandomFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+    return std::unique_ptr<CRandomFitter>(new CRandomFitter(
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
   else if (fittingMethod == "individual")
     return std::unique_ptr<CIndividualFitter>(new CIndividualFitter(
-        elements, inputSpectrum, lambdaRange, spectrumModel,restLineList));
+        elements, inputSpectrum, lambdaRange, spectrumModel, restLineList));
   else
     THROWG(INTERNAL_ERROR, Formatter()
                                << "Unknown fitting method " << fittingMethod);

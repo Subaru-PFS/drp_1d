@@ -95,8 +95,7 @@ CLineModelFitting::CLineModelFitting()
   initMembers();
   setLineRatioType(m_lineRatioType);
   if (m_lineRatioType == "rules")
-    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
-        ->setRulesOption();
+    dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption();
 }
 
 CLineModelFitting::CLineModelFitting(
@@ -115,8 +114,7 @@ CLineModelFitting::CLineModelFitting(
   initMembers();
   setLineRatioType(m_lineRatioType);
 
-  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())
-      ->setRulesOption("no");
+  dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
   m_lineRatioManager->m_ContinuumComponent = "fromspectrum";
 }
 
@@ -197,34 +195,36 @@ void CLineModelFitting::initMembers() {
 
 void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "m_pass" << m_pass);
-  Log.LogDetail(Formatter() << " m_enableAmplitudeOffsets"
-                          << m_enableAmplitudeOffsets);
+  Log.LogDetail(Formatter()
+                << " m_enableAmplitudeOffsets" << m_enableAmplitudeOffsets);
   Log.LogDetail(Formatter() << " m_LambdaOffsetMin" << m_LambdaOffsetMin);
   Log.LogDetail(Formatter() << " m_LambdaOffsetMax" << m_LambdaOffsetMax);
   Log.LogDetail(Formatter() << " m_LambdaOffsetStep" << m_LambdaOffsetStep);
-  Log.LogDetail(Formatter() << " m_enableLambdaOffsetsFit"
-                          << m_enableLambdaOffsetsFit);
+  Log.LogDetail(Formatter()
+                << " m_enableLambdaOffsetsFit" << m_enableLambdaOffsetsFit);
 
-  Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableMultipleContinuumfit"
-                          << m_opt_firstpass_forcedisableMultipleContinuumfit);
+  Log.LogDetail(Formatter()
+                << " m_opt_firstpass_forcedisableMultipleContinuumfit"
+                << m_opt_firstpass_forcedisableMultipleContinuumfit);
   Log.LogDetail(Formatter() << "m_opt_firstpass_fittingmethod "
-                          << m_opt_firstpass_fittingmethod);
+                            << m_opt_firstpass_fittingmethod);
   Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
-                          << m_opt_secondpass_fittingmethod);
+                            << m_opt_secondpass_fittingmethod);
 
   Log.LogDetail(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
   Log.LogDetail(Formatter() << "LineWidthType=" << m_LineWidthType);
 
   Log.LogDetail(Formatter() << "velocityEmission=" << m_velocityEmission);
   Log.LogDetail(Formatter() << "velocityAbsorption=" << m_velocityAbsorption);
-  Log.LogDetail(Formatter() << "velocityEmissionInit=" << m_velocityEmissionInit);
-  Log.LogDetail(Formatter() << "velocityAbsorptionInit="
-                          << m_velocityAbsorptionInit);
+  Log.LogDetail(Formatter()
+                << "velocityEmissionInit=" << m_velocityEmissionInit);
+  Log.LogDetail(Formatter()
+                << "velocityAbsorptionInit=" << m_velocityAbsorptionInit);
 
   Log.LogDetail(Formatter() << "nominalWidthDefaultEmission="
-                          << m_nominalWidthDefaultEmission);
+                            << m_nominalWidthDefaultEmission);
   Log.LogDetail(Formatter() << "nominalWidthDefaultAbsorption="
-                          << m_nominalWidthDefaultAbsorption);
+                            << m_nominalWidthDefaultAbsorption);
 
   Log.LogDetail(Formatter() << "fittingmethod=" << m_fittingmethod);
 
@@ -234,15 +234,15 @@ void CLineModelFitting::logParameters() {
   // Log.LogDetail(Formatter()<<"tplCategoryList="<<m_tplCategoryList);
 
   Log.LogDetail(Formatter() << "secondpass_fitContinuum_dustfit="
-                          << m_secondpass_fitContinuum_dustfit);
+                            << m_secondpass_fitContinuum_dustfit);
   Log.LogDetail(Formatter() << "secondpass_fitContinuum_igm="
-                          << m_secondpass_fitContinuum_igm);
+                            << m_secondpass_fitContinuum_igm);
 
   //  Log.LogDetail(Formatter()<<"fitContinuum_tplFitPolyCoeffs="<<m_fitContinuum_tplFitPolyCoeffs);
   //  // only used with
   // m_fitContinuum_option==2 for now
   Log.LogDetail(Formatter() << "forcedisableMultipleContinuumfit="
-                          << m_forcedisableMultipleContinuumfit);
+                            << m_forcedisableMultipleContinuumfit);
 }
 
 /**
@@ -500,7 +500,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
     for (Int32 itratio = 0; itratio < ntplratio; itratio++) {
 
-      if(m_lineRatioManager->init(redshift, itratio)) continue;
+      if (m_lineRatioManager->init(redshift, itratio))
+        continue;
 
       m_fitter->fit(redshift);
 
@@ -574,14 +575,15 @@ void CLineModelFitting::SetSecondpassContinuumFitPrms() {
 
 void CLineModelFitting::SetFittingMethod(const std::string &fitMethod) {
   m_fittingmethod = fitMethod;
-  m_fitter =
-      CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
-                                  m_lambdaRange, m_model, m_RestLineList, m_continuumManager);
+  m_fitter = CAbstractFitter::makeFitter(fitMethod, m_Elements, m_inputSpc,
+                                         m_lambdaRange, m_model, m_RestLineList,
+                                         m_continuumManager);
 }
 
 void CLineModelFitting::setLineRatioType(const std::string &lineRatioType) {
-  m_lineRatioManager = CLineRatioManager::makeLineRatioManager(lineRatioType, m_Elements, m_model, m_inputSpc,
-							    m_lambdaRange, m_continuumManager,  m_RestLineList);
+  m_lineRatioManager = CLineRatioManager::makeLineRatioManager(
+      lineRatioType, m_Elements, m_model, m_inputSpc, m_lambdaRange,
+      m_continuumManager, m_RestLineList);
 }
 
 void CLineModelFitting::SetAbsLinesLimit(Float64 limit) {
@@ -649,7 +651,6 @@ Float64 CLineModelFitting::getOutsideLinesSTD(Int32 which) const {
     return NAN;
   return sqrt(sum2 / nsum);
 }
-
 
 Float64 CLineModelFitting::getLeastSquareContinuumMerit() const {
   const CSpectrumSpectralAxis &spcSpectralAxis = m_inputSpc->GetSpectralAxis();
@@ -1087,7 +1088,7 @@ CLineModelSolution CLineModelFitting::GetModelSolution(Int32 opt_level) {
                    // and high level line properties
     {
       modelSolution.FittingError[iRestLine] =
-          m_model->getModelErrorUnderElement(eIdx);
+          m_model->getModelErrorUnderElement(eIdx, m_model->getSpcFluxAxis());
       TPolynomCoeffs polynom_coeffs = m_Elements.getPolynomCoeffs(eIdx);
       // save polynom info to output them in hdf5, mainly to recontruct
       // linemeas model

@@ -1610,21 +1610,6 @@ Int32 COperatorLineModel::EstimateSecondPassParameters(
                   // by an unused variable
                   contreest_iterations, false);
 
-              //                                    if(m_enableWidthFitByGroups)
-              //                                    {
-              //                                        meritv
-              //                                        =
-              //                                        0.0;
-              //                                        for(Int32
-              //                                        ke=0;
-              //                                        ke<idxVelfitGroups[kgroup].size();
-              //                                        ke++)
-              //                                        {
-              //                                            meritv +=
-              //                                            m_fittingManager->getModelErrorUnderElement(idxVelfitGroups[kgroup][ke]);
-              //                                        }
-              //                                    }
-
               Log.LogDebug("  Operator-Linemodel: testing velocity: "
                            "merit=%.3e for velocity = %.1f",
                            meritv, vTest);
