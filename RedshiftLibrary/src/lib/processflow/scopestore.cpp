@@ -50,9 +50,9 @@ std::string CScopeStore::GetCurrentScopeName() const {
 
   n = m_ScopeStack[0];
   it = m_ScopeStack.begin();
-  it++;
+  ++it;
 
-  for (; it != m_ScopeStack.end(); it++) {
+  for (; it != m_ScopeStack.end(); ++it) {
     n.append(".");
     n.append((*it));
   }

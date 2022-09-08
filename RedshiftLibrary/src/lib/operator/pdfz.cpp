@@ -272,7 +272,8 @@ Float64 COperatorPdfz::logSumExpTrick(const TFloat64List &valproba,
     sumModifiedExp += trapezArea;
     modifiedEXPO_previous = modifiedEXPO;
   }
-
+  if (sumModifiedExp == 0.0)
+    THROWG(INTERNAL_ERROR, "sumModifiedExp cannot be null");
   Float64 sum = logfactor + log(sumModifiedExp);
 
   return sum;

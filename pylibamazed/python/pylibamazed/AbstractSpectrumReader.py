@@ -212,7 +212,7 @@ class AbstractSpectrumReader:
 
     def init(self):
         if len(self.waves) != len(self.fluxes) or len(self.waves) != len(self.errors):
-            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Numbers of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves), str(len(self.errors)), str(len(self.fluxes)))))
+            raise  APIException(ErrorCode.INVALID_SPECTRUM,"Number of error, wavelength and flux arrays should be the same:{0} {1} {2}".format(str(len(self.waves)), str(len(self.errors)), str(len(self.fluxes))))
         if len(self.lsf_data) > 1:
             raise  APIException(ErrorCode.MULTILSF_NOT_HANDELED,"Multiple LSF not handled")
         airvacuum_method = self.parameters.get("airvacuum_method", "")

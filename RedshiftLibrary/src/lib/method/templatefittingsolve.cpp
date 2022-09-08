@@ -365,7 +365,7 @@ ChisquareArray CTemplateFittingSolve::BuildChisquareArray(
   chisquarearray.cstLog = -1;
 
   for (TOperatorResultMap::const_iterator it = meritResults.begin();
-       it != meritResults.end(); it++) {
+       it != meritResults.end(); ++it) {
     auto meritResult =
         std::dynamic_pointer_cast<const CTemplateFittingResult>((*it).second);
     Int32 nISM = -1;
