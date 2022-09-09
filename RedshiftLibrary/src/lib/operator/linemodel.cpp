@@ -322,7 +322,7 @@ Int32 COperatorLineModel::ComputeFirstPass() {
   }
 
   // WARNING: HACK, first pass with continuum from spectrum.
-  // model.SetContinuumComponent(opt_continuumcomponent);
+  // model.setContinuumComponent(opt_continuumcomponent);
   // model.InitFitContinuum();
   //
   boost::chrono::thread_clock::time_point stop_mainloop =
@@ -696,7 +696,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                        << ", amplitude/error = " << fitValues.fitAmplitudeSigma
                        << " & error = " << fitValues.fitAmplitudeError);
       m_opt_continuumcomponent = "fromspectrum";
-      m_fittingManager->SetContinuumComponent("fromspectrum");
+      m_fittingManager->setContinuumComponent("fromspectrum");
     }
   }
   // check if continuum is too weak comparing to the preset threshold
@@ -711,7 +711,7 @@ void COperatorLineModel::evaluateContinuumAmplitude(
                      << ", amplitude/error = " << fitValues.fitAmplitudeSigma
                      << " & error = " << fitValues.fitAmplitudeError);
     m_opt_continuumcomponent = "nocontinuum";
-    m_fittingManager->SetContinuumComponent("nocontinuum");
+    m_fittingManager->setContinuumComponent("nocontinuum");
   }
 }
 /**

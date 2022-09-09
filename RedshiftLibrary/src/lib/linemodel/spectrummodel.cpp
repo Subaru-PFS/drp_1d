@@ -447,30 +447,16 @@ Float64 CSpectrumModel::getModelErrorUnderElement(
   return sqrt(fit / sumErr);
 }
 
-/**
- * \brief This function prepares the continuum for use in the fit with the
- *line elements. Rebin with PFG buffer Find and apply amplitude factor from
- *previously fitted tpl
- **/
-void CSpectrumModel::PrepareContinuum() {
-  const CSpectrumSpectralAxis &targetSpectralAxis =
-      m_inputSpc->GetSpectralAxis();
+void CSpectrumModel::setContinuumToInputSpc() {
   TAxisSampleList &Yrebin = m_ContinuumFluxAxis.GetSamplesVector();
-
-  if (m_ContinuumComponent == "nocontinuum")
-    return;
-
-  if (!isContinuumComponentTplfitxx()) {
-    Yrebin = m_inputSpc->GetContinuumFluxAxis().GetSamplesVector();
-  }
+  Yrebin = m_inputSpc->GetContinuumFluxAxis().GetSamplesVector();
 }
 
-void CSpectrumModel::SetContinuumComponent(std::string component) {
-  m_ContinuumComponent = component;
+void CSpectrumModel::setContinuumComponent(const std::string &component) {
 
   const Int32 spectrumSampleCount = m_inputSpc->GetSampleCount();
 
-  if (m_ContinuumComponent == "nocontinuum") {
+  if (component == "nocontinuum") {
     // the continuum is set to zero and the observed spectrum is the spectrum
     // without continuum
     m_spcFluxAxisNoContinuum =
@@ -479,7 +465,7 @@ void CSpectrumModel::SetContinuumComponent(std::string component) {
     m_SpcFluxAxis = m_spcFluxAxisNoContinuum;
     m_SpectrumModel.SetFluxAxis(CSpectrumFluxAxis(spectrumSampleCount));
   }
-  if (m_ContinuumComponent == "fromspectrum") {
+  if (component == "fromspectrum") {
     // the continuum is set to the spectrum continuum and the observed
     // spectrum is the raw spectrum
     m_spcFluxAxisNoContinuum = m_inputSpc->GetWithoutContinuumFluxAxis();
@@ -487,7 +473,7 @@ void CSpectrumModel::SetContinuumComponent(std::string component) {
     m_ContinuumFluxAxis = m_inputSpc->GetContinuumFluxAxis();
     m_SpectrumModel.SetFluxAxis(m_ContinuumFluxAxis);
   }
-  if (isContinuumComponentTplfitxx()) {
+  if (component == "tplfit" || component == "tplfitauto") {
     // the continuum is set to zero and the observed spectrum is the raw
     // spectrum
     m_SpcFluxAxis = m_inputSpc->GetRawFluxAxis();

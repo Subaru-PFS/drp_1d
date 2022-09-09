@@ -23,10 +23,8 @@ public:
                                  Int32 lineIdx = -1);
 
   CSpectrumFluxAxis getModel(Int32 lineTypeFilter = -1) const;
-  // methods modifying/initializing continuum (m_ContinuumFluxAxis)
-  // void prepareContinuum(std::string continuumComponent);
-  void PrepareContinuum();
-  void SetContinuumComponent(std::string component);
+  void setContinuumToInputSpc();
+  void setContinuumComponent(const std::string &component);
   void EstimateSpectrumContinuum(Float64 opt_enhance_lines);
 
   const CSpectrum &GetModelSpectrum() const;
@@ -58,8 +56,6 @@ public:
   // new methods
 
   void initModelWithContinuum();
-  void buildFromParameters(const CLineModelSolution &lm_solution,
-                           const CContinuumModelSolution &c_solution);
   void setContinuumFromTplFit(Float64 alpha, Float64 tplAmp,
                               const TFloat64List &polyCoeffs,
                               const TAxisSampleList &observeGridContinuumFlux);
@@ -83,12 +79,6 @@ private:
   CSpectrumFluxAxis m_SpcFluxAxis;
   CSpectrumFluxAxis
       m_spcFluxAxisNoContinuum; // observed spectrum for line fitting
-
-  std::string m_ContinuumComponent;
-  bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplfit" ||
-           m_ContinuumComponent == "tplfitauto";
-  }
 };
 
 } // namespace NSEpic
