@@ -72,13 +72,16 @@ public:
   }
   CContinuumModelSolution GetContinuumModelSolution() const;
   void setContinuumComponent(std::string component);
+  const std::string &getContinuumComponent() const {
+    return m_ContinuumComponent;
+  };
 
   // new methods
   void logParameters();
   std::shared_ptr<const CSpectrumFluxCorrectionCalzetti>
   getIsmCorrectionFromTpl();
   void reinterpolateContinuum(Float64 redshift);
-  void reinterpolateContinuum();
+  void reinterpolateContinuumResetAmp();
   void initObserveGridContinuumFlux(Int32 size);
   bool isContFittedToNull();
   Int32 getFittedMeiksinIndex() { return m_fitContinuum_tplFitMeiksinIdx; }

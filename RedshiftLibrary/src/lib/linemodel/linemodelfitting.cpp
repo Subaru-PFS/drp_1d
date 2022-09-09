@@ -106,7 +106,6 @@ CLineModelFitting::CLineModelFitting(
   m_lambdaRange = std::make_shared<const TLambdaRange>(lambdaRange);
   initParameters();
   // override ortho specific parameters
-  m_ContinuumComponent = "fromspectrum";
   m_fittingmethod = "hybrid";
   // temporary options override to be removed when full tpl ortho is implemented
   m_lineRatioType = "rules";
@@ -115,7 +114,7 @@ CLineModelFitting::CLineModelFitting(
   setLineRatioType(m_lineRatioType);
 
   dynamic_cast<CRulesManager *>(m_lineRatioManager.get())->setRulesOption("no");
-  m_continuumManager->setContinuumComponent("fromspectrum");
+  setContinuumComponent("fromspectrum");
 }
 
 void CLineModelFitting::initParameters() {
@@ -123,8 +122,6 @@ void CLineModelFitting::initParameters() {
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
   m_fittingmethod = ps->GetScoped<std::string>("fittingmethod");
-  m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
-
   m_LineWidthType = ps->GetScoped<std::string>("linewidthtype");
 
   m_velocityEmission = ps->GetScoped<Float64>("velocityemission");
@@ -144,7 +141,10 @@ void CLineModelFitting::initParameters() {
 
     SetSecondpassContinuumFitPrms();
   }
-  if (isContinuumComponentTplfitxx()) {
+
+  std::string continuumComponent =
+      ps->GetScoped<std::string>("continuumcomponent");
+  if (continuumComponent == "tplfit" || continuumComponent == "tplfitauto") {
     m_opt_firstpass_forcedisableMultipleContinuumfit =
         ps->GetScoped<bool>("firstpass.multiplecontinuumfit_disable");
     // useloglambdasampling param is relevant only if linemodel.continuumfit is
@@ -183,7 +183,6 @@ void CLineModelFitting::initMembers() {
       CSpectrumModel(m_Elements, m_inputSpc, m_RestLineList));
   m_continuumManager = std::make_shared<CContinuumManager>(
       CContinuumManager(m_inputSpc, m_model, *(m_lambdaRange)));
-  SetContinuumComponent(m_ContinuumComponent);
 
   SetFittingMethod(m_fittingmethod);
   SetLSF();
@@ -211,7 +210,6 @@ void CLineModelFitting::logParameters() {
   Log.LogDetail(Formatter() << "m_opt_secondpass_fittingmethod"
                             << m_opt_secondpass_fittingmethod);
 
-  Log.LogDetail(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
   Log.LogDetail(Formatter() << "LineWidthType=" << m_LineWidthType);
 
   Log.LogDetail(Formatter() << "velocityEmission=" << m_velocityEmission);
@@ -423,30 +421,30 @@ bool CLineModelFitting::initModelAtZ(
 bool CLineModelFitting::initDtd() {
   //  m_dTransposeDLambdaRange = TLambdaRange(*(m_lambdaRange));
   m_dTransposeDLambdaRange = *(m_lambdaRange);
-  if (m_ContinuumComponent == "tplfit" ||
-      m_ContinuumComponent == "tplfitauto") {
+  if (isContinuumComponentTplfitxx())
     m_dTransposeD = EstimateDTransposeD("raw");
-  } else {
+  else
     m_dTransposeD = EstimateDTransposeD("nocontinuum");
-  }
+
   m_likelihood_cstLog = EstimateLikelihoodCstLog();
   return true;
 }
 
 void CLineModelFitting::prepareAndLoadContinuum(Int32 k, Float64 redshift) {
-  if (m_ContinuumComponent == "nocontinuum")
+  if (getContinuumComponent() == "nocontinuum")
     return;
 
-  m_model->PrepareContinuum();
-
-  if (isContinuumComponentTplfitxx()) // the support has to be already computed
-                                      // when LoadFitContinuum() is called
-  {
-    m_continuumManager->initObserveGridContinuumFlux(
-        m_inputSpc->GetSampleCount());
-    Int32 autoselect = m_ContinuumComponent == "tplfitauto";
-    m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
+  if (!isContinuumComponentTplfitxx()) {
+    m_model->setContinuumToInputSpc();
+    return;
   }
+
+  // the support has to be already computed
+  // when LoadFitContinuum() is called
+  m_continuumManager->initObserveGridContinuumFlux(
+      m_inputSpc->GetSampleCount());
+  Int32 autoselect = getContinuumComponent() == "tplfitauto";
+  m_continuumManager->LoadFitContinuum(k, autoselect, redshift);
 }
 
 void CLineModelFitting::computeSpectrumFluxWithoutContinuum() {
@@ -492,7 +490,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
     Float64 _merit = INFINITY;
     Float64 _meritprior = 0.; // only relevant for "tplratio"
     prepareAndLoadContinuum(k, redshift);
-    if (m_ContinuumComponent != "nocontinuum")
+    if (getContinuumComponent() != "nocontinuum")
       computeSpectrumFluxWithoutContinuum();
 
     if (m_enableAmplitudeOffsets)
@@ -521,7 +519,7 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
         m_lineRatioManager->saveResults(itratio);
       }
-      if (m_ContinuumComponent == "nocontinuum")
+      if (getContinuumComponent() == "nocontinuum")
         m_model->reinitModel();
     }
   }
@@ -531,7 +529,8 @@ Float64 CLineModelFitting::fit(Float64 redshift,
 
   if (isContinuumComponentTplfitxx()) {
     if (m_fittingmethod != "svdlc" && nContinuum > 1) {
-      Int32 autoselect = m_ContinuumComponent == "tplfitauto";
+      Int32 autoselect =
+          m_continuumManager->getContinuumComponent() == "tplfitauto";
       // TODO savedIdxContinuumFitted=-1 if lineRatioType!=tplratio
       m_continuumManager->LoadFitContinuum(savedIdxContinuumFitted, autoselect,
                                            redshift);
@@ -1441,10 +1440,8 @@ Float64 CLineModelFitting::EstimateMTransposeM()
   return mtm;
 }
 
-void CLineModelFitting::SetContinuumComponent(std::string component) {
-  m_ContinuumComponent = component;
-  m_model->SetContinuumComponent(component);
-  m_continuumManager->setContinuumComponent(component);
+void CLineModelFitting::setContinuumComponent(std::string component) {
+  m_continuumManager->setContinuumComponent(std::move(component));
 }
 /**
  * \brief this function estimates the likelihood_cstLog term withing the

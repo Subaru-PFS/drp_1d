@@ -48,10 +48,11 @@ CSvdlcFitter::CSvdlcFitter(CLineModelElementList &elements,
                            std::shared_ptr<const CSpectrum> inputSpectrum,
                            std::shared_ptr<const TLambdaRange> lambdaRange,
                            std::shared_ptr<CSpectrumModel> spectrumModel,
-			   const CLineCatalog::TLineVector &restLineList,
+                           const CLineCatalog::TLineVector &restLineList,
                            std::shared_ptr<CContinuumManager> continuumManager,
                            Int32 polyOrder)
-  : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,restLineList),
+    : CAbstractFitter(elements, inputSpectrum, lambdaRange, spectrumModel,
+                      restLineList),
       m_fitc_polyOrder(polyOrder), m_continuumManager(continuumManager),
       m_spectralAxis(inputSpectrum->GetSpectralAxis())
 
@@ -69,7 +70,7 @@ void CSvdlcFitter::fit(Float64 redshift) {
 
   // re-interpolate the continuum on the grid
 
-  m_continuumManager->reinterpolateContinuum();
+  m_continuumManager->reinterpolateContinuumResetAmp();
   TInt32List validEltsIdx = m_Elements.GetModelValidElementsIndexes();
   TFloat64List ampsfitted;
   TFloat64List errorsfitted;

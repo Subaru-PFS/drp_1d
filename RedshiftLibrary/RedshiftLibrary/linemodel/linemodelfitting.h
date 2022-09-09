@@ -90,7 +90,10 @@ public:
   void LogCatalogInfos();
 
   void setRedshift(Float64 redshift, bool reinterpolatedContinuum);
-  void SetContinuumComponent(std::string component);
+  void setContinuumComponent(std::string component);
+  const std::string &getContinuumComponent() const {
+    return m_continuumManager->getContinuumComponent();
+  };
 
   bool initDtd();
   Float64 EstimateDTransposeD(const std::string &spcComponent) const;
@@ -167,8 +170,7 @@ public:
   void prepareAndLoadContinuum(Int32 icontfitting, Float64 redshift);
   void computeSpectrumFluxWithoutContinuum();
   bool isContinuumComponentTplfitxx() const {
-    return m_ContinuumComponent == "tplfit" ||
-           m_ContinuumComponent == "tplfitauto";
+    return m_continuumManager->isContinuumComponentTplfitxx();
   }
 
   std::shared_ptr<CSpectrumModel> getSpectrumModel() {
@@ -220,7 +222,6 @@ private:
 
   // Float64* m_unscaleContinuumFluxAxisDerivZ;
 
-  std::string m_ContinuumComponent;
   std::string m_LineWidthType;
 
   Float64 m_velocityEmission;

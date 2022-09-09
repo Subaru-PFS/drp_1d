@@ -29,8 +29,8 @@ CContinuumManager::CContinuumManager(
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
 
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
+  setContinuumComponent(ps->GetScoped<std::string>("continuumcomponent"));
 
-  m_ContinuumComponent = ps->GetScoped<std::string>("continuumcomponent");
   if (m_ContinuumComponent != "nocontinuum") {
     m_opt_fitcontinuum_neg_threshold =
         ps->GetScoped<Float64>("continuumfit.negativethreshold");
@@ -395,6 +395,8 @@ CContinuumManager::getIsmCorrectionFromTpl() {
 }
 
 void CContinuumManager::logParameters() {
+  Log.LogInfo(Formatter() << "ContinuumComponent=" << m_ContinuumComponent);
+
   Log.LogInfo(Formatter() << "fitContinuum_option=" << m_fitContinuum_option);
   Log.LogInfo(Formatter() << "fitContinuum_tplName=" << m_fitContinuum_tplName);
   Log.LogInfo(Formatter() << "fitContinuum_tplFitAmplitude="
@@ -428,12 +430,6 @@ void CContinuumManager::logParameters() {
                           << m_fitContinuum_tplFitAlpha);
 }
 
-void CContinuumManager::reinterpolateContinuum(Float64 redshift) {
-  std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
-      m_tplCategoryList, m_fitContinuum_tplName);
-  ApplyContinuumOnGrid(tpl, redshift);
-}
-
 void CContinuumManager::initObserveGridContinuumFlux(Int32 size) {
   m_observeGridContinuumFlux.resize(size);
 }
@@ -445,7 +441,8 @@ bool CContinuumManager::isContFittedToNull() {
 }
 
 void CContinuumManager::setContinuumComponent(std::string component) {
-  m_ContinuumComponent = component;
+  m_ContinuumComponent = std::move(component);
+  m_model->setContinuumComponent(m_ContinuumComponent);
 
   if (m_ContinuumComponent == "nocontinuum") {
     m_fitContinuum_tplName = "nocontinuum"; // to keep track in resultstore
@@ -459,13 +456,14 @@ void CContinuumManager::setContinuumComponent(std::string component) {
   }
 }
 
-void CContinuumManager::reinterpolateContinuum() {
-
+void CContinuumManager::reinterpolateContinuum(const Float64 redshift) {
   std::shared_ptr<const CTemplate> tpl = m_tplCatalog->GetTemplateByName(
       m_tplCategoryList, m_fitContinuum_tplName);
+  ApplyContinuumOnGrid(tpl, redshift);
+}
 
-  ApplyContinuumOnGrid(tpl, m_fitContinuum_tplFitRedshift);
-
+void CContinuumManager::reinterpolateContinuumResetAmp() {
+  reinterpolateContinuum(m_fitContinuum_tplFitRedshift);
   m_fitContinuum_tplFitAmplitude = 1.0;
   m_fitContinuum_tplFitAmplitudeError = 1.0;
   TFloat64List polyCoeffs_unused;
