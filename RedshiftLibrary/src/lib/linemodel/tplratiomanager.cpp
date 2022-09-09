@@ -53,8 +53,8 @@ CTplratioManager::CTplratioManager(
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineCatalog::TLineVector &restLineList)
-    : CLineRatioManager(elements, model, inputSpc, lambdaRange, continuumManager,
-                       restLineList) {
+    : CLineRatioManager(elements, model, inputSpc, lambdaRange,
+                        continuumManager, restLineList) {
   std::shared_ptr<const CParameterStore> ps = Context.GetParameterStore();
 
   CAutoScope autoscope(Context.m_ScopeStack, "linemodel");
@@ -186,7 +186,6 @@ void CTplratioManager::duplicateTplratioResult(
   return;
 }
 
-
 void CTplratioManager::initTplratioCatalogs(Int32 opt_tplratio_ismFit) {
   // TODO: use the passed tplRatioCatalog
   // TODO: check if m_CatalogTplRatio changes between iterations
@@ -281,20 +280,21 @@ void CTplratioManager::logParameters() {
   Log.LogDetail(Formatter() << " m_opt_haprior" << m_opt_haprior);
   Log.LogDetail(Formatter() << "NSigmaSupport=" << m_NSigmaSupport);
   Log.LogDetail(Formatter() << " m_opt_firstpass_forcedisableTplratioISMfit "
-                          << m_opt_firstpass_forcedisableTplratioISMfit);
+                            << m_opt_firstpass_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "forcedisableTplratioISMfit="
-                          << m_forcedisableTplratioISMfit);
+                            << m_forcedisableTplratioISMfit);
   Log.LogDetail(Formatter() << "tplratioBestTplName=" << m_tplratioBestTplName);
-  Log.LogDetail(Formatter() << "tplratioBestTplIsmCoeff="
-                          << m_tplratioBestTplIsmCoeff);
-  Log.LogDetail(Formatter() << "tplratioBestTplAmplitude="
-                          << m_tplratioBestTplAmplitude);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplIsmCoeff=" << m_tplratioBestTplIsmCoeff);
+  Log.LogDetail(Formatter()
+                << "tplratioBestTplAmplitude=" << m_tplratioBestTplAmplitude);
   Log.LogDetail(Formatter() << "tplratioBestTplDtm=" << m_tplratioBestTplDtm);
   Log.LogDetail(Formatter() << "tplratioBestTplMtm=" << m_tplratioBestTplMtm);
-  Log.LogDetail(Formatter()
-              << "tplratioLeastSquareFast="
-              << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
-                                             // use fast least square estimation
+  Log.LogDetail(
+      Formatter()
+      << "tplratioLeastSquareFast="
+      << m_tplratioLeastSquareFast); // for rigidity=tplratio: switch to
+                                     // use fast least square estimation
 }
 
 void CTplratioManager::setPassMode(Int32 iPass) {

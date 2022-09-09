@@ -166,8 +166,7 @@ void CLineModelResult::SetChisquareTplratioResult(
   return;
 }
 
-void CLineModelResult::SetChisquareTplratioResultFromPrevious(
-    Int32 index_z) {
+void CLineModelResult::SetChisquareTplratioResultFromPrevious(Int32 index_z) {
 
   if (index_z >= Redshifts.size())
     THROWG(INTERNAL_ERROR, "Invalid z index");
@@ -176,10 +175,12 @@ void CLineModelResult::SetChisquareTplratioResultFromPrevious(
 
   for (Int32 k = 0; k < ChiSquareTplratios.size(); k++) {
     ChiSquareTplratios[k][index_z] = ChiSquareTplratios[k][previous];
-    ScaleMargCorrectionTplratios[k][index_z] = ScaleMargCorrectionTplratios[k][previous];
-    StrongELPresentTplratios[k][index_z] = StrongELPresentTplratios[k][previous];
+    ScaleMargCorrectionTplratios[k][index_z] =
+        ScaleMargCorrectionTplratios[k][previous];
+    StrongELPresentTplratios[k][index_z] =
+        StrongELPresentTplratios[k][previous];
     StrongHalphaELPresentTplratios[k][index_z] =
-       StrongHalphaELPresentTplratios[k][previous];
+        StrongHalphaELPresentTplratios[k][previous];
     NLinesAboveSNRTplratios[k][index_z] = NLinesAboveSNRTplratios[k][previous];
     PriorLinesTplratios[k][index_z] = PriorLinesTplratios[k][previous];
   }

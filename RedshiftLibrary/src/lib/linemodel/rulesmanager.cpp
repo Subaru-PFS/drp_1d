@@ -50,8 +50,8 @@ CRulesManager::CRulesManager(
     std::shared_ptr<const TFloat64Range> lambdaRange,
     std::shared_ptr<CContinuumManager> continuumManager,
     const CLineCatalog::TLineVector &restLineList)
-    : CLineRatioManager(elements, model, inputSpc, lambdaRange, continuumManager,
-                       restLineList) {}
+    : CLineRatioManager(elements, model, inputSpc, lambdaRange,
+                        continuumManager, restLineList) {}
 
 Float64 CRulesManager::computeMerit(Int32 iratio) {
   applyRules(true); // enableLogging);

@@ -84,8 +84,7 @@ public:
   void
   SetChisquareTplratioResult(Int32 index,
                              std::shared_ptr<CTplratioManager> tplratioManager);
-  void
-  SetChisquareTplratioResultFromPrevious(Int32 index);
+  void SetChisquareTplratioResultFromPrevious(Int32 index);
 
   TFloat64List getChisquareTplContinuumResult(Int32 index_z);
   TFloat64List getChisquareTplratioResult(Int32 index_z);

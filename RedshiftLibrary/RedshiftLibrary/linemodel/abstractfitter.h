@@ -55,7 +55,7 @@ public:
                   std::shared_ptr<const CSpectrum> inputSpectrum,
                   std::shared_ptr<const TLambdaRange> lambdaRange,
                   std::shared_ptr<CSpectrumModel> spectrumModel,
-		  const CLineCatalog::TLineVector &restLineList);
+                  const CLineCatalog::TLineVector &restLineList);
 
   virtual void fit(Float64 redshift) = 0;
 
@@ -66,7 +66,7 @@ public:
              std::shared_ptr<const CSpectrum> inputSpectrum,
              std::shared_ptr<const TLambdaRange> lambdaRange,
              std::shared_ptr<CSpectrumModel> spectrumModel,
-	     const CLineCatalog::TLineVector &restLineList,
+             const CLineCatalog::TLineVector &restLineList,
              std::shared_ptr<CContinuumManager> continuumManager);
   Int32 m_cont_reestim_iterations = 0;
 

@@ -73,7 +73,8 @@ CLineModelSolve::CLineModelSolve(TScopeStack &scope, string objectType)
 bool CLineModelSolve::PopulateParameters(
     std::shared_ptr<const CParameterStore> parameterStore) {
 
-  m_opt_lineratiotype = parameterStore->GetScoped<std::string>("linemodel.lineRatioType");
+  m_opt_lineratiotype =
+      parameterStore->GetScoped<std::string>("linemodel.lineRatioType");
   m_opt_continuumreest =
       parameterStore->GetScoped<std::string>("linemodel.continuumreestimation");
   m_opt_continuumcomponent =

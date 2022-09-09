@@ -58,14 +58,12 @@ public:
                    const CLineCatalog::TLineVector &restLineList);
   CTplratioManager() = delete;
   virtual ~CTplratioManager() = default;
-  CTplratioManager(CTplratioManager const& other) = default;
-  CTplratioManager& operator=(CTplratioManager const& other) = default;
-   
-  CTplratioManager(CTplratioManager&& other) = default;
-  CTplratioManager& operator=(CTplratioManager&& other) = default;
+  CTplratioManager(CTplratioManager const &other) = default;
+  CTplratioManager &operator=(CTplratioManager const &other) = default;
 
+  CTplratioManager(CTplratioManager &&other) = default;
+  CTplratioManager &operator=(CTplratioManager &&other) = default;
 
-  
   int prepareFit(Float64 redshift) override;
   bool init(Float64 redshift, Int32 itratio) override;
 
@@ -75,7 +73,7 @@ public:
   void saveResults(Int32 itratio) override;
   Int32 getTplratio_count() const override;
   TFloat64List getTplratio_priors() override;
-  
+
   void logParameters() override;
   const std::string &getTplratio_bestTplName() const;
   Float64 getTplratio_bestTplIsmCoeff() const;
