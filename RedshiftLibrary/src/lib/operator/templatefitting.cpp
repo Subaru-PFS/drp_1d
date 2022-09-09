@@ -188,7 +188,9 @@ TFittingIsmIgmResult COperatorTemplateFitting::BasicFit(
       TFittingResult fitRes =
           ComputeLeastSquare(kM, kEbmv_, logpriorTZE, spcMaskAdditional);
 
-      Log.LogDebug(Formatter()<<"BasicFit: z="<< redshift<<" fit="<< fitRes.chiSquare<<" coeffEBMV="<< coeffEBMV<<" meiksinIdx="<<meiksinIdx);
+      Log.LogDebug(Formatter() << "BasicFit: z=" << redshift << " fit="
+                               << fitRes.chiSquare << " coeffEBMV=" << coeffEBMV
+                               << " meiksinIdx=" << meiksinIdx);
 
       result.ChiSquareInterm[kEbmv_][kM] = fitRes.chiSquare;
       result.IsmCalzettiCoeffInterm[kEbmv_][kM] = coeffEBMV;

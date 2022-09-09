@@ -53,7 +53,7 @@ public:
                std::shared_ptr<const CSpectrum> inputSpectrum,
                std::shared_ptr<const TLambdaRange> lambdaRange,
                std::shared_ptr<CSpectrumModel> spectrumModel,
-	       const CLineCatalog::TLineVector &restLineList,
+               const CLineCatalog::TLineVector &restLineList,
                std::shared_ptr<CContinuumManager> continuumManager,
                Int32 polyOrder = -1);
 
