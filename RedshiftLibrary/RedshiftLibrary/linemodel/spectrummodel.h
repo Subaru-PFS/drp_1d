@@ -38,7 +38,8 @@ public:
                                              const TInt32List &EltsIdx) const;
 
   Float64 GetContinuumError(Int32 eIdx, Int32 subeIdx);
-  Float64 getModelErrorUnderElement(Int32 eltId) const;
+  Float64 getModelErrorUnderElement(Int32 eltId,
+                                    const CSpectrumFluxAxis &fluxRef) const;
   void getFluxDirectIntegration(const TInt32List &eIdx_list,
                                 const TInt32List &subeIdx_list,
                                 bool substract_abslinesmodel, Float64 &fluxdi,

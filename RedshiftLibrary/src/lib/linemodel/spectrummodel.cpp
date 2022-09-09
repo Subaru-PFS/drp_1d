@@ -401,7 +401,8 @@ Float64 CSpectrumModel::GetContinuumError(Int32 eIdx, Int32 subeIdx) {
  *value. Accumulate "sumErr" 1 / square of the m_ErrorNoContinuum value. return
  *the square root of fit / sumErr.
  **/
-Float64 CSpectrumModel::getModelErrorUnderElement(Int32 eltId) const {
+Float64 CSpectrumModel::getModelErrorUnderElement(
+    Int32 eltId, const CSpectrumFluxAxis &fluxRef) const {
   // before elementlistcutting this variable was
   // CElementList::m_ErrorNoContinuum, a reference initialized twice in
   // CElementList constructor, first init to m_spcFluxAxisNoContinuum.GetError()
@@ -416,7 +417,7 @@ Float64 CSpectrumModel::getModelErrorUnderElement(Int32 eltId) const {
   Int32 numDevs = 0;
   Float64 fit = 0.0;
   const Float64 *Ymodel = m_SpectrumModel.GetFluxAxis().GetSamples();
-  const Float64 *Yspc = m_inputSpc->GetFluxAxis().GetSamples();
+  const Float64 *Yspc = fluxRef.GetSamples();
   Float64 diff = 0.0;
 
   Float64 sumErr = 0.0;
