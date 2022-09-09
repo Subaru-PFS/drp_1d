@@ -44,9 +44,8 @@
 #include <boost/foreach.hpp>
 #include <boost/range/combine.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
 
 using namespace NSEpic;
 

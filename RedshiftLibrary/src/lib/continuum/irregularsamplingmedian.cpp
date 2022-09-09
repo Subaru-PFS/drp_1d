@@ -37,15 +37,15 @@
 // knowledge of the CeCILL-C license and that you accept its terms.
 // ============================================================================
 #include "RedshiftLibrary/continuum/irregularsamplingmedian.h"
-
 #include "RedshiftLibrary/common/mean.h"
 #include "RedshiftLibrary/common/median.h"
 #include "RedshiftLibrary/spectrum/axis.h"
 #include "RedshiftLibrary/spectrum/spectrum.h"
 
-#include <algorithm>
 #include <boost/algorithm/clamp.hpp>
-#include <math.h>
+
+#include <algorithm>
+#include <cmath>
 
 using namespace NSEpic;
 using namespace std;

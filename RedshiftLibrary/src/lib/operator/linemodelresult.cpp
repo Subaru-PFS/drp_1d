@@ -43,6 +43,7 @@
 #include "RedshiftLibrary/log/log.h"
 #include "RedshiftLibrary/statistics/deltaz.h"
 
+#include <cfloat>
 #include <fstream>
 #include <string>
 

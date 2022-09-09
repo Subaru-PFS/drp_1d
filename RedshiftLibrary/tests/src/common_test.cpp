@@ -42,9 +42,8 @@
 #include "RedshiftLibrary/common/median.h"
 
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
 
 using namespace NSEpic;
 

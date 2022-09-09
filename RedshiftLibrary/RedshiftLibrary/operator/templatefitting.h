@@ -53,7 +53,10 @@
 #include "RedshiftLibrary/spectrum/template/template.h"
 #include "RedshiftLibrary/statistics/priorhelper.h"
 
+#include <cfloat>
+#include <climits>
 #include <numeric>
+
 namespace NSEpic {
 struct TFittingResult {
   Float64 chiSquare = INFINITY;

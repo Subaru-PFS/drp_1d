@@ -47,7 +47,8 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_vector.h>
-#include <math.h>
+
+#include <cmath>
 
 using namespace NSEpic;
 

@@ -42,13 +42,12 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/defaults.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/line/catalog.h"
 #include "RedshiftLibrary/line/lineprofile.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
-
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
 
 namespace NSEpic {
 

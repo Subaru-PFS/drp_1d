@@ -40,7 +40,7 @@
 #include "RedshiftLibrary/common/indexing.h"
 #include "RedshiftLibrary/linemodel/linemodelfitting.h"
 
-#include <float.h>
+#include <climits>
 
 using namespace NSEpic;
 

@@ -39,11 +39,12 @@
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-
 #include "test-config.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <math.h>
+
+#include <cmath>
 
 using namespace NSEpic;
 

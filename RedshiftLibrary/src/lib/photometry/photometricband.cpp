@@ -41,8 +41,9 @@
 #include "RedshiftLibrary/common/exception.h"
 #include "RedshiftLibrary/log/log.h"
 
-#include <algorithm>
 #include <gsl/gsl_const_mksa.h>
+
+#include <algorithm>
 #include <stdexcept>
 
 using namespace NSEpic;

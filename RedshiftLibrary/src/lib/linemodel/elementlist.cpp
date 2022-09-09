@@ -39,7 +39,9 @@
 #include "RedshiftLibrary/linemodel/elementlist.h"
 #include "RedshiftLibrary/line/linetags.h"
 #include "RedshiftLibrary/linemodel/linemodelsolution.h"
+
 #include <cfloat>
+#include <cmath>
 
 using namespace NSEpic;
 
@@ -433,7 +435,7 @@ CLineModelElementList::getValidElementIndices(Int32 lineTypeFilter) const {
     if (lineTypeFilter != -1 && lineTypeFilter != lineType)
       continue;
 
-    if (!isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
+    if (!std::isnan(m_Elements[eIdx]->GetElementAmplitude()) &&
         m_Elements[eIdx]->GetElementAmplitude() > 0.0)
       nonZeroValidEltsIdx.push_back(eIdx);
   }

@@ -39,13 +39,13 @@
 #ifndef _LINEMEAS_SOLVE_H
 #define _LINEMEAS_SOLVE_H
 
-#include <RedshiftLibrary/common/datatypes.h>
+#include "RedshiftLibrary/common/datatypes.h"
 
-#include <RedshiftLibrary/method/linemeassolveresult.h>
-#include <RedshiftLibrary/method/objectSolve.h>
-#include <RedshiftLibrary/operator/linemodel.h>
-#include <RedshiftLibrary/processflow/context.h>
-#include <RedshiftLibrary/spectrum/template/template.h>
+#include "RedshiftLibrary/method/linemeassolveresult.h"
+#include "RedshiftLibrary/method/objectSolve.h"
+#include "RedshiftLibrary/operator/linemodel.h"
+#include "RedshiftLibrary/processflow/context.h"
+#include "RedshiftLibrary/spectrum/template/template.h"
 
 namespace NSEpic {
 

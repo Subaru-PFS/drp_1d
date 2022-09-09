@@ -42,11 +42,12 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/log.h"
 
-using namespace NSEpic;
-using namespace std;
+#include <gsl/gsl_multifit.h>
+
 #include <fstream>
 
-#include <gsl/gsl_multifit.h>
+using namespace NSEpic;
+using namespace std;
 
 Float64 CDeltaz::GetDeltaz(const TFloat64List &redshifts,
                            const TFloat64List &pdf, const Float64 z,

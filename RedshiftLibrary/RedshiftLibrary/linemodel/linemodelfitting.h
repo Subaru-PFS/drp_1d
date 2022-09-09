@@ -41,29 +41,23 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/line/linetags.h"
+#include "RedshiftLibrary/line/regulament.h"
+#include "RedshiftLibrary/linemodel/abstractfitter.h"
+#include "RedshiftLibrary/linemodel/continuummanager.h"
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/linemodel/elementlist.h"
+#include "RedshiftLibrary/linemodel/spectrummodel.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/operator/modelspectrumresult.h"
+#include "RedshiftLibrary/operator/pdfz.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 
-#include "RedshiftLibrary/line/catalog.h"
-
-#include "RedshiftLibrary/line/regulament.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/operator/linemodelresult.h"
-#include "RedshiftLibrary/operator/modelspectrumresult.h"
-
-#include "RedshiftLibrary/operator/pdfz.h"
-
 #include <boost/shared_ptr.hpp>
-
-#include "RedshiftLibrary/line/linetags.h"
-#include "RedshiftLibrary/linemodel/abstractfitter.h"
-#include "RedshiftLibrary/linemodel/continuummanager.h"
-#include "RedshiftLibrary/linemodel/elementlist.h"
-#include "RedshiftLibrary/linemodel/spectrummodel.h"
-
 #include <memory>
 #include <unordered_set>
 

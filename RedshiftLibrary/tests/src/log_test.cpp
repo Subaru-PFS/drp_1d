@@ -39,9 +39,10 @@
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/consolehandler.h"
 #include "RedshiftLibrary/log/filehandler.h"
-#include "boost/test/unit_test.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <string>

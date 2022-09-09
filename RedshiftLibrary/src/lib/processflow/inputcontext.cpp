@@ -43,7 +43,7 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/catalog.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
-#include <float.h>
+#include <climits>
 using namespace NSEpic;
 
 CInputContext::CInputContext(std::shared_ptr<CParameterStore> paramStore)

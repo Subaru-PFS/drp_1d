@@ -56,22 +56,20 @@
 #include "RedshiftLibrary/processflow/autoscope.h"
 #include "RedshiftLibrary/processflow/context.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
+
 #include <boost/chrono/thread_clock.hpp>
 #include <boost/format.hpp>
-
-#include <float.h>
-#include <gsl/gsl_blas.h>
-#include <memory>
-
-#include <gsl/gsl_interp.h>
-
-#include <gsl/gsl_spline.h>
-#include <math.h>
-
 #include <boost/numeric/conversion/bounds.hpp>
 
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_vector.h>
+
+#include <climits>
+#include <cmath>
+#include <memory>
+
 using namespace NSEpic;
 using namespace std;
 

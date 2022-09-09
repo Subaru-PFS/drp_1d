@@ -40,7 +40,8 @@
 #include "RedshiftLibrary/common/formatter.h"
 
 #include <boost/test/unit_test.hpp>
-#include <math.h>
+
+#include <cmath>
 #include <string>
 
 using namespace NSEpic;

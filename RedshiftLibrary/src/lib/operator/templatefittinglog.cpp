@@ -47,9 +47,10 @@
 #include "RedshiftLibrary/spectrum/spectrum.h"
 #include "RedshiftLibrary/spectrum/template/template.h"
 
-#include <float.h>
 #include <gsl/gsl_interp.h>
 #include <gsl/gsl_spline.h>
+
+#include <climits>
 
 using namespace NSEpic;
 using namespace std;

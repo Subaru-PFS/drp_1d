@@ -40,7 +40,8 @@
 #include "RedshiftLibrary/common/flag.h"
 #include "RedshiftLibrary/common/formatter.h"
 #include "RedshiftLibrary/log/consolehandler.h"
-#include "boost/test/unit_test.hpp"
+
+#include <boost/test/unit_test.hpp>
 
 using namespace NSEpic;
 

@@ -38,7 +38,7 @@
 // ============================================================================
 #include "RedshiftLibrary/common/mask.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace NSEpic;
 

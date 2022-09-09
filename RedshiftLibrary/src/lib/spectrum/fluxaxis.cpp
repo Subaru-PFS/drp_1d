@@ -44,7 +44,7 @@
 #include "RedshiftLibrary/common/median.h"
 
 #include "RedshiftLibrary/log/log.h"
-#include <math.h>
+#include <cmath>
 
 using namespace NSEpic;
 using namespace std;

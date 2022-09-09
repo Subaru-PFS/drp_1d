@@ -38,9 +38,9 @@
 // ============================================================================
 #include "RedshiftLibrary/spectrum/noiseaxis.h"
 #include "RedshiftLibrary/common/mask.h"
-
 #include "RedshiftLibrary/log/log.h"
-#include <math.h>
+
+#include <cmath>
 
 using namespace NSEpic;
 using namespace std;

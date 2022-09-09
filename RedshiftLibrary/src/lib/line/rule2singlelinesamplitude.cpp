@@ -41,7 +41,8 @@
 
 #include "RedshiftLibrary/line/rule2singlelinesamplitude.h"
 #include "RedshiftLibrary/log/log.h"
-#include "boost/format.hpp"
+
+#include <boost/format.hpp>
 
 using namespace NSEpic;
 using namespace std;

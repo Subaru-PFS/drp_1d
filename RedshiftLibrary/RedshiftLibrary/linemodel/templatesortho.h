@@ -41,21 +41,17 @@
 
 #include "RedshiftLibrary/common/datatypes.h"
 #include "RedshiftLibrary/common/range.h"
+#include "RedshiftLibrary/line/catalog.h"
+#include "RedshiftLibrary/linemodel/element.h"
+#include "RedshiftLibrary/operator/linemodelresult.h"
+#include "RedshiftLibrary/operator/templatefitting.h"
+#include "RedshiftLibrary/processflow/inputcontext.h"
+#include "RedshiftLibrary/spectrum/LSF.h"
+#include "RedshiftLibrary/spectrum/spectrum.h"
+#include "RedshiftLibrary/spectrum/template/catalog.h"
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
-
-#include "RedshiftLibrary/line/catalog.h"
-#include "RedshiftLibrary/operator/templatefitting.h"
-#include "RedshiftLibrary/spectrum/LSF.h"
-#include "RedshiftLibrary/spectrum/spectrum.h"
-
-#include "RedshiftLibrary/linemodel/element.h"
-#include "RedshiftLibrary/operator/linemodelresult.h"
-
-#include "RedshiftLibrary/processflow/inputcontext.h"
-#include "RedshiftLibrary/spectrum/template/catalog.h"
-#include <boost/shared_ptr.hpp>
 
 #include <memory>
 
